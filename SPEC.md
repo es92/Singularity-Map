@@ -1,8 +1,8 @@
-# Singularity Atlas — Project Spec
+# Singularity Map — Project Spec
 
 ## Overview
 
-Singularity Atlas is an interactive, choose-your-own-adventure experience that guides users through a branching questionnaire about the future of AI. Based on the choices they make, users arrive at one of many possible "AI futures" — each rendered as a short narrative story paired with a visual timeline of key events.
+Singularity Map is an interactive, choose-your-own-adventure experience that guides users through a branching questionnaire about the future of AI. Based on the choices they make, users arrive at one of many possible "AI futures" — each rendered as a short narrative story paired with a visual timeline of key events.
 
 ---
 
@@ -144,7 +144,7 @@ Everything is static. Can be opened as a local file or served from any static ho
 ## File Structure
 
 ```
-Singularity Atlas/
+Singularity Map/
 ├── SPEC.md              ← this file
 ├── index.html           ← renderer (reads data/, presents UI)
 ├── data/

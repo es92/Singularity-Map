@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Singularity Atlas</title>
+    <title>Singularity Map</title>
     <meta name="description" content="Navigate the branching futures of artificial intelligence. Your beliefs shape the path.">
-    <meta property="og:title" content="Singularity Atlas">
+    <meta property="og:title" content="Singularity Map">
     <meta property="og:description" content="Choose your own adventure through the future of AI.">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -170,7 +170,11 @@
         /* ---- Outcome ---- */
         .outcome-screen { padding-top: 1.5rem; }
         .outcome-header { margin-bottom: 2rem; }
-        .outcome-header h1 { margin-bottom: 0.75rem; }
+        .outcome-header h1 { margin-bottom: 0.25rem; }
+        .outcome-subtitle {
+            color: var(--text-secondary); font-size: 1.15rem; font-weight: 400;
+            font-style: italic; margin-bottom: 0.75rem;
+        }
         .mood-badge {
             display: inline-block;
             padding: 0.22rem 0.7rem; border-radius: 20px;
@@ -292,6 +296,7 @@
             margin-bottom: 0.6rem;
         }
         .gallery-card .card-title { font-weight: 600; font-size: 1.05rem; }
+        .card-subtitle { font-weight: 400; color: var(--text-secondary); font-style: italic; }
         .gallery-card .card-summary {
             color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6;
         }
@@ -350,6 +355,7 @@
             display: inline-block; width: 7px; height: 7px;
             border-radius: 50%; flex-shrink: 0;
         }
+        .tree-subtitle { font-style: italic; opacity: 0.7; }
         .tree-nav { margin-top: 2rem; }
 
         /* ---- Tree Stage Headers ---- */
@@ -481,6 +487,7 @@
             letter-spacing: 0.08em; color: var(--accent); margin-bottom: 0.5rem;
         }
         .explorer-match-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.3rem; }
+        .explorer-match-subtitle { font-weight: 400; font-style: italic; opacity: 0.7; }
         .explorer-match-summary { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; }
         .explorer-match .mood-badge { margin-left: 0.5rem; vertical-align: middle; }
         .explorer-match-action { margin-top: 0.75rem; }
@@ -495,6 +502,7 @@
         .explorer-card.matched { border-color: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
         .explorer-card.dimmed { opacity: 0.35; }
         .explorer-card .ec-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.2rem; }
+        .ec-subtitle { font-weight: 400; font-style: italic; opacity: 0.7; }
         .explorer-card .ec-summary {
             color: var(--text-secondary); font-size: 0.82rem; line-height: 1.5;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
@@ -605,7 +613,8 @@
                         allVariants.push({
                             templateId: t.id,
                             variantKey: key,
-                            title: v.title,
+                            title: t.title,
+                            subtitle: v.subtitle,
                             mood: v.mood || t.mood,
                             summary: v.summary
                         });
@@ -615,6 +624,7 @@
                         templateId: t.id,
                         variantKey: null,
                         title: t.title,
+                        subtitle: null,
                         mood: t.mood,
                         summary: t.summary
                     });
@@ -650,32 +660,32 @@
             const t = templatesMap[templateId];
             if (!t) return null;
 
-            let title, mood, summary;
+            let subtitle = null, mood, summary;
             let variantKey = null;
 
             if (t.variants && t.primaryDimension) {
                 variantKey = dims[t.primaryDimension];
                 const variant = variantKey ? t.variants[variantKey] : null;
                 if (variant) {
-                    title = variant.title;
+                    subtitle = variant.subtitle;
                     mood = variant.mood || t.mood;
                     summary = variant.summary;
                 } else {
                     const first = Object.entries(t.variants)[0];
                     variantKey = first[0];
-                    title = first[1].title;
+                    subtitle = first[1].subtitle;
                     mood = first[1].mood || t.mood;
                     summary = first[1].summary;
                 }
             } else {
-                title = t.title;
                 mood = t.mood;
                 summary = t.summary;
             }
 
             return {
                 variantKey,
-                title,
+                title: t.title,
+                subtitle,
                 mood,
                 summary,
                 story: t.story,
@@ -691,7 +701,8 @@
                 const v = t.variants[variantKey];
                 return {
                     variantKey,
-                    title: v.title,
+                    title: t.title,
+                    subtitle: v.subtitle,
                     mood: v.mood || t.mood,
                     summary: v.summary,
                     story: t.story,
@@ -703,6 +714,7 @@
                 return {
                     variantKey: null,
                     title: t.title,
+                    subtitle: null,
                     mood: t.mood,
                     summary: t.summary,
                     story: t.story,
@@ -784,7 +796,7 @@
         for (const d of DIM_META) DIM_MAP[d.id] = d;
 
         // --- Persistence ---
-        const STORAGE_KEY = 'singularity-atlas-discovered';
+        const STORAGE_KEY = 'singularity-map-discovered';
         function loadDiscovered() {
             try {
                 discovered = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
@@ -909,7 +921,7 @@
             const total = allVariants.length;
             app.innerHTML = `
                 <div class="intro">
-                    <h1>Singularity Atlas</h1>
+                    <h1>Singularity Map</h1>
                     <p class="subtitle">Navigate the branching futures of artificial intelligence. Your beliefs shape the path. Where do you end up?</p>
                     <div class="actions">
                         <button class="btn btn-primary" data-action="start">Story Mode</button>
@@ -1069,6 +1081,11 @@
                 const header = app.querySelector('.outcome-header');
                 if (header) {
                     header.querySelector('h1').textContent = resolved.title;
+                    const subtitleEl = header.querySelector('.outcome-subtitle');
+                    if (subtitleEl) {
+                        subtitleEl.textContent = resolved.subtitle || '';
+                        subtitleEl.style.display = resolved.subtitle ? '' : 'none';
+                    }
                     const badge = header.querySelector('.mood-badge');
                     badge.className = 'mood-badge mood-' + resolved.mood;
                     badge.textContent = resolved.mood;
@@ -1180,6 +1197,7 @@
                 <div class="outcome-screen">
                     <div class="outcome-header">
                         <h1>${esc(initResolved.title)}</h1>
+                        ${initResolved.subtitle ? `<div class="outcome-subtitle">${esc(initResolved.subtitle)}</div>` : ''}
                         <span class="mood-badge mood-${initResolved.mood}">${esc(initResolved.mood)}</span>
                     </div>
                     <div class="outcome-summary">${esc(initResolved.summary)}</div>
@@ -1241,7 +1259,7 @@
                 return `
                     <div class="gallery-card" data-tid="${esc(v.templateId)}" data-vk="${esc(v.variantKey || '')}">
                         <div class="card-top">
-                            <span class="card-title">${esc(v.title)}</span>
+                            <span class="card-title">${esc(v.title)}${v.subtitle ? ` <span class="card-subtitle">— ${esc(v.subtitle)}</span>` : ''}</span>
                             <span class="mood-badge mood-${v.mood}" style="font-size:0.68rem;">${esc(v.mood)}</span>
                         </div>
                         <div class="card-summary">${esc(v.summary)}</div>
@@ -1302,7 +1320,7 @@
                     if (!resolved) return `<span style="color:var(--mood-dystopian)">[error: ${esc(nodeId)}]</span>`;
                     return `<span class="tree-outcome" data-tid="${esc(nodeId)}" data-vk="${esc(resolved.variantKey || '')}">`
                         + `<span class="tree-dot" style="background:${moodColor(resolved.mood)}"></span>`
-                        + `${esc(resolved.title)}</span>`;
+                        + `${esc(resolved.title)}${resolved.subtitle ? ` <span class="tree-subtitle">— ${esc(resolved.subtitle)}</span>` : ''}</span>`;
                 }
 
                 const q = questionsMap[nodeId];
@@ -1517,7 +1535,7 @@
                             <div class="explorer-match-label">Your future</div>
                             <div class="explorer-match-title">
                                 <span class="ec-dot" style="background:${moodColor(resolved.mood)}"></span>
-                                ${esc(resolved.title)}
+                                ${esc(resolved.title)}${resolved.subtitle ? ` <span class="explorer-match-subtitle">— ${esc(resolved.subtitle)}</span>` : ''}
                                 <span class="mood-badge mood-${resolved.mood}" style="font-size:0.68rem;">${esc(resolved.mood)}</span>
                             </div>
                             <div class="explorer-match-summary">${esc(resolved.summary)}</div>
@@ -1551,7 +1569,7 @@
                     const resolved = resolveTemplate(tid, dims);
                     if (resolved) {
                         card.querySelector('.ec-title').innerHTML =
-                            `<span class="ec-dot" style="background:${moodColor(resolved.mood)}"></span>${esc(resolved.title)}`;
+                            `<span class="ec-dot" style="background:${moodColor(resolved.mood)}"></span>${esc(resolved.title)}${resolved.subtitle ? ` <span class="ec-subtitle">— ${esc(resolved.subtitle)}</span>` : ''}`;
                         card.querySelector('.ec-summary').textContent = resolved.summary;
                     }
                 });
@@ -1583,10 +1601,11 @@
             const cards = templatesList.map(t => {
                 const resolved = resolveTemplate(t.id, effectiveDims());
                 const title = resolved ? resolved.title : t.title || t.id;
+                const subtitle = resolved ? resolved.subtitle : null;
                 const mood = resolved ? resolved.mood : t.mood || 'mixed';
                 const summary = resolved ? resolved.summary : t.summary || '';
                 return `<div class="explorer-card" data-tid="${esc(t.id)}">
-                    <div class="ec-title"><span class="ec-dot" style="background:${moodColor(mood)}"></span>${esc(title)}</div>
+                    <div class="ec-title"><span class="ec-dot" style="background:${moodColor(mood)}"></span>${esc(title)}${subtitle ? ` <span class="ec-subtitle">— ${esc(subtitle)}</span>` : ''}</div>
                     <div class="ec-summary">${esc(summary)}</div></div>`;
             }).join('');
 
@@ -1639,7 +1658,7 @@
             app.innerHTML = `
                 <div class="error-screen">
                     <h2>Failed to Load</h2>
-                    <p>Singularity Atlas needs to be served over HTTP to load its data files. If you opened this file directly, try running a local server:</p>
+                    <p>Singularity Map needs to be served over HTTP to load its data files. If you opened this file directly, try running a local server:</p>
                     <code>python3 -m http.server 8000</code>
                     <p style="margin-top:1rem;font-size:0.85rem;">Then visit <strong>http://localhost:8000</strong></p>
                 </div>`;

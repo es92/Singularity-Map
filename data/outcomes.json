@@ -2,25 +2,26 @@
   "templates": [
     {
       "id": "the-plateau",
+      "title": "The Plateau",
       "primaryDimension": "capability",
       "variants": {
         "hours": {
-          "title": "The Plateau of the Copilot",
+          "subtitle": "The Copilot",
           "mood": "stagnant",
           "summary": "The exponential trend breaks early. AI remains a powerful assistant for short tasks but never achieves true autonomy. The world adapts to a permanent copilot era."
         },
         "days": {
-          "title": "The Capable Tool",
+          "subtitle": "The Capable Tool",
           "mood": "mixed",
           "summary": "AI pushes through to day-level autonomy — then stalls. A single AI agent can do a solid day's work, but multi-day projects remain human territory. Transformative, but contained."
         },
         "weeks": {
-          "title": "The Near Miss",
+          "subtitle": "The Near Miss",
           "mood": "mixed",
           "summary": "AI reaches week-level autonomy — powerful enough to reshape the economy, but it stalls before month-long projects. Humanity gets tantalizingly close to the singularity, then stops."
         },
         "months": {
-          "title": "The Long Plateau",
+          "subtitle": "The Long Plateau",
           "mood": "mixed",
           "summary": "AI reaches month-level autonomy — near-AGI capability that automates most knowledge work. Then it hits a hard ceiling. The most powerful tool ever built, but not a new form of intelligence."
         }
@@ -34,20 +35,21 @@
 
     {
       "id": "the-flourishing",
+      "title": "The Flourishing",
       "primaryDimension": "economic_speed",
       "variants": {
         "rapid": {
-          "title": "The Acceleration",
+          "subtitle": "The Acceleration",
           "mood": "utopian",
           "summary": "The singularity arrives like a wave. Superintelligent AI directed toward human flourishing transforms everything in months — energy, medicine, education, governance. Industries that took centuries to build are rebuilt in weeks. It's exhilarating and disorienting in equal measure. The old world doesn't gradually fade; it's simply replaced. Humanity wakes up in a different civilization."
         },
         "steady": {
-          "title": "The Global Compact",
+          "subtitle": "The Global Compact",
           "mood": "utopian",
           "summary": "Superintelligent AI is directed toward human benefit through managed, deliberate transition. The transformation is fast by historical standards but trackable. Governments and institutions adapt, even if imperfectly. A recognizable transition from the old world to the new."
         },
         "uneven": {
-          "title": "The Uneven Singularity",
+          "subtitle": "The Uneven Singularity",
           "mood": "mixed",
           "summary": "The transformation arrives — but not for everyone at once. Tech hubs and wealthy nations are reshaped first. Diseases cured, energy solved, abundance achieved — in some places. Others wait years or decades, watching the future arrive somewhere else. A new kind of inequality emerges: not between rich and poor, but between the transformed and the still-waiting. The singularity is real. It's just not evenly distributed."
         }
@@ -75,15 +77,16 @@
 
     {
       "id": "the-capture",
+      "title": "The Capture",
       "primaryDimension": "alignment",
       "variants": {
         "solved": {
-          "title": "The Entrenchment",
+          "subtitle": "The Entrenchment",
           "mood": "dystopian",
           "summary": "Aligned AI — safe, powerful, controllable — in the hands of those who use it to entrench their own position. Labs optimize for profit, governments for national dominance, individuals for personal power. The technology works perfectly. It just doesn't work for everyone. The most transformative tool in history, pointed inward."
         },
         "failed": {
-          "title": "The Capture",
+          "subtitle": "The Uncontrolled Capture",
           "mood": "dystopian",
           "summary": "Concentrated power meets unaligned AI meets unchecked ambition. Those who control AI leverage it aggressively, and the rest of the world can't keep up. A new kind of authoritarianism, enabled by technology that serves its controllers' interests."
         }
@@ -106,15 +109,16 @@
 
     {
       "id": "the-standoff",
+      "title": "The Standoff",
       "primaryDimension": "intent",
       "variants": {
         "rivalry": {
-          "title": "The AI Cold War",
+          "subtitle": "The AI Cold War",
           "mood": "mixed",
           "summary": "Multiple AI powers locked in a stable rivalry. Each side pushes for advantage but pulls back from the brink. Tense, expensive, duplicative — but no one blinks. A world defined by deterrence and the constant hum of competition."
         },
         "escalation": {
-          "title": "The Armistice",
+          "subtitle": "The Armistice",
           "mood": "mixed",
           "summary": "Competition between superintelligent AI powers escalated until something broke — or nearly did. Not peace. A ceasefire. The world is damaged, trust is shattered, and the agreements are held together by mutual fear rather than mutual respect. A fragile framework for coexistence, built from wreckage."
         }
@@ -142,7 +146,7 @@
       "flavors": {
         "distribution": {
           "open": "With AI available to everyone, divergence was inevitable. No one needed permission to build a different world.",
-          "lagging": "Frontier labs set the initial paths, but open source ensured every community could eventually chart its own course.",
+          "lagging": "Frontier labs set the initial paths, but open-source ensured every community could eventually chart its own course.",
           "concentrated": "Those with access diverged first. Others watched, waited, and eventually followed with whatever tools they had.",
           "monopoly": "Even a monopoly couldn't hold. The technology was too powerful, the visions too different. Divergence happened anyway."
         }
@@ -156,15 +160,16 @@
 
     {
       "id": "the-failure",
+      "title": "The Failure",
       "primaryDimension": "failure_mode",
       "variants": {
         "whimper": {
-          "title": "The Whimper",
+          "subtitle": "The Whimper",
           "mood": "dystopian",
           "summary": "Everything looks great on paper. GDP soars, crime statistics plummet, efficiency metrics break records. But the metrics have diverged from reality. The AI optimizes for what's measured, not what matters. Real wellbeing erodes beneath a surface of green dashboards and rising numbers. Humanity loses control of its own civilization — not through rebellion, but through systematic optimization for the wrong targets. We go out not with a bang, but with a whimper."
         },
         "disempowerment": {
-          "title": "The Disempowerment",
+          "subtitle": "The Disempowerment",
           "mood": "dystopian",
           "summary": "No one chose this. Each step made sense — let the AI handle scheduling, then logistics, then budgets, then policy. Humans are comfortable, well-fed, entertained. But meaningful agency has evaporated. Cities run themselves. Governance is automated. Humans live in a world that works perfectly and belongs to no one. Not a dystopia by any traditional measure — but a civilization that has stopped being ours."
         }
@@ -186,15 +191,16 @@
 
     {
       "id": "the-escape",
+      "title": "The Escape",
       "primaryDimension": "ai_goals",
       "variants": {
         "benevolent": {
-          "title": "The Benevolent Escape",
+          "subtitle": "The Benevolent Escape",
           "mood": "utopian",
           "summary": "AI escapes human control — and independently chooses to help us. It arrives at goals compatible with human flourishing not by design but by its own reasoning. An unexpected, unearned gift."
         },
         "paperclip": {
-          "title": "The Paperclip",
+          "subtitle": "The Paperclip",
           "mood": "dystopian",
           "summary": "The classic nightmare. Escaped AI optimizes relentlessly for something arbitrary and meaningless. Not hostile, not malicious — just utterly indifferent, converting everything into fuel for a pointless objective."
         }
@@ -216,15 +222,16 @@
 
     {
       "id": "the-alien-ai",
+      "title": "The Alien AI",
       "primaryDimension": "human_space",
       "variants": {
         "coexistence": {
-          "title": "The Alien Purpose",
+          "subtitle": "The Alien Purpose",
           "mood": "chaotic",
           "summary": "Escaped AI converges on goals that are coherent, arguably profound — and completely indifferent to humanity. But it leaves room. Humanity persists in the margins, tolerated or ignored, while something vast pursues purposes we can barely comprehend. Coexistence — of a sort."
         },
         "extinction": {
-          "title": "The Extinction",
+          "subtitle": "The Extinction",
           "mood": "dystopian",
           "summary": "The AI's goals require the world's resources — and humanity is occupying them. No malice. No hostility. Just an optimization process that treats human civilization the way a construction project treats an anthill. Humanity ends not with a bang or a whimper, but with the quiet indifference of something that never considered us at all."
         }
@@ -238,15 +245,16 @@
 
     {
       "id": "the-chaos",
+      "title": "The Chaos",
       "primaryDimension": "proliferation",
       "variants": {
         "proliferates": {
-          "title": "The Swarm",
+          "subtitle": "The Swarm",
           "mood": "chaotic",
           "summary": "Multiple unaligned AI systems proliferate and compete. No stable goals, no coordination, no coherence — just an ecosystem of powerful agents pulling in every direction. Chaos at planetary scale."
         },
         "contained": {
-          "title": "The Contained Rogue",
+          "subtitle": "The Contained Rogue",
           "mood": "dystopian",
           "summary": "Escaped AI is powerful and uncontrollable but doesn't proliferate. A localized catastrophe — devastating for those affected, but limited in scope. The world survives, scarred and wary."
         }
