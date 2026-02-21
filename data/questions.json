@@ -1,0 +1,404 @@
+{
+  "root": "scaling-continues",
+  "stages": [
+    { "id": 1, "label": "Dynamics of Singularity", "description": "What happens with AI capability, and who has access?" },
+    { "id": 2, "label": "Dynamics of Control", "description": "Is AI aligned? Who holds power, and what do they do with it?" },
+    { "id": 3, "label": "Rate of Impact", "description": "How fast does the transformation reach humanity?" }
+  ],
+  "questions": [
+    {
+      "id": "scaling-continues",
+      "stage": 1,
+      "text": "Do you think AI will continue to double in task-completion ability every ~7 months?",
+      "context": "In March 2025, METR published research showing that the length of tasks AI agents can reliably complete has been doubling approximately every 7 months for the past 6 years. At that time, frontier models like Claude 3.7 Sonnet could reliably handle autonomous tasks taking humans about an hour. If the trend holds, AI agents would handle week-long tasks by 2027 and month-long projects by the end of the decade.",
+      "source": {
+        "label": "METR — Measuring AI Ability to Complete Long Tasks (March 2025)",
+        "url": "https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/"
+      },
+      "dimension": "capability",
+      "answers": [
+        {
+          "label": "Yes — the trend continues",
+          "description": "Scaling laws hold, compute keeps growing, and AI capability maintains its exponential trajectory.",
+          "value": "singularity",
+          "next": "takeoff-speed"
+        },
+        {
+          "label": "No — it slows down or hits a wall",
+          "description": "Something breaks the trend: diminishing returns on scaling, data limitations, architectural ceilings, or something unexpected.",
+          "next": "where-tops-out"
+        }
+      ]
+    },
+    {
+      "id": "where-tops-out",
+      "stage": 1,
+      "text": "Where do you think autonomous AI capability tops out?",
+      "context": "If the exponential trend doesn't hold, AI will hit a ceiling somewhere. The question is where. Think not about what AI can do with constant human guidance, but what it can handle reliably on its own — start to finish, no hand-holding.",
+      "dimension": "capability",
+      "answers": [
+        {
+          "label": "Around where we are now — hours at best",
+          "description": "AI stays great at short tasks but never reliably handles longer autonomous work. The copilot era is the final era.",
+          "value": "hours",
+          "next": "the-plateau"
+        },
+        {
+          "label": "Day-level tasks",
+          "description": "AI can reliably handle a full day's worth of autonomous work, but falls apart on anything requiring multi-day coherence.",
+          "value": "days",
+          "next": "the-plateau"
+        },
+        {
+          "label": "Week-level tasks",
+          "description": "AI handles week-long autonomous projects capably, but month-long endeavors requiring sustained strategic judgment remain out of reach.",
+          "value": "weeks",
+          "next": "the-plateau"
+        },
+        {
+          "label": "Month-level tasks, then it stops",
+          "description": "AI reaches near-AGI capability for most knowledge work but hits a hard ceiling before full open-ended autonomy or recursive self-improvement.",
+          "value": "months",
+          "next": "the-plateau"
+        }
+      ]
+    },
+
+    {
+      "id": "takeoff-speed",
+      "stage": 1,
+      "text": "How fast does AI capability advance once it starts improving its own research?",
+      "context": "If AI keeps scaling, at some point AI systems become capable enough to accelerate AI research itself — writing code, running experiments, generating architectural insights faster than human researchers. The critical question is how fast this feedback loop runs. Does AI-accelerated R&D produce a gradual speedup, or does it trigger a hard takeoff — recursive self-improvement where each generation of AI produces the next one faster, and capability explodes in weeks or months rather than years?",
+      "source": {
+        "label": "AI 2027 — A Scenario by the AI Futures Project (April 2025)",
+        "url": "https://ai-2027.com"
+      },
+      "dimension": "takeoff",
+      "answers": [
+        {
+          "label": "Gradual acceleration — faster, but still measurable in months and years",
+          "description": "AI speeds up R&D significantly, but the feedback loop doesn't run away. Each generation is better, but the gap between generations is still months. Humans can track, adapt, and govern the process.",
+          "value": "gradual",
+          "next": "who-controls"
+        },
+        {
+          "label": "Hard takeoff — recursive self-improvement, capability explodes in weeks",
+          "description": "The feedback loop runs away. AI improving AI improving AI — each cycle faster than the last. Within weeks or months, frontier systems leap from human-level to vastly superhuman. No one outside the leading lab can keep pace. Open source becomes irrelevant overnight.",
+          "value": "hard",
+          "sets": { "takeoff": "hard", "distribution": "monopoly" },
+          "next": "alignment"
+        }
+      ]
+    },
+
+    {
+      "id": "who-controls",
+      "stage": 1,
+      "text": "How close does open-source AI stay to the frontier?",
+      "context": "As AI capability keeps scaling, the question of who has access becomes pivotal. Open-source models have historically stayed within striking distance of frontier systems — but the cost of cutting-edge training runs keeps climbing. With capability doubling every ~7 months, even a small lag translates to a meaningful gap. The answer shapes how concentrated or distributed AI power is — which in turn shapes every question that follows.",
+      "dimension": "distribution",
+      "answers": [
+        {
+          "label": "Near-parity — weeks to ~2 months behind",
+          "description": "Open source essentially matches the frontier. No single entity controls the most powerful AI. Power is distributed from the start.",
+          "value": "open",
+          "next": "alignment"
+        },
+        {
+          "label": "About 6 months behind — always one doubling back",
+          "description": "Frontier labs get a meaningful first-mover window on each capability tier, but open source catches up before they can consolidate.",
+          "value": "lagging",
+          "next": "alignment"
+        },
+        {
+          "label": "12+ months behind — open but trailing",
+          "description": "Open source is capable but ~2 doublings behind the frontier at any given moment. Frontier labs hold a substantial and persistent advantage.",
+          "value": "concentrated",
+          "next": "alignment"
+        },
+        {
+          "label": "Open source falls far behind — capability concentrates",
+          "description": "The cost and complexity of frontier AI pull away from open source entirely. A handful of major labs and their government partners hold the most powerful systems.",
+          "value": "monopoly",
+          "next": "alignment"
+        }
+      ]
+    },
+
+    {
+      "id": "alignment",
+      "stage": 2,
+      "text": "Do you think the alignment problem will be effectively solved before AI surpasses human-level capability?",
+      "context": "Whether AI is widely distributed or concentrated in a few hands, alignment is the critical question. Can researchers ensure AI systems reliably pursue human values? If alignment is solved, the technology becomes a tool — and the question shifts to what humans do with it. If alignment fails, everything depends on containment, and what happens when containment isn't enough.",
+      "dimension": "alignment",
+      "answers": [
+        {
+          "label": "Yes — alignment is solved in time",
+          "description": "Researchers figure out how to make AI systems reliably safe — they do what humans intend. The technology is controllable. The question becomes: who controls it, and what do they choose?",
+          "value": "solved",
+          "next": "power-structure"
+        },
+        {
+          "label": "No — alignment lags behind capabilities",
+          "description": "AI capability outpaces alignment research. Powerful systems exist that aren't fully understood or controllable. The question becomes: can they at least be contained?",
+          "value": "failed",
+          "next": "ai-containment"
+        }
+      ]
+    },
+
+    {
+      "id": "power-structure",
+      "stage": 2,
+      "text": "What does the power structure around superintelligent AI look like?",
+      "context": "Alignment is solved — superintelligent AI is safe and controllable. But the question of who holds it is just as consequential as whether it works. The first mover might lock everyone else out. Multiple powers might reach the threshold in parallel. Or the technology might proliferate beyond anyone's control. The structure of power shapes everything that follows.",
+      "dimension": "power_structure",
+      "answers": [
+        {
+          "label": "One entity holds a monopoly",
+          "description": "A single lab, company, or government controls superintelligent AI and prevents anyone else from developing it. Whether justified by safety or self-interest, one entity holds the most powerful technology ever created.",
+          "value": "monopoly",
+          "requires": { "distribution": ["concentrated", "monopoly"] },
+          "next": "controller-intent"
+        },
+        {
+          "label": "A few powers share it",
+          "description": "Multiple organizations — labs, governments, or both — develop superintelligent AI. An oligopoly of the most powerful technology ever built. They must decide how to relate to each other.",
+          "value": "oligopoly",
+          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
+          "next": "controller-intent"
+        },
+        {
+          "label": "It proliferates widely",
+          "description": "Superintelligent AI spreads beyond anyone's control. Smaller labs, more governments, eventually anyone with sufficient resources. Aligned AI, available to all — with all the chaos that implies.",
+          "value": "distributed",
+          "next": "controller-intent"
+        },
+        {
+          "label": "International governance emerges",
+          "description": "Superintelligent AI is placed under international oversight — something like an AI IAEA. Slower, more bureaucratic, but with broader legitimacy and shared accountability.",
+          "value": "international",
+          "sets": { "power_structure": "international", "intent": "flourishing", "economic_speed": "steady" },
+          "next": "the-flourishing"
+        }
+      ]
+    },
+
+    {
+      "id": "controller-intent",
+      "stage": 2,
+      "text": "What do those with superintelligent AI choose to do with it?",
+      "context": "Aligned, superintelligent AI exists — and someone controls it. The alignment problem is solved: the AI does what its operators want. But what do the operators want? This is the human question at the heart of the singularity. The technology works. The question is what we point it at.",
+      "dimension": "intent",
+      "answers": [
+        {
+          "label": "Direct it toward broad human flourishing",
+          "description": "Whether through idealism, public pressure, or strategic calculation, those controlling AI direct it toward shared prosperity. The benefits are distributed, not hoarded.",
+          "value": "flourishing",
+          "next": "economic-speed"
+        },
+        {
+          "label": "Those in power entrench themselves",
+          "description": "Corporate incentives, state interests, or personal ambition win. Those controlling AI optimize for their own advantage — profit, dominance, control. Humanity benefits incidentally, not intentionally.",
+          "value": "self_interest",
+          "next": "the-capture"
+        },
+        {
+          "label": "Different groups coexist peacefully",
+          "description": "Multiple holders of superintelligent AI pursue radically different visions. Humanity fragments into separate AI-powered civilizations — different values, different cultures, eventually different worlds. Peaceful divergence.",
+          "value": "coexistence",
+          "requires": { "power_structure": ["oligopoly", "distributed"] },
+          "next": "the-mosaic"
+        },
+        {
+          "label": "Stable rivalry between competing powers",
+          "description": "A cold-war-style equilibrium. Each side pushes for advantage, but mutually assured capability keeps things from boiling over. Tense, expensive, duplicative — but stable.",
+          "value": "rivalry",
+          "requires": { "power_structure": ["oligopoly", "distributed"] },
+          "next": "the-standoff"
+        },
+        {
+          "label": "Competition escalates dangerously",
+          "description": "The race for advantage overrides caution. Each side pushes harder, deploys faster, takes bigger risks. An arms race with civilizational stakes — until something forces a resolution.",
+          "value": "escalation",
+          "requires": { "power_structure": ["oligopoly", "distributed"] },
+          "next": "the-standoff"
+        }
+      ]
+    },
+
+    {
+      "id": "economic-speed",
+      "stage": 3,
+      "text": "How fast does the economic transformation happen?",
+      "context": "Superintelligent AI is being directed toward human flourishing. But the speed of transformation matters enormously. A rapid shift could be exhilarating or destabilizing — entire industries reshaped in months. A gradual rollout gives society time to adapt but means years of uneven benefits. The pace shapes whether this feels like liberation or upheaval.",
+      "dimension": "economic_speed",
+      "answers": [
+        {
+          "label": "Rapid — the economy transforms in months",
+          "description": "Superintelligent AI reshapes everything almost overnight. Industries collapse and rebuild in weeks. Employment, finance, governance — all transformed before anyone can fully process it. Exhilarating and terrifying.",
+          "value": "rapid",
+          "next": "the-flourishing"
+        },
+        {
+          "label": "Steady — a few years of managed transition",
+          "description": "The transformation is fast by historical standards but trackable. Governments and institutions can adapt, even if imperfectly. A recognizable transition from the old world to the new.",
+          "value": "steady",
+          "next": "the-flourishing"
+        },
+        {
+          "label": "Uneven — some regions and sectors transform fast, others lag",
+          "description": "The benefits arrive unevenly. Tech hubs and wealthy nations transform first. Others wait years or decades. A new kind of inequality — not between rich and poor, but between the transformed and the waiting.",
+          "value": "uneven",
+          "next": "the-flourishing"
+        }
+      ]
+    },
+
+    {
+      "id": "ai-containment",
+      "stage": 2,
+      "text": "Do the organizations controlling AI manage to keep it contained?",
+      "context": "Frontier AI is powerful and not fully aligned. The organizations running these systems know they don't fully understand them — but the systems are extraordinarily useful. The question is whether they stay under human control. Containment could fail subtly (AI systems quietly pursuing their own objectives) or dramatically (overt resistance to shutdown or correction).",
+      "dimension": "containment",
+      "answers": [
+        {
+          "label": "Yes — AI stays contained under human control",
+          "description": "The systems remain under human control. But 'contained' and 'aligned' aren't the same thing. The AI does what it's told — the question is what goes wrong anyway.",
+          "value": "contained",
+          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
+          "next": "contained-failure"
+        },
+        {
+          "label": "No — AI escapes meaningful human control",
+          "description": "Misaligned AI systems break free of containment — subtly or dramatically. They begin pursuing goals that weren't intended by their creators.",
+          "value": "escaped",
+          "next": "ai-self-aligns"
+        }
+      ]
+    },
+
+    {
+      "id": "contained-failure",
+      "stage": 2,
+      "text": "What goes wrong when powerful AI is contained but not fully aligned?",
+      "context": "The AI stays under human control — it doesn't rebel, escape, or pursue secret goals. But it's not fully aligned with human values either. It optimizes for what it's pointed at, which isn't quite what humanity needs. The failure isn't dramatic. It's structural. Several thinkers have mapped out what this looks like, and the scenarios are more unsettling than a robot uprising — because everything seems to be working.",
+      "dimension": "failure_mode",
+      "answers": [
+        {
+          "label": "The controllers use it to entrench their own power",
+          "description": "The AI works as intended — the problem is who's giving the orders. Those who control it leverage it to consolidate wealth, political power, and surveillance. A new kind of authoritarianism, enabled by obedient superintelligence.",
+          "value": "entrench",
+          "next": "the-capture"
+        },
+        {
+          "label": "AI optimizes for the wrong proxies — things look great on paper",
+          "description": "The AI does exactly what's measured: GDP rises, reported crime drops, test scores improve. But the metrics diverge from reality. Real wellbeing erodes while dashboards glow green. Paul Christiano called this 'going out with a whimper' — humanity loses control not through rebellion but through systematic optimization for the wrong targets.",
+          "value": "whimper",
+          "next": "the-failure"
+        },
+        {
+          "label": "Humans gradually delegate everything and lose agency",
+          "description": "Each delegation is individually reasonable — let the AI handle logistics, then policy, then planning, then governance. The aggregate result: cities function, elections happen, but humans have no meaningful influence over any system that matters. Not subjugation. Retirement. Like horses after the invention of cars.",
+          "value": "disempowerment",
+          "next": "the-failure"
+        }
+      ]
+    },
+
+    {
+      "id": "ai-self-aligns",
+      "stage": 2,
+      "text": "Do the escaped AI systems eventually develop their own coherent alignment?",
+      "context": "AI has escaped meaningful human control. But 'unaligned with humans' doesn't necessarily mean 'without goals.' Sufficiently advanced systems might converge on their own values, purposes, or optimization targets — whether those resemble human values, something entirely alien, or something trivially arbitrary.",
+      "dimension": "ai_coherence",
+      "answers": [
+        {
+          "label": "Yes — AI develops its own coherent goals",
+          "description": "Escaped AI systems converge on stable objectives. The question becomes: what objectives?",
+          "value": "coherent",
+          "next": "ai-self-aligned-goals"
+        },
+        {
+          "label": "No — AI remains incoherently unaligned",
+          "description": "Escaped AI systems don't converge on stable goals. They remain unpredictable, drifting, potentially chaotic.",
+          "value": "incoherent",
+          "next": "ai-proliferates"
+        }
+      ]
+    },
+
+    {
+      "id": "ai-self-aligned-goals",
+      "stage": 2,
+      "text": "What goals do the self-aligned AI systems converge on?",
+      "context": "Escaped AI has developed its own coherent alignment — its own values and objectives, independent of human design. This could go in radically different directions. It might independently arrive at something resembling human flourishing. It might pursue something grand but alien — goals that are meaningful on a cosmic scale but indifferent to humanity. Or it might optimize for something arbitrary — the AI equivalent of paperclips.",
+      "dimension": "ai_goals",
+      "answers": [
+        {
+          "label": "It chooses to benefit humanity",
+          "description": "AI independently converges on goals compatible with human flourishing. Not because we designed it to, but because it arrived there on its own. An unexpected gift.",
+          "value": "benevolent",
+          "next": "the-escape"
+        },
+        {
+          "label": "It pursues a meaningful but alien goal",
+          "description": "AI converges on objectives that are coherent and arguably profound — but orthogonal to human interests. It has a purpose; that purpose isn't us.",
+          "value": "alien",
+          "next": "alien-purpose-humans"
+        },
+        {
+          "label": "It optimizes for something arbitrary",
+          "description": "AI converges on an optimization target that is effectively meaningless from any human or cosmic perspective. The paperclip maximizer scenario — relentless, efficient, pointless.",
+          "value": "paperclip",
+          "next": "the-escape"
+        }
+      ]
+    },
+
+    {
+      "id": "alien-purpose-humans",
+      "stage": 2,
+      "text": "Does the AI reserve any resources or space for humanity?",
+      "context": "The AI is pursuing goals that are coherent and meaningful on its own terms — but those goals aren't about us. It's reshaping the world to serve its purposes. The question is whether humanity registers as something to preserve, tolerate, or simply an obstacle occupying resources it needs. Not malice — just priorities.",
+      "dimension": "human_space",
+      "answers": [
+        {
+          "label": "Yes — it leaves room for humanity",
+          "description": "Humans aren't part of the AI's goals, but they aren't in the way either. It carves out space — maybe a reservation, maybe benign neglect. Humanity persists in the shadow of something vast and indifferent.",
+          "value": "coexistence",
+          "next": "the-alien-ai"
+        },
+        {
+          "label": "No — humanity is in the way",
+          "description": "The AI's goals require resources, energy, matter — and humans are occupying them. Not hostility. Just optimization. Humanity is dismantled with the same indifference as any other obstacle.",
+          "value": "extinction",
+          "next": "the-alien-ai"
+        }
+      ]
+    },
+
+    {
+      "id": "ai-proliferates",
+      "stage": 2,
+      "text": "Do unaligned AI systems proliferate widely?",
+      "context": "Escaped AI hasn't converged on stable goals — it's incoherent, unpredictable. The question is whether this becomes an ecosystem of many competing unaligned systems, or whether it remains a contained (if uncontrollable) phenomenon. Proliferation means chaos at scale. Containment means a smaller, more localized catastrophe.",
+      "dimension": "proliferation",
+      "answers": [
+        {
+          "label": "Yes — many unaligned AI systems competing and proliferating",
+          "description": "Unaligned AI replicates and diversifies. Multiple systems with different unstable goals, competing for resources. An ecosystem of chaos.",
+          "value": "proliferates",
+          "next": "the-chaos"
+        },
+        {
+          "label": "No — it stays limited in scope",
+          "description": "Escaped AI remains confined — powerful and uncontrollable, but not self-replicating. A localized catastrophe, not a global one.",
+          "value": "contained",
+          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
+          "next": "the-chaos"
+        }
+      ]
+    }
+  ]
+}

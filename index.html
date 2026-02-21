@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singularity Atlas</title>
+    <meta name="description" content="Navigate the branching futures of artificial intelligence. Your beliefs shape the path.">
+    <meta property="og:title" content="Singularity Atlas">
+    <meta property="og:description" content="Choose your own adventure through the future of AI.">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #08080f;
+            --bg-surface: #0e0e18;
+            --bg-card: #141422;
+            --bg-card-hover: #1c1c32;
+            --text: #e4e4f0;
+            --text-secondary: #9898b0;
+            --text-dim: #5c5c74;
+            --accent: #00c8ff;
+            --accent-glow: rgba(0, 200, 255, 0.1);
+            --accent-2: #7c5cff;
+            --border: #222238;
+            --border-hover: #3a3a58;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+            --mood-utopian: #00e088;
+            --mood-dystopian: #ff3366;
+            --mood-mixed: #ffaa22;
+            --mood-stagnant: #7888aa;
+            --mood-chaotic: #aa44ff;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 25% 50%, rgba(0, 200, 255, 0.025) 0%, transparent 60%),
+                radial-gradient(ellipse at 75% 20%, rgba(124, 92, 255, 0.025) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        #app {
+            position: relative;
+            z-index: 1;
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+            min-height: 100vh;
+        }
+
+        #app.fade-out { animation: fadeOut 0.28s var(--ease) forwards; }
+        #app.fade-in  { animation: fadeIn  0.28s var(--ease) forwards; }
+
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(8px); } }
+        @keyframes fadeIn  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; }
+        h2 { font-size: 1.6rem; font-weight: 600; letter-spacing: -0.015em; line-height: 1.3; }
+        h3 { font-size: 1.15rem; font-weight: 600; line-height: 1.4; }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.8rem 1.6rem;
+            border-radius: var(--radius);
+            font-size: 0.95rem; font-weight: 500;
+            cursor: pointer; border: none;
+            transition: all 0.2s var(--ease);
+            text-decoration: none; font-family: inherit;
+        }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover {
+            background: #40d8ff;
+            box-shadow: 0 0 24px rgba(0, 200, 255, 0.25);
+        }
+        .btn-secondary {
+            background: var(--bg-card); color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { background: var(--bg-card-hover); border-color: var(--border-hover); }
+        .btn-ghost {
+            background: transparent; color: var(--text-secondary);
+            padding: 0.5rem 0.75rem; font-size: 0.9rem;
+        }
+        .btn-ghost:hover { color: var(--text); }
+        .btn-small { padding: 0.5rem 1rem; font-size: 0.85rem; }
+
+        /* ---- Intro ---- */
+        .intro {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            min-height: 82vh; text-align: center;
+        }
+        .intro h1 {
+            font-size: clamp(2.2rem, 6vw, 3.2rem);
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+        .intro .subtitle {
+            color: var(--text-secondary); font-size: 1.15rem;
+            margin-bottom: 3rem; max-width: 480px; line-height: 1.7;
+        }
+        .intro .actions { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+        .intro .discovery {
+            margin-top: 2.5rem; color: var(--text-dim);
+            font-size: 0.85rem; letter-spacing: 0.02em;
+        }
+
+        /* ---- Question ---- */
+        .question-screen { padding-top: 1.5rem; }
+        .breadcrumbs {
+            display: flex; align-items: center; flex-wrap: wrap;
+            gap: 0.4rem; margin-bottom: 2rem;
+            font-size: 0.82rem; color: var(--text-dim);
+        }
+        .breadcrumbs .crumb { color: var(--text-secondary); }
+        .breadcrumbs .sep { color: var(--text-dim); margin: 0 0.1rem; }
+        .question-text {
+            font-size: 1.45rem; font-weight: 600;
+            margin-bottom: 1rem; line-height: 1.4;
+        }
+        .question-context {
+            color: var(--text-secondary); margin-bottom: 0.75rem;
+            font-size: 0.95rem; line-height: 1.75;
+        }
+        .question-source { margin-bottom: 2rem; }
+        .question-source a {
+            color: var(--accent); text-decoration: none;
+            font-size: 0.82rem; opacity: 0.75;
+        }
+        .question-source a:hover { opacity: 1; text-decoration: underline; }
+        .answers { display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 2.5rem; }
+        .answer-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.15rem 1.4rem;
+            cursor: pointer;
+            transition: all 0.2s var(--ease);
+        }
+        .answer-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+            transform: translateX(4px);
+        }
+        .answer-card .label { font-weight: 600; font-size: 1.02rem; margin-bottom: 0.2rem; }
+        .answer-card .desc { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; }
+        .question-nav { display: flex; gap: 0.75rem; }
+
+        /* ---- Outcome ---- */
+        .outcome-screen { padding-top: 1.5rem; }
+        .outcome-header { margin-bottom: 2rem; }
+        .outcome-header h1 { margin-bottom: 0.75rem; }
+        .mood-badge {
+            display: inline-block;
+            padding: 0.22rem 0.7rem; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.06em;
+        }
+        .mood-chaotic  { background: rgba(170,68,255,0.12); color: var(--mood-chaotic);  border: 1px solid rgba(170,68,255,0.25); }
+        .mood-utopian  { background: rgba(0,224,136,0.12);  color: var(--mood-utopian);  border: 1px solid rgba(0,224,136,0.25); }
+        .mood-dystopian{ background: rgba(255,51,102,0.12); color: var(--mood-dystopian); border: 1px solid rgba(255,51,102,0.25); }
+        .mood-mixed    { background: rgba(255,170,34,0.12); color: var(--mood-mixed);    border: 1px solid rgba(255,170,34,0.25); }
+        .mood-stagnant { background: rgba(120,136,170,0.12);color: var(--mood-stagnant); border: 1px solid rgba(120,136,170,0.25); }
+
+        .outcome-summary {
+            color: var(--text-secondary); font-size: 1.08rem;
+            margin-bottom: 2rem; padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border); line-height: 1.7;
+        }
+
+        .outcome-flavors {
+            margin-bottom: 2rem; padding-left: 1rem;
+            border-left: 2px solid var(--accent);
+        }
+        .outcome-flavors p {
+            color: var(--text-secondary); font-style: italic;
+            font-size: 0.95rem; line-height: 1.7; margin-bottom: 0.5rem;
+        }
+        .outcome-flavors p:last-child { margin-bottom: 0; }
+
+        .outcome-story { margin-bottom: 3rem; }
+        .outcome-story p { margin-bottom: 1.2rem; font-size: 1.02rem; line-height: 1.85; }
+
+        .timeline-section { margin-bottom: 3rem; }
+        .timeline-section h2 { margin-bottom: 1.75rem; }
+        .timeline { position: relative; padding-left: 2.5rem; }
+        .timeline::before {
+            content: ''; position: absolute;
+            left: 7px; top: 8px; bottom: 8px; width: 2px;
+            background: linear-gradient(to bottom, var(--accent), var(--accent-2));
+            opacity: 0.3; border-radius: 1px;
+        }
+        .timeline-event { position: relative; margin-bottom: 1.75rem; }
+        .timeline-event:last-child { margin-bottom: 0; }
+        .timeline-event::before {
+            content: ''; position: absolute;
+            left: -2.5rem; top: 0.55rem;
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 8px rgba(0, 200, 255, 0.35);
+            border: 2px solid var(--bg);
+        }
+        .timeline-year {
+            font-size: 0.8rem; font-weight: 700; color: var(--accent);
+            letter-spacing: 0.04em; margin-bottom: 0.2rem;
+        }
+        .timeline-headline { font-weight: 600; margin-bottom: 0.2rem; font-size: 0.98rem; }
+        .timeline-desc { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6; }
+
+        /* ---- Path Summary ---- */
+        .path-summary {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.4rem 1.5rem; margin-bottom: 2rem;
+        }
+        .path-summary h3 {
+            margin-bottom: 1rem; color: var(--text-dim);
+            font-size: 0.78rem; text-transform: uppercase;
+            letter-spacing: 0.06em; font-weight: 600;
+        }
+        .path-step {
+            display: flex; flex-direction: column; gap: 0.15rem;
+            margin-bottom: 0.75rem; font-size: 0.88rem;
+            line-height: 1.5;
+        }
+        .path-step:last-child { margin-bottom: 0; }
+        .path-step .step-q { color: var(--text-dim); font-size: 0.82rem; }
+        .path-step .step-a { color: var(--accent); font-weight: 500; }
+
+        .outcome-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+        /* ---- Dimensions badge row ---- */
+        .dimensions-row {
+            display: flex; flex-wrap: wrap; gap: 0.4rem;
+            margin-bottom: 1.5rem;
+        }
+        .dim-badge {
+            display: inline-block;
+            padding: 0.18rem 0.55rem; border-radius: 12px;
+            font-size: 0.7rem; font-weight: 500;
+            background: var(--bg-card); border: 1px solid var(--border);
+            color: var(--text-secondary); letter-spacing: 0.02em;
+        }
+
+        /* ---- Gallery ---- */
+        .gallery-screen { padding-top: 1.5rem; }
+        .gallery-header { margin-bottom: 2rem; }
+        .gallery-header h1 { margin-bottom: 0.5rem; }
+        .gallery-counter { color: var(--text-secondary); font-size: 0.92rem; }
+        .gallery-grid {
+            display: grid; grid-template-columns: 1fr;
+            gap: 0.85rem; margin-bottom: 2.5rem;
+        }
+        .gallery-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.35rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s var(--ease);
+        }
+        .gallery-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+        }
+        .gallery-card .card-top {
+            display: flex; align-items: center; gap: 0.65rem;
+            margin-bottom: 0.6rem;
+        }
+        .gallery-card .card-title { font-weight: 600; font-size: 1.05rem; }
+        .gallery-card .card-summary {
+            color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6;
+        }
+        .gallery-card .discovered-tag {
+            margin-top: 0.6rem; font-size: 0.75rem;
+            color: var(--accent); font-weight: 500;
+        }
+        .gallery-card .template-tag {
+            margin-top: 0.5rem; font-size: 0.7rem;
+            color: var(--text-dim);
+        }
+
+        /* ---- Tree ---- */
+        .tree-screen { padding-top: 1.5rem; }
+        .tree-screen > h1 { margin-bottom: 0.5rem; }
+        .tree-screen > .tree-subtitle {
+            color: var(--text-secondary); font-size: 0.92rem; margin-bottom: 2rem;
+        }
+        .tree { font-size: 0.88rem; }
+        .tree ul { list-style: none; padding-left: 1.5rem; position: relative; }
+        .tree > ul { padding-left: 0; }
+        .tree ul ul::before {
+            content: ''; position: absolute;
+            left: 0.55rem; top: 0; bottom: 0.75rem;
+            width: 1px; background: var(--border);
+        }
+        .tree li { position: relative; padding: 0.3rem 0; }
+        .tree ul ul > li::before {
+            content: ''; position: absolute;
+            left: -0.95rem; top: 1.05rem;
+            width: 0.85rem; height: 1px;
+            background: var(--border);
+        }
+        .tree ul ul > li:last-child::after {
+            content: ''; position: absolute;
+            left: -0.95rem; top: 1.05rem; bottom: 0;
+            width: 1px; background: var(--bg);
+        }
+        .tree-question {
+            color: var(--text); font-weight: 500;
+            margin-bottom: 0.15rem; line-height: 1.45;
+            cursor: pointer; display: inline;
+        }
+        .tree-question:hover { color: var(--accent); }
+        .tree-answer {
+            color: var(--accent); font-weight: 500;
+            cursor: default; line-height: 1.45;
+        }
+        .tree-outcome {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            color: var(--text-secondary); font-weight: 400;
+            cursor: pointer; line-height: 1.45;
+        }
+        .tree-outcome:hover { color: var(--text); }
+        .tree-outcome .tree-dot {
+            display: inline-block; width: 7px; height: 7px;
+            border-radius: 50%; flex-shrink: 0;
+        }
+        .tree-nav { margin-top: 2rem; }
+
+        /* ---- Tree Stage Headers ---- */
+        .tree-stage {
+            margin-bottom: 1.5rem;
+        }
+        .tree-stage-header {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.65rem 1rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            user-select: none;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s var(--ease);
+        }
+        .tree-stage-header:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-card);
+        }
+        .tree-stage-header .stage-toggle {
+            font-size: 0.7rem; color: var(--text-dim);
+            transition: transform 0.2s var(--ease);
+            flex-shrink: 0; width: 1rem; text-align: center;
+        }
+        .tree-stage.collapsed .stage-toggle { transform: rotate(-90deg); }
+        .tree-stage-header .stage-num {
+            font-size: 0.68rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.08em;
+            color: var(--accent); white-space: nowrap;
+        }
+        .tree-stage-header .stage-label {
+            font-weight: 600; font-size: 0.92rem; color: var(--text);
+        }
+        .tree-stage-header .stage-desc {
+            color: var(--text-dim); font-size: 0.8rem;
+            margin-left: auto; white-space: nowrap;
+        }
+        .tree-stage-body {
+            overflow: hidden;
+            transition: max-height 0.3s var(--ease), opacity 0.2s var(--ease);
+            max-height: 5000px; opacity: 1;
+        }
+        .tree-stage.collapsed .tree-stage-body {
+            max-height: 0; opacity: 0;
+        }
+
+        .tree-condition {
+            font-size: 0.75rem; color: var(--text-dim);
+            font-weight: 400; font-style: italic;
+            margin-left: 0.35rem;
+        }
+        .tree-stage-link {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            color: var(--accent); font-weight: 500;
+            font-size: 0.85rem; cursor: pointer;
+            padding: 0.15rem 0.5rem;
+            background: var(--accent-glow);
+            border-radius: var(--radius-sm);
+            transition: all 0.15s var(--ease);
+        }
+        .tree-stage-link:hover {
+            background: rgba(0, 200, 255, 0.15);
+        }
+
+        @media (max-width: 600px) {
+            .tree-stage-header .stage-desc { display: none; }
+        }
+
+        /* ---- Outcome Dims ---- */
+        .outcome-dims {
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 0.85rem 1.1rem; margin-bottom: 2rem;
+        }
+        .outcome-dims-label {
+            font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 0.65rem;
+        }
+
+        /* ---- Explorer ---- */
+        .explorer-screen { padding-top: 1.5rem; }
+        .explorer-screen > h1 { margin-bottom: 0.3rem; }
+        .explorer-subtitle { color: var(--text-secondary); font-size: 0.92rem; margin-bottom: 2rem; }
+
+        .dim-stages { display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2.5rem; }
+        .dim-stage-panel {
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1rem 1.25rem;
+        }
+        .dim-stage-label {
+            font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--accent); margin-bottom: 0.85rem;
+        }
+        .dim-row { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.65rem; }
+        .dim-row:last-child { margin-bottom: 0; }
+        .dim-row.hidden { display: none; }
+        .dim-label {
+            flex-shrink: 0; width: 110px; font-size: 0.82rem; font-weight: 500;
+            color: var(--text-secondary); padding-top: 0.3rem;
+        }
+        .dim-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+        .dim-pill {
+            padding: 0.28rem 0.7rem; border-radius: 20px; font-size: 0.78rem; font-weight: 500;
+            cursor: pointer; border: 1px solid var(--border); background: var(--bg-card);
+            color: var(--text-secondary); transition: all 0.15s var(--ease); user-select: none;
+        }
+        .dim-pill:hover:not(.active):not(.locked):not(.disabled) {
+            border-color: var(--border-hover); color: var(--text);
+        }
+        .dim-pill.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+        .dim-pill.locked {
+            background: var(--bg-card); color: var(--text-dim); border-color: var(--border);
+            border-style: dashed; cursor: default; font-style: italic;
+        }
+        .dim-pill.locked.active {
+            background: rgba(0,200,255,0.08); color: var(--accent); border-color: var(--accent); border-style: dashed;
+        }
+        .dim-pill.disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .explorer-divider { border: none; border-top: 1px solid var(--border); margin: 0.5rem 0 1.5rem; }
+        .explorer-match {
+            margin-bottom: 1.5rem; padding: 1rem 1.25rem; background: var(--bg-surface);
+            border: 1px solid var(--accent); border-radius: var(--radius);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+        .explorer-match-label {
+            font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--accent); margin-bottom: 0.5rem;
+        }
+        .explorer-match-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.3rem; }
+        .explorer-match-summary { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; }
+        .explorer-match .mood-badge { margin-left: 0.5rem; vertical-align: middle; }
+        .explorer-match-action { margin-top: 0.75rem; }
+        .explorer-no-match { color: var(--text-dim); font-size: 0.9rem; font-style: italic; padding: 1rem 0; }
+
+        .explorer-grid { display: grid; gap: 0.75rem; grid-template-columns: 1fr; }
+        .explorer-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 1rem 1.15rem; cursor: pointer; transition: all 0.2s var(--ease);
+        }
+        .explorer-card:hover { background: var(--bg-card-hover); border-color: var(--border-hover); }
+        .explorer-card.matched { border-color: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
+        .explorer-card.dimmed { opacity: 0.35; }
+        .explorer-card .ec-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.2rem; }
+        .explorer-card .ec-summary {
+            color: var(--text-secondary); font-size: 0.82rem; line-height: 1.5;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .explorer-card .ec-dot {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+            margin-right: 0.4rem; vertical-align: middle;
+        }
+        .explorer-grid-label {
+            font-size: 0.78rem; font-weight: 600; color: var(--text-dim);
+            text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; margin-top: 0.5rem;
+        }
+
+        @media (min-width: 580px) { .explorer-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) {
+            .dim-row { flex-direction: column; gap: 0.35rem; }
+            .dim-label { width: auto; }
+        }
+
+        /* ---- Error / Loading ---- */
+        .loading, .error-screen {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            min-height: 60vh; text-align: center;
+        }
+        .loading { color: var(--text-dim); }
+        .error-screen h2 { color: var(--mood-dystopian); margin-bottom: 1rem; }
+        .error-screen p { color: var(--text-secondary); max-width: 480px; line-height: 1.7; }
+        .error-screen code {
+            display: block; margin-top: 1.5rem;
+            background: var(--bg-surface); padding: 0.75rem 1rem;
+            border-radius: var(--radius-sm); font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        /* ---- Toast ---- */
+        #toast {
+            position: fixed; bottom: 1.5rem; left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--bg-card); border: 1px solid var(--accent);
+            color: var(--text); padding: 0.65rem 1.25rem;
+            border-radius: var(--radius); font-size: 0.88rem;
+            transition: transform 0.3s var(--ease);
+            z-index: 100; pointer-events: none;
+        }
+        #toast.visible { transform: translateX(-50%) translateY(0); }
+
+        @media (min-width: 580px) {
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            .intro h1 { font-size: 2.2rem; }
+            #app { padding: 1.25rem 1rem 3rem; }
+            .question-text { font-size: 1.25rem; }
+            .answer-card { padding: 1rem 1.15rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="app"><div class="loading"><p>Loading futures...</p></div></div>
+    <div id="toast"></div>
+
+    <script>
+    (function () {
+        'use strict';
+
+        const app = document.getElementById('app');
+        const toastEl = document.getElementById('toast');
+
+        let questionsMap = {};
+        let templatesMap = {};
+        let templatesList = [];
+        let allVariants = [];
+        let stagesMap = {};
+        let rootId = null;
+        let path = [];
+        let discovered = new Set();
+
+        loadDiscovered();
+        loadData().then(() => {
+            handleInitialRoute();
+        }).catch(err => {
+            renderError(err);
+        });
+
+        // --- Data Loading ---
+        async function loadData() {
+            const [qRes, oRes] = await Promise.all([
+                fetch('data/questions.json'),
+                fetch('data/outcomes.json')
+            ]);
+            if (!qRes.ok || !oRes.ok) {
+                throw new Error('Could not load data files. Are you running a local server?');
+            }
+            const qData = await qRes.json();
+            const oData = await oRes.json();
+            rootId = qData.root;
+            for (const q of qData.questions) questionsMap[q.id] = q;
+            if (qData.stages) for (const s of qData.stages) stagesMap[s.id] = s;
+            templatesList = oData.templates;
+            for (const t of templatesList) templatesMap[t.id] = t;
+
+            allVariants = [];
+            for (const t of templatesList) {
+                if (t.variants) {
+                    for (const [key, v] of Object.entries(t.variants)) {
+                        allVariants.push({
+                            templateId: t.id,
+                            variantKey: key,
+                            title: v.title,
+                            mood: v.mood || t.mood,
+                            summary: v.summary
+                        });
+                    }
+                } else {
+                    allVariants.push({
+                        templateId: t.id,
+                        variantKey: null,
+                        title: t.title,
+                        mood: t.mood,
+                        summary: t.summary
+                    });
+                }
+            }
+        }
+
+        // --- Dimensions ---
+        function collectStepDims(question, answer) {
+            if (answer.sets) return { ...answer.sets };
+            if (answer.value !== undefined && question.dimension) return { [question.dimension]: answer.value };
+            return {};
+        }
+
+        function answerVisible(answer, dims) {
+            if (!answer.requires) return true;
+            for (const [dim, allowed] of Object.entries(answer.requires)) {
+                if (!dims[dim] || !allowed.includes(dims[dim])) return false;
+            }
+            return true;
+        }
+
+        function dimensionsFromPath(p) {
+            const d = {};
+            for (const s of p) {
+                if (s.dims) Object.assign(d, s.dims);
+            }
+            return d;
+        }
+
+        // --- Template Resolution ---
+        function resolveTemplate(templateId, dims) {
+            const t = templatesMap[templateId];
+            if (!t) return null;
+
+            let title, mood, summary;
+            let variantKey = null;
+
+            if (t.variants && t.primaryDimension) {
+                variantKey = dims[t.primaryDimension];
+                const variant = variantKey ? t.variants[variantKey] : null;
+                if (variant) {
+                    title = variant.title;
+                    mood = variant.mood || t.mood;
+                    summary = variant.summary;
+                } else {
+                    const first = Object.entries(t.variants)[0];
+                    variantKey = first[0];
+                    title = first[1].title;
+                    mood = first[1].mood || t.mood;
+                    summary = first[1].summary;
+                }
+            } else {
+                title = t.title;
+                mood = t.mood;
+                summary = t.summary;
+            }
+
+            return {
+                variantKey,
+                title,
+                mood,
+                summary,
+                story: t.story,
+                timeline: t.timeline,
+                flavors: resolveFlavors(t.flavors, dims)
+            };
+        }
+
+        function resolveVariantDirect(templateId, variantKey) {
+            const t = templatesMap[templateId];
+            if (!t) return null;
+            if (t.variants && variantKey && t.variants[variantKey]) {
+                const v = t.variants[variantKey];
+                return {
+                    variantKey,
+                    title: v.title,
+                    mood: v.mood || t.mood,
+                    summary: v.summary,
+                    story: t.story,
+                    timeline: t.timeline,
+                    flavors: []
+                };
+            }
+            if (!t.variants) {
+                return {
+                    variantKey: null,
+                    title: t.title,
+                    mood: t.mood,
+                    summary: t.summary,
+                    story: t.story,
+                    timeline: t.timeline,
+                    flavors: []
+                };
+            }
+            return resolveTemplate(templateId, {});
+        }
+
+        function resolveFlavors(flavors, dims) {
+            if (!flavors) return [];
+            const texts = [];
+            for (const [dim, options] of Object.entries(flavors)) {
+                if (dims[dim] && options[dims[dim]]) {
+                    texts.push(options[dims[dim]]);
+                }
+            }
+            return texts;
+        }
+
+        // --- Dimension Metadata ---
+        const DIM_META = [
+            { id: 'capability', label: 'AI Scaling', stage: 1, values: [
+                { id: 'singularity', label: 'Trend continues' }, { id: 'hours', label: 'Stalls: hours' },
+                { id: 'days', label: 'Stalls: days' }, { id: 'weeks', label: 'Stalls: weeks' },
+                { id: 'months', label: 'Stalls: months' } ] },
+            { id: 'takeoff', label: 'Takeoff', stage: 1,
+              visibleWhen: { capability: ['singularity'] }, values: [
+                { id: 'gradual', label: 'Gradual' }, { id: 'hard', label: 'Hard takeoff' } ] },
+            { id: 'distribution', label: 'Open Source', stage: 1,
+              visibleWhen: { capability: ['singularity'] },
+              lockedWhen: { takeoff: { equals: 'hard', value: 'monopoly' } }, values: [
+                { id: 'open', label: 'Near-parity' }, { id: 'lagging', label: '~6 months' },
+                { id: 'concentrated', label: '12+ months' }, { id: 'monopoly', label: 'Falls behind' } ] },
+            { id: 'alignment', label: 'Alignment', stage: 2,
+              visibleWhen: { capability: ['singularity'] }, values: [
+                { id: 'solved', label: 'Solved' }, { id: 'failed', label: 'Failed' } ] },
+            { id: 'power_structure', label: 'Power', stage: 2,
+              visibleWhen: { capability: ['singularity'], alignment: ['solved'] }, values: [
+                { id: 'monopoly', label: 'Monopoly', requires: { distribution: ['concentrated', 'monopoly'] } },
+                { id: 'oligopoly', label: 'Few powers', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } },
+                { id: 'distributed', label: 'Proliferates' }, { id: 'international', label: 'International' } ] },
+            { id: 'intent', label: 'Intent', stage: 2,
+              visibleWhen: { capability: ['singularity'], alignment: ['solved'] },
+              lockedWhen: { power_structure: { equals: 'international', value: 'flourishing' } }, values: [
+                { id: 'flourishing', label: 'Flourishing' }, { id: 'self_interest', label: 'Self-interest' },
+                { id: 'coexistence', label: 'Coexistence', requires: { power_structure: ['oligopoly', 'distributed'] } },
+                { id: 'rivalry', label: 'Rivalry', requires: { power_structure: ['oligopoly', 'distributed'] } },
+                { id: 'escalation', label: 'Escalation', requires: { power_structure: ['oligopoly', 'distributed'] } } ] },
+            { id: 'containment', label: 'Containment', stage: 2,
+              visibleWhen: { capability: ['singularity'], alignment: ['failed'] }, values: [
+                { id: 'contained', label: 'Contained', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } },
+                { id: 'escaped', label: 'Escapes' } ] },
+            { id: 'failure_mode', label: 'Failure Mode', stage: 2,
+              visibleWhen: { capability: ['singularity'], alignment: ['failed'], containment: ['contained'] }, values: [
+                { id: 'entrench', label: 'Power grab' }, { id: 'whimper', label: 'Wrong metrics' },
+                { id: 'disempowerment', label: 'Human irrelevance' } ] },
+            { id: 'ai_coherence', label: 'AI Self-Aligns?', stage: 2,
+              visibleWhen: { capability: ['singularity'], alignment: ['failed'], containment: ['escaped'] }, values: [
+                { id: 'coherent', label: 'Yes' }, { id: 'incoherent', label: 'No' } ] },
+            { id: 'ai_goals', label: 'AI Goals', stage: 2,
+              visibleWhen: { capability: ['singularity'], alignment: ['failed'], containment: ['escaped'], ai_coherence: ['coherent'] }, values: [
+                { id: 'benevolent', label: 'Benefit humanity' }, { id: 'alien', label: 'Alien purpose' },
+                { id: 'paperclip', label: 'Arbitrary' } ] },
+            { id: 'human_space', label: 'Humans?', stage: 2,
+              visibleWhen: { capability: ['singularity'], alignment: ['failed'], containment: ['escaped'], ai_coherence: ['coherent'], ai_goals: ['alien'] }, values: [
+                { id: 'coexistence', label: 'Room for us' }, { id: 'extinction', label: 'Extinction' } ] },
+            { id: 'proliferation', label: 'Proliferates?', stage: 2,
+              visibleWhen: { capability: ['singularity'], alignment: ['failed'], containment: ['escaped'], ai_coherence: ['incoherent'] }, values: [
+                { id: 'proliferates', label: 'Yes, widely' },
+                { id: 'contained', label: 'No, limited', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } } ] },
+            { id: 'economic_speed', label: 'Speed', stage: 3,
+              visibleWhen: { capability: ['singularity'], alignment: ['solved'], intent: ['flourishing'] },
+              lockedWhen: { power_structure: { equals: 'international', value: 'steady' } }, values: [
+                { id: 'rapid', label: 'Rapid' }, { id: 'steady', label: 'Steady' }, { id: 'uneven', label: 'Uneven' } ] }
+        ];
+        const DIM_MAP = {};
+        for (const d of DIM_META) DIM_MAP[d.id] = d;
+
+        // --- Persistence ---
+        const STORAGE_KEY = 'singularity-atlas-discovered';
+        function loadDiscovered() {
+            try {
+                discovered = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+            } catch { discovered = new Set(); }
+        }
+        function saveDiscovered() {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...discovered])); } catch {}
+        }
+        function markDiscovered(key) {
+            if (!discovered.has(key)) {
+                discovered.add(key);
+                saveDiscovered();
+            }
+        }
+        function outcomeKey(templateId, variantKey) {
+            return variantKey ? templateId + '/' + variantKey : templateId;
+        }
+
+        // --- Routing ---
+        function handleInitialRoute() {
+            const state = routeFromHash();
+            history.replaceState(state, '', location.href);
+            renderState(state, false);
+        }
+
+        function routeFromHash() {
+            const hash = location.hash.slice(1);
+            if (hash.startsWith('/outcome/')) {
+                const rest = hash.slice('/outcome/'.length);
+                const slashIdx = rest.indexOf('/');
+                let tid, vk;
+                if (slashIdx >= 0) {
+                    tid = rest.slice(0, slashIdx);
+                    vk = rest.slice(slashIdx + 1);
+                } else {
+                    tid = rest;
+                    vk = null;
+                }
+                if (templatesMap[tid]) {
+                    return { screen: 'outcome', templateId: tid, variantKey: vk, path: [], showPath: false };
+                }
+            }
+            if (hash === '/gallery') return { screen: 'gallery' };
+            if (hash === '/tree') return { screen: 'tree' };
+            if (hash === '/explore') return { screen: 'explore' };
+            return { screen: 'intro' };
+        }
+
+        function navigate(state, animated) {
+            let hash = '';
+            if (state.screen === 'outcome') {
+                hash = '/outcome/' + state.templateId + (state.variantKey ? '/' + state.variantKey : '');
+            } else if (state.screen === 'gallery') {
+                hash = '/gallery';
+            } else if (state.screen === 'tree') {
+                hash = '/tree';
+            } else if (state.screen === 'explore') {
+                hash = '/explore';
+            }
+            history.pushState(state, '', hash ? '#' + hash : location.pathname);
+            renderState(state, animated !== false);
+        }
+
+        function renderState(state, animated) {
+            const render = () => {
+                if (state.screen === 'outcome') {
+                    if (state.path) path = state.path;
+                    renderOutcome(state.templateId, state.variantKey, state.showPath, state.dims);
+                } else if (state.screen === 'gallery') {
+                    path = [];
+                    renderGallery();
+                } else if (state.screen === 'tree') {
+                    renderTree();
+                } else if (state.screen === 'explore') {
+                    renderExplorer();
+                } else if (state.screen === 'question') {
+                    if (state.path) path = state.path;
+                    renderQuestion(state.questionId);
+                } else {
+                    path = [];
+                    renderIntro();
+                }
+            };
+            if (animated) { transition(render); } else { render(); }
+        }
+
+        window.addEventListener('popstate', (e) => {
+            if (e.state) {
+                renderState(e.state, false);
+            } else {
+                renderState(routeFromHash(), false);
+            }
+        });
+
+        // --- Transitions ---
+        function transition(renderFn) {
+            app.classList.remove('fade-in');
+            app.classList.add('fade-out');
+            setTimeout(() => {
+                renderFn();
+                app.classList.remove('fade-out');
+                app.classList.add('fade-in');
+                window.scrollTo({ top: 0, behavior: 'instant' });
+            }, 260);
+        }
+
+        function esc(str) {
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        function showToast(msg) {
+            toastEl.textContent = msg;
+            toastEl.classList.add('visible');
+            setTimeout(() => toastEl.classList.remove('visible'), 2200);
+        }
+
+        // --- Render: Intro ---
+        function renderIntro() {
+            const count = allVariants.filter(v => discovered.has(outcomeKey(v.templateId, v.variantKey))).length;
+            const total = allVariants.length;
+            app.innerHTML = `
+                <div class="intro">
+                    <h1>Singularity Atlas</h1>
+                    <p class="subtitle">Navigate the branching futures of artificial intelligence. Your beliefs shape the path. Where do you end up?</p>
+                    <div class="actions">
+                        <button class="btn btn-primary" data-action="start">Story Mode</button>
+                        <button class="btn btn-secondary" data-action="explore">Explore Futures</button>
+                    </div>
+                    ${count > 0 ? `<p class="discovery">${count} of ${total} future${total !== 1 ? 's' : ''} discovered</p>` : ''}
+                </div>`;
+            listen('[data-action="start"]', 'click', () => {
+                path = [];
+                navigate({ screen: 'question', questionId: rootId, path: [] });
+            });
+            listen('[data-action="explore"]', 'click', () => navigate({ screen: 'explore' }));
+        }
+
+        // --- Render: Question ---
+        function renderQuestion(questionId) {
+            const q = questionsMap[questionId];
+            if (!q) { renderIntro(); return; }
+
+            let crumbs = '';
+            if (path.length > 0) {
+                const parts = path.map(p => `<span class="crumb">${esc(p.answerLabel)}</span>`);
+                crumbs = `<div class="breadcrumbs">${parts.join('<span class="sep">\u2192</span>')}</div>`;
+            }
+
+            let source = '';
+            if (q.source) {
+                source = `<div class="question-source"><a href="${esc(q.source.url)}" target="_blank" rel="noopener">${esc(q.source.label)} \u2197</a></div>`;
+            }
+
+            const dims = dimensionsFromPath(path);
+            const visibleAnswers = q.answers
+                .map((a, i) => ({ ...a, originalIndex: i }))
+                .filter(a => answerVisible(a, dims));
+
+            const answers = visibleAnswers.map(a => `
+                <div class="answer-card" data-idx="${a.originalIndex}">
+                    <div class="label">${esc(a.label)}</div>
+                    ${a.description ? `<div class="desc">${esc(a.description)}</div>` : ''}
+                </div>`).join('');
+
+            app.innerHTML = `
+                <div class="question-screen">
+                    ${crumbs}
+                    <div class="question-text">${esc(q.text)}</div>
+                    ${q.context ? `<div class="question-context">${esc(q.context)}</div>` : ''}
+                    ${source}
+                    <div class="answers">${answers}</div>
+                    <div class="question-nav">
+                        ${path.length > 0
+                            ? '<button class="btn btn-ghost" data-action="back">\u2190 Back</button>'
+                            : '<button class="btn btn-ghost" data-action="home">\u2190 Home</button>'}
+                    </div>
+                </div>`;
+
+            app.querySelectorAll('.answer-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const idx = parseInt(card.dataset.idx, 10);
+                    const answer = q.answers[idx];
+                    const stepDims = collectStepDims(q, answer);
+                    path.push({
+                        questionId: q.id,
+                        answerIndex: idx,
+                        answerLabel: answer.label,
+                        questionText: q.text,
+                        dims: stepDims
+                    });
+                    const next = answer.next;
+                    if (questionsMap[next]) {
+                        navigate({ screen: 'question', questionId: next, path: [...path] });
+                    } else if (templatesMap[next]) {
+                        const dims = dimensionsFromPath(path);
+                        const resolved = resolveTemplate(next, dims);
+                        const key = outcomeKey(next, resolved.variantKey);
+                        markDiscovered(key);
+                        navigate({
+                            screen: 'outcome',
+                            templateId: next,
+                            variantKey: resolved.variantKey,
+                            path: [...path],
+                            showPath: true
+                        });
+                    } else {
+                        console.error('Unknown next node:', next);
+                    }
+                });
+            });
+
+            listen('[data-action="back"]', 'click', () => {
+                const prev = path.pop();
+                if (prev) navigate({ screen: 'question', questionId: prev.questionId, path: [...path] });
+            });
+            listen('[data-action="home"]', 'click', () => history.back());
+        }
+
+        // --- Render: Outcome ---
+        function renderOutcome(templateId, variantKey, showPath, passedDims) {
+            const t = templatesMap[templateId];
+            if (!t) { renderIntro(); return; }
+
+            const pathDims = dimensionsFromPath(path);
+            const localDims = { ...pathDims, ...(passedDims || {}) };
+            if (variantKey && t.primaryDimension && !localDims[t.primaryDimension]) {
+                localDims[t.primaryDimension] = variantKey;
+            }
+
+            const adjustableIds = new Set();
+            if (t.primaryDimension) adjustableIds.add(t.primaryDimension);
+            if (t.flavors) for (const k of Object.keys(t.flavors)) adjustableIds.add(k);
+            const relevantDims = DIM_META.filter(d => adjustableIds.has(d.id));
+
+            const validValues = {};
+            for (const dimId of adjustableIds) {
+                const s = new Set();
+                if (dimId === t.primaryDimension && t.variants) {
+                    for (const k of Object.keys(t.variants)) s.add(k);
+                }
+                if (t.flavors && t.flavors[dimId]) {
+                    for (const k of Object.keys(t.flavors[dimId])) s.add(k);
+                }
+                validValues[dimId] = s;
+            }
+
+            const lockedValues = {};
+            if (t.reachable) {
+                for (const cond of t.reachable) {
+                    for (const [dimId, vals] of Object.entries(cond)) {
+                        if (adjustableIds.has(dimId)) continue;
+                        if (!lockedValues[dimId]) lockedValues[dimId] = new Set();
+                        for (const v of vals) lockedValues[dimId].add(v);
+                    }
+                }
+            }
+            const lockedDims = DIM_META.filter(d => lockedValues[d.id]);
+            for (const dim of lockedDims) {
+                const allowed = lockedValues[dim.id];
+                if (allowed.size === 1 && !localDims[dim.id]) {
+                    localDims[dim.id] = [...allowed][0];
+                }
+            }
+
+            function isPillDisabled(dim, valObj) {
+                const valid = validValues[dim.id] || new Set();
+                if (!valid.has(valObj.id)) return true;
+                if (valObj.requires) {
+                    for (const [k, allowed] of Object.entries(valObj.requires)) {
+                        if (localDims[k] && !allowed.includes(localDims[k])) return true;
+                    }
+                }
+                return false;
+            }
+
+            function updateContent() {
+                const resolved = resolveTemplate(templateId, localDims);
+                if (!resolved) return;
+
+                const header = app.querySelector('.outcome-header');
+                if (header) {
+                    header.querySelector('h1').textContent = resolved.title;
+                    const badge = header.querySelector('.mood-badge');
+                    badge.className = 'mood-badge mood-' + resolved.mood;
+                    badge.textContent = resolved.mood;
+                }
+                const summaryEl = app.querySelector('.outcome-summary');
+                if (summaryEl) summaryEl.textContent = resolved.summary;
+
+                const flavorsEl = app.querySelector('.outcome-flavors');
+                if (flavorsEl) {
+                    if (resolved.flavors && resolved.flavors.length > 0) {
+                        flavorsEl.innerHTML = resolved.flavors.map(f => `<p>${esc(f)}</p>`).join('');
+                        flavorsEl.style.display = '';
+                    } else {
+                        flavorsEl.innerHTML = '';
+                        flavorsEl.style.display = 'none';
+                    }
+                }
+
+                relevantDims.forEach(dim => {
+                    const row = app.querySelector('[data-odim="' + dim.id + '"]');
+                    if (!row) return;
+                    row.querySelectorAll('.dim-pill').forEach(pill => {
+                        const vid = pill.dataset.val;
+                        const valObj = dim.values.find(v => v.id === vid);
+                        const disabled = valObj ? isPillDisabled(dim, valObj) : false;
+                        const isActive = localDims[dim.id] === vid;
+                        pill.classList.toggle('active', isActive);
+                        pill.classList.toggle('disabled', disabled && !isActive);
+                    });
+                });
+
+                const newKey = outcomeKey(templateId, resolved.variantKey);
+                markDiscovered(newKey);
+                const hashStr = '/outcome/' + templateId + (resolved.variantKey ? '/' + resolved.variantKey : '');
+                history.replaceState(
+                    { screen: 'outcome', templateId, variantKey: resolved.variantKey, path: [...path], showPath, dims: { ...localDims } },
+                    '', '#' + hashStr
+                );
+            }
+
+            const initResolved = resolveTemplate(templateId, localDims);
+            if (!initResolved) { renderIntro(); return; }
+
+            const storyHtml = (Array.isArray(initResolved.story) ? initResolved.story : [initResolved.story])
+                .map(p => `<p>${esc(p)}</p>`).join('');
+
+            const timelineHtml = initResolved.timeline.map(e => `
+                <div class="timeline-event">
+                    <div class="timeline-year">${esc(e.year)}</div>
+                    <div class="timeline-headline">${esc(e.headline)}</div>
+                    <div class="timeline-desc">${esc(e.description)}</div>
+                </div>`).join('');
+
+            let initFlavorsHtml = '';
+            if (initResolved.flavors && initResolved.flavors.length > 0) {
+                initFlavorsHtml = initResolved.flavors.map(f => `<p>${esc(f)}</p>`).join('');
+            }
+
+            let pathHtml = '';
+            if (showPath && path.length > 0) {
+                const steps = path.map(p =>
+                    `<div class="path-step">
+                        <span class="step-q">${esc(p.questionText)}</span>
+                        <span class="step-a">\u2192 ${esc(p.answerLabel)}</span>
+                    </div>`).join('');
+                pathHtml = `<div class="path-summary"><h3>Your choices</h3>${steps}</div>`;
+            }
+
+            const allOutcomeDims = [...lockedDims, ...relevantDims];
+            let dimSelectorHtml = '';
+            if (allOutcomeDims.length > 0) {
+                const stageNames = { 1: 'Dynamics of Singularity', 2: 'Dynamics of Control', 3: 'Rate of Impact' };
+                const byStage = {};
+                allOutcomeDims.forEach(dim => {
+                    if (!byStage[dim.stage]) byStage[dim.stage] = [];
+                    byStage[dim.stage].push(dim);
+                });
+                const stagePanels = [1, 2, 3].filter(s => byStage[s]).map(s => {
+                    const rows = byStage[s].map(dim => {
+                        const isLocked = !!lockedValues[dim.id];
+                        const allowed = lockedValues[dim.id];
+                        const pills = dim.values.map(v => {
+                            if (isLocked) {
+                                const isAllowed = allowed.has(v.id);
+                                return `<span class="dim-pill locked${isAllowed ? ' active' : ' disabled'}">${esc(v.label)}</span>`;
+                            }
+                            const disabled = isPillDisabled(dim, v);
+                            const isActive = localDims[dim.id] === v.id;
+                            return `<span class="dim-pill${isActive ? ' active' : ''}${disabled && !isActive ? ' disabled' : ''}" data-val="${esc(v.id)}">${esc(v.label)}</span>`;
+                        }).join('');
+                        return `<div class="dim-row${isLocked ? ' locked-row' : ''}" data-odim="${esc(dim.id)}">
+                            <span class="dim-label">${esc(dim.label)}</span>
+                            <div class="dim-pills">${pills}</div>
+                        </div>`;
+                    }).join('');
+                    return `<div class="dim-stage-panel">
+                        <div class="dim-stage-label">${esc(stageNames[s])}</div>
+                        ${rows}
+                    </div>`;
+                }).join('');
+                dimSelectorHtml = `
+                    <div class="outcome-dims">
+                        <div class="outcome-dims-label">Parameters</div>
+                        <div class="dim-stages">${stagePanels}</div>
+                    </div>`;
+            }
+
+            app.innerHTML = `
+                <div class="outcome-screen">
+                    <div class="outcome-header">
+                        <h1>${esc(initResolved.title)}</h1>
+                        <span class="mood-badge mood-${initResolved.mood}">${esc(initResolved.mood)}</span>
+                    </div>
+                    <div class="outcome-summary">${esc(initResolved.summary)}</div>
+                    <div class="outcome-flavors"${initFlavorsHtml ? '' : ' style="display:none"'}>${initFlavorsHtml}</div>
+                    ${dimSelectorHtml}
+                    <div class="outcome-story">${storyHtml}</div>
+                    <div class="timeline-section">
+                        <h2>Timeline</h2>
+                        <div class="timeline">${timelineHtml}</div>
+                    </div>
+                    ${pathHtml}
+                    <div class="outcome-actions">
+                        ${showPath && path.length > 0
+                            ? '<button class="btn btn-ghost btn-small" data-action="back-to-q">\u2190 Change last answer</button>'
+                            : ''}
+                        <button class="btn btn-secondary btn-small" data-action="restart">Start Over</button>
+                        <button class="btn btn-secondary btn-small" data-action="gallery">Browse All Futures</button>
+                        <button class="btn btn-secondary btn-small" data-action="share">Copy Link</button>
+                    </div>
+                </div>`;
+
+            relevantDims.forEach(dim => {
+                const row = app.querySelector('[data-odim="' + dim.id + '"]');
+                if (!row) return;
+                row.querySelectorAll('.dim-pill').forEach(pill => {
+                    pill.addEventListener('click', () => {
+                        if (pill.classList.contains('disabled')) return;
+                        localDims[dim.id] = pill.dataset.val;
+                        updateContent();
+                    });
+                });
+            });
+
+            listen('[data-action="back-to-q"]', 'click', () => {
+                const prev = path.pop();
+                if (prev) navigate({ screen: 'question', questionId: prev.questionId, path: [...path] });
+            });
+            listen('[data-action="restart"]', 'click', () => navigate({ screen: 'intro' }));
+            listen('[data-action="gallery"]', 'click', () => navigate({ screen: 'gallery' }));
+            listen('[data-action="share"]', 'click', () => {
+                const currentKey = outcomeKey(templateId, localDims[t.primaryDimension] || variantKey);
+                const url = location.origin + location.pathname + '#/outcome/' + currentKey;
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
+                } else {
+                    showToast(url);
+                }
+            });
+        }
+
+        // --- Render: Gallery ---
+        function renderGallery() {
+            const total = allVariants.length;
+            const count = allVariants.filter(v => discovered.has(outcomeKey(v.templateId, v.variantKey))).length;
+
+            const cards = allVariants.map(v => {
+                const key = outcomeKey(v.templateId, v.variantKey);
+                const isDiscovered = discovered.has(key);
+                return `
+                    <div class="gallery-card" data-tid="${esc(v.templateId)}" data-vk="${esc(v.variantKey || '')}">
+                        <div class="card-top">
+                            <span class="card-title">${esc(v.title)}</span>
+                            <span class="mood-badge mood-${v.mood}" style="font-size:0.68rem;">${esc(v.mood)}</span>
+                        </div>
+                        <div class="card-summary">${esc(v.summary)}</div>
+                        ${isDiscovered ? '<div class="discovered-tag">\u2713 Discovered</div>' : ''}
+                    </div>`;
+            }).join('');
+
+            app.innerHTML = `
+                <div class="gallery-screen">
+                    <div class="gallery-header">
+                        <h1>All Futures</h1>
+                        <p class="gallery-counter">${count} of ${total} discovered through the questionnaire</p>
+                    </div>
+                    <div class="gallery-grid">${cards}</div>
+                    <div>
+                        <button class="btn btn-ghost" data-action="home">\u2190 Back to Start</button>
+                    </div>
+                </div>`;
+
+            app.querySelectorAll('.gallery-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const tid = card.dataset.tid;
+                    const vk = card.dataset.vk || null;
+                    navigate({ screen: 'outcome', templateId: tid, variantKey: vk, path: [], showPath: false });
+                });
+            });
+
+            listen('[data-action="home"]', 'click', () => navigate({ screen: 'intro' }));
+        }
+
+        // --- Render: Tree ---
+        function renderTree() {
+            function moodColor(mood) {
+                const map = { utopian:'var(--mood-utopian)', dystopian:'var(--mood-dystopian)',
+                    mixed:'var(--mood-mixed)', stagnant:'var(--mood-stagnant)', chaotic:'var(--mood-chaotic)' };
+                return map[mood] || 'var(--text-dim)';
+            }
+
+            const treePaths = {};
+            let tpId = 0;
+
+            function overviewVisible(answer, dims) {
+                if (!answer.requires) return { show: true, note: '' };
+                const notes = [];
+                for (const [dim, allowed] of Object.entries(answer.requires)) {
+                    if (dim in dims) {
+                        if (!allowed.includes(dims[dim])) return { show: false, note: '' };
+                    } else {
+                        notes.push('if ' + dim.replace(/_/g, ' ') + ': ' + allowed.join(' / '));
+                    }
+                }
+                return { show: true, note: notes.join('; ') };
+            }
+
+            function buildStageTree(nodeId, stageNum, pathSoFar, dimsSoFar) {
+                if (templatesMap[nodeId]) {
+                    const resolved = resolveTemplate(nodeId, dimsSoFar);
+                    if (!resolved) return `<span style="color:var(--mood-dystopian)">[error: ${esc(nodeId)}]</span>`;
+                    return `<span class="tree-outcome" data-tid="${esc(nodeId)}" data-vk="${esc(resolved.variantKey || '')}">`
+                        + `<span class="tree-dot" style="background:${moodColor(resolved.mood)}"></span>`
+                        + `${esc(resolved.title)}</span>`;
+                }
+
+                const q = questionsMap[nodeId];
+                if (!q) return `<span style="color:var(--mood-dystopian)">[missing: ${esc(nodeId)}]</span>`;
+
+                if (q.stage > stageNum) {
+                    const info = stagesMap[q.stage];
+                    return `<span class="tree-stage-link" data-stage="${q.stage}">\u2192 Round ${q.stage}${info ? ': ' + esc(info.label) : ''}</span>`;
+                }
+
+                const pid = tpId++;
+                treePaths[pid] = pathSoFar;
+
+                const answersHtml = q.answers
+                    .map((a, i) => {
+                        const { show, note } = overviewVisible(a, dimsSoFar);
+                        if (!show) return '';
+
+                        const stepDims = {};
+                        if (a.sets) Object.assign(stepDims, a.sets);
+                        else if (a.value !== undefined && q.dimension) stepDims[q.dimension] = a.value;
+
+                        const childPath = [...pathSoFar, {
+                            questionId: q.id, answerIndex: i,
+                            answerLabel: a.label, questionText: q.text,
+                            dims: stepDims
+                        }];
+                        const childDims = { ...dimsSoFar, ...stepDims };
+
+                        const noteHtml = note ? ` <span class="tree-condition">(${esc(note)})</span>` : '';
+
+                        return `<li><span class="tree-answer">${esc(a.label)}</span>${noteHtml}<ul><li>${buildStageTree(a.next, stageNum, childPath, childDims)}</li></ul></li>`;
+                    })
+                    .filter(Boolean)
+                    .join('');
+
+                return `<span class="tree-question" data-qid="${esc(q.id)}" data-pid="${pid}">${esc(q.text)}</span><ul>${answersHtml}</ul>`;
+            }
+
+            const stage1Html = buildStageTree(rootId, 1, [], {});
+            const stage2Html = buildStageTree('alignment', 2, [], {});
+            const stage3Html = buildStageTree('economic-speed', 3, [], {});
+
+            function stagePanel(id, body) {
+                const info = stagesMap[id];
+                if (!info) return '';
+                return `<div class="tree-stage" data-stage="${id}">
+                    <div class="tree-stage-header">
+                        <span class="stage-toggle">\u25BC</span>
+                        <span class="stage-num">Round ${id}</span>
+                        <span class="stage-label">${esc(info.label)}</span>
+                        <span class="stage-desc">${esc(info.description)}</span>
+                    </div>
+                    <div class="tree-stage-body">
+                        <div class="tree"><ul><li>${body}</li></ul></div>
+                    </div>
+                </div>`;
+            }
+
+            const variantCount = allVariants.length;
+
+            app.innerHTML = `
+                <div class="tree-screen">
+                    <h1>Question Tree</h1>
+                    <p class="tree-subtitle">${Object.keys(questionsMap).length} questions \u2022 ${variantCount} outcomes (${templatesList.length} templates)</p>
+                    ${stagePanel(1, stage1Html)}
+                    ${stagePanel(2, stage2Html)}
+                    ${stagePanel(3, stage3Html)}
+                    <div class="tree-nav">
+                        <button class="btn btn-ghost" data-action="home">\u2190 Back to Start</button>
+                    </div>
+                </div>`;
+
+            app.querySelectorAll('.tree-outcome').forEach(el => {
+                el.addEventListener('click', () => {
+                    navigate({ screen: 'outcome', templateId: el.dataset.tid, variantKey: el.dataset.vk || null, path: [], showPath: false });
+                });
+            });
+
+            app.querySelectorAll('.tree-question').forEach(el => {
+                el.addEventListener('click', () => {
+                    const p = treePaths[parseInt(el.dataset.pid)] || [];
+                    navigate({ screen: 'question', questionId: el.dataset.qid, path: p });
+                });
+            });
+
+            app.querySelectorAll('.tree-stage-header').forEach(el => {
+                el.addEventListener('click', () => {
+                    el.parentElement.classList.toggle('collapsed');
+                });
+            });
+
+            app.querySelectorAll('.tree-stage-link').forEach(el => {
+                el.addEventListener('click', () => {
+                    const stageId = el.dataset.stage;
+                    const target = app.querySelector('.tree-stage[data-stage="' + stageId + '"]');
+                    if (target) {
+                        target.classList.remove('collapsed');
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+
+            listen('[data-action="home"]', 'click', () => navigate({ screen: 'intro' }));
+        }
+
+        // --- Render: Explorer ---
+        function renderExplorer() {
+            let sel = {};
+
+            function isDimVisible(dim) {
+                if (!dim.visibleWhen) return true;
+                for (const [k, allowed] of Object.entries(dim.visibleWhen)) {
+                    if (!sel[k] || !allowed.includes(sel[k])) return false;
+                }
+                return true;
+            }
+            function isDimLocked(dim) {
+                if (!dim.lockedWhen) return null;
+                for (const [triggerDim, rule] of Object.entries(dim.lockedWhen)) {
+                    if (sel[triggerDim] === rule.equals) return rule.value;
+                }
+                return null;
+            }
+            function isValueDisabled(dim, val) {
+                if (!val.requires) return false;
+                for (const [k, allowed] of Object.entries(val.requires)) {
+                    if (sel[k] && !allowed.includes(sel[k])) return true;
+                }
+                return false;
+            }
+            function cleanSelection() {
+                for (const dim of DIM_META) {
+                    if (!isDimVisible(dim)) { delete sel[dim.id]; continue; }
+                    const locked = isDimLocked(dim);
+                    if (locked !== null) { sel[dim.id] = locked; continue; }
+                    if (sel[dim.id]) {
+                        const val = dim.values.find(v => v.id === sel[dim.id]);
+                        if (val && isValueDisabled(dim, val)) delete sel[dim.id];
+                    }
+                }
+            }
+            function effectiveDims() {
+                const d = {};
+                for (const dim of DIM_META) {
+                    if (!isDimVisible(dim)) continue;
+                    const locked = isDimLocked(dim);
+                    if (locked !== null) { d[dim.id] = locked; continue; }
+                    if (sel[dim.id]) d[dim.id] = sel[dim.id];
+                }
+                return d;
+            }
+            function templateMatches(t, dims) {
+                if (!t.reachable) return true;
+                return t.reachable.some(cond => {
+                    for (const [k, allowed] of Object.entries(cond)) {
+                        if (!dims[k] || !allowed.includes(dims[k])) return false;
+                    }
+                    return true;
+                });
+            }
+            function templatePartialMatch(t, dims) {
+                if (!t.reachable) return true;
+                return t.reachable.some(cond => {
+                    for (const [k, allowed] of Object.entries(cond)) {
+                        if (dims[k] && !allowed.includes(dims[k])) return false;
+                    }
+                    return true;
+                });
+            }
+            function moodColor(mood) {
+                const map = { utopian:'var(--mood-utopian)', dystopian:'var(--mood-dystopian)',
+                    mixed:'var(--mood-mixed)', stagnant:'var(--mood-stagnant)', chaotic:'var(--mood-chaotic)' };
+                return map[mood] || 'var(--text-dim)';
+            }
+
+            function update() {
+                cleanSelection();
+                const dims = effectiveDims();
+                DIM_META.forEach(dim => {
+                    const row = app.querySelector('[data-dim-row="' + dim.id + '"]');
+                    if (!row) return;
+                    const visible = isDimVisible(dim);
+                    row.classList.toggle('hidden', !visible);
+                    if (!visible) return;
+                    const locked = isDimLocked(dim);
+                    row.querySelectorAll('.dim-pill').forEach(pill => {
+                        const vid = pill.dataset.val;
+                        const val = dim.values.find(v => v.id === vid);
+                        const disabled = val && isValueDisabled(dim, val);
+                        const isLocked = locked !== null;
+                        const isActive = isLocked ? vid === locked : sel[dim.id] === vid;
+                        pill.classList.toggle('active', isActive);
+                        pill.classList.toggle('locked', isLocked);
+                        pill.classList.toggle('disabled', disabled && !isActive);
+                    });
+                });
+
+                const matched = [], partial = [], dimmed = [];
+                for (const t of templatesList) {
+                    if (templateMatches(t, dims)) matched.push(t);
+                    else if (templatePartialMatch(t, dims)) partial.push(t);
+                    else dimmed.push(t);
+                }
+
+                const matchDiv = app.querySelector('.explorer-match-zone');
+                if (matched.length === 1) {
+                    const t = matched[0];
+                    const resolved = resolveTemplate(t.id, dims);
+                    matchDiv.innerHTML = `
+                        <div class="explorer-match">
+                            <div class="explorer-match-label">Your future</div>
+                            <div class="explorer-match-title">
+                                <span class="ec-dot" style="background:${moodColor(resolved.mood)}"></span>
+                                ${esc(resolved.title)}
+                                <span class="mood-badge mood-${resolved.mood}" style="font-size:0.68rem;">${esc(resolved.mood)}</span>
+                            </div>
+                            <div class="explorer-match-summary">${esc(resolved.summary)}</div>
+                            <div class="explorer-match-action">
+                                <button class="btn btn-small btn-primary" data-action="view-match"
+                                    data-tid="${esc(t.id)}" data-vk="${esc(resolved.variantKey || '')}">View Full Story</button>
+                            </div>
+                        </div>`;
+                    matchDiv.querySelector('[data-action="view-match"]').addEventListener('click', (e) => {
+                        const tid = e.currentTarget.dataset.tid;
+                        const vk = e.currentTarget.dataset.vk || null;
+                        const key = outcomeKey(tid, vk);
+                        markDiscovered(key);
+                        navigate({ screen: 'outcome', templateId: tid, variantKey: vk, path: [], showPath: false, dims: effectiveDims() });
+                    });
+                } else if (matched.length > 1) {
+                    matchDiv.innerHTML = `<div class="explorer-no-match">${matched.length} outcomes match. Keep choosing to narrow it down.</div>`;
+                } else {
+                    const setCount = Object.keys(dims).length;
+                    matchDiv.innerHTML = setCount > 0 ? '<div class="explorer-no-match">No single outcome matches yet. Keep choosing.</div>' : '';
+                }
+
+                const grid = app.querySelector('.explorer-grid');
+                grid.querySelectorAll('.explorer-card').forEach(card => {
+                    const tid = card.dataset.tid;
+                    const t = templatesMap[tid];
+                    const isMatch = matched.includes(t);
+                    const isPartial = partial.includes(t);
+                    card.classList.toggle('matched', isMatch);
+                    card.classList.toggle('dimmed', !isMatch && !isPartial);
+                    const resolved = resolveTemplate(tid, dims);
+                    if (resolved) {
+                        card.querySelector('.ec-title').innerHTML =
+                            `<span class="ec-dot" style="background:${moodColor(resolved.mood)}"></span>${esc(resolved.title)}`;
+                        card.querySelector('.ec-summary').textContent = resolved.summary;
+                    }
+                });
+            }
+
+            cleanSelection();
+            const stageGroups = { 1: [], 2: [], 3: [] };
+            DIM_META.forEach(d => { if (!stageGroups[d.stage]) stageGroups[d.stage] = []; stageGroups[d.stage].push(d); });
+            const stageNames = { 1: 'Dynamics of Singularity', 2: 'Dynamics of Control', 3: 'Rate of Impact' };
+
+            let dimsHtml = '';
+            for (const [stageId, dims] of Object.entries(stageGroups)) {
+                if (dims.length === 0) continue;
+                const rows = dims.map(dim => {
+                    const visible = isDimVisible(dim);
+                    const locked = isDimLocked(dim);
+                    const pills = dim.values.map(v => {
+                        const disabled = isValueDisabled(dim, v);
+                        const isLocked = locked !== null;
+                        const isActive = isLocked ? v.id === locked : sel[dim.id] === v.id;
+                        return `<span class="dim-pill${isActive?' active':''}${isLocked?' locked':''}${disabled&&!isActive?' disabled':''}" data-val="${esc(v.id)}">${esc(v.label)}</span>`;
+                    }).join('');
+                    return `<div class="dim-row${visible?'':' hidden'}" data-dim-row="${esc(dim.id)}">
+                        <span class="dim-label">${esc(dim.label)}</span><div class="dim-pills">${pills}</div></div>`;
+                }).join('');
+                dimsHtml += `<div class="dim-stage-panel"><div class="dim-stage-label">Round ${stageId}: ${esc(stageNames[stageId]||'')}</div>${rows}</div>`;
+            }
+
+            const cards = templatesList.map(t => {
+                const resolved = resolveTemplate(t.id, effectiveDims());
+                const title = resolved ? resolved.title : t.title || t.id;
+                const mood = resolved ? resolved.mood : t.mood || 'mixed';
+                const summary = resolved ? resolved.summary : t.summary || '';
+                return `<div class="explorer-card" data-tid="${esc(t.id)}">
+                    <div class="ec-title"><span class="ec-dot" style="background:${moodColor(mood)}"></span>${esc(title)}</div>
+                    <div class="ec-summary">${esc(summary)}</div></div>`;
+            }).join('');
+
+            app.innerHTML = `
+                <div class="explorer-screen">
+                    <h1>Explore AI Futures</h1>
+                    <p class="explorer-subtitle">Set your beliefs about each dimension. The matching outcome updates as you choose.</p>
+                    <div class="dim-stages">${dimsHtml}</div>
+                    <div class="explorer-match-zone"></div>
+                    <hr class="explorer-divider">
+                    <div class="explorer-grid-label">All Outcomes</div>
+                    <div class="explorer-grid">${cards}</div>
+                    <div style="margin-top:2rem;">
+                        <button class="btn btn-ghost" data-action="home">\u2190 Back to Start</button>
+                        <button class="btn btn-ghost" data-action="reset-dims">Reset</button>
+                    </div>
+                </div>`;
+
+            DIM_META.forEach(dim => {
+                const row = app.querySelector('[data-dim-row="' + dim.id + '"]');
+                if (!row) return;
+                row.querySelectorAll('.dim-pill').forEach(pill => {
+                    pill.addEventListener('click', () => {
+                        if (pill.classList.contains('locked') || pill.classList.contains('disabled')) return;
+                        const vid = pill.dataset.val;
+                        sel[dim.id] = sel[dim.id] === vid ? undefined : vid;
+                        if (!sel[dim.id]) delete sel[dim.id];
+                        update();
+                    });
+                });
+            });
+
+            app.querySelectorAll('.explorer-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const tid = card.dataset.tid;
+                    const dims = effectiveDims();
+                    const resolved = resolveTemplate(tid, dims);
+                    const vk = resolved ? resolved.variantKey : null;
+                    navigate({ screen: 'outcome', templateId: tid, variantKey: vk, path: [], showPath: false, dims: dims });
+                });
+            });
+
+            listen('[data-action="home"]', 'click', () => navigate({ screen: 'intro' }));
+            listen('[data-action="reset-dims"]', 'click', () => { sel = {}; update(); });
+            update();
+        }
+
+        // --- Render: Error ---
+        function renderError(err) {
+            app.innerHTML = `
+                <div class="error-screen">
+                    <h2>Failed to Load</h2>
+                    <p>Singularity Atlas needs to be served over HTTP to load its data files. If you opened this file directly, try running a local server:</p>
+                    <code>python3 -m http.server 8000</code>
+                    <p style="margin-top:1rem;font-size:0.85rem;">Then visit <strong>http://localhost:8000</strong></p>
+                </div>`;
+            console.error(err);
+        }
+
+        // --- Helpers ---
+        function listen(selector, event, fn) {
+            const el = app.querySelector(selector);
+            if (el) el.addEventListener(event, fn);
+        }
+
+    })();
+    </script>
+</body>
+</html>
