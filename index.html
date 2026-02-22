@@ -742,6 +742,9 @@
                 { id: 'singularity', label: 'Trend continues' }, { id: 'hours', label: 'Stalls: hours' },
                 { id: 'days', label: 'Stalls: days' }, { id: 'weeks', label: 'Stalls: weeks' },
                 { id: 'months', label: 'Stalls: months' } ] },
+            { id: 'stall_recovery', label: 'Recovery?', stage: 1,
+              visibleWhen: { capability: ['hours', 'days', 'weeks', 'months'] }, values: [
+                { id: 'mild', label: 'Months/years' }, { id: 'substantial', label: 'Years/decades' }, { id: 'never', label: 'Never' } ] },
             { id: 'takeoff', label: 'Takeoff', stage: 1,
               visibleWhen: { capability: ['singularity'] }, values: [
                 { id: 'gradual', label: 'Gradual' }, { id: 'hard', label: 'Hard takeoff' } ] },
@@ -769,17 +772,18 @@
               visibleWhen: { capability: ['singularity'], alignment: ['failed'] }, values: [
                 { id: 'contained', label: 'Contained', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } },
                 { id: 'escaped', label: 'Escapes' } ] },
-            { id: 'failure_mode', label: 'Failure Mode', stage: 2,
-              visibleWhen: { capability: ['singularity'], alignment: ['failed'], containment: ['contained'] }, values: [
-                { id: 'entrench', label: 'Power grab' }, { id: 'whimper', label: 'Wrong metrics' },
-                { id: 'disempowerment', label: 'Human irrelevance' } ] },
             { id: 'ai_goals', label: 'AI Converges On', stage: 2,
               visibleWhen: { capability: ['singularity'], alignment: ['failed'], containment: ['escaped'] }, values: [
                 { id: 'benevolent', label: 'Benefit humanity' }, { id: 'alien_coexistence', label: 'Alien (tolerant)' },
                 { id: 'alien_extinction', label: 'Alien (total)' }, { id: 'paperclip', label: 'Arbitrary' },
                 { id: 'swarm', label: 'No convergence' } ] },
-            { id: 'economic_speed', label: 'Speed', stage: 3,
+            { id: 'failure_mode', label: 'Implementation', stage: 3,
               visibleWhen: { capability: ['singularity'], alignment: ['solved'], intent: ['flourishing'] },
+              lockedWhen: { power_structure: { equals: 'international', value: 'none' } }, values: [
+                { id: 'none', label: 'Succeeds' }, { id: 'whimper', label: 'Wrong metrics' },
+                { id: 'disempowerment', label: 'Human irrelevance' } ] },
+            { id: 'economic_speed', label: 'Speed', stage: 3,
+              visibleWhen: { capability: ['singularity'], alignment: ['solved'], intent: ['flourishing'], failure_mode: ['none'] },
               lockedWhen: { power_structure: { equals: 'international', value: 'steady' } }, values: [
                 { id: 'rapid', label: 'Rapid' }, { id: 'steady', label: 'Steady' }, { id: 'uneven', label: 'Uneven' } ] }
         ];
@@ -816,7 +820,16 @@
         function routeFromHash() {
             const hash = location.hash.slice(1);
             if (hash.startsWith('/outcome/')) {
-                const rest = hash.slice('/outcome/'.length);
+                let rest = hash.slice('/outcome/'.length);
+                const dims = {};
+                const qIdx = rest.indexOf('?');
+                if (qIdx >= 0) {
+                    rest.slice(qIdx + 1).split('&').forEach(pair => {
+                        const [k, v] = pair.split('=');
+                        if (k && v) dims[decodeURIComponent(k)] = decodeURIComponent(v);
+                    });
+                    rest = rest.slice(0, qIdx);
+                }
                 const slashIdx = rest.indexOf('/');
                 let tid, vk;
                 if (slashIdx >= 0) {
@@ -827,7 +840,7 @@
                     vk = null;
                 }
                 if (templatesMap[tid]) {
-                    return { screen: 'outcome', templateId: tid, variantKey: vk, path: [], showPath: false };
+                    return { screen: 'outcome', templateId: tid, variantKey: vk, path: [], showPath: false, dims: Object.keys(dims).length ? dims : undefined };
                 }
             }
             if (hash === '/gallery') return { screen: 'gallery' };
@@ -850,6 +863,9 @@
             let hash = '';
             if (state.screen === 'outcome') {
                 hash = '/outcome/' + state.templateId + (state.variantKey ? '/' + state.variantKey : '');
+                if (state.dims && Object.keys(state.dims).length > 0) {
+                    hash += '?' + Object.entries(state.dims).map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
+                }
             } else if (state.screen === 'gallery') {
                 hash = '/gallery';
             } else if (state.screen === 'tree') {
@@ -1006,7 +1022,8 @@
                             templateId: next,
                             variantKey: resolved.variantKey,
                             path: [...path],
-                            showPath: true
+                            showPath: true,
+                            dims: dims
                         });
                     } else {
                         console.error('Unknown next node:', next);
@@ -1035,6 +1052,8 @@
             const adjustableIds = new Set();
             if (t.primaryDimension) adjustableIds.add(t.primaryDimension);
             if (t.flavors) for (const k of Object.keys(t.flavors)) adjustableIds.add(k);
+            adjustableIds.add('capability');
+            if (t.flavors && t.flavors.stall_recovery) adjustableIds.add('stall_recovery');
             const relevantDims = DIM_META.filter(d => adjustableIds.has(d.id));
 
             const validValues = {};
@@ -1045,6 +1064,13 @@
                 }
                 if (t.flavors && t.flavors[dimId]) {
                     for (const k of Object.keys(t.flavors[dimId])) s.add(k);
+                }
+                const meta = DIM_MAP[dimId];
+                if (dimId === 'capability' && meta) {
+                    meta.values.forEach(v => s.add(v.id));
+                }
+                if (dimId === 'stall_recovery' && meta) {
+                    meta.values.forEach(v => s.add(v.id));
                 }
                 validValues[dimId] = s;
             }
@@ -1066,6 +1092,13 @@
                     localDims[dim.id] = [...allowed][0];
                 }
             }
+
+            if (!localDims.capability && t.reachable) {
+                for (const cond of t.reachable) {
+                    if (cond.capability) { localDims.capability = cond.capability[0]; break; }
+                }
+            }
+            const isSingularityOutcome = t.reachable && t.reachable.some(c => c.capability && c.capability.includes('singularity'));
 
             function isPillDisabled(dim, valObj) {
                 const valid = validValues[dim.id] || new Set();
@@ -1108,22 +1141,38 @@
                     }
                 }
 
+                const isStallCap = ['hours', 'days', 'weeks', 'months'].includes(localDims.capability);
+                if (!isStallCap) {
+                    delete localDims.stall_recovery;
+                } else if (isSingularityOutcome) {
+                    localDims.stall_recovery = 'mild';
+                }
+
                 relevantDims.forEach(dim => {
                     const row = app.querySelector('[data-odim="' + dim.id + '"]');
                     if (!row) return;
+                    if (dim.id === 'stall_recovery') {
+                        row.classList.toggle('hidden', !isStallCap);
+                        if (!isStallCap) return;
+                    }
+                    const forceLockedRecovery = dim.id === 'stall_recovery' && isSingularityOutcome;
                     row.querySelectorAll('.dim-pill').forEach(pill => {
                         const vid = pill.dataset.val;
                         const valObj = dim.values.find(v => v.id === vid);
                         const disabled = valObj ? isPillDisabled(dim, valObj) : false;
                         const isActive = localDims[dim.id] === vid;
                         pill.classList.toggle('active', isActive);
-                        pill.classList.toggle('disabled', disabled && !isActive);
+                        pill.classList.toggle('disabled', (disabled && !isActive) || (forceLockedRecovery && !isActive));
+                        pill.classList.toggle('locked', forceLockedRecovery);
                     });
                 });
 
                 const newKey = outcomeKey(templateId, resolved.variantKey);
                 markDiscovered(newKey);
-                const hashStr = '/outcome/' + templateId + (resolved.variantKey ? '/' + resolved.variantKey : '');
+                let hashStr = '/outcome/' + templateId + (resolved.variantKey ? '/' + resolved.variantKey : '');
+                if (Object.keys(localDims).length > 0) {
+                    hashStr += '?' + Object.entries(localDims).map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
+                }
                 history.replaceState(
                     { screen: 'outcome', templateId, variantKey: resolved.variantKey, path: [...path], showPath, dims: { ...localDims } },
                     '', '#' + hashStr
@@ -1229,7 +1278,12 @@
                 row.querySelectorAll('.dim-pill').forEach(pill => {
                     pill.addEventListener('click', () => {
                         if (pill.classList.contains('disabled')) return;
-                        localDims[dim.id] = pill.dataset.val;
+                        const val = pill.dataset.val;
+                        if (localDims[dim.id] === val) {
+                            delete localDims[dim.id];
+                        } else {
+                            localDims[dim.id] = val;
+                        }
                         updateContent();
                     });
                 });
@@ -1243,7 +1297,10 @@
             listen('[data-action="gallery"]', 'click', () => navigate({ screen: 'gallery' }));
             listen('[data-action="share"]', 'click', () => {
                 const currentKey = outcomeKey(templateId, localDims[t.primaryDimension] || variantKey);
-                const url = location.origin + location.pathname + '#/outcome/' + currentKey;
+                let url = location.origin + location.pathname + '#/outcome/' + currentKey;
+                if (localDims && Object.keys(localDims).length > 0) {
+                    url += '?' + Object.entries(localDims).map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
+                }
                 if (navigator.clipboard) {
                     navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
                 } else {
@@ -1435,10 +1492,15 @@
         function renderExplorer(initialDims) {
             let sel = initialDims ? { ...initialDims } : {};
 
+            function effectiveVal(k) {
+                if (k === 'capability' && sel.stall_recovery === 'mild') return 'singularity';
+                return sel[k];
+            }
             function isDimVisible(dim) {
                 if (!dim.visibleWhen) return true;
                 for (const [k, allowed] of Object.entries(dim.visibleWhen)) {
-                    if (!sel[k] || !allowed.includes(sel[k])) return false;
+                    const v = (dim.id === 'stall_recovery') ? sel[k] : effectiveVal(k);
+                    if (!v || !allowed.includes(v)) return false;
                 }
                 return true;
             }
@@ -1473,7 +1535,8 @@
                     if (!isDimVisible(dim)) continue;
                     const locked = isDimLocked(dim);
                     if (locked !== null) { d[dim.id] = locked; continue; }
-                    if (sel[dim.id]) d[dim.id] = sel[dim.id];
+                    const v = effectiveVal(dim.id);
+                    if (v) d[dim.id] = v;
                 }
                 return d;
             }

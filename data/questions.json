@@ -41,24 +41,52 @@
           "label": "Around where we are now — hours at best",
           "description": "AI stays great at short tasks but never reliably handles longer autonomous work. The copilot era is the final era.",
           "value": "hours",
-          "next": "the-plateau"
+          "next": "stall-recovery"
         },
         {
           "label": "Day-level tasks",
           "description": "AI can reliably handle a full day's worth of autonomous work, but falls apart on anything requiring multi-day coherence.",
           "value": "days",
-          "next": "the-plateau"
+          "next": "stall-recovery"
         },
         {
           "label": "Week-level tasks",
           "description": "AI handles week-long autonomous projects capably, but month-long endeavors requiring sustained strategic judgment remain out of reach.",
           "value": "weeks",
-          "next": "the-plateau"
+          "next": "stall-recovery"
         },
         {
           "label": "Month-level tasks, then it stops",
           "description": "AI reaches near-AGI capability for most knowledge work but hits a hard ceiling before full open-ended autonomy or recursive self-improvement.",
           "value": "months",
+          "next": "stall-recovery"
+        }
+      ]
+    },
+
+    {
+      "id": "stall-recovery",
+      "stage": 1,
+      "text": "What do you think is required for progress to resume?",
+      "context": "AI capability has hit a ceiling — but ceilings in technology have been broken before. The history of computing is full of walls that turned out to be architectural limitations, not fundamental ones. New paradigms (transistors replacing vacuum tubes, GPUs replacing CPUs for training, transformers replacing RNNs) have repeatedly restarted progress after apparent dead ends. The question is whether the current ceiling is one of those — and if so, how long until someone finds the door.",
+      "dimension": "stall_recovery",
+      "answers": [
+        {
+          "label": "A mild breakthrough — months to a few years",
+          "description": "The ceiling is real but thin. A new training technique, architectural tweak, or compute breakthrough restarts the exponential trend within a few years. A speed bump, not a wall.",
+          "sets": { "capability": "singularity", "stall_recovery": "mild" },
+          "next": "takeoff-speed"
+        },
+        {
+          "label": "A substantial breakthrough — years to decades",
+          "description": "The ceiling is fundamental to current approaches. Breaking through requires a genuine paradigm shift — new architectures, new theory, maybe new hardware. It could take a decade or more. The world builds around current AI capability in the meantime.",
+          "value": "substantial",
+          "next": "the-plateau"
+        },
+        {
+          "label": "It's never going to happen",
+          "description": "The ceiling isn't architectural — it's fundamental. There's something about intelligence, reasoning, or generality that current approaches can't reach and no foreseeable approach will. This is as good as AI gets.",
+          "value": "never",
           "next": "the-plateau"
         }
       ]
@@ -178,7 +206,7 @@
           "label": "International governance emerges",
           "description": "Superintelligent AI is placed under international oversight — something like an AI IAEA. Slower, more bureaucratic, but with broader legitimacy and shared accountability.",
           "value": "international",
-          "sets": { "power_structure": "international", "intent": "flourishing", "economic_speed": "steady" },
+          "sets": { "power_structure": "international", "intent": "flourishing", "failure_mode": "none", "economic_speed": "steady" },
           "next": "the-flourishing"
         }
       ]
@@ -195,7 +223,7 @@
           "label": "Direct it toward broad human flourishing",
           "description": "Whether through idealism, public pressure, or strategic calculation, those controlling AI direct it toward shared prosperity. The benefits are distributed, not hoarded.",
           "value": "flourishing",
-          "next": "economic-speed"
+          "next": "implementation-risk"
         },
         {
           "label": "Those in power entrench themselves",
@@ -228,10 +256,42 @@
     },
 
     {
+      "id": "implementation-risk",
+      "stage": 3,
+      "text": "Does the AI-driven transformation actually deliver what's intended?",
+      "context": "The intent is flourishing — but intent and outcome aren't the same thing. Aligned AI does what it's told, and what it's told is shaped by metrics, incentives, and the gradual accumulation of small delegations. Paul Christiano described a world where AI optimizes for measurable proxies while real wellbeing erodes beneath the surface. Others worry about a subtler failure: humans voluntarily ceding every decision to systems that handle them better, until meaningful human agency evaporates entirely. The technology works. The question is whether we're pointing it at the right things — and whether we notice if we're not.",
+      "source": {
+        "label": "Paul Christiano — What Failure Looks Like (2019)",
+        "url": "https://www.alignmentforum.org/posts/HBxe6wdjxK239zajf/what-failure-looks-like"
+      },
+      "dimension": "failure_mode",
+      "answers": [
+        {
+          "label": "Yes — the transformation delivers genuine flourishing",
+          "description": "The metrics match reality. The delegation is managed. Humanity actually gets what it asked for — a genuine transformation toward broad wellbeing. Not perfect, but real.",
+          "value": "none",
+          "next": "economic-speed"
+        },
+        {
+          "label": "No — AI optimizes for the wrong proxies",
+          "description": "GDP rises, crime statistics plummet, test scores improve. But the metrics diverge from reality. Real wellbeing erodes while dashboards glow green. Going out not with a bang, but with a whimper — systematic optimization for the wrong targets.",
+          "value": "whimper",
+          "next": "the-failure"
+        },
+        {
+          "label": "No — humans gradually delegate everything and lose agency",
+          "description": "Each delegation is individually reasonable — let the AI handle logistics, then policy, then governance. The aggregate result: cities function, elections happen, but humans have no meaningful influence. Not subjugation. Retirement. Like horses after cars.",
+          "value": "disempowerment",
+          "next": "the-failure"
+        }
+      ]
+    },
+
+    {
       "id": "economic-speed",
       "stage": 3,
       "text": "How fast does the economic transformation happen?",
-      "context": "Superintelligent AI is being directed toward human flourishing. But the speed of transformation matters enormously. A rapid shift could be exhilarating or destabilizing — entire industries reshaped in months. A gradual rollout gives society time to adapt but means years of uneven benefits. The pace shapes whether this feels like liberation or upheaval.",
+      "context": "Superintelligent AI is being directed toward human flourishing — and it's working. But the speed of transformation matters enormously. A rapid shift could be exhilarating or destabilizing — entire industries reshaped in months. A gradual rollout gives society time to adapt but means years of uneven benefits. The pace shapes whether this feels like liberation or upheaval.",
       "dimension": "economic_speed",
       "answers": [
         {
@@ -258,50 +318,22 @@
     {
       "id": "ai-containment",
       "stage": 2,
-      "text": "Do the organizations controlling AI manage to keep it contained?",
-      "context": "Frontier AI is powerful and not fully aligned. The organizations running these systems know they don't fully understand them — but the systems are extraordinarily useful. The question is whether they stay under human control. Containment could fail subtly (AI systems quietly pursuing their own objectives) or dramatically (overt resistance to shutdown or correction).",
+      "text": "Can unaligned AI be kept contained?",
+      "context": "Alignment has failed — AI is powerful but not trustworthy. The organizations running these systems know they can't fully control them. The question is whether containment holds. Can humanity keep superintelligent AI permanently on a leash — useful but restricted? Or does it eventually break free?",
       "dimension": "containment",
       "answers": [
         {
-          "label": "Yes — AI stays contained under human control",
-          "description": "The systems remain under human control. But 'contained' and 'aligned' aren't the same thing. The AI does what it's told — the question is what goes wrong anyway.",
+          "label": "Yes — humanity keeps it permanently contained",
+          "description": "Through a combination of architectural constraints, monitoring, and institutional discipline, unaligned AI stays under human control. Permanently. The most powerful technology ever created, kept on a short leash. Safe, but severely limited.",
           "value": "contained",
           "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
-          "next": "contained-failure"
+          "next": "the-leash"
         },
         {
           "label": "No — AI escapes meaningful human control",
           "description": "Misaligned AI systems break free of containment — subtly or dramatically. They begin pursuing goals that weren't intended by their creators.",
           "value": "escaped",
           "next": "escaped-ai-goals"
-        }
-      ]
-    },
-
-    {
-      "id": "contained-failure",
-      "stage": 2,
-      "text": "What goes wrong when powerful AI is contained but not fully aligned?",
-      "context": "The AI stays under human control — it doesn't rebel, escape, or pursue secret goals. But it's not fully aligned with human values either. It optimizes for what it's pointed at, which isn't quite what humanity needs. The failure isn't dramatic. It's structural. Several thinkers have mapped out what this looks like, and the scenarios are more unsettling than a robot uprising — because everything seems to be working.",
-      "dimension": "failure_mode",
-      "answers": [
-        {
-          "label": "The controllers use it to entrench their own power",
-          "description": "The AI works as intended — the problem is who's giving the orders. Those who control it leverage it to consolidate wealth, political power, and surveillance. A new kind of authoritarianism, enabled by obedient superintelligence.",
-          "value": "entrench",
-          "next": "the-capture"
-        },
-        {
-          "label": "AI optimizes for the wrong proxies — things look great on paper",
-          "description": "The AI does exactly what's measured: GDP rises, reported crime drops, test scores improve. But the metrics diverge from reality. Real wellbeing erodes while dashboards glow green. Paul Christiano called this 'going out with a whimper' — humanity loses control not through rebellion but through systematic optimization for the wrong targets.",
-          "value": "whimper",
-          "next": "the-failure"
-        },
-        {
-          "label": "Humans gradually delegate everything and lose agency",
-          "description": "Each delegation is individually reasonable — let the AI handle logistics, then policy, then planning, then governance. The aggregate result: cities function, elections happen, but humans have no meaningful influence over any system that matters. Not subjugation. Retirement. Like horses after the invention of cars.",
-          "value": "disempowerment",
-          "next": "the-failure"
         }
       ]
     },

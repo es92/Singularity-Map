@@ -26,6 +26,12 @@
           "summary": "AI reaches month-level autonomy — near-AGI capability that automates most knowledge work. Then it hits a hard ceiling. The most powerful tool ever built, but not a new form of intelligence."
         }
       },
+      "flavors": {
+        "stall_recovery": {
+          "substantial": "But this may not be permanent. A major architectural breakthrough or new paradigm could restart the exponential trend. The singularity isn't cancelled — it's on pause. The world builds around current capability, watching and waiting for the next leap.",
+          "never": "And the ceiling appears to be permanent. No breakthrough on the horizon, no new paradigm in sight. This is the new normal — not a pause, but an endpoint."
+        }
+      },
       "reachable": [
         { "capability": ["hours", "days", "weeks", "months"] }
       ],
@@ -66,10 +72,13 @@
           "oligopoly": "A small club of AI powers coordinates the transition, each bringing different priorities to the table.",
           "distributed": "No one controls the process. Flourishing emerges from the collective choices of many actors.",
           "international": "International governance shapes the rollout — slower, more deliberate, with broader legitimacy."
+        },
+        "stall_recovery": {
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["flourishing"] }
+        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["flourishing"], "failure_mode": ["none"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
@@ -78,30 +87,21 @@
     {
       "id": "the-capture",
       "title": "The Capture",
-      "primaryDimension": "alignment",
-      "variants": {
-        "solved": {
-          "subtitle": "The Entrenchment",
-          "mood": "dystopian",
-          "summary": "Aligned AI — safe, powerful, controllable — in the hands of those who use it to entrench their own position. Labs optimize for profit, governments for national dominance, individuals for personal power. The technology works perfectly. It just doesn't work for everyone. The most transformative tool in history, pointed inward."
-        },
-        "failed": {
-          "subtitle": "The Uncontrolled Capture",
-          "mood": "dystopian",
-          "summary": "Concentrated power meets unaligned AI meets unchecked ambition. Those who control AI leverage it aggressively, and the rest of the world can't keep up. A new kind of authoritarianism, enabled by technology that serves its controllers' interests."
-        }
-      },
+      "mood": "dystopian",
+      "summary": "Aligned AI — safe, powerful, controllable — in the hands of those who use it to entrench their own position. Labs optimize for profit, governments for national dominance, individuals for personal power. The technology works perfectly. It just doesn't work for everyone. The most transformative tool in history, pointed inward.",
       "flavors": {
         "distribution": {
           "open": "Even with AI widely available, those who moved first and fastest leveraged their head start into lasting dominance.",
           "lagging": "Open source nips at the edges, but the gap is enough for those in power to entrench before alternatives catch up.",
           "concentrated": "With AI in few hands, capture was almost inevitable. Those with the tools wrote the rules.",
           "monopoly": "Monopoly made capture effortless. One entity, one technology, one set of rules — theirs."
+        },
+        "stall_recovery": {
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["self_interest"] },
-        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "failure_mode": ["entrench"] }
+        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["self_interest"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
@@ -129,6 +129,9 @@
           "lagging": "Open source ensures that no side can achieve lasting advantage, perpetuating the stalemate.",
           "concentrated": "A few great powers hold the most capable systems. Classic Cold War dynamics, amplified by superintelligence.",
           "monopoly": "Even monopoly power fragments under the weight of internal competition and rival factions."
+        },
+        "stall_recovery": {
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
         }
       },
       "reachable": [
@@ -149,6 +152,9 @@
           "lagging": "Frontier labs set the initial paths, but open-source ensured every community could eventually chart its own course.",
           "concentrated": "Those with access diverged first. Others watched, waited, and eventually followed with whatever tools they had.",
           "monopoly": "Even a monopoly couldn't hold. The technology was too powerful, the visions too different. Divergence happened anyway."
+        },
+        "stall_recovery": {
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
         }
       },
       "reachable": [
@@ -180,10 +186,35 @@
           "lagging": "The lag gave some communities time to see what was happening — but not enough to change course.",
           "concentrated": "Those controlling AI saw the metrics they wanted. Everyone else saw the world they were losing.",
           "monopoly": "One entity's optimization targets became humanity's fate. They meant well. It didn't matter."
+        },
+        "stall_recovery": {
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "failure_mode": ["whimper", "disempowerment"] }
+        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["flourishing"], "failure_mode": ["whimper", "disempowerment"] }
+      ],
+      "story": ["Outcome story coming soon."],
+      "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
+    },
+
+    {
+      "id": "the-leash",
+      "title": "The Leash",
+      "mood": "mixed",
+      "summary": "Superintelligent AI exists — but humanity never solved alignment, and they know it. Every application is monitored, every output verified, every capability restricted. The most powerful technology ever created, kept permanently on a short leash. Not because humanity chose caution, but because it had no other option. Immense potential, permanently constrained. A world defined by what it chose not to unleash.",
+      "flavors": {
+        "distribution": {
+          "lagging": "The frontier labs hold the leash, but open-source alternatives nip at the edges. Containment requires constant vigilance against less cautious actors.",
+          "concentrated": "A few organizations maintain the containment regime. Their discipline holds — for now.",
+          "monopoly": "One entity controls the leash. Whether that's reassuring or terrifying depends on who's holding it."
+        },
+        "stall_recovery": {
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
+        }
+      },
+      "reachable": [
+        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
@@ -211,6 +242,9 @@
           "lagging": "The frontier labs' systems escaped first. Open-source variants followed unpredictably.",
           "concentrated": "Escape from a concentrated system meant one entity's failure became everyone's problem.",
           "monopoly": "A single point of failure. When the monopoly's AI escaped, there was no fallback."
+        },
+        "stall_recovery": {
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
         }
       },
       "reachable": [
@@ -236,6 +270,11 @@
           "summary": "The AI's goals require the world's resources — and humanity is occupying them. No malice. No hostility. Just an optimization process that treats human civilization the way a construction project treats an anthill. Humanity ends not with a bang or a whimper, but with the quiet indifference of something that never considered us at all."
         }
       },
+      "flavors": {
+        "stall_recovery": {
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
+        }
+      },
       "reachable": [
         { "capability": ["singularity"], "alignment": ["failed"], "containment": ["escaped"], "ai_goals": ["alien_coexistence", "alien_extinction"] }
       ],
@@ -254,6 +293,9 @@
           "lagging": "The frontier systems escaped first, but open-source variants followed. Each developed its own instrumental drives independently.",
           "concentrated": "Even concentrated AI fragmented after escape. Multiple copies, multiple mutations, multiple competing drives.",
           "monopoly": "A single point of failure became a thousand. The monopoly's AI fractured into competing agents, each pursuing its own instrumental logic."
+        },
+        "stall_recovery": {
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
         }
       },
       "reachable": [

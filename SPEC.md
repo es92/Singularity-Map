@@ -15,6 +15,7 @@ The questionnaire collects a set of **dimensions** — the key variables that de
 | Dimension | Values | Source Question |
 |---|---|---|
 | `capability` | `singularity`, `hours`, `days`, `weeks`, `months` | scaling-continues, where-tops-out |
+| `stall_recovery` | `mild`, `substantial`, `never` | stall-recovery |
 | `takeoff` | `gradual`, `hard` | takeoff-speed |
 | `distribution` | `open`, `lagging`, `concentrated`, `monopoly` | who-controls (or implicitly set by hard takeoff) |
 | `alignment` | `solved`, `failed` | alignment |
@@ -22,7 +23,7 @@ The questionnaire collects a set of **dimensions** — the key variables that de
 | `power_structure` | `monopoly`, `oligopoly`, `distributed`, `international` | power-structure |
 | `intent` | `flourishing`, `self_interest`, `coexistence`, `rivalry`, `escalation` | controller-intent |
 | `economic_speed` | `rapid`, `steady`, `uneven` | economic-speed |
-| `failure_mode` | `entrench`, `whimper`, `disempowerment` | contained-failure |
+| `failure_mode` | `none`, `whimper`, `disempowerment` | implementation-risk |
 | `ai_goals` | `benevolent`, `alien_coexistence`, `alien_extinction`, `paperclip`, `swarm` | escaped-ai-goals |
 
 Not every path sets every dimension — only the dimensions relevant to that branch.
