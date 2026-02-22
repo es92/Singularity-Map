@@ -1056,6 +1056,8 @@
             if (t.flavors && t.flavors.stall_recovery) adjustableIds.add('stall_recovery');
             const relevantDims = DIM_META.filter(d => adjustableIds.has(d.id));
 
+            const isSingularityOutcome = t.reachable && t.reachable.some(c => c.capability && c.capability.includes('singularity'));
+
             const validValues = {};
             for (const dimId of adjustableIds) {
                 const s = new Set();
@@ -1066,10 +1068,10 @@
                     for (const k of Object.keys(t.flavors[dimId])) s.add(k);
                 }
                 const meta = DIM_MAP[dimId];
-                if (dimId === 'capability' && meta) {
+                if (dimId === 'capability' && meta && isSingularityOutcome) {
                     meta.values.forEach(v => s.add(v.id));
                 }
-                if (dimId === 'stall_recovery' && meta) {
+                if (dimId === 'stall_recovery' && meta && !isSingularityOutcome) {
                     meta.values.forEach(v => s.add(v.id));
                 }
                 validValues[dimId] = s;
@@ -1098,7 +1100,6 @@
                     if (cond.capability) { localDims.capability = cond.capability[0]; break; }
                 }
             }
-            const isSingularityOutcome = t.reachable && t.reachable.some(c => c.capability && c.capability.includes('singularity'));
 
             function isPillDisabled(dim, valObj) {
                 const valid = validValues[dim.id] || new Set();
