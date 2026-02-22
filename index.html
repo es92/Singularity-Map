@@ -1071,9 +1071,6 @@
                 if (dimId === 'capability' && meta && isSingularityOutcome) {
                     meta.values.forEach(v => s.add(v.id));
                 }
-                if (dimId === 'stall_recovery' && meta && !isSingularityOutcome) {
-                    meta.values.forEach(v => s.add(v.id));
-                }
                 validValues[dimId] = s;
             }
 
