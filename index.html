@@ -757,7 +757,7 @@
               visibleWhen: { capability: ['singularity'], alignment: ['solved'] }, values: [
                 { id: 'monopoly', label: 'Monopoly', requires: { distribution: ['concentrated', 'monopoly'] } },
                 { id: 'oligopoly', label: 'Few powers', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } },
-                { id: 'distributed', label: 'Proliferates' }, { id: 'international', label: 'International' } ] },
+                { id: 'distributed', label: 'Proliferates' }, { id: 'international', label: 'International', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } } ] },
             { id: 'intent', label: 'Intent', stage: 2,
               visibleWhen: { capability: ['singularity'], alignment: ['solved'] },
               lockedWhen: { power_structure: { equals: 'international', value: 'flourishing' } }, values: [
@@ -773,20 +773,11 @@
               visibleWhen: { capability: ['singularity'], alignment: ['failed'], containment: ['contained'] }, values: [
                 { id: 'entrench', label: 'Power grab' }, { id: 'whimper', label: 'Wrong metrics' },
                 { id: 'disempowerment', label: 'Human irrelevance' } ] },
-            { id: 'ai_coherence', label: 'AI Self-Aligns?', stage: 2,
+            { id: 'ai_goals', label: 'AI Converges On', stage: 2,
               visibleWhen: { capability: ['singularity'], alignment: ['failed'], containment: ['escaped'] }, values: [
-                { id: 'coherent', label: 'Yes' }, { id: 'incoherent', label: 'No' } ] },
-            { id: 'ai_goals', label: 'AI Goals', stage: 2,
-              visibleWhen: { capability: ['singularity'], alignment: ['failed'], containment: ['escaped'], ai_coherence: ['coherent'] }, values: [
-                { id: 'benevolent', label: 'Benefit humanity' }, { id: 'alien', label: 'Alien purpose' },
-                { id: 'paperclip', label: 'Arbitrary' } ] },
-            { id: 'human_space', label: 'Humans?', stage: 2,
-              visibleWhen: { capability: ['singularity'], alignment: ['failed'], containment: ['escaped'], ai_coherence: ['coherent'], ai_goals: ['alien'] }, values: [
-                { id: 'coexistence', label: 'Room for us' }, { id: 'extinction', label: 'Extinction' } ] },
-            { id: 'proliferation', label: 'Proliferates?', stage: 2,
-              visibleWhen: { capability: ['singularity'], alignment: ['failed'], containment: ['escaped'], ai_coherence: ['incoherent'] }, values: [
-                { id: 'proliferates', label: 'Yes, widely' },
-                { id: 'contained', label: 'No, limited', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } } ] },
+                { id: 'benevolent', label: 'Benefit humanity' }, { id: 'alien_coexistence', label: 'Alien (tolerant)' },
+                { id: 'alien_extinction', label: 'Alien (total)' }, { id: 'paperclip', label: 'Arbitrary' },
+                { id: 'swarm', label: 'No convergence' } ] },
             { id: 'economic_speed', label: 'Speed', stage: 3,
               visibleWhen: { capability: ['singularity'], alignment: ['solved'], intent: ['flourishing'] },
               lockedWhen: { power_structure: { equals: 'international', value: 'steady' } }, values: [
@@ -841,7 +832,17 @@
             }
             if (hash === '/gallery') return { screen: 'gallery' };
             if (hash === '/tree') return { screen: 'tree' };
-            if (hash === '/explore') return { screen: 'explore' };
+            if (hash.startsWith('/explore')) {
+                const dims = {};
+                const qIdx = hash.indexOf('?');
+                if (qIdx >= 0) {
+                    hash.slice(qIdx + 1).split('&').forEach(pair => {
+                        const [k, v] = pair.split('=');
+                        if (k && v) dims[decodeURIComponent(k)] = decodeURIComponent(v);
+                    });
+                }
+                return { screen: 'explore', dims };
+            }
             return { screen: 'intro' };
         }
 
@@ -855,6 +856,9 @@
                 hash = '/tree';
             } else if (state.screen === 'explore') {
                 hash = '/explore';
+                if (state.dims && Object.keys(state.dims).length > 0) {
+                    hash += '?' + Object.entries(state.dims).map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
+                }
             }
             history.pushState(state, '', hash ? '#' + hash : location.pathname);
             renderState(state, animated !== false);
@@ -871,7 +875,7 @@
                 } else if (state.screen === 'tree') {
                     renderTree();
                 } else if (state.screen === 'explore') {
-                    renderExplorer();
+                    renderExplorer(state.dims);
                 } else if (state.screen === 'question') {
                     if (state.path) path = state.path;
                     renderQuestion(state.questionId);
@@ -1428,8 +1432,8 @@
         }
 
         // --- Render: Explorer ---
-        function renderExplorer() {
-            let sel = {};
+        function renderExplorer(initialDims) {
+            let sel = initialDims ? { ...initialDims } : {};
 
             function isDimVisible(dim) {
                 if (!dim.visibleWhen) return true;
@@ -1497,8 +1501,18 @@
                 return map[mood] || 'var(--text-dim)';
             }
 
+            function syncHash() {
+                let hash = '/explore';
+                const entries = Object.entries(sel).filter(([, v]) => v != null);
+                if (entries.length > 0) {
+                    hash += '?' + entries.map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
+                }
+                history.replaceState({ screen: 'explore', dims: { ...sel } }, '', '#' + hash);
+            }
+
             function update() {
                 cleanSelection();
+                syncHash();
                 const dims = effectiveDims();
                 DIM_META.forEach(dim => {
                     const row = app.querySelector('[data-dim-row="' + dim.id + '"]');

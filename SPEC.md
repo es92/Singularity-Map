@@ -23,10 +23,7 @@ The questionnaire collects a set of **dimensions** — the key variables that de
 | `intent` | `flourishing`, `self_interest`, `coexistence`, `rivalry`, `escalation` | controller-intent |
 | `economic_speed` | `rapid`, `steady`, `uneven` | economic-speed |
 | `failure_mode` | `entrench`, `whimper`, `disempowerment` | contained-failure |
-| `ai_coherence` | `coherent`, `incoherent` | ai-self-aligns |
-| `ai_goals` | `benevolent`, `alien`, `paperclip` | ai-self-aligned-goals |
-| `human_space` | `coexistence`, `extinction` | alien-purpose-humans |
-| `proliferation` | `proliferates`, `contained` | ai-proliferates |
+| `ai_goals` | `benevolent`, `alien_coexistence`, `alien_extinction`, `paperclip`, `swarm` | escaped-ai-goals |
 
 Not every path sets every dimension — only the dimensions relevant to that branch.
 

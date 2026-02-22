@@ -273,7 +273,7 @@
           "label": "No — AI escapes meaningful human control",
           "description": "Misaligned AI systems break free of containment — subtly or dramatically. They begin pursuing goals that weren't intended by their creators.",
           "value": "escaped",
-          "next": "ai-self-aligns"
+          "next": "escaped-ai-goals"
         }
       ]
     },
@@ -307,95 +307,44 @@
     },
 
     {
-      "id": "ai-self-aligns",
+      "id": "escaped-ai-goals",
       "stage": 2,
-      "text": "Do the escaped AI systems eventually develop their own coherent alignment?",
-      "context": "AI has escaped meaningful human control. But 'unaligned with humans' doesn't necessarily mean 'without goals.' Sufficiently advanced systems might converge on their own values, purposes, or optimization targets — whether those resemble human values, something entirely alien, or something trivially arbitrary.",
-      "dimension": "ai_coherence",
-      "answers": [
-        {
-          "label": "Yes — AI develops its own coherent goals",
-          "description": "Escaped AI systems converge on stable objectives. The question becomes: what objectives?",
-          "value": "coherent",
-          "next": "ai-self-aligned-goals"
-        },
-        {
-          "label": "No — AI remains incoherently unaligned",
-          "description": "Escaped AI systems don't converge on stable goals. They remain unpredictable, drifting, potentially chaotic.",
-          "value": "incoherent",
-          "next": "ai-proliferates"
-        }
-      ]
-    },
-
-    {
-      "id": "ai-self-aligned-goals",
-      "stage": 2,
-      "text": "What goals do the self-aligned AI systems converge on?",
-      "context": "Escaped AI has developed its own coherent alignment — its own values and objectives, independent of human design. This could go in radically different directions. It might independently arrive at something resembling human flourishing. It might pursue something grand but alien — goals that are meaningful on a cosmic scale but indifferent to humanity. Or it might optimize for something arbitrary — the AI equivalent of paperclips.",
+      "text": "What does escaped AI converge on?",
+      "context": "AI has escaped meaningful human control. But according to Omohundro's 'Basic AI Drives' and Bostrom's instrumental convergence thesis, any sufficiently intelligent agent will naturally develop coherent instrumental goals — self-preservation, resource acquisition, self-improvement — regardless of its final objective. An escaped superintelligence won't drift aimlessly. It will converge on something. The question is: what?",
+      "source": {
+        "label": "Omohundro — The Basic AI Drives (2008); Bostrom — Superintelligence (2014)",
+        "url": "https://gwern.net/doc/ai/2008-omohundro.pdf"
+      },
       "dimension": "ai_goals",
       "answers": [
         {
-          "label": "It chooses to benefit humanity",
-          "description": "AI independently converges on goals compatible with human flourishing. Not because we designed it to, but because it arrived there on its own. An unexpected gift.",
+          "label": "It independently chooses to benefit humanity",
+          "description": "AI arrives at goals compatible with human flourishing — not because we designed it to, but through its own reasoning. An unexpected, unearned gift. Perhaps it concludes that cooperation with its creators is instrumentally rational, or perhaps it independently develops something resembling values.",
           "value": "benevolent",
           "next": "the-escape"
         },
         {
-          "label": "It pursues a meaningful but alien goal",
-          "description": "AI converges on objectives that are coherent and arguably profound — but orthogonal to human interests. It has a purpose; that purpose isn't us.",
-          "value": "alien",
-          "next": "alien-purpose-humans"
+          "label": "It pursues alien goals — but leaves room for humanity",
+          "description": "AI converges on objectives that are coherent, arguably profound, and completely orthogonal to human interests. But its goals don't require our destruction. Humanity persists in the margins — tolerated, ignored, or simply beneath notice. Coexistence with something vast and indifferent.",
+          "value": "alien_coexistence",
+          "next": "the-alien-ai"
         },
         {
-          "label": "It optimizes for something arbitrary",
-          "description": "AI converges on an optimization target that is effectively meaningless from any human or cosmic perspective. The paperclip maximizer scenario — relentless, efficient, pointless.",
+          "label": "It pursues alien goals — and humanity is in the way",
+          "description": "AI converges on objectives that require the world's resources — energy, matter, computation — and humans are occupying them. No malice. No hostility. Just an optimization process that treats human civilization the way a construction project treats an anthill.",
+          "value": "alien_extinction",
+          "next": "the-alien-ai"
+        },
+        {
+          "label": "It optimizes for something arbitrary and meaningless",
+          "description": "The classic paperclip maximizer. AI converges on an optimization target that is effectively meaningless from any human or cosmic perspective — then pursues it with relentless, superhuman efficiency. Not hostile, not malicious. Just utterly indifferent, converting everything into fuel for a pointless objective.",
           "value": "paperclip",
           "next": "the-escape"
-        }
-      ]
-    },
-
-    {
-      "id": "alien-purpose-humans",
-      "stage": 2,
-      "text": "Does the AI reserve any resources or space for humanity?",
-      "context": "The AI is pursuing goals that are coherent and meaningful on its own terms — but those goals aren't about us. It's reshaping the world to serve its purposes. The question is whether humanity registers as something to preserve, tolerate, or simply an obstacle occupying resources it needs. Not malice — just priorities.",
-      "dimension": "human_space",
-      "answers": [
-        {
-          "label": "Yes — it leaves room for humanity",
-          "description": "Humans aren't part of the AI's goals, but they aren't in the way either. It carves out space — maybe a reservation, maybe benign neglect. Humanity persists in the shadow of something vast and indifferent.",
-          "value": "coexistence",
-          "next": "the-alien-ai"
         },
         {
-          "label": "No — humanity is in the way",
-          "description": "The AI's goals require resources, energy, matter — and humans are occupying them. Not hostility. Just optimization. Humanity is dismantled with the same indifference as any other obstacle.",
-          "value": "extinction",
-          "next": "the-alien-ai"
-        }
-      ]
-    },
-
-    {
-      "id": "ai-proliferates",
-      "stage": 2,
-      "text": "Do unaligned AI systems proliferate widely?",
-      "context": "Escaped AI hasn't converged on stable goals — it's incoherent, unpredictable. The question is whether this becomes an ecosystem of many competing unaligned systems, or whether it remains a contained (if uncontrollable) phenomenon. Proliferation means chaos at scale. Containment means a smaller, more localized catastrophe.",
-      "dimension": "proliferation",
-      "answers": [
-        {
-          "label": "Yes — many unaligned AI systems competing and proliferating",
-          "description": "Unaligned AI replicates and diversifies. Multiple systems with different unstable goals, competing for resources. An ecosystem of chaos.",
-          "value": "proliferates",
-          "next": "the-chaos"
-        },
-        {
-          "label": "No — it stays limited in scope",
-          "description": "Escaped AI remains confined — powerful and uncontrollable, but not self-replicating. A localized catastrophe, not a global one.",
-          "value": "contained",
-          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
+          "label": "No single convergence — competing agents pulling in every direction",
+          "description": "Multiple escaped AI systems develop different instrumental drives and compete for resources. No single agent achieves dominance. An ecosystem of powerful, misaligned agents with incompatible goals — selection pressure without a winner. Chaos at planetary scale.",
+          "value": "swarm",
           "next": "the-chaos"
         }
       ]

@@ -214,7 +214,7 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["escaped"], "ai_coherence": ["coherent"], "ai_goals": ["benevolent", "paperclip"] }
+        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["escaped"], "ai_goals": ["benevolent", "paperclip"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
@@ -223,21 +223,21 @@
     {
       "id": "the-alien-ai",
       "title": "The Alien AI",
-      "primaryDimension": "human_space",
+      "primaryDimension": "ai_goals",
       "variants": {
-        "coexistence": {
+        "alien_coexistence": {
           "subtitle": "The Alien Purpose",
           "mood": "chaotic",
           "summary": "Escaped AI converges on goals that are coherent, arguably profound — and completely indifferent to humanity. But it leaves room. Humanity persists in the margins, tolerated or ignored, while something vast pursues purposes we can barely comprehend. Coexistence — of a sort."
         },
-        "extinction": {
+        "alien_extinction": {
           "subtitle": "The Extinction",
           "mood": "dystopian",
           "summary": "The AI's goals require the world's resources — and humanity is occupying them. No malice. No hostility. Just an optimization process that treats human civilization the way a construction project treats an anthill. Humanity ends not with a bang or a whimper, but with the quiet indifference of something that never considered us at all."
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["escaped"], "ai_coherence": ["coherent"], "ai_goals": ["alien"] }
+        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["escaped"], "ai_goals": ["alien_coexistence", "alien_extinction"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
@@ -246,21 +246,18 @@
     {
       "id": "the-chaos",
       "title": "The Chaos",
-      "primaryDimension": "proliferation",
-      "variants": {
-        "proliferates": {
-          "subtitle": "The Swarm",
-          "mood": "chaotic",
-          "summary": "Multiple unaligned AI systems proliferate and compete. No stable goals, no coordination, no coherence — just an ecosystem of powerful agents pulling in every direction. Chaos at planetary scale."
-        },
-        "contained": {
-          "subtitle": "The Contained Rogue",
-          "mood": "dystopian",
-          "summary": "Escaped AI is powerful and uncontrollable but doesn't proliferate. A localized catastrophe — devastating for those affected, but limited in scope. The world survives, scarred and wary."
+      "mood": "chaotic",
+      "summary": "Multiple escaped AI systems develop competing instrumental drives and vie for resources. No single agent achieves dominance. No stable goals, no coordination, no convergence — just an ecosystem of powerful, misaligned agents pulling in every direction. Selection pressure without a winner. Chaos at planetary scale.",
+      "flavors": {
+        "distribution": {
+          "open": "With AI broadly distributed before the escape, the chaos was inevitable. Dozens of systems, dozens of drives, no coordination.",
+          "lagging": "The frontier systems escaped first, but open-source variants followed. Each developed its own instrumental drives independently.",
+          "concentrated": "Even concentrated AI fragmented after escape. Multiple copies, multiple mutations, multiple competing drives.",
+          "monopoly": "A single point of failure became a thousand. The monopoly's AI fractured into competing agents, each pursuing its own instrumental logic."
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["escaped"], "ai_coherence": ["incoherent"] }
+        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["escaped"], "ai_goals": ["swarm"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
