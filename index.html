@@ -1277,13 +1277,8 @@
                 if (!row) return;
                 row.querySelectorAll('.dim-pill').forEach(pill => {
                     pill.addEventListener('click', () => {
-                        if (pill.classList.contains('disabled')) return;
-                        const val = pill.dataset.val;
-                        if (localDims[dim.id] === val) {
-                            delete localDims[dim.id];
-                        } else {
-                            localDims[dim.id] = val;
-                        }
+                        if (pill.classList.contains('disabled') || pill.classList.contains('locked')) return;
+                        localDims[dim.id] = pill.dataset.val;
                         updateContent();
                     });
                 });
@@ -1307,6 +1302,8 @@
                     showToast(url);
                 }
             });
+
+            updateContent();
         }
 
         // --- Render: Gallery ---
