@@ -761,10 +761,13 @@
                 { id: 'monopoly', label: 'Monopoly', requires: { distribution: ['concentrated', 'monopoly'] } },
                 { id: 'oligopoly', label: 'Few powers', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } },
                 { id: 'distributed', label: 'Proliferates' }, { id: 'international', label: 'International', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } } ] },
+            { id: 'proliferation', label: 'Proliferation', stage: 2,
+              visibleWhen: { capability: ['singularity'], alignment: ['solved'], power_structure: ['monopoly', 'oligopoly', 'international'] }, values: [
+                { id: 'holds', label: 'Control holds' }, { id: 'proliferates', label: 'Proliferates' } ] },
             { id: 'intent', label: 'Intent', stage: 2,
               visibleWhen: { capability: ['singularity'], alignment: ['solved'] },
               lockedWhen: { power_structure: { equals: 'international', value: 'flourishing' } }, values: [
-                { id: 'flourishing', label: 'Flourishing' }, { id: 'self_interest', label: 'Self-interest' },
+                { id: 'flourishing', label: 'Flourishing', requires: { power_structure: ['monopoly'] } }, { id: 'self_interest', label: 'Self-interest', requires: { power_structure: ['monopoly'] } },
                 { id: 'coexistence', label: 'Coexistence', requires: { power_structure: ['oligopoly', 'distributed'] } },
                 { id: 'rivalry', label: 'Rivalry', requires: { power_structure: ['oligopoly', 'distributed'] } },
                 { id: 'escalation', label: 'Escalation', requires: { power_structure: ['oligopoly', 'distributed'] } } ] },
@@ -1489,12 +1492,15 @@
 
             function effectiveVal(k) {
                 if (k === 'capability' && sel.stall_recovery === 'mild') return 'singularity';
+                if (k === 'power_structure' && sel.proliferation === 'proliferates') return 'distributed';
                 return sel[k];
             }
             function isDimVisible(dim) {
                 if (!dim.visibleWhen) return true;
                 for (const [k, allowed] of Object.entries(dim.visibleWhen)) {
-                    const v = (dim.id === 'stall_recovery') ? sel[k] : effectiveVal(k);
+                    const useRaw = (dim.id === 'stall_recovery' && k === 'capability') ||
+                                   (dim.id === 'proliferation' && k === 'power_structure');
+                    const v = useRaw ? sel[k] : effectiveVal(k);
                     if (!v || !allowed.includes(v)) return false;
                 }
                 return true;
@@ -1502,14 +1508,15 @@
             function isDimLocked(dim) {
                 if (!dim.lockedWhen) return null;
                 for (const [triggerDim, rule] of Object.entries(dim.lockedWhen)) {
-                    if (sel[triggerDim] === rule.equals) return rule.value;
+                    if (effectiveVal(triggerDim) === rule.equals) return rule.value;
                 }
                 return null;
             }
             function isValueDisabled(dim, val) {
                 if (!val.requires) return false;
                 for (const [k, allowed] of Object.entries(val.requires)) {
-                    if (sel[k] && !allowed.includes(sel[k])) return true;
+                    const v = effectiveVal(k);
+                    if (v && !allowed.includes(v)) return true;
                 }
                 return false;
             }

@@ -187,14 +187,14 @@
           "description": "A single lab, company, or government controls superintelligent AI and prevents anyone else from developing it. Whether justified by safety or self-interest, one entity holds the most powerful technology ever created.",
           "value": "monopoly",
           "requires": { "distribution": ["concentrated", "monopoly"] },
-          "next": "controller-intent"
+          "next": "proliferation-control"
         },
         {
           "label": "A few powers share it",
           "description": "Multiple organizations — labs, governments, or both — develop superintelligent AI. An oligopoly of the most powerful technology ever built. They must decide how to relate to each other.",
           "value": "oligopoly",
           "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
-          "next": "controller-intent"
+          "next": "proliferation-control"
         },
         {
           "label": "It proliferates widely",
@@ -206,8 +206,36 @@
           "label": "International governance emerges",
           "description": "Superintelligent AI is placed under international oversight — something like an AI IAEA. Slower, more bureaucratic, but with broader legitimacy and shared accountability.",
           "value": "international",
-          "sets": { "power_structure": "international", "intent": "flourishing", "failure_mode": "none", "economic_speed": "steady" },
+          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
+          "next": "proliferation-control"
+        }
+      ]
+    },
+
+    {
+      "id": "proliferation-control",
+      "stage": 2,
+      "text": "Does the concentration of power hold — or does the technology proliferate?",
+      "context": "Right now, superintelligent AI is concentrated. But concentration is expensive to maintain. Research leaks, engineers change jobs, open-source projects iterate, and rival states invest. History suggests that transformative technologies eventually spread — nuclear weapons, the internet, smartphones. The question is whether this time is different. Can those in power prevent proliferation through regulation, classification, trade controls, and technical lockdown? Or is the spread inevitable?",
+      "answers": [
+        {
+          "label": "Control holds — the power structure persists",
+          "description": "Through a combination of regulation, trade controls, technical secrecy, and institutional discipline, those in power maintain their advantage. The technology stays concentrated. The power structure endures.",
+          "requires": { "power_structure": ["monopoly", "oligopoly"] },
+          "next": "controller-intent"
+        },
+        {
+          "label": "International governance holds",
+          "description": "The international framework proves durable. Enforcement mechanisms work, member states comply, and the technology remains under shared oversight rather than spreading uncontrolled.",
+          "requires": { "power_structure": ["international"] },
+          "sets": { "intent": "flourishing", "failure_mode": "none", "economic_speed": "steady" },
           "next": "the-flourishing"
+        },
+        {
+          "label": "No — the technology proliferates despite their efforts",
+          "description": "Control proves impossible to maintain. The knowledge spreads through leaks, independent research, espionage, or simply the march of progress. What was concentrated becomes distributed. The power structure that existed on paper dissolves into reality.",
+          "sets": { "power_structure": "distributed" },
+          "next": "controller-intent"
         }
       ]
     },
@@ -223,12 +251,14 @@
           "label": "Direct it toward broad human flourishing",
           "description": "Whether through idealism, public pressure, or strategic calculation, those controlling AI direct it toward shared prosperity. The benefits are distributed, not hoarded.",
           "value": "flourishing",
+          "requires": { "power_structure": ["monopoly"] },
           "next": "implementation-risk"
         },
         {
           "label": "Those in power entrench themselves",
           "description": "Corporate incentives, state interests, or personal ambition win. Those controlling AI optimize for their own advantage — profit, dominance, control. Humanity benefits incidentally, not intentionally.",
           "value": "self_interest",
+          "requires": { "power_structure": ["monopoly"] },
           "next": "the-capture"
         },
         {
