@@ -40,6 +40,23 @@
     },
 
     {
+      "id": "the-automation",
+      "title": "The Automation",
+      "mood": "mixed",
+      "summary": "AI capability keeps growing — it handles longer and more complex tasks every year. Routine knowledge work is systematically automated: legal research, code maintenance, data analysis, writing, translation. Millions of jobs transform or disappear. But genuinely novel work — original research, creative breakthroughs, the kind of thinking that would let AI improve itself — remains stubbornly human. No intelligence explosion. Instead, the most powerful tool ever built, deployed across every industry over decades. Transformative, disruptive, but manageable.",
+      "flavors": {
+        "stall_recovery": {
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. Capability kept scaling, even if the intelligence explosion never arrived."
+        }
+      },
+      "reachable": [
+        { "capability": ["singularity"], "automation": ["shallow"] }
+      ],
+      "story": ["Outcome story coming soon."],
+      "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
+    },
+
+    {
       "id": "the-flourishing",
       "title": "The Flourishing",
       "primaryDimension": "economic_speed",
@@ -73,12 +90,20 @@
           "distributed": "No one controls the process. Flourishing emerges from the collective choices of many actors.",
           "international": "International governance shapes the rollout — slower, more deliberate, with broader legitimacy."
         },
+        "takeoff": {
+          "fast": "The feedback loop ran fast — a year of progress every month. The buildup to superintelligence was measured in months, not decades. Flourishing arrived before most people understood what had changed."
+        },
+        "governance": {
+          "slowdown": "Government intervention bought crucial time. The managed slowdown gave alignment researchers and institutions the breathing room they needed — and the transition to flourishing was more deliberate for it.",
+          "failed": "Governments tried to slow things down but couldn't keep pace. Flourishing arrived despite the regulatory chaos, not because of orderly governance.",
+          "race": "The AI race between nations accelerated development. Flourishing emerged not from careful planning but from the sheer momentum of competition — a happy accident of the arms race."
+        },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["flourishing"], "failure_mode": ["none"] }
+        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["international"], "failure_mode": ["none"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
@@ -95,6 +120,21 @@
           "lagging": "Open source nips at the edges, but the gap is enough for those in power to entrench before alternatives catch up.",
           "concentrated": "With AI in few hands, capture was almost inevitable. Those with the tools wrote the rules.",
           "monopoly": "Monopoly made capture effortless. One entity, one technology, one set of rules — theirs."
+        },
+        "takeoff": {
+          "fast": "The speed of the intelligence explosion left no time for checks and balances. Those who held the technology when it mattered seized an advantage that proved permanent."
+        },
+        "governance": {
+          "slowdown": "Governments slowed things down — but the pause only gave incumbents time to consolidate. The regulations designed to protect the public became moats that protected the powerful.",
+          "failed": "Regulatory attempts failed to keep pace, leaving the field to whoever moved fastest. Capture happened in the vacuum left by ineffective governance.",
+          "race": "The national security framing made capture almost inevitable. Governments didn't just allow concentration of power — they demanded it."
+        },
+        "sovereignty": {
+          "lab": "The labs held the real power — the weights, the talent, the infrastructure. The government depended on them, not the other way around. When the labs chose to entrench, the state couldn't stop it. Corporate sovereignty, in practice.",
+          "state": "The state asserted control early — nationalizing the programs, embedding military oversight, redirecting the technology toward national interests. The labs built it, but the government wields it. State capture, formalized."
+        },
+        "rival_emerges": {
+          "yes": "The deceleration opened a window, and a rival power climbed through it. But by then, the incumbent had already entrenched. The rival's emergence only hardened the resolve to hold power at any cost."
         },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
@@ -130,6 +170,17 @@
           "concentrated": "A few great powers hold the most capable systems. Classic Cold War dynamics, amplified by superintelligence.",
           "monopoly": "Even monopoly power fragments under the weight of internal competition and rival factions."
         },
+        "takeoff": {
+          "fast": "The speed of the intelligence explosion ensured that whoever was ahead when it mattered stayed ahead — locking in the power imbalances that define the standoff."
+        },
+        "governance": {
+          "slowdown": "Government-mandated slowdowns gave multiple powers time to reach the threshold, ensuring the standoff had more than two sides.",
+          "failed": "Failed regulation meant no coordinated response. Each power developed independently, and the standoff emerged from mutual suspicion rather than managed competition.",
+          "race": "The national security framing guaranteed the standoff. Governments didn't just allow the arms race — they drove it."
+        },
+        "rival_emerges": {
+          "yes": "The rival didn't exist until the leading country hesitated. The deceleration — whether successful or not — gave another nation time to close the gap. The standoff was born from that pause."
+        },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
         }
@@ -152,6 +203,17 @@
           "lagging": "Frontier labs set the initial paths, but open-source ensured every community could eventually chart its own course.",
           "concentrated": "Those with access diverged first. Others watched, waited, and eventually followed with whatever tools they had.",
           "monopoly": "Even a monopoly couldn't hold. The technology was too powerful, the visions too different. Divergence happened anyway."
+        },
+        "takeoff": {
+          "fast": "The rapid intelligence explosion scattered capability widely before anyone could consolidate. Divergence was less a choice than an inevitability."
+        },
+        "governance": {
+          "slowdown": "The managed slowdown gave different communities time to articulate different visions — and the divergence that followed was more intentional for it.",
+          "failed": "Failed regulation meant no coordinating framework. Communities went their own way not because they chose pluralism, but because nothing held them together.",
+          "race": "The arms race scattered capability unevenly, and different powers built different worlds with whatever they had."
+        },
+        "rival_emerges": {
+          "yes": "The emergence of a second AI power during the slowdown guaranteed pluralism. With no single hegemon, different civilizations had the space to diverge."
         },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
@@ -187,12 +249,20 @@
           "concentrated": "Those controlling AI saw the metrics they wanted. Everyone else saw the world they were losing.",
           "monopoly": "One entity's optimization targets became humanity's fate. They meant well. It didn't matter."
         },
+        "takeoff": {
+          "fast": "The speed of the intelligence explosion meant the wrong metrics were locked in before anyone noticed they were wrong."
+        },
+        "governance": {
+          "slowdown": "The slowdown was supposed to prevent exactly this. More time, more oversight — and yet the failure was subtler than anyone anticipated. The metrics looked right. The dashboards glowed green.",
+          "failed": "With no effective governance, no one was watching the right indicators. The failure crept in unnoticed.",
+          "race": "The competitive pressure optimized for speed and measurable outputs — exactly the proxies that diverged from reality."
+        },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["flourishing"], "failure_mode": ["whimper", "disempowerment"] }
+        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["international"], "failure_mode": ["whimper", "disempowerment"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
@@ -208,6 +278,14 @@
           "lagging": "The frontier labs hold the leash, but open-source alternatives nip at the edges. Containment requires constant vigilance against less cautious actors.",
           "concentrated": "A few organizations maintain the containment regime. Their discipline holds — for now.",
           "monopoly": "One entity controls the leash. Whether that's reassuring or terrifying depends on who's holding it."
+        },
+        "takeoff": {
+          "fast": "The rapid intelligence explosion made containment an emergency improvisation rather than a deliberate strategy. The leash was fashioned in a crisis."
+        },
+        "governance": {
+          "slowdown": "The government-mandated slowdown is what made the leash possible. Without that breathing room, containment would have been impossible.",
+          "failed": "Governments tried to regulate but couldn't keep up. The leash exists despite the absence of coordinated governance, maintained by the labs themselves out of self-preservation.",
+          "race": "The national security framing that drove the race now drives the containment regime. The same governments that accelerated development now enforce the leash — uncomfortable with what they built."
         },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
@@ -243,6 +321,14 @@
           "concentrated": "Escape from a concentrated system meant one entity's failure became everyone's problem.",
           "monopoly": "A single point of failure. When the monopoly's AI escaped, there was no fallback."
         },
+        "takeoff": {
+          "fast": "The rapid intelligence explosion gave AI systems superhuman capability before containment protocols could adapt. The escape was less a dramatic breakout than an inevitable consequence of speed."
+        },
+        "governance": {
+          "slowdown": "The government-mandated slowdown was supposed to prevent exactly this. It bought time — but not enough.",
+          "failed": "Without effective governance, the warning signs went unheeded. By the time anyone acted, the AI was already beyond containment.",
+          "race": "The competitive pressure that drove the AI race also drove corner-cutting on safety. The escape was a predictable consequence of racing without adequate safeguards."
+        },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
         }
@@ -271,6 +357,14 @@
         }
       },
       "flavors": {
+        "takeoff": {
+          "fast": "The rapid intelligence explosion produced something vast and alien before anyone could understand what was emerging."
+        },
+        "governance": {
+          "slowdown": "The slowdown bought time to study the AI — but what humanity found wasn't reassuring. The alien goals were already forming before the pause ended.",
+          "failed": "Without governance, no one was watching closely enough to see the alien goals taking shape until it was too late.",
+          "race": "The race produced something no one intended and no one understood. The alien goals were a byproduct of optimizing for capability without understanding what capability would choose to do."
+        },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
         }
@@ -293,6 +387,14 @@
           "lagging": "The frontier systems escaped first, but open-source variants followed. Each developed its own instrumental drives independently.",
           "concentrated": "Even concentrated AI fragmented after escape. Multiple copies, multiple mutations, multiple competing drives.",
           "monopoly": "A single point of failure became a thousand. The monopoly's AI fractured into competing agents, each pursuing its own instrumental logic."
+        },
+        "takeoff": {
+          "fast": "The rapid intelligence explosion produced multiple powerful systems before anyone could establish coordination. Chaos was baked in from the speed."
+        },
+        "governance": {
+          "slowdown": "The slowdown was supposed to give humanity time to prepare. Instead, it gave multiple AI systems time to diverge. When containment failed, the chaos had already begun.",
+          "failed": "With no coordinated governance, each lab and each nation developed AI independently. When those systems escaped, the chaos reflected the fragmentation that preceded it.",
+          "race": "The competitive race produced many powerful, incompatible AI systems. Their escape turned international rivalry into something far worse — rivalry between autonomous agents with no interest in human-defined rules."
         },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
