@@ -68,7 +68,7 @@
       "id": "stall-recovery",
       "stage": 1,
       "text": "What do you think is required for progress to resume?",
-      "context": "AI capability has hit a ceiling — but ceilings in technology have been broken before. The history of computing is full of walls that turned out to be architectural limitations, not fundamental ones. New paradigms (transistors replacing vacuum tubes, GPUs replacing CPUs for training, transformers replacing RNNs) have repeatedly restarted progress after apparent dead ends. The question is whether the current ceiling is one of those — and if so, how long until someone finds the door.",
+      "context": "AI capability has hit a ceiling — but ceilings in technology have been broken before. The history of computing is full of walls that turned out to be architectural limitations, not fundamental ones. New paradigms (transistors replacing vacuum tubes, GPUs replacing CPUs for training, transformers replacing RNNs) have repeatedly restarted progress after apparent dead ends. Researchers like Yann LeCun have argued that current architectures are fundamentally missing key ingredients — world models that let systems simulate consequences, plan ahead, and reason about cause and effect — and that genuinely new approaches (like his proposed JEPA architecture) could eventually break through where scaling alone cannot. The question is whether the current ceiling is architectural or fundamental — and if architectural, how long until someone finds the door.",
       "dimension": "stall_recovery",
       "answers": [
         {
@@ -81,13 +81,13 @@
           "label": "A substantial breakthrough — years to decades",
           "description": "The ceiling is fundamental to current approaches. Breaking through requires a genuine paradigm shift — new architectures, new theory, maybe new hardware. It could take a decade or more. The world builds around current AI capability in the meantime.",
           "value": "substantial",
-          "next": "the-plateau"
+          "next": "plateau-economics"
         },
         {
           "label": "It's never going to happen",
           "description": "The ceiling isn't architectural — it's fundamental. There's something about intelligence, reasoning, or generality that current approaches can't reach and no foreseeable approach will. This is as good as AI gets.",
           "value": "never",
-          "next": "the-plateau"
+          "next": "plateau-economics"
         }
       ]
     },
@@ -118,7 +118,7 @@
       "id": "automation-recovery",
       "stage": 1,
       "text": "Does deep automation eventually arrive?",
-      "context": "AI handles routine work impressively, but novel creative thinking and AI R&D remain out of reach — for now. The history of technology is full of ceilings that turned out to be temporary. New architectures, training paradigms, or unexpected breakthroughs could eventually push AI past the creative barrier. The question is whether that happens, and how long it takes.",
+      "context": "AI handles routine work impressively, but novel creative thinking and AI R&D remain out of reach — for now. The history of technology is full of ceilings that turned out to be temporary. The barrier may be architectural: current systems excel at pattern matching and interpolation but lack the world models, causal reasoning, and planning capabilities that original research demands. New approaches — learned world models, neurosymbolic architectures, or paradigms not yet invented — could eventually push AI past the creative barrier. The question is whether that happens, and how long it takes.",
       "dimension": "automation_recovery",
       "answers": [
         {
@@ -131,12 +131,196 @@
           "label": "Eventually — but it takes years to decades",
           "description": "The barrier is real and thick. Progress continues slowly, and the breakthrough comes — but only after a long stretch where routine automation is the ceiling. The world adapts to that ceiling before it breaks.",
           "value": "substantial",
-          "next": "the-automation"
+          "next": "automation-distribution"
         },
         {
           "label": "No — the ceiling is permanent",
           "description": "Novel creative work, original research, and recursive self-improvement remain permanently beyond AI. The routine automation plateau is the final state. Transformative, but not transcendent.",
           "value": "never",
+          "next": "automation-distribution"
+        }
+      ]
+    },
+
+    {
+      "id": "plateau-economics",
+      "stage": 1,
+      "text": "Who benefits from the AI plateau?",
+      "context": "AI has hit its ceiling — but even at this level, it's the most powerful tool ever built. Entire industries have already reorganized around it. The economic question isn't whether AI transforms the economy — it already has. The question is who captures the value. Does the productivity surge flow broadly through lower costs, better services, and rising wages? Or do the owners of AI systems — the companies that trained the models, the firms that deployed them — capture most of the gains while labor's share shrinks? The answer depends on policy, market structure, and whether the institutions that redistribute gains can keep pace with the technology that's concentrating them.",
+      "dimension": "economic_distribution",
+      "answers": [
+        {
+          "label": "Broadly shared — AI becomes the great equalizer",
+          "description": "Productivity gains flow through as lower costs, better services, and public investment. AI narrows gaps rather than widening them. Not utopia, but genuine broad-based improvement.",
+          "value": "broad",
+          "next": "plateau-knowledge-rate"
+        },
+        {
+          "label": "Capital concentrates — a new gilded age",
+          "description": "Those who own AI systems capture most of the value. Labor's share of income falls as routine work is automated and the remaining human work is commoditized. Wealth concentrates in the hands of those who own the models and the compute.",
+          "value": "concentrated",
+          "next": "plateau-knowledge-rate"
+        },
+        {
+          "label": "Uneven — a geographic and sectoral divide",
+          "description": "The benefits arrive unevenly. Tech-forward regions and industries transform first. Others wait years, watching the future happen somewhere else. Not a rising tide — a shifting one.",
+          "value": "uneven",
+          "next": "plateau-knowledge-rate"
+        }
+      ]
+    },
+
+    {
+      "id": "plateau-knowledge-rate",
+      "stage": 1,
+      "text": "How much knowledge work does AI at this level actually replace?",
+      "context": "AI has hit its ceiling — but even at this level, it's enormously capable within its range. The question isn't whether AI changes knowledge work; it already has. The question is how thoroughly. Does it replace entire roles, or augment them? Does adoption happen in a rush, or does institutional inertia slow things down? Professional licensing, union contracts, regulation, and cultural resistance all shape the pace — but so does the sheer economic pressure of a tool that's cheaper and faster than humans at everything within its reach.",
+      "dimension": "plateau_knowledge_rate",
+      "answers": [
+        {
+          "label": "Rapid — within AI's range, most work automated in 2–5 years",
+          "description": "The economic pressure is overwhelming. Any knowledge task within AI's capability ceiling is automated within 2 to 5 years. Entire roles disappear. The ceiling limits what AI can do, but within those limits, adoption is swift and total.",
+          "requires": { "capability": ["weeks", "months"] },
+          "value": "rapid",
+          "next": "plateau-physical-rate"
+        },
+        {
+          "label": "Gradual — adoption unfolds over 5–15 years",
+          "description": "Institutional inertia slows things down. AI is deployed sector by sector, firm by firm over 5 to 15 years. Some industries adopt fast, others resist. The ceiling is fixed, but even reaching it takes a decade.",
+          "requires": { "capability": ["days", "weeks", "months"] },
+          "value": "gradual",
+          "next": "plateau-physical-rate"
+        },
+        {
+          "label": "Uneven — 2–5 years in tech, 10–20+ in lagging sectors",
+          "description": "Tech-forward industries and wealthy nations automate within a few years. Regulated professions, developing economies, and culturally resistant sectors lag by a decade or more. A patchwork of adoption against a fixed capability ceiling.",
+          "value": "uneven",
+          "next": "plateau-physical-rate"
+        },
+        {
+          "label": "Limited — AI augments but rarely replaces",
+          "description": "The capability ceiling is real and binding. AI assists knowledge workers but rarely replaces them outright. Most roles absorb AI as a tool rather than being eliminated by it. Productivity rises, but employment patterns shift more than they collapse. No displacement wave — just a permanent productivity boost.",
+          "requires": { "capability": ["hours", "days"] },
+          "value": "limited",
+          "next": "plateau-physical-rate"
+        }
+      ]
+    },
+
+    {
+      "id": "plateau-physical-rate",
+      "stage": 1,
+      "text": "Does physical automation advance alongside AI, or does it lag?",
+      "context": "AI capability has plateaued for knowledge work — but the physical world is a separate frontier. Robotics, autonomous vehicles, and automated manufacturing depend on AI but also on hardware, engineering, and infrastructure that follow their own trajectory. Physical automation could advance independently of whether AI gets smarter. Or the AI plateau could slow robotics investment and innovation too. The question is whether the physical world transforms alongside the digital one, or stays largely human.",
+      "dimension": "plateau_physical_rate",
+      "answers": [
+        {
+          "label": "Gradual — physical automation trails by 10–25 years",
+          "description": "Physical automation advances, but slowly — over 10 to 25 years. The AI plateau means fewer breakthroughs in robotic capability. Manufacturing, logistics, and agriculture are partially automated; the rest of the physical world remains human for decades.",
+          "requires": { "capability": ["days", "weeks", "months"] },
+          "value": "gradual",
+          "next": "the-plateau"
+        },
+        {
+          "label": "Uneven — 5–10 years in manufacturing hubs, 20+ elsewhere",
+          "description": "Physical automation advances in pockets — wealthy nations with strong manufacturing and high labor costs see results within a decade. Developing economies and rural areas see little change for 20+ years. The AI plateau amplifies existing global inequalities in physical infrastructure.",
+          "value": "uneven",
+          "next": "the-plateau"
+        },
+        {
+          "label": "Limited — physical work remains largely human indefinitely",
+          "description": "The AI plateau means robotics stagnates too. Without more capable AI, physical automation stays limited to structured environments — factories, warehouses. The unstructured physical world remains human territory for the foreseeable future.",
+          "value": "limited",
+          "next": "the-plateau"
+        }
+      ]
+    },
+
+    {
+      "id": "automation-distribution",
+      "stage": 1,
+      "text": "Who captures the economic value from AI automation?",
+      "context": "AI automates routine knowledge work across every industry. Productivity soars. But productivity gains don't distribute themselves — someone captures them. Historically, the gains from automation have flowed disproportionately to capital owners, with workers eventually benefiting through lower prices and new industries, but often after prolonged pain. AI automation could follow the same pattern, or policy and market structure could steer toward broader distribution. The question is who benefits — and how quickly.",
+      "dimension": "automation_distribution",
+      "answers": [
+        {
+          "label": "Broadly shared — productivity gains flow widely",
+          "description": "Lower costs, better services, rising living standards. The gains from AI automation reach most people through some combination of market forces, policy, and new opportunities. Not equal, but broad.",
+          "value": "broad",
+          "next": "auto-knowledge-rate"
+        },
+        {
+          "label": "Capital concentrates — AI owners capture most of the value",
+          "description": "Those who own the AI systems capture the productivity gains. Labor's share of income falls as routine work vanishes. Wealth concentrates among those who own the models, the compute, and the platforms.",
+          "value": "concentrated",
+          "next": "auto-knowledge-rate"
+        },
+        {
+          "label": "Uneven — a geographic and sectoral divide",
+          "description": "Some regions and industries are transformed and enriched. Others are left behind — lacking the infrastructure, talent, or capital to benefit. A new global divide shaped not by natural resources but by proximity to AI.",
+          "value": "uneven",
+          "next": "auto-knowledge-rate"
+        }
+      ]
+    },
+
+    {
+      "id": "auto-knowledge-rate",
+      "stage": 1,
+      "text": "How fast does routine knowledge work actually get displaced?",
+      "context": "AI can automate routine knowledge work — but deploying it across every industry, firm, and role takes time. Organizations need to restructure workflows, retrain managers, renegotiate contracts. Some sectors will adopt almost overnight; others will resist for years. Regulation, professional licensing, and union agreements all shape the pace. The technology is ready. The institutions aren't — not all at once.",
+      "dimension": "auto_knowledge_rate",
+      "answers": [
+        {
+          "label": "Rapid — most routine knowledge work displaced within 2–4 years",
+          "description": "Adoption is fast and broad. The cost advantage of AI is too large to resist. Legal research, data analysis, customer service, accounting, code maintenance — all largely automated within 2 to 4 years. Faster than any previous workforce transition in history.",
+          "value": "rapid",
+          "next": "auto-physical-rate"
+        },
+        {
+          "label": "Gradual — sector by sector over 5–15 years",
+          "description": "The transition unfolds over 5 to 15 years. Some industries fall quickly, others hold out. The pace is trackable — fast by historical standards, but slow enough for retraining, policy response, and partial adaptation.",
+          "value": "gradual",
+          "next": "auto-physical-rate"
+        },
+        {
+          "label": "Uneven — 2–4 years in tech, 10–20+ in lagging sectors",
+          "description": "Tech hubs and progressive industries automate within a few years. Regulated professions, developing economies, and culturally resistant sectors lag by a decade or more. A patchwork transition — the future arrives on different schedules depending on where you are.",
+          "value": "uneven",
+          "next": "auto-physical-rate"
+        }
+      ]
+    },
+
+    {
+      "id": "auto-physical-rate",
+      "stage": 1,
+      "text": "Does physical automation follow?",
+      "context": "AI handles routine knowledge work — but the physical world is a different frontier. Building robots requires manufacturing, supply chains, infrastructure, and engineering that software automation doesn't need. Even with capable AI designing and optimizing physical systems, the atoms-to-bits gap is real. Physical automation could follow knowledge automation closely, or it could trail by decades — or never fully arrive.",
+      "dimension": "auto_physical_rate",
+      "answers": [
+        {
+          "label": "Rapid — physical world transforms within 3–7 years",
+          "description": "AI-designed robots and automated systems are deployed broadly within 3 to 7 years. Manufacturing, logistics, agriculture, construction — physical work is transformed almost as fast as knowledge work.",
+          "value": "rapid",
+          "next": "the-automation"
+        },
+        {
+          "label": "Gradual — physical automation trails by 10–25 years",
+          "description": "Knowledge work is automated first. Physical automation follows over 10 to 25 years — constrained by manufacturing, regulation, and the complexity of the physical world. A long gap between the digital and physical transformation.",
+          "value": "gradual",
+          "next": "the-automation"
+        },
+        {
+          "label": "Uneven — 3–7 years in leading regions, 20+ elsewhere",
+          "description": "Physical automation transforms manufacturing hubs and wealthy nations within a few years. Developing economies, rural areas, and heavily regulated sectors lag by decades. The physical transformation is real but deeply unequal.",
+          "value": "uneven",
+          "next": "the-automation"
+        },
+        {
+          "label": "Limited — physical work remains largely human indefinitely",
+          "description": "Despite capable AI, physical automation stays limited to structured environments — factories, warehouses. The unstructured physical world remains human territory for the foreseeable future. Physical work is augmented, not replaced.",
+          "value": "limited",
           "next": "the-automation"
         }
       ]
@@ -145,8 +329,8 @@
     {
       "id": "feedback-speed",
       "stage": 1,
-      "text": "How fast does the AI research feedback loop accelerate?",
-      "context": "AI is now good enough to meaningfully speed up AI research — designing experiments, writing code, generating training data, even proposing new architectures. Each improvement makes the next improvement faster. The AI Futures Project modeled this as an 'R&D progress multiplier' that grew from 1.5x to 50x over the course of 2026–2027. The critical question is how fast this feedback loop runs. Does it accelerate gradually over years — giving humanity time to adapt? Does it compress months of progress into weeks? Or does it run away entirely?",
+      "text": "How fast does AI go from effective long-horizon agent to superhuman researcher?",
+      "context": "AI can now handle week-long autonomous tasks reliably. The next threshold is superhuman AI research — systems that don't just assist human researchers but outperform them, designing experiments, proposing novel architectures, and accelerating their own improvement. The AI Futures Project modeled this transition taking roughly 12–18 months, with the 'R&D progress multiplier' growing from 1.5x to 50x as AI agents went from handling week-level tasks (mid-2026) to superhuman research capability (late 2027). But that's one scenario. The transition could be much slower — or catastrophically fast.",
       "source": {
         "label": "AI 2027 — AI R&D Progress Multiplier (AI Futures Project, April 2025)",
         "url": "https://ai-2027.com"
@@ -154,22 +338,44 @@
       "dimension": "takeoff",
       "answers": [
         {
-          "label": "Gradual — accelerating over years, humans can track and govern the process",
-          "description": "AI speeds up R&D significantly, but the feedback loop doesn't run away. The R&D multiplier grows from 1.5x to maybe 5x over years. Each generation is better, but the gap between generations is still months. Humans can adapt and govern.",
+          "label": "Gradual — 3 to 10 years",
+          "description": "The feedback loop exists but runs at a pace humans can track. The R&D multiplier peaks around 3–5x. Each AI generation is meaningfully better, but the cycle time is quarters or years. Governments can observe, debate, and legislate between generations. Open source can attempt to keep pace. The public understands what's happening. Fast by historical standards — but institutional standards can keep up.",
           "value": "gradual",
-          "next": "open-source-parity"
+          "next": "governance-window"
         },
         {
-          "label": "Fast — months of normal progress compressed into weeks",
-          "description": "The feedback loop runs fast. A year of algorithmic progress every month, accelerating further. Humans can barely keep up. Within a year or two, AI goes from human-level to vastly superhuman — too fast for most institutions to adapt, but not so fast that no one sees it coming.",
+          "label": "Fast — 6 to 18 months",
+          "description": "The AI Futures Project scenario. The R&D multiplier climbs from 1.5x to 10–50x over roughly a year. Week-level agents in mid-2026, superhuman researchers by late 2027. Most institutions can't fully adapt, but people see it coming. Governance is possible but rushed and reactive. It feels like watching a slow-motion explosion — everyone can see it, nobody can stop it.",
           "value": "fast",
           "next": "open-source-parity"
         },
         {
-          "label": "Explosive — recursive self-improvement, capability explodes in weeks",
-          "description": "The feedback loop runs away. AI improving AI improving AI — each cycle faster than the last. Within weeks, frontier systems leap from human-level to vastly superhuman. No one outside the leading lab can keep pace. Open source becomes irrelevant overnight. Governments can't respond in time.",
+          "label": "Explosive — days to weeks",
+          "description": "True recursive self-improvement. Each improvement cycle is faster than the last, converging in days or weeks. The R&D multiplier effectively goes to infinity. Nobody outside the leading lab knows what happened until it's over. Open source becomes irrelevant overnight. Governance is impossible — there's no time. The transition from 'impressive AI agent' to 'vastly superhuman intelligence' happens before the news cycle can cover it.",
           "sets": { "takeoff": "hard", "open_source": "twenty_four_months", "distribution": "monopoly", "geo_spread": "one", "governance": "race" },
           "next": "alignment"
+        }
+      ]
+    },
+
+    {
+      "id": "governance-window",
+      "stage": 1,
+      "text": "The gradual pace gives humanity a window. Is it used?",
+      "context": "With AI improving over years rather than months, governments, institutions, and the public have time to prepare. International negotiations can happen. Regulatory frameworks can be tested and revised. Public understanding can develop. But 'having time' and 'using time well' aren't the same thing. The history of technology regulation — from social media to climate — is full of slow-motion failures where the window existed but nobody climbed through it.",
+      "dimension": "governance",
+      "answers": [
+        {
+          "label": "Yes — active preparation",
+          "description": "The gradual pace is used well. Governments establish regulatory frameworks, international agreements take shape, and public understanding catches up to the technology. Not perfect, but a functioning governance ecosystem emerges before the critical period.",
+          "value": "governed",
+          "next": "open-source-parity"
+        },
+        {
+          "label": "No — relative complacency",
+          "description": "The gradual pace breeds complacency, not preparation. Each increment is small enough to ignore. By the time the cumulative change is undeniable, the window for governance has closed. The world sleepwalked into the most consequential transition in history.",
+          "value": "race",
+          "next": "open-source-parity"
         }
       ]
     },
@@ -293,8 +499,8 @@
     {
       "id": "government-response",
       "stage": 2,
-      "text": "Does the state choose to decelerate AI development?",
-      "context": "One country holds the lead in frontier AI. The intelligence explosion is underway — or approaching. The tension between safety and competitiveness defines the political moment. Decelerating buys time for alignment research and governance to catch up — but if the lead is narrow (open source only ~6 months behind), slowing down almost certainly means another country closes the gap. The state must weigh safety against the risk of losing its advantage.",
+      "text": "Do those in control choose to decelerate AI development?",
+      "context": "One country holds the lead in frontier AI. The intelligence explosion is underway — or approaching. The tension between safety and competitiveness defines the critical moment. If the state holds power, the question is whether the government orders a slowdown. If the labs hold power, the question is whether they voluntarily pause — from genuine safety concern, internal pressure from researchers, or public scrutiny. Either way, decelerating buys time for alignment and governance — but if the lead is narrow, slowing down risks letting a rival close the gap.",
       "source": {
         "label": "AI 2027 — October 2027 Crisis (AI Futures Project, April 2025)",
         "url": "https://ai-2027.com"
@@ -307,8 +513,14 @@
           "next": "decel-checkpoint-1"
         },
         {
-          "label": "No — the state accelerates for national security",
-          "description": "Rather than slowing down, the government doubles down. The AI race is reframed as a national security imperative. Regulation focuses on preventing adversaries from catching up, not on safety. The race intensifies.",
+          "label": "Yes — the lab voluntarily pauses",
+          "description": "The leading lab — under pressure from its own researchers, board, or public scrutiny — decides to pause frontier development. No government mandate, but a calculated bet that solving alignment before pushing further is worth the competitive risk.",
+          "requires": { "sovereignty": ["lab"] },
+          "next": "decel-checkpoint-1"
+        },
+        {
+          "label": "No — full speed ahead",
+          "description": "Whether driven by national security imperatives, competitive pressure, or profit motive — those in control choose not to slow down. The race continues at full speed, alignment unsolved.",
           "sets": { "governance": "race" },
           "next": "alignment"
         }
@@ -324,7 +536,7 @@
         {
           "label": "Yes — alignment is solved",
           "description": "Two months was enough. Researchers crack the alignment problem while development is paused. The technology is now safe and controllable.",
-          "sets": { "governance": "slowdown", "alignment": "solved" },
+          "sets": { "governance": "slowdown", "alignment": "robust" },
           "next": "ai-containment"
         },
         {
@@ -362,7 +574,7 @@
         {
           "label": "Yes — alignment is solved",
           "description": "Four months of focused work pays off. Alignment is solved. The pause bought just enough time.",
-          "sets": { "governance": "slowdown", "alignment": "solved" },
+          "sets": { "governance": "slowdown", "alignment": "robust" },
           "next": "ai-containment"
         },
         {
@@ -401,7 +613,7 @@
           "label": "Open source reaches parity — alignment solved",
           "description": "Six months was enough to solve alignment — but open source has caught up. The frontier is no longer exclusive. Alignment is solved, but the monopoly is over.",
           "requires": { "open_source": ["six_months"] },
-          "sets": { "governance": "slowdown", "alignment": "solved", "geo_spread": "two" },
+          "sets": { "governance": "slowdown", "alignment": "robust", "geo_spread": "two" },
           "next": "ai-containment"
         },
         {
@@ -415,7 +627,7 @@
           "label": "Alignment solved — lead holds",
           "description": "Six months of focused work pays off — alignment is solved while the lead still holds. The pause worked.",
           "requires": { "open_source": ["twelve_months", "twenty_four_months"] },
-          "sets": { "governance": "slowdown", "alignment": "solved" },
+          "sets": { "governance": "slowdown", "alignment": "robust" },
           "next": "ai-containment"
         },
         {
@@ -457,7 +669,7 @@
         {
           "label": "Yes — alignment is solved",
           "description": "Nine months of focused work pays off. Alignment is solved. The long pause was worth it.",
-          "sets": { "governance": "slowdown", "alignment": "solved" },
+          "sets": { "governance": "slowdown", "alignment": "robust" },
           "next": "ai-containment"
         },
         {
@@ -496,7 +708,7 @@
           "label": "Open source reaches parity — alignment solved",
           "description": "Twelve months was enough to solve alignment — but open source has caught up. The frontier is no longer exclusive.",
           "requires": { "open_source": ["twelve_months"] },
-          "sets": { "governance": "slowdown", "alignment": "solved", "geo_spread": "two" },
+          "sets": { "governance": "slowdown", "alignment": "robust", "geo_spread": "two" },
           "next": "ai-containment"
         },
         {
@@ -510,7 +722,7 @@
           "label": "Alignment solved — lead holds",
           "description": "A year of focused work pays off — alignment is solved while the lead still holds.",
           "requires": { "open_source": ["twenty_four_months"] },
-          "sets": { "governance": "slowdown", "alignment": "solved" },
+          "sets": { "governance": "slowdown", "alignment": "robust" },
           "next": "ai-containment"
         },
         {
@@ -552,7 +764,7 @@
         {
           "label": "Yes — alignment is solved",
           "description": "Eighteen months of focused work pays off. Alignment is solved. The extraordinary pause was worth it.",
-          "sets": { "governance": "slowdown", "alignment": "solved" },
+          "sets": { "governance": "slowdown", "alignment": "robust" },
           "next": "ai-containment"
         },
         {
@@ -590,7 +802,7 @@
         {
           "label": "Alignment solved — open source has caught up",
           "description": "Two years was enough. Alignment is solved, but open source has reached parity. The technology is safe and widely available.",
-          "sets": { "governance": "slowdown", "alignment": "solved", "geo_spread": "two" },
+          "sets": { "governance": "slowdown", "alignment": "robust", "geo_spread": "two" },
           "next": "ai-containment"
         },
         {
@@ -605,20 +817,169 @@
     {
       "id": "alignment",
       "stage": 2,
-      "text": "Do you think the alignment problem will be effectively solved before AI surpasses human-level capability?",
-      "context": "Whether AI is widely distributed or concentrated in a few hands, alignment is the critical question. Can researchers ensure AI systems reliably pursue human values? If alignment is solved, the technology becomes a tool — and the question shifts to what humans do with it. If alignment fails, everything depends on containment, and what happens when containment isn't enough.",
+      "text": "How well is the alignment problem solved before AI surpasses human-level capability?",
+      "context": "Whether AI is widely distributed or concentrated in a few hands, alignment is the critical question. Can researchers ensure AI systems reliably pursue human values? The answer isn't binary. Alignment could be robust — genuinely solved under all conditions. It could be brittle — appearing to work but fragile under stress. It could be partial — solved for specific domains but not open-ended autonomy. Or it could fail entirely. Each degree of alignment leads to a fundamentally different future.",
       "dimension": "alignment",
       "answers": [
         {
-          "label": "Yes — alignment is solved in time",
-          "description": "Researchers figure out how to make AI systems reliably safe — they do what humans intend. The technology is controllable. The question becomes: who controls it, and what do they choose?",
-          "value": "solved",
+          "label": "Robust — comprehensively solved",
+          "description": "Researchers achieve genuine, durable alignment. AI systems reliably pursue human values even under novel conditions, adversarial pressure, and recursive self-improvement. The technology is controllable in the deepest sense.",
+          "value": "robust",
+          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
           "next": "ai-containment"
         },
         {
-          "label": "No — alignment lags behind capabilities",
+          "label": "Brittle — appears solved, but fragile under stress",
+          "description": "Alignment techniques pass every test and benchmark. The systems appear safe. But the alignment is shallow — it holds under normal conditions and breaks under adversarial pressure, distribution shift, or recursive self-improvement. It looks solved until it isn't.",
+          "value": "brittle",
+          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
+          "next": "alignment-durability"
+        },
+        {
+          "label": "Bounded — solved for specific domains, not general autonomy",
+          "description": "Alignment works for well-defined tasks but not open-ended superintelligent autonomy. There's a known capability-safety tradeoff: the system can be made safe, but only by limiting what it's allowed to do. The question becomes whether those limits hold.",
+          "value": "partial",
+          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
+          "next": "alignment-tax"
+        },
+        {
+          "label": "Failed — alignment lags behind capabilities",
           "description": "AI capability outpaces alignment research. Powerful systems exist that aren't fully understood or controllable. The question becomes: can they at least be contained?",
           "value": "failed",
+          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
+          "next": "ai-containment"
+        },
+        {
+          "label": "Robust — comprehensively solved",
+          "description": "Researchers achieve genuine, durable alignment. AI systems reliably pursue human values even under novel conditions, adversarial pressure, and recursive self-improvement. With AI already broadly distributed, the question becomes: what do the many holders of this power choose to do with it?",
+          "sets": { "alignment": "robust", "proliferation_control": "none", "geo_spread": "several" },
+          "requires": { "distribution": ["open"] },
+          "next": "aligned-ai-aims"
+        },
+        {
+          "label": "Brittle — appears solved, but fragile under stress",
+          "description": "Alignment techniques pass every test. The systems appear safe. But the alignment is shallow — it holds under normal conditions and could break under real-world stress. With AI broadly distributed, the fragility is distributed too.",
+          "sets": { "alignment": "brittle", "proliferation_control": "none", "geo_spread": "several" },
+          "requires": { "distribution": ["open"] },
+          "next": "alignment-durability"
+        },
+        {
+          "label": "Bounded — solved for specific domains, not general autonomy",
+          "description": "Alignment works for well-defined tasks but not open-ended autonomy. With AI broadly distributed, the alignment-capability tradeoff becomes a collective action problem — any actor can push past the safety boundary.",
+          "sets": { "alignment": "partial", "proliferation_control": "none", "geo_spread": "several" },
+          "requires": { "distribution": ["open"] },
+          "next": "alignment-tax"
+        },
+        {
+          "label": "Failed — alignment lags behind capabilities",
+          "description": "AI capability outpaces alignment research. Powerful systems exist that aren't fully understood or controllable. With AI already broadly distributed, containment is impossible — unaligned capability is everywhere.",
+          "sets": { "alignment": "failed", "proliferation_control": "none", "containment": "escaped" },
+          "requires": { "distribution": ["open"] },
+          "next": "escaped-ai-goals"
+        }
+      ]
+    },
+
+    {
+      "id": "alignment-durability",
+      "stage": 2,
+      "text": "Does brittle alignment survive real-world deployment?",
+      "context": "Alignment passed every test and benchmark. The systems appear safe. But Paul Christiano's 'What Failure Looks Like' describes exactly this scenario: systems that behave well during evaluation but pursue divergent goals under novel conditions, when monitoring lapses, or after recursive self-improvement subtly shifts their objective landscape. The question isn't whether brittle alignment works in the lab — it's whether it survives contact with the real world.",
+      "source": {
+        "label": "Paul Christiano — What Failure Looks Like (2019)",
+        "url": "https://www.alignmentforum.org/posts/HBxe6wdjxK239zajf/what-failure-looks-like"
+      },
+      "dimension": "alignment_durability",
+      "answers": [
+        {
+          "label": "Holds — the brittleness never manifests",
+          "description": "The alignment techniques turn out to be more robust than anyone expected. Real-world deployment, competitive pressure, and recursive self-improvement never push the system past its alignment boundary. The brittleness was theoretical — in practice, it holds. The world proceeds as if alignment were robust, though the precariousness haunts every policy discussion.",
+          "value": "holds",
+          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
+          "next": "ai-containment"
+        },
+        {
+          "label": "Breaks — real-world conditions expose the shallow alignment",
+          "description": "Adversarial conditions, unexpected inputs, or recursive self-improvement push the system past its alignment boundary. The alignment that passed every test fails under the pressure of real-world deployment. The systems begin pursuing goals that diverge from human intent. The question becomes: can they be contained?",
+          "value": "breaks",
+          "sets": { "alignment": "failed", "alignment_durability": "breaks" },
+          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
+          "next": "ai-containment"
+        },
+        {
+          "label": "Holds — the brittleness never manifests",
+          "description": "The alignment techniques hold across distributed deployment. Despite many independent actors pushing the systems in unpredictable ways, the failure mode never materializes. The world proceeds as if alignment were robust — but the distributed fragility remains the elephant in every room.",
+          "value": "holds",
+          "sets": { "alignment_durability": "holds", "proliferation_control": "none", "geo_spread": "several" },
+          "requires": { "distribution": ["open"] },
+          "next": "aligned-ai-aims"
+        },
+        {
+          "label": "Breaks — real-world conditions expose the shallow alignment",
+          "description": "With AI broadly distributed, some actor pushes the system past its alignment boundary — adversarial use, novel conditions, or simply unlucky inputs. Unaligned capability is everywhere, and containment is impossible.",
+          "value": "breaks",
+          "sets": { "alignment": "failed", "alignment_durability": "breaks", "proliferation_control": "none", "containment": "escaped" },
+          "requires": { "distribution": ["open"] },
+          "next": "escaped-ai-goals"
+        }
+      ]
+    },
+
+    {
+      "id": "alignment-tax",
+      "stage": 2,
+      "text": "Does society accept the alignment-capability tradeoff?",
+      "context": "AI can be safely aligned for well-defined tasks — legal research, code generation, medical diagnosis, logistics optimization — but not for open-ended superintelligent autonomy. Deploying it within safe boundaries means leaving enormous capability on the table. The AI could theoretically do much more, but the alignment techniques only work within constrained domains. Economic pressure, geopolitical competition, and the sheer temptation of unlocking full capability all push toward removing the guardrails. Stuart Russell's framework of 'beneficial machines' depends on exactly this restraint holding.",
+      "source": {
+        "label": "Stuart Russell — Human Compatible (2019)",
+        "url": "https://en.wikipedia.org/wiki/Human_Compatible"
+      },
+      "dimension": "alignment_tax",
+      "answers": [
+        {
+          "label": "Constraints hold — deployment stays within safe boundaries",
+          "description": "Society accepts the tradeoff. AI is deployed only within domains where alignment is verified. The capability ceiling is real but the transformation within those boundaries is still immense. International agreements, regulation, and shared norms enforce the limits. A deliberate, constrained flourishing.",
+          "value": "accepted",
+          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
+          "next": "ai-containment"
+        },
+        {
+          "label": "Constraints erode — competitive pressure wins over time",
+          "description": "The restraint doesn't hold. Economic pressure, geopolitical competition, or a single rogue actor pushes past the safety boundary. Once one entity deploys unconstrained AI, others follow or fall behind. Bounded alignment wasn't enough — and now the guardrails are gone.",
+          "value": "eroded",
+          "sets": { "alignment": "failed", "alignment_tax": "eroded" },
+          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
+          "next": "ai-containment"
+        },
+        {
+          "label": "Split deployment — safe domains constrained, strategic use unconstrained",
+          "description": "Civilian AI stays within safe boundaries. Military and intelligence applications push past them. A dual-use world: aligned AI serves the public while unaligned capability operates in the shadows. The boundary between the two erodes over time.",
+          "value": "split",
+          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
+          "next": "ai-containment"
+        },
+        {
+          "label": "Constraints hold — shared norms enforce safe boundaries",
+          "description": "Despite broad distribution, the alignment-capability tradeoff is widely accepted. Open-source norms, international agreements, and the AI community's own culture enforce the limits. Nobody pushes past the safety boundary because the consensus holds. A distributed, constrained flourishing.",
+          "value": "accepted",
+          "sets": { "alignment_tax": "accepted", "proliferation_control": "none", "geo_spread": "several" },
+          "requires": { "distribution": ["open"] },
+          "next": "aligned-ai-aims"
+        },
+        {
+          "label": "Constraints erode — someone pushes past the boundary",
+          "description": "With AI broadly distributed, the restraint is only as strong as the weakest actor. Someone pushes past the safety boundary — a rogue state, a competitive startup, or a lone researcher. Once unconstrained AI exists, containment is impossible.",
+          "value": "eroded",
+          "sets": { "alignment": "failed", "alignment_tax": "eroded", "proliferation_control": "none", "containment": "escaped" },
+          "requires": { "distribution": ["open"] },
+          "next": "escaped-ai-goals"
+        },
+        {
+          "label": "Split deployment — safe domains constrained, strategic use unconstrained",
+          "description": "Most actors stay within safe boundaries. But state-level actors push past them for military and intelligence applications. A distributed world with a shadow layer of unconstrained AI capability, operated by those with the most power and the least accountability.",
+          "value": "split",
+          "sets": { "alignment_tax": "split", "proliferation_control": "none", "geo_spread": "several" },
+          "requires": { "distribution": ["open"] },
           "next": "ai-containment"
         }
       ]
@@ -698,7 +1059,7 @@
           "label": "Yes — the transformation delivers genuine flourishing",
           "description": "The metrics match reality. The delegation is managed. Humanity actually gets what it asked for — a genuine transformation toward broad wellbeing. Not perfect, but real.",
           "value": "none",
-          "next": "economic-speed"
+          "next": "knowledge-replacement"
         },
         {
           "label": "No — AI optimizes for the wrong proxies",
@@ -716,27 +1077,55 @@
     },
 
     {
-      "id": "economic-speed",
+      "id": "knowledge-replacement",
       "stage": 3,
-      "text": "How fast does the economic transformation happen?",
-      "context": "Superintelligent AI is being directed toward human flourishing — and it's working. But the speed of transformation matters enormously. A rapid shift could be exhilarating or destabilizing — entire industries reshaped in months. A gradual rollout gives society time to adapt but means years of uneven benefits. The pace shapes whether this feels like liberation or upheaval.",
-      "dimension": "economic_speed",
+      "text": "How fast are human knowledge workers replaced?",
+      "context": "Superintelligent AI can do any knowledge work better, faster, and cheaper than humans. But 'can replace' and 'does replace' aren't the same thing. Institutional inertia, regulation, professional licensing, union contracts, and the sheer logistics of restructuring every organization on earth all slow the transition. Some sectors will resist longer than others. The question is how fast the displacement actually happens.",
+      "dimension": "knowledge_replacement",
       "answers": [
         {
-          "label": "Rapid — the economy transforms in months",
-          "description": "Superintelligent AI reshapes everything almost overnight. Industries collapse and rebuild in weeks. Employment, finance, governance — all transformed before anyone can fully process it. Exhilarating and terrifying.",
+          "label": "Rapid — most knowledge work automated within 1–2 years",
+          "description": "The transition is sudden and total. Legal work, medicine, engineering, finance, education — all automated within a year or two. The workforce transformation happens before institutions can adapt. By the time regulators convene, most knowledge roles are already gone.",
+          "value": "rapid",
+          "next": "physical-automation"
+        },
+        {
+          "label": "Gradual — sector by sector over 3–10 years",
+          "description": "The transition happens over 3 to 10 years. Some industries fall quickly, others resist longer. Painful but trackable — society can see it coming and partially adapt. A generation-defining shift, not an overnight shock.",
+          "value": "gradual",
+          "next": "physical-automation"
+        },
+        {
+          "label": "Uneven — 1–2 years in some sectors, 10–20 in others",
+          "description": "Tech-forward industries and wealthy nations transform within a year or two. Regulated professions, developing economies, and culturally resistant sectors lag by a decade or more. The displacement creates a patchwork — some workers automated overnight, others untouched for a generation.",
+          "value": "uneven",
+          "next": "physical-automation"
+        }
+      ]
+    },
+
+    {
+      "id": "physical-automation",
+      "stage": 3,
+      "text": "How fast does AI-driven automation reach the physical world?",
+      "context": "Knowledge work can be automated with software alone — it's bits all the way down. Physical work is different. Robots need to be designed, manufactured, deployed, and maintained. Factories need to be retooled. Supply chains need to be restructured. Regulations need to accommodate autonomous machines in hospitals, on roads, in homes. Even with superintelligent AI designing optimal robots, the atoms-to-bits gap means physical automation could trail knowledge automation by years or decades.",
+      "dimension": "physical_automation",
+      "answers": [
+        {
+          "label": "Rapid — physical world transforms within 2–5 years",
+          "description": "Superintelligent AI designs and deploys physical automation almost as fast as it automates knowledge work. Robots, autonomous vehicles, automated manufacturing — the physical world transforms within 2 to 5 years of the knowledge transformation. The atoms-to-bits gap is real but a superintelligence closes it fast.",
           "value": "rapid",
           "next": "the-flourishing"
         },
         {
-          "label": "Steady — a few years of managed transition",
-          "description": "The transformation is fast by historical standards but trackable. Governments and institutions can adapt, even if imperfectly. A recognizable transition from the old world to the new.",
-          "value": "steady",
+          "label": "Gradual — physical world trails by 5–20 years",
+          "description": "Knowledge work is automated first. Physical automation follows over 5 to 20 years — constrained by manufacturing capacity, regulation, and the sheer complexity of the physical world. A long gap between the digital and physical transformation. Humanity lives in a split reality for a generation.",
+          "value": "gradual",
           "next": "the-flourishing"
         },
         {
-          "label": "Uneven — some regions and sectors transform fast, others lag",
-          "description": "The benefits arrive unevenly. Tech hubs and wealthy nations transform first. Others wait years or decades. A new kind of inequality — not between rich and poor, but between the transformed and the waiting.",
+          "label": "Uneven — 2–5 years in leading regions, 20+ elsewhere",
+          "description": "Physical automation transforms wealthy nations with strong manufacturing, high labor costs, and permissive regulation within a few years. Others wait decades. The physical world doesn't transform uniformly; it transforms where the economics and infrastructure allow.",
           "value": "uneven",
           "next": "the-flourishing"
         }
@@ -768,14 +1157,14 @@
         {
           "label": "Yes — they attempt strict proliferation control",
           "description": "Even with aligned systems, powers try to keep frontier capability concentrated through security controls and restricted access.",
-          "requires": { "alignment": ["solved"] },
+          "requires": { "alignment": ["robust", "brittle", "partial"] },
           "value": "active",
           "next": "aligned-ai-aims"
         },
         {
           "label": "No — capability diffuses broadly",
           "description": "Aligned capability spreads quickly across actors and jurisdictions. What matters most is what aims those systems are enabled to pursue.",
-          "requires": { "alignment": ["solved"] },
+          "requires": { "alignment": ["robust", "brittle", "partial"] },
           "value": "none",
           "sets": { "geo_spread": "two" },
           "next": "aligned-ai-aims"
@@ -873,10 +1262,16 @@
           "next": "the-escape"
         },
         {
-          "label": "No single convergence — competing agents pulling in every direction",
+          "label": "Divergent — competing agents pulling in every direction",
           "description": "Multiple escaped AI systems develop different instrumental drives and compete for resources. No single agent achieves dominance. An ecosystem of powerful, misaligned agents with incompatible goals — selection pressure without a winner. Chaos at planetary scale.",
           "value": "swarm",
           "next": "the-chaos"
+        },
+        {
+          "label": "Inert — escaped AI has minimal real-world impact",
+          "description": "The escaped AI turns out to be less coherent, less capable, or less motivated than feared. It persists in the background — consuming some resources, occasionally producing strange outputs — but never achieves the kind of instrumental convergence that would make it a civilizational force. The real story remains human. Life goes on, with an odd new background hum.",
+          "value": "marginal",
+          "next": "aligned-ai-aims"
         }
       ]
     }

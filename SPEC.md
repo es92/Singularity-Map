@@ -12,19 +12,35 @@ Singularity Map is an interactive, choose-your-own-adventure experience that gui
 
 The questionnaire collects a set of **dimensions** — the key variables that define an AI future. Each question sets one or more dimension values based on the user's answer.
 
-| Dimension | Values | Source Question |
+| Dimension | Values | Source Question(s) |
 |---|---|---|
 | `capability` | `singularity`, `hours`, `days`, `weeks`, `months` | scaling-continues, where-tops-out |
 | `stall_recovery` | `mild`, `substantial`, `never` | stall-recovery |
-| `takeoff` | `gradual`, `hard` | takeoff-speed |
-| `distribution` | `open`, `lagging`, `concentrated`, `monopoly` | who-controls (or implicitly set by hard takeoff) |
-| `alignment` | `solved`, `failed` | alignment |
-| `containment` | `contained`, `escaped` | ai-containment |
-| `power_structure` | `monopoly`, `oligopoly`, `distributed`, `international` | power-structure |
-| `intent` | `flourishing`, `self_interest`, `coexistence`, `rivalry`, `escalation` | controller-intent |
-| `economic_speed` | `rapid`, `steady`, `uneven` | economic-speed |
+| `automation` | `deep`, `shallow` | automation-depth |
+| `automation_recovery` | `mild`, `substantial`, `never` | automation-recovery |
+| `takeoff` | `gradual`, `fast`, `hard` | feedback-speed |
+| `open_source` | `near_parity`, `six_months`, `twelve_months`, `twenty_four_months` | open-source-parity |
+| `distribution` | `open`, `lagging`, `concentrated`, `monopoly` | open-source-parity, frontier-concentration (or implicitly set by hard takeoff) |
+| `geo_spread` | `one`, `two`, `several` | geo-spread (or implicitly set by hard takeoff / decel checkpoints) |
+| `sovereignty` | `lab`, `state` | lab-or-state |
+| `governance` | `slowdown`, `race` | government-response, decel checkpoints |
+| `alignment` | `robust`, `brittle`, `bounded`, `failed` | alignment, decel checkpoints |
+| `alignment_durability` | `holds`, `breaks` | alignment-durability |
+| `alignment_tax` | `accepted`, `eroded`, `split` | alignment-tax |
+| `proliferation_control` | `active`, `none` | ai-containment |
+| `enabled_aims` | `human_centered`, `proxy`, `arbitrary` | aligned-ai-aims |
+| `containment` | `contained`, `escaped` | containment-durability (or implicitly set by various paths) |
+| `intent` | `self_interest`, `coexistence`, `rivalry`, `escalation`, `international` | power-dynamics |
 | `failure_mode` | `none`, `whimper`, `disempowerment` | implementation-risk |
-| `ai_goals` | `benevolent`, `alien_coexistence`, `alien_extinction`, `paperclip`, `swarm` | escaped-ai-goals |
+| `knowledge_replacement` | `rapid`, `gradual`, `uneven` | knowledge-replacement |
+| `physical_automation` | `rapid`, `gradual`, `uneven` | physical-automation |
+| `auto_knowledge_rate` | `rapid`, `gradual`, `uneven` | auto-knowledge-rate |
+| `auto_physical_rate` | `rapid`, `gradual`, `uneven`, `limited` | auto-physical-rate |
+| `economic_distribution` | `broad`, `concentrated`, `uneven` | plateau-economics |
+| `plateau_knowledge_rate` | `rapid`, `gradual`, `uneven`, `limited` | plateau-knowledge-rate |
+| `plateau_physical_rate` | `gradual`, `uneven`, `limited` | plateau-physical-rate |
+| `automation_distribution` | `broad`, `concentrated`, `uneven` | automation-distribution |
+| `ai_goals` | `benevolent`, `alien_coexistence`, `alien_extinction`, `paperclip`, `swarm`, `marginal` | escaped-ai-goals |
 
 Not every path sets every dimension — only the dimensions relevant to that branch.
 
@@ -41,7 +57,7 @@ Instead of fixed outcomes, the system uses **parameterized templates**. Each tem
 
 Templates without variants (e.g. `the-mosaic`) are standalone outcomes with direct title/mood/summary fields.
 
-**Current templates:** 9 templates → 20 outcome variants.
+**Current templates:** 10 templates → 19 outcome variants.
 
 ### 3. Question Tree (Decision Graph)
 
@@ -87,7 +103,7 @@ These are the major dimensions / branching factors the question tree should expl
 | **Scaling wall** | If progress slows, where does it stall — reasoning? robotics? generality? |
 | **Open-source parity** | Does open-source keep pace with frontier labs? |
 | **Geopolitical race** | Does China keep pace with (or surpass) the US? |
-| **Alignment / safety** | Are alignment techniques solved before superhuman AI arrives? |
+| **Alignment / safety** | How well are alignment techniques solved — robust, brittle, bounded, or failed? |
 | **Regulation** | Do governments successfully regulate AI development? |
 | **Economic disruption** | How fast does AI displace jobs — gradual transition or sudden shock? |
 | **Concentration of power** | Does AI consolidate power in a few actors, or distribute it? |

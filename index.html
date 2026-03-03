@@ -754,6 +754,9 @@
             { id: 'takeoff', label: 'Feedback Loop', stage: 1,
               visibleWhen: { capability: ['singularity'], automation: ['deep'] }, values: [
                 { id: 'gradual', label: 'Gradual' }, { id: 'fast', label: 'Fast' }, { id: 'hard', label: 'Explosive' } ] },
+            { id: 'governance_window', label: 'Governance Window', stage: 1,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], takeoff: ['gradual'] }, values: [
+                { id: 'governed', label: 'Active preparation' }, { id: 'race', label: 'Relative complacency' } ] },
             { id: 'open_source', label: 'Open Source', stage: 2,
               visibleWhen: { capability: ['singularity'], automation: ['deep'] },
               lockedWhen: { takeoff: { equals: 'hard', value: 'twenty_four_months' } }, values: [
@@ -773,9 +776,9 @@
             { id: 'sovereignty', label: 'Power Holder', stage: 2,
               visibleWhen: { capability: ['singularity'], automation: ['deep'], distribution: ['monopoly', 'concentrated', 'lagging'], geo_spread: ['one'] }, values: [
                 { id: 'lab', label: 'The labs' }, { id: 'state', label: 'The state' } ] },
-            { id: 'gov_action', label: 'State Policy', stage: 2,
+            { id: 'gov_action', label: 'Deceleration', stage: 2,
               visibleWhen: { capability: ['singularity'], automation: ['deep'], geo_spread: ['one'] },
-              lockedWhen: { takeoff: { equals: 'hard', value: 'accelerate' }, sovereignty: { equals: 'lab', value: 'accelerate' } }, values: [
+              lockedWhen: { takeoff: { equals: 'hard', value: 'accelerate' } }, values: [
                 { id: 'decelerate', label: 'Decelerate' }, { id: 'accelerate', label: 'Accelerate' } ] },
             { id: 'decel_2mo', label: '2 Months', stage: 2,
               visibleWhen: { capability: ['singularity'], automation: ['deep'], gov_action: ['decelerate'] }, values: [
@@ -819,41 +822,82 @@
               visibleWhen: { capability: ['singularity'], automation: ['deep'], decel_18mo: ['continue'] }, values: [
                 { id: 'parity_solved', label: 'Parity — Solved' },
                 { id: 'parity_failed', label: 'Parity — Failed' } ] },
-            { id: 'alignment', label: 'Alignment', stage: 2,
-              visibleWhen: { capability: ['singularity'], automation: ['deep'] }, values: [
-                { id: 'solved', label: 'Solved' }, { id: 'failed', label: 'Failed' } ] },
             { id: 'proliferation_control', label: 'Proliferation Control', stage: 2,
-              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['solved', 'failed'] }, values: [
+              visibleWhen: { capability: ['singularity'], automation: ['deep'] },
+              lockedWhen: { distribution: { equals: 'open', value: 'none' } }, values: [
                 { id: 'active', label: 'Attempt strict control' },
                 { id: 'none', label: 'No durable control' } ] },
             { id: 'enabled_aims', label: 'Enabled Aims', stage: 2,
-              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['solved'], proliferation_control: ['active', 'none'] }, values: [
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], proliferation_control: ['active', 'none'] }, values: [
                 { id: 'human_centered', label: 'Human-centered' },
                 { id: 'proxy', label: 'Proxy / institutional' },
                 { id: 'arbitrary', label: 'Arbitrary / unconstrained', requires: { proliferation_control: ['none'] } } ] },
+            { id: 'alignment', label: 'Alignment', stage: 2,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'] }, values: [
+                { id: 'robust', label: 'Robust' }, { id: 'brittle', label: 'Brittle' },
+                { id: 'partial', label: 'Bounded' }, { id: 'failed', label: 'Failed' } ] },
+            { id: 'alignment_durability', label: 'Alignment Durability', stage: 2,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['brittle'] }, values: [
+                { id: 'holds', label: 'Holds' }, { id: 'breaks', label: 'Breaks' } ] },
+            { id: 'alignment_tax', label: 'Capability Constraints', stage: 2,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['partial'] }, values: [
+                { id: 'accepted', label: 'Constraints hold' }, { id: 'eroded', label: 'Constraints erode' },
+                { id: 'split', label: 'Split deployment' } ] },
             { id: 'containment', label: 'Containment', stage: 2,
               visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['failed'] }, values: [
                 { id: 'contained', label: 'Contained', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } },
                 { id: 'escaped', label: 'Escapes' } ] },
+            { id: 'ai_goals', label: 'AI Converges On', stage: 2,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'] }, values: [
+                { id: 'benevolent', label: 'Benefit humanity' }, { id: 'alien_coexistence', label: 'Alien (tolerant)' },
+                { id: 'alien_extinction', label: 'Alien (total)' }, { id: 'paperclip', label: 'Arbitrary' },
+                { id: 'swarm', label: 'Divergent' }, { id: 'marginal', label: 'Inert' } ] },
             { id: 'intent', label: 'Intent', stage: 2,
-              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['solved'], enabled_aims: ['human_centered', 'proxy'] }, values: [
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle', 'partial'], enabled_aims: ['human_centered', 'proxy'] }, values: [
                 { id: 'self_interest', label: 'Self-interest', requires: [{ distribution: ['monopoly'], geo_spread: ['one'], proliferation_control: ['active'] }, { distribution: ['concentrated', 'lagging'], geo_spread: ['one'], sovereignty: ['state'], proliferation_control: ['active'] }] },
                 { id: 'coexistence', label: 'Coexistence', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }] },
                 { id: 'rivalry', label: 'Rivalry', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }] },
                 { id: 'escalation', label: 'Escalation', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }] },
                 { id: 'international', label: 'International' } ] },
-            { id: 'ai_goals', label: 'AI Converges On', stage: 2,
-              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'] }, values: [
-                { id: 'benevolent', label: 'Benefit humanity' }, { id: 'alien_coexistence', label: 'Alien (tolerant)' },
-                { id: 'alien_extinction', label: 'Alien (total)' }, { id: 'paperclip', label: 'Arbitrary' },
-                { id: 'swarm', label: 'No convergence' } ] },
             { id: 'failure_mode', label: 'Implementation', stage: 3,
-              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['solved'] }, values: [
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle', 'partial'] }, values: [
                 { id: 'none', label: 'Succeeds' }, { id: 'whimper', label: 'Wrong metrics' },
                 { id: 'disempowerment', label: 'Human irrelevance' } ] },
-            { id: 'economic_speed', label: 'Speed', stage: 3,
-              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['solved'], intent: ['international'], failure_mode: ['none'] }, values: [
-                { id: 'rapid', label: 'Rapid' }, { id: 'steady', label: 'Steady' }, { id: 'uneven', label: 'Uneven' } ] }
+            { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle', 'partial'], intent: ['international'], failure_mode: ['none'] }, values: [
+                { id: 'rapid', label: 'Rapid (1–2 yrs)' }, { id: 'gradual', label: 'Gradual (3–10 yrs)' }, { id: 'uneven', label: 'Uneven (1–20 yrs)' },
+                { id: 'limited', label: 'Limited', requires: { capability: ['hours', 'days', 'weeks', 'months'] } } ] },
+            { id: 'physical_automation', label: 'Physical Automation', stage: 3,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle', 'partial'], intent: ['international'], failure_mode: ['none'] }, values: [
+                { id: 'rapid', label: 'Rapid (2–5 yrs)' }, { id: 'gradual', label: 'Gradual (5–20 yrs)' }, { id: 'uneven', label: 'Uneven (2–20+ yrs)' },
+                { id: 'limited', label: 'Limited', requires: { capability: ['hours', 'days', 'weeks', 'months'] } } ] },
+            { id: 'economic_distribution', label: 'Who Benefits?', stage: 3,
+              visibleWhen: { capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }, values: [
+                { id: 'broad', label: 'Broadly shared' }, { id: 'concentrated', label: 'Capital concentrates' },
+                { id: 'uneven', label: 'Uneven by geography' } ] },
+            { id: 'plateau_knowledge_rate', label: 'Knowledge Work', stage: 3,
+              visibleWhen: { capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }, values: [
+                { id: 'rapid', label: 'Rapid (2–5 yrs)', requires: { capability: ['weeks', 'months'] } },
+                { id: 'gradual', label: 'Gradual (5–15 yrs)', requires: { capability: ['days', 'weeks', 'months'] } },
+                { id: 'uneven', label: 'Uneven (2–20+ yrs)' },
+                { id: 'limited', label: 'Limited', requires: { capability: ['hours', 'days'] } } ] },
+            { id: 'plateau_physical_rate', label: 'Physical Automation', stage: 3,
+              visibleWhen: { capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }, values: [
+                { id: 'rapid', label: 'Rapid', requires: { capability: ['singularity'] } },
+                { id: 'gradual', label: 'Gradual (10–25 yrs)', requires: { capability: ['days', 'weeks', 'months'] } },
+                { id: 'uneven', label: 'Uneven (5–20+ yrs)' },
+                { id: 'limited', label: 'Limited' } ] },
+            { id: 'automation_distribution', label: 'Who Benefits?', stage: 3,
+              visibleWhen: { capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }, values: [
+                { id: 'broad', label: 'Broadly shared' }, { id: 'concentrated', label: 'Capital concentrates' },
+                { id: 'uneven', label: 'Uneven by geography' } ] },
+            { id: 'auto_knowledge_rate', label: 'Knowledge Work', stage: 3,
+              visibleWhen: { capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }, values: [
+                { id: 'rapid', label: 'Rapid (2–4 yrs)' }, { id: 'gradual', label: 'Gradual (5–15 yrs)' }, { id: 'uneven', label: 'Uneven (2–20+ yrs)' },
+                { id: 'limited', label: 'Limited', requires: { automation: ['deep'] } } ] },
+            { id: 'auto_physical_rate', label: 'Physical Automation', stage: 3,
+              visibleWhen: { capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }, values: [
+                { id: 'rapid', label: 'Rapid (3–7 yrs)' }, { id: 'gradual', label: 'Gradual (10–25 yrs)' }, { id: 'uneven', label: 'Uneven (3–20+ yrs)' }, { id: 'limited', label: 'Limited' } ] }
         ];
         const DIM_MAP = {};
         for (const d of DIM_META) DIM_MAP[d.id] = d;
@@ -1511,7 +1555,7 @@
 
             const stage1Html = buildStageTree(rootId, 1, [], {});
             const stage2Html = buildStageTree('open-source-parity', 2, [], {});
-            const stage3Html = buildStageTree('economic-speed', 3, [], {});
+            const stage3Html = buildStageTree('knowledge-replacement', 3, [], {});
 
             function stagePanel(id, body) {
                 const info = stagesMap[id];
@@ -1596,15 +1640,20 @@
                     if (sel.gov_action === 'accelerate') return 'race';
                     if (out === 'abandon') return 'race';
                     if (sel.gov_action === 'decelerate') return 'slowdown';
+                    if (sel.governance_window) return sel.governance_window;
                 }
                 if (k === 'alignment') {
-                    if (['solved', 'parity_solved'].includes(out)) return 'solved';
+                    if (['solved', 'parity_solved'].includes(out)) return 'robust';
+                    if (sel.ai_goals === 'marginal') return sel[k] === 'failed' ? 'partial' : sel[k];
                     if (['escapes', 'abandon', 'rival', 'parity_failed'].includes(out)) return 'failed';
                     if (sel.enabled_aims === 'arbitrary') return 'failed';
+                    if (sel.alignment_durability === 'breaks') return 'failed';
+                    if (sel.alignment_tax === 'eroded') return 'failed';
+                    if (['split', 'accepted'].includes(sel.alignment_tax) && sel.containment === 'escaped') return 'failed';
                 }
                 if (k === 'containment' && ['escapes', 'parity_failed'].includes(out)) return 'escaped';
                 if (k === 'containment' && sel.proliferation_control === 'none' && effectiveVal('alignment') === 'failed') return 'escaped';
-                if (k === 'containment' && sel.enabled_aims === 'arbitrary') return 'escaped';
+                if (k === 'containment' && sel.enabled_aims === 'arbitrary' && sel.ai_goals !== 'marginal') return 'escaped';
                 if (k === 'failure_mode' && sel.enabled_aims === 'proxy') return 'whimper';
                 if (k === 'geo_spread') {
                     if (['parity_solved', 'parity_failed', 'rival'].includes(out)) return 'two';
@@ -1618,9 +1667,18 @@
                 if (dim.id === 'proliferation_control') {
                     if (['escapes', 'parity_failed'].includes(out)) return false;
                 }
-                if (dim.id === 'containment' && ['solved', 'parity_solved'].includes(out)) return false;
-                if (dim.id === 'containment' && effectiveVal('alignment') !== 'failed') return false;
-                if (dim.id === 'containment' && !['escapes', 'parity_failed'].includes(out) && !sel.proliferation_control) return false;
+                if (dim.id === 'containment') {
+                    if (['solved', 'parity_solved'].includes(out)) return false;
+                    const alignFailed = effectiveVal('alignment') === 'failed';
+                    const partialEscapeRisk = ['split', 'accepted'].includes(sel.alignment_tax);
+                    const marginalEscape = sel.ai_goals === 'marginal';
+                    if (!alignFailed && !partialEscapeRisk && !marginalEscape) return false;
+                    if (!['escapes', 'parity_failed'].includes(out) && !sel.proliferation_control && !marginalEscape) return false;
+                    return effectiveVal('capability') === 'singularity' && effectiveVal('automation') === 'deep';
+                }
+                if (dim.id === 'ai_goals' && sel.ai_goals === 'marginal' && sel.containment === 'escaped') {
+                    return effectiveVal('capability') === 'singularity' && effectiveVal('automation') === 'deep';
+                }
                 if (dim.id === 'failure_mode' && sel.enabled_aims !== 'proxy' && sel.intent !== 'international') return false;
                 const failedContained = effectiveVal('alignment') === 'failed' && sel.containment === 'contained';
                 if (dim.id === 'intent' && failedContained) return true;
@@ -1630,7 +1688,8 @@
                         || (dim.id === 'automation_recovery' && k === 'automation')
                         || (dim.id === 'sovereignty' && k === 'geo_spread')
                         || (dim.id === 'gov_action' && k === 'geo_spread')
-                        || (dim.id === 'enabled_aims' && k === 'alignment');
+                        || (dim.id === 'alignment_durability' && k === 'alignment')
+                        || (dim.id === 'alignment_tax' && k === 'alignment');
                     const v = useRaw ? sel[k] : effectiveVal(k);
                     if (!v || !allowed.includes(v)) return false;
                 }
@@ -1641,7 +1700,7 @@
                     const out = decelOutcome();
                     if (['escapes', 'parity_failed'].includes(out)) return 'escaped';
                     if (sel.proliferation_control === 'none' && effectiveVal('alignment') === 'failed') return 'escaped';
-                    if (sel.enabled_aims === 'arbitrary') return 'escaped';
+                    if (sel.enabled_aims === 'arbitrary' && sel.ai_goals !== 'marginal') return 'escaped';
                 }
                 if (dim.id === 'failure_mode' && sel.enabled_aims === 'proxy') return 'whimper';
                 if (!dim.lockedWhen) return null;
@@ -1685,12 +1744,13 @@
                 if (sel.gov_action === 'accelerate') d.governance = 'race';
                 else if (out === 'abandon') d.governance = 'race';
                 else if (sel.gov_action === 'decelerate') d.governance = 'slowdown';
-                if (['solved', 'parity_solved'].includes(out)) d.alignment = 'solved';
+                else if (sel.governance_window) d.governance = sel.governance_window;
+                if (['solved', 'parity_solved'].includes(out)) d.alignment = 'robust';
                 if (['escapes', 'abandon', 'rival', 'parity_failed'].includes(out)) d.alignment = 'failed';
-                if (d.enabled_aims === 'arbitrary') d.alignment = 'failed';
+                if (d.enabled_aims === 'arbitrary' && d.ai_goals !== 'marginal') d.alignment = 'failed';
                 if (['escapes', 'parity_failed'].includes(out)) d.containment = 'escaped';
                 if (d.proliferation_control === 'none' && d.alignment === 'failed') d.containment = 'escaped';
-                if (d.enabled_aims === 'arbitrary') d.containment = 'escaped';
+                if (d.enabled_aims === 'arbitrary' && d.ai_goals !== 'marginal') d.containment = 'escaped';
                 if (d.enabled_aims === 'proxy') d.failure_mode = 'whimper';
                 if (['parity_solved', 'parity_failed', 'rival'].includes(out)) {
                     d.geo_spread = 'two';

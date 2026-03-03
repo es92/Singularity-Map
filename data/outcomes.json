@@ -28,8 +28,24 @@
       },
       "flavors": {
         "stall_recovery": {
-          "substantial": "But this may not be permanent. A major architectural breakthrough or new paradigm could restart the exponential trend. The singularity isn't cancelled — it's on pause. The world builds around current capability, watching and waiting for the next leap.",
-          "never": "And the ceiling appears to be permanent. No breakthrough on the horizon, no new paradigm in sight. This is the new normal — not a pause, but an endpoint."
+          "substantial": "But this may not be permanent. A major architectural breakthrough — world models, neurosymbolic reasoning, or something not yet imagined — could restart the exponential trend. The singularity isn't cancelled; it's delayed. The world builds around current capability for years or decades, and when the breakthrough comes, all the questions about alignment, power, and distribution play out in a society already reshaped by powerful-but-limited AI.",
+          "never": "And the ceiling appears to be permanent. No breakthrough on the horizon, no new paradigm in sight. This is the new normal — not a pause, but an endpoint. The most powerful tool humanity ever built, deployed and adapted to, but never transcended."
+        },
+        "economic_distribution": {
+          "broad": "The productivity gains from AI flow broadly — lower costs, better services, public investment in the gap between what AI can do and what it can't. The plateau feels less like stagnation and more like a rising floor.",
+          "concentrated": "The AI plateau concentrates wealth. Those who own the systems capture the productivity gains; everyone else competes for the shrinking pool of work AI can't do. A new gilded age — not built on factories and railroads, but on models and compute.",
+          "uneven": "The plateau's benefits arrive unevenly. Tech-forward regions and industries transform first; others wait years, watching the future happen somewhere else. The ceiling is the same everywhere. The floor is not."
+        },
+        "plateau_knowledge_rate": {
+          "rapid": "Within AI's capability ceiling, adoption is swift and total. Any knowledge task AI can handle is automated within a few years. The ceiling limits what changes — but within those limits, the transformation is fast and deep.",
+          "gradual": "Adoption unfolds slowly — sector by sector, firm by firm, constrained by institutional inertia and regulation. The ceiling is fixed, but even reaching it takes a decade. A long, trackable transition.",
+          "uneven": "Some industries automate overnight; others hold out for years. The plateau creates a patchwork economy — a fixed technological ceiling, but wildly uneven adoption beneath it.",
+          "limited": "AI augments knowledge workers but rarely replaces them outright. The capability ceiling is binding — AI handles pieces of roles, not whole roles. Productivity rises, but employment patterns shift more than they collapse. The most significant tool ever built, used mostly as an assistant."
+        },
+        "plateau_physical_rate": {
+          "gradual": "Physical automation trails the digital transformation by years. Knowledge work is restructured first; the physical world follows slowly, constrained by hardware, regulation, and the sheer complexity of atoms.",
+          "uneven": "Physical automation advances in pockets — wealthy nations with strong manufacturing and high labor costs invest heavily. Developing economies and rural areas see little change. The AI plateau amplifies existing global inequalities in physical infrastructure.",
+          "limited": "The AI plateau means robotics stagnates too. Without more capable AI, physical automation stays limited to structured environments. The unstructured physical world remains human territory — and human employment."
         }
       },
       "reachable": [
@@ -43,14 +59,30 @@
       "id": "the-automation",
       "title": "The Automation",
       "mood": "mixed",
-      "summary": "AI capability keeps growing — it handles longer and more complex tasks every year. Routine knowledge work is systematically automated: legal research, code maintenance, data analysis, writing, translation. Millions of jobs transform or disappear. But genuinely novel work — original research, creative breakthroughs, the kind of thinking that would let AI improve itself — remains stubbornly human. No intelligence explosion. Instead, the most powerful tool ever built, deployed across every industry over decades. Transformative, disruptive, but manageable.",
+      "summary": "AI capability keeps growing — it handles longer and more complex tasks every year. Routine knowledge work is systematically automated: legal research, code maintenance, data analysis, writing, translation. Millions of jobs transform or disappear. But genuinely novel work — original research, creative breakthroughs, the kind of thinking that would let AI improve itself — remains stubbornly human. No intelligence explosion. Instead, the most powerful tool ever built, deployed across every industry. Transformative, disruptive, but manageable — and the world that emerges from decades of this transformation will be profoundly different from the one that entered it.",
       "flavors": {
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. Capability kept scaling, even if the intelligence explosion never arrived."
         },
         "automation_recovery": {
-          "substantial": "The barrier between routine and creative AI work eventually breaks — but it takes years to decades. By then, the world has already adapted to the automation plateau, and the breakthrough arrives into a transformed society.",
-          "never": "The ceiling is permanent. Novel creative work, original research, and recursive self-improvement remain forever beyond AI. This is the final form of artificial intelligence: an extraordinarily powerful tool, but a tool nonetheless."
+          "substantial": "The barrier between routine and creative AI work eventually breaks — but it takes years to decades. By then, the world has already adapted to the automation plateau, rebuilt its institutions around it, and the breakthrough arrives into a society that looks nothing like the one that started waiting. When the intelligence explosion finally comes, it transforms a world already profoundly reshaped by decades of powerful-but-limited AI.",
+          "never": "The ceiling is permanent. Novel creative work, original research, and recursive self-improvement remain forever beyond AI. This is the final form of artificial intelligence: an extraordinarily powerful tool, but a tool nonetheless. The world adapts — and what emerges over decades of deep automation is its own kind of transformation, even without the singularity."
+        },
+        "automation_distribution": {
+          "broad": "The productivity gains from AI automation flow broadly — lower costs, better services, new industries absorbing displaced workers. The transformation is disruptive but ultimately equalizing.",
+          "concentrated": "Those who own the AI systems capture the lion's share. Labor's declining share of income becomes the defining economic fact of the era. Wealth concentrates among those who own the models and the platforms, while everyone else competes for the shrinking pool of work AI can't do.",
+          "uneven": "The automation dividend arrives unevenly. Tech-forward regions and industries are enriched; others are hollowed out. A new geography of prosperity and decline, shaped not by natural resources but by proximity to AI."
+        },
+        "auto_knowledge_rate": {
+          "rapid": "Routine knowledge work is displaced within a few years — fast enough to be felt as a shock. The cost advantage of AI is simply too large for organizations to ignore.",
+          "gradual": "The displacement unfolds over a decade or more, sector by sector. Fast by historical standards, but slow enough that workers and institutions can partially adapt.",
+          "uneven": "Some industries automate overnight; others hold out for years. The transition creates a patchwork economy — some workers displaced immediately, others untouched for a generation."
+        },
+        "auto_physical_rate": {
+          "rapid": "Physical automation follows closely behind knowledge work. AI-designed robots and autonomous systems transform manufacturing, logistics, agriculture, and construction within years.",
+          "gradual": "Knowledge work is automated first. Physical automation trails by years to decades — constrained by manufacturing, regulation, and the irreducible complexity of the physical world.",
+          "uneven": "Physical automation transforms manufacturing hubs and wealthy nations first. Developing economies, rural areas, and heavily regulated sectors lag by years or decades. The physical transformation is real but deeply unequal — some regions live in the automated future while others barely notice.",
+          "limited": "Despite capable AI, physical automation remains limited. Robots handle factories and warehouses, but the unstructured physical world — caregiving, repair, construction, agriculture — remains human territory."
         }
       },
       "reachable": [
@@ -63,22 +95,22 @@
     {
       "id": "the-flourishing",
       "title": "The Flourishing",
-      "primaryDimension": "economic_speed",
+      "primaryDimension": "knowledge_replacement",
       "variants": {
         "rapid": {
           "subtitle": "The Acceleration",
           "mood": "utopian",
-          "summary": "The singularity arrives like a wave. Superintelligent AI directed toward human flourishing transforms everything in months — energy, medicine, education, governance. Industries that took centuries to build are rebuilt in weeks. It's exhilarating and disorienting in equal measure. The old world doesn't gradually fade; it's simply replaced. Humanity wakes up in a different civilization."
+          "summary": "Knowledge work is automated in a rush — legal, medical, engineering, financial, creative work all displaced within months. The workforce transformation is sudden and total. Superintelligent AI directed toward human flourishing rebuilds entire industries before anyone can fully process what happened. Exhilarating and disorienting in equal measure. Humanity wakes up in a different civilization."
         },
-        "steady": {
+        "gradual": {
           "subtitle": "The Global Compact",
           "mood": "utopian",
-          "summary": "Superintelligent AI is directed toward human benefit through managed, deliberate transition. The transformation is fast by historical standards but trackable. Governments and institutions adapt, even if imperfectly. A recognizable transition from the old world to the new."
+          "summary": "Knowledge work is automated sector by sector over years. Superintelligent AI is directed toward human benefit through managed, deliberate transition. Governments and institutions can adapt, even if imperfectly. A recognizable transition from the old world to the new — fast by historical standards, but trackable."
         },
         "uneven": {
           "subtitle": "The Uneven Singularity",
           "mood": "mixed",
-          "summary": "The transformation arrives — but not for everyone at once. Tech hubs and wealthy nations are reshaped first. Diseases cured, energy solved, abundance achieved — in some places. Others wait years or decades, watching the future arrive somewhere else. A new kind of inequality emerges: not between rich and poor, but between the transformed and the still-waiting. The singularity is real. It's just not evenly distributed."
+          "summary": "The transformation of knowledge work arrives — but not for everyone at once. Tech hubs and wealthy nations see their workforces reshaped first. Diseases cured, energy solved, abundance achieved — in some places. Others wait years or decades, watching the future arrive somewhere else. A new kind of inequality: not between rich and poor, but between the transformed and the still-waiting."
         }
       },
       "flavors": {
@@ -107,10 +139,20 @@
         },
         "automation_recovery": {
           "mild": "AI was stuck on routine work for a while — impressive but limited. Then a breakthrough cracked the creative barrier, and the feedback loop finally began. The delay shaped the trajectory but didn't prevent the destination."
+        },
+        "physical_automation": {
+          "rapid": "Physical automation follows closely behind knowledge work — AI-designed robots, autonomous vehicles, and automated manufacturing transform the physical world within years. The digital and physical revolutions arrive almost simultaneously.",
+          "gradual": "Knowledge work is transformed first. The physical world follows, but slowly — constrained by manufacturing, regulation, and the complexity of atoms. For years, humanity lives in a split reality: digital abundance alongside a still-human physical world.",
+          "uneven": "Physical automation transforms some regions and industries rapidly — wealthy nations with manufacturing infrastructure and high labor costs lead the way. Others wait decades. The superintelligence designs optimal robots, but deploying them everywhere takes time, money, and political will that isn't equally distributed."
+        },
+        "alignment": {
+          "robust": "Alignment is comprehensive and durable. The AI systems reliably pursue human values even under novel conditions and recursive self-improvement. The flourishing rests on a genuine foundation — not hope, not luck, but verified safety.",
+          "brittle": "Alignment holds — but everyone knows it might not have. The techniques passed every test, yet the theoretical fragility haunts every policy discussion. Flourishing unfolds in the shadow of a risk that never materialized, and the question of whether it could still break never fully goes away.",
+          "partial": "Alignment works within constrained domains — and those constraints are deliberately maintained. The AI is immensely powerful but intentionally limited. The flourishing is real but bounded: transformative within safe boundaries, with vast capability deliberately left on the table."
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["international"], "failure_mode": ["none"] },
+        { "capability": ["singularity"], "alignment": ["robust", "brittle", "partial"], "intent": ["international"], "failure_mode": ["none"] },
         { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["international"], "failure_mode": ["none"] }
       ],
       "story": ["Outcome story coming soon."],
@@ -149,7 +191,7 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["self_interest"] },
+        { "capability": ["singularity"], "alignment": ["robust", "brittle", "partial"], "intent": ["self_interest"] },
         { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["self_interest"] }
       ],
       "story": ["Outcome story coming soon."],
@@ -195,7 +237,7 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["rivalry", "escalation"] },
+        { "capability": ["singularity"], "alignment": ["robust", "brittle", "partial"], "intent": ["rivalry", "escalation"] },
         { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["rivalry", "escalation"] }
       ],
       "story": ["Outcome story coming soon."],
@@ -205,8 +247,29 @@
     {
       "id": "the-mosaic",
       "title": "The Mosaic",
-      "mood": "mixed",
-      "summary": "Humanity fragments — peacefully. Different groups use their aligned superintelligent AI to build radically different civilizations. Some optimize for individual freedom, others for collective harmony, others for exploration, others for contemplation. There is no single human future anymore. There are hundreds, coexisting in separate spheres — different values, different cultures, eventually different worlds. Not unity, not conflict. Divergence.",
+      "primaryDimension": "alignment",
+      "variants": {
+        "robust": {
+          "subtitle": "The Distributed Flourishing",
+          "mood": "utopian",
+          "summary": "Humanity fragments — peacefully, beautifully. Different groups use their aligned superintelligent AI to build radically different civilizations, each flourishing on its own terms. Some optimize for individual freedom, others for collective harmony, others for exploration, others for contemplation. There is no single human future anymore. There are hundreds — coexisting, thriving, each a different answer to what it means to live well. Not unity. Something better: pluralism at civilizational scale."
+        },
+        "brittle": {
+          "subtitle": "The Precarious Mosaic",
+          "mood": "mixed",
+          "summary": "Humanity fragments peacefully into divergent AI-powered civilizations — each thriving on its own terms. But the alignment undergirding every one of them is brittle. It holds under current conditions. No one knows if it will hold forever. A hundred different futures, each built on the same uncertain foundation. Beautiful, diverse, precarious."
+        },
+        "partial": {
+          "subtitle": "The Constrained Mosaic",
+          "mood": "mixed",
+          "summary": "Humanity fragments into divergent civilizations, each using AI within deliberately constrained boundaries. The alignment works within those limits — and each group shapes its constraints differently. Some push closer to the boundary than others. A mosaic of different risk tolerances, different capability ceilings, different visions of acceptable tradeoff."
+        },
+        "failed": {
+          "subtitle": "The Fragile Mosaic",
+          "mood": "mixed",
+          "summary": "Humanity fragments — peacefully, for now. Different groups diverge into separate AI-powered civilizations, each pursuing its own vision. But the AI systems powering these worlds were never fully aligned — only contained. The pieces coexist, the divergence is real, but the foundation is uncertain. A mosaic held together by containment rather than trust. Beautiful from a distance. Fragile up close."
+        }
+      },
       "flavors": {
         "distribution": {
           "open": "With AI available to everyone, divergence was inevitable. No one needed permission to build a different world.",
@@ -230,7 +293,7 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["coexistence"] },
+        { "capability": ["singularity"], "alignment": ["robust", "brittle", "partial"], "intent": ["coexistence"] },
         { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["coexistence"] }
       ],
       "story": ["Outcome story coming soon."],
@@ -273,7 +336,7 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["international"], "failure_mode": ["whimper", "disempowerment"] },
+        { "capability": ["singularity"], "alignment": ["robust", "brittle", "partial"], "intent": ["international"], "failure_mode": ["whimper", "disempowerment"] },
         { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["international"], "failure_mode": ["whimper", "disempowerment"] }
       ],
       "story": ["Outcome story coming soon."],
