@@ -47,10 +47,14 @@
       "flavors": {
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. Capability kept scaling, even if the intelligence explosion never arrived."
+        },
+        "automation_recovery": {
+          "substantial": "The barrier between routine and creative AI work eventually breaks — but it takes years to decades. By then, the world has already adapted to the automation plateau, and the breakthrough arrives into a transformed society.",
+          "never": "The ceiling is permanent. Novel creative work, original research, and recursive self-improvement remain forever beyond AI. This is the final form of artificial intelligence: an extraordinarily powerful tool, but a tool nonetheless."
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "automation": ["shallow"] }
+        { "capability": ["singularity"], "automation": ["shallow"], "automation_recovery": ["substantial", "never"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
@@ -100,10 +104,14 @@
         },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
+        },
+        "automation_recovery": {
+          "mild": "AI was stuck on routine work for a while — impressive but limited. Then a breakthrough cracked the creative barrier, and the feedback loop finally began. The delay shaped the trajectory but didn't prevent the destination."
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["international"], "failure_mode": ["none"] }
+        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["international"], "failure_mode": ["none"] },
+        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["international"], "failure_mode": ["none"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
@@ -141,7 +149,8 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["self_interest"] }
+        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["self_interest"] },
+        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["self_interest"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
@@ -186,7 +195,8 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["rivalry", "escalation"] }
+        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["rivalry", "escalation"] },
+        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["rivalry", "escalation"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
@@ -220,7 +230,8 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["coexistence"] }
+        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["coexistence"] },
+        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["coexistence"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
@@ -262,37 +273,8 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["international"], "failure_mode": ["whimper", "disempowerment"] }
-      ],
-      "story": ["Outcome story coming soon."],
-      "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
-    },
-
-    {
-      "id": "the-leash",
-      "title": "The Leash",
-      "mood": "mixed",
-      "summary": "Superintelligent AI exists — but humanity never solved alignment, and they know it. Every application is monitored, every output verified, every capability restricted. The most powerful technology ever created, kept permanently on a short leash. Not because humanity chose caution, but because it had no other option. Immense potential, permanently constrained. A world defined by what it chose not to unleash.",
-      "flavors": {
-        "distribution": {
-          "lagging": "The frontier labs hold the leash, but open-source alternatives nip at the edges. Containment requires constant vigilance against less cautious actors.",
-          "concentrated": "A few organizations maintain the containment regime. Their discipline holds — for now.",
-          "monopoly": "One entity controls the leash. Whether that's reassuring or terrifying depends on who's holding it."
-        },
-        "takeoff": {
-          "fast": "The rapid intelligence explosion made containment an emergency improvisation rather than a deliberate strategy. The leash was fashioned in a crisis."
-        },
-        "governance": {
-          "slowdown": "The government-mandated slowdown is what made the leash possible. Without that breathing room, containment would have been impossible.",
-          "failed": "Governments tried to regulate but couldn't keep up. The leash exists despite the absence of coordinated governance, maintained by the labs themselves out of self-preservation.",
-          "race": "The national security framing that drove the race now drives the containment regime. The same governments that accelerated development now enforce the leash — uncomfortable with what they built."
-        },
-        "stall_recovery": {
-          "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
-        }
-      },
-      "reachable": [
-        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"] }
+        { "capability": ["singularity"], "alignment": ["solved"], "intent": ["international"], "failure_mode": ["whimper", "disempowerment"] },
+        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["international"], "failure_mode": ["whimper", "disempowerment"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]

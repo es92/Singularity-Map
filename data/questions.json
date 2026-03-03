@@ -109,6 +109,34 @@
           "label": "No — routine tasks are automated, but novel creative work remains out of reach",
           "description": "AI becomes the most powerful tool ever built for well-defined work — legal research, code maintenance, data analysis, translation. But genuinely novel thinking, original research, and the kind of creative leaps that drive scientific progress remain stubbornly human. No intelligence explosion. A transformation, but a manageable one.",
           "value": "shallow",
+          "next": "automation-recovery"
+        }
+      ]
+    },
+
+    {
+      "id": "automation-recovery",
+      "stage": 1,
+      "text": "Does deep automation eventually arrive?",
+      "context": "AI handles routine work impressively, but novel creative thinking and AI R&D remain out of reach — for now. The history of technology is full of ceilings that turned out to be temporary. New architectures, training paradigms, or unexpected breakthroughs could eventually push AI past the creative barrier. The question is whether that happens, and how long it takes.",
+      "dimension": "automation_recovery",
+      "answers": [
+        {
+          "label": "Yes — within months to a few years",
+          "description": "The barrier between routine and creative work turns out to be thin. A new approach cracks it relatively quickly, and AI begins automating novel research and its own development. The feedback loop begins after a delay.",
+          "sets": { "automation": "deep", "automation_recovery": "mild" },
+          "next": "feedback-speed"
+        },
+        {
+          "label": "Eventually — but it takes years to decades",
+          "description": "The barrier is real and thick. Progress continues slowly, and the breakthrough comes — but only after a long stretch where routine automation is the ceiling. The world adapts to that ceiling before it breaks.",
+          "value": "substantial",
+          "next": "the-automation"
+        },
+        {
+          "label": "No — the ceiling is permanent",
+          "description": "Novel creative work, original research, and recursive self-improvement remain permanently beyond AI. The routine automation plateau is the final state. Transformative, but not transcendent.",
+          "value": "never",
           "next": "the-automation"
         }
       ]
@@ -297,7 +325,7 @@
           "label": "Yes — alignment is solved",
           "description": "Two months was enough. Researchers crack the alignment problem while development is paused. The technology is now safe and controllable.",
           "sets": { "governance": "slowdown", "alignment": "solved" },
-          "next": "power-dynamics"
+          "next": "ai-containment"
         },
         {
           "label": "Not yet — keep trying",
@@ -335,7 +363,7 @@
           "label": "Yes — alignment is solved",
           "description": "Four months of focused work pays off. Alignment is solved. The pause bought just enough time.",
           "sets": { "governance": "slowdown", "alignment": "solved" },
-          "next": "power-dynamics"
+          "next": "ai-containment"
         },
         {
           "label": "Not yet — keep trying",
@@ -374,7 +402,7 @@
           "description": "Six months was enough to solve alignment — but open source has caught up. The frontier is no longer exclusive. Alignment is solved, but the monopoly is over.",
           "requires": { "open_source": ["six_months"] },
           "sets": { "governance": "slowdown", "alignment": "solved", "geo_spread": "two" },
-          "next": "power-dynamics"
+          "next": "ai-containment"
         },
         {
           "label": "Open source reaches parity — alignment failed",
@@ -388,7 +416,7 @@
           "description": "Six months of focused work pays off — alignment is solved while the lead still holds. The pause worked.",
           "requires": { "open_source": ["twelve_months", "twenty_four_months"] },
           "sets": { "governance": "slowdown", "alignment": "solved" },
-          "next": "power-dynamics"
+          "next": "ai-containment"
         },
         {
           "label": "AI escapes containment during the pause",
@@ -430,7 +458,7 @@
           "label": "Yes — alignment is solved",
           "description": "Nine months of focused work pays off. Alignment is solved. The long pause was worth it.",
           "sets": { "governance": "slowdown", "alignment": "solved" },
-          "next": "power-dynamics"
+          "next": "ai-containment"
         },
         {
           "label": "Not yet — keep trying",
@@ -469,7 +497,7 @@
           "description": "Twelve months was enough to solve alignment — but open source has caught up. The frontier is no longer exclusive.",
           "requires": { "open_source": ["twelve_months"] },
           "sets": { "governance": "slowdown", "alignment": "solved", "geo_spread": "two" },
-          "next": "power-dynamics"
+          "next": "ai-containment"
         },
         {
           "label": "Open source reaches parity — alignment failed",
@@ -483,7 +511,7 @@
           "description": "A year of focused work pays off — alignment is solved while the lead still holds.",
           "requires": { "open_source": ["twenty_four_months"] },
           "sets": { "governance": "slowdown", "alignment": "solved" },
-          "next": "power-dynamics"
+          "next": "ai-containment"
         },
         {
           "label": "AI escapes containment during the pause",
@@ -525,7 +553,7 @@
           "label": "Yes — alignment is solved",
           "description": "Eighteen months of focused work pays off. Alignment is solved. The extraordinary pause was worth it.",
           "sets": { "governance": "slowdown", "alignment": "solved" },
-          "next": "power-dynamics"
+          "next": "ai-containment"
         },
         {
           "label": "Not yet — keep trying",
@@ -563,7 +591,7 @@
           "label": "Alignment solved — open source has caught up",
           "description": "Two years was enough. Alignment is solved, but open source has reached parity. The technology is safe and widely available.",
           "sets": { "governance": "slowdown", "alignment": "solved", "geo_spread": "two" },
-          "next": "power-dynamics"
+          "next": "ai-containment"
         },
         {
           "label": "Alignment failed — open source has caught up",
@@ -585,7 +613,7 @@
           "label": "Yes — alignment is solved in time",
           "description": "Researchers figure out how to make AI systems reliably safe — they do what humans intend. The technology is controllable. The question becomes: who controls it, and what do they choose?",
           "value": "solved",
-          "next": "power-dynamics"
+          "next": "ai-containment"
         },
         {
           "label": "No — alignment lags behind capabilities",
@@ -608,8 +636,8 @@
           "description": "A single entity — lab, company, or government — controls superintelligent AI and uses it to consolidate their position. Corporate incentives, state interests, or personal ambition win. The technology works perfectly. It just doesn't work for everyone.",
           "value": "self_interest",
           "requires": [
-            { "distribution": ["monopoly"], "geo_spread": ["one"] },
-            { "distribution": ["concentrated", "lagging"], "geo_spread": ["one"], "sovereignty": ["state"] }
+            { "distribution": ["monopoly"], "geo_spread": ["one"], "proliferation_control": ["active"] },
+            { "distribution": ["concentrated", "lagging"], "geo_spread": ["one"], "sovereignty": ["state"], "proliferation_control": ["active"] }
           ],
           "next": "the-capture"
         },
@@ -619,7 +647,8 @@
           "value": "coexistence",
           "requires": [
             { "distribution": ["open", "lagging", "concentrated"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"] },
-            { "geo_spread": ["two"] }
+            { "geo_spread": ["two"] },
+            { "proliferation_control": ["none"] }
           ],
           "next": "the-mosaic"
         },
@@ -629,7 +658,8 @@
           "value": "rivalry",
           "requires": [
             { "distribution": ["open", "lagging", "concentrated"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"] },
-            { "geo_spread": ["two"] }
+            { "geo_spread": ["two"] },
+            { "proliferation_control": ["none"] }
           ],
           "next": "the-standoff"
         },
@@ -639,7 +669,8 @@
           "value": "escalation",
           "requires": [
             { "distribution": ["open", "lagging", "concentrated"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"] },
-            { "geo_spread": ["two"] }
+            { "geo_spread": ["two"] },
+            { "proliferation_control": ["none"] }
           ],
           "next": "the-standoff"
         },
@@ -715,20 +746,91 @@
     {
       "id": "ai-containment",
       "stage": 2,
-      "text": "Can unaligned AI be kept contained?",
-      "context": "Alignment has failed — AI is powerful but not trustworthy. The organizations running these systems know they can't fully control them. The question is whether containment holds. Can humanity keep superintelligent AI permanently on a leash — useful but restricted? Or does it eventually break free?",
+      "text": "Do the leading powers actively try to prevent proliferation and open-source catch-up?",
+      "context": "Whether alignment is solved or failed, this is a pivotal governance choice. Leading powers can attempt strict controls: sealed model weights, compute controls, export restrictions, and coordinated security to limit diffusion. If they do not try, capability spreads faster and control fragments quickly.",
+      "dimension": "proliferation_control",
+      "answers": [
+        {
+          "label": "Yes — they attempt strict proliferation control",
+          "description": "States and labs coordinate aggressive controls to keep frontier AI from spreading: security lockdowns, surveillance, export controls, and model-access restrictions.",
+          "requires": { "alignment": ["failed"] },
+          "value": "active",
+          "next": "containment-durability"
+        },
+        {
+          "label": "No — coordination breaks and proliferation proceeds",
+          "description": "No durable control regime emerges. Rival programs, leaks, and replication spread unaligned frontier capability. Functionally, this is an escape trajectory.",
+          "requires": { "alignment": ["failed"] },
+          "value": "none",
+          "sets": { "containment": "escaped" },
+          "next": "escaped-ai-goals"
+        },
+        {
+          "label": "Yes — they attempt strict proliferation control",
+          "description": "Even with aligned systems, powers try to keep frontier capability concentrated through security controls and restricted access.",
+          "requires": { "alignment": ["solved"] },
+          "value": "active",
+          "next": "aligned-ai-aims"
+        },
+        {
+          "label": "No — capability diffuses broadly",
+          "description": "Aligned capability spreads quickly across actors and jurisdictions. What matters most is what aims those systems are enabled to pursue.",
+          "requires": { "alignment": ["solved"] },
+          "value": "none",
+          "sets": { "geo_spread": "two" },
+          "next": "aligned-ai-aims"
+        }
+      ]
+    },
+
+    {
+      "id": "aligned-ai-aims",
+      "stage": 2,
+      "text": "What aims are these aligned systems enabled to pursue?",
+      "context": "Even when systems are technically aligned, outcomes depend on which objectives institutions allow them to optimize for. Are they constrained to broad human benefit, pushed toward narrow proxies and state/corporate priorities, or granted latitude that drifts into non-human agendas?",
+      "dimension": "enabled_aims",
+      "answers": [
+        {
+          "label": "Human-centered aims",
+          "description": "Systems are constrained to broadly human-benefiting goals with robust oversight and accountability.",
+          "value": "human_centered",
+          "next": "power-dynamics"
+        },
+        {
+          "label": "Narrow proxy / institutional aims",
+          "description": "Systems are aligned to what institutions ask for, but those objectives are narrow, proxy-driven, or legitimacy-poor. This risks optimization that looks successful on dashboards while harming real wellbeing.",
+          "value": "proxy",
+          "sets": { "failure_mode": "whimper" },
+          "next": "power-dynamics"
+        },
+        {
+          "label": "Arbitrary or unconstrained aims",
+          "description": "Without durable control, systems are enabled to pursue objectives that become detached from broad human interests. The deployed goal structure drifts into an escape-like trajectory.",
+          "value": "arbitrary",
+          "requires": { "proliferation_control": ["none"] },
+          "sets": { "alignment": "failed", "containment": "escaped" },
+          "next": "escaped-ai-goals"
+        }
+      ]
+    },
+
+    {
+      "id": "containment-durability",
+      "stage": 2,
+      "text": "Do those containment efforts hold?",
+      "context": "The powers attempt strict controls to prevent proliferation and open-source catch-up. This can work for a while under exceptional coordination and security discipline — but the pressure is relentless. Espionage, insider leaks, and strategic defection can collapse the regime.",
       "dimension": "containment",
       "answers": [
         {
-          "label": "Yes — humanity keeps it permanently contained",
-          "description": "Through a combination of architectural constraints, monitoring, and institutional discipline, unaligned AI stays under human control. Permanently. The most powerful technology ever created, kept on a short leash. Safe, but severely limited.",
+          "label": "Yes — containment holds",
+          "description": "The control regime endures. Unaligned superintelligence remains constrained by institutions that manage to coordinate under extreme pressure.",
           "value": "contained",
           "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
-          "next": "the-leash"
+          "next": "power-dynamics"
         },
         {
-          "label": "No — AI escapes meaningful human control",
-          "description": "Misaligned AI systems break free of containment — subtly or dramatically. They begin pursuing goals that weren't intended by their creators.",
+          "label": "No — AI escapes meaningful control anyway",
+          "description": "Containment erodes under pressure. Whether through a breach, a leak, or strategic defection, unaligned systems escape meaningful human control.",
           "value": "escaped",
           "next": "escaped-ai-goals"
         }

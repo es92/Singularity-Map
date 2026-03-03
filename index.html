@@ -748,6 +748,9 @@
             { id: 'automation', label: 'Knowledge Work', stage: 1,
               visibleWhen: { capability: ['singularity'] }, values: [
                 { id: 'deep', label: 'Automates broadly' }, { id: 'shallow', label: 'Routine only' } ] },
+            { id: 'automation_recovery', label: 'Deep Automation Recovery?', stage: 1,
+              visibleWhen: { capability: ['singularity'], automation: ['shallow'] }, values: [
+                { id: 'mild', label: 'Months/years' }, { id: 'substantial', label: 'Years/decades' }, { id: 'never', label: 'Never' } ] },
             { id: 'takeoff', label: 'Feedback Loop', stage: 1,
               visibleWhen: { capability: ['singularity'], automation: ['deep'] }, values: [
                 { id: 'gradual', label: 'Gradual' }, { id: 'fast', label: 'Fast' }, { id: 'hard', label: 'Explosive' } ] },
@@ -819,24 +822,33 @@
             { id: 'alignment', label: 'Alignment', stage: 2,
               visibleWhen: { capability: ['singularity'], automation: ['deep'] }, values: [
                 { id: 'solved', label: 'Solved' }, { id: 'failed', label: 'Failed' } ] },
-            { id: 'intent', label: 'Intent', stage: 2,
-              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['solved'] }, values: [
-                { id: 'self_interest', label: 'Self-interest', requires: [{ distribution: ['monopoly'], geo_spread: ['one'] }, { distribution: ['concentrated', 'lagging'], geo_spread: ['one'], sovereignty: ['state'] }] },
-                { id: 'coexistence', label: 'Coexistence', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }] },
-                { id: 'rivalry', label: 'Rivalry', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }] },
-                { id: 'escalation', label: 'Escalation', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }] },
-                { id: 'international', label: 'International' } ] },
+            { id: 'proliferation_control', label: 'Proliferation Control', stage: 2,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['solved', 'failed'] }, values: [
+                { id: 'active', label: 'Attempt strict control' },
+                { id: 'none', label: 'No durable control' } ] },
+            { id: 'enabled_aims', label: 'Enabled Aims', stage: 2,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['solved'], proliferation_control: ['active', 'none'] }, values: [
+                { id: 'human_centered', label: 'Human-centered' },
+                { id: 'proxy', label: 'Proxy / institutional' },
+                { id: 'arbitrary', label: 'Arbitrary / unconstrained', requires: { proliferation_control: ['none'] } } ] },
             { id: 'containment', label: 'Containment', stage: 2,
               visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['failed'] }, values: [
                 { id: 'contained', label: 'Contained', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } },
                 { id: 'escaped', label: 'Escapes' } ] },
+            { id: 'intent', label: 'Intent', stage: 2,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['solved'], enabled_aims: ['human_centered', 'proxy'] }, values: [
+                { id: 'self_interest', label: 'Self-interest', requires: [{ distribution: ['monopoly'], geo_spread: ['one'], proliferation_control: ['active'] }, { distribution: ['concentrated', 'lagging'], geo_spread: ['one'], sovereignty: ['state'], proliferation_control: ['active'] }] },
+                { id: 'coexistence', label: 'Coexistence', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }] },
+                { id: 'rivalry', label: 'Rivalry', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }] },
+                { id: 'escalation', label: 'Escalation', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }] },
+                { id: 'international', label: 'International' } ] },
             { id: 'ai_goals', label: 'AI Converges On', stage: 2,
               visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'] }, values: [
                 { id: 'benevolent', label: 'Benefit humanity' }, { id: 'alien_coexistence', label: 'Alien (tolerant)' },
                 { id: 'alien_extinction', label: 'Alien (total)' }, { id: 'paperclip', label: 'Arbitrary' },
                 { id: 'swarm', label: 'No convergence' } ] },
             { id: 'failure_mode', label: 'Implementation', stage: 3,
-              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['solved'], intent: ['international'] }, values: [
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['solved'] }, values: [
                 { id: 'none', label: 'Succeeds' }, { id: 'whimper', label: 'Wrong metrics' },
                 { id: 'disempowerment', label: 'Human irrelevance' } ] },
             { id: 'economic_speed', label: 'Speed', stage: 3,
@@ -1105,14 +1117,16 @@
                 localDims[t.primaryDimension] = variantKey;
             }
 
+            const isSingularityOutcome = t.reachable && t.reachable.some(c => c.capability && c.capability.includes('singularity'));
+
             const adjustableIds = new Set();
             if (t.primaryDimension) adjustableIds.add(t.primaryDimension);
             if (t.flavors) for (const k of Object.keys(t.flavors)) adjustableIds.add(k);
             adjustableIds.add('capability');
+            if (isSingularityOutcome) { adjustableIds.add('automation'); adjustableIds.add('automation_recovery'); }
             if (t.flavors && t.flavors.stall_recovery) adjustableIds.add('stall_recovery');
+            if (t.flavors && t.flavors.automation_recovery) adjustableIds.add('automation_recovery');
             const relevantDims = DIM_META.filter(d => adjustableIds.has(d.id));
-
-            const isSingularityOutcome = t.reachable && t.reachable.some(c => c.capability && c.capability.includes('singularity'));
 
             const validValues = {};
             for (const dimId of adjustableIds) {
@@ -1202,6 +1216,14 @@
                     localDims.stall_recovery = 'mild';
                 }
 
+                const isShallowAuto = localDims.automation === 'shallow';
+                const isDeepOutcome = t.reachable && t.reachable.some(c => c.automation && c.automation.includes('deep'));
+                if (!isShallowAuto) {
+                    delete localDims.automation_recovery;
+                } else if (isDeepOutcome) {
+                    localDims.automation_recovery = 'mild';
+                }
+
                 relevantDims.forEach(dim => {
                     const row = app.querySelector('[data-odim="' + dim.id + '"]');
                     if (!row) return;
@@ -1209,7 +1231,11 @@
                         row.classList.toggle('hidden', !isStallCap);
                         if (!isStallCap) return;
                     }
-                    const forceLockedRecovery = dim.id === 'stall_recovery' && isSingularityOutcome;
+                    if (dim.id === 'automation_recovery') {
+                        row.classList.toggle('hidden', !isShallowAuto);
+                        if (!isShallowAuto) return;
+                    }
+                    const forceLockedRecovery = (dim.id === 'stall_recovery' && isSingularityOutcome) || (dim.id === 'automation_recovery' && isDeepOutcome);
                     row.querySelectorAll('.dim-pill').forEach(pill => {
                         const vid = pill.dataset.val;
                         const valObj = dim.values.find(v => v.id === vid);
@@ -1564,6 +1590,7 @@
             }
             function effectiveVal(k) {
                 if (k === 'capability' && sel.stall_recovery === 'mild') return 'singularity';
+                if (k === 'automation' && sel.automation_recovery === 'mild') return 'deep';
                 const out = decelOutcome();
                 if (k === 'governance') {
                     if (sel.gov_action === 'accelerate') return 'race';
@@ -1573,8 +1600,12 @@
                 if (k === 'alignment') {
                     if (['solved', 'parity_solved'].includes(out)) return 'solved';
                     if (['escapes', 'abandon', 'rival', 'parity_failed'].includes(out)) return 'failed';
+                    if (sel.enabled_aims === 'arbitrary') return 'failed';
                 }
                 if (k === 'containment' && ['escapes', 'parity_failed'].includes(out)) return 'escaped';
+                if (k === 'containment' && sel.proliferation_control === 'none' && effectiveVal('alignment') === 'failed') return 'escaped';
+                if (k === 'containment' && sel.enabled_aims === 'arbitrary') return 'escaped';
+                if (k === 'failure_mode' && sel.enabled_aims === 'proxy') return 'whimper';
                 if (k === 'geo_spread') {
                     if (['parity_solved', 'parity_failed', 'rival'].includes(out)) return 'two';
                 }
@@ -1584,11 +1615,22 @@
                 if (!dim.visibleWhen) return true;
                 const out = decelOutcome();
                 if (dim.id === 'alignment' && ['solved', 'parity_solved', 'escapes', 'abandon', 'rival', 'parity_failed'].includes(out)) return false;
+                if (dim.id === 'proliferation_control') {
+                    if (['escapes', 'parity_failed'].includes(out)) return false;
+                }
                 if (dim.id === 'containment' && ['solved', 'parity_solved'].includes(out)) return false;
+                if (dim.id === 'containment' && effectiveVal('alignment') !== 'failed') return false;
+                if (dim.id === 'containment' && !['escapes', 'parity_failed'].includes(out) && !sel.proliferation_control) return false;
+                if (dim.id === 'failure_mode' && sel.enabled_aims !== 'proxy' && sel.intent !== 'international') return false;
+                const failedContained = effectiveVal('alignment') === 'failed' && sel.containment === 'contained';
+                if (dim.id === 'intent' && failedContained) return true;
+                if (dim.id === 'failure_mode' && failedContained && sel.intent === 'international') return true;
                 for (const [k, allowed] of Object.entries(dim.visibleWhen)) {
                     const useRaw = (dim.id === 'stall_recovery' && k === 'capability')
+                        || (dim.id === 'automation_recovery' && k === 'automation')
                         || (dim.id === 'sovereignty' && k === 'geo_spread')
-                        || (dim.id === 'gov_action' && k === 'geo_spread');
+                        || (dim.id === 'gov_action' && k === 'geo_spread')
+                        || (dim.id === 'enabled_aims' && k === 'alignment');
                     const v = useRaw ? sel[k] : effectiveVal(k);
                     if (!v || !allowed.includes(v)) return false;
                 }
@@ -1598,7 +1640,10 @@
                 if (dim.id === 'containment') {
                     const out = decelOutcome();
                     if (['escapes', 'parity_failed'].includes(out)) return 'escaped';
+                    if (sel.proliferation_control === 'none' && effectiveVal('alignment') === 'failed') return 'escaped';
+                    if (sel.enabled_aims === 'arbitrary') return 'escaped';
                 }
+                if (dim.id === 'failure_mode' && sel.enabled_aims === 'proxy') return 'whimper';
                 if (!dim.lockedWhen) return null;
                 for (const [triggerDim, rule] of Object.entries(dim.lockedWhen)) {
                     if (effectiveVal(triggerDim) === rule.equals) return rule.value;
@@ -1642,7 +1687,11 @@
                 else if (sel.gov_action === 'decelerate') d.governance = 'slowdown';
                 if (['solved', 'parity_solved'].includes(out)) d.alignment = 'solved';
                 if (['escapes', 'abandon', 'rival', 'parity_failed'].includes(out)) d.alignment = 'failed';
+                if (d.enabled_aims === 'arbitrary') d.alignment = 'failed';
                 if (['escapes', 'parity_failed'].includes(out)) d.containment = 'escaped';
+                if (d.proliferation_control === 'none' && d.alignment === 'failed') d.containment = 'escaped';
+                if (d.enabled_aims === 'arbitrary') d.containment = 'escaped';
+                if (d.enabled_aims === 'proxy') d.failure_mode = 'whimper';
                 if (['parity_solved', 'parity_failed', 'rival'].includes(out)) {
                     d.geo_spread = 'two';
                     d.rival_emerges = 'yes';
