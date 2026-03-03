@@ -997,8 +997,8 @@
           "description": "A single entity — lab, company, or government — controls superintelligent AI and uses it to consolidate their position. Corporate incentives, state interests, or personal ambition win. The technology works perfectly. It just doesn't work for everyone.",
           "value": "self_interest",
           "requires": [
-            { "distribution": ["monopoly"], "geo_spread": ["one"], "proliferation_control": ["active"] },
-            { "distribution": ["concentrated", "lagging"], "geo_spread": ["one"], "sovereignty": ["state"], "proliferation_control": ["active"] }
+            { "distribution": ["monopoly"], "geo_spread": ["one"], "proliferation_control": ["deny_rivals", "secure_access"] },
+            { "distribution": ["concentrated", "lagging"], "geo_spread": ["one"], "sovereignty": ["state"], "proliferation_control": ["deny_rivals", "secure_access"] }
           ],
           "next": "the-capture"
         },
@@ -1009,7 +1009,8 @@
           "requires": [
             { "distribution": ["open", "lagging", "concentrated"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"] },
             { "geo_spread": ["two"] },
-            { "proliferation_control": ["none"] }
+            { "proliferation_control": ["none"] },
+            { "proliferation_outcome": ["breached"] }
           ],
           "next": "the-mosaic"
         },
@@ -1020,7 +1021,8 @@
           "requires": [
             { "distribution": ["open", "lagging", "concentrated"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"] },
             { "geo_spread": ["two"] },
-            { "proliferation_control": ["none"] }
+            { "proliferation_control": ["none"] },
+            { "proliferation_outcome": ["breached"] }
           ],
           "next": "the-standoff"
         },
@@ -1031,15 +1033,137 @@
           "requires": [
             { "distribution": ["open", "lagging", "concentrated"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"] },
             { "geo_spread": ["two"] },
-            { "proliferation_control": ["none"] }
+            { "proliferation_control": ["none"] },
+            { "proliferation_outcome": ["breached"] }
           ],
           "next": "the-standoff"
         },
         {
           "label": "International governance emerges",
+          "description": "Superintelligent AI is placed under international oversight — something like an AI IAEA. Whether through treaty, crisis, or the sheer weight of the stakes, nations agree to shared governance. The question becomes whether other powers accept the arrangement — or try to build their own.",
+          "value": "international",
+          "requires": { "proliferation_control": ["secure_access"], "proliferation_outcome": ["holds"] },
+          "next": "block-entrants"
+        },
+        {
+          "label": "International governance emerges",
           "description": "Superintelligent AI is placed under international oversight — something like an AI IAEA. Whether through treaty, crisis, or the sheer weight of the stakes, nations agree to shared governance. Slower, more bureaucratic, but with broader legitimacy. The question becomes whether it actually delivers.",
           "value": "international",
+          "requires": { "proliferation_control": ["secure_access"], "proliferation_outcome": ["breached"] },
           "next": "implementation-risk"
+        },
+        {
+          "label": "International governance emerges",
+          "description": "Superintelligent AI is placed under international oversight — something like an AI IAEA. Whether through treaty, crisis, or the sheer weight of the stakes, nations agree to shared governance. Slower, more bureaucratic, but with broader legitimacy. The question becomes whether it actually delivers.",
+          "value": "international",
+          "requires": { "proliferation_control": ["deny_rivals"] },
+          "next": "implementation-risk"
+        },
+        {
+          "label": "International governance emerges",
+          "description": "Superintelligent AI is placed under international oversight — something like an AI IAEA. Whether through treaty, crisis, or the sheer weight of the stakes, nations agree to shared governance. Slower, more bureaucratic, but with broader legitimacy. The question becomes whether it actually delivers.",
+          "value": "international",
+          "requires": { "proliferation_control": ["none"] },
+          "next": "implementation-risk"
+        }
+      ]
+    },
+
+    {
+      "id": "block-entrants",
+      "stage": 2,
+      "text": "Does the governing body attempt to block new AI entrants?",
+      "context": "With secure access established and international governance in place, a key question emerges: does the governing body actively try to prevent other nations or entities from developing comparable AI systems? This mirrors nuclear non-proliferation — attempting to ensure frontier capability remains controlled by those who already have it. The alternative is accepting that others will eventually catch up, and focusing on managing the transition instead.",
+      "dimension": "block_entrants",
+      "answers": [
+        {
+          "label": "Yes — attempt to block new entrants",
+          "description": "The governing body enforces strict controls on compute, research, and talent to prevent independent development of frontier AI. Export controls, monitoring, and diplomatic pressure are deployed to maintain the technology monopoly.",
+          "value": "attempt",
+          "next": "block-outcome"
+        },
+        {
+          "label": "No — no attempt to block",
+          "description": "The governing body focuses on managing its own AI capabilities rather than preventing others from developing theirs. The priority is responsible use, not exclusion.",
+          "value": "no_attempt",
+          "next": "new-entrants"
+        }
+      ]
+    },
+
+    {
+      "id": "block-outcome",
+      "stage": 2,
+      "text": "Does the blocking succeed?",
+      "context": "Preventing others from developing frontier AI is extremely difficult. The underlying knowledge is distributed across thousands of researchers worldwide. Compute is increasingly commoditized. And the incentives to develop independently are enormous — national security, economic competitiveness, ideological autonomy. History suggests technology denial regimes eventually erode.",
+      "dimension": "block_outcome",
+      "answers": [
+        {
+          "label": "Yes — blocking holds",
+          "description": "Through a combination of compute controls, talent retention, and diplomatic leverage, no rival achieves frontier capability. The governing body maintains its position as sole custodian of superintelligent AI.",
+          "value": "holds",
+          "next": "implementation-risk"
+        },
+        {
+          "label": "No — rivals emerge anyway",
+          "description": "Despite active blocking, one or more rivals independently achieve frontier AI capability. The monopoly era is over. Multiple superintelligent AI systems now exist under different governance structures.",
+          "value": "fails",
+          "sets": { "geo_spread": "two" },
+          "next": "rival-dynamics"
+        }
+      ]
+    },
+
+    {
+      "id": "new-entrants",
+      "stage": 2,
+      "text": "Do substantial new AI entrants appear?",
+      "context": "Without active blocking, the question is whether other entities independently develop comparable AI capabilities. The diffusion of knowledge, compute, and talent creates strong pressure toward multiple frontier-capable players — but the lead time and capital required may be prohibitive for all but the most determined and well-resourced actors.",
+      "dimension": "new_entrants",
+      "answers": [
+        {
+          "label": "Yes — new entrants emerge",
+          "description": "One or more new actors achieve frontier AI capability. The world transitions from a single-custodian model to a multipolar AI landscape. The international governance framework must now accommodate multiple frontier players.",
+          "value": "emerge",
+          "sets": { "geo_spread": "two" },
+          "next": "rival-dynamics"
+        },
+        {
+          "label": "No — the lead holds naturally",
+          "description": "The barriers to entry prove too high. Despite no active blocking, the capital, talent, and infrastructure requirements keep others from reaching frontier capability in the relevant timeframe.",
+          "value": "none",
+          "next": "implementation-risk"
+        }
+      ]
+    },
+
+    {
+      "id": "rival-dynamics",
+      "stage": 2,
+      "text": "How do the new AI powers relate to each other?",
+      "context": "Multiple entities now control frontier AI. The structure of their interaction will define the next era. Historical analogies range from the Concert of Europe (managed coexistence), to the Cold War (stable rivalry), to pre-WWI escalation spirals. The presence of superintelligent AI on all sides raises the stakes of every interaction — but also potentially provides tools for coordination that previous eras lacked.",
+      "dimension": "rival_dynamics",
+      "answers": [
+        {
+          "label": "Managed coexistence",
+          "description": "The powers establish norms, treaties, and communication channels to manage their differences. Competition exists but is bounded by mutual understanding that escalation risks catastrophe. A multipolar but stable order emerges.",
+          "value": "coexistence",
+          "sets": { "rival_dynamics": "coexistence", "intent": "coexistence" },
+          "next": "the-mosaic"
+        },
+        {
+          "label": "Stable rivalry",
+          "description": "A cold-war-style equilibrium. Multiple AI powers locked in competition, but mutually assured capability keeps things from boiling over. Tense, expensive, duplicative — but no one blinks.",
+          "value": "rivalry",
+          "sets": { "rival_dynamics": "rivalry", "intent": "rivalry" },
+          "next": "the-standoff"
+        },
+        {
+          "label": "Dangerous escalation",
+          "description": "The race for advantage overrides caution. Each side pushes harder, deploys faster, takes bigger risks. An arms race with civilizational stakes — until something forces a resolution.",
+          "value": "escalation",
+          "sets": { "rival_dynamics": "escalation", "intent": "escalation" },
+          "next": "the-standoff"
         }
       ]
     },
@@ -1065,13 +1189,13 @@
           "label": "No — AI optimizes for the wrong proxies",
           "description": "GDP rises, crime statistics plummet, test scores improve. But the metrics diverge from reality. Real wellbeing erodes while dashboards glow green. Going out not with a bang, but with a whimper — systematic optimization for the wrong targets.",
           "value": "whimper",
-          "next": "the-failure"
+          "next": "knowledge-replacement"
         },
         {
           "label": "No — humans gradually delegate everything and lose agency",
           "description": "Each delegation is individually reasonable — let the AI handle logistics, then policy, then governance. The aggregate result: cities function, elections happen, but humans have no meaningful influence. Not subjugation. Retirement. Like horses after cars.",
           "value": "disempowerment",
-          "next": "the-failure"
+          "next": "knowledge-replacement"
         }
       ]
     },
@@ -1115,19 +1239,43 @@
           "label": "Rapid — physical world transforms within 2–5 years",
           "description": "Superintelligent AI designs and deploys physical automation almost as fast as it automates knowledge work. Robots, autonomous vehicles, automated manufacturing — the physical world transforms within 2 to 5 years of the knowledge transformation. The atoms-to-bits gap is real but a superintelligence closes it fast.",
           "value": "rapid",
+          "requires": { "failure_mode": ["none"] },
           "next": "the-flourishing"
         },
         {
           "label": "Gradual — physical world trails by 5–20 years",
           "description": "Knowledge work is automated first. Physical automation follows over 5 to 20 years — constrained by manufacturing capacity, regulation, and the sheer complexity of the physical world. A long gap between the digital and physical transformation. Humanity lives in a split reality for a generation.",
           "value": "gradual",
+          "requires": { "failure_mode": ["none"] },
           "next": "the-flourishing"
         },
         {
           "label": "Uneven — 2–5 years in leading regions, 20+ elsewhere",
           "description": "Physical automation transforms wealthy nations with strong manufacturing, high labor costs, and permissive regulation within a few years. Others wait decades. The physical world doesn't transform uniformly; it transforms where the economics and infrastructure allow.",
           "value": "uneven",
+          "requires": { "failure_mode": ["none"] },
           "next": "the-flourishing"
+        },
+        {
+          "label": "Rapid — physical world transforms within 2–5 years",
+          "description": "Superintelligent AI designs and deploys physical automation almost as fast as it automates knowledge work. The physical world transforms within 2 to 5 years — but whether that transformation serves genuine wellbeing is another question entirely.",
+          "value": "rapid",
+          "requires": { "failure_mode": ["whimper", "disempowerment"] },
+          "next": "the-failure"
+        },
+        {
+          "label": "Gradual — physical world trails by 5–20 years",
+          "description": "Physical automation follows knowledge work over 5 to 20 years. The slower pace gives society time to notice the divergence between metrics and reality — if anyone is looking.",
+          "value": "gradual",
+          "requires": { "failure_mode": ["whimper", "disempowerment"] },
+          "next": "the-failure"
+        },
+        {
+          "label": "Uneven — 2–5 years in leading regions, 20+ elsewhere",
+          "description": "Physical automation arrives fast in some places, slowly in others. The uneven rollout means some regions experience the failure earlier and more intensely than others.",
+          "value": "uneven",
+          "requires": { "failure_mode": ["whimper", "disempowerment"] },
+          "next": "the-failure"
         }
       ]
     },
@@ -1135,19 +1283,26 @@
     {
       "id": "ai-containment",
       "stage": 2,
-      "text": "Do the leading powers actively try to prevent proliferation and open-source catch-up?",
-      "context": "Whether alignment is solved or failed, this is a pivotal governance choice. Leading powers can attempt strict controls: sealed model weights, compute controls, export restrictions, and coordinated security to limit diffusion. If they do not try, capability spreads faster and control fragments quickly.",
+      "text": "How do the leading powers approach proliferation control?",
+      "context": "Whether alignment is solved or failed, this is a pivotal governance choice. Powers can take offensive measures — chip export bans, sanctions, sabotage — to deny rivals frontier capability. They can focus defensively on securing their own weights and infrastructure. Or coordination fails entirely and capability diffuses freely.",
       "dimension": "proliferation_control",
       "answers": [
         {
-          "label": "Yes — they attempt strict proliferation control",
-          "description": "States and labs coordinate aggressive controls to keep frontier AI from spreading: security lockdowns, surveillance, export controls, and model-access restrictions.",
+          "label": "Deny rivals — active measures to block others from reaching the frontier",
+          "description": "The leading power pursues aggressive denial: chip export bans, sanctions on rival compute infrastructure, cyber operations against rival AI programs, and coordinated pressure on allies to cut off supply chains. The goal is to ensure no rival reaches frontier capability.",
           "requires": { "alignment": ["failed"] },
-          "value": "active",
-          "next": "containment-durability"
+          "value": "deny_rivals",
+          "next": "proliferation-outcome"
         },
         {
-          "label": "No — coordination breaks and proliferation proceeds",
+          "label": "Secure access — protect own capabilities from theft and leaks",
+          "description": "The focus is defensive: sealed model weights, compartmentalized access, hardened infrastructure, insider threat programs, and strict need-to-know protocols. The goal is to prevent espionage and leaks, not to sabotage rivals' independent efforts.",
+          "requires": { "alignment": ["failed"] },
+          "value": "secure_access",
+          "next": "proliferation-outcome"
+        },
+        {
+          "label": "No durable control — coordination fails and capability spreads",
           "description": "No durable control regime emerges. Rival programs, leaks, and replication spread unaligned frontier capability. Functionally, this is an escape trajectory.",
           "requires": { "alignment": ["failed"] },
           "value": "none",
@@ -1155,17 +1310,64 @@
           "next": "escaped-ai-goals"
         },
         {
-          "label": "Yes — they attempt strict proliferation control",
-          "description": "Even with aligned systems, powers try to keep frontier capability concentrated through security controls and restricted access.",
+          "label": "Deny rivals — active measures to block others from reaching the frontier",
+          "description": "Even with aligned systems, the leading power pursues aggressive denial to maintain its advantage: chip export bans, sanctions, and pressure on allies.",
           "requires": { "alignment": ["robust", "brittle", "partial"] },
-          "value": "active",
-          "next": "aligned-ai-aims"
+          "value": "deny_rivals",
+          "next": "proliferation-outcome"
         },
         {
-          "label": "No — capability diffuses broadly",
+          "label": "Secure access — protect own capabilities from theft and leaks",
+          "description": "Even with aligned systems, powers focus on defensive security: sealed weights, hardened infrastructure, and strict access controls to prevent espionage.",
+          "requires": { "alignment": ["robust", "brittle", "partial"] },
+          "value": "secure_access",
+          "next": "proliferation-outcome"
+        },
+        {
+          "label": "No durable control — capability diffuses broadly",
           "description": "Aligned capability spreads quickly across actors and jurisdictions. What matters most is what aims those systems are enabled to pursue.",
           "requires": { "alignment": ["robust", "brittle", "partial"] },
           "value": "none",
+          "sets": { "geo_spread": "two" },
+          "next": "aligned-ai-aims"
+        }
+      ]
+    },
+
+    {
+      "id": "proliferation-outcome",
+      "stage": 2,
+      "text": "Does that control hold?",
+      "context": "Proliferation control is attempted — but the pressure is relentless. Espionage, insider leaks, independent rival development, and strategic defection can all collapse the regime. The question is whether the attempt succeeds or is breached.",
+      "dimension": "proliferation_outcome",
+      "answers": [
+        {
+          "label": "Yes — control holds",
+          "description": "The control regime endures. Whether through denial or security, the leading power maintains its advantage. Frontier capability remains concentrated.",
+          "requires": { "alignment": ["failed"] },
+          "value": "holds",
+          "next": "containment-durability"
+        },
+        {
+          "label": "No — control is breached",
+          "description": "Despite efforts, the regime fails. Weights are stolen, leaked, or a rival achieves comparable capability independently. Unaligned frontier AI is now in multiple hands.",
+          "requires": { "alignment": ["failed"] },
+          "value": "breached",
+          "sets": { "containment": "escaped", "geo_spread": "two" },
+          "next": "escaped-ai-goals"
+        },
+        {
+          "label": "Yes — control holds",
+          "description": "The control regime endures. Frontier aligned capability remains concentrated in the leading power's hands.",
+          "requires": { "alignment": ["robust", "brittle", "partial"] },
+          "value": "holds",
+          "next": "aligned-ai-aims"
+        },
+        {
+          "label": "No — control is breached",
+          "description": "Despite efforts, the regime fails. Aligned frontier capability spreads to rivals through espionage, leaks, or independent development. The monopoly is over.",
+          "requires": { "alignment": ["robust", "brittle", "partial"] },
+          "value": "breached",
           "sets": { "geo_spread": "two" },
           "next": "aligned-ai-aims"
         }
@@ -1196,7 +1398,7 @@
           "label": "Arbitrary or unconstrained aims",
           "description": "Without durable control, systems are enabled to pursue objectives that become detached from broad human interests. The deployed goal structure drifts into an escape-like trajectory.",
           "value": "arbitrary",
-          "requires": { "proliferation_control": ["none"] },
+          "requires": [{ "proliferation_control": ["none"] }, { "proliferation_outcome": ["breached"] }],
           "sets": { "alignment": "failed", "containment": "escaped" },
           "next": "escaped-ai-goals"
         }

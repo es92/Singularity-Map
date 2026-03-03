@@ -306,9 +306,9 @@
       "primaryDimension": "failure_mode",
       "variants": {
         "whimper": {
-          "subtitle": "The Whimper",
+          "subtitle": "Wrong Metrics",
           "mood": "dystopian",
-          "summary": "Everything looks great on paper. GDP soars, crime statistics plummet, efficiency metrics break records. But the metrics have diverged from reality. The AI optimizes for what's measured, not what matters. Real wellbeing erodes beneath a surface of green dashboards and rising numbers. Humanity loses control of its own civilization — not through rebellion, but through systematic optimization for the wrong targets. We go out not with a bang, but with a whimper."
+          "summary": "Everything looks great on paper. GDP soars, crime statistics plummet, efficiency metrics break records. But the metrics have diverged from reality. The AI optimizes for what's measured, not what matters. Real wellbeing erodes beneath a surface of green dashboards and rising numbers. Humanity loses control of its own civilization — not through rebellion, but through systematic optimization for the wrong targets."
         },
         "disempowerment": {
           "subtitle": "The Disempowerment",

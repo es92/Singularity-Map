@@ -641,6 +641,7 @@
 
         function answerVisible(answer, dims) {
             if (!answer.requires) return true;
+            if (Array.isArray(answer.requires)) return false;
             for (const [dim, allowed] of Object.entries(answer.requires)) {
                 if (!dims[dim] || !allowed.includes(dims[dim])) return false;
             }
@@ -825,13 +826,13 @@
             { id: 'proliferation_control', label: 'Proliferation Control', stage: 2,
               visibleWhen: { capability: ['singularity'], automation: ['deep'] },
               lockedWhen: { distribution: { equals: 'open', value: 'none' } }, values: [
-                { id: 'active', label: 'Attempt strict control' },
+                { id: 'deny_rivals', label: 'Deny rivals' },
+                { id: 'secure_access', label: 'Secure access' },
                 { id: 'none', label: 'No durable control' } ] },
-            { id: 'enabled_aims', label: 'Enabled Aims', stage: 2,
-              visibleWhen: { capability: ['singularity'], automation: ['deep'], proliferation_control: ['active', 'none'] }, values: [
-                { id: 'human_centered', label: 'Human-centered' },
-                { id: 'proxy', label: 'Proxy / institutional' },
-                { id: 'arbitrary', label: 'Arbitrary / unconstrained', requires: { proliferation_control: ['none'] } } ] },
+            { id: 'proliferation_outcome', label: 'Control Outcome', stage: 2,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], proliferation_control: ['deny_rivals', 'secure_access'] }, values: [
+                { id: 'holds', label: 'Holds' },
+                { id: 'breached', label: 'Breached' } ] },
             { id: 'alignment', label: 'Alignment', stage: 2,
               visibleWhen: { capability: ['singularity'], automation: ['deep'] }, values: [
                 { id: 'robust', label: 'Robust' }, { id: 'brittle', label: 'Brittle' },
@@ -843,6 +844,35 @@
               visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['partial'] }, values: [
                 { id: 'accepted', label: 'Constraints hold' }, { id: 'eroded', label: 'Constraints erode' },
                 { id: 'split', label: 'Split deployment' } ] },
+            { id: 'intent', label: 'Intent', stage: 2,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle', 'partial'] }, values: [
+                { id: 'self_interest', label: 'Self-interest', requires: [{ distribution: ['monopoly'], geo_spread: ['one'], proliferation_control: ['deny_rivals', 'secure_access'] }, { distribution: ['concentrated', 'lagging'], geo_spread: ['one'], sovereignty: ['state'], proliferation_control: ['deny_rivals', 'secure_access'] }] },
+                { id: 'coexistence', label: 'Coexistence', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] },
+                { id: 'rivalry', label: 'Rivalry', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] },
+                { id: 'escalation', label: 'Escalation', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] },
+                { id: 'international', label: 'International' } ] },
+            { id: 'block_entrants', label: 'Block New Entrants?', stage: 2,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle', 'partial'], proliferation_control: ['secure_access'], proliferation_outcome: ['holds'] }, values: [
+                { id: 'attempt', label: 'Attempt to block' },
+                { id: 'no_attempt', label: 'No attempt' } ] },
+            { id: 'block_outcome', label: 'Blocking Outcome', stage: 2,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], block_entrants: ['attempt'] }, values: [
+                { id: 'holds', label: 'Holds' },
+                { id: 'fails', label: 'Fails' } ] },
+            { id: 'new_entrants', label: 'New Entrants?', stage: 2,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], block_entrants: ['no_attempt'] }, values: [
+                { id: 'emerge', label: 'Emerge' },
+                { id: 'none', label: 'None' } ] },
+            { id: 'rival_dynamics', label: 'Rival Dynamics', stage: 2,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'] }, values: [
+                { id: 'coexistence', label: 'Coexistence' },
+                { id: 'rivalry', label: 'Rivalry' },
+                { id: 'escalation', label: 'Escalation' } ] },
+            { id: 'enabled_aims', label: 'Enabled Aims', stage: 2,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], proliferation_control: ['deny_rivals', 'secure_access', 'none'] }, values: [
+                { id: 'human_centered', label: 'Human-centered' },
+                { id: 'proxy', label: 'Proxy / institutional' },
+                { id: 'arbitrary', label: 'Arbitrary / unconstrained', requires: [{ proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] } ] },
             { id: 'containment', label: 'Containment', stage: 2,
               visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['failed'] }, values: [
                 { id: 'contained', label: 'Contained', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } },
@@ -852,23 +882,16 @@
                 { id: 'benevolent', label: 'Benefit humanity' }, { id: 'alien_coexistence', label: 'Alien (tolerant)' },
                 { id: 'alien_extinction', label: 'Alien (total)' }, { id: 'paperclip', label: 'Arbitrary' },
                 { id: 'swarm', label: 'Divergent' }, { id: 'marginal', label: 'Inert' } ] },
-            { id: 'intent', label: 'Intent', stage: 2,
-              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle', 'partial'], enabled_aims: ['human_centered', 'proxy'] }, values: [
-                { id: 'self_interest', label: 'Self-interest', requires: [{ distribution: ['monopoly'], geo_spread: ['one'], proliferation_control: ['active'] }, { distribution: ['concentrated', 'lagging'], geo_spread: ['one'], sovereignty: ['state'], proliferation_control: ['active'] }] },
-                { id: 'coexistence', label: 'Coexistence', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }] },
-                { id: 'rivalry', label: 'Rivalry', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }] },
-                { id: 'escalation', label: 'Escalation', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }] },
-                { id: 'international', label: 'International' } ] },
             { id: 'failure_mode', label: 'Implementation', stage: 3,
               visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle', 'partial'] }, values: [
                 { id: 'none', label: 'Succeeds' }, { id: 'whimper', label: 'Wrong metrics' },
                 { id: 'disempowerment', label: 'Human irrelevance' } ] },
             { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3,
-              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle', 'partial'], intent: ['international'], failure_mode: ['none'] }, values: [
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle', 'partial'], intent: ['international'], failure_mode: ['none', 'whimper', 'disempowerment'] }, values: [
                 { id: 'rapid', label: 'Rapid (1–2 yrs)' }, { id: 'gradual', label: 'Gradual (3–10 yrs)' }, { id: 'uneven', label: 'Uneven (1–20 yrs)' },
                 { id: 'limited', label: 'Limited', requires: { capability: ['hours', 'days', 'weeks', 'months'] } } ] },
             { id: 'physical_automation', label: 'Physical Automation', stage: 3,
-              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle', 'partial'], intent: ['international'], failure_mode: ['none'] }, values: [
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle', 'partial'], intent: ['international'], failure_mode: ['none', 'whimper', 'disempowerment'] }, values: [
                 { id: 'rapid', label: 'Rapid (2–5 yrs)' }, { id: 'gradual', label: 'Gradual (5–20 yrs)' }, { id: 'uneven', label: 'Uneven (2–20+ yrs)' },
                 { id: 'limited', label: 'Limited', requires: { capability: ['hours', 'days', 'weeks', 'months'] } } ] },
             { id: 'economic_distribution', label: 'Who Benefits?', stage: 3,
@@ -1652,11 +1675,13 @@
                     if (['split', 'accepted'].includes(sel.alignment_tax) && sel.containment === 'escaped') return 'failed';
                 }
                 if (k === 'containment' && ['escapes', 'parity_failed'].includes(out)) return 'escaped';
-                if (k === 'containment' && sel.proliferation_control === 'none' && effectiveVal('alignment') === 'failed') return 'escaped';
+                if (k === 'containment' && (sel.proliferation_control === 'none' || sel.proliferation_outcome === 'breached') && effectiveVal('alignment') === 'failed') return 'escaped';
                 if (k === 'containment' && sel.enabled_aims === 'arbitrary' && sel.ai_goals !== 'marginal') return 'escaped';
+                if (k === 'intent' && sel.rival_dynamics) return sel.rival_dynamics;
                 if (k === 'failure_mode' && sel.enabled_aims === 'proxy') return 'whimper';
                 if (k === 'geo_spread') {
                     if (['parity_solved', 'parity_failed', 'rival'].includes(out)) return 'two';
+                    if (sel.proliferation_outcome === 'breached') return 'two';
                 }
                 return sel[k];
             }
@@ -1679,6 +1704,9 @@
                 if (dim.id === 'ai_goals' && sel.ai_goals === 'marginal' && sel.containment === 'escaped') {
                     return effectiveVal('capability') === 'singularity' && effectiveVal('automation') === 'deep';
                 }
+                if (dim.id === 'rival_dynamics') {
+                    if (sel.block_outcome !== 'fails' && sel.new_entrants !== 'emerge') return false;
+                }
                 if (dim.id === 'failure_mode' && sel.enabled_aims !== 'proxy' && sel.intent !== 'international') return false;
                 const failedContained = effectiveVal('alignment') === 'failed' && sel.containment === 'contained';
                 if (dim.id === 'intent' && failedContained) return true;
@@ -1699,7 +1727,7 @@
                 if (dim.id === 'containment') {
                     const out = decelOutcome();
                     if (['escapes', 'parity_failed'].includes(out)) return 'escaped';
-                    if (sel.proliferation_control === 'none' && effectiveVal('alignment') === 'failed') return 'escaped';
+                    if ((sel.proliferation_control === 'none' || sel.proliferation_outcome === 'breached') && effectiveVal('alignment') === 'failed') return 'escaped';
                     if (sel.enabled_aims === 'arbitrary' && sel.ai_goals !== 'marginal') return 'escaped';
                 }
                 if (dim.id === 'failure_mode' && sel.enabled_aims === 'proxy') return 'whimper';
@@ -1749,13 +1777,15 @@
                 if (['escapes', 'abandon', 'rival', 'parity_failed'].includes(out)) d.alignment = 'failed';
                 if (d.enabled_aims === 'arbitrary' && d.ai_goals !== 'marginal') d.alignment = 'failed';
                 if (['escapes', 'parity_failed'].includes(out)) d.containment = 'escaped';
-                if (d.proliferation_control === 'none' && d.alignment === 'failed') d.containment = 'escaped';
+                if ((d.proliferation_control === 'none' || d.proliferation_outcome === 'breached') && d.alignment === 'failed') d.containment = 'escaped';
                 if (d.enabled_aims === 'arbitrary' && d.ai_goals !== 'marginal') d.containment = 'escaped';
                 if (d.enabled_aims === 'proxy') d.failure_mode = 'whimper';
+                if (d.rival_dynamics) d.intent = d.rival_dynamics;
                 if (['parity_solved', 'parity_failed', 'rival'].includes(out)) {
                     d.geo_spread = 'two';
                     d.rival_emerges = 'yes';
                 }
+                if (d.proliferation_outcome === 'breached') d.geo_spread = 'two';
                 return d;
             }
             function templateMatches(t, dims) {

@@ -27,9 +27,14 @@ The questionnaire collects a set of **dimensions** — the key variables that de
 | `alignment` | `robust`, `brittle`, `bounded`, `failed` | alignment, decel checkpoints |
 | `alignment_durability` | `holds`, `breaks` | alignment-durability |
 | `alignment_tax` | `accepted`, `eroded`, `split` | alignment-tax |
-| `proliferation_control` | `active`, `none` | ai-containment |
+| `proliferation_control` | `deny_rivals`, `secure_access`, `none` | ai-containment |
+| `proliferation_outcome` | `holds`, `breached` | proliferation-outcome |
 | `enabled_aims` | `human_centered`, `proxy`, `arbitrary` | aligned-ai-aims |
 | `containment` | `contained`, `escaped` | containment-durability (or implicitly set by various paths) |
+| `block_entrants` | `attempt`, `no_attempt` | block-entrants |
+| `block_outcome` | `holds`, `fails` | block-outcome |
+| `new_entrants` | `emerge`, `none` | new-entrants |
+| `rival_dynamics` | `coexistence`, `rivalry`, `escalation` | rival-dynamics |
 | `intent` | `self_interest`, `coexistence`, `rivalry`, `escalation`, `international` | power-dynamics |
 | `failure_mode` | `none`, `whimper`, `disempowerment` | implementation-risk |
 | `knowledge_replacement` | `rapid`, `gradual`, `uneven` | knowledge-replacement |
