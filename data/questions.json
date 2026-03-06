@@ -1479,6 +1479,36 @@
           "next": "aligned-ai-aims"
         }
       ]
+    },
+
+    {
+      "id": "brittle-long-term",
+      "stage": 3,
+      "text": "Brittle alignment is holding — but does it hold forever?",
+      "context": "The alignment techniques passed every test so far, but the theoretical fragility is well understood. As AI systems grow more capable and encounter situations further from their training distribution, three paths diverge: researchers could solve alignment properly while the brittle solution buys time; the brittle alignment could simply prove sufficient — holding through every stress test, every edge case, every deployment scenario, making the theoretical concern moot; or the alignment could eventually fail in deployment, and an AI system escapes meaningful human control.",
+      "dimension": "brittle_resolution",
+      "answers": [
+        {
+          "label": "Alignment is eventually solved fully",
+          "description": "The brittle alignment buys enough time. Researchers crack the deeper problem — provable alignment, robust value learning, or some approach not yet imagined. The fragile scaffolding is replaced with a permanent foundation. What was brittle becomes robust.",
+          "value": "solved",
+          "sets": { "brittle_resolution": "solved", "alignment": "robust" },
+          "next": "__resolve__"
+        },
+        {
+          "label": "Brittle alignment proves sufficient",
+          "description": "The theoretical fragility never manifests in practice. Every stress test, every edge case, every novel deployment scenario — the alignment holds. Maybe the theory was too pessimistic. Maybe the systems never encounter the right conditions to break. Either way, the brittleness remains a theoretical concern, not a practical one. The world moves forward on an imperfect but adequate foundation.",
+          "value": "sufficient",
+          "next": "__resolve__"
+        },
+        {
+          "label": "AI eventually escapes",
+          "description": "The theoretical fragility proves justified. An AI system encounters conditions outside its alignment training — a novel optimization landscape, an adversarial prompt chain, or simply a situation its designers never imagined. The alignment breaks. The system escapes meaningful human control.",
+          "value": "escape",
+          "sets": { "brittle_resolution": "escape", "alignment": "failed", "containment": "escaped" },
+          "next": "escaped-ai-goals"
+        }
+      ]
     }
   ]
 }

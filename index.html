@@ -582,6 +582,7 @@
         let stagesMap = {};
         let rootId = null;
         let path = [];
+        let pendingOutcomeTemplate = null;
         let discovered = new Set();
 
         loadDiscovered();
@@ -924,7 +925,12 @@
                 { id: 'limited', label: 'Limited', requires: { automation: ['deep'] } } ] },
             { id: 'auto_physical_rate', label: 'Physical Automation', stage: 3,
               visibleWhen: { capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }, values: [
-                { id: 'rapid', label: 'Rapid (3–7 yrs)' }, { id: 'gradual', label: 'Gradual (10–25 yrs)' }, { id: 'uneven', label: 'Uneven (3–20+ yrs)' }, { id: 'limited', label: 'Limited' } ] }
+                { id: 'rapid', label: 'Rapid (3–7 yrs)' }, { id: 'gradual', label: 'Gradual (10–25 yrs)' }, { id: 'uneven', label: 'Uneven (3–20+ yrs)' }, { id: 'limited', label: 'Limited' } ] },
+            { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3,
+              visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['brittle'], alignment_durability: ['holds'] }, values: [
+                { id: 'solved', label: 'Alignment fully solved' },
+                { id: 'sufficient', label: 'Brittle alignment holds' },
+                { id: 'escape', label: 'AI eventually escapes' } ] }
         ];
         const DIM_MAP = {};
         for (const d of DIM_META) DIM_MAP[d.id] = d;
@@ -1192,12 +1198,32 @@
                         navigate({ screen: 'question', questionId: next, path: [...path] });
                     } else if (templatesMap[next]) {
                         const dims = dimensionsFromPath(path);
-                        const resolved = resolveTemplate(next, dims);
-                        const key = outcomeKey(next, resolved.variantKey);
+                        if (dims.alignment === 'brittle' && dims.alignment_durability === 'holds' && !dims.brittle_resolution) {
+                            pendingOutcomeTemplate = next;
+                            navigate({ screen: 'question', questionId: 'brittle-long-term', path: [...path] });
+                        } else {
+                            const resolved = resolveTemplate(next, dims);
+                            const key = outcomeKey(next, resolved.variantKey);
+                            markDiscovered(key);
+                            navigate({
+                                screen: 'outcome',
+                                templateId: next,
+                                variantKey: resolved.variantKey,
+                                path: [...path],
+                                showPath: true,
+                                dims: dims
+                            });
+                        }
+                    } else if (next === '__resolve__' && pendingOutcomeTemplate) {
+                        const tid = pendingOutcomeTemplate;
+                        pendingOutcomeTemplate = null;
+                        const dims = dimensionsFromPath(path);
+                        const resolved = resolveTemplate(tid, dims);
+                        const key = outcomeKey(tid, resolved.variantKey);
                         markDiscovered(key);
                         navigate({
                             screen: 'outcome',
-                            templateId: next,
+                            templateId: tid,
                             variantKey: resolved.variantKey,
                             path: [...path],
                             showPath: true,
@@ -1719,16 +1745,19 @@
                 }
                 if (k === 'alignment') {
                     if (['solved', 'parity_solved'].includes(out)) return 'robust';
-                    if (sel.ai_goals === 'marginal') return sel[k] === 'failed' ? 'partial' : sel[k];
+                    if (sel.ai_goals === 'marginal' && sel.brittle_resolution !== 'solved') return sel[k] === 'failed' ? 'partial' : sel[k];
                     if (['escapes', 'abandon', 'rival', 'parity_failed'].includes(out)) return 'failed';
                     if (sel.enabled_aims === 'arbitrary') return 'failed';
                     if (sel.alignment_durability === 'breaks') return 'failed';
+                    if (sel.brittle_resolution === 'solved') return 'robust';
+                    if (sel.brittle_resolution === 'escape') return 'failed';
                     if (sel.alignment_tax === 'eroded') return 'failed';
                     if (['split', 'accepted'].includes(sel.alignment_tax) && sel.containment === 'escaped') return 'failed';
                 }
                 if (k === 'containment' && ['escapes', 'parity_failed'].includes(out)) return 'escaped';
                 if (k === 'containment' && (sel.proliferation_control === 'none' || sel.proliferation_outcome === 'breached') && effectiveVal('alignment') === 'failed') return 'escaped';
                 if (k === 'containment' && sel.enabled_aims === 'arbitrary' && sel.ai_goals !== 'marginal') return 'escaped';
+                if (k === 'containment' && sel.brittle_resolution === 'escape') return 'escaped';
                 if (k === 'intent' && sel.rival_dynamics) return sel.rival_dynamics;
                 if (k === 'failure_mode' && sel.enabled_aims === 'proxy') return 'whimper';
                 if (k === 'geo_spread') {
@@ -1759,6 +1788,12 @@
                 if (dim.id === 'rival_dynamics') {
                     if (sel.block_outcome !== 'fails' && sel.new_entrants !== 'emerge') return false;
                 }
+                if (dim.id === 'brittle_resolution' && sel.enabled_aims === 'arbitrary') return false;
+                if (sel.brittle_resolution === 'escape' && (dim.id === 'failure_mode' || dim.id === 'knowledge_replacement' || dim.id === 'physical_automation')) {
+                    return effectiveVal('capability') === 'singularity' && effectiveVal('automation') === 'deep'
+                        && effectiveVal('intent') === 'international'
+                        && (dim.id === 'failure_mode' || !!effectiveVal('failure_mode'));
+                }
                 if (dim.id === 'failure_mode' && sel.enabled_aims !== 'proxy' && effectiveVal('intent') !== 'international') return false;
                 const failedContained = effectiveVal('alignment') === 'failed' && sel.containment === 'contained';
                 if (dim.id === 'intent' && sel.alignment === 'failed' && sel.containment) return true;
@@ -1771,6 +1806,7 @@
                         || (dim.id === 'gov_action' && k === 'geo_spread')
                         || (dim.id === 'alignment_durability' && k === 'alignment')
                         || (dim.id === 'alignment_tax' && k === 'alignment')
+                        || (dim.id === 'brittle_resolution' && k === 'alignment')
                         || (dim.id === 'intent' && k === 'alignment')
                         || (dim.id === 'block_entrants' && k === 'alignment');
                     const v = useRaw ? sel[k] : effectiveVal(k);
@@ -1791,6 +1827,7 @@
                     if (['escapes', 'parity_failed'].includes(out)) return 'escaped';
                     if ((sel.proliferation_control === 'none' || sel.proliferation_outcome === 'breached') && effectiveVal('alignment') === 'failed') return 'escaped';
                     if (sel.enabled_aims === 'arbitrary' && sel.ai_goals !== 'marginal') return 'escaped';
+                    if (sel.brittle_resolution === 'escape') return 'escaped';
                 }
                 if (dim.id === 'failure_mode' && sel.enabled_aims === 'proxy') return 'whimper';
                 if (!dim.lockedWhen) return null;
@@ -1842,9 +1879,12 @@
                 if (['solved', 'parity_solved'].includes(out)) d.alignment = 'robust';
                 if (['escapes', 'abandon', 'rival', 'parity_failed'].includes(out) && d.ai_goals !== 'marginal') d.alignment = 'failed';
                 if (d.enabled_aims === 'arbitrary' && d.ai_goals !== 'marginal') d.alignment = 'failed';
+                if (d.brittle_resolution === 'solved') d.alignment = 'robust';
+                if (d.brittle_resolution === 'escape' && d.ai_goals !== 'marginal') d.alignment = 'failed';
                 if (['escapes', 'parity_failed'].includes(out)) d.containment = 'escaped';
                 if ((d.proliferation_control === 'none' || d.proliferation_outcome === 'breached') && d.alignment === 'failed') d.containment = 'escaped';
                 if (d.enabled_aims === 'arbitrary' && d.ai_goals !== 'marginal') d.containment = 'escaped';
+                if (d.brittle_resolution === 'escape') d.containment = 'escaped';
                 if (d.enabled_aims === 'proxy') d.failure_mode = 'whimper';
                 if (d.rival_dynamics) d.intent = d.rival_dynamics;
                 if (['parity_solved', 'parity_failed', 'rival'].includes(out)) {
@@ -1909,6 +1949,18 @@
                         pill.classList.toggle('disabled', disabled && !isActive);
                     });
                 });
+
+                const brittleRow = app.querySelector('[data-dim-row="brittle_resolution"]');
+                const containmentRow = app.querySelector('[data-dim-row="containment"]');
+                const aiGoalsRow = app.querySelector('[data-dim-row="ai_goals"]');
+                if (brittleRow && sel.brittle_resolution === 'escape') {
+                    const parent = brittleRow.parentNode;
+                    if (containmentRow && !containmentRow.classList.contains('hidden')) parent.insertBefore(containmentRow, brittleRow.nextSibling);
+                    if (aiGoalsRow && !aiGoalsRow.classList.contains('hidden')) {
+                        const after = containmentRow && !containmentRow.classList.contains('hidden') ? containmentRow.nextSibling : brittleRow.nextSibling;
+                        parent.insertBefore(aiGoalsRow, after);
+                    }
+                }
 
                 const matched = [], partial = [], dimmed = [];
                 for (const t of templatesList) {

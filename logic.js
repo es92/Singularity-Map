@@ -183,7 +183,12 @@ const DIM_META = [
         { id: 'limited', label: 'Limited', requires: { automation: ['deep'] } } ] },
     { id: 'auto_physical_rate', label: 'Physical Automation', stage: 3,
       visibleWhen: { capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }, values: [
-        { id: 'rapid', label: 'Rapid (3–7 yrs)' }, { id: 'gradual', label: 'Gradual (10–25 yrs)' }, { id: 'uneven', label: 'Uneven (3–20+ yrs)' }, { id: 'limited', label: 'Limited' } ] }
+        { id: 'rapid', label: 'Rapid (3–7 yrs)' }, { id: 'gradual', label: 'Gradual (10–25 yrs)' }, { id: 'uneven', label: 'Uneven (3–20+ yrs)' }, { id: 'limited', label: 'Limited' } ] },
+    { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3,
+      visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['brittle'], alignment_durability: ['holds'] }, values: [
+        { id: 'solved', label: 'Alignment fully solved' },
+        { id: 'sufficient', label: 'Brittle alignment holds' },
+        { id: 'escape', label: 'AI eventually escapes' } ] }
 ];
 
 const DIM_MAP = {};
@@ -210,16 +215,19 @@ function effectiveVal(sel, k) {
     }
     if (k === 'alignment') {
         if (['solved', 'parity_solved'].includes(out)) return 'robust';
-        if (sel.ai_goals === 'marginal') return sel[k] === 'failed' ? 'partial' : sel[k];
+        if (sel.ai_goals === 'marginal' && sel.brittle_resolution !== 'solved') return sel[k] === 'failed' ? 'partial' : sel[k];
         if (['escapes', 'abandon', 'rival', 'parity_failed'].includes(out)) return 'failed';
         if (sel.enabled_aims === 'arbitrary') return 'failed';
         if (sel.alignment_durability === 'breaks') return 'failed';
+        if (sel.brittle_resolution === 'solved') return 'robust';
+        if (sel.brittle_resolution === 'escape') return 'failed';
         if (sel.alignment_tax === 'eroded') return 'failed';
         if (['split', 'accepted'].includes(sel.alignment_tax) && sel.containment === 'escaped') return 'failed';
     }
     if (k === 'containment' && ['escapes', 'parity_failed'].includes(out)) return 'escaped';
     if (k === 'containment' && (sel.proliferation_control === 'none' || sel.proliferation_outcome === 'breached') && effectiveVal(sel, 'alignment') === 'failed') return 'escaped';
     if (k === 'containment' && sel.enabled_aims === 'arbitrary' && sel.ai_goals !== 'marginal') return 'escaped';
+    if (k === 'containment' && sel.brittle_resolution === 'escape') return 'escaped';
     if (k === 'intent' && sel.rival_dynamics) return sel.rival_dynamics;
     if (k === 'failure_mode' && sel.enabled_aims === 'proxy') return 'whimper';
     if (k === 'geo_spread') {
@@ -251,6 +259,12 @@ function isDimVisible(sel, dim) {
     if (dim.id === 'rival_dynamics') {
         if (sel.block_outcome !== 'fails' && sel.new_entrants !== 'emerge') return false;
     }
+    if (dim.id === 'brittle_resolution' && sel.enabled_aims === 'arbitrary') return false;
+    if (sel.brittle_resolution === 'escape' && (dim.id === 'failure_mode' || dim.id === 'knowledge_replacement' || dim.id === 'physical_automation')) {
+        return effectiveVal(sel, 'capability') === 'singularity' && effectiveVal(sel, 'automation') === 'deep'
+            && effectiveVal(sel, 'intent') === 'international'
+            && (dim.id === 'failure_mode' || !!effectiveVal(sel, 'failure_mode'));
+    }
     if (dim.id === 'failure_mode' && sel.enabled_aims !== 'proxy' && effectiveVal(sel, 'intent') !== 'international') return false;
     const failedContained = effectiveVal(sel, 'alignment') === 'failed' && sel.containment === 'contained';
     if (dim.id === 'intent' && sel.alignment === 'failed' && sel.containment) return true;
@@ -263,6 +277,7 @@ function isDimVisible(sel, dim) {
             || (dim.id === 'gov_action' && k === 'geo_spread')
             || (dim.id === 'alignment_durability' && k === 'alignment')
             || (dim.id === 'alignment_tax' && k === 'alignment')
+            || (dim.id === 'brittle_resolution' && k === 'alignment')
             || (dim.id === 'intent' && k === 'alignment')
             || (dim.id === 'block_entrants' && k === 'alignment');
         const v = useRaw ? sel[k] : effectiveVal(sel, k);
@@ -284,6 +299,7 @@ function isDimLocked(sel, dim) {
         if (['escapes', 'parity_failed'].includes(out)) return 'escaped';
         if ((sel.proliferation_control === 'none' || sel.proliferation_outcome === 'breached') && effectiveVal(sel, 'alignment') === 'failed') return 'escaped';
         if (sel.enabled_aims === 'arbitrary' && sel.ai_goals !== 'marginal') return 'escaped';
+        if (sel.brittle_resolution === 'escape') return 'escaped';
     }
     if (dim.id === 'failure_mode' && sel.enabled_aims === 'proxy') return 'whimper';
     if (!dim.lockedWhen) return null;
@@ -339,9 +355,12 @@ function effectiveDims(sel) {
     if (['solved', 'parity_solved'].includes(out)) d.alignment = 'robust';
     if (['escapes', 'abandon', 'rival', 'parity_failed'].includes(out) && d.ai_goals !== 'marginal') d.alignment = 'failed';
     if (d.enabled_aims === 'arbitrary' && d.ai_goals !== 'marginal') d.alignment = 'failed';
+    if (d.brittle_resolution === 'solved') d.alignment = 'robust';
+    if (d.brittle_resolution === 'escape' && d.ai_goals !== 'marginal') d.alignment = 'failed';
     if (['escapes', 'parity_failed'].includes(out)) d.containment = 'escaped';
     if ((d.proliferation_control === 'none' || d.proliferation_outcome === 'breached') && d.alignment === 'failed') d.containment = 'escaped';
     if (d.enabled_aims === 'arbitrary' && d.ai_goals !== 'marginal') d.containment = 'escaped';
+    if (d.brittle_resolution === 'escape') d.containment = 'escaped';
     if (d.enabled_aims === 'proxy') d.failure_mode = 'whimper';
     if (d.rival_dynamics) d.intent = d.rival_dynamics;
     if (['parity_solved', 'parity_failed', 'rival'].includes(out)) {
