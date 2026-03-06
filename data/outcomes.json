@@ -49,7 +49,7 @@
         }
       },
       "reachable": [
-        { "capability": ["hours", "days", "weeks", "months"] }
+        { "capability": ["hours", "days", "weeks", "months"], "stall_recovery": ["substantial", "never"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
@@ -147,12 +147,13 @@
         },
         "alignment": {
           "robust": "Alignment is comprehensive and durable. The AI systems reliably pursue human values even under novel conditions and recursive self-improvement. The flourishing rests on a genuine foundation — not hope, not luck, but verified safety.",
-          "brittle": "Alignment holds — but everyone knows it might not have. The techniques passed every test, yet the theoretical fragility haunts every policy discussion. Flourishing unfolds in the shadow of a risk that never materialized, and the question of whether it could still break never fully goes away.",
-          "partial": "Alignment works within constrained domains — and those constraints are deliberately maintained. The AI is immensely powerful but intentionally limited. The flourishing is real but bounded: transformative within safe boundaries, with vast capability deliberately left on the table."
+          "brittle": "Alignment holds — but everyone knows it might not have. The techniques passed every test, yet the theoretical fragility haunts every policy discussion. Flourishing unfolds in the shadow of a risk that never materialized, and the question of whether it could still break never fully goes away."
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["robust", "brittle", "partial"], "intent": ["international"], "failure_mode": ["none"] },
+        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["international"], "failure_mode": ["none"], "enabled_aims": ["human_centered", "proxy"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["international"], "failure_mode": ["none"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "intent": ["international"], "failure_mode": ["none"] },
         { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["international"], "failure_mode": ["none"] }
       ],
       "story": ["Outcome story coming soon."],
@@ -191,7 +192,9 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["robust", "brittle", "partial"], "intent": ["self_interest"] },
+        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["self_interest"], "enabled_aims": ["human_centered", "proxy"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["self_interest"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "intent": ["self_interest"] },
         { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["self_interest"] }
       ],
       "story": ["Outcome story coming soon."],
@@ -237,7 +240,9 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["robust", "brittle", "partial"], "intent": ["rivalry", "escalation"] },
+        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["rivalry", "escalation"], "enabled_aims": ["human_centered", "proxy"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["rivalry", "escalation"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "intent": ["rivalry", "escalation"] },
         { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["rivalry", "escalation"] }
       ],
       "story": ["Outcome story coming soon."],
@@ -258,11 +263,6 @@
           "subtitle": "The Precarious Mosaic",
           "mood": "mixed",
           "summary": "Humanity fragments peacefully into divergent AI-powered civilizations — each thriving on its own terms. But the alignment undergirding every one of them is brittle. It holds under current conditions. No one knows if it will hold forever. A hundred different futures, each built on the same uncertain foundation. Beautiful, diverse, precarious."
-        },
-        "partial": {
-          "subtitle": "The Constrained Mosaic",
-          "mood": "mixed",
-          "summary": "Humanity fragments into divergent civilizations, each using AI within deliberately constrained boundaries. The alignment works within those limits — and each group shapes its constraints differently. Some push closer to the boundary than others. A mosaic of different risk tolerances, different capability ceilings, different visions of acceptable tradeoff."
         },
         "failed": {
           "subtitle": "The Fragile Mosaic",
@@ -293,7 +293,9 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["robust", "brittle", "partial"], "intent": ["coexistence"] },
+        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["coexistence"], "enabled_aims": ["human_centered", "proxy"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["coexistence"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "intent": ["coexistence"] },
         { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["coexistence"] }
       ],
       "story": ["Outcome story coming soon."],
@@ -336,7 +338,9 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["robust", "brittle", "partial"], "intent": ["international"], "failure_mode": ["whimper", "disempowerment"] },
+        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["international"], "failure_mode": ["whimper", "disempowerment"], "enabled_aims": ["human_centered", "proxy"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["international"], "failure_mode": ["whimper", "disempowerment"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "intent": ["international"], "failure_mode": ["whimper", "disempowerment"] },
         { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["international"], "failure_mode": ["whimper", "disempowerment"] }
       ],
       "story": ["Outcome story coming soon."],

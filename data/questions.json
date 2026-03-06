@@ -818,7 +818,7 @@
       "id": "alignment",
       "stage": 2,
       "text": "How well is the alignment problem solved before AI surpasses human-level capability?",
-      "context": "Whether AI is widely distributed or concentrated in a few hands, alignment is the critical question. Can researchers ensure AI systems reliably pursue human values? The answer isn't binary. Alignment could be robust — genuinely solved under all conditions. It could be brittle — appearing to work but fragile under stress. It could be partial — solved for specific domains but not open-ended autonomy. Or it could fail entirely. Each degree of alignment leads to a fundamentally different future.",
+      "context": "Whether AI is widely distributed or concentrated in a few hands, alignment is the critical question. Can researchers ensure AI systems reliably pursue human values? The answer isn't binary. Alignment could be robust — genuinely solved under all conditions. It could be brittle or partial — appearing to work but fragile under stress, or solved only for specific domains. Or it could fail entirely. Each degree of alignment leads to a fundamentally different future.",
       "dimension": "alignment",
       "answers": [
         {
@@ -834,13 +834,6 @@
           "value": "brittle",
           "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
           "next": "alignment-durability"
-        },
-        {
-          "label": "Bounded — solved for specific domains, not general autonomy",
-          "description": "Alignment works for well-defined tasks but not open-ended superintelligent autonomy. There's a known capability-safety tradeoff: the system can be made safe, but only by limiting what it's allowed to do. The question becomes whether those limits hold.",
-          "value": "partial",
-          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
-          "next": "alignment-tax"
         },
         {
           "label": "Failed — alignment lags behind capabilities",
@@ -862,13 +855,6 @@
           "sets": { "alignment": "brittle", "proliferation_control": "none", "geo_spread": "several" },
           "requires": { "distribution": ["open"] },
           "next": "alignment-durability"
-        },
-        {
-          "label": "Bounded — solved for specific domains, not general autonomy",
-          "description": "Alignment works for well-defined tasks but not open-ended autonomy. With AI broadly distributed, the alignment-capability tradeoff becomes a collective action problem — any actor can push past the safety boundary.",
-          "sets": { "alignment": "partial", "proliferation_control": "none", "geo_spread": "several" },
-          "requires": { "distribution": ["open"] },
-          "next": "alignment-tax"
         },
         {
           "label": "Failed — alignment lags behind capabilities",
@@ -921,66 +907,6 @@
           "sets": { "alignment": "failed", "alignment_durability": "breaks", "proliferation_control": "none", "containment": "escaped" },
           "requires": { "distribution": ["open"] },
           "next": "escaped-ai-goals"
-        }
-      ]
-    },
-
-    {
-      "id": "alignment-tax",
-      "stage": 2,
-      "text": "Does society accept the alignment-capability tradeoff?",
-      "context": "AI can be safely aligned for well-defined tasks — legal research, code generation, medical diagnosis, logistics optimization — but not for open-ended superintelligent autonomy. Deploying it within safe boundaries means leaving enormous capability on the table. The AI could theoretically do much more, but the alignment techniques only work within constrained domains. Economic pressure, geopolitical competition, and the sheer temptation of unlocking full capability all push toward removing the guardrails. Stuart Russell's framework of 'beneficial machines' depends on exactly this restraint holding.",
-      "source": {
-        "label": "Stuart Russell — Human Compatible (2019)",
-        "url": "https://en.wikipedia.org/wiki/Human_Compatible"
-      },
-      "dimension": "alignment_tax",
-      "answers": [
-        {
-          "label": "Constraints hold — deployment stays within safe boundaries",
-          "description": "Society accepts the tradeoff. AI is deployed only within domains where alignment is verified. The capability ceiling is real but the transformation within those boundaries is still immense. International agreements, regulation, and shared norms enforce the limits. A deliberate, constrained flourishing.",
-          "value": "accepted",
-          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
-          "next": "ai-containment"
-        },
-        {
-          "label": "Constraints erode — competitive pressure wins over time",
-          "description": "The restraint doesn't hold. Economic pressure, geopolitical competition, or a single rogue actor pushes past the safety boundary. Once one entity deploys unconstrained AI, others follow or fall behind. Bounded alignment wasn't enough — and now the guardrails are gone.",
-          "value": "eroded",
-          "sets": { "alignment": "failed", "alignment_tax": "eroded" },
-          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
-          "next": "ai-containment"
-        },
-        {
-          "label": "Split deployment — safe domains constrained, strategic use unconstrained",
-          "description": "Civilian AI stays within safe boundaries. Military and intelligence applications push past them. A dual-use world: aligned AI serves the public while unaligned capability operates in the shadows. The boundary between the two erodes over time.",
-          "value": "split",
-          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
-          "next": "ai-containment"
-        },
-        {
-          "label": "Constraints hold — shared norms enforce safe boundaries",
-          "description": "Despite broad distribution, the alignment-capability tradeoff is widely accepted. Open-source norms, international agreements, and the AI community's own culture enforce the limits. Nobody pushes past the safety boundary because the consensus holds. A distributed, constrained flourishing.",
-          "value": "accepted",
-          "sets": { "alignment_tax": "accepted", "proliferation_control": "none", "geo_spread": "several" },
-          "requires": { "distribution": ["open"] },
-          "next": "aligned-ai-aims"
-        },
-        {
-          "label": "Constraints erode — someone pushes past the boundary",
-          "description": "With AI broadly distributed, the restraint is only as strong as the weakest actor. Someone pushes past the safety boundary — a rogue state, a competitive startup, or a lone researcher. Once unconstrained AI exists, containment is impossible.",
-          "value": "eroded",
-          "sets": { "alignment": "failed", "alignment_tax": "eroded", "proliferation_control": "none", "containment": "escaped" },
-          "requires": { "distribution": ["open"] },
-          "next": "escaped-ai-goals"
-        },
-        {
-          "label": "Split deployment — safe domains constrained, strategic use unconstrained",
-          "description": "Most actors stay within safe boundaries. But state-level actors push past them for military and intelligence applications. A distributed world with a shadow layer of unconstrained AI capability, operated by those with the most power and the least accountability.",
-          "value": "split",
-          "sets": { "alignment_tax": "split", "proliferation_control": "none", "geo_spread": "several" },
-          "requires": { "distribution": ["open"] },
-          "next": "ai-containment"
         }
       ]
     },
@@ -1315,21 +1241,21 @@
         {
           "label": "Deny rivals — active measures to block others from reaching the frontier",
           "description": "Even with aligned systems, the leading power pursues aggressive denial to maintain its advantage: chip export bans, sanctions, and pressure on allies.",
-          "requires": { "alignment": ["robust", "brittle", "partial"] },
+          "requires": { "alignment": ["robust", "brittle"] },
           "value": "deny_rivals",
           "next": "proliferation-outcome"
         },
         {
           "label": "Secure access — protect own capabilities from theft and leaks",
           "description": "Even with aligned systems, powers focus on defensive security: sealed weights, hardened infrastructure, and strict access controls to prevent espionage.",
-          "requires": { "alignment": ["robust", "brittle", "partial"] },
+          "requires": { "alignment": ["robust", "brittle"] },
           "value": "secure_access",
           "next": "proliferation-outcome"
         },
         {
           "label": "No durable control — capability diffuses broadly",
           "description": "Aligned capability spreads quickly across actors and jurisdictions. What matters most is what aims those systems are enabled to pursue.",
-          "requires": { "alignment": ["robust", "brittle", "partial"] },
+          "requires": { "alignment": ["robust", "brittle"] },
           "value": "none",
           "sets": { "geo_spread": "two" },
           "next": "aligned-ai-aims"
@@ -1362,14 +1288,14 @@
         {
           "label": "Yes — control holds",
           "description": "The control regime endures. Frontier aligned capability remains concentrated in the leading power's hands.",
-          "requires": { "alignment": ["robust", "brittle", "partial"] },
+          "requires": { "alignment": ["robust", "brittle"] },
           "value": "holds",
           "next": "aligned-ai-aims"
         },
         {
           "label": "No — control is breached",
           "description": "Despite efforts, the regime fails. Aligned frontier capability spreads to rivals through espionage, leaks, or independent development. The monopoly is over.",
-          "requires": { "alignment": ["robust", "brittle", "partial"] },
+          "requires": { "alignment": ["robust", "brittle"] },
           "value": "breached",
           "sets": { "geo_spread": "two" },
           "next": "aligned-ai-aims"

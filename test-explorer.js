@@ -61,8 +61,8 @@ function forwardKey(sel) {
 
 // --- Invariant checks ---
 
-const violations = { vanish: [], deadEnd: [], ambiguous: [], stuck: [] };
-const seen = { vanish: new Set() };
+const violations = { vanish: [], deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], premature: [] };
+const seen = { vanish: new Set(), clickErased: new Set(), premature: new Set() };
 
 function checkVanishUpward(sel) {
     const visible = new Set(DIM_META.filter(d => isDimVisible(sel, d)).map(d => d.id));
@@ -99,6 +99,49 @@ function checkStuck(sel) {
         if (enabled.length === 0) {
             violations.stuck.push({ dim: dim.id, url: selToUrl(sel) });
         }
+        if (enabled.length === 1) {
+            violations.singleOption.push({ dim: dim.id, val: enabled[0].id, url: selToUrl(sel) });
+        }
+    }
+}
+
+function checkClickErased(sel) {
+    for (const dim of DIM_META) {
+        if (!isDimVisible(sel, dim)) continue;
+        if (isDimLocked(sel, dim) !== null) continue;
+        for (const val of getEnabledValues(sel, dim)) {
+            if (sel[dim.id] === val.id) continue;
+            const next = { ...sel, [dim.id]: val.id };
+            cleanSelection(next);
+            if (!next[dim.id]) {
+                const k = `${dim.id}:${val.id}`;
+                if (seen.clickErased.has(k)) continue;
+                seen.clickErased.add(k);
+                violations.clickErased.push({ dim: dim.id, val: val.id, url: selToUrl(sel) });
+            }
+        }
+    }
+}
+
+function checkPrematureOutcome(sel, nextDim) {
+    const dims = effectiveDims(sel);
+    const matched = templatesList.filter(t => templateMatches(t, dims));
+    if (matched.length !== 1) return;
+
+    const currentOutcome = matched[0].id;
+    const enabled = getEnabledValues(sel, nextDim);
+    for (const val of enabled) {
+        const next = { ...sel, [nextDim.id]: val.id };
+        cleanSelection(next);
+        const childDims = effectiveDims(next);
+        const childMatched = templatesList.filter(t => templateMatches(t, childDims));
+        if (childMatched.length !== 1 || childMatched[0].id !== currentOutcome) {
+            const k = selKey(sel);
+            if (seen.premature.has(k)) return;
+            seen.premature.add(k);
+            violations.premature.push({ outcome: currentOutcome, nextDim: nextDim.id, url: selToUrl(sel) });
+            return;
+        }
     }
 }
 
@@ -115,6 +158,7 @@ function checkLeaf(sel) {
 function runChecks(sel) {
     checkVanishUpward(sel);
     checkStuck(sel);
+    checkClickErased(sel);
 }
 
 // --- DFS with forward-key deduplication ---
@@ -152,6 +196,7 @@ function explore(startSel) {
 
         const next = getNextDim(sel);
         if (next) {
+            checkPrematureOutcome(sel, next);
             for (const val of getEnabledValues(sel, next)) {
                 stack.push({ ...sel, [next.id]: val.id });
             }
@@ -253,7 +298,10 @@ if (mode === 'sample') {
         { name: 'DEAD-END LEAF (no outcome)', items: violations.deadEnd, fmt: v => `  No outcome matches at leaf` },
         { name: 'AMBIGUOUS LEAF (multiple outcomes)', items: violations.ambiguous, fmt: v => `  ${v.outcomes.length} outcomes: [${v.outcomes.join(', ')}]` },
         { name: 'STUCK DIM (visible, 0 enabled values)', items: violations.stuck, fmt: v => `  "${v.dim}" is visible but has no selectable values` },
+        { name: 'UNLOCKED SINGLE OPTION (should be auto-locked)', items: violations.singleOption, fmt: v => `  "${v.dim}" has only "${v.val}" enabled but is not locked` },
         { name: 'ROW VANISHES UPWARD', items: violations.vanish, fmt: v => `  Click "${v.dim}=${v.val}" → "${v.vanished}" vanishes` },
+        { name: 'CLICK ERASED (value removed by cleanSelection)', items: violations.clickErased, fmt: v => `  Click "${v.dim}=${v.val}" → immediately cleared` },
+        { name: 'PREMATURE OUTCOME (shown before all choices made)', items: violations.premature, fmt: v => `  "${v.outcome}" matches but "${v.nextDim}" still unset and can change result` },
     ];
 
     let total = 0;
