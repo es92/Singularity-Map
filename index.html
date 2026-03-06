@@ -132,7 +132,8 @@
             gap: 0.4rem; margin-bottom: 2rem;
             font-size: 0.82rem; color: var(--text-dim);
         }
-        .breadcrumbs .crumb { color: var(--text-secondary); }
+        .breadcrumbs .crumb { color: var(--text-secondary); cursor: pointer; border-radius: 4px; padding: 0.1rem 0.3rem; transition: background 0.15s, color 0.15s; }
+        .breadcrumbs .crumb:hover { background: var(--bg-surface); color: var(--accent); }
         .breadcrumbs .sep { color: var(--text-dim); margin: 0 0.1rem; }
         .question-text {
             font-size: 1.45rem; font-weight: 600;
@@ -489,6 +490,7 @@
         .explorer-match-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.3rem; }
         .explorer-match-subtitle { font-weight: 400; font-style: italic; opacity: 0.7; }
         .explorer-match-summary { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; }
+        .explorer-match-refine { color: var(--text-dim); font-size: 0.8rem; font-style: italic; margin-top: 0.5rem; }
         .explorer-match .mood-badge { margin-left: 0.5rem; vertical-align: middle; }
         .explorer-match-action { margin-top: 0.75rem; }
         .explorer-no-match { color: var(--text-dim); font-size: 0.9rem; font-style: italic; padding: 1rem 0; }
@@ -641,11 +643,13 @@
 
         function answerVisible(answer, dims) {
             if (!answer.requires) return true;
-            if (Array.isArray(answer.requires)) return false;
-            for (const [dim, allowed] of Object.entries(answer.requires)) {
-                if (!dims[dim] || !allowed.includes(dims[dim])) return false;
-            }
-            return true;
+            const condSets = Array.isArray(answer.requires) ? answer.requires : [answer.requires];
+            return condSets.some(conds => {
+                for (const [dim, allowed] of Object.entries(conds)) {
+                    if (!dims[dim] || !allowed.includes(dims[dim])) return false;
+                }
+                return true;
+            });
         }
 
         function dimensionsFromPath(p) {
@@ -847,9 +851,9 @@
             { id: 'intent', label: 'Intent', stage: 2,
               visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle', 'partial'] }, values: [
                 { id: 'self_interest', label: 'Self-interest', requires: [{ distribution: ['monopoly'], geo_spread: ['one'], proliferation_control: ['deny_rivals', 'secure_access'] }, { distribution: ['concentrated', 'lagging'], geo_spread: ['one'], sovereignty: ['state'], proliferation_control: ['deny_rivals', 'secure_access'] }] },
-                { id: 'coexistence', label: 'Coexistence', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] },
-                { id: 'rivalry', label: 'Rivalry', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] },
-                { id: 'escalation', label: 'Escalation', requires: [{ distribution: ['open', 'lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] },
+                { id: 'coexistence', label: 'Coexistence', requires: [{ distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { distribution: ['lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'], geo_spread: ['two', 'several'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] },
+                { id: 'rivalry', label: 'Rivalry', requires: [{ distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { distribution: ['lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'], geo_spread: ['two', 'several'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] },
+                { id: 'escalation', label: 'Escalation', requires: [{ distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { distribution: ['lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'], geo_spread: ['two', 'several'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] },
                 { id: 'international', label: 'International' } ] },
             { id: 'block_entrants', label: 'Block New Entrants?', stage: 2,
               visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle', 'partial'], proliferation_control: ['secure_access'], proliferation_outcome: ['holds'] }, values: [
@@ -978,6 +982,40 @@
                     return { screen: 'outcome', templateId: tid, variantKey: vk, path: [], showPath: false, dims: Object.keys(dims).length ? dims : undefined };
                 }
             }
+            if (hash.startsWith('/story/')) {
+                let rest = hash.slice('/story/'.length);
+                const qIdx = rest.indexOf('?');
+                let questionId, pathStr;
+                if (qIdx >= 0) {
+                    questionId = rest.slice(0, qIdx);
+                    pathStr = rest.slice(qIdx + 1);
+                } else {
+                    questionId = rest;
+                    pathStr = '';
+                }
+                const restoredPath = [];
+                if (pathStr) {
+                    for (const pair of pathStr.split(',')) {
+                        const [qid, aidx] = pair.split(':');
+                        const decodedQid = decodeURIComponent(qid);
+                        const idx = parseInt(aidx, 10);
+                        const q = questionsMap[decodedQid];
+                        if (q && q.answers[idx]) {
+                            const answer = q.answers[idx];
+                            restoredPath.push({
+                                questionId: decodedQid,
+                                answerIndex: idx,
+                                answerLabel: answer.label,
+                                questionText: q.text,
+                                dims: collectStepDims(q, answer)
+                            });
+                        }
+                    }
+                }
+                if (questionsMap[questionId]) {
+                    return { screen: 'question', questionId, path: restoredPath };
+                }
+            }
             if (hash === '/gallery') return { screen: 'gallery' };
             if (hash === '/tree') return { screen: 'tree' };
             if (hash.startsWith('/explore')) {
@@ -1009,6 +1047,11 @@
                 hash = '/explore';
                 if (state.dims && Object.keys(state.dims).length > 0) {
                     hash += '?' + Object.entries(state.dims).map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
+                }
+            } else if (state.screen === 'question') {
+                hash = '/story/' + state.questionId;
+                if (state.path && state.path.length > 0) {
+                    hash += '?' + state.path.map(s => encodeURIComponent(s.questionId) + ':' + s.answerIndex).join(',');
                 }
             }
             history.pushState(state, '', hash ? '#' + hash : location.pathname);
@@ -1098,7 +1141,7 @@
 
             let crumbs = '';
             if (path.length > 0) {
-                const parts = path.map(p => `<span class="crumb">${esc(p.answerLabel)}</span>`);
+                const parts = path.map((p, i) => `<span class="crumb" data-step="${i}" title="${esc(p.questionText)}">${esc(p.answerLabel)}</span>`);
                 crumbs = `<div class="breadcrumbs">${parts.join('<span class="sep">\u2192</span>')}</div>`;
             }
 
@@ -1166,11 +1209,20 @@
                 });
             });
 
+            app.querySelectorAll('.breadcrumbs .crumb[data-step]').forEach(crumb => {
+                crumb.addEventListener('click', () => {
+                    const step = parseInt(crumb.dataset.step, 10);
+                    const target = path[step];
+                    path = path.slice(0, step);
+                    navigate({ screen: 'question', questionId: target.questionId, path: [...path] });
+                });
+            });
+
             listen('[data-action="back"]', 'click', () => {
                 const prev = path.pop();
                 if (prev) navigate({ screen: 'question', questionId: prev.questionId, path: [...path] });
             });
-            listen('[data-action="home"]', 'click', () => history.back());
+            listen('[data-action="home"]', 'click', () => navigate({ screen: 'intro' }));
         }
 
         // --- Render: Outcome ---
@@ -1436,7 +1488,7 @@
                 if (prev) navigate({ screen: 'question', questionId: prev.questionId, path: [...path] });
             });
             listen('[data-action="restart"]', 'click', () => navigate({ screen: 'intro' }));
-            listen('[data-action="gallery"]', 'click', () => navigate({ screen: 'gallery' }));
+            listen('[data-action="gallery"]', 'click', () => navigate({ screen: 'explore', dims: { ...localDims } }));
             listen('[data-action="share"]', 'click', () => {
                 const currentKey = outcomeKey(templateId, localDims[t.primaryDimension] || variantKey);
                 let url = location.origin + location.pathname + '#/outcome/' + currentKey;
@@ -1878,9 +1930,11 @@
                 });
 
                 const matchDiv = app.querySelector('.explorer-match-zone');
-                if (matched.length === 1 && !hasUnsetVisibleDims) {
+                if (matched.length === 1) {
                     const t = matched[0];
                     const resolved = resolveTemplate(t.id, dims);
+                    const refineNote = hasUnsetVisibleDims
+                        ? '<div class="explorer-match-refine">You can still adjust choices below to explore variations.</div>' : '';
                     matchDiv.innerHTML = `
                         <div class="explorer-match">
                             <div class="explorer-match-label">Your future</div>
@@ -1890,6 +1944,7 @@
                                 <span class="mood-badge mood-${resolved.mood}" style="font-size:0.68rem;">${esc(resolved.mood)}</span>
                             </div>
                             <div class="explorer-match-summary">${esc(resolved.summary)}</div>
+                            ${refineNote}
                             <div class="explorer-match-action">
                                 <button class="btn btn-small btn-primary" data-action="view-match"
                                     data-tid="${esc(t.id)}" data-vk="${esc(resolved.variantKey || '')}">View Full Story</button>
@@ -1902,8 +1957,8 @@
                         markDiscovered(key);
                         navigate({ screen: 'outcome', templateId: tid, variantKey: vk, path: [], showPath: false, dims: effectiveDims() });
                     });
-                } else if (matched.length >= 1 && hasUnsetVisibleDims) {
-                    matchDiv.innerHTML = `<div class="explorer-no-match">${matched.length} outcome${matched.length > 1 ? 's' : ''} match${matched.length === 1 ? 'es' : ''} so far. Keep choosing to lock it in.</div>`;
+                } else if (matched.length > 1 && hasUnsetVisibleDims) {
+                    matchDiv.innerHTML = `<div class="explorer-no-match">${matched.length} outcomes match so far. Keep choosing to narrow it down.</div>`;
                 } else if (matched.length > 1) {
                     matchDiv.innerHTML = `<div class="explorer-no-match">${matched.length} outcomes match. Keep choosing to narrow it down.</div>`;
                 } else {
@@ -1917,7 +1972,7 @@
                     const t = templatesMap[tid];
                     const isMatch = matched.includes(t);
                     const isPartial = partial.includes(t);
-                    card.classList.toggle('matched', isMatch && !hasUnsetVisibleDims);
+                    card.classList.toggle('matched', isMatch && matched.length === 1);
                     card.classList.toggle('dimmed', !isMatch && !isPartial);
                     const resolved = resolveTemplate(tid, dims);
                     if (resolved) {

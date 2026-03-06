@@ -1007,7 +1007,8 @@
           "description": "Multiple holders of superintelligent AI pursue radically different visions. Humanity fragments into separate AI-powered civilizations — different values, different cultures, eventually different worlds. Not unity, not conflict. Peaceful divergence.",
           "value": "coexistence",
           "requires": [
-            { "distribution": ["open", "lagging", "concentrated"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"] },
+            { "distribution": ["open"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"] },
+            { "distribution": ["lagging", "concentrated"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"], "geo_spread": ["two", "several"] },
             { "geo_spread": ["two"] },
             { "proliferation_control": ["none"] },
             { "proliferation_outcome": ["breached"] }
@@ -1019,7 +1020,8 @@
           "description": "A cold-war-style equilibrium. Multiple AI powers locked in competition, but mutually assured capability keeps things from boiling over. Tense, expensive, duplicative — but no one blinks.",
           "value": "rivalry",
           "requires": [
-            { "distribution": ["open", "lagging", "concentrated"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"] },
+            { "distribution": ["open"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"] },
+            { "distribution": ["lagging", "concentrated"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"], "geo_spread": ["two", "several"] },
             { "geo_spread": ["two"] },
             { "proliferation_control": ["none"] },
             { "proliferation_outcome": ["breached"] }
@@ -1031,7 +1033,8 @@
           "description": "The race for advantage overrides caution. Each side pushes harder, deploys faster, takes bigger risks. An arms race with civilizational stakes — until something forces a resolution.",
           "value": "escalation",
           "requires": [
-            { "distribution": ["open", "lagging", "concentrated"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"] },
+            { "distribution": ["open"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"] },
+            { "distribution": ["lagging", "concentrated"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"], "geo_spread": ["two", "several"] },
             { "geo_spread": ["two"] },
             { "proliferation_control": ["none"] },
             { "proliferation_outcome": ["breached"] }
