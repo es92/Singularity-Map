@@ -1688,7 +1688,7 @@
             function isDimVisible(dim) {
                 if (!dim.visibleWhen) return true;
                 const out = decelOutcome();
-                if (dim.id === 'alignment' && ['solved', 'parity_solved', 'escapes', 'abandon', 'rival', 'parity_failed'].includes(out)) return false;
+                if (dim.id === 'alignment_tax' && ['escapes', 'abandon', 'rival', 'parity_failed'].includes(out)) return false;
                 if (dim.id === 'proliferation_control') {
                     if (['escapes', 'parity_failed'].includes(out)) return false;
                 }
@@ -1707,23 +1707,33 @@
                 if (dim.id === 'rival_dynamics') {
                     if (sel.block_outcome !== 'fails' && sel.new_entrants !== 'emerge') return false;
                 }
-                if (dim.id === 'failure_mode' && sel.enabled_aims !== 'proxy' && sel.intent !== 'international') return false;
+                if (dim.id === 'failure_mode' && sel.enabled_aims !== 'proxy' && effectiveVal('intent') !== 'international') return false;
                 const failedContained = effectiveVal('alignment') === 'failed' && sel.containment === 'contained';
-                if (dim.id === 'intent' && failedContained) return true;
-                if (dim.id === 'failure_mode' && failedContained && sel.intent === 'international') return true;
+                if (dim.id === 'intent' && sel.alignment === 'failed' && sel.containment) return true;
+                if (dim.id === 'failure_mode' && failedContained && effectiveVal('intent') === 'international') return true;
+                if ((dim.id === 'knowledge_replacement' || dim.id === 'physical_automation') && failedContained && effectiveVal('intent') === 'international' && effectiveVal('failure_mode')) return true;
                 for (const [k, allowed] of Object.entries(dim.visibleWhen)) {
                     const useRaw = (dim.id === 'stall_recovery' && k === 'capability')
                         || (dim.id === 'automation_recovery' && k === 'automation')
                         || (dim.id === 'sovereignty' && k === 'geo_spread')
                         || (dim.id === 'gov_action' && k === 'geo_spread')
                         || (dim.id === 'alignment_durability' && k === 'alignment')
-                        || (dim.id === 'alignment_tax' && k === 'alignment');
+                        || (dim.id === 'alignment_tax' && k === 'alignment')
+                        || (dim.id === 'intent' && k === 'alignment')
+                        || (dim.id === 'block_entrants' && k === 'alignment');
                     const v = useRaw ? sel[k] : effectiveVal(k);
                     if (!v || !allowed.includes(v)) return false;
                 }
                 return true;
             }
             function isDimLocked(dim) {
+                if (dim.id === 'alignment') {
+                    const out = decelOutcome();
+                    if (['solved', 'parity_solved'].includes(out)) return 'robust';
+                    if (['escapes', 'abandon', 'rival', 'parity_failed'].includes(out)) {
+                        return sel.ai_goals === 'marginal' ? 'partial' : 'failed';
+                    }
+                }
                 if (dim.id === 'containment') {
                     const out = decelOutcome();
                     if (['escapes', 'parity_failed'].includes(out)) return 'escaped';
@@ -1738,6 +1748,10 @@
                 return null;
             }
             function isValueDisabled(dim, val) {
+                if (dim.id === 'enabled_aims' && val.id === 'arbitrary') {
+                    const out = decelOutcome();
+                    if (['solved', 'parity_solved'].includes(out)) return true;
+                }
                 if (!val.requires) return false;
                 const condSets = Array.isArray(val.requires) ? val.requires : [val.requires];
                 return condSets.every(conds => {
@@ -1774,7 +1788,7 @@
                 else if (sel.gov_action === 'decelerate') d.governance = 'slowdown';
                 else if (sel.governance_window) d.governance = sel.governance_window;
                 if (['solved', 'parity_solved'].includes(out)) d.alignment = 'robust';
-                if (['escapes', 'abandon', 'rival', 'parity_failed'].includes(out)) d.alignment = 'failed';
+                if (['escapes', 'abandon', 'rival', 'parity_failed'].includes(out) && d.ai_goals !== 'marginal') d.alignment = 'failed';
                 if (d.enabled_aims === 'arbitrary' && d.ai_goals !== 'marginal') d.alignment = 'failed';
                 if (['escapes', 'parity_failed'].includes(out)) d.containment = 'escaped';
                 if ((d.proliferation_control === 'none' || d.proliferation_outcome === 'breached') && d.alignment === 'failed') d.containment = 'escaped';
@@ -1851,8 +1865,20 @@
                     else dimmed.push(t);
                 }
 
+                const TERMINAL_IDS = new Set([
+                    'knowledge_replacement', 'physical_automation', 'economic_distribution',
+                    'plateau_knowledge_rate', 'plateau_physical_rate',
+                    'automation_distribution', 'auto_knowledge_rate', 'auto_physical_rate'
+                ]);
+                const hasUnsetVisibleDims = DIM_META.some(dim => {
+                    if (TERMINAL_IDS.has(dim.id)) return false;
+                    if (!isDimVisible(dim)) return false;
+                    if (isDimLocked(dim) !== null) return false;
+                    return !dims[dim.id];
+                });
+
                 const matchDiv = app.querySelector('.explorer-match-zone');
-                if (matched.length === 1) {
+                if (matched.length === 1 && !hasUnsetVisibleDims) {
                     const t = matched[0];
                     const resolved = resolveTemplate(t.id, dims);
                     matchDiv.innerHTML = `
@@ -1876,6 +1902,8 @@
                         markDiscovered(key);
                         navigate({ screen: 'outcome', templateId: tid, variantKey: vk, path: [], showPath: false, dims: effectiveDims() });
                     });
+                } else if (matched.length >= 1 && hasUnsetVisibleDims) {
+                    matchDiv.innerHTML = `<div class="explorer-no-match">${matched.length} outcome${matched.length > 1 ? 's' : ''} match${matched.length === 1 ? 'es' : ''} so far. Keep choosing to lock it in.</div>`;
                 } else if (matched.length > 1) {
                     matchDiv.innerHTML = `<div class="explorer-no-match">${matched.length} outcomes match. Keep choosing to narrow it down.</div>`;
                 } else {
@@ -1889,7 +1917,7 @@
                     const t = templatesMap[tid];
                     const isMatch = matched.includes(t);
                     const isPartial = partial.includes(t);
-                    card.classList.toggle('matched', isMatch);
+                    card.classList.toggle('matched', isMatch && !hasUnsetVisibleDims);
                     card.classList.toggle('dimmed', !isMatch && !isPartial);
                     const resolved = resolveTemplate(tid, dims);
                     if (resolved) {
