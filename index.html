@@ -1774,6 +1774,9 @@
                     if (['escapes', 'parity_failed'].includes(out)) return false;
                 }
                 if (dim.id === 'containment') {
+                    if (sel.alignment === 'brittle' && sel.alignment_durability === 'holds' && sel.brittle_resolution
+                        && (sel.brittle_resolution === 'escape' || sel.containment))
+                        return effectiveVal('capability') === 'singularity' && effectiveVal('automation') === 'deep';
                     if (['solved', 'parity_solved'].includes(out)) return false;
                     const alignFailed = effectiveVal('alignment') === 'failed';
                     const partialEscapeRisk = ['split', 'accepted'].includes(sel.alignment_tax);
@@ -1789,10 +1792,17 @@
                     if (sel.block_outcome !== 'fails' && sel.new_entrants !== 'emerge') return false;
                 }
                 if (dim.id === 'brittle_resolution' && sel.enabled_aims === 'arbitrary') return false;
-                if (sel.brittle_resolution === 'escape' && (dim.id === 'failure_mode' || dim.id === 'knowledge_replacement' || dim.id === 'physical_automation')) {
-                    return effectiveVal('capability') === 'singularity' && effectiveVal('automation') === 'deep'
-                        && effectiveVal('intent') === 'international'
-                        && (dim.id === 'failure_mode' || !!effectiveVal('failure_mode'));
+                if (dim.id === 'ai_goals' && sel.alignment === 'brittle' && sel.alignment_durability === 'holds' && sel.brittle_resolution
+                    && (sel.brittle_resolution === 'escape' || sel.containment)) {
+                    return effectiveVal('capability') === 'singularity' && effectiveVal('automation') === 'deep';
+                }
+                if (sel.brittle_resolution === 'escape' && dim.id === 'failure_mode') {
+                    if (sel.enabled_aims === 'proxy' || effectiveVal('intent') === 'international')
+                        return effectiveVal('capability') === 'singularity' && effectiveVal('automation') === 'deep';
+                }
+                if (sel.brittle_resolution === 'escape' && (dim.id === 'knowledge_replacement' || dim.id === 'physical_automation')) {
+                    if (effectiveVal('intent') === 'international' && effectiveVal('failure_mode'))
+                        return effectiveVal('capability') === 'singularity' && effectiveVal('automation') === 'deep';
                 }
                 if (dim.id === 'failure_mode' && sel.enabled_aims !== 'proxy' && effectiveVal('intent') !== 'international') return false;
                 const failedContained = effectiveVal('alignment') === 'failed' && sel.containment === 'contained';
@@ -1823,11 +1833,15 @@
                     }
                 }
                 if (dim.id === 'containment') {
+                    if (sel.brittle_resolution === 'escape') return 'escaped';
+                    if (sel.brittle_resolution === 'solved' || sel.brittle_resolution === 'sufficient') return 'contained';
                     const out = decelOutcome();
                     if (['escapes', 'parity_failed'].includes(out)) return 'escaped';
                     if ((sel.proliferation_control === 'none' || sel.proliferation_outcome === 'breached') && effectiveVal('alignment') === 'failed') return 'escaped';
                     if (sel.enabled_aims === 'arbitrary' && sel.ai_goals !== 'marginal') return 'escaped';
-                    if (sel.brittle_resolution === 'escape') return 'escaped';
+                }
+                if (dim.id === 'ai_goals' && sel.alignment === 'brittle' && sel.alignment_durability === 'holds') {
+                    if (sel.brittle_resolution === 'solved' || sel.brittle_resolution === 'sufficient') return 'benevolent';
                 }
                 if (dim.id === 'failure_mode' && sel.enabled_aims === 'proxy') return 'whimper';
                 if (!dim.lockedWhen) return null;
@@ -1953,7 +1967,7 @@
                 const brittleRow = app.querySelector('[data-dim-row="brittle_resolution"]');
                 const containmentRow = app.querySelector('[data-dim-row="containment"]');
                 const aiGoalsRow = app.querySelector('[data-dim-row="ai_goals"]');
-                if (brittleRow && sel.brittle_resolution === 'escape') {
+                if (brittleRow && sel.brittle_resolution) {
                     const parent = brittleRow.parentNode;
                     if (containmentRow && !containmentRow.classList.contains('hidden')) parent.insertBefore(containmentRow, brittleRow.nextSibling);
                     if (aiGoalsRow && !aiGoalsRow.classList.contains('hidden')) {

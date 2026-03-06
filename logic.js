@@ -245,6 +245,9 @@ function isDimVisible(sel, dim) {
         if (['escapes', 'parity_failed'].includes(out)) return false;
     }
     if (dim.id === 'containment') {
+        if (sel.alignment === 'brittle' && sel.alignment_durability === 'holds' && sel.brittle_resolution
+            && (sel.brittle_resolution === 'escape' || sel.containment))
+            return effectiveVal(sel, 'capability') === 'singularity' && effectiveVal(sel, 'automation') === 'deep';
         if (['solved', 'parity_solved'].includes(out)) return false;
         const alignFailed = effectiveVal(sel, 'alignment') === 'failed';
         const partialEscapeRisk = ['split', 'accepted'].includes(sel.alignment_tax);
@@ -260,10 +263,17 @@ function isDimVisible(sel, dim) {
         if (sel.block_outcome !== 'fails' && sel.new_entrants !== 'emerge') return false;
     }
     if (dim.id === 'brittle_resolution' && sel.enabled_aims === 'arbitrary') return false;
-    if (sel.brittle_resolution === 'escape' && (dim.id === 'failure_mode' || dim.id === 'knowledge_replacement' || dim.id === 'physical_automation')) {
-        return effectiveVal(sel, 'capability') === 'singularity' && effectiveVal(sel, 'automation') === 'deep'
-            && effectiveVal(sel, 'intent') === 'international'
-            && (dim.id === 'failure_mode' || !!effectiveVal(sel, 'failure_mode'));
+    if (dim.id === 'ai_goals' && sel.alignment === 'brittle' && sel.alignment_durability === 'holds' && sel.brittle_resolution
+        && (sel.brittle_resolution === 'escape' || sel.containment)) {
+        return effectiveVal(sel, 'capability') === 'singularity' && effectiveVal(sel, 'automation') === 'deep';
+    }
+    if (sel.brittle_resolution === 'escape' && dim.id === 'failure_mode') {
+        if (sel.enabled_aims === 'proxy' || effectiveVal(sel, 'intent') === 'international')
+            return effectiveVal(sel, 'capability') === 'singularity' && effectiveVal(sel, 'automation') === 'deep';
+    }
+    if (sel.brittle_resolution === 'escape' && (dim.id === 'knowledge_replacement' || dim.id === 'physical_automation')) {
+        if (effectiveVal(sel, 'intent') === 'international' && effectiveVal(sel, 'failure_mode'))
+            return effectiveVal(sel, 'capability') === 'singularity' && effectiveVal(sel, 'automation') === 'deep';
     }
     if (dim.id === 'failure_mode' && sel.enabled_aims !== 'proxy' && effectiveVal(sel, 'intent') !== 'international') return false;
     const failedContained = effectiveVal(sel, 'alignment') === 'failed' && sel.containment === 'contained';
@@ -295,11 +305,15 @@ function isDimLocked(sel, dim) {
         }
     }
     if (dim.id === 'containment') {
+        if (sel.brittle_resolution === 'escape') return 'escaped';
+        if (sel.brittle_resolution === 'solved' || sel.brittle_resolution === 'sufficient') return 'contained';
         const out = decelOutcome(sel);
         if (['escapes', 'parity_failed'].includes(out)) return 'escaped';
         if ((sel.proliferation_control === 'none' || sel.proliferation_outcome === 'breached') && effectiveVal(sel, 'alignment') === 'failed') return 'escaped';
         if (sel.enabled_aims === 'arbitrary' && sel.ai_goals !== 'marginal') return 'escaped';
-        if (sel.brittle_resolution === 'escape') return 'escaped';
+    }
+    if (dim.id === 'ai_goals' && sel.alignment === 'brittle' && sel.alignment_durability === 'holds') {
+        if (sel.brittle_resolution === 'solved' || sel.brittle_resolution === 'sufficient') return 'benevolent';
     }
     if (dim.id === 'failure_mode' && sel.enabled_aims === 'proxy') return 'whimper';
     if (!dim.lockedWhen) return null;
