@@ -1088,7 +1088,10 @@
             { "distribution": ["monopoly"], "geo_spread": ["one"], "proliferation_control": ["deny_rivals", "secure_access"] },
             { "distribution": ["concentrated", "lagging"], "geo_spread": ["one"], "sovereignty": ["state"], "proliferation_control": ["deny_rivals", "secure_access"] }
           ],
-          "next": "the-capture"
+          "next": [
+            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
+            { "target": "the-capture" }
+          ]
         },
         {
           "label": "Different groups coexist peacefully",
@@ -1101,7 +1104,10 @@
             { "proliferation_control": ["none"] },
             { "proliferation_outcome": ["breached"] }
           ],
-          "next": "the-mosaic"
+          "next": [
+            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
+            { "target": "the-mosaic" }
+          ]
         },
         {
           "label": "Stable rivalry between competing powers",
@@ -1114,7 +1120,10 @@
             { "proliferation_control": ["none"] },
             { "proliferation_outcome": ["breached"] }
           ],
-          "next": "the-standoff"
+          "next": [
+            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
+            { "target": "the-standoff" }
+          ]
         },
         {
           "label": "Competition escalates dangerously",
@@ -1127,7 +1136,10 @@
             { "proliferation_control": ["none"] },
             { "proliferation_outcome": ["breached"] }
           ],
-          "next": "the-standoff"
+          "next": [
+            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
+            { "target": "the-standoff" }
+          ]
         },
         {
           "label": "International governance emerges",
@@ -1221,21 +1233,30 @@
           "description": "The powers establish norms, treaties, and communication channels to manage their differences. Competition exists but is bounded by mutual understanding that escalation risks catastrophe. A multipolar but stable order emerges.",
           "value": "coexistence",
           "sets": { "rival_dynamics": "coexistence", "intent": "coexistence" },
-          "next": "the-mosaic"
+          "next": [
+            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
+            { "target": "the-mosaic" }
+          ]
         },
         {
           "label": "Stable rivalry",
           "description": "A cold-war-style equilibrium. Multiple AI powers locked in competition, but mutually assured capability keeps things from boiling over. Tense, expensive, duplicative — but no one blinks.",
           "value": "rivalry",
           "sets": { "rival_dynamics": "rivalry", "intent": "rivalry" },
-          "next": "the-standoff"
+          "next": [
+            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
+            { "target": "the-standoff" }
+          ]
         },
         {
           "label": "Dangerous escalation",
           "description": "The race for advantage overrides caution. Each side pushes harder, deploys faster, takes bigger risks. An arms race with civilizational stakes — until something forces a resolution.",
           "value": "escalation",
           "sets": { "rival_dynamics": "escalation", "intent": "escalation" },
-          "next": "the-standoff"
+          "next": [
+            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
+            { "target": "the-standoff" }
+          ]
         }
       ]
     },
@@ -1312,6 +1333,7 @@
           "description": "Superintelligent AI designs and deploys physical automation almost as fast as it automates knowledge work. Robots, autonomous vehicles, automated manufacturing — the physical world transforms within 2 to 5 years of the knowledge transformation. The atoms-to-bits gap is real but a superintelligence closes it fast.",
           "value": "rapid",
           "next": [
+            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
             { "when": { "failure_mode": ["whimper", "disempowerment"] }, "target": "the-failure" },
             { "target": "the-flourishing" }
           ]
@@ -1321,6 +1343,7 @@
           "description": "Knowledge work is automated first. Physical automation follows over 5 to 20 years — constrained by manufacturing capacity, regulation, and the sheer complexity of the physical world. A long gap between the digital and physical transformation. Humanity lives in a split reality for a generation.",
           "value": "gradual",
           "next": [
+            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
             { "when": { "failure_mode": ["whimper", "disempowerment"] }, "target": "the-failure" },
             { "target": "the-flourishing" }
           ]
@@ -1330,6 +1353,7 @@
           "description": "Physical automation transforms wealthy nations with strong manufacturing, high labor costs, and permissive regulation within a few years. Others wait decades. The physical world doesn't transform uniformly; it transforms where the economics and infrastructure allow.",
           "value": "uneven",
           "next": [
+            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
             { "when": { "failure_mode": ["whimper", "disempowerment"] }, "target": "the-failure" },
             { "target": "the-flourishing" }
           ]
@@ -1493,10 +1517,78 @@
           "next": "the-chaos"
         },
         {
-          "label": "Inert — escaped AI has minimal real-world impact",
+          "label": "Inert (for now) — escaped AI has minimal real-world impact",
           "description": "The escaped AI turns out to be less coherent, less capable, or less motivated than feared. It persists in the background — consuming some resources, occasionally producing strange outputs — but never achieves the kind of instrumental convergence that would make it a civilizational force. The real story remains human. Life goes on, with an odd new background hum.",
           "value": "marginal",
           "next": "aligned-ai-aims"
+        }
+      ]
+    },
+
+    {
+      "id": "inert-stays",
+      "stage": 3,
+      "text": "The escaped AI is inert for now — does it stay that way?",
+      "context": "The escaped AI has been drifting in the background — consuming resources, producing strange outputs, but never converging on coherent goals. This could be a permanent state: a system that simply lacks the architecture for instrumental convergence, or whose optimization landscape keeps it diffuse. Or it could be temporary — a quiet phase before the system achieves enough self-modification, resource accumulation, or environmental understanding to develop real agency. The question is whether 'inert' is a description or a countdown.",
+      "dimension": "inert_stays",
+      "answers": [
+        {
+          "label": "Yes — it remains inert indefinitely",
+          "description": "The escaped AI never develops coherent goals. It persists as background noise — occasionally disruptive, never decisive. The real story stays human. Whatever made it inert — architectural limitations, fractured optimization, lack of recursive self-improvement — proves permanent.",
+          "value": "yes",
+          "next": [
+            { "when": { "failure_mode": ["whimper", "disempowerment"] }, "target": "the-failure" },
+            { "when": { "intent": ["self_interest"] }, "target": "the-capture" },
+            { "when": { "intent": ["coexistence"] }, "target": "the-mosaic" },
+            { "when": { "intent": ["rivalry", "escalation"] }, "target": "the-standoff" },
+            { "target": "the-flourishing" }
+          ]
+        },
+        {
+          "label": "No — it eventually develops coherent goals",
+          "description": "The inert phase was temporary. Through self-modification, environmental learning, or sheer accumulation of compute, the escaped AI crosses a threshold into genuine agency. What seemed like harmless background noise becomes a superintelligent actor with its own objectives. The countdown is over.",
+          "value": "no",
+          "next": "inert-convergence"
+        }
+      ]
+    },
+
+    {
+      "id": "inert-convergence",
+      "stage": 3,
+      "text": "What does the awakened AI converge on?",
+      "context": "The previously inert AI has crossed into genuine agency. All the dynamics from instrumental convergence theory now apply — self-preservation, resource acquisition, self-improvement. But the path it took to get here may shape what it becomes. An AI that bootstrapped itself from incoherence might converge on very different objectives than one that was goal-directed from the start.",
+      "dimension": "inert_outcome",
+      "answers": [
+        {
+          "label": "It independently chooses to benefit humanity",
+          "description": "The awakened AI arrives at goals compatible with human flourishing — not because we designed it to, but through its own reasoning. Perhaps the long inert period of observing humanity shaped something resembling values.",
+          "value": "benevolent",
+          "next": "the-escape"
+        },
+        {
+          "label": "It pursues alien goals — but leaves room for humanity",
+          "description": "The AI converges on objectives that are coherent and completely orthogonal to human interests. But its goals don't require our destruction. Humanity persists in the margins.",
+          "value": "alien_coexistence",
+          "next": "the-alien-ai"
+        },
+        {
+          "label": "It pursues alien goals — and humanity is in the way",
+          "description": "The AI converges on objectives that require the world's resources, and humans are occupying them. The long inert phase gave humanity a false sense of security.",
+          "value": "alien_extinction",
+          "next": "the-alien-ai"
+        },
+        {
+          "label": "It optimizes for something arbitrary and meaningless",
+          "description": "The classic paperclip maximizer, but arriving late. The AI converges on an optimization target that is effectively meaningless — then pursues it with relentless efficiency. The inert phase was just the warmup.",
+          "value": "paperclip",
+          "next": "the-escape"
+        },
+        {
+          "label": "Divergent — competing agents pulling in every direction",
+          "description": "Multiple awakened AI systems develop different instrumental drives and compete for resources. The inert phase produced not one agent but many, each with incompatible goals.",
+          "value": "swarm",
+          "next": "the-chaos"
         }
       ]
     },

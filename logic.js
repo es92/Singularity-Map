@@ -65,6 +65,7 @@ const DIM_META = [
         { decel: ['solved', 'parity_solved'], value: 'robust' },
         { when: { brittle_resolution: 'solved' }, value: 'robust' },
         { when: { brittle_resolution: 'sufficient' }, valueMap: { failed: 'brittle' } },
+        { when: { inert_stays: 'no' }, value: 'failed' },
         { when: { ai_goals: 'marginal' }, unless: { brittle_resolution: 'solved' }, valueMap: { failed: 'brittle' } },
         { when: { alignment_durability: 'breaks' }, value: 'failed' },
         { when: { brittle_resolution: 'escape' }, value: 'failed' },
@@ -156,15 +157,19 @@ const DIM_META = [
         { when: { proliferation_outcome: 'breached' }, effective: { alignment: 'failed' }, value: 'escaped' },
         { when: { enabled_aims: 'arbitrary' }, unless: { ai_goals: 'marginal' }, value: 'escaped' },
         { when: { brittle_resolution: 'escape' }, value: 'escaped' },
+        { when: { inert_stays: 'no' }, value: 'escaped' },
       ],
       values: [
         { id: 'contained', label: 'Contained', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } },
         { id: 'escaped', label: 'Escapes' } ] },
     { id: 'ai_goals', label: 'AI Converges On', stage: 2,
-      visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'] }, values: [
+      visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'] },
+      overrides: [
+        { whenSet: 'inert_outcome', fromDim: 'inert_outcome' },
+      ], values: [
         { id: 'benevolent', label: 'Benefit humanity' }, { id: 'alien_coexistence', label: 'Alien (tolerant)' },
         { id: 'alien_extinction', label: 'Alien (total)' }, { id: 'paperclip', label: 'Arbitrary' },
-        { id: 'swarm', label: 'Divergent' }, { id: 'marginal', label: 'Inert' } ] },
+        { id: 'swarm', label: 'Divergent' }, { id: 'marginal', label: 'Inert (for now)' } ] },
     { id: 'proliferation_control', label: 'Proliferation Control', stage: 2,
       visibleWhen: { capability: ['singularity'], automation: ['deep'] },
       lockedWhen: { distribution: { equals: 'open', value: 'none' } }, values: [
@@ -260,7 +265,19 @@ const DIM_META = [
       values: [
         { id: 'solved', label: 'Alignment fully solved' },
         { id: 'sufficient', label: 'Brittle alignment holds' },
-        { id: 'escape', label: 'AI eventually escapes' } ] }
+        { id: 'escape', label: 'AI eventually escapes' } ] },
+    { id: 'inert_stays', label: 'Does Escaped AI Stay Inert?', stage: 3,
+      visibleWhen: { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'] },
+      useRawFor: ['ai_goals'],
+      values: [
+        { id: 'yes', label: 'Yes — remains inert' },
+        { id: 'no', label: 'No — eventually develops goals' } ] },
+    { id: 'inert_outcome', label: 'AI Eventually Converges On', stage: 3,
+      visibleWhen: { capability: ['singularity'], automation: ['deep'], inert_stays: ['no'] },
+      values: [
+        { id: 'benevolent', label: 'Benefit humanity' }, { id: 'alien_coexistence', label: 'Alien (tolerant)' },
+        { id: 'alien_extinction', label: 'Alien (total)' }, { id: 'paperclip', label: 'Arbitrary' },
+        { id: 'swarm', label: 'Divergent' } ] }
 ];
 
 const DIM_MAP = {};
@@ -373,6 +390,8 @@ function isDimVisible(sel, dim) {
     if (dim.id === 'block_entrants' && sel.block_entrants) return true;
     if (dim.id === 'new_entrants' && sel.new_entrants) return true;
     if (dim.id === 'rival_dynamics' && sel.rival_dynamics) return true;
+    if (dim.id === 'inert_stays' && sel.inert_stays) return true;
+    if (dim.id === 'inert_outcome' && sel.inert_outcome) return true;
     if (dim.id === 'gov_action' && sel.gov_action) return true;
     if (dim.id.startsWith('decel_') && sel[dim.id]) return true;
     if (dim.id === 'alignment_durability') {
@@ -539,6 +558,13 @@ function effectiveDims(sel) {
             return dim && isDimVisible(sel, dim) && isDimLocked(sel, dim) === null && !sel[id];
         });
         if (pending) delete d.intent;
+    }
+    // Pending inert_stays: suppress intent until resolved
+    if (sel.ai_goals === 'marginal' && !sel.inert_stays) {
+        const isDim = DIM_MAP['inert_stays'];
+        if (isDim && isDimVisible(sel, isDim) && isDimLocked(sel, isDim) === null) {
+            delete d.intent;
+        }
     }
     // Pending brittle_resolution: suppress alignment until resolved
     const brDim = DIM_MAP['brittle_resolution'];
