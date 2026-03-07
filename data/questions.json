@@ -1014,43 +1014,28 @@
           "label": "Robust — comprehensively solved",
           "description": "Researchers achieve genuine, durable alignment. AI systems reliably pursue human values even under novel conditions, adversarial pressure, and recursive self-improvement. The technology is controllable in the deepest sense.",
           "value": "robust",
-          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
-          "next": "ai-containment"
+          "next": [
+            { "when": { "distribution": ["open"] }, "target": "aligned-ai-aims", "sets": { "proliferation_control": "none", "geo_spread": "several" } },
+            { "target": "ai-containment" }
+          ]
         },
         {
           "label": "Brittle — appears solved, but fragile under stress",
           "description": "Alignment techniques pass every test and benchmark. The systems appear safe. But the alignment is shallow — it holds under normal conditions and breaks under adversarial pressure, distribution shift, or recursive self-improvement. It looks solved until it isn't.",
           "value": "brittle",
-          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
-          "next": "alignment-durability"
+          "next": [
+            { "when": { "distribution": ["open"] }, "target": "alignment-durability", "sets": { "proliferation_control": "none", "geo_spread": "several" } },
+            { "target": "alignment-durability" }
+          ]
         },
         {
           "label": "Failed — alignment lags behind capabilities",
           "description": "AI capability outpaces alignment research. Powerful systems exist that aren't fully understood or controllable. The question becomes: can they at least be contained?",
           "value": "failed",
-          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
-          "next": "ai-containment"
-        },
-        {
-          "label": "Robust — comprehensively solved",
-          "description": "Researchers achieve genuine, durable alignment. AI systems reliably pursue human values even under novel conditions, adversarial pressure, and recursive self-improvement. With AI already broadly distributed, the question becomes: what do the many holders of this power choose to do with it?",
-          "sets": { "alignment": "robust", "proliferation_control": "none", "geo_spread": "several" },
-          "requires": { "distribution": ["open"] },
-          "next": "aligned-ai-aims"
-        },
-        {
-          "label": "Brittle — appears solved, but fragile under stress",
-          "description": "Alignment techniques pass every test. The systems appear safe. But the alignment is shallow — it holds under normal conditions and could break under real-world stress. With AI broadly distributed, the fragility is distributed too.",
-          "sets": { "alignment": "brittle", "proliferation_control": "none", "geo_spread": "several" },
-          "requires": { "distribution": ["open"] },
-          "next": "alignment-durability"
-        },
-        {
-          "label": "Failed — alignment lags behind capabilities",
-          "description": "AI capability outpaces alignment research. Powerful systems exist that aren't fully understood or controllable. With AI already broadly distributed, containment is impossible — unaligned capability is everywhere.",
-          "sets": { "alignment": "failed", "proliferation_control": "none", "containment": "escaped" },
-          "requires": { "distribution": ["open"] },
-          "next": "escaped-ai-goals"
+          "next": [
+            { "when": { "distribution": ["open"] }, "target": "escaped-ai-goals", "sets": { "proliferation_control": "none", "containment": "escaped" } },
+            { "target": "ai-containment" }
+          ]
         }
       ]
     },
@@ -1068,34 +1053,22 @@
       "answers": [
         {
           "label": "Holds — the brittleness never manifests",
-          "description": "The alignment techniques turn out to be more robust than anyone expected. Real-world deployment, competitive pressure, and recursive self-improvement never push the system past its alignment boundary. The brittleness was theoretical — in practice, it holds. The world proceeds as if alignment were robust, though the precariousness haunts every policy discussion.",
+          "description": "The alignment techniques turn out to be more robust than anyone expected. Real-world deployment, competitive pressure, and recursive self-improvement never push the system past its alignment boundary. The brittleness was theoretical — in practice, it holds.",
           "value": "holds",
-          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
-          "next": "ai-containment"
+          "next": [
+            { "when": { "distribution": ["open"] }, "target": "aligned-ai-aims", "sets": { "proliferation_control": "none", "geo_spread": "several" } },
+            { "target": "ai-containment" }
+          ]
         },
         {
           "label": "Breaks — real-world conditions expose the shallow alignment",
-          "description": "Adversarial conditions, unexpected inputs, or recursive self-improvement push the system past its alignment boundary. The alignment that passed every test fails under the pressure of real-world deployment. The systems begin pursuing goals that diverge from human intent. The question becomes: can they be contained?",
+          "description": "Adversarial conditions, unexpected inputs, or recursive self-improvement push the system past its alignment boundary. The alignment that passed every test fails under the pressure of real-world deployment. The systems begin pursuing goals that diverge from human intent.",
           "value": "breaks",
           "sets": { "alignment": "failed", "alignment_durability": "breaks" },
-          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
-          "next": "ai-containment"
-        },
-        {
-          "label": "Holds — the brittleness never manifests",
-          "description": "The alignment techniques hold across distributed deployment. Despite many independent actors pushing the systems in unpredictable ways, the failure mode never materializes. The world proceeds as if alignment were robust — but the distributed fragility remains the elephant in every room.",
-          "value": "holds",
-          "sets": { "alignment_durability": "holds", "proliferation_control": "none", "geo_spread": "several" },
-          "requires": { "distribution": ["open"] },
-          "next": "aligned-ai-aims"
-        },
-        {
-          "label": "Breaks — real-world conditions expose the shallow alignment",
-          "description": "With AI broadly distributed, some actor pushes the system past its alignment boundary — adversarial use, novel conditions, or simply unlucky inputs. Unaligned capability is everywhere, and containment is impossible.",
-          "value": "breaks",
-          "sets": { "alignment": "failed", "alignment_durability": "breaks", "proliferation_control": "none", "containment": "escaped" },
-          "requires": { "distribution": ["open"] },
-          "next": "escaped-ai-goals"
+          "next": [
+            { "when": { "distribution": ["open"] }, "target": "escaped-ai-goals", "sets": { "proliferation_control": "none", "containment": "escaped" } },
+            { "target": "ai-containment" }
+          ]
         }
       ]
     },
@@ -1158,31 +1131,12 @@
         },
         {
           "label": "International governance emerges",
-          "description": "Superintelligent AI is placed under international oversight — something like an AI IAEA. Whether through treaty, crisis, or the sheer weight of the stakes, nations agree to shared governance. The question becomes whether other powers accept the arrangement — or try to build their own.",
+          "description": "Superintelligent AI is placed under international oversight — something like an AI IAEA. Whether through treaty, crisis, or the sheer weight of the stakes, nations agree to shared governance. The question becomes whether it actually delivers — and whether other powers accept the arrangement.",
           "value": "international",
-          "requires": { "proliferation_control": ["secure_access"], "proliferation_outcome": ["holds"] },
-          "next": "block-entrants"
-        },
-        {
-          "label": "International governance emerges",
-          "description": "Superintelligent AI is placed under international oversight — something like an AI IAEA. Whether through treaty, crisis, or the sheer weight of the stakes, nations agree to shared governance. Slower, more bureaucratic, but with broader legitimacy. The question becomes whether it actually delivers.",
-          "value": "international",
-          "requires": { "proliferation_control": ["secure_access"], "proliferation_outcome": ["breached"] },
-          "next": "implementation-risk"
-        },
-        {
-          "label": "International governance emerges",
-          "description": "Superintelligent AI is placed under international oversight — something like an AI IAEA. Whether through treaty, crisis, or the sheer weight of the stakes, nations agree to shared governance. Slower, more bureaucratic, but with broader legitimacy. The question becomes whether it actually delivers.",
-          "value": "international",
-          "requires": { "proliferation_control": ["deny_rivals"] },
-          "next": "implementation-risk"
-        },
-        {
-          "label": "International governance emerges",
-          "description": "Superintelligent AI is placed under international oversight — something like an AI IAEA. Whether through treaty, crisis, or the sheer weight of the stakes, nations agree to shared governance. Slower, more bureaucratic, but with broader legitimacy. The question becomes whether it actually delivers.",
-          "value": "international",
-          "requires": { "proliferation_control": ["none"] },
-          "next": "implementation-risk"
+          "next": [
+            { "when": { "proliferation_control": ["secure_access"], "proliferation_outcome": ["holds"] }, "target": "block-entrants" },
+            { "target": "implementation-risk" }
+          ]
         }
       ]
     },
@@ -1357,43 +1311,28 @@
           "label": "Rapid — physical world transforms within 2–5 years",
           "description": "Superintelligent AI designs and deploys physical automation almost as fast as it automates knowledge work. Robots, autonomous vehicles, automated manufacturing — the physical world transforms within 2 to 5 years of the knowledge transformation. The atoms-to-bits gap is real but a superintelligence closes it fast.",
           "value": "rapid",
-          "requires": { "failure_mode": ["none"] },
-          "next": "the-flourishing"
+          "next": [
+            { "when": { "failure_mode": ["whimper", "disempowerment"] }, "target": "the-failure" },
+            { "target": "the-flourishing" }
+          ]
         },
         {
           "label": "Gradual — physical world trails by 5–20 years",
           "description": "Knowledge work is automated first. Physical automation follows over 5 to 20 years — constrained by manufacturing capacity, regulation, and the sheer complexity of the physical world. A long gap between the digital and physical transformation. Humanity lives in a split reality for a generation.",
           "value": "gradual",
-          "requires": { "failure_mode": ["none"] },
-          "next": "the-flourishing"
+          "next": [
+            { "when": { "failure_mode": ["whimper", "disempowerment"] }, "target": "the-failure" },
+            { "target": "the-flourishing" }
+          ]
         },
         {
           "label": "Uneven — 2–5 years in leading regions, 20+ elsewhere",
           "description": "Physical automation transforms wealthy nations with strong manufacturing, high labor costs, and permissive regulation within a few years. Others wait decades. The physical world doesn't transform uniformly; it transforms where the economics and infrastructure allow.",
           "value": "uneven",
-          "requires": { "failure_mode": ["none"] },
-          "next": "the-flourishing"
-        },
-        {
-          "label": "Rapid — physical world transforms within 2–5 years",
-          "description": "Superintelligent AI designs and deploys physical automation almost as fast as it automates knowledge work. The physical world transforms within 2 to 5 years — but whether that transformation serves genuine wellbeing is another question entirely.",
-          "value": "rapid",
-          "requires": { "failure_mode": ["whimper", "disempowerment"] },
-          "next": "the-failure"
-        },
-        {
-          "label": "Gradual — physical world trails by 5–20 years",
-          "description": "Physical automation follows knowledge work over 5 to 20 years. The slower pace gives society time to notice the divergence between metrics and reality — if anyone is looking.",
-          "value": "gradual",
-          "requires": { "failure_mode": ["whimper", "disempowerment"] },
-          "next": "the-failure"
-        },
-        {
-          "label": "Uneven — 2–5 years in leading regions, 20+ elsewhere",
-          "description": "Physical automation arrives fast in some places, slowly in others. The uneven rollout means some regions experience the failure earlier and more intensely than others.",
-          "value": "uneven",
-          "requires": { "failure_mode": ["whimper", "disempowerment"] },
-          "next": "the-failure"
+          "next": [
+            { "when": { "failure_mode": ["whimper", "disempowerment"] }, "target": "the-failure" },
+            { "target": "the-flourishing" }
+          ]
         }
       ]
     },
@@ -1408,46 +1347,23 @@
         {
           "label": "Deny rivals — active measures to block others from reaching the frontier",
           "description": "The leading power pursues aggressive denial: chip export bans, sanctions on rival compute infrastructure, cyber operations against rival AI programs, and coordinated pressure on allies to cut off supply chains. The goal is to ensure no rival reaches frontier capability.",
-          "requires": { "alignment": ["failed"] },
           "value": "deny_rivals",
           "next": "proliferation-outcome"
         },
         {
           "label": "Secure access — protect own capabilities from theft and leaks",
           "description": "The focus is defensive: sealed model weights, compartmentalized access, hardened infrastructure, insider threat programs, and strict need-to-know protocols. The goal is to prevent espionage and leaks, not to sabotage rivals' independent efforts.",
-          "requires": { "alignment": ["failed"] },
           "value": "secure_access",
           "next": "proliferation-outcome"
         },
         {
           "label": "No durable control — coordination fails and capability spreads",
-          "description": "No durable control regime emerges. Rival programs, leaks, and replication spread unaligned frontier capability. Functionally, this is an escape trajectory.",
-          "requires": { "alignment": ["failed"] },
+          "description": "No durable control regime emerges. Capability spreads through rival programs, leaks, and replication. What happens next depends on whether AI is aligned.",
           "value": "none",
-          "sets": { "containment": "escaped" },
-          "next": "escaped-ai-goals"
-        },
-        {
-          "label": "Deny rivals — active measures to block others from reaching the frontier",
-          "description": "Even with aligned systems, the leading power pursues aggressive denial to maintain its advantage: chip export bans, sanctions, and pressure on allies.",
-          "requires": { "alignment": ["robust", "brittle"] },
-          "value": "deny_rivals",
-          "next": "proliferation-outcome"
-        },
-        {
-          "label": "Secure access — protect own capabilities from theft and leaks",
-          "description": "Even with aligned systems, powers focus on defensive security: sealed weights, hardened infrastructure, and strict access controls to prevent espionage.",
-          "requires": { "alignment": ["robust", "brittle"] },
-          "value": "secure_access",
-          "next": "proliferation-outcome"
-        },
-        {
-          "label": "No durable control — capability diffuses broadly",
-          "description": "Aligned capability spreads quickly across actors and jurisdictions. What matters most is what aims those systems are enabled to pursue.",
-          "requires": { "alignment": ["robust", "brittle"] },
-          "value": "none",
-          "sets": { "geo_spread": "two" },
-          "next": "aligned-ai-aims"
+          "next": [
+            { "when": { "alignment": ["robust", "brittle"] }, "target": "aligned-ai-aims", "sets": { "geo_spread": "two" } },
+            { "target": "escaped-ai-goals", "sets": { "containment": "escaped" } }
+          ]
         }
       ]
     },
@@ -1462,32 +1378,21 @@
         {
           "label": "Yes — control holds",
           "description": "The control regime endures. Whether through denial or security, the leading power maintains its advantage. Frontier capability remains concentrated.",
-          "requires": { "alignment": ["failed"] },
           "value": "holds",
-          "next": "containment-durability"
+          "next": [
+            { "when": { "alignment": ["robust", "brittle"] }, "target": "aligned-ai-aims" },
+            { "target": "containment-durability" }
+          ]
         },
         {
           "label": "No — control is breached",
-          "description": "Despite efforts, the regime fails. Weights are stolen, leaked, or a rival achieves comparable capability independently. Unaligned frontier AI is now in multiple hands.",
-          "requires": { "alignment": ["failed"] },
-          "value": "breached",
-          "sets": { "containment": "escaped", "geo_spread": "two" },
-          "next": "escaped-ai-goals"
-        },
-        {
-          "label": "Yes — control holds",
-          "description": "The control regime endures. Frontier aligned capability remains concentrated in the leading power's hands.",
-          "requires": { "alignment": ["robust", "brittle"] },
-          "value": "holds",
-          "next": "aligned-ai-aims"
-        },
-        {
-          "label": "No — control is breached",
-          "description": "Despite efforts, the regime fails. Aligned frontier capability spreads to rivals through espionage, leaks, or independent development. The monopoly is over.",
-          "requires": { "alignment": ["robust", "brittle"] },
+          "description": "Despite efforts, the regime fails. Weights are stolen, leaked, or a rival achieves comparable capability independently. Frontier AI is now in multiple hands.",
           "value": "breached",
           "sets": { "geo_spread": "two" },
-          "next": "aligned-ai-aims"
+          "next": [
+            { "when": { "alignment": ["robust", "brittle"] }, "target": "aligned-ai-aims" },
+            { "target": "escaped-ai-goals", "sets": { "containment": "escaped" } }
+          ]
         }
       ]
     },

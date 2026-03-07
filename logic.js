@@ -2,18 +2,30 @@
 // Used by both index.html (browser) and test-explorer.js (Node.js)
 
 const DIM_META = [
-    { id: 'capability', label: 'AI Scaling', stage: 1, values: [
+    { id: 'capability', label: 'AI Scaling', stage: 1,
+      overrides: [
+        { when: { stall_recovery: 'mild' }, value: 'singularity' },
+      ],
+      values: [
         { id: 'singularity', label: 'Trend continues' }, { id: 'hours', label: 'Stalls: hours' },
         { id: 'days', label: 'Stalls: days' }, { id: 'weeks', label: 'Stalls: weeks' },
         { id: 'months', label: 'Stalls: months' } ] },
     { id: 'stall_recovery', label: 'Recovery?', stage: 1,
-      visibleWhen: { capability: ['hours', 'days', 'weeks', 'months'] }, values: [
+      visibleWhen: { capability: ['hours', 'days', 'weeks', 'months'] },
+      useRawFor: ['capability'],
+      values: [
         { id: 'mild', label: 'Months/years' }, { id: 'substantial', label: 'Years/decades' }, { id: 'never', label: 'Never' } ] },
     { id: 'automation', label: 'Knowledge Work', stage: 1,
-      visibleWhen: { capability: ['singularity'] }, values: [
+      visibleWhen: { capability: ['singularity'] },
+      overrides: [
+        { when: { automation_recovery: 'mild' }, value: 'deep' },
+      ],
+      values: [
         { id: 'deep', label: 'Automates broadly' }, { id: 'shallow', label: 'Routine only' } ] },
     { id: 'automation_recovery', label: 'Deep Automation Recovery?', stage: 1,
-      visibleWhen: { capability: ['singularity'], automation: ['shallow'] }, values: [
+      visibleWhen: { capability: ['singularity'], automation: ['shallow'] },
+      useRawFor: ['automation'],
+      values: [
         { id: 'mild', label: 'Months/years' }, { id: 'substantial', label: 'Years/decades' }, { id: 'never', label: 'Never' } ] },
     { id: 'takeoff', label: 'Feedback Loop', stage: 1,
       visibleWhen: { capability: ['singularity'], automation: ['deep'] }, values: [
@@ -34,18 +46,38 @@ const DIM_META = [
         { id: 'concentrated', label: 'A few lead' }, { id: 'monopoly', label: 'One dominates' } ] },
     { id: 'geo_spread', label: 'Countries', stage: 2,
       visibleWhen: { capability: ['singularity'], automation: ['deep'], open_source: ['six_months', 'twelve_months', 'twenty_four_months'] },
-      lockedWhen: { takeoff: { equals: 'hard', value: 'one' }, distribution: { equals: 'monopoly', value: 'one' } }, values: [
+      lockedWhen: { takeoff: { equals: 'hard', value: 'one' }, distribution: { equals: 'monopoly', value: 'one' } },
+      overrides: [
+        { decel: ['rival', 'parity_solved', 'parity_failed'], value: 'two' },
+        { when: { proliferation_outcome: 'breached' }, value: 'two' },
+      ],
+      values: [
         { id: 'one', label: 'One country' }, { id: 'two', label: 'Two powers' },
         { id: 'several', label: 'Several' } ] },
     { id: 'sovereignty', label: 'Power Holder', stage: 2,
-      visibleWhen: { capability: ['singularity'], automation: ['deep'], distribution: ['monopoly', 'concentrated', 'lagging'], geo_spread: ['one'] }, values: [
+      visibleWhen: { capability: ['singularity'], automation: ['deep'], distribution: ['monopoly', 'concentrated', 'lagging'], geo_spread: ['one'] },
+      useRawFor: ['geo_spread'],
+      values: [
         { id: 'lab', label: 'The labs' }, { id: 'state', label: 'The state' } ] },
     { id: 'alignment', label: 'Alignment', stage: 2,
-      visibleWhen: { capability: ['singularity'], automation: ['deep'] }, values: [
+      visibleWhen: { capability: ['singularity'], automation: ['deep'] },
+      overrides: [
+        { decel: ['solved', 'parity_solved'], value: 'robust' },
+        { when: { brittle_resolution: 'solved' }, value: 'robust' },
+        { when: { brittle_resolution: 'sufficient' }, valueMap: { failed: 'brittle' } },
+        { when: { ai_goals: 'marginal' }, unless: { brittle_resolution: 'solved' }, valueMap: { failed: 'brittle' } },
+        { when: { alignment_durability: 'breaks' }, value: 'failed' },
+        { when: { brittle_resolution: 'escape' }, value: 'failed' },
+        { when: { enabled_aims: 'arbitrary' }, value: 'failed' },
+        { decel: ['rival'], value: 'brittle' },
+        { decel: ['escapes', 'abandon', 'parity_failed'], value: 'failed' },
+      ],
+      values: [
         { id: 'robust', label: 'Robust' }, { id: 'brittle', label: 'Brittle / Partial' },
         { id: 'failed', label: 'Unsolved' } ] },
     { id: 'gov_action', label: 'Deceleration', stage: 2,
       visibleWhen: { capability: ['singularity'], automation: ['deep'], geo_spread: ['one'] },
+      useRawFor: ['geo_spread'],
       lockedWhen: { takeoff: { equals: 'hard', value: 'accelerate' } }, values: [
         { id: 'decelerate', label: 'Decelerate' }, { id: 'accelerate', label: 'Accelerate' } ] },
     { id: 'decel_2mo_progress', label: '2 Months', stage: 2,
@@ -112,10 +144,20 @@ const DIM_META = [
       visibleWhen: { capability: ['singularity'], automation: ['deep'], decel_24mo_progress: ['robust', 'brittle', 'unsolved'] }, values: [
         { id: 'rival', label: 'Rival reaches parity' } ] },
     { id: 'alignment_durability', label: 'Alignment Durability', stage: 2,
-      visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['brittle'] }, values: [
+      visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['brittle'] },
+      useRawFor: ['alignment'], useRawUnlessDecel: true,
+      values: [
         { id: 'holds', label: 'Holds for now' }, { id: 'breaks', label: 'Breaks' } ] },
     { id: 'containment', label: 'Containment', stage: 2,
-      visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['failed'] }, values: [
+      visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['failed'] },
+      overrides: [
+        { decel: ['escapes'], value: 'escaped' },
+        { when: { proliferation_control: 'none' }, effective: { alignment: 'failed' }, value: 'escaped' },
+        { when: { proliferation_outcome: 'breached' }, effective: { alignment: 'failed' }, value: 'escaped' },
+        { when: { enabled_aims: 'arbitrary' }, unless: { ai_goals: 'marginal' }, value: 'escaped' },
+        { when: { brittle_resolution: 'escape' }, value: 'escaped' },
+      ],
+      values: [
         { id: 'contained', label: 'Contained', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } },
         { id: 'escaped', label: 'Escapes' } ] },
     { id: 'ai_goals', label: 'AI Converges On', stage: 2,
@@ -134,7 +176,9 @@ const DIM_META = [
         { id: 'holds', label: 'Holds' },
         { id: 'breached', label: 'Breached' } ] },
     { id: 'block_entrants', label: 'Block New Entrants?', stage: 2,
-      visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], proliferation_control: ['secure_access'], proliferation_outcome: ['holds'] }, values: [
+      visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], proliferation_control: ['secure_access'], proliferation_outcome: ['holds'] },
+      useRawFor: ['alignment'], useRawUnlessDecel: true,
+      values: [
         { id: 'attempt', label: 'Attempt to block' },
         { id: 'no_attempt', label: 'No attempt' } ] },
     { id: 'block_outcome', label: 'Blocking Outcome', stage: 2,
@@ -156,14 +200,23 @@ const DIM_META = [
         { id: 'proxy', label: 'Proxy / institutional' },
         { id: 'arbitrary', label: 'Arbitrary / unconstrained' } ] },
     { id: 'intent', label: 'Intent', stage: 2,
-      visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'] }, values: [
+      visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'] },
+      useRawFor: ['alignment'], useRawUnlessDecel: true,
+      overrides: [
+        { whenSet: 'rival_dynamics', fromDim: 'rival_dynamics' },
+      ],
+      values: [
         { id: 'self_interest', label: 'Self-interest', requires: [{ distribution: ['monopoly'], geo_spread: ['one'], proliferation_control: ['deny_rivals', 'secure_access'] }, { distribution: ['concentrated', 'lagging'], geo_spread: ['one'], sovereignty: ['state'], proliferation_control: ['deny_rivals', 'secure_access'] }] },
         { id: 'coexistence', label: 'Coexistence', requires: [{ distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { distribution: ['lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'], geo_spread: ['two', 'several'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] },
         { id: 'rivalry', label: 'Rivalry', requires: [{ distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { distribution: ['lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'], geo_spread: ['two', 'several'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] },
         { id: 'escalation', label: 'Escalation', requires: [{ distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { distribution: ['lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'], geo_spread: ['two', 'several'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] },
         { id: 'international', label: 'International' } ] },
     { id: 'failure_mode', label: 'Implementation', stage: 3,
-      visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'] }, values: [
+      visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'] },
+      overrides: [
+        { when: { enabled_aims: 'proxy' }, value: 'whimper' },
+      ],
+      values: [
         { id: 'none', label: 'Succeeds' }, { id: 'whimper', label: 'Wrong metrics' },
         { id: 'disempowerment', label: 'Human irrelevance' } ] },
     { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3,
@@ -202,7 +255,9 @@ const DIM_META = [
       visibleWhen: { capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }, values: [
         { id: 'rapid', label: 'Rapid (3–7 yrs)' }, { id: 'gradual', label: 'Gradual (10–25 yrs)' }, { id: 'uneven', label: 'Uneven (3–20+ yrs)' }, { id: 'limited', label: 'Limited' } ] },
     { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3,
-      visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['brittle'], alignment_durability: ['holds'] }, values: [
+      visibleWhen: { capability: ['singularity'], automation: ['deep'], alignment: ['brittle'], alignment_durability: ['holds'] },
+      useRawFor: ['alignment'], useRawUnlessDecel: true,
+      values: [
         { id: 'solved', label: 'Alignment fully solved' },
         { id: 'sufficient', label: 'Brittle alignment holds' },
         { id: 'escape', label: 'AI eventually escapes' } ] }
@@ -249,37 +304,50 @@ function decelAlignProgress(sel) {
     return null;
 }
 
+function matchesOverride(rule, sel, decel) {
+    if (rule.decel && !rule.decel.includes(decel)) return false;
+    if (rule.when) {
+        for (const [key, val] of Object.entries(rule.when)) {
+            if (sel[key] !== val) return false;
+        }
+    }
+    if (rule.whenSet && !sel[rule.whenSet]) return false;
+    if (rule.effective) {
+        for (const [key, val] of Object.entries(rule.effective)) {
+            if (effectiveVal(sel, key) !== val) return false;
+        }
+    }
+    if (rule.unless) {
+        for (const [key, val] of Object.entries(rule.unless)) {
+            if (sel[key] === val) return false;
+        }
+    }
+    return true;
+}
+
+function applyOverrides(overrides, sel, k, decel) {
+    for (const rule of overrides) {
+        if (!matchesOverride(rule, sel, decel)) continue;
+        if (rule.fromDim) return sel[rule.fromDim];
+        if (rule.valueMap) return rule.valueMap[sel[k]] ?? sel[k];
+        return rule.value;
+    }
+    return undefined;
+}
+
 function effectiveVal(sel, k) {
-    if (k === 'capability' && sel.stall_recovery === 'mild') return 'singularity';
-    if (k === 'automation' && sel.automation_recovery === 'mild') return 'deep';
-    const out = decelOutcome(sel);
     if (k === 'governance') {
+        const out = decelOutcome(sel);
         if (sel.gov_action === 'accelerate') return 'race';
         if (out === 'abandon') return 'race';
         if (sel.gov_action === 'decelerate') return 'slowdown';
         if (sel.governance_window) return sel.governance_window;
+        return sel[k];
     }
-    if (k === 'alignment') {
-        if (['solved', 'parity_solved'].includes(out)) return 'robust';
-        if (sel.brittle_resolution === 'solved') return 'robust';
-        if (sel.brittle_resolution === 'sufficient') return sel[k] === 'failed' ? 'brittle' : sel[k];
-        if (sel.ai_goals === 'marginal' && sel.brittle_resolution !== 'solved') return sel[k] === 'failed' ? 'brittle' : sel[k];
-        if (sel.alignment_durability === 'breaks') return 'failed';
-        if (sel.brittle_resolution === 'escape') return 'failed';
-        if (sel.enabled_aims === 'arbitrary') return 'failed';
-        if (out === 'rival') return 'brittle';
-        if (['escapes', 'abandon', 'parity_failed'].includes(out)) return 'failed';
-    }
-    if (k === 'geo_spread' && ['rival', 'parity_solved', 'parity_failed'].includes(out)) return 'two';
-    if (k === 'containment' && out === 'escapes') return 'escaped';
-    if (k === 'containment' && (sel.proliferation_control === 'none' || sel.proliferation_outcome === 'breached') && effectiveVal(sel, 'alignment') === 'failed') return 'escaped';
-    if (k === 'containment' && sel.enabled_aims === 'arbitrary' && sel.ai_goals !== 'marginal') return 'escaped';
-    if (k === 'containment' && sel.brittle_resolution === 'escape') return 'escaped';
-    if (k === 'intent' && sel.rival_dynamics) return sel.rival_dynamics;
-    if (k === 'failure_mode' && sel.enabled_aims === 'proxy') return 'whimper';
-    if (k === 'geo_spread') {
-        if (['parity_solved', 'parity_failed', 'rival'].includes(out)) return 'two';
-        if (sel.proliferation_outcome === 'breached') return 'two';
+    const dim = DIM_MAP[k];
+    if (dim && dim.overrides) {
+        const result = applyOverrides(dim.overrides, sel, k, decelOutcome(sel));
+        if (result !== undefined) return result;
     }
     return sel[k];
 }
@@ -302,6 +370,9 @@ function isDimVisible(sel, dim) {
     if (dim.id === 'knowledge_replacement' && sel.knowledge_replacement) return true;
     if (dim.id === 'physical_automation' && sel.physical_automation) return true;
     if (dim.id === 'proliferation_control' && sel.proliferation_control) return true;
+    if (dim.id === 'block_entrants' && sel.block_entrants) return true;
+    if (dim.id === 'new_entrants' && sel.new_entrants) return true;
+    if (dim.id === 'rival_dynamics' && sel.rival_dynamics) return true;
     if (dim.id === 'gov_action' && sel.gov_action) return true;
     if (dim.id.startsWith('decel_') && sel[dim.id]) return true;
     if (dim.id === 'alignment_durability') {
@@ -365,14 +436,8 @@ function isDimVisible(sel, dim) {
     if (dim.id === 'failure_mode' && failedContained && effectiveVal(sel, 'intent') === 'international') return true;
     if ((dim.id === 'knowledge_replacement' || dim.id === 'physical_automation') && failedContained && effectiveVal(sel, 'intent') === 'international' && effectiveVal(sel, 'failure_mode')) return true;
     for (const [k, allowed] of Object.entries(dim.visibleWhen)) {
-        const useRaw = (dim.id === 'stall_recovery' && k === 'capability')
-            || (dim.id === 'automation_recovery' && k === 'automation')
-            || (dim.id === 'sovereignty' && k === 'geo_spread')
-            || (dim.id === 'gov_action' && k === 'geo_spread')
-            || (dim.id === 'alignment_durability' && k === 'alignment' && !out)
-            || (dim.id === 'brittle_resolution' && k === 'alignment' && !out)
-            || (dim.id === 'intent' && k === 'alignment' && !out)
-            || (dim.id === 'block_entrants' && k === 'alignment' && !out);
+        const useRaw = dim.useRawFor && dim.useRawFor.includes(k)
+            && (!dim.useRawUnlessDecel || !out);
         const v = useRaw ? sel[k] : effectiveVal(sel, k);
         if (!v || !allowed.includes(v)) return false;
     }
@@ -460,50 +525,31 @@ function effectiveDims(sel) {
     const d = {};
     for (const dim of DIM_META) {
         if (!isDimVisible(sel, dim)) continue;
+        const ev = effectiveVal(sel, dim.id);
+        if (ev) { d[dim.id] = ev; continue; }
         const locked = isDimLocked(sel, dim);
-        if (locked !== null) { d[dim.id] = locked; continue; }
-        const v = effectiveVal(sel, dim.id);
-        if (v) d[dim.id] = v;
+        if (locked !== null) d[dim.id] = locked;
     }
-    const out = decelOutcome(sel);
-    if (sel.gov_action === 'accelerate') d.governance = 'race';
-    else if (out === 'abandon') d.governance = 'race';
-    else if (sel.gov_action === 'decelerate') d.governance = 'slowdown';
-    else if (sel.governance_window) d.governance = sel.governance_window;
-    if (['rival', 'parity_solved', 'parity_failed'].includes(out)) d.geo_spread = 'two';
-    if (['solved', 'parity_solved'].includes(out)) d.alignment = 'robust';
-    if (d.brittle_resolution === 'solved') d.alignment = 'robust';
-    else if (d.brittle_resolution === 'sufficient') d.alignment = d.alignment || 'brittle';
-    else if (out === 'rival') d.alignment = 'brittle';
-    else if (['escapes', 'abandon', 'parity_failed'].includes(out) && d.ai_goals !== 'marginal') d.alignment = 'failed';
-    if (d.alignment_durability === 'breaks' && d.alignment === 'brittle' && d.ai_goals !== 'marginal') d.alignment = 'failed';
-    if (d.enabled_aims === 'arbitrary' && d.ai_goals !== 'marginal') d.alignment = 'failed';
-    if (d.brittle_resolution === 'escape' && d.ai_goals !== 'marginal') d.alignment = 'failed';
-    if (out === 'escapes') d.containment = 'escaped';
-    if ((d.proliferation_control === 'none' || d.proliferation_outcome === 'breached') && d.alignment === 'failed') d.containment = 'escaped';
-    if (d.enabled_aims === 'arbitrary' && d.ai_goals !== 'marginal') d.containment = 'escaped';
-    if (d.brittle_resolution === 'escape') d.containment = 'escaped';
-    if (d.enabled_aims === 'proxy') d.failure_mode = 'whimper';
-    if (d.rival_dynamics) d.intent = d.rival_dynamics;
-    else {
-        const rdDim = DIM_MAP['rival_dynamics'];
-        const rdPending = rdDim && isDimVisible(sel, rdDim) && isDimLocked(sel, rdDim) === null;
-        const beDim = DIM_MAP['block_entrants'];
-        const boDim = DIM_MAP['block_outcome'];
-        const neDim = DIM_MAP['new_entrants'];
-        const bePending = beDim && isDimVisible(sel, beDim) && isDimLocked(sel, beDim) === null && !sel.block_entrants;
-        const boPending = boDim && isDimVisible(sel, boDim) && isDimLocked(sel, boDim) === null && !sel.block_outcome;
-        const nePending = neDim && isDimVisible(sel, neDim) && isDimLocked(sel, neDim) === null && !sel.new_entrants;
-        if (rdPending || bePending || boPending || nePending) delete d.intent;
+    // Virtual governance dimension (not in DIM_META)
+    d.governance = effectiveVal(sel, 'governance');
+    // Pending rival_dynamics: suppress intent until the rival path is resolved
+    if (!d.rival_dynamics) {
+        const pending = ['rival_dynamics', 'block_entrants', 'block_outcome', 'new_entrants'].some(id => {
+            const dim = DIM_MAP[id];
+            return dim && isDimVisible(sel, dim) && isDimLocked(sel, dim) === null && !sel[id];
+        });
+        if (pending) delete d.intent;
     }
+    // Pending brittle_resolution: suppress alignment until resolved
     const brDim = DIM_MAP['brittle_resolution'];
-    const brPending = brDim && isDimVisible(sel, brDim) && isDimLocked(sel, brDim) === null && !sel.brittle_resolution;
-    if (brPending) delete d.alignment;
+    if (brDim && isDimVisible(sel, brDim) && isDimLocked(sel, brDim) === null && !sel.brittle_resolution) {
+        delete d.alignment;
+    }
+    // Virtual rival_emerges for outcome matching
+    const out = decelOutcome(sel);
     if (['parity_solved', 'parity_failed', 'rival'].includes(out)) {
-        d.geo_spread = 'two';
         d.rival_emerges = 'yes';
     }
-    if (d.proliferation_outcome === 'breached') d.geo_spread = 'two';
     return d;
 }
 
@@ -528,8 +574,8 @@ function templatePartialMatch(t, dims) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { DIM_META, DIM_MAP, DECEL_PAIRS, decelOutcome, decelAlignProgress, effectiveVal, isDimVisible, isDimLocked, isValueDisabled, cleanSelection, effectiveDims, templateMatches, templatePartialMatch };
+    module.exports = { DIM_META, DIM_MAP, DECEL_PAIRS, decelOutcome, decelAlignProgress, matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimLocked, isValueDisabled, cleanSelection, effectiveDims, templateMatches, templatePartialMatch };
 }
 if (typeof window !== 'undefined') {
-    window.Logic = { DIM_META, DIM_MAP, DECEL_PAIRS, decelOutcome, decelAlignProgress, effectiveVal, isDimVisible, isDimLocked, isValueDisabled, cleanSelection, effectiveDims, templateMatches, templatePartialMatch };
+    window.Logic = { DIM_META, DIM_MAP, DECEL_PAIRS, decelOutcome, decelAlignProgress, matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimLocked, isValueDisabled, cleanSelection, effectiveDims, templateMatches, templatePartialMatch };
 }

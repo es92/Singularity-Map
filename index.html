@@ -638,9 +638,21 @@
 
         // --- Dimensions ---
         function collectStepDims(question, answer) {
-            if (answer.sets) return { ...answer.sets };
-            if (answer.value !== undefined && question.dimension) return { [question.dimension]: answer.value };
-            return {};
+            const dims = {};
+            if (answer.value !== undefined && question.dimension) dims[question.dimension] = answer.value;
+            if (answer.sets) Object.assign(dims, answer.sets);
+            return dims;
+        }
+
+        function resolveConditionalNext(nextSpec, dims) {
+            if (typeof nextSpec === 'string') return { target: nextSpec };
+            for (const route of nextSpec) {
+                if (!route.when) return { target: route.target, sets: route.sets };
+                const match = Object.entries(route.when).every(([k, allowed]) =>
+                    dims[k] && allowed.includes(dims[k]));
+                if (match) return { target: route.target, sets: route.sets };
+            }
+            return null;
         }
 
         function answerVisible(answer, dims) {
@@ -819,12 +831,16 @@
                         const q = questionsMap[decodedQid];
                         if (q && q.answers[idx]) {
                             const answer = q.answers[idx];
+                            const stepDims = collectStepDims(q, answer);
+                            const allDims = { ...dimensionsFromPath(restoredPath), ...stepDims };
+                            const resolved = resolveConditionalNext(answer.next, allDims);
+                            if (resolved && resolved.sets) Object.assign(stepDims, resolved.sets);
                             restoredPath.push({
                                 questionId: decodedQid,
                                 answerIndex: idx,
                                 answerLabel: answer.label,
                                 questionText: q.text,
-                                dims: collectStepDims(q, answer)
+                                dims: stepDims
                             });
                         }
                     }
@@ -997,6 +1013,9 @@
                     const idx = parseInt(card.dataset.idx, 10);
                     const answer = q.answers[idx];
                     const stepDims = collectStepDims(q, answer);
+                    const allDims = { ...dimensionsFromPath(path), ...stepDims };
+                    const resolved = resolveConditionalNext(answer.next, allDims);
+                    if (resolved && resolved.sets) Object.assign(stepDims, resolved.sets);
                     path.push({
                         questionId: q.id,
                         answerIndex: idx,
@@ -1004,7 +1023,7 @@
                         questionText: q.text,
                         dims: stepDims
                     });
-                    const next = answer.next;
+                    const next = resolved ? resolved.target : answer.next;
                     if (questionsMap[next]) {
                         navigate({ screen: 'question', questionId: next, path: [...path] });
                     } else if (templatesMap[next]) {
@@ -1445,19 +1464,23 @@
                         if (!show) return '';
 
                         const stepDims = {};
+                        if (a.value !== undefined && q.dimension) stepDims[q.dimension] = a.value;
                         if (a.sets) Object.assign(stepDims, a.sets);
-                        else if (a.value !== undefined && q.dimension) stepDims[q.dimension] = a.value;
 
+                        const childDimsBase = { ...dimsSoFar, ...stepDims };
+                        const resolved = resolveConditionalNext(a.next, childDimsBase);
+                        if (resolved && resolved.sets) Object.assign(stepDims, resolved.sets);
                         const childPath = [...pathSoFar, {
                             questionId: q.id, answerIndex: i,
                             answerLabel: a.label, questionText: q.text,
                             dims: stepDims
                         }];
                         const childDims = { ...dimsSoFar, ...stepDims };
+                        const nextTarget = resolved ? resolved.target : a.next;
 
                         const noteHtml = note ? ` <span class="tree-condition">(${esc(note)})</span>` : '';
 
-                        return `<li><span class="tree-answer">${esc(a.label)}</span>${noteHtml}<ul><li>${buildStageTree(a.next, stageNum, childPath, childDims)}</li></ul></li>`;
+                        return `<li><span class="tree-answer">${esc(a.label)}</span>${noteHtml}<ul><li>${buildStageTree(nextTarget, stageNum, childPath, childDims)}</li></ul></li>`;
                     })
                     .filter(Boolean)
                     .join('');
