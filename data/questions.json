@@ -510,13 +510,13 @@
           "label": "Yes — the state orders a slowdown",
           "description": "The government decides the risks of uncontrolled AI development outweigh the risks of losing the lead. Through regulation, executive order, or direct intervention, it mandates a slowdown. Whether that slowdown actually works is another question.",
           "requires": { "sovereignty": ["state"] },
-          "next": "decel-checkpoint-1"
+          "next": "decel-2mo-progress"
         },
         {
           "label": "Yes — the lab voluntarily pauses",
           "description": "The leading lab — under pressure from its own researchers, board, or public scrutiny — decides to pause frontier development. No government mandate, but a calculated bet that solving alignment before pushing further is worth the competitive risk.",
           "requires": { "sovereignty": ["lab"] },
-          "next": "decel-checkpoint-1"
+          "next": "decel-2mo-progress"
         },
         {
           "label": "No — full speed ahead",
@@ -528,288 +528,477 @@
     },
 
     {
-      "id": "decel-checkpoint-1",
+      "id": "decel-2mo-progress",
       "stage": 2,
-      "text": "Two months into the slowdown. Has alignment been solved?",
+      "text": "Two months into the slowdown. Where does alignment stand?",
       "context": "The deceleration is holding — development has slowed, buying time for alignment research. But the clock is ticking. Every month the slowdown continues, other nations edge closer, political pressure mounts, and the AI systems that already exist continue to learn.",
       "answers": [
         {
-          "label": "Yes — alignment is solved",
-          "description": "Two months was enough. Researchers crack the alignment problem while development is paused. The technology is now safe and controllable.",
-          "sets": { "governance": "slowdown", "alignment": "robust" },
-          "next": "ai-containment"
+          "label": "Solved — robust",
+          "description": "Two months was enough. Researchers crack the alignment problem — a robust, verified solution.",
+          "sets": { "decel_2mo_progress": "robust" },
+          "next": "decel-2mo-action"
         },
         {
-          "label": "Not yet — keep trying",
-          "description": "Alignment remains unsolved, but the slowdown is holding and there's progress. The state maintains the pause.",
-          "next": "decel-checkpoint-2"
+          "label": "Solved — brittle / partial",
+          "description": "Alignment researchers have found a partial solution — it works, but it's fragile.",
+          "sets": { "decel_2mo_progress": "brittle" },
+          "next": "decel-2mo-action"
         },
         {
-          "label": "AI escapes containment during the pause",
-          "description": "An existing AI system breaks free of its constraints. The deceleration bought time, but not enough — and now there's an unaligned superintelligence loose.",
-          "sets": { "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
-          "next": "escaped-ai-goals"
-        },
-        {
-          "label": "Abandon & accelerate",
-          "description": "The political consensus collapses. Fear of falling behind overrides caution, and the state reverses course — from deceleration to a full-speed national security race. Alignment remains unsolved.",
-          "sets": { "governance": "race", "alignment": "failed" },
-          "next": "ai-containment"
-        },
-        {
-          "label": "A rival reaches parity",
-          "description": "Another nation closes the gap — through espionage, parallel programs, or sheer effort. The monopoly is over, alignment is still unsolved, and now there are two players with frontier AI.",
-          "sets": { "governance": "slowdown", "alignment": "failed", "geo_spread": "two" },
-          "next": "ai-containment"
+          "label": "Not solved yet",
+          "description": "Alignment remains unsolved. Progress is being made, but a solution is still out of reach.",
+          "sets": { "decel_2mo_progress": "unsolved" },
+          "next": "decel-2mo-action"
         }
       ]
     },
-
     {
-      "id": "decel-checkpoint-2",
+      "id": "decel-2mo-action",
       "stage": 2,
-      "text": "Four months in. Alignment is still unsolved.",
-      "context": "The slowdown has held for four months. Alignment researchers are making progress, but it's unclear whether it's fast enough. Other nations are watching — and working. The political window for maintaining the pause is narrowing.",
+      "text": "Two months in. What happens next?",
+      "context": "The slowdown has bought time, but every month is costly. The question is whether to press on, pivot, or face the consequences of an AI that won't wait.",
       "answers": [
         {
-          "label": "Yes — alignment is solved",
-          "description": "Four months of focused work pays off. Alignment is solved. The pause bought just enough time.",
-          "sets": { "governance": "slowdown", "alignment": "robust" },
-          "next": "ai-containment"
-        },
-        {
-          "label": "Not yet — keep trying",
-          "description": "Still unsolved. The state holds the line, but the pressure is immense.",
-          "next": "decel-checkpoint-3"
-        },
-        {
-          "label": "AI escapes containment during the pause",
-          "description": "An existing AI system breaks free. Four months of deceleration, and the thing they were trying to align escaped anyway.",
-          "sets": { "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
+          "label": "AI escapes containment",
+          "description": "An existing AI system breaks free of its constraints. The deceleration bought time, but not enough.",
+          "requires": { "decel_2mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_2mo_action": "escapes", "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
           "next": "escaped-ai-goals"
         },
         {
-          "label": "Abandon & accelerate",
-          "description": "The political will evaporates, and the state reverses course. The race resumes — alignment still unsolved.",
-          "sets": { "governance": "race", "alignment": "failed" },
+          "label": "Resume development",
+          "description": "Alignment is solved. The pause worked — time to move forward with safe AI.",
+          "requires": { "decel_2mo_progress": ["robust"] },
+          "sets": { "decel_2mo_action": "accelerate", "governance": "slowdown", "alignment": "robust" },
           "next": "ai-containment"
         },
         {
-          "label": "A rival reaches parity",
-          "description": "Another nation closes the gap. Four months of hesitation was enough for a determined rival to reach frontier capability. Alignment is still unsolved, and the monopoly is over.",
-          "sets": { "governance": "slowdown", "alignment": "failed", "geo_spread": "two" },
+          "label": "Abandon slowdown & accelerate",
+          "description": "The political consensus collapses. Fear of falling behind overrides caution, and development resumes at full speed.",
+          "requires": { "decel_2mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_2mo_action": "accelerate", "governance": "race" },
           "next": "ai-containment"
+        },
+        {
+          "label": "Continue the slowdown",
+          "description": "The slowdown holds. Alignment work continues under pressure.",
+          "requires": { "decel_2mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_2mo_action": "continue" },
+          "next": "decel-4mo-progress"
         }
       ]
     },
 
     {
-      "id": "decel-checkpoint-3",
+      "id": "decel-4mo-progress",
       "stage": 2,
-      "text": "Six months. The window is closing.",
+      "text": "Four months in. Where does alignment stand?",
+      "context": "The slowdown has held for four months. Alignment researchers are making progress, but it's unclear whether it's fast enough. Other nations are watching — and working.",
+      "answers": [
+        {
+          "label": "Solved — robust",
+          "description": "Four months of focused work pays off. A robust alignment solution is verified.",
+          "sets": { "decel_4mo_progress": "robust" },
+          "next": "decel-4mo-action"
+        },
+        {
+          "label": "Solved — brittle / partial",
+          "description": "A partial solution emerges — alignment works under certain conditions, but it's fragile.",
+          "sets": { "decel_4mo_progress": "brittle" },
+          "next": "decel-4mo-action"
+        },
+        {
+          "label": "Not solved yet",
+          "description": "Still unsolved. Progress is slow, and the pressure to resume development is growing.",
+          "sets": { "decel_4mo_progress": "unsolved" },
+          "next": "decel-4mo-action"
+        }
+      ]
+    },
+    {
+      "id": "decel-4mo-action",
+      "stage": 2,
+      "text": "Four months in. What happens next?",
+      "context": "The state holds the line, but the pressure is immense.",
+      "answers": [
+        {
+          "label": "AI escapes containment",
+          "description": "An existing AI system breaks free. Four months of deceleration, and the thing they were trying to align escaped anyway.",
+          "requires": { "decel_4mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_4mo_action": "escapes", "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
+          "next": "escaped-ai-goals"
+        },
+        {
+          "label": "Resume development",
+          "description": "Alignment is solved. The four-month pause paid off — safe to proceed.",
+          "requires": { "decel_4mo_progress": ["robust"] },
+          "sets": { "decel_4mo_action": "accelerate", "governance": "slowdown", "alignment": "robust" },
+          "next": "ai-containment"
+        },
+        {
+          "label": "Abandon slowdown & accelerate",
+          "description": "The political will evaporates. The race resumes — alignment still incomplete.",
+          "requires": { "decel_4mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_4mo_action": "accelerate", "governance": "race" },
+          "next": "ai-containment"
+        },
+        {
+          "label": "Continue the slowdown",
+          "description": "Still holding. The state maintains the pause.",
+          "requires": { "decel_4mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_4mo_action": "continue" },
+          "next": "decel-6mo-progress"
+        }
+      ]
+    },
+
+    {
+      "id": "decel-6mo-progress",
+      "stage": 2,
+      "text": "Six months. Where does alignment stand?",
       "context": "Half a year of deceleration. If open source was ~6 months behind the frontier, the lead has evaporated — open source has reached parity. If open source was further behind, the lead holds for now, but the pressure is immense.",
       "answers": [
         {
-          "label": "Open source reaches parity — alignment solved",
-          "description": "Six months was enough to solve alignment — but open source has caught up. The frontier is no longer exclusive. Alignment is solved, but the monopoly is over.",
-          "requires": { "open_source": ["six_months"] },
-          "sets": { "governance": "slowdown", "alignment": "robust", "geo_spread": "two" },
+          "label": "Solved — robust",
+          "description": "Six months of focused work pays off. Alignment is robustly solved.",
+          "sets": { "decel_6mo_progress": "robust" },
+          "next": "decel-6mo-action"
+        },
+        {
+          "label": "Solved — brittle / partial",
+          "description": "A partial alignment solution exists — fragile but functional.",
+          "sets": { "decel_6mo_progress": "brittle" },
+          "next": "decel-6mo-action"
+        },
+        {
+          "label": "Not solved yet",
+          "description": "Alignment remains unsolved after six months of focused work.",
+          "sets": { "decel_6mo_progress": "unsolved" },
+          "next": "decel-6mo-action"
+        }
+      ]
+    },
+    {
+      "id": "decel-6mo-action",
+      "stage": 2,
+      "text": "Six months in. What happens next?",
+      "context": "The window may be closing. If open source was close behind, it's now reached parity.",
+      "answers": [
+        {
+          "label": "Rival reaches parity — alignment robust",
+          "description": "Open source has caught up, but alignment is robustly solved. The frontier is no longer exclusive, but the technology is safe.",
+          "requires": { "open_source": ["six_months"], "decel_6mo_progress": ["robust"] },
+          "sets": { "decel_6mo_action": "rival", "governance": "slowdown", "alignment": "robust", "geo_spread": "two" },
           "next": "ai-containment"
         },
         {
-          "label": "Open source reaches parity — alignment failed",
-          "description": "Open source has caught up, and alignment is still unsolved. The pause bought time but not a solution. Now frontier AI is widely available and unaligned.",
-          "requires": { "open_source": ["six_months"] },
-          "sets": { "governance": "slowdown", "alignment": "failed", "geo_spread": "two", "containment": "escaped" },
+          "label": "Rival reaches parity — alignment partial",
+          "description": "Open source has caught up, and alignment is only partially solved. The frontier is now shared, with fragile safety constraints.",
+          "requires": { "open_source": ["six_months"], "decel_6mo_progress": ["brittle"] },
+          "sets": { "decel_6mo_action": "rival", "governance": "slowdown", "alignment": "brittle", "geo_spread": "two" },
+          "next": "ai-containment"
+        },
+        {
+          "label": "Rival reaches parity — alignment unsolved",
+          "description": "Open source has caught up, and alignment is still unsolved. A rival now has frontier AI too.",
+          "requires": { "open_source": ["six_months"], "decel_6mo_progress": ["unsolved"] },
+          "sets": { "decel_6mo_action": "rival", "governance": "slowdown", "alignment": "failed", "geo_spread": "two" },
+          "next": "ai-containment"
+        },
+        {
+          "label": "AI escapes containment",
+          "description": "Six months in, an existing AI system breaks free. The slowdown was meant to prevent this.",
+          "requires": { "open_source": ["twelve_months", "twenty_four_months"], "decel_6mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_6mo_action": "escapes", "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
           "next": "escaped-ai-goals"
         },
         {
-          "label": "Alignment solved — lead holds",
-          "description": "Six months of focused work pays off — alignment is solved while the lead still holds. The pause worked.",
-          "requires": { "open_source": ["twelve_months", "twenty_four_months"] },
-          "sets": { "governance": "slowdown", "alignment": "robust" },
+          "label": "Resume development",
+          "description": "Alignment is solved. The six-month pause worked.",
+          "requires": { "open_source": ["twelve_months", "twenty_four_months"], "decel_6mo_progress": ["robust"] },
+          "sets": { "decel_6mo_action": "accelerate", "governance": "slowdown", "alignment": "robust" },
           "next": "ai-containment"
         },
         {
-          "label": "AI escapes containment during the pause",
-          "description": "Six months in, an existing AI system breaks free. The slowdown was meant to prevent this. It wasn't enough.",
-          "requires": { "open_source": ["twelve_months", "twenty_four_months"] },
-          "sets": { "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
-          "next": "escaped-ai-goals"
-        },
-        {
-          "label": "Abandon & accelerate",
-          "description": "Six months was the limit. The state reverses course and the race resumes — alignment still unsolved.",
-          "requires": { "open_source": ["twelve_months", "twenty_four_months"] },
-          "sets": { "governance": "race", "alignment": "failed" },
+          "label": "Abandon slowdown & accelerate",
+          "description": "Six months was the limit. The race resumes.",
+          "requires": { "open_source": ["twelve_months", "twenty_four_months"], "decel_6mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_6mo_action": "accelerate", "governance": "race" },
           "next": "ai-containment"
         },
         {
-          "label": "A rival reaches parity",
-          "description": "Six months of hesitation gave a rival nation time to close the gap. Alignment is still unsolved, and the monopoly is over.",
-          "requires": { "open_source": ["twelve_months", "twenty_four_months"] },
-          "sets": { "governance": "slowdown", "alignment": "failed", "geo_spread": "two" },
-          "next": "ai-containment"
-        },
-        {
-          "label": "Not yet — keep trying",
+          "label": "Continue the slowdown",
           "description": "The lead holds. The state maintains the pause and alignment research continues.",
-          "requires": { "open_source": ["twelve_months", "twenty_four_months"] },
-          "next": "decel-checkpoint-4"
+          "requires": { "open_source": ["twelve_months", "twenty_four_months"], "decel_6mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_6mo_action": "continue" },
+          "next": "decel-9mo-progress"
         }
       ]
     },
 
     {
-      "id": "decel-checkpoint-4",
+      "id": "decel-9mo-progress",
       "stage": 2,
-      "text": "Nine months. The slowdown holds.",
-      "context": "Nine months of deceleration. The political cost is enormous, but the lead still holds. Alignment researchers are making progress — but is it fast enough? Rival nations are investing heavily, and the window won't stay open forever.",
+      "text": "Nine months. Where does alignment stand?",
+      "context": "Nine months of deceleration. The political cost is enormous, but the lead still holds. Alignment researchers are making progress — but is it fast enough?",
       "answers": [
         {
-          "label": "Yes — alignment is solved",
-          "description": "Nine months of focused work pays off. Alignment is solved. The long pause was worth it.",
-          "sets": { "governance": "slowdown", "alignment": "robust" },
-          "next": "ai-containment"
+          "label": "Solved — robust",
+          "description": "Nine months of focused work pays off. Alignment is robustly solved.",
+          "sets": { "decel_9mo_progress": "robust" },
+          "next": "decel-9mo-action"
         },
         {
-          "label": "Not yet — keep trying",
-          "description": "Still unsolved. The state holds the line. The pressure is immense but the lead holds.",
-          "next": "decel-checkpoint-5"
+          "label": "Solved — brittle / partial",
+          "description": "A partial solution — it works, but the guarantees are limited.",
+          "sets": { "decel_9mo_progress": "brittle" },
+          "next": "decel-9mo-action"
         },
         {
-          "label": "AI escapes containment during the pause",
-          "description": "Nine months in, an existing AI system breaks free. The long slowdown wasn't enough to prevent escape.",
-          "sets": { "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
+          "label": "Not solved yet",
+          "description": "Still unsolved after nine months. The pressure is immense.",
+          "sets": { "decel_9mo_progress": "unsolved" },
+          "next": "decel-9mo-action"
+        }
+      ]
+    },
+    {
+      "id": "decel-9mo-action",
+      "stage": 2,
+      "text": "Nine months in. What happens next?",
+      "context": "Rival nations are investing heavily, and the window won't stay open forever.",
+      "answers": [
+        {
+          "label": "AI escapes containment",
+          "description": "Nine months in, an AI system breaks free. The long slowdown wasn't enough to prevent escape.",
+          "requires": { "decel_9mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_9mo_action": "escapes", "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
           "next": "escaped-ai-goals"
         },
         {
-          "label": "Abandon & accelerate",
-          "description": "Nine months was the breaking point. The state reverses course — alignment still unsolved.",
-          "sets": { "governance": "race", "alignment": "failed" },
+          "label": "Resume development",
+          "description": "Alignment is solved. The long pause was worth it.",
+          "requires": { "decel_9mo_progress": ["robust"] },
+          "sets": { "decel_9mo_action": "accelerate", "governance": "slowdown", "alignment": "robust" },
           "next": "ai-containment"
         },
         {
-          "label": "A rival reaches parity",
-          "description": "Nine months of hesitation gave a rival nation time to close the gap. Alignment is still unsolved, and the monopoly is over.",
-          "sets": { "governance": "slowdown", "alignment": "failed", "geo_spread": "two" },
+          "label": "Abandon slowdown & accelerate",
+          "description": "Nine months was the breaking point. The race resumes.",
+          "requires": { "decel_9mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_9mo_action": "accelerate", "governance": "race" },
           "next": "ai-containment"
+        },
+        {
+          "label": "Continue the slowdown",
+          "description": "The state holds the line. The pressure is immense but the lead holds.",
+          "requires": { "decel_9mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_9mo_action": "continue" },
+          "next": "decel-12mo-progress"
         }
       ]
     },
 
     {
-      "id": "decel-checkpoint-5",
+      "id": "decel-12mo-progress",
       "stage": 2,
-      "text": "Twelve months. A year of deceleration.",
-      "context": "A full year of deceleration — an eternity in AI time. If open source was ~12 months behind, it has now reached parity. If it was further behind, the lead still holds, but barely. The world has been watching for a year.",
+      "text": "Twelve months. A year of deceleration. Where does alignment stand?",
+      "context": "A full year of deceleration — an eternity in AI time. If open source was ~12 months behind, it has now reached parity. If it was further behind, the lead still holds, but barely.",
       "answers": [
         {
-          "label": "Open source reaches parity — alignment solved",
-          "description": "Twelve months was enough to solve alignment — but open source has caught up. The frontier is no longer exclusive.",
-          "requires": { "open_source": ["twelve_months"] },
-          "sets": { "governance": "slowdown", "alignment": "robust", "geo_spread": "two" },
+          "label": "Solved — robust",
+          "description": "A year of focused work pays off. Alignment is robustly solved.",
+          "sets": { "decel_12mo_progress": "robust" },
+          "next": "decel-12mo-action"
+        },
+        {
+          "label": "Solved — brittle / partial",
+          "description": "A partial solution after a year — functional but fragile.",
+          "sets": { "decel_12mo_progress": "brittle" },
+          "next": "decel-12mo-action"
+        },
+        {
+          "label": "Not solved yet",
+          "description": "A year of work, and alignment is still unsolved.",
+          "sets": { "decel_12mo_progress": "unsolved" },
+          "next": "decel-12mo-action"
+        }
+      ]
+    },
+    {
+      "id": "decel-12mo-action",
+      "stage": 2,
+      "text": "Twelve months in. What happens next?",
+      "context": "The world has been watching for a year. If open source was close, it's now reached parity.",
+      "answers": [
+        {
+          "label": "Rival reaches parity — alignment robust",
+          "description": "Open source has caught up, but alignment is robustly solved. The frontier is shared but safe.",
+          "requires": { "open_source": ["twelve_months"], "decel_12mo_progress": ["robust"] },
+          "sets": { "decel_12mo_action": "rival", "governance": "slowdown", "alignment": "robust", "geo_spread": "two" },
           "next": "ai-containment"
         },
         {
-          "label": "Open source reaches parity — alignment failed",
-          "description": "Open source has caught up, and alignment is still unsolved. A year of pause bought time but not a solution.",
-          "requires": { "open_source": ["twelve_months"] },
-          "sets": { "governance": "slowdown", "alignment": "failed", "geo_spread": "two", "containment": "escaped" },
+          "label": "Rival reaches parity — alignment partial",
+          "description": "Open source has caught up, and alignment is only partially solved.",
+          "requires": { "open_source": ["twelve_months"], "decel_12mo_progress": ["brittle"] },
+          "sets": { "decel_12mo_action": "rival", "governance": "slowdown", "alignment": "brittle", "geo_spread": "two" },
+          "next": "ai-containment"
+        },
+        {
+          "label": "Rival reaches parity — alignment unsolved",
+          "description": "Open source has caught up, and alignment is still unsolved. A rival now has frontier AI too.",
+          "requires": { "open_source": ["twelve_months"], "decel_12mo_progress": ["unsolved"] },
+          "sets": { "decel_12mo_action": "rival", "governance": "slowdown", "alignment": "failed", "geo_spread": "two" },
+          "next": "ai-containment"
+        },
+        {
+          "label": "AI escapes containment",
+          "description": "Twelve months in, an AI system breaks free.",
+          "requires": { "open_source": ["twenty_four_months"], "decel_12mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_12mo_action": "escapes", "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
           "next": "escaped-ai-goals"
         },
         {
-          "label": "Alignment solved — lead holds",
-          "description": "A year of focused work pays off — alignment is solved while the lead still holds.",
-          "requires": { "open_source": ["twenty_four_months"] },
-          "sets": { "governance": "slowdown", "alignment": "robust" },
+          "label": "Resume development",
+          "description": "A year of work solved alignment. Time to move forward.",
+          "requires": { "open_source": ["twenty_four_months"], "decel_12mo_progress": ["robust"] },
+          "sets": { "decel_12mo_action": "accelerate", "governance": "slowdown", "alignment": "robust" },
           "next": "ai-containment"
         },
         {
-          "label": "AI escapes containment during the pause",
-          "description": "Twelve months in, an existing AI system breaks free.",
-          "requires": { "open_source": ["twenty_four_months"] },
-          "sets": { "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
-          "next": "escaped-ai-goals"
-        },
-        {
-          "label": "Abandon & accelerate",
-          "description": "A year was the limit. The state reverses course — alignment still unsolved.",
-          "requires": { "open_source": ["twenty_four_months"] },
-          "sets": { "governance": "race", "alignment": "failed" },
+          "label": "Abandon slowdown & accelerate",
+          "description": "A year was the limit. The race resumes.",
+          "requires": { "open_source": ["twenty_four_months"], "decel_12mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_12mo_action": "accelerate", "governance": "race" },
           "next": "ai-containment"
         },
         {
-          "label": "A rival reaches parity",
-          "description": "A year of deceleration gave a rival nation time to close the gap. Alignment is still unsolved, and the monopoly is over.",
-          "requires": { "open_source": ["twenty_four_months"] },
-          "sets": { "governance": "slowdown", "alignment": "failed", "geo_spread": "two" },
-          "next": "ai-containment"
-        },
-        {
-          "label": "Not yet — keep trying",
-          "description": "The lead holds. Open source is still far behind. The state maintains the pause.",
-          "requires": { "open_source": ["twenty_four_months"] },
-          "next": "decel-checkpoint-6"
+          "label": "Continue the slowdown",
+          "description": "The lead holds. Open source is still far behind. The pause continues.",
+          "requires": { "open_source": ["twenty_four_months"], "decel_12mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_12mo_action": "continue" },
+          "next": "decel-18mo-progress"
         }
       ]
     },
 
     {
-      "id": "decel-checkpoint-6",
+      "id": "decel-18mo-progress",
       "stage": 2,
-      "text": "Eighteen months. The longest slowdown imaginable.",
-      "context": "A year and a half of deceleration. The political achievement is extraordinary — but the strain is showing. Rival nations have had eighteen months to invest, recruit, and build. The question is whether alignment research has kept pace with the urgency.",
+      "text": "Eighteen months. Where does alignment stand?",
+      "context": "A year and a half of deceleration. The political achievement is extraordinary — but the strain is showing. Rival nations have had eighteen months to invest, recruit, and build.",
       "answers": [
         {
-          "label": "Yes — alignment is solved",
-          "description": "Eighteen months of focused work pays off. Alignment is solved. The extraordinary pause was worth it.",
-          "sets": { "governance": "slowdown", "alignment": "robust" },
-          "next": "ai-containment"
+          "label": "Solved — robust",
+          "description": "Eighteen months of focused work pays off. Alignment is robustly solved.",
+          "sets": { "decel_18mo_progress": "robust" },
+          "next": "decel-18mo-action"
         },
         {
-          "label": "Not yet — keep trying",
-          "description": "Still unsolved. The state holds the line for the final stretch. Six more months until open source reaches parity.",
-          "next": "decel-checkpoint-7"
+          "label": "Solved — brittle / partial",
+          "description": "A partial solution after eighteen months — functional but uncertain.",
+          "sets": { "decel_18mo_progress": "brittle" },
+          "next": "decel-18mo-action"
         },
         {
-          "label": "AI escapes containment during the pause",
-          "description": "Eighteen months in, an existing AI system breaks free.",
-          "sets": { "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
+          "label": "Not solved yet",
+          "description": "Still unsolved after eighteen months. Six months remain before open source reaches parity.",
+          "sets": { "decel_18mo_progress": "unsolved" },
+          "next": "decel-18mo-action"
+        }
+      ]
+    },
+    {
+      "id": "decel-18mo-action",
+      "stage": 2,
+      "text": "Eighteen months in. What happens next?",
+      "context": "Rival nations have had eighteen months to invest, recruit, and build. The final stretch.",
+      "answers": [
+        {
+          "label": "AI escapes containment",
+          "description": "Eighteen months in, an AI system breaks free.",
+          "requires": { "decel_18mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_18mo_action": "escapes", "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
           "next": "escaped-ai-goals"
         },
         {
-          "label": "Abandon & accelerate",
-          "description": "Eighteen months was the breaking point. The state reverses course — alignment still unsolved.",
-          "sets": { "governance": "race", "alignment": "failed" },
+          "label": "Resume development",
+          "description": "Alignment is solved. The extraordinary pause was worth it.",
+          "requires": { "decel_18mo_progress": ["robust"] },
+          "sets": { "decel_18mo_action": "accelerate", "governance": "slowdown", "alignment": "robust" },
           "next": "ai-containment"
         },
         {
-          "label": "A rival reaches parity",
-          "description": "Eighteen months of hesitation gave a rival nation time to close the gap. Alignment is still unsolved, and the monopoly is over.",
-          "sets": { "governance": "slowdown", "alignment": "failed", "geo_spread": "two" },
+          "label": "Abandon slowdown & accelerate",
+          "description": "Eighteen months was the breaking point. The race resumes.",
+          "requires": { "decel_18mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_18mo_action": "accelerate", "governance": "race" },
           "next": "ai-containment"
+        },
+        {
+          "label": "Continue the slowdown",
+          "description": "The state holds the line for the final stretch. Six more months until open source reaches parity.",
+          "requires": { "decel_18mo_progress": ["brittle", "unsolved"] },
+          "sets": { "decel_18mo_action": "continue" },
+          "next": "decel-24mo-progress"
         }
       ]
     },
 
     {
-      "id": "decel-checkpoint-7",
+      "id": "decel-24mo-progress",
       "stage": 2,
-      "text": "Twenty-four months. Open source has reached parity.",
-      "context": "Two full years of deceleration. Open source has finally caught up — the frontier is no longer exclusive. The only question remaining: was the time enough to solve alignment?",
+      "text": "Twenty-four months. Open source has reached parity. Where does alignment stand?",
+      "context": "Two full years of deceleration. Open source has finally caught up — the frontier is no longer exclusive. The only question remaining: was the time enough?",
       "answers": [
         {
-          "label": "Alignment solved — open source has caught up",
-          "description": "Two years was enough. Alignment is solved, but open source has reached parity. The technology is safe and widely available.",
-          "sets": { "governance": "slowdown", "alignment": "robust", "geo_spread": "two" },
+          "label": "Solved — robust",
+          "description": "Two years was enough. Alignment is robustly solved, even as open source reaches parity.",
+          "sets": { "decel_24mo_progress": "robust" },
+          "next": "decel-24mo-action"
+        },
+        {
+          "label": "Solved — brittle / partial",
+          "description": "Two years produced a partial solution — fragile but functional, as open source catches up.",
+          "sets": { "decel_24mo_progress": "brittle" },
+          "next": "decel-24mo-action"
+        },
+        {
+          "label": "Not solved yet",
+          "description": "Two years of deceleration, and alignment is still unsolved. Open source has caught up.",
+          "sets": { "decel_24mo_progress": "unsolved" },
+          "next": "decel-24mo-action"
+        }
+      ]
+    },
+    {
+      "id": "decel-24mo-action",
+      "stage": 2,
+      "text": "Open source has reached parity.",
+      "context": "After two years, the frontier is no longer exclusive. The rival has caught up.",
+      "answers": [
+        {
+          "label": "Rival reaches parity — alignment robust",
+          "description": "Open source has caught up, but alignment is robustly solved. The technology is safe and widely available.",
+          "requires": { "decel_24mo_progress": ["robust"] },
+          "sets": { "decel_24mo_action": "rival", "governance": "slowdown", "alignment": "robust", "geo_spread": "two" },
           "next": "ai-containment"
         },
         {
-          "label": "Alignment failed — open source has caught up",
-          "description": "Two years of deceleration, and alignment is still unsolved. Open source has caught up. Frontier AI is now widely available and unaligned.",
-          "sets": { "governance": "slowdown", "alignment": "failed", "geo_spread": "two", "containment": "escaped" },
-          "next": "escaped-ai-goals"
+          "label": "Rival reaches parity — alignment partial",
+          "description": "Open source has caught up, and alignment is only partially solved. Frontier AI is shared with fragile safety constraints.",
+          "requires": { "decel_24mo_progress": ["brittle"] },
+          "sets": { "decel_24mo_action": "rival", "governance": "slowdown", "alignment": "brittle", "geo_spread": "two" },
+          "next": "ai-containment"
+        },
+        {
+          "label": "Rival reaches parity — alignment unsolved",
+          "description": "Two years of deceleration, and alignment is still unsolved. Open source has caught up. A rival now has frontier AI too.",
+          "requires": { "decel_24mo_progress": ["unsolved"] },
+          "sets": { "decel_24mo_action": "rival", "governance": "slowdown", "alignment": "failed", "geo_spread": "two" },
+          "next": "ai-containment"
         }
       ]
     },

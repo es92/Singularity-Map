@@ -61,8 +61,8 @@ function forwardKey(sel) {
 
 // --- Invariant checks ---
 
-const violations = { vanish: [], deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], premature: [] };
-const seen = { vanish: new Set(), clickErased: new Set(), premature: new Set() };
+const violations = { vanish: [], appearAboveAnswered: [], deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], premature: [], lockedAfterUnanswered: [], progressiveVanish: [] };
+const seen = { vanish: new Set(), appearAbove: new Set(), clickErased: new Set(), premature: new Set(), lockedAfterUnanswered: new Set(), progressiveVanish: new Set() };
 
 function checkVanishUpward(sel) {
     const visible = new Set(DIM_META.filter(d => isDimVisible(sel, d)).map(d => d.id));
@@ -79,6 +79,7 @@ function checkVanishUpward(sel) {
             for (let i = 0; i < myIdx; i++) {
                 const upper = DIM_META[i];
                 if (!visible.has(upper.id)) continue;
+                if (!sel[upper.id]) continue;
                 if (!isDimVisible(next, upper)) {
                     const k = `${dim.id}:${val.id}->${upper.id}`;
                     if (seen.vanish.has(k)) continue;
@@ -87,6 +88,126 @@ function checkVanishUpward(sel) {
                 }
             }
         }
+    }
+}
+
+function checkAppearAbove(sel) {
+    const visibleBefore = new Set(DIM_META.filter(d => isDimVisible(sel, d)).map(d => d.id));
+    const answeredBefore = new Set(DIM_META.filter(d => visibleBefore.has(d.id) && sel[d.id] && isDimLocked(sel, d) === null).map(d => d.id));
+
+    for (const dim of DIM_META) {
+        if (!visibleBefore.has(dim.id) || isDimLocked(sel, dim) !== null) continue;
+
+        if (sel[dim.id]) continue;
+        for (const val of getEnabledValues(sel, dim)) {
+            const next = { ...sel, [dim.id]: val.id };
+            cleanSelection(next);
+
+            const alignBefore = effectiveVal(sel, 'alignment');
+            const alignAfter = effectiveVal(next, 'alignment');
+            const containBefore = effectiveVal(sel, 'containment');
+            const containAfter = effectiveVal(next, 'containment');
+
+            const answeredRef = new Set(answeredBefore);
+            answeredRef.add(dim.id);
+
+            for (let i = 0; i < DIM_META.length; i++) {
+                const newDim = DIM_META[i];
+                if (visibleBefore.has(newDim.id)) continue;
+                if (!isDimVisible(next, newDim)) continue;
+                if (isDimLocked(next, newDim) !== null) continue;
+                if (alignBefore !== alignAfter && newDim.visibleWhen && newDim.visibleWhen.alignment) continue;
+                if (containBefore !== containAfter && newDim.visibleWhen && newDim.visibleWhen.containment) continue;
+                if (next.ai_goals === 'marginal' && answeredRef.has('ai_goals')
+                    && newDim.visibleWhen && newDim.visibleWhen.alignment
+                    && !newDim.visibleWhen.alignment.includes('failed')) continue;
+
+                const k = `${dim.id}:${val.id}->${newDim.id}`;
+                if (seen.appearAbove.has(k)) continue;
+
+                let hasAnsweredBelow = false;
+                for (let j = i + 1; j < DIM_META.length; j++) {
+                    if (answeredRef.has(DIM_META[j].id)) { hasAnsweredBelow = true; break; }
+                }
+
+                if (hasAnsweredBelow) {
+                    seen.appearAbove.add(k);
+                    violations.appearAboveAnswered.push({ dim: dim.id, val: val.id, appeared: newDim.id, url: selToUrl(sel) });
+                }
+            }
+        }
+    }
+}
+
+function progressivelyShown(sel) {
+    let shownNext = false;
+    const shown = new Set();
+    for (const dim of DIM_META) {
+        const visible = isDimVisible(sel, dim);
+        if (!visible) continue;
+        const locked = isDimLocked(sel, dim);
+        const answered = !!sel[dim.id];
+        const userAnswered = answered && locked === null;
+        const isNext = visible && locked === null && !answered;
+        if (shownNext && !userAnswered) continue;
+        shown.add(dim.id);
+        if (isNext) shownNext = true;
+    }
+    return shown;
+}
+
+function checkProgressiveVanish(sel) {
+    const shownBefore = progressivelyShown(sel);
+
+    for (const dim of DIM_META) {
+        if (!shownBefore.has(dim.id)) continue;
+        if (isDimLocked(sel, dim) !== null) continue;
+        const myIdx = DIM_META.indexOf(dim);
+
+        for (const val of getEnabledValues(sel, dim)) {
+            if (sel[dim.id] === val.id) continue;
+            const next = { ...sel, [dim.id]: val.id };
+            cleanSelection(next);
+            const shownAfter = progressivelyShown(next);
+
+            for (const wasShown of shownBefore) {
+                if (shownAfter.has(wasShown)) continue;
+                const wasIdx = DIM_META.findIndex(d => d.id === wasShown);
+                if (wasIdx >= myIdx) continue;
+                const wasDim = DIM_META.find(d => d.id === wasShown);
+                if (!sel[wasShown] || isDimLocked(sel, wasDim) !== null) continue;
+                const k = `${dim.id}:${val.id}->${wasShown}`;
+                if (seen.progressiveVanish.has(k)) continue;
+                seen.progressiveVanish.add(k);
+                violations.progressiveVanish.push({ dim: dim.id, val: val.id, vanished: wasShown, url: selToUrl(sel) });
+            }
+        }
+    }
+}
+
+function checkLockedAfterUnanswered(sel) {
+    let firstUnansweredIdx = -1;
+    for (let i = 0; i < DIM_META.length; i++) {
+        const dim = DIM_META[i];
+        if (!isDimVisible(sel, dim)) continue;
+        if (isDimLocked(sel, dim) !== null) continue;
+        if (sel[dim.id]) continue;
+        firstUnansweredIdx = i;
+        break;
+    }
+    if (firstUnansweredIdx === -1) return;
+    for (let i = firstUnansweredIdx + 1; i < DIM_META.length; i++) {
+        const dim = DIM_META[i];
+        if (!isDimVisible(sel, dim)) continue;
+        if (isDimLocked(sel, dim) === null) continue;
+        const k = `${DIM_META[firstUnansweredIdx].id}|${dim.id}`;
+        if (seen.lockedAfterUnanswered.has(k)) continue;
+        seen.lockedAfterUnanswered.add(k);
+        violations.lockedAfterUnanswered.push({
+            unanswered: DIM_META[firstUnansweredIdx].id,
+            locked: dim.id,
+            url: selToUrl(sel)
+        });
     }
 }
 
@@ -157,6 +278,9 @@ function checkLeaf(sel) {
 
 function runChecks(sel) {
     checkVanishUpward(sel);
+    checkAppearAbove(sel);
+    checkProgressiveVanish(sel);
+    checkLockedAfterUnanswered(sel);
     checkStuck(sel);
     checkClickErased(sel);
 }
@@ -300,6 +424,8 @@ if (mode === 'sample') {
         { name: 'STUCK DIM (visible, 0 enabled values)', items: violations.stuck, fmt: v => `  "${v.dim}" is visible but has no selectable values` },
         { name: 'UNLOCKED SINGLE OPTION (should be auto-locked)', items: violations.singleOption, fmt: v => `  "${v.dim}" has only "${v.val}" enabled but is not locked` },
         { name: 'ROW VANISHES UPWARD', items: violations.vanish, fmt: v => `  Click "${v.dim}=${v.val}" → "${v.vanished}" vanishes` },
+        { name: 'PROGRESSIVE DISCLOSURE VANISH (row above disappears from screen)', items: violations.progressiveVanish, fmt: v => `  Click "${v.dim}=${v.val}" → "${v.vanished}" hidden by progressive disclosure` },
+        { name: 'ROW APPEARS ABOVE ANSWERED', items: violations.appearAboveAnswered, fmt: v => `  Click "${v.dim}=${v.val}" → "${v.appeared}" appears above a row with an answer` },
         { name: 'CLICK ERASED (value removed by cleanSelection)', items: violations.clickErased, fmt: v => `  Click "${v.dim}=${v.val}" → immediately cleared` },
         { name: 'PREMATURE OUTCOME (shown before all choices made)', items: violations.premature, fmt: v => `  "${v.outcome}" matches but "${v.nextDim}" still unset and can change result` },
     ];
@@ -308,6 +434,18 @@ if (mode === 'sample') {
     for (const cat of cats) {
         if (cat.items.length === 0) continue;
         total += cat.items.length;
+        console.log(`━━━ ${cat.name} (${cat.items.length}) ━━━`);
+        for (const v of cat.items) {
+            console.log(cat.fmt(v));
+            console.log(`  ${v.url}\n`);
+        }
+    }
+
+    const info = [
+        { name: 'LOCKED LEAKS PAST UNANSWERED (handled by progressive disclosure)', items: violations.lockedAfterUnanswered, fmt: v => `  "${v.locked}" is auto-locked but appears after unanswered "${v.unanswered}"` },
+    ];
+    for (const cat of info) {
+        if (cat.items.length === 0) continue;
         console.log(`━━━ ${cat.name} (${cat.items.length}) ━━━`);
         for (const v of cat.items) {
             console.log(cat.fmt(v));
