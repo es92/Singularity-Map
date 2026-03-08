@@ -305,8 +305,7 @@ const DIM_META = [
       ],
       suppressWhen: [{ intent: ['self_interest', 'escalation'] }],
       values: [
-        { id: 'rapid', label: 'Rapid (1–2 yrs)' }, { id: 'gradual', label: 'Gradual (3–10 yrs)' }, { id: 'uneven', label: 'Uneven (1–20 yrs)' },
-        { id: 'limited', label: 'Limited', requires: { capability: ['hours', 'days', 'weeks', 'months'] } } ] },
+        { id: 'rapid', label: 'Rapid (1–2 yrs)' }, { id: 'gradual', label: 'Gradual (3–10 yrs)' }, { id: 'uneven', label: 'Uneven (1–20 yrs)' } ] },
     { id: 'physical_automation', label: 'Physical Automation', stage: 3,
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], failure_mode: ['none', 'whimper', 'disempowerment'] },
@@ -316,8 +315,7 @@ const DIM_META = [
       ],
       suppressWhen: [{ intent: ['self_interest', 'escalation'] }],
       values: [
-        { id: 'rapid', label: 'Rapid (2–5 yrs)' }, { id: 'gradual', label: 'Gradual (5–20 yrs)' }, { id: 'uneven', label: 'Uneven (2–20+ yrs)' },
-        { id: 'limited', label: 'Limited', requires: { capability: ['hours', 'days', 'weeks', 'months'] } } ] },
+        { id: 'rapid', label: 'Rapid (2–5 yrs)' }, { id: 'gradual', label: 'Gradual (5–20 yrs)' }, { id: 'uneven', label: 'Uneven (2–20+ yrs)' } ] },
     { id: 'plateau_knowledge_rate', label: 'Knowledge Work', stage: 3,
       activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }],
       values: [
@@ -328,15 +326,13 @@ const DIM_META = [
     { id: 'plateau_physical_rate', label: 'Physical Automation', stage: 3,
       activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }],
       values: [
-        { id: 'rapid', label: 'Rapid', requires: { capability: ['singularity'] } },
         { id: 'gradual', label: 'Gradual (10–25 yrs)', requires: { capability: ['days', 'weeks', 'months'] } },
         { id: 'uneven', label: 'Uneven (5–20+ yrs)' },
         { id: 'limited', label: 'Limited' } ] },
     { id: 'auto_knowledge_rate', label: 'Knowledge Work', stage: 3,
       activateWhen: [{ capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }],
       values: [
-        { id: 'rapid', label: 'Rapid (2–4 yrs)' }, { id: 'gradual', label: 'Gradual (5–15 yrs)' }, { id: 'uneven', label: 'Uneven (2–20+ yrs)' },
-        { id: 'limited', label: 'Limited', requires: { automation: ['deep'] } } ] },
+        { id: 'rapid', label: 'Rapid (2–4 yrs)' }, { id: 'gradual', label: 'Gradual (5–15 yrs)' }, { id: 'uneven', label: 'Uneven (2–20+ yrs)' } ] },
     { id: 'auto_physical_rate', label: 'Physical Automation', stage: 3,
       activateWhen: [{ capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }],
       values: [
@@ -685,6 +681,13 @@ function effectiveDims(sel) {
         const iDim = DIM_MAP['inert_stays'];
         if (iDim && isDimVisible(sel, iDim) && isDimLocked(sel, iDim) === null) {
             delete d.intent;
+            delete d.ai_goals;
+        }
+    }
+    if (sel.inert_stays === 'no' && !sel.inert_outcome) {
+        const ioDim = DIM_MAP['inert_outcome'];
+        if (ioDim && isDimVisible(sel, ioDim) && isDimLocked(sel, ioDim) === null) {
+            delete d.ai_goals;
         }
     }
     const brDim = DIM_MAP['brittle_resolution'];

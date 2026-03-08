@@ -363,7 +363,7 @@
       "stage": 1,
       "text": "The gradual pace gives humanity a window. Is it used?",
       "context": "With AI improving over years rather than months, governments, institutions, and the public have time to prepare. International negotiations can happen. Regulatory frameworks can be tested and revised. Public understanding can develop. But 'having time' and 'using time well' aren't the same thing. The history of technology regulation — from social media to climate — is full of slow-motion failures where the window existed but nobody climbed through it.",
-      "dimension": "governance",
+      "dimension": "governance_window",
       "answers": [
         {
           "label": "Yes — active preparation",
@@ -510,18 +510,20 @@
           "label": "Yes — the state orders a slowdown",
           "description": "The government decides the risks of uncontrolled AI development outweigh the risks of losing the lead. Through regulation, executive order, or direct intervention, it mandates a slowdown. Whether that slowdown actually works is another question.",
           "requires": { "sovereignty": ["state"] },
+          "sets": { "gov_action": "decelerate" },
           "next": "decel-2mo-progress"
         },
         {
           "label": "Yes — the lab voluntarily pauses",
           "description": "The leading lab — under pressure from its own researchers, board, or public scrutiny — decides to pause frontier development. No government mandate, but a calculated bet that solving alignment before pushing further is worth the competitive risk.",
           "requires": { "sovereignty": ["lab"] },
+          "sets": { "gov_action": "decelerate" },
           "next": "decel-2mo-progress"
         },
         {
           "label": "No — full speed ahead",
           "description": "Whether driven by national security imperatives, competitive pressure, or profit motive — those in control choose not to slow down. The race continues at full speed, alignment unsolved.",
-          "sets": { "governance": "race" },
+          "sets": { "governance": "race", "gov_action": "accelerate" },
           "next": "alignment"
         }
       ]

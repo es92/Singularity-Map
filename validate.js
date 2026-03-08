@@ -26,17 +26,6 @@ for (const q of questions.questions) qMap[q.id] = q;
 const oMap = {};
 for (const t of templatesList) oMap[t.id] = t;
 
-const KNOWN_EXCEPTIONS = {
-    unreachableQuestions: new Set([]),
-    exploreOnlyDims: new Set(['governance_window', 'gov_action']),
-    disabledValues: new Set([
-        'knowledge_replacement.limited', 'physical_automation.limited',
-        'plateau_physical_rate.rapid', 'auto_knowledge_rate.limited',
-    ]),
-    premature: new Set([
-        'the-ruin:inert_outcome',
-    ]),
-};
 
 // ════════════════════════════════════════════════════════
 // Phase 1 — Static Analysis
@@ -45,7 +34,6 @@ const KNOWN_EXCEPTIONS = {
 function runStaticAnalysis() {
     const errors = [];
     const warnings = [];
-    const infos = [];
 
     // 1. Routing completeness
     function collectNextTargets(nextSpec) {
@@ -109,10 +97,7 @@ function runStaticAnalysis() {
     }
     for (const q of questions.questions) {
         if (!reachedNodes.has(q.id)) {
-            if (KNOWN_EXCEPTIONS.unreachableQuestions.has(q.id))
-                infos.push(`[reachability] Question "${q.id}" is never reached from the question tree (dynamically navigated)`);
-            else
-                warnings.push(`[reachability] Question "${q.id}" is never reached from the question tree`);
+            warnings.push(`[reachability] Question "${q.id}" is never reached from the question tree`);
         }
     }
 
@@ -157,10 +142,7 @@ function runStaticAnalysis() {
     }
     for (const dim of metaDims) {
         if (!questionDims.has(dim) && !dim.startsWith('decel_')) {
-            if (KNOWN_EXCEPTIONS.exploreOnlyDims.has(dim))
-                infos.push(`[consistency] Dimension "${dim}" is in DIM_META but never set by any question (Explore-only)`);
-            else
-                warnings.push(`[consistency] Dimension "${dim}" is in DIM_META but never set by any question`);
+            warnings.push(`[consistency] Dimension "${dim}" is in DIM_META but never set by any question`);
         }
     }
 
@@ -171,12 +153,7 @@ function runStaticAnalysis() {
                 const isDecel = dim.id.startsWith('decel_');
                 if (!isDecel) {
                     const key = `${dim.id}.${v.id}`;
-                    if (KNOWN_EXCEPTIONS.exploreOnlyDims.has(dim.id))
-                        infos.push(`[consistency] DIM_META value "${key}" never appears in any question answer (Explore-only)`);
-                    else if (KNOWN_EXCEPTIONS.disabledValues.has(key))
-                        infos.push(`[consistency] DIM_META value "${key}" never appears in any question answer (intentionally disabled)`);
-                    else
-                        warnings.push(`[consistency] DIM_META value "${key}" never appears in any question answer`);
+                    warnings.push(`[consistency] DIM_META value "${key}" never appears in any question answer`);
                 }
             }
         }
@@ -248,7 +225,7 @@ function runStaticAnalysis() {
         }
     }
 
-    return { errors, warnings, infos, overrideDeps };
+    return { errors, warnings, overrideDeps };
 }
 
 // ════════════════════════════════════════════════════════
@@ -588,8 +565,6 @@ function runExplorer() {
         const matched = templatesList.filter(t => templateMatches(t, dims));
         if (matched.length !== 1) return;
         const currentOutcome = matched[0].id;
-        const exKey = `${currentOutcome}:${nextDim.id}`;
-        if (KNOWN_EXCEPTIONS.premature.has(exKey)) return;
         const enabled = getEnabledValues(sel, nextDim);
         for (const val of enabled) {
             const next = { ...sel, [nextDim.id]: val.id };
@@ -743,7 +718,7 @@ function samplePaths(n) {
 // ════════════════════════════════════════════════════════
 
 function printPhase1(result) {
-    const { errors, warnings, infos } = result;
+    const { errors, warnings } = result;
     if (errors.length) {
         console.log(`  ERRORS (${errors.length}):`);
         for (const e of errors) console.log('    ✗ ' + e);
@@ -751,10 +726,6 @@ function printPhase1(result) {
     if (warnings.length) {
         console.log(`  WARNINGS (${warnings.length}):`);
         for (const w of warnings) console.log('    ⚠ ' + w);
-    }
-    if (infos.length) {
-        console.log(`  INFO — known exceptions (${infos.length}):`);
-        for (const i of infos) console.log('    ℹ ' + i);
     }
     if (!errors.length && !warnings.length) {
         console.log('  ✓ All static checks passed');
