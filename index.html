@@ -583,7 +583,6 @@
         let stagesMap = {};
         let rootId = null;
         let path = [];
-        let pendingOutcomeTemplate = null;
         let discovered = new Set();
 
         loadDiscovered();
@@ -1028,37 +1027,37 @@
                         navigate({ screen: 'question', questionId: next, path: [...path] });
                     } else if (templatesMap[next]) {
                         const dims = dimensionsFromPath(path);
-                        if (dims.alignment === 'brittle' && dims.alignment_durability === 'holds' && !dims.brittle_resolution) {
-                            pendingOutcomeTemplate = next;
-                            navigate({ screen: 'question', questionId: 'brittle-long-term', path: [...path] });
-                        } else {
-                            const resolved = resolveTemplate(next, dims);
-                            const key = outcomeKey(next, resolved.variantKey);
-                            markDiscovered(key);
-                            navigate({
-                                screen: 'outcome',
-                                templateId: next,
-                                variantKey: resolved.variantKey,
-                                path: [...path],
-                                showPath: true,
-                                dims: dims
-                            });
-                        }
-                    } else if (next === '__resolve__' && pendingOutcomeTemplate) {
-                        const tid = pendingOutcomeTemplate;
-                        pendingOutcomeTemplate = null;
-                        const dims = dimensionsFromPath(path);
-                        const resolved = resolveTemplate(tid, dims);
-                        const key = outcomeKey(tid, resolved.variantKey);
+                        const resolved = resolveTemplate(next, dims);
+                        const key = outcomeKey(next, resolved.variantKey);
                         markDiscovered(key);
                         navigate({
                             screen: 'outcome',
-                            templateId: tid,
+                            templateId: next,
                             variantKey: resolved.variantKey,
                             path: [...path],
                             showPath: true,
                             dims: dims
                         });
+                    } else if (next === '__resolve__') {
+                        const dims = dimensionsFromPath(path);
+                        const { templateMatches } = window.Logic;
+                        const matched = templatesList.filter(t => templateMatches(t, dims));
+                        if (matched.length === 1) {
+                            const tid = matched[0].id;
+                            const resolved = resolveTemplate(tid, dims);
+                            const key = outcomeKey(tid, resolved.variantKey);
+                            markDiscovered(key);
+                            navigate({
+                                screen: 'outcome',
+                                templateId: tid,
+                                variantKey: resolved.variantKey,
+                                path: [...path],
+                                showPath: true,
+                                dims: dims
+                            });
+                        } else {
+                            console.error('__resolve__: expected 1 match, got', matched.length, matched.map(t => t.id));
+                        }
                     } else {
                         console.error('Unknown next node:', next);
                     }

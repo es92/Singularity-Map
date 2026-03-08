@@ -1067,7 +1067,7 @@
           "sets": { "alignment": "failed", "alignment_durability": "breaks" },
           "next": [
             { "when": { "distribution": ["open"] }, "target": "escaped-ai-goals", "sets": { "proliferation_control": "none", "containment": "escaped" } },
-            { "target": "ai-containment" }
+            { "target": "containment-durability" }
           ]
         }
       ]
@@ -1090,6 +1090,7 @@
           ],
           "next": [
             { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
+            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
             { "target": "the-capture" }
           ]
         },
@@ -1106,6 +1107,7 @@
           ],
           "next": [
             { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
+            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
             { "target": "the-mosaic" }
           ]
         },
@@ -1219,6 +1221,7 @@
           "sets": { "rival_dynamics": "coexistence", "intent": "coexistence" },
           "next": [
             { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
+            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
             { "target": "the-mosaic" }
           ]
         },
@@ -1246,7 +1249,10 @@
           "label": "Indefinite standoff",
           "description": "Neither side gains a decisive advantage. Mutual deterrence holds — expensively, dangerously, but durably. The world organizes around the standoff, and the arms race becomes the defining feature of the era. No one blinks.",
           "value": "standoff",
-          "next": "the-standoff"
+          "next": [
+            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
+            { "target": "the-standoff" }
+          ]
         },
         {
           "label": "Forced agreement",
@@ -1280,7 +1286,10 @@
           "label": "Mutual destruction",
           "description": "No decisive winner emerges. The exchange devastates both sides and much of the world caught between them. Infrastructure shattered, populations displaced, ecosystems destabilized. The tools built to elevate humanity were turned against it.",
           "value": "destruction",
-          "next": "the-ruin"
+          "next": [
+            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
+            { "target": "the-ruin" }
+          ]
         }
       ]
     },
@@ -1302,7 +1311,10 @@
           "label": "Consolidate power",
           "description": "The victor decides the lesson of the war is that power must never be contested again. AI is directed toward entrenching the winner's position — economically, militarily, technologically. The world gets stability, but on the victor's terms. Not tyranny, necessarily, but permanent, unchallengeable dominance.",
           "value": "self_interest",
-          "next": "the-capture"
+          "next": [
+            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
+            { "target": "the-capture" }
+          ]
         }
       ]
     },
@@ -1408,6 +1420,7 @@
           "value": "rapid",
           "next": [
             { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
+            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
             { "when": { "failure_mode": ["whimper", "disempowerment"] }, "target": "the-failure" },
             { "target": "the-flourishing" }
           ]
@@ -1418,6 +1431,7 @@
           "value": "gradual",
           "next": [
             { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
+            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
             { "when": { "failure_mode": ["whimper", "disempowerment"] }, "target": "the-failure" },
             { "target": "the-flourishing" }
           ]
@@ -1428,6 +1442,7 @@
           "value": "uneven",
           "next": [
             { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
+            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
             { "when": { "failure_mode": ["whimper", "disempowerment"] }, "target": "the-failure" },
             { "target": "the-flourishing" }
           ]
@@ -1529,8 +1544,8 @@
     {
       "id": "containment-durability",
       "stage": 2,
-      "text": "Do those containment efforts hold?",
-      "context": "The powers attempt strict controls to prevent proliferation and open-source catch-up. This can work for a while under exceptional coordination and security discipline — but the pressure is relentless. Espionage, insider leaks, and strategic defection can collapse the regime.",
+      "text": "Can AI be kept under meaningful human control?",
+      "context": "Whether through alignment failure or proliferation pressure, superintelligent AI now threatens to escape institutional control. Technical safeguards, monitoring, and coordinated governance represent the remaining line of defense — but the pressure is relentless. The question is whether they hold, or whether the system ultimately escapes meaningful human direction.",
       "dimension": "containment",
       "answers": [
         {
@@ -1538,7 +1553,10 @@
           "description": "The control regime endures. Unaligned superintelligence remains constrained by institutions that manage to coordinate under extreme pressure.",
           "value": "contained",
           "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
-          "next": "power-dynamics"
+          "next": [
+            { "when": { "proliferation_control": ["deny_rivals", "secure_access"] }, "target": "power-dynamics" },
+            { "target": "ai-containment" }
+          ]
         },
         {
           "label": "No — AI escapes meaningful control anyway",
