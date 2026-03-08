@@ -10,12 +10,13 @@
 
 const fs = require('fs');
 const path = require('path');
+const { DIMENSIONS, DIM_MAP, DECEL_PAIRS } = require('./dimensions.js');
 const {
-    DIM_META, DIM_MAP, DECEL_PAIRS, decelOutcome, decelAlignProgress,
+    decelOutcome, decelAlignProgress,
     matchesOverride, applyOverrides, effectiveVal,
     isDimVisible, isDimLocked, isValueDisabled,
     cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch
-} = require('./logic.js');
+} = require('./engine.js');
 
 const questions = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/questions.json'), 'utf8'));
 const outcomes = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/outcomes.json'), 'utf8'));
@@ -132,28 +133,28 @@ function runStaticAnalysis() {
         }
     }
 
-    const metaDims = new Set(DIM_META.map(d => d.id));
+    const metaDims = new Set(DIMENSIONS.map(d => d.id));
     const virtualDims = new Set(['governance', 'rival_emerges']);
 
     for (const dim of questionDims) {
         if (!metaDims.has(dim) && !virtualDims.has(dim)) {
-            warnings.push(`[consistency] Dimension "${dim}" is set in questions.json but not defined in DIM_META`);
+            warnings.push(`[consistency] Dimension "${dim}" is set in questions.json but not defined in DIMENSIONS`);
         }
     }
     for (const dim of metaDims) {
         if (!questionDims.has(dim) && !dim.startsWith('decel_')) {
-            warnings.push(`[consistency] Dimension "${dim}" is in DIM_META but never set by any question`);
+            warnings.push(`[consistency] Dimension "${dim}" is in DIMENSIONS but never set by any question`);
         }
     }
 
-    for (const dim of DIM_META) {
+    for (const dim of DIMENSIONS) {
         const qVals = questionDimValues[dim.id] || new Set();
         for (const v of dim.values) {
             if (!qVals.has(v.id)) {
                 const isDecel = dim.id.startsWith('decel_');
                 if (!isDecel) {
                     const key = `${dim.id}.${v.id}`;
-                    warnings.push(`[consistency] DIM_META value "${key}" never appears in any question answer`);
+                    warnings.push(`[consistency] DIMENSIONS value "${key}" never appears in any question answer`);
                 }
             }
         }
@@ -161,7 +162,7 @@ function runStaticAnalysis() {
 
     // 4. Override dependency / circular detection
     const overrideDeps = {};
-    for (const dim of DIM_META) {
+    for (const dim of DIMENSIONS) {
         if (!dim.overrides) continue;
         const deps = new Set();
         for (const rule of dim.overrides) {
@@ -174,7 +175,7 @@ function runStaticAnalysis() {
     }
 
     const visibilityDeps = {};
-    for (const dim of DIM_META) {
+    for (const dim of DIMENSIONS) {
         const deps = new Set();
         if (dim.activateWhen) {
             for (const cond of dim.activateWhen) {
@@ -248,7 +249,7 @@ function selKey(sel) {
 }
 
 function getNextDim(sel) {
-    for (const dim of DIM_META) {
+    for (const dim of DIMENSIONS) {
         if (TERMINAL_IDS.has(dim.id)) continue;
         if (!isDimVisible(sel, dim)) continue;
         if (isDimLocked(sel, dim) !== null) continue;
@@ -268,7 +269,7 @@ function forwardKey(sel) {
     for (const k of ['capability', 'automation', 'alignment', 'intent', 'failure_mode', 'containment', 'ai_goals', 'governance']) {
         if (dims[k]) parts.push(`E:${k}=${dims[k]}`);
     }
-    for (const dim of DIM_META) {
+    for (const dim of DIMENSIONS) {
         if (TERMINAL_IDS.has(dim.id)) continue;
         if (!isDimVisible(sel, dim)) continue;
         if (isDimLocked(sel, dim) !== null) continue;
@@ -282,7 +283,7 @@ function forwardKey(sel) {
 function progressivelyShown(sel) {
     let shownNext = false;
     const shown = new Set();
-    for (const dim of DIM_META) {
+    for (const dim of DIMENSIONS) {
         const visible = isDimVisible(sel, dim);
         if (!visible) continue;
         const locked = isDimLocked(sel, dim);
@@ -301,16 +302,16 @@ function runExplorer() {
     const seen = { vanish: new Set(), appearAbove: new Set(), clickErased: new Set(), premature: new Set(), lockedAfterUnanswered: new Set(), progressiveVanish: new Set(), selectionErasedUpward: new Set(), selectionOverriddenUpward: new Set(), selectionOverriddenDownward: new Set(), switchOrphan: new Set(), switchErased: new Set() };
 
     function checkVanishUpward(sel) {
-        const visible = new Set(DIM_META.filter(d => isDimVisible(sel, d)).map(d => d.id));
-        for (const dim of DIM_META) {
+        const visible = new Set(DIMENSIONS.filter(d => isDimVisible(sel, d)).map(d => d.id));
+        for (const dim of DIMENSIONS) {
             if (!visible.has(dim.id) || isDimLocked(sel, dim) !== null) continue;
-            const myIdx = DIM_META.indexOf(dim);
+            const myIdx = DIMENSIONS.indexOf(dim);
             for (const val of getEnabledValues(sel, dim)) {
                 if (sel[dim.id] === val.id) continue;
                 const next = { ...sel, [dim.id]: val.id };
                 cleanSelection(next);
                 for (let i = 0; i < myIdx; i++) {
-                    const upper = DIM_META[i];
+                    const upper = DIMENSIONS[i];
                     if (!visible.has(upper.id)) continue;
                     if (!sel[upper.id]) continue;
                     if (!isDimVisible(next, upper)) {
@@ -337,9 +338,9 @@ function runExplorer() {
     }
 
     function checkAppearAbove(sel) {
-        const visibleBefore = new Set(DIM_META.filter(d => isDimVisible(sel, d)).map(d => d.id));
-        const answeredBefore = new Set(DIM_META.filter(d => visibleBefore.has(d.id) && sel[d.id] && isDimLocked(sel, d) === null).map(d => d.id));
-        for (const dim of DIM_META) {
+        const visibleBefore = new Set(DIMENSIONS.filter(d => isDimVisible(sel, d)).map(d => d.id));
+        const answeredBefore = new Set(DIMENSIONS.filter(d => visibleBefore.has(d.id) && sel[d.id] && isDimLocked(sel, d) === null).map(d => d.id));
+        for (const dim of DIMENSIONS) {
             if (!visibleBefore.has(dim.id) || isDimLocked(sel, dim) !== null) continue;
             if (sel[dim.id]) continue;
             for (const val of getEnabledValues(sel, dim)) {
@@ -351,8 +352,8 @@ function runExplorer() {
                 const containAfter = effectiveVal(next, 'containment');
                 const answeredRef = new Set(answeredBefore);
                 answeredRef.add(dim.id);
-                for (let i = 0; i < DIM_META.length; i++) {
-                    const newDim = DIM_META[i];
+                for (let i = 0; i < DIMENSIONS.length; i++) {
+                    const newDim = DIMENSIONS[i];
                     if (visibleBefore.has(newDim.id)) continue;
                     if (!isDimVisible(next, newDim)) continue;
                     if (isDimLocked(next, newDim) !== null) continue;
@@ -363,8 +364,8 @@ function runExplorer() {
                     const k = `${dim.id}:${val.id}->${newDim.id}`;
                     if (seen.appearAbove.has(k)) continue;
                     let hasAnsweredBelow = false;
-                    for (let j = i + 1; j < DIM_META.length; j++) {
-                        if (answeredRef.has(DIM_META[j].id)) { hasAnsweredBelow = true; break; }
+                    for (let j = i + 1; j < DIMENSIONS.length; j++) {
+                        if (answeredRef.has(DIMENSIONS[j].id)) { hasAnsweredBelow = true; break; }
                     }
                     if (hasAnsweredBelow) {
                         seen.appearAbove.add(k);
@@ -377,10 +378,10 @@ function runExplorer() {
 
     function checkProgressiveVanish(sel) {
         const shownBefore = progressivelyShown(sel);
-        for (const dim of DIM_META) {
+        for (const dim of DIMENSIONS) {
             if (!shownBefore.has(dim.id)) continue;
             if (isDimLocked(sel, dim) !== null) continue;
-            const myIdx = DIM_META.indexOf(dim);
+            const myIdx = DIMENSIONS.indexOf(dim);
             for (const val of getEnabledValues(sel, dim)) {
                 if (sel[dim.id] === val.id) continue;
                 const next = { ...sel, [dim.id]: val.id };
@@ -388,9 +389,9 @@ function runExplorer() {
                 const shownAfter = progressivelyShown(next);
                 for (const wasShown of shownBefore) {
                     if (shownAfter.has(wasShown)) continue;
-                    const wasIdx = DIM_META.findIndex(d => d.id === wasShown);
+                    const wasIdx = DIMENSIONS.findIndex(d => d.id === wasShown);
                     if (wasIdx >= myIdx) continue;
-                    const wasDim = DIM_META.find(d => d.id === wasShown);
+                    const wasDim = DIMENSIONS.find(d => d.id === wasShown);
                     if (!sel[wasShown] || isDimLocked(sel, wasDim) !== null) continue;
                     const k = `${dim.id}:${val.id}->${wasShown}`;
                     if (seen.progressiveVanish.has(k)) continue;
@@ -403,8 +404,8 @@ function runExplorer() {
 
     function checkLockedAfterUnanswered(sel) {
         let firstUnansweredIdx = -1;
-        for (let i = 0; i < DIM_META.length; i++) {
-            const dim = DIM_META[i];
+        for (let i = 0; i < DIMENSIONS.length; i++) {
+            const dim = DIMENSIONS[i];
             if (!isDimVisible(sel, dim)) continue;
             if (isDimLocked(sel, dim) !== null) continue;
             if (sel[dim.id]) continue;
@@ -412,19 +413,19 @@ function runExplorer() {
             break;
         }
         if (firstUnansweredIdx === -1) return;
-        for (let i = firstUnansweredIdx + 1; i < DIM_META.length; i++) {
-            const dim = DIM_META[i];
+        for (let i = firstUnansweredIdx + 1; i < DIMENSIONS.length; i++) {
+            const dim = DIMENSIONS[i];
             if (!isDimVisible(sel, dim)) continue;
             if (isDimLocked(sel, dim) === null) continue;
-            const k = `${DIM_META[firstUnansweredIdx].id}|${dim.id}`;
+            const k = `${DIMENSIONS[firstUnansweredIdx].id}|${dim.id}`;
             if (seen.lockedAfterUnanswered.has(k)) continue;
             seen.lockedAfterUnanswered.add(k);
-            violations.lockedAfterUnanswered.push({ unanswered: DIM_META[firstUnansweredIdx].id, locked: dim.id, url: selToUrl(sel) });
+            violations.lockedAfterUnanswered.push({ unanswered: DIMENSIONS[firstUnansweredIdx].id, locked: dim.id, url: selToUrl(sel) });
         }
     }
 
     function checkStuck(sel) {
-        for (const dim of DIM_META) {
+        for (const dim of DIMENSIONS) {
             if (!isDimVisible(sel, dim)) continue;
             if (isDimLocked(sel, dim) !== null) continue;
             if (sel[dim.id]) continue;
@@ -435,7 +436,7 @@ function runExplorer() {
     }
 
     function checkClickErased(sel) {
-        for (const dim of DIM_META) {
+        for (const dim of DIMENSIONS) {
             if (!isDimVisible(sel, dim)) continue;
             if (isDimLocked(sel, dim) !== null) continue;
             for (const val of getEnabledValues(sel, dim)) {
@@ -453,16 +454,16 @@ function runExplorer() {
     }
 
     function checkSelectionImpact(sel) {
-        for (const dim of DIM_META) {
+        for (const dim of DIMENSIONS) {
             if (!isDimVisible(sel, dim)) continue;
             if (isDimLocked(sel, dim) !== null) continue;
             if (sel[dim.id]) continue;
-            const myIdx = DIM_META.indexOf(dim);
+            const myIdx = DIMENSIONS.indexOf(dim);
             for (const val of getEnabledValues(sel, dim)) {
                 const next = { ...sel, [dim.id]: val.id };
                 cleanSelection(next);
                 for (let i = 0; i < myIdx; i++) {
-                    const upper = DIM_META[i];
+                    const upper = DIMENSIONS[i];
                     if (!sel[upper.id]) continue;
                     if (isDimLocked(sel, upper) !== null) continue;
                     if (!isDimVisible(next, upper)) continue;
@@ -487,8 +488,8 @@ function runExplorer() {
                         });
                     }
                 }
-                for (let i = myIdx + 1; i < DIM_META.length; i++) {
-                    const lower = DIM_META[i];
+                for (let i = myIdx + 1; i < DIMENSIONS.length; i++) {
+                    const lower = DIMENSIONS[i];
                     if (!sel[lower.id]) continue;
                     if (isDimLocked(sel, lower) !== null) continue;
                     if (next[lower.id] === undefined) continue;
@@ -507,7 +508,7 @@ function runExplorer() {
     }
 
     function checkValueSwitch(sel) {
-        for (const dim of DIM_META) {
+        for (const dim of DIMENSIONS) {
             if (!isDimVisible(sel, dim)) continue;
             if (isDimLocked(sel, dim) !== null) continue;
             if (!sel[dim.id]) continue;
@@ -527,7 +528,7 @@ function runExplorer() {
                     }
                 }
 
-                for (const check of DIM_META) {
+                for (const check of DIMENSIONS) {
                     if (next[check.id] === undefined) continue;
                     if (check.id === dim.id) continue;
                     if (isDimLocked(next, check) !== null) continue;
@@ -687,7 +688,7 @@ function samplePaths(n) {
         console.log(`━━━ Path ${p + 1} ━━━`);
 
         const steps = [];
-        for (const dim of DIM_META) {
+        for (const dim of DIMENSIONS) {
             if (TERMINAL_IDS.has(dim.id)) continue;
             if (!isDimVisible(sel, dim)) continue;
             const locked = isDimLocked(sel, dim);
@@ -790,7 +791,7 @@ if (arg === 'sample') {
 
 console.log('Singularity Map — Validation Report');
 console.log('═'.repeat(50));
-console.log(`${questions.questions.length} questions, ${templatesList.length} outcomes, ${DIM_META.length} dimensions\n`);
+console.log(`${questions.questions.length} questions, ${templatesList.length} outcomes, ${DIMENSIONS.length} dimensions\n`);
 
 // Phase 1
 const t0 = Date.now();

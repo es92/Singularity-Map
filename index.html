@@ -568,7 +568,8 @@
     <div id="app"><div class="loading"><p>Loading futures...</p></div></div>
     <div id="toast"></div>
 
-    <script src="logic.js"></script>
+    <script src="dimensions.js"></script>
+    <script src="engine.js"></script>
     <script>
     (function () {
         'use strict';
@@ -754,8 +755,7 @@
             return texts;
         }
 
-        // --- Dimension Metadata (from logic.js) ---
-        const { DIM_META, DIM_MAP } = window.Logic;
+        const { DIMENSIONS, DIM_MAP } = window.Dimensions;
 
         // --- Persistence ---
         const STORAGE_KEY = 'singularity-map-discovered';
@@ -1040,7 +1040,7 @@
                         });
                     } else if (next === '__resolve__') {
                         const dims = dimensionsFromPath(path);
-                        const { templateMatches } = window.Logic;
+                        const { templateMatches } = window.Engine;
                         const matched = templatesList.filter(t => templateMatches(t, dims));
                         if (matched.length === 1) {
                             const tid = matched[0].id;
@@ -1100,7 +1100,7 @@
             if (isSingularityOutcome) { adjustableIds.add('automation'); adjustableIds.add('automation_recovery'); }
             if (t.flavors && t.flavors.stall_recovery) adjustableIds.add('stall_recovery');
             if (t.flavors && t.flavors.automation_recovery) adjustableIds.add('automation_recovery');
-            const relevantDims = DIM_META.filter(d => adjustableIds.has(d.id));
+            const relevantDims = DIMENSIONS.filter(d => adjustableIds.has(d.id));
 
             const validValues = {};
             for (const dimId of adjustableIds) {
@@ -1128,7 +1128,7 @@
                     }
                 }
             }
-            const lockedDims = DIM_META.filter(d => lockedValues[d.id]);
+            const lockedDims = DIMENSIONS.filter(d => lockedValues[d.id]);
             for (const dim of lockedDims) {
                 const allowed = lockedValues[dim.id];
                 if (allowed.size === 1 && !localDims[dim.id]) {
@@ -1558,11 +1558,12 @@
         function renderExplorer(initialDims) {
             let sel = initialDims ? { ...initialDims } : {};
 
-            const { DECEL_PAIRS, decelOutcome: _decelOutcome, decelAlignProgress: _decelAlignProgress,
+            const { DECEL_PAIRS } = window.Dimensions;
+            const { decelOutcome: _decelOutcome, decelAlignProgress: _decelAlignProgress,
                 effectiveVal: _effectiveVal, isDimVisible: _isDimVisible, isDimLocked: _isDimLocked,
                 isValueDisabled: _isValueDisabled, cleanSelection: _cleanSelection,
                 applySelection: _applySelection, effectiveDims: _effectiveDims,
-                templateMatches, templatePartialMatch } = window.Logic;
+                templateMatches, templatePartialMatch } = window.Engine;
             function decelOutcome() { return _decelOutcome(sel); }
             function decelAlignProgress() { return _decelAlignProgress(sel); }
             function effectiveVal(k) { return _effectiveVal(sel, k); }
@@ -1591,7 +1592,7 @@
                 syncHash();
                 const dims = effectiveDims();
                 let shownNextQuestion = false;
-                DIM_META.forEach(dim => {
+                DIMENSIONS.forEach(dim => {
                     const row = app.querySelector('[data-dim-row="' + dim.id + '"]');
                     if (!row) return;
                     const visible = isDimVisible(dim);
@@ -1639,7 +1640,7 @@
                     'plateau_knowledge_rate', 'plateau_physical_rate',
                     'auto_knowledge_rate', 'auto_physical_rate'
                 ]);
-                const hasUnsetVisibleDims = DIM_META.some(dim => {
+                const hasUnsetVisibleDims = DIMENSIONS.some(dim => {
                     if (TERMINAL_IDS.has(dim.id)) return false;
                     if (!isDimVisible(dim)) return false;
                     if (isDimLocked(dim) !== null) return false;
@@ -1701,7 +1702,7 @@
 
             cleanSelection();
             const stageGroups = { 1: [], 2: [], 3: [] };
-            DIM_META.forEach(d => { if (!stageGroups[d.stage]) stageGroups[d.stage] = []; stageGroups[d.stage].push(d); });
+            DIMENSIONS.forEach(d => { if (!stageGroups[d.stage]) stageGroups[d.stage] = []; stageGroups[d.stage].push(d); });
             const stageNames = { 1: 'Dynamics of Singularity', 2: 'Dynamics of Control', 3: 'Rate of Impact' };
 
             let dimsHtml = '';
@@ -1748,7 +1749,7 @@
                     </div>
                 </div>`;
 
-            DIM_META.forEach(dim => {
+            DIMENSIONS.forEach(dim => {
                 const row = app.querySelector('[data-dim-row="' + dim.id + '"]');
                 if (!row) return;
                 row.querySelectorAll('.dim-pill').forEach(pill => {
