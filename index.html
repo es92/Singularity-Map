@@ -1561,7 +1561,8 @@
 
             const { DECEL_PAIRS, decelOutcome: _decelOutcome, decelAlignProgress: _decelAlignProgress,
                 effectiveVal: _effectiveVal, isDimVisible: _isDimVisible, isDimLocked: _isDimLocked,
-                isValueDisabled: _isValueDisabled, cleanSelection: _cleanSelection, effectiveDims: _effectiveDims,
+                isValueDisabled: _isValueDisabled, cleanSelection: _cleanSelection,
+                applySelection: _applySelection, effectiveDims: _effectiveDims,
                 templateMatches, templatePartialMatch } = window.Logic;
             function decelOutcome() { return _decelOutcome(sel); }
             function decelAlignProgress() { return _decelAlignProgress(sel); }
@@ -1754,16 +1755,7 @@
                 row.querySelectorAll('.dim-pill').forEach(pill => {
                     pill.addEventListener('click', () => {
                         if (pill.classList.contains('locked') || pill.classList.contains('disabled')) return;
-                        const vid = pill.dataset.val;
-                        const wasSelected = sel[dim.id] === vid;
-                        sel[dim.id] = wasSelected ? undefined : vid;
-                        if (!sel[dim.id]) delete sel[dim.id];
-                        if (wasSelected) {
-                            const idx = DIM_META.indexOf(dim);
-                            for (let i = idx + 1; i < DIM_META.length; i++) {
-                                delete sel[DIM_META[i].id];
-                            }
-                        }
+                        _applySelection(sel, dim.id, pill.dataset.val);
                         update();
                     });
                 });

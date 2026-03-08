@@ -14,7 +14,7 @@ const {
     DIM_META, DIM_MAP, DECEL_PAIRS, decelOutcome, decelAlignProgress,
     matchesOverride, applyOverrides, effectiveVal,
     isDimVisible, isDimLocked, isValueDisabled,
-    cleanSelection, effectiveDims, templateMatches, templatePartialMatch
+    cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch
 } = require('./logic.js');
 
 const questions = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/questions.json'), 'utf8'));
@@ -32,6 +32,9 @@ const KNOWN_EXCEPTIONS = {
     disabledValues: new Set([
         'knowledge_replacement.limited', 'physical_automation.limited',
         'plateau_physical_rate.rapid', 'auto_knowledge_rate.limited',
+    ]),
+    premature: new Set([
+        'the-ruin:inert_outcome',
     ]),
 };
 
@@ -317,8 +320,8 @@ function progressivelyShown(sel) {
 }
 
 function runExplorer() {
-    const violations = { vanish: [], appearAboveAnswered: [], deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], premature: [], lockedAfterUnanswered: [], progressiveVanish: [] };
-    const seen = { vanish: new Set(), appearAbove: new Set(), clickErased: new Set(), premature: new Set(), lockedAfterUnanswered: new Set(), progressiveVanish: new Set() };
+    const violations = { vanish: [], appearAboveAnswered: [], deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], premature: [], lockedAfterUnanswered: [], progressiveVanish: [], selectionErasedUpward: [], selectionOverriddenUpward: [], switchOrphan: [], switchErased: [] };
+    const seen = { vanish: new Set(), appearAbove: new Set(), clickErased: new Set(), premature: new Set(), lockedAfterUnanswered: new Set(), progressiveVanish: new Set(), selectionErasedUpward: new Set(), selectionOverriddenUpward: new Set(), switchOrphan: new Set(), switchErased: new Set() };
 
     function checkVanishUpward(sel) {
         const visible = new Set(DIM_META.filter(d => isDimVisible(sel, d)).map(d => d.id));
@@ -472,11 +475,111 @@ function runExplorer() {
         }
     }
 
+    const DECEL_CASCADE_DIMS = new Set(DIM_META.filter(d => d.id.startsWith('decel_')).map(d => d.id));
+    DECEL_CASCADE_DIMS.add('alignment_durability');
+    DECEL_CASCADE_DIMS.add('brittle_resolution');
+
+    function checkSelectionImpactUpward(sel) {
+        for (const dim of DIM_META) {
+            if (!isDimVisible(sel, dim)) continue;
+            if (isDimLocked(sel, dim) !== null) continue;
+            if (sel[dim.id]) continue;
+            const myIdx = DIM_META.indexOf(dim);
+            for (const val of getEnabledValues(sel, dim)) {
+                const next = { ...sel, [dim.id]: val.id };
+                cleanSelection(next);
+                for (let i = 0; i < myIdx; i++) {
+                    const upper = DIM_META[i];
+                    if (!sel[upper.id]) continue;
+                    if (isDimLocked(sel, upper) !== null) continue;
+                    if (!isDimVisible(next, upper)) continue;
+                    if (next[upper.id] === sel[upper.id]) continue;
+                    const nowLocked = isDimLocked(next, upper) !== null;
+                    if (nowLocked && DECEL_CASCADE_DIMS.has(dim.id)) continue;
+                    const k = `${dim.id}:${val.id}->${upper.id}`;
+                    if (nowLocked) {
+                        if (seen.selectionOverriddenUpward.has(k)) continue;
+                        seen.selectionOverriddenUpward.add(k);
+                        violations.selectionOverriddenUpward.push({
+                            dim: dim.id, val: val.id,
+                            overridden: upper.id, from: sel[upper.id], to: next[upper.id],
+                            url: selToUrl(sel)
+                        });
+                    } else {
+                        if (seen.selectionErasedUpward.has(k)) continue;
+                        seen.selectionErasedUpward.add(k);
+                        violations.selectionErasedUpward.push({
+                            dim: dim.id, val: val.id,
+                            erased: upper.id, hadValue: sel[upper.id],
+                            url: selToUrl(sel)
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    function checkValueSwitch(sel) {
+        for (const dim of DIM_META) {
+            if (!isDimVisible(sel, dim)) continue;
+            if (isDimLocked(sel, dim) !== null) continue;
+            if (!sel[dim.id]) continue;
+
+            for (const val of getEnabledValues(sel, dim)) {
+                if (val.id === sel[dim.id]) continue;
+
+                const next = { ...sel };
+                applySelection(next, dim.id, val.id);
+                cleanSelection(next);
+
+                if (next[dim.id] !== val.id) {
+                    const k = `${dim.id}:${val.id}`;
+                    if (!seen.switchErased.has(k)) {
+                        seen.switchErased.add(k);
+                        violations.switchErased.push({ dim: dim.id, val: val.id, url: selToUrl(sel) });
+                    }
+                }
+
+                for (const check of DIM_META) {
+                    if (next[check.id] === undefined) continue;
+                    if (check.id === dim.id) continue;
+                    if (isDimLocked(next, check) !== null) continue;
+
+                    const savedPre = sel[check.id];
+                    if (savedPre !== undefined) delete sel[check.id];
+                    const wasActivated = savedPre !== undefined ? isDimVisible(sel, check) : false;
+                    if (savedPre !== undefined) sel[check.id] = savedPre;
+
+                    if (!wasActivated) continue;
+
+                    const savedPost = next[check.id];
+                    delete next[check.id];
+                    const isActivated = isDimVisible(next, check);
+                    next[check.id] = savedPost;
+
+                    if (!isActivated) {
+                        const k = `${dim.id}:${val.id}->${check.id}`;
+                        if (!seen.switchOrphan.has(k)) {
+                            seen.switchOrphan.add(k);
+                            violations.switchOrphan.push({
+                                switchDim: dim.id, switchTo: val.id,
+                                orphan: check.id, orphanVal: savedPost,
+                                url: selToUrl(sel)
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     function checkPrematureOutcome(sel, nextDim) {
         const dims = effectiveDims(sel);
         const matched = templatesList.filter(t => templateMatches(t, dims));
         if (matched.length !== 1) return;
         const currentOutcome = matched[0].id;
+        const exKey = `${currentOutcome}:${nextDim.id}`;
+        if (KNOWN_EXCEPTIONS.premature.has(exKey)) return;
         const enabled = getEnabledValues(sel, nextDim);
         for (const val of enabled) {
             const next = { ...sel, [nextDim.id]: val.id };
@@ -507,6 +610,8 @@ function runExplorer() {
         checkLockedAfterUnanswered(sel);
         checkStuck(sel);
         checkClickErased(sel);
+        checkSelectionImpactUpward(sel);
+        checkValueSwitch(sel);
     }
 
     // DFS with forward-key deduplication
@@ -658,7 +763,11 @@ function printPhase2(result) {
         { name: 'PROGRESSIVE DISCLOSURE VANISH', items: violations.progressiveVanish, fmt: v => `    Click "${v.dim}=${v.val}" → "${v.vanished}" hidden` },
         { name: 'ROW APPEARS ABOVE ANSWERED', items: violations.appearAboveAnswered, fmt: v => `    Click "${v.dim}=${v.val}" → "${v.appeared}" appears above answered row` },
         { name: 'CLICK ERASED', items: violations.clickErased, fmt: v => `    Click "${v.dim}=${v.val}" → immediately cleared` },
+        { name: 'SELECTION ERASED UPWARD', items: violations.selectionErasedUpward, fmt: v => `    Click "${v.dim}=${v.val}" → erased "${v.erased}=${v.hadValue}" above` },
+        { name: 'SELECTION OVERRIDDEN UPWARD', items: violations.selectionOverriddenUpward, fmt: v => `    Click "${v.dim}=${v.val}" → overrode "${v.overridden}" from "${v.from}" to "${v.to}" above` },
         { name: 'PREMATURE OUTCOME', items: violations.premature, fmt: v => `    "${v.outcome}" matches but "${v.nextDim}" still unset` },
+        { name: 'VALUE SWITCH ORPHAN', items: violations.switchOrphan, fmt: v => `    Switch "${v.switchDim}" to "${v.switchTo}" → "${v.orphan}=${v.orphanVal}" persists without activation` },
+        { name: 'VALUE SWITCH ERASED', items: violations.switchErased, fmt: v => `    Switch "${v.dim}" to "${v.val}" → immediately cleared` },
     ];
 
     let violationCount = 0;

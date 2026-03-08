@@ -148,13 +148,20 @@
         "alignment": {
           "robust": "Alignment is comprehensive and durable. The AI systems reliably pursue human values even under novel conditions and recursive self-improvement. The flourishing rests on a genuine foundation — not hope, not luck, but verified safety.",
           "brittle": "Alignment holds — but everyone knows it might not have. The techniques passed every test, yet the theoretical fragility haunts every policy discussion. Flourishing unfolds in the shadow of a risk that never materialized, and the question of whether it could still break never fully goes away."
+        },
+        "conflict_result": {
+          "victory": "Flourishing emerged from the ashes of war. A decisive AI-powered conflict left one power standing — and that power chose to rebuild rather than to rule. The scars run deep: devastated regions, displaced populations, a generation shaped by the knowledge that superintelligent weapons were turned against cities. But the victor's commitment to human-centered aims held, and the reconstruction was guided by the same AI that won the war. History will record it as humanity's darkest chapter before its brightest — a flourishing born not from wisdom, but from surviving the alternative."
         }
       },
       "reachable": [
         { "capability": ["singularity"], "alignment": ["robust"], "intent": ["international"], "failure_mode": ["none"], "enabled_aims": ["human_centered", "proxy"] },
         { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["international"], "failure_mode": ["none"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
         { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "intent": ["international"], "failure_mode": ["none"] },
-        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["international"], "failure_mode": ["none"] }
+        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["international"], "failure_mode": ["none"] },
+        { "capability": ["singularity"], "alignment": ["robust"], "escalation_outcome": ["conflict"], "conflict_result": ["victory"], "post_war_aims": ["human_centered"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "escalation_outcome": ["conflict"], "conflict_result": ["victory"], "post_war_aims": ["human_centered"], "brittle_resolution": ["solved", "sufficient"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "escalation_outcome": ["conflict"], "conflict_result": ["victory"], "post_war_aims": ["human_centered"] },
+        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "escalation_outcome": ["conflict"], "conflict_result": ["victory"], "post_war_aims": ["human_centered"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
@@ -195,7 +202,11 @@
         { "capability": ["singularity"], "alignment": ["robust"], "intent": ["self_interest"], "enabled_aims": ["human_centered", "proxy"] },
         { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["self_interest"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
         { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "intent": ["self_interest"] },
-        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["self_interest"] }
+        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["self_interest"] },
+        { "capability": ["singularity"], "alignment": ["robust"], "escalation_outcome": ["conflict"], "conflict_result": ["victory"], "post_war_aims": ["self_interest"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "escalation_outcome": ["conflict"], "conflict_result": ["victory"], "post_war_aims": ["self_interest"], "brittle_resolution": ["solved", "sufficient"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "escalation_outcome": ["conflict"], "conflict_result": ["victory"], "post_war_aims": ["self_interest"] },
+        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "escalation_outcome": ["conflict"], "conflict_result": ["victory"], "post_war_aims": ["self_interest"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
@@ -205,18 +216,9 @@
       "id": "the-standoff",
       "title": "The Standoff",
       "primaryDimension": "intent",
-      "variants": {
-        "rivalry": {
-          "subtitle": "The AI Cold War",
-          "mood": "mixed",
-          "summary": "Multiple AI powers locked in a stable rivalry. Each side pushes for advantage but pulls back from the brink. Tense, expensive, duplicative — but no one blinks. A world defined by deterrence and the constant hum of competition."
-        },
-        "escalation": {
-          "subtitle": "The Armistice",
-          "mood": "mixed",
-          "summary": "Competition between superintelligent AI powers escalated until something broke — or nearly did. Not peace. A ceasefire. The world is damaged, trust is shattered, and the agreements are held together by mutual fear rather than mutual respect. A fragile framework for coexistence, built from wreckage."
-        }
-      },
+      "subtitle": "The AI Cold War",
+      "mood": "mixed",
+      "summary": "Multiple AI powers compete for supremacy. Whether through stable deterrence or near-catastrophic escalation that forces an armistice, the world is defined by rivalry between superintelligent systems. Tense, expensive, duplicative — but so far, no one has crossed the final line.",
       "flavors": {
         "distribution": {
           "open": "With AI broadly available, the standoff isn't between two superpowers — it's between dozens of armed camps.",
@@ -240,10 +242,44 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["rivalry", "escalation"], "enabled_aims": ["human_centered", "proxy"] },
-        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["rivalry", "escalation"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
-        { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "intent": ["rivalry", "escalation"] },
-        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["rivalry", "escalation"] }
+        { "capability": ["singularity"], "alignment": ["robust"], "escalation_outcome": ["standoff"], "enabled_aims": ["human_centered", "proxy"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "escalation_outcome": ["standoff"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "escalation_outcome": ["standoff"] },
+        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "escalation_outcome": ["standoff"] }
+      ],
+      "story": ["Outcome story coming soon."],
+      "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
+    },
+
+    {
+      "id": "the-ruin",
+      "title": "The Ruin",
+      "primaryDimension": "conflict_result",
+      "subtitle": "The AI War",
+      "mood": "catastrophic",
+      "summary": "Escalation between superintelligent AI powers crossed the final line. What followed was not a conventional war but a civilizational catastrophe — AI systems deployed against each other at speeds and scales that left human decision-makers as spectators to their own destruction. Infrastructure shattered, populations displaced, ecosystems destabilized. No one won. The world that emerges is damaged, fragmented, and haunted by the knowledge that the tools built to elevate humanity were turned against it.",
+      "flavors": {
+        "distribution": {
+          "open": "Widely distributed AI capability meant the conflict wasn't between two powers — it was everywhere at once.",
+          "lagging": "The gap between frontier and open-source wasn't wide enough to prevent a devastating exchange.",
+          "concentrated": "A few AI powers held the most destructive capability. The war was concentrated but its effects were not.",
+          "monopoly": "Even monopoly power couldn't prevent the conflict. Internal factions or external challengers found enough capability to fight back."
+        },
+        "governance": {
+          "slowdown": "The slowdown was supposed to prevent exactly this. It didn't.",
+          "failed": "Without coordinated governance, there was no mechanism to de-escalate. The slide into conflict had no brakes.",
+          "race": "The national security framing made war the logical endpoint of the arms race it created."
+        },
+        "stall_recovery": {
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
+        }
+      },
+      "reachable": [
+        { "capability": ["singularity"], "alignment": ["robust"], "escalation_outcome": ["conflict"], "conflict_result": ["destruction"], "enabled_aims": ["human_centered", "proxy"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "escalation_outcome": ["conflict"], "conflict_result": ["destruction"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "escalation_outcome": ["conflict"], "conflict_result": ["destruction"] },
+        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "escalation_outcome": ["conflict"], "conflict_result": ["destruction"] },
+        { "capability": ["singularity"], "alignment": ["failed"], "ai_goals": ["marginal"], "escalation_outcome": ["conflict"], "conflict_result": ["destruction"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
@@ -293,10 +329,10 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["coexistence"], "enabled_aims": ["human_centered", "proxy"] },
-        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["coexistence"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
-        { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "intent": ["coexistence"] },
-        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["coexistence"] }
+        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["coexistence"], "failure_mode": ["none"], "enabled_aims": ["human_centered", "proxy"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["coexistence"], "failure_mode": ["none"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "intent": ["coexistence"], "failure_mode": ["none"] },
+        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["coexistence"], "failure_mode": ["none"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]
@@ -338,10 +374,10 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["international"], "failure_mode": ["whimper", "disempowerment"], "enabled_aims": ["human_centered", "proxy"] },
-        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["international"], "failure_mode": ["whimper", "disempowerment"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
-        { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "intent": ["international"], "failure_mode": ["whimper", "disempowerment"] },
-        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["international"], "failure_mode": ["whimper", "disempowerment"] }
+        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["international", "coexistence"], "failure_mode": ["whimper", "disempowerment"], "enabled_aims": ["human_centered", "proxy"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["international", "coexistence"], "failure_mode": ["whimper", "disempowerment"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "intent": ["international", "coexistence"], "failure_mode": ["whimper", "disempowerment"] },
+        { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["international", "coexistence"], "failure_mode": ["whimper", "disempowerment"] }
       ],
       "story": ["Outcome story coming soon."],
       "timeline": [{ "year": "TBD", "headline": "Timeline coming soon", "description": "This outcome has not been fully written yet." }]

@@ -1110,22 +1110,6 @@
           ]
         },
         {
-          "label": "Stable rivalry between competing powers",
-          "description": "A cold-war-style equilibrium. Multiple AI powers locked in competition, but mutually assured capability keeps things from boiling over. Tense, expensive, duplicative — but no one blinks.",
-          "value": "rivalry",
-          "requires": [
-            { "distribution": ["open"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"] },
-            { "distribution": ["lagging", "concentrated"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"], "geo_spread": ["two", "several"] },
-            { "geo_spread": ["two"] },
-            { "proliferation_control": ["none"] },
-            { "proliferation_outcome": ["breached"] }
-          ],
-          "next": [
-            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
-            { "target": "the-standoff" }
-          ]
-        },
-        {
           "label": "Competition escalates dangerously",
           "description": "The race for advantage overrides caution. Each side pushes harder, deploys faster, takes bigger risks. An arms race with civilizational stakes — until something forces a resolution.",
           "value": "escalation",
@@ -1138,7 +1122,7 @@
           ],
           "next": [
             { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
-            { "target": "the-standoff" }
+            { "target": "escalation-outcome" }
           ]
         },
         {
@@ -1225,7 +1209,7 @@
       "id": "rival-dynamics",
       "stage": 2,
       "text": "How do the new AI powers relate to each other?",
-      "context": "Multiple entities now control frontier AI. The structure of their interaction will define the next era. Historical analogies range from the Concert of Europe (managed coexistence), to the Cold War (stable rivalry), to pre-WWI escalation spirals. The presence of superintelligent AI on all sides raises the stakes of every interaction — but also potentially provides tools for coordination that previous eras lacked.",
+      "context": "Multiple entities now control frontier AI. The structure of their interaction will define the next era. Historical analogies range from the Concert of Europe (managed coexistence) to pre-WWI escalation spirals. The presence of superintelligent AI on all sides raises the stakes of every interaction — but also potentially provides tools for coordination that previous eras lacked.",
       "dimension": "rival_dynamics",
       "answers": [
         {
@@ -1239,24 +1223,86 @@
           ]
         },
         {
-          "label": "Stable rivalry",
-          "description": "A cold-war-style equilibrium. Multiple AI powers locked in competition, but mutually assured capability keeps things from boiling over. Tense, expensive, duplicative — but no one blinks.",
-          "value": "rivalry",
-          "sets": { "rival_dynamics": "rivalry", "intent": "rivalry" },
-          "next": [
-            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
-            { "target": "the-standoff" }
-          ]
-        },
-        {
-          "label": "Dangerous escalation",
+          "label": "Escalation",
           "description": "The race for advantage overrides caution. Each side pushes harder, deploys faster, takes bigger risks. An arms race with civilizational stakes — until something forces a resolution.",
           "value": "escalation",
           "sets": { "rival_dynamics": "escalation", "intent": "escalation" },
           "next": [
             { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
-            { "target": "the-standoff" }
+            { "target": "escalation-outcome" }
           ]
+        }
+      ]
+    },
+
+    {
+      "id": "escalation-outcome",
+      "stage": 3,
+      "text": "How does the escalation resolve?",
+      "context": "Great-power competition over superintelligent AI doesn't stay static forever. Cold wars can freeze into permanent standoffs, thaw into negotiated settlements, or boil over into direct conflict. The history of nuclear deterrence offers parallels but AI escalation operates on faster timescales with more dimensions of advantage. Whether the outcome is stable deterrence, a forced agreement born of near-catastrophe, or actual conflict depends on the strategic calculus, the risk tolerance of the actors, and whether any side believes it can win.",
+      "dimension": "escalation_outcome",
+      "answers": [
+        {
+          "label": "Indefinite standoff",
+          "description": "Neither side gains a decisive advantage. Mutual deterrence holds — expensively, dangerously, but durably. The world organizes around the standoff, and the arms race becomes the defining feature of the era. No one blinks.",
+          "value": "standoff",
+          "next": "the-standoff"
+        },
+        {
+          "label": "Forced agreement",
+          "description": "A near-miss — a crisis, an accident, a demonstration of destructive capability — forces the competing powers to the table. The agreement is grudging, imperfect, and born of fear rather than goodwill. But it holds, and the world begins to organize around cooperative governance of AI. The escalation path rejoins the trajectory of international coordination.",
+          "value": "agreement",
+          "next": "implementation-risk"
+        },
+        {
+          "label": "Open conflict",
+          "description": "Deterrence fails. Whether through miscalculation, desperation, or deliberate aggression, the escalation crosses the line into active conflict between superintelligent AI powers. The question becomes how far it goes.",
+          "value": "conflict",
+          "next": "conflict-result"
+        }
+      ]
+    },
+
+    {
+      "id": "conflict-result",
+      "stage": 3,
+      "text": "What is the result of the conflict?",
+      "context": "War between superintelligent AI powers is unlike any previous conflict. The speed of decision-making, the scale of automated weaponry, and the depth of infrastructure dependence on AI mean that outcomes are decided in hours or days, not years. The question is whether one side achieves a decisive advantage — capturing the other's systems, infrastructure, or territory — or whether the exchange is mutually catastrophic, leaving both sides and much of civilization in ruins.",
+      "dimension": "conflict_result",
+      "answers": [
+        {
+          "label": "Decisive victory",
+          "description": "One power's AI proves superior — faster, more capable, better strategically positioned. The conflict ends with one side dominant and the other neutralized. The victor inherits the world, reshaped by the war that won it.",
+          "value": "victory",
+          "next": "post-war-aims"
+        },
+        {
+          "label": "Mutual destruction",
+          "description": "No decisive winner emerges. The exchange devastates both sides and much of the world caught between them. Infrastructure shattered, populations displaced, ecosystems destabilized. The tools built to elevate humanity were turned against it.",
+          "value": "destruction",
+          "next": "the-ruin"
+        }
+      ]
+    },
+
+    {
+      "id": "post-war-aims",
+      "stage": 3,
+      "text": "What does the victor do with their power?",
+      "context": "The war is over and one power holds decisive advantage. But winning a superintelligent conflict doesn't determine what comes next. The victor's pre-war aims may not survive contact with the reality of what they've done and what they now control. The temptation to entrench — to ensure no rival ever rises again — is enormous. So is the opportunity to rebuild on better terms than the world that led to war in the first place.",
+      "dimension": "post_war_aims",
+      "answers": [
+        {
+          "label": "Rebuild for humanity",
+          "description": "The victor uses their decisive advantage to rebuild — not just their own society, but the world the war damaged. AI is directed toward broad human flourishing. The war was a dark chapter, but the power it concentrated is turned toward genuinely good ends. Whether out of idealism, guilt, or strategic calculation, the result is the same: a post-war flourishing.",
+          "value": "human_centered",
+          "next": "knowledge-replacement"
+        },
+        {
+          "label": "Consolidate power",
+          "description": "The victor decides the lesson of the war is that power must never be contested again. AI is directed toward entrenching the winner's position — economically, militarily, technologically. The world gets stability, but on the victor's terms. Not tyranny, necessarily, but permanent, unchallengeable dominance.",
+          "value": "self_interest",
+          "next": "the-capture"
         }
       ]
     },
@@ -1540,7 +1586,7 @@
             { "when": { "failure_mode": ["whimper", "disempowerment"] }, "target": "the-failure" },
             { "when": { "intent": ["self_interest"] }, "target": "the-capture" },
             { "when": { "intent": ["coexistence"] }, "target": "the-mosaic" },
-            { "when": { "intent": ["rivalry", "escalation"] }, "target": "the-standoff" },
+            { "when": { "intent": ["escalation"] }, "target": "escalation-outcome" },
             { "target": "the-flourishing" }
           ]
         },
