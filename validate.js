@@ -196,10 +196,15 @@ function runStaticAnalysis() {
     const visibilityDeps = {};
     for (const dim of DIM_META) {
         const deps = new Set();
-        if (dim.visibleWhen) {
-            for (const [k] of Object.entries(dim.visibleWhen)) {
-                const useRaw = dim.useRawFor && dim.useRawFor.includes(k);
-                deps.add(useRaw ? 'raw:' + k : 'effective:' + k);
+        if (dim.activateWhen) {
+            for (const cond of dim.activateWhen) {
+                for (const [k] of Object.entries(cond)) {
+                    if (k.startsWith('_')) continue;
+                    const useRaw = dim.useRawFor && dim.useRawFor.includes(k);
+                    deps.add(useRaw ? 'raw:' + k : 'effective:' + k);
+                }
+                if (cond._raw) for (const k of Object.keys(cond._raw)) deps.add('raw:' + k);
+                if (cond._eff) for (const k of Object.keys(cond._eff)) deps.add('effective:' + k);
             }
         }
         visibilityDeps[dim.id] = deps;
@@ -339,6 +344,18 @@ function runExplorer() {
         }
     }
 
+    function dimDependsOn(dim, key) {
+        if (!dim.activateWhen) return false;
+        return dim.activateWhen.some(c => c[key] || (c._raw && c._raw[key]) || (c._eff && c._eff[key]));
+    }
+    function dimDependsOnKeyNotVal(dim, key, excludeVal) {
+        if (!dim.activateWhen) return false;
+        return dim.activateWhen.some(c => {
+            const vals = c[key] || (c._raw && c._raw[key]) || (c._eff && c._eff[key]);
+            return vals && !vals.includes(excludeVal);
+        });
+    }
+
     function checkAppearAbove(sel) {
         const visibleBefore = new Set(DIM_META.filter(d => isDimVisible(sel, d)).map(d => d.id));
         const answeredBefore = new Set(DIM_META.filter(d => visibleBefore.has(d.id) && sel[d.id] && isDimLocked(sel, d) === null).map(d => d.id));
@@ -359,11 +376,10 @@ function runExplorer() {
                     if (visibleBefore.has(newDim.id)) continue;
                     if (!isDimVisible(next, newDim)) continue;
                     if (isDimLocked(next, newDim) !== null) continue;
-                    if (alignBefore !== alignAfter && newDim.visibleWhen && newDim.visibleWhen.alignment) continue;
-                    if (containBefore !== containAfter && newDim.visibleWhen && newDim.visibleWhen.containment) continue;
+                    if (alignBefore !== alignAfter && dimDependsOn(newDim, 'alignment')) continue;
+                    if (containBefore !== containAfter && dimDependsOn(newDim, 'containment')) continue;
                     if (next.ai_goals === 'marginal' && answeredRef.has('ai_goals')
-                        && newDim.visibleWhen && newDim.visibleWhen.alignment
-                        && !newDim.visibleWhen.alignment.includes('failed')) continue;
+                        && dimDependsOnKeyNotVal(newDim, 'alignment', 'failed')) continue;
                     const k = `${dim.id}:${val.id}->${newDim.id}`;
                     if (seen.appearAbove.has(k)) continue;
                     let hasAnsweredBelow = false;
