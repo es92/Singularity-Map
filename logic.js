@@ -160,6 +160,33 @@ const DIM_META = [
       useRawFor: ['alignment'], useRawUnlessDecel: true,
       values: [
         { id: 'holds', label: 'Holds for now' }, { id: 'breaks', label: 'Breaks' } ] },
+    { id: 'containment', label: 'Containment', stage: 2,
+      activateWhen: [
+        { capability: ['singularity'], automation: ['deep'], _raw: { alignment: ['brittle'], alignment_durability: ['holds'], brittle_resolution: ['escape'] } },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], _notDecel: ['solved', 'parity_solved'] },
+        { capability: ['singularity'], automation: ['deep'], _raw: { ai_goals: ['marginal'] }, _notDecel: ['solved', 'parity_solved'] },
+      ],
+      overrides: [
+        { decel: ['escapes'], value: 'escaped' },
+        { when: { proliferation_control: 'none' }, effective: { alignment: 'failed' }, value: 'escaped' },
+        { when: { proliferation_outcome: 'breached' }, effective: { alignment: 'failed' }, value: 'escaped' },
+        { when: { enabled_aims: 'arbitrary' }, unless: { ai_goals: 'marginal' }, value: 'escaped' },
+        { when: { brittle_resolution: 'escape' }, value: 'escaped' },
+        { when: { inert_stays: 'no' }, value: 'escaped' },
+      ],
+      values: [
+        { id: 'contained', label: 'Contained', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } },
+        { id: 'escaped', label: 'Escapes' } ] },
+    { id: 'ai_goals', label: 'AI Converges On', stage: 2,
+      activateWhen: [
+        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'] },
+      ],
+      overrides: [
+        { whenSet: 'inert_outcome', fromDim: 'inert_outcome' },
+      ], values: [
+        { id: 'benevolent', label: 'Benefit humanity' }, { id: 'alien_coexistence', label: 'Alien (tolerant)' },
+        { id: 'alien_extinction', label: 'Alien (total)' }, { id: 'paperclip', label: 'Arbitrary' },
+        { id: 'swarm', label: 'Divergent' }, { id: 'marginal', label: 'Inert (for now)' } ] },
     { id: 'proliferation_control', label: 'Proliferation Control', stage: 2,
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], _notDecel: ['escapes', 'parity_failed'] },
@@ -203,33 +230,6 @@ const DIM_META = [
         { id: 'human_centered', label: 'Human-centered' },
         { id: 'proxy', label: 'Proxy / institutional' },
         { id: 'arbitrary', label: 'Arbitrary / unconstrained' } ] },
-    { id: 'containment', label: 'Containment', stage: 2,
-      activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], _raw: { alignment: ['brittle'], alignment_durability: ['holds'], brittle_resolution: ['escape'] } },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], _notDecel: ['solved', 'parity_solved'] },
-        { capability: ['singularity'], automation: ['deep'], _raw: { ai_goals: ['marginal'] }, _notDecel: ['solved', 'parity_solved'] },
-      ],
-      overrides: [
-        { decel: ['escapes'], value: 'escaped' },
-        { when: { proliferation_control: 'none' }, effective: { alignment: 'failed' }, value: 'escaped' },
-        { when: { proliferation_outcome: 'breached' }, effective: { alignment: 'failed' }, value: 'escaped' },
-        { when: { enabled_aims: 'arbitrary' }, unless: { ai_goals: 'marginal' }, value: 'escaped' },
-        { when: { brittle_resolution: 'escape' }, value: 'escaped' },
-        { when: { inert_stays: 'no' }, value: 'escaped' },
-      ],
-      values: [
-        { id: 'contained', label: 'Contained', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } },
-        { id: 'escaped', label: 'Escapes' } ] },
-    { id: 'ai_goals', label: 'AI Converges On', stage: 2,
-      activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'] },
-      ],
-      overrides: [
-        { whenSet: 'inert_outcome', fromDim: 'inert_outcome' },
-      ], values: [
-        { id: 'benevolent', label: 'Benefit humanity' }, { id: 'alien_coexistence', label: 'Alien (tolerant)' },
-        { id: 'alien_extinction', label: 'Alien (total)' }, { id: 'paperclip', label: 'Arbitrary' },
-        { id: 'swarm', label: 'Divergent' }, { id: 'marginal', label: 'Inert (for now)' } ] },
     { id: 'intent', label: 'Intent', stage: 2,
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'] },
@@ -559,8 +559,9 @@ function isDimLocked(sel, dim) {
         if (sel.brittle_resolution === 'solved' || sel.brittle_resolution === 'sufficient') return 'contained';
         const out = decelOutcome(sel);
         if (out === 'escapes') return 'escaped';
-        if ((sel.proliferation_control === 'none' || sel.proliferation_outcome === 'breached') && effectiveVal(sel, 'alignment') === 'failed') return 'escaped';
-        if (sel.enabled_aims === 'arbitrary' && sel.ai_goals !== 'marginal') return 'escaped';
+        // proliferation_control, proliferation_outcome, and enabled_aims come AFTER
+        // containment in DIM_META — their effect on containment is handled via
+        // effectiveVal overrides (world state) rather than locking (question state).
         if (effectiveVal(sel, 'alignment') === 'robust') return 'contained';
     }
     if (dim.id === 'ai_goals' && sel.alignment === 'brittle' && sel.alignment_durability === 'holds') {

@@ -27,7 +27,7 @@ const oMap = {};
 for (const t of templatesList) oMap[t.id] = t;
 
 const KNOWN_EXCEPTIONS = {
-    unreachableQuestions: new Set(['brittle-long-term']),
+    unreachableQuestions: new Set([]),
     exploreOnlyDims: new Set(['governance_window', 'gov_action']),
     disabledValues: new Set([
         'knowledge_replacement.limited', 'physical_automation.limited',
