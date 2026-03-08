@@ -87,6 +87,9 @@ const DIM_META = [
     { id: 'gov_action', label: 'Deceleration', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], geo_spread: ['one'] }],
       useRawFor: ['geo_spread'],
+      overrides: [
+        { when: { alignment_durability: 'breaks' }, value: 'accelerate' },
+      ],
       lockedWhen: { takeoff: { equals: 'hard', value: 'accelerate' } }, values: [
         { id: 'decelerate', label: 'Decelerate' }, { id: 'accelerate', label: 'Accelerate' } ] },
     { id: 'decel_2mo_progress', label: '2 Months', stage: 2,
@@ -447,9 +450,10 @@ function applyOverrides(overrides, sel, k, decel) {
 function effectiveVal(sel, k) {
     if (k === 'governance') {
         const out = decelOutcome(sel);
-        if (sel.gov_action === 'accelerate') return 'race';
+        const effGov = effectiveVal(sel, 'gov_action');
+        if (effGov === 'accelerate') return 'race';
         if (out === 'abandon') return 'race';
-        if (sel.gov_action === 'decelerate') return 'slowdown';
+        if (effGov === 'decelerate') return 'slowdown';
         if (sel.governance_window) return sel.governance_window;
         return sel[k];
     }
@@ -545,18 +549,7 @@ function isDimVisible(sel, dim) {
 // ════════════════════════════════════════════════════════
 
 function isDimLocked(sel, dim) {
-    if (dim.id === 'gov_action' && sel.alignment === 'robust' && sel.gov_action !== 'decelerate' && !decelOutcome(sel)) return 'accelerate';
-    if (dim.id === 'gov_action' && sel.alignment_durability === 'breaks') return 'accelerate';
-    if (dim.id === 'alignment') {
-        const out = decelOutcome(sel);
-        if (['solved', 'parity_solved'].includes(out)) return 'robust';
-        if (sel.brittle_resolution === 'solved') return 'robust';
-        if (sel.brittle_resolution === 'sufficient') return 'brittle';
-        if (out === 'rival') return 'brittle';
-        if (['escapes', 'abandon', 'parity_failed'].includes(out)) {
-            return sel.ai_goals === 'marginal' ? 'brittle' : 'failed';
-        }
-    }
+    if (dim.id === 'gov_action' && sel.alignment === 'robust' && !decelOutcome(sel)) return 'accelerate';
     if (dim.id === 'containment') {
         if (sel.brittle_resolution === 'escape') return 'escaped';
         if (sel.brittle_resolution === 'solved' || sel.brittle_resolution === 'sufficient') return 'contained';
@@ -587,6 +580,7 @@ function isValueDisabled(sel, dim, val) {
         if (['solved', 'parity_solved'].includes(out)) return true;
     }
     if (dim.id === 'intent' && val.id === 'self_interest' && sel.enabled_aims === 'human_centered') return true;
+    if (dim.id === 'gov_action' && val.id === 'decelerate' && sel.alignment === 'robust') return true;
     if (!val.requires) return false;
     const condSets = Array.isArray(val.requires) ? val.requires : [val.requires];
     return condSets.every(conds => {
