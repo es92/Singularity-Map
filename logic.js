@@ -173,30 +173,6 @@ const DIM_META = [
       values: [
         { id: 'holds', label: 'Holds' },
         { id: 'breached', label: 'Breached' } ] },
-    { id: 'block_entrants', label: 'Block New Entrants?', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], proliferation_control: ['secure_access'], proliferation_outcome: ['holds'] }],
-      useRawFor: ['alignment'], useRawUnlessDecel: true,
-      values: [
-        { id: 'attempt', label: 'Attempt to block' },
-        { id: 'no_attempt', label: 'No attempt' } ] },
-    { id: 'block_outcome', label: 'Blocking Outcome', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], block_entrants: ['attempt'] }],
-      values: [
-        { id: 'holds', label: 'Holds' },
-        { id: 'fails', label: 'Fails' } ] },
-    { id: 'new_entrants', label: 'New Entrants?', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], block_entrants: ['no_attempt'] }],
-      values: [
-        { id: 'emerge', label: 'Emerge' },
-        { id: 'none', label: 'None' } ] },
-    { id: 'rival_dynamics', label: 'Rival Dynamics', stage: 2,
-      activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], _raw: { block_outcome: ['fails'] } },
-        { capability: ['singularity'], automation: ['deep'], _raw: { new_entrants: ['emerge'] } },
-      ],
-      values: [
-        { id: 'coexistence', label: 'Coexistence' },
-        { id: 'escalation', label: 'Escalation' } ] },
     { id: 'enabled_aims', label: 'Enabled Aims', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], proliferation_control: ['deny_rivals', 'secure_access', 'none'] }],
       values: [
@@ -247,6 +223,30 @@ const DIM_META = [
         { id: 'coexistence', label: 'Coexistence', requires: [{ distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { distribution: ['lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'], geo_spread: ['two', 'several'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] },
         { id: 'escalation', label: 'Escalation', requires: [{ distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { distribution: ['lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'], geo_spread: ['two', 'several'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] },
         { id: 'international', label: 'International' } ] },
+    { id: 'block_entrants', label: 'Block New Entrants?', stage: 2,
+      activateWhen: [{ capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], proliferation_control: ['secure_access'], proliferation_outcome: ['holds'], intent: ['self_interest'] }],
+      useRawFor: ['alignment'], useRawUnlessDecel: true,
+      values: [
+        { id: 'attempt', label: 'Attempt to block' },
+        { id: 'no_attempt', label: 'No attempt' } ] },
+    { id: 'block_outcome', label: 'Blocking Outcome', stage: 2,
+      activateWhen: [{ capability: ['singularity'], automation: ['deep'], block_entrants: ['attempt'] }],
+      values: [
+        { id: 'holds', label: 'Holds' },
+        { id: 'fails', label: 'Fails' } ] },
+    { id: 'new_entrants', label: 'New Entrants?', stage: 2,
+      activateWhen: [{ capability: ['singularity'], automation: ['deep'], block_entrants: ['no_attempt'] }],
+      values: [
+        { id: 'emerge', label: 'Emerge' },
+        { id: 'none', label: 'None' } ] },
+    { id: 'rival_dynamics', label: 'Rival Dynamics', stage: 2,
+      activateWhen: [
+        { capability: ['singularity'], automation: ['deep'], _raw: { block_outcome: ['fails'] } },
+        { capability: ['singularity'], automation: ['deep'], _raw: { new_entrants: ['emerge'] } },
+      ],
+      values: [
+        { id: 'coexistence', label: 'Coexistence' },
+        { id: 'escalation', label: 'Escalation' } ] },
     { id: 'escalation_outcome', label: 'Escalation Resolves', stage: 3,
       activateWhen: [{ intent: ['escalation'] }],
       values: [
@@ -280,6 +280,19 @@ const DIM_META = [
       values: [
         { id: 'none', label: 'Succeeds' }, { id: 'whimper', label: 'Wrong metrics' },
         { id: 'disempowerment', label: 'Human irrelevance' } ] },
+    { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3,
+      activateWhen: [
+        { capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] },
+        { capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], failure_mode: ['none', 'whimper', 'disempowerment'] },
+        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
+        { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'] }, _raw: { containment: ['contained'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
+        { capability: ['singularity'], automation: ['deep'], post_war_aims: ['human_centered'] },
+      ],
+      suppressWhen: [{ intent: ['self_interest', 'escalation'] }],
+      values: [
+        { id: 'equal', label: 'Shared equally' }, { id: 'unequal', label: 'Wealth concentrates' },
+        { id: 'extreme', label: 'Power concentrates' } ] },
     { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3,
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], failure_mode: ['none', 'whimper', 'disempowerment'] },
@@ -302,11 +315,6 @@ const DIM_META = [
       values: [
         { id: 'rapid', label: 'Rapid (2–5 yrs)' }, { id: 'gradual', label: 'Gradual (5–20 yrs)' }, { id: 'uneven', label: 'Uneven (2–20+ yrs)' },
         { id: 'limited', label: 'Limited', requires: { capability: ['hours', 'days', 'weeks', 'months'] } } ] },
-    { id: 'economic_distribution', label: 'Who Benefits?', stage: 3,
-      activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }],
-      values: [
-        { id: 'broad', label: 'Broadly shared' }, { id: 'concentrated', label: 'Capital concentrates' },
-        { id: 'uneven', label: 'Uneven by geography' } ] },
     { id: 'plateau_knowledge_rate', label: 'Knowledge Work', stage: 3,
       activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }],
       values: [
@@ -321,11 +329,6 @@ const DIM_META = [
         { id: 'gradual', label: 'Gradual (10–25 yrs)', requires: { capability: ['days', 'weeks', 'months'] } },
         { id: 'uneven', label: 'Uneven (5–20+ yrs)' },
         { id: 'limited', label: 'Limited' } ] },
-    { id: 'automation_distribution', label: 'Who Benefits?', stage: 3,
-      activateWhen: [{ capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }],
-      values: [
-        { id: 'broad', label: 'Broadly shared' }, { id: 'concentrated', label: 'Capital concentrates' },
-        { id: 'uneven', label: 'Uneven by geography' } ] },
     { id: 'auto_knowledge_rate', label: 'Knowledge Work', stage: 3,
       activateWhen: [{ capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }],
       values: [
@@ -477,8 +480,8 @@ const CUSTOM_CHECKS = {
         return decelAlignProgress(sel) === 'brittle';
     },
     allPrecedingAnswered(sel, dim) {
-        const TERM = new Set(['knowledge_replacement', 'physical_automation', 'economic_distribution',
-            'plateau_knowledge_rate', 'plateau_physical_rate', 'automation_distribution',
+        const TERM = new Set(['benefit_distribution', 'knowledge_replacement', 'physical_automation',
+            'plateau_knowledge_rate', 'plateau_physical_rate',
             'auto_knowledge_rate', 'auto_physical_rate']);
         const brIdx = DIM_META.indexOf(dim);
         const adIdx = DIM_META.findIndex(d => d.id === 'alignment_durability');
@@ -567,7 +570,6 @@ function isDimLocked(sel, dim) {
         if (sel.brittle_resolution === 'solved' || sel.brittle_resolution === 'sufficient') return 'benevolent';
     }
     if (dim.id === 'failure_mode' && sel.enabled_aims === 'proxy') return 'whimper';
-    if (dim.id === 'intent' && sel.rival_dynamics) return sel.rival_dynamics;
     if (!dim.lockedWhen) {
         const enabled = dim.values.filter(v => !isValueDisabled(sel, dim, v));
         return enabled.length === 1 ? enabled[0].id : null;

@@ -31,10 +31,10 @@
           "substantial": "But this may not be permanent. A major architectural breakthrough — world models, neurosymbolic reasoning, or something not yet imagined — could restart the exponential trend. The singularity isn't cancelled; it's delayed. The world builds around current capability for years or decades, and when the breakthrough comes, all the questions about alignment, power, and distribution play out in a society already reshaped by powerful-but-limited AI.",
           "never": "And the ceiling appears to be permanent. No breakthrough on the horizon, no new paradigm in sight. This is the new normal — not a pause, but an endpoint. The most powerful tool humanity ever built, deployed and adapted to, but never transcended."
         },
-        "economic_distribution": {
-          "broad": "The productivity gains from AI flow broadly — lower costs, better services, public investment in the gap between what AI can do and what it can't. The plateau feels less like stagnation and more like a rising floor.",
-          "concentrated": "The AI plateau concentrates wealth. Those who own the systems capture the productivity gains; everyone else competes for the shrinking pool of work AI can't do. A new gilded age — not built on factories and railroads, but on models and compute.",
-          "uneven": "The plateau's benefits arrive unevenly. Tech-forward regions and industries transform first; others wait years, watching the future happen somewhere else. The ceiling is the same everywhere. The floor is not."
+        "benefit_distribution": {
+          "equal": "The productivity gains from AI flow broadly — lower costs, better services, public investment in the gap between what AI can do and what it can't. The plateau feels less like stagnation and more like a rising floor.",
+          "unequal": "The AI plateau concentrates wealth. Those who already own capital capture the productivity gains; everyone else competes for the shrinking pool of work AI can't do. A new gilded age — not built on factories and railroads, but on models and compute.",
+          "extreme": "The plateau's benefits flow almost entirely to those who hold power at the moment of transformation. Regulatory capture and monopoly control of compute mean that a narrow elite shapes the plateau economy. The ceiling is the same everywhere. Who benefits is not."
         },
         "plateau_knowledge_rate": {
           "rapid": "Within AI's capability ceiling, adoption is swift and total. Any knowledge task AI can handle is automated within a few years. The ceiling limits what changes — but within those limits, the transformation is fast and deep.",
@@ -68,10 +68,10 @@
           "substantial": "The barrier between routine and creative AI work eventually breaks — but it takes years to decades. By then, the world has already adapted to the automation plateau, rebuilt its institutions around it, and the breakthrough arrives into a society that looks nothing like the one that started waiting. When the intelligence explosion finally comes, it transforms a world already profoundly reshaped by decades of powerful-but-limited AI.",
           "never": "The ceiling is permanent. Novel creative work, original research, and recursive self-improvement remain forever beyond AI. This is the final form of artificial intelligence: an extraordinarily powerful tool, but a tool nonetheless. The world adapts — and what emerges over decades of deep automation is its own kind of transformation, even without the singularity."
         },
-        "automation_distribution": {
-          "broad": "The productivity gains from AI automation flow broadly — lower costs, better services, new industries absorbing displaced workers. The transformation is disruptive but ultimately equalizing.",
-          "concentrated": "Those who own the AI systems capture the lion's share. Labor's declining share of income becomes the defining economic fact of the era. Wealth concentrates among those who own the models and the platforms, while everyone else competes for the shrinking pool of work AI can't do.",
-          "uneven": "The automation dividend arrives unevenly. Tech-forward regions and industries are enriched; others are hollowed out. A new geography of prosperity and decline, shaped not by natural resources but by proximity to AI."
+        "benefit_distribution": {
+          "equal": "The productivity gains from AI automation flow broadly — lower costs, better services, new industries absorbing displaced workers. The transformation is disruptive but ultimately equalizing.",
+          "unequal": "Those who already own capital capture the lion's share. Labor's declining share of income becomes the defining economic fact of the era. Wealth concentrates among those who own the models and the platforms, while everyone else competes for the shrinking pool of work AI can't do.",
+          "extreme": "The gains concentrate among those who hold power at the moment of transformation. AI becomes a tool of entrenchment — whoever controls compute and policy locks in their advantage permanently. Not just inequality, but a new caste system built on access to superintelligent tools."
         },
         "auto_knowledge_rate": {
           "rapid": "Routine knowledge work is displaced within a few years — fast enough to be felt as a shock. The cost advantage of AI is simply too large for organizations to ignore.",
@@ -139,6 +139,11 @@
         },
         "automation_recovery": {
           "mild": "AI was stuck on routine work for a while — impressive but limited. Then a breakthrough cracked the creative barrier, and the feedback loop finally began. The delay shaped the trajectory but didn't prevent the destination."
+        },
+        "benefit_distribution": {
+          "equal": "The extraordinary productivity of superintelligent AI flows broadly. Costs collapse, services improve, and abundance becomes the default. Policy and market dynamics ensure the gains reach most of humanity. The flourishing is genuine and widely shared.",
+          "unequal": "The gains flow disproportionately to those who already hold capital. Superintelligent productivity creates immense wealth, but it concentrates among those who own the AI systems, the compute, and the platforms. Everyone's life improves — but some lives improve vastly more than others.",
+          "extreme": "Those who hold power at the moment of superintelligence lock in their advantage. The flourishing is real — but it's someone else's flourishing. A tiny elite shapes the post-singularity world, and everyone else lives in the civilization they designed."
         },
         "physical_automation": {
           "rapid": "Physical automation follows closely behind knowledge work — AI-designed robots, autonomous vehicles, and automated manufacturing transform the physical world within years. The digital and physical revolutions arrive almost simultaneously.",
@@ -355,6 +360,11 @@
         }
       },
       "flavors": {
+        "benefit_distribution": {
+          "equal": "The gains from AI were broadly shared — which made the failure all the more insidious. Everyone benefited. Everyone was complicit. The wrong metrics felt like progress because they were everyone's progress.",
+          "unequal": "The failure hit hardest for those who didn't own the systems. The wealthy saw dashboards that told them everything was fine. Everyone else felt the divergence between the metrics and their lived reality — but lacked the power to change course.",
+          "extreme": "Those who held power at the moment of transformation captured nearly everything — and then delegated the rest to AI that optimized for their metrics, not humanity's wellbeing. The failure wasn't just technological. It was political."
+        },
         "distribution": {
           "open": "With AI everywhere, the failure is distributed too. No one is to blame because everyone contributed.",
           "lagging": "The lag gave some communities time to see what was happening — but not enough to change course.",

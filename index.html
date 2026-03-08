@@ -1636,9 +1636,9 @@
                 }
 
                 const TERMINAL_IDS = new Set([
-                    'knowledge_replacement', 'physical_automation', 'economic_distribution',
+                    'benefit_distribution', 'knowledge_replacement', 'physical_automation',
                     'plateau_knowledge_rate', 'plateau_physical_rate',
-                    'automation_distribution', 'auto_knowledge_rate', 'auto_physical_rate'
+                    'auto_knowledge_rate', 'auto_physical_rate'
                 ]);
                 const hasUnsetVisibleDims = DIM_META.some(dim => {
                     if (TERMINAL_IDS.has(dim.id)) return false;

@@ -256,9 +256,9 @@ function runStaticAnalysis() {
 // ════════════════════════════════════════════════════════
 
 const TERMINAL_IDS = new Set([
-    'knowledge_replacement', 'physical_automation',
-    'economic_distribution', 'plateau_knowledge_rate', 'plateau_physical_rate',
-    'automation_distribution', 'auto_knowledge_rate', 'auto_physical_rate'
+    'benefit_distribution', 'knowledge_replacement', 'physical_automation',
+    'plateau_knowledge_rate', 'plateau_physical_rate',
+    'auto_knowledge_rate', 'auto_physical_rate'
 ]);
 
 function selToUrl(sel) {
@@ -478,6 +478,7 @@ function runExplorer() {
     const DECEL_CASCADE_DIMS = new Set(DIM_META.filter(d => d.id.startsWith('decel_')).map(d => d.id));
     DECEL_CASCADE_DIMS.add('alignment_durability');
     DECEL_CASCADE_DIMS.add('brittle_resolution');
+    DECEL_CASCADE_DIMS.add('rival_dynamics');
 
     function checkSelectionImpactUpward(sel) {
         for (const dim of DIM_META) {
