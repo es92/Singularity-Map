@@ -224,8 +224,8 @@ const DIMENSIONS = [
         { id: 'escalation', label: 'Escalation', requires: [{ distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { distribution: ['lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'], geo_spread: ['two', 'several'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] },
         { id: 'international', label: 'International' } ] },
     { id: 'block_entrants', label: 'Block New Entrants?', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], proliferation_control: ['secure_access'], proliferation_outcome: ['holds'], intent: ['self_interest'] }],
-      useRawFor: ['alignment'], useRawUnlessDecel: true,
+      activateWhen: [{ capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], proliferation_control: ['secure_access'], proliferation_outcome: ['holds'], intent: ['self_interest', 'international'] }],
+      useRawFor: ['alignment', 'intent'], useRawUnlessDecel: true,
       values: [
         { id: 'attempt', label: 'Attempt to block' },
         { id: 'no_attempt', label: 'No attempt' } ] },

@@ -298,8 +298,8 @@ function progressivelyShown(sel) {
 }
 
 function runExplorer() {
-    const violations = { vanish: [], appearAboveAnswered: [], deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], premature: [], lockedAfterUnanswered: [], progressiveVanish: [], selectionErasedUpward: [], selectionOverriddenUpward: [], selectionOverriddenDownward: [], switchOrphan: [], switchErased: [] };
-    const seen = { vanish: new Set(), appearAbove: new Set(), clickErased: new Set(), premature: new Set(), lockedAfterUnanswered: new Set(), progressiveVanish: new Set(), selectionErasedUpward: new Set(), selectionOverriddenUpward: new Set(), selectionOverriddenDownward: new Set(), switchOrphan: new Set(), switchErased: new Set() };
+    const violations = { vanish: [], appearAboveAnswered: [], deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], premature: [], lockedAfterUnanswered: [], progressiveVanish: [], selectionErasedUpward: [], selectionOverriddenUpward: [], selectionOverriddenDownward: [], switchOrphan: [], switchErased: [], switchUpstreamChanged: [] };
+    const seen = { vanish: new Set(), appearAbove: new Set(), clickErased: new Set(), premature: new Set(), lockedAfterUnanswered: new Set(), progressiveVanish: new Set(), selectionErasedUpward: new Set(), selectionOverriddenUpward: new Set(), selectionOverriddenDownward: new Set(), switchOrphan: new Set(), switchErased: new Set(), switchUpstreamChanged: new Set() };
 
     function checkVanishUpward(sel) {
         const visible = new Set(DIMENSIONS.filter(d => isDimVisible(sel, d)).map(d => d.id));
@@ -528,6 +528,36 @@ function runExplorer() {
                     }
                 }
 
+                if (next[dim.id] === val.id) {
+                    const dimIdx = DIMENSIONS.indexOf(dim);
+                    for (let ui = 0; ui < dimIdx; ui++) {
+                        const up = DIMENSIONS[ui];
+                        if (!sel[up.id] || !next[up.id]) continue;
+                        if (sel[up.id] !== next[up.id]) {
+                            const k = `${dim.id}:${val.id}->${up.id}`;
+                            if (!seen.switchUpstreamChanged.has(k)) {
+                                seen.switchUpstreamChanged.add(k);
+                                violations.switchUpstreamChanged.push({
+                                    dim: dim.id, val: val.id,
+                                    upstream: up.id, from: sel[up.id], to: next[up.id],
+                                    url: selToUrl(sel)
+                                });
+                            }
+                        }
+                        if (!next[up.id] && sel[up.id]) {
+                            const k = `${dim.id}:${val.id}->${up.id}`;
+                            if (!seen.switchUpstreamChanged.has(k)) {
+                                seen.switchUpstreamChanged.add(k);
+                                violations.switchUpstreamChanged.push({
+                                    dim: dim.id, val: val.id,
+                                    upstream: up.id, from: sel[up.id], to: '(deleted)',
+                                    url: selToUrl(sel)
+                                });
+                            }
+                        }
+                    }
+                }
+
                 for (const check of DIMENSIONS) {
                     if (next[check.id] === undefined) continue;
                     if (check.id === dim.id) continue;
@@ -751,6 +781,7 @@ function printPhase2(result) {
         { name: 'PREMATURE OUTCOME', items: violations.premature, fmt: v => `    "${v.outcome}" matches but "${v.nextDim}" still unset` },
         { name: 'VALUE SWITCH ORPHAN', items: violations.switchOrphan, fmt: v => `    Switch "${v.switchDim}" to "${v.switchTo}" → "${v.orphan}=${v.orphanVal}" persists without activation` },
         { name: 'VALUE SWITCH ERASED', items: violations.switchErased, fmt: v => `    Switch "${v.dim}" to "${v.val}" → immediately cleared` },
+        { name: 'VALUE SWITCH CHANGES UPSTREAM', items: violations.switchUpstreamChanged, fmt: v => `    Switch "${v.dim}" to "${v.val}" → changes upstream "${v.upstream}" (${v.from} → ${v.to})` },
     ];
 
     let violationCount = 0;
