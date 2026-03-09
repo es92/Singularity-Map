@@ -305,287 +305,6 @@ function runExplorer() {
         return baseIdx + 1;
     }
 
-    function checkVanishUpward(sel) {
-        const visible = new Set(DIMENSIONS.filter(d => !d.virtual && isDimVisible(sel, d)).map(d => d.id));
-        for (const dim of DIMENSIONS) {
-            if (dim.virtual) continue;
-            if (!visible.has(dim.id) || isDimLocked(sel, dim) !== null) continue;
-            const myIdx = DIMENSIONS.indexOf(dim);
-            for (const val of getEnabledValues(sel, dim)) {
-                if (sel[dim.id] === val.id) continue;
-                const next = { ...sel };
-                applySelection(next, dim.id, val.id);
-                for (let i = 0; i < myIdx; i++) {
-                    const upper = DIMENSIONS[i];
-                    if (!visible.has(upper.id)) continue;
-                    if (!sel[upper.id]) continue;
-                    if (!isDimVisible(next, upper)) {
-                        const k = `${dim.id}:${val.id}->${upper.id}`;
-                        if (seen.vanish.has(k)) continue;
-                        seen.vanish.add(k);
-                        violations.vanish.push({ dim: dim.id, val: val.id, vanished: upper.id, url: selToUrl(sel) });
-                    }
-                }
-            }
-        }
-    }
-
-    function checkAppearAbove(sel) {
-        const visibleBefore = new Set(DIMENSIONS.filter(d => !d.virtual && isDimVisible(sel, d)).map(d => d.id));
-        const answeredBefore = new Set(DIMENSIONS.filter(d => visibleBefore.has(d.id) && sel[d.id] && isDimLocked(sel, d) === null).map(d => d.id));
-        for (const dim of DIMENSIONS) {
-            if (dim.virtual) continue;
-            if (!visibleBefore.has(dim.id) || isDimLocked(sel, dim) !== null) continue;
-            if (sel[dim.id]) continue;
-            for (const val of getEnabledValues(sel, dim)) {
-                const next = { ...sel };
-                applySelection(next, dim.id, val.id);
-                const answeredRef = new Set(answeredBefore);
-                answeredRef.add(dim.id);
-                for (let i = 0; i < DIMENSIONS.length; i++) {
-                    const newDim = DIMENSIONS[i];
-                    if (newDim.virtual) continue;
-                    if (visibleBefore.has(newDim.id)) continue;
-                    if (!isDimVisible(next, newDim)) continue;
-                    if (isDimLocked(next, newDim) !== null) continue;
-                    const k = `${dim.id}:${val.id}->${newDim.id}`;
-                    if (seen.appearAbove.has(k)) continue;
-                    let effectiveIdx = i;
-                    const renderPos = resolveRenderIdx(next, newDim);
-                    if (renderPos !== null) effectiveIdx = renderPos;
-                    let hasAnsweredBelow = false;
-                    for (let j = effectiveIdx + 1; j < DIMENSIONS.length; j++) {
-                        if (answeredRef.has(DIMENSIONS[j].id)) { hasAnsweredBelow = true; break; }
-                    }
-                    if (hasAnsweredBelow) {
-                        seen.appearAbove.add(k);
-                        violations.appearAboveAnswered.push({ dim: dim.id, val: val.id, appeared: newDim.id, url: selToUrl(sel) });
-                    }
-                }
-            }
-        }
-    }
-
-    function checkProgressiveVanish(sel) {
-        const shownBefore = progressivelyShown(sel);
-        for (const dim of DIMENSIONS) {
-            if (dim.virtual) continue;
-            if (!shownBefore.has(dim.id)) continue;
-            if (isDimLocked(sel, dim) !== null) continue;
-            const myIdx = DIMENSIONS.indexOf(dim);
-            for (const val of getEnabledValues(sel, dim)) {
-                if (sel[dim.id] === val.id) continue;
-                const next = { ...sel };
-                applySelection(next, dim.id, val.id);
-                const shownAfter = progressivelyShown(next);
-                for (const wasShown of shownBefore) {
-                    if (shownAfter.has(wasShown)) continue;
-                    const wasIdx = DIMENSIONS.findIndex(d => d.id === wasShown);
-                    if (wasIdx >= myIdx) continue;
-                    const wasDim = DIMENSIONS.find(d => d.id === wasShown);
-                    if (!sel[wasShown] || isDimLocked(sel, wasDim) !== null) continue;
-                    const k = `${dim.id}:${val.id}->${wasShown}`;
-                    if (seen.progressiveVanish.has(k)) continue;
-                    seen.progressiveVanish.add(k);
-                    violations.progressiveVanish.push({ dim: dim.id, val: val.id, vanished: wasShown, url: selToUrl(sel) });
-                }
-            }
-        }
-    }
-
-    function checkLockedAfterUnanswered(sel) {
-        let firstUnansweredIdx = -1;
-        for (let i = 0; i < DIMENSIONS.length; i++) {
-            const dim = DIMENSIONS[i];
-            if (dim.virtual) continue;
-            if (!isDimVisible(sel, dim)) continue;
-            if (isDimLocked(sel, dim) !== null) continue;
-            if (sel[dim.id]) continue;
-            firstUnansweredIdx = i;
-            break;
-        }
-        if (firstUnansweredIdx === -1) return;
-        for (let i = firstUnansweredIdx + 1; i < DIMENSIONS.length; i++) {
-            const dim = DIMENSIONS[i];
-            if (dim.virtual) continue;
-            if (!isDimVisible(sel, dim)) continue;
-            if (isDimLocked(sel, dim) === null) continue;
-            const k = `${DIMENSIONS[firstUnansweredIdx].id}|${dim.id}`;
-            if (seen.lockedAfterUnanswered.has(k)) continue;
-            seen.lockedAfterUnanswered.add(k);
-            violations.lockedAfterUnanswered.push({ unanswered: DIMENSIONS[firstUnansweredIdx].id, locked: dim.id, url: selToUrl(sel) });
-        }
-    }
-
-    function checkStuck(sel) {
-        for (const dim of DIMENSIONS) {
-            if (dim.virtual) continue;
-            if (!isDimVisible(sel, dim)) continue;
-            if (isDimLocked(sel, dim) !== null) continue;
-            if (sel[dim.id]) continue;
-            const enabled = getEnabledValues(sel, dim);
-            if (enabled.length === 0) violations.stuck.push({ dim: dim.id, url: selToUrl(sel) });
-            if (enabled.length === 1) violations.singleOption.push({ dim: dim.id, val: enabled[0].id, url: selToUrl(sel) });
-        }
-    }
-
-    function checkClickErased(sel) {
-        for (const dim of DIMENSIONS) {
-            if (dim.virtual) continue;
-            if (!isDimVisible(sel, dim)) continue;
-            if (isDimLocked(sel, dim) !== null) continue;
-            for (const val of getEnabledValues(sel, dim)) {
-                if (sel[dim.id] === val.id) continue;
-                const next = { ...sel };
-                applySelection(next, dim.id, val.id);
-                if (!next[dim.id]) {
-                    const k = `${dim.id}:${val.id}`;
-                    if (seen.clickErased.has(k)) continue;
-                    seen.clickErased.add(k);
-                    violations.clickErased.push({ dim: dim.id, val: val.id, url: selToUrl(sel) });
-                }
-            }
-        }
-    }
-
-    function checkSelectionImpact(sel) {
-        for (const dim of DIMENSIONS) {
-            if (dim.virtual) continue;
-            if (!isDimVisible(sel, dim)) continue;
-            if (isDimLocked(sel, dim) !== null) continue;
-            if (sel[dim.id]) continue;
-            const myIdx = DIMENSIONS.indexOf(dim);
-            for (const val of getEnabledValues(sel, dim)) {
-                const next = { ...sel };
-                applySelection(next, dim.id, val.id);
-                for (let i = 0; i < myIdx; i++) {
-                    const upper = DIMENSIONS[i];
-                    if (!sel[upper.id]) continue;
-                    if (isDimLocked(sel, upper) !== null) continue;
-                    if (!isDimVisible(next, upper)) continue;
-                    if (next[upper.id] === sel[upper.id]) continue;
-                    const nowLocked = isDimLocked(next, upper) !== null;
-                    const k = `${dim.id}:${val.id}->${upper.id}`;
-                    if (nowLocked) {
-                        if (seen.selectionOverriddenUpward.has(k)) continue;
-                        seen.selectionOverriddenUpward.add(k);
-                        violations.selectionOverriddenUpward.push({
-                            dim: dim.id, val: val.id,
-                            overridden: upper.id, from: sel[upper.id], to: next[upper.id],
-                            url: selToUrl(sel)
-                        });
-                    } else {
-                        if (seen.selectionErasedUpward.has(k)) continue;
-                        seen.selectionErasedUpward.add(k);
-                        violations.selectionErasedUpward.push({
-                            dim: dim.id, val: val.id,
-                            erased: upper.id, hadValue: sel[upper.id],
-                            url: selToUrl(sel)
-                        });
-                    }
-                }
-                for (let i = myIdx + 1; i < DIMENSIONS.length; i++) {
-                    const lower = DIMENSIONS[i];
-                    if (!sel[lower.id]) continue;
-                    if (isDimLocked(sel, lower) !== null) continue;
-                    if (next[lower.id] === undefined) continue;
-                    if (next[lower.id] === sel[lower.id]) continue;
-                    const k = `${dim.id}:${val.id}->${lower.id}`;
-                    if (seen.selectionOverriddenDownward.has(k)) continue;
-                    seen.selectionOverriddenDownward.add(k);
-                    violations.selectionOverriddenDownward.push({
-                        dim: dim.id, val: val.id,
-                        overridden: lower.id, from: sel[lower.id], to: next[lower.id],
-                        url: selToUrl(sel)
-                    });
-                }
-            }
-        }
-    }
-
-    function checkValueSwitch(sel) {
-        for (const dim of DIMENSIONS) {
-            if (dim.virtual) continue;
-            if (!isDimVisible(sel, dim)) continue;
-            if (isDimLocked(sel, dim) !== null) continue;
-            if (!sel[dim.id]) continue;
-
-            const dimIdx = DIMENSIONS.indexOf(dim);
-            for (const val of getEnabledValues(sel, dim)) {
-                if (val.id === sel[dim.id]) continue;
-
-                const next = { ...sel };
-                applySelection(next, dim.id, val.id);
-
-                if (next[dim.id] !== val.id) {
-                    const k = `${dim.id}:${val.id}`;
-                    if (!seen.switchErased.has(k)) {
-                        seen.switchErased.add(k);
-                        violations.switchErased.push({ dim: dim.id, val: val.id, url: selToUrl(sel) });
-                    }
-                }
-
-                if (next[dim.id] === val.id) {
-                    for (let ui = 0; ui < dimIdx; ui++) {
-                        const up = DIMENSIONS[ui];
-                        if (!sel[up.id]) continue;
-                        if (!next[up.id]) {
-                            const k = `${dim.id}:${val.id}->${up.id}`;
-                            if (!seen.switchUpstreamChanged.has(k)) {
-                                seen.switchUpstreamChanged.add(k);
-                                violations.switchUpstreamChanged.push({
-                                    dim: dim.id, val: val.id,
-                                    upstream: up.id, from: sel[up.id], to: '(deleted)',
-                                    url: selToUrl(sel)
-                                });
-                            }
-                        } else if (sel[up.id] !== next[up.id]) {
-                            const k = `${dim.id}:${val.id}->${up.id}`;
-                            if (!seen.switchUpstreamChanged.has(k)) {
-                                seen.switchUpstreamChanged.add(k);
-                                violations.switchUpstreamChanged.push({
-                                    dim: dim.id, val: val.id,
-                                    upstream: up.id, from: sel[up.id], to: next[up.id],
-                                    url: selToUrl(sel)
-                                });
-                            }
-                        }
-                    }
-                }
-
-                for (let ci = dimIdx + 1; ci < DIMENSIONS.length; ci++) {
-                    const check = DIMENSIONS[ci];
-                    if (next[check.id] === undefined) continue;
-                    if (isDimLocked(next, check) !== null) continue;
-
-                    const savedPre = sel[check.id];
-                    if (savedPre !== undefined) delete sel[check.id];
-                    const wasActivated = savedPre !== undefined ? isDimVisible(sel, check) : false;
-                    if (savedPre !== undefined) sel[check.id] = savedPre;
-
-                    if (!wasActivated) continue;
-
-                    const savedPost = next[check.id];
-                    delete next[check.id];
-                    const isActivated = isDimVisible(next, check);
-                    next[check.id] = savedPost;
-
-                    if (!isActivated) {
-                        const k = `${dim.id}:${val.id}->${check.id}`;
-                        if (!seen.switchOrphan.has(k)) {
-                            seen.switchOrphan.add(k);
-                            violations.switchOrphan.push({
-                                switchDim: dim.id, switchTo: val.id,
-                                orphan: check.id, orphanVal: savedPost,
-                                url: selToUrl(sel)
-                            });
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     function checkPrematureOutcome(sel, nextDim) {
         const dims = effectiveDims(sel);
         const matched = templatesList.filter(t => templateMatches(t, dims));
@@ -615,14 +334,218 @@ function runExplorer() {
     }
 
     function runChecks(sel) {
-        checkVanishUpward(sel);
-        checkAppearAbove(sel);
-        checkProgressiveVanish(sel);
-        checkLockedAfterUnanswered(sel);
-        checkStuck(sel);
-        checkClickErased(sel);
-        checkSelectionImpact(sel);
-        checkValueSwitch(sel);
+        const N = DIMENSIONS.length;
+        const dimVis = new Uint8Array(N);
+        const dimLock = new Array(N);
+        const dimEna = new Array(N);
+        const dimHasVal = new Uint8Array(N);
+        for (let i = 0; i < N; i++) {
+            const dim = DIMENSIONS[i];
+            if (dim.virtual) continue;
+            const vis = isDimVisible(sel, dim);
+            if (!vis) continue;
+            dimVis[i] = 1;
+            const lock = isDimLocked(sel, dim);
+            dimLock[i] = lock;
+            if (lock === null) {
+                dimEna[i] = getEnabledValues(sel, dim);
+                dimHasVal[i] = sel[dim.id] ? 1 : 0;
+            }
+        }
+
+        // lockedAfterUnanswered (no per-value iteration needed)
+        let firstUnansweredIdx = -1;
+        for (let i = 0; i < N; i++) {
+            if (!dimVis[i] || dimLock[i] !== null) continue;
+            if (dimHasVal[i]) continue;
+            firstUnansweredIdx = i;
+            break;
+        }
+        if (firstUnansweredIdx !== -1) {
+            for (let i = firstUnansweredIdx + 1; i < N; i++) {
+                if (!dimVis[i] || dimLock[i] === null) continue;
+                const k = `${DIMENSIONS[firstUnansweredIdx].id}|${DIMENSIONS[i].id}`;
+                if (seen.lockedAfterUnanswered.has(k)) continue;
+                seen.lockedAfterUnanswered.add(k);
+                violations.lockedAfterUnanswered.push({ unanswered: DIMENSIONS[firstUnansweredIdx].id, locked: DIMENSIONS[i].id, url: selToUrl(sel) });
+            }
+        }
+
+        // stuck / singleOption (no per-value iteration needed)
+        for (let i = 0; i < N; i++) {
+            if (!dimVis[i] || dimLock[i] !== null || dimHasVal[i]) continue;
+            const ena = dimEna[i];
+            if (ena.length === 0) violations.stuck.push({ dim: DIMENSIONS[i].id, url: selToUrl(sel) });
+            if (ena.length === 1) violations.singleOption.push({ dim: DIMENSIONS[i].id, val: ena[0].id, url: selToUrl(sel) });
+        }
+
+        const visibleIds = new Set();
+        const answeredIds = new Set();
+        for (let i = 0; i < N; i++) {
+            if (!dimVis[i]) continue;
+            visibleIds.add(DIMENSIONS[i].id);
+            if (dimLock[i] === null && dimHasVal[i]) answeredIds.add(DIMENSIONS[i].id);
+        }
+        const shownBefore = progressivelyShown(sel);
+
+        // Unified per-value iteration: applySelection once per (dim, val) pair
+        for (let di = 0; di < N; di++) {
+            if (!dimVis[di] || dimLock[di] !== null || !dimEna[di]) continue;
+            const dim = DIMENSIONS[di];
+            const dimId = dim.id;
+            const isUnanswered = !dimHasVal[di];
+
+            for (const val of dimEna[di]) {
+                if (sel[dimId] === val.id) continue;
+
+                const next = { ...sel };
+                applySelection(next, dimId, val.id);
+                const vk = `${dimId}:${val.id}`;
+
+                // clickErased
+                if (!next[dimId]) {
+                    if (!seen.clickErased.has(vk)) {
+                        seen.clickErased.add(vk);
+                        violations.clickErased.push({ dim: dimId, val: val.id, url: selToUrl(sel) });
+                    }
+                }
+
+                // switchErased / switchUpstreamChanged (answered dims only)
+                if (!isUnanswered) {
+                    if (next[dimId] !== val.id) {
+                        if (!seen.switchErased.has(vk)) {
+                            seen.switchErased.add(vk);
+                            violations.switchErased.push({ dim: dimId, val: val.id, url: selToUrl(sel) });
+                        }
+                    }
+                    if (next[dimId] === val.id) {
+                        for (let ui = 0; ui < di; ui++) {
+                            if (!sel[DIMENSIONS[ui].id]) continue;
+                            const upId = DIMENSIONS[ui].id;
+                            const k = `${vk}->${upId}`;
+                            if (!next[upId]) {
+                                if (!seen.switchUpstreamChanged.has(k)) {
+                                    seen.switchUpstreamChanged.add(k);
+                                    violations.switchUpstreamChanged.push({ dim: dimId, val: val.id, upstream: upId, from: sel[upId], to: '(deleted)', url: selToUrl(sel) });
+                                }
+                            } else if (sel[upId] !== next[upId]) {
+                                if (!seen.switchUpstreamChanged.has(k)) {
+                                    seen.switchUpstreamChanged.add(k);
+                                    violations.switchUpstreamChanged.push({ dim: dimId, val: val.id, upstream: upId, from: sel[upId], to: next[upId], url: selToUrl(sel) });
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // upper dims: vanishUpward + selectionImpact upward
+                for (let ui = 0; ui < di; ui++) {
+                    if (!dimVis[ui] || !sel[DIMENSIONS[ui].id]) continue;
+                    const upper = DIMENSIONS[ui];
+                    const upperVisible = isDimVisible(next, upper);
+                    const k = `${vk}->${upper.id}`;
+
+                    if (!upperVisible) {
+                        if (!seen.vanish.has(k)) {
+                            seen.vanish.add(k);
+                            violations.vanish.push({ dim: dimId, val: val.id, vanished: upper.id, url: selToUrl(sel) });
+                        }
+                    } else if (isUnanswered && dimLock[ui] === null && next[upper.id] !== sel[upper.id]) {
+                        const nowLocked = isDimLocked(next, upper) !== null;
+                        if (nowLocked) {
+                            if (!seen.selectionOverriddenUpward.has(k)) {
+                                seen.selectionOverriddenUpward.add(k);
+                                violations.selectionOverriddenUpward.push({ dim: dimId, val: val.id, overridden: upper.id, from: sel[upper.id], to: next[upper.id], url: selToUrl(sel) });
+                            }
+                        } else {
+                            if (!seen.selectionErasedUpward.has(k)) {
+                                seen.selectionErasedUpward.add(k);
+                                violations.selectionErasedUpward.push({ dim: dimId, val: val.id, erased: upper.id, hadValue: sel[upper.id], url: selToUrl(sel) });
+                            }
+                        }
+                    }
+                }
+
+                // lower dims: selectionImpact downward (unanswered) + switchOrphan (answered)
+                if (isUnanswered) {
+                    for (let li = di + 1; li < N; li++) {
+                        if (!dimVis[li] || dimLock[li] !== null || !sel[DIMENSIONS[li].id]) continue;
+                        if (next[DIMENSIONS[li].id] === undefined || next[DIMENSIONS[li].id] === sel[DIMENSIONS[li].id]) continue;
+                        const k = `${vk}->${DIMENSIONS[li].id}`;
+                        if (!seen.selectionOverriddenDownward.has(k)) {
+                            seen.selectionOverriddenDownward.add(k);
+                            violations.selectionOverriddenDownward.push({ dim: dimId, val: val.id, overridden: DIMENSIONS[li].id, from: sel[DIMENSIONS[li].id], to: next[DIMENSIONS[li].id], url: selToUrl(sel) });
+                        }
+                    }
+                } else {
+                    for (let ci = di + 1; ci < N; ci++) {
+                        const check = DIMENSIONS[ci];
+                        if (next[check.id] === undefined) continue;
+                        if (isDimLocked(next, check) !== null) continue;
+                        const savedPre = sel[check.id];
+                        if (savedPre !== undefined) delete sel[check.id];
+                        const wasActivated = savedPre !== undefined ? isDimVisible(sel, check) : false;
+                        if (savedPre !== undefined) sel[check.id] = savedPre;
+                        if (!wasActivated) continue;
+                        const savedPost = next[check.id];
+                        delete next[check.id];
+                        const isActivated = isDimVisible(next, check);
+                        next[check.id] = savedPost;
+                        if (!isActivated) {
+                            const k = `${vk}->${check.id}`;
+                            if (!seen.switchOrphan.has(k)) {
+                                seen.switchOrphan.add(k);
+                                violations.switchOrphan.push({ switchDim: dimId, switchTo: val.id, orphan: check.id, orphanVal: savedPost, url: selToUrl(sel) });
+                            }
+                        }
+                    }
+                }
+
+                // appearAbove (unanswered dims only)
+                if (isUnanswered) {
+                    const answeredRef = new Set(answeredIds);
+                    answeredRef.add(dimId);
+                    for (let ni = 0; ni < N; ni++) {
+                        if (DIMENSIONS[ni].virtual || visibleIds.has(DIMENSIONS[ni].id)) continue;
+                        if (!isDimVisible(next, DIMENSIONS[ni])) continue;
+                        if (isDimLocked(next, DIMENSIONS[ni]) !== null) continue;
+                        const k = `${vk}->${DIMENSIONS[ni].id}`;
+                        if (seen.appearAbove.has(k)) continue;
+                        let effectiveIdx = ni;
+                        const renderPos = resolveRenderIdx(next, DIMENSIONS[ni]);
+                        if (renderPos !== null) effectiveIdx = renderPos;
+                        let hasAnsweredBelow = false;
+                        for (let j = effectiveIdx + 1; j < N; j++) {
+                            if (answeredRef.has(DIMENSIONS[j].id)) { hasAnsweredBelow = true; break; }
+                        }
+                        if (hasAnsweredBelow) {
+                            seen.appearAbove.add(k);
+                            violations.appearAboveAnswered.push({ dim: dimId, val: val.id, appeared: DIMENSIONS[ni].id, url: selToUrl(sel) });
+                        }
+                    }
+                }
+
+                // progressiveVanish — only compute shownAfter if a previously-shown dim lost visibility
+                let needFullCheck = false;
+                for (const wasShown of shownBefore) {
+                    const wasIdx = DIMENSIONS.findIndex(dd => dd.id === wasShown);
+                    if (wasIdx >= di || !sel[wasShown] || dimLock[wasIdx] !== null) continue;
+                    if (!isDimVisible(next, DIMENSIONS[wasIdx])) { needFullCheck = true; break; }
+                }
+                if (needFullCheck) {
+                    const shownAfter = progressivelyShown(next);
+                    for (const wasShown of shownBefore) {
+                        if (shownAfter.has(wasShown)) continue;
+                        const wasIdx = DIMENSIONS.findIndex(dd => dd.id === wasShown);
+                        if (wasIdx >= di || !sel[wasShown] || dimLock[wasIdx] !== null) continue;
+                        const k = `${vk}->${wasShown}`;
+                        if (seen.progressiveVanish.has(k)) continue;
+                        seen.progressiveVanish.add(k);
+                        violations.progressiveVanish.push({ dim: dimId, val: val.id, vanished: wasShown, url: selToUrl(sel) });
+                    }
+                }
+            }
+        }
     }
 
     // DFS with forward-key deduplication
