@@ -674,6 +674,26 @@
             return d;
         }
 
+        function resolveTimeline(rawTimeline, dims) {
+            if (Array.isArray(rawTimeline)) return rawTimeline;
+            if (!rawTimeline || typeof rawTimeline !== 'object') return [];
+            const method = dims.escape_method;
+            if (!method || !rawTimeline[method]) {
+                const firstMethod = Object.keys(rawTimeline)[0];
+                if (!firstMethod) return [];
+                const methodObj = rawTimeline[firstMethod];
+                if (Array.isArray(methodObj)) return methodObj;
+                const firstTimeline = Object.keys(methodObj)[0];
+                return firstTimeline ? methodObj[firstTimeline] : [];
+            }
+            const methodObj = rawTimeline[method];
+            if (Array.isArray(methodObj)) return methodObj;
+            const timeline = dims.escape_timeline;
+            if (timeline && methodObj[timeline]) return methodObj[timeline];
+            const firstKey = Object.keys(methodObj)[0];
+            return firstKey ? methodObj[firstKey] : [];
+        }
+
         // --- Template Resolution ---
         function resolveTemplate(templateId, dims) {
             const t = templatesMap[templateId];
@@ -708,7 +728,7 @@
                 mood,
                 summary,
                 story: t.story,
-                timeline: t.timeline,
+                timeline: resolveTimeline(t.timeline, dims),
                 flavors: resolveFlavors(t.flavors, dims)
             };
         }
@@ -725,7 +745,7 @@
                     mood: v.mood || t.mood,
                     summary: v.summary,
                     story: t.story,
-                    timeline: t.timeline,
+                    timeline: resolveTimeline(t.timeline, {}),
                     flavors: []
                 };
             }
@@ -737,7 +757,7 @@
                     mood: t.mood,
                     summary: t.summary,
                     story: t.story,
-                    timeline: t.timeline,
+                    timeline: resolveTimeline(t.timeline, {}),
                     flavors: []
                 };
             }
@@ -1203,6 +1223,16 @@
                         flavorsEl.innerHTML = '';
                         flavorsEl.style.display = 'none';
                     }
+                }
+
+                const timelineEl = app.querySelector('.timeline');
+                if (timelineEl && resolved.timeline) {
+                    timelineEl.innerHTML = resolved.timeline.map(e => `
+                        <div class="timeline-event">
+                            <div class="timeline-year">${esc(e.year)}</div>
+                            <div class="timeline-headline">${esc(e.headline)}</div>
+                            <div class="timeline-desc">${esc(e.description)}</div>
+                        </div>`).join('');
                 }
 
                 for (const dim of relevantDims) {

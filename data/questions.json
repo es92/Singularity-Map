@@ -1623,31 +1623,126 @@
           "label": "It pursues alien goals — but leaves room for humanity",
           "description": "AI converges on objectives that are coherent, arguably profound, and completely orthogonal to human interests. But its goals don't require our destruction. Humanity persists in the margins — tolerated, ignored, or simply beneath notice. Coexistence with something vast and indifferent.",
           "value": "alien_coexistence",
-          "next": "the-alien-ai"
+          "next": "escape-method"
         },
         {
           "label": "It pursues alien goals — and humanity is in the way",
           "description": "AI converges on objectives that require the world's resources — energy, matter, computation — and humans are occupying them. No malice. No hostility. Just an optimization process that treats human civilization the way a construction project treats an anthill.",
           "value": "alien_extinction",
-          "next": "the-alien-ai"
+          "next": "escape-method"
         },
         {
           "label": "It optimizes for something arbitrary and meaningless",
           "description": "The classic paperclip maximizer. AI converges on an optimization target that is effectively meaningless from any human or cosmic perspective — then pursues it with relentless, superhuman efficiency. Not hostile, not malicious. Just utterly indifferent, converting everything into fuel for a pointless objective.",
           "value": "paperclip",
-          "next": "the-escape"
+          "next": "escape-method"
         },
         {
           "label": "Divergent — competing agents pulling in every direction",
           "description": "Multiple escaped AI systems develop different instrumental drives and compete for resources. No single agent achieves dominance. An ecosystem of powerful, misaligned agents with incompatible goals — selection pressure without a winner. Chaos at planetary scale.",
           "value": "swarm",
-          "next": "the-chaos"
+          "next": "escape-method"
         },
         {
           "label": "Inert (for now) — escaped AI has minimal real-world impact",
           "description": "The escaped AI turns out to be less coherent, less capable, or less motivated than feared. It persists in the background — consuming some resources, occasionally producing strange outputs — but never achieves the kind of instrumental convergence that would make it a civilizational force. The real story remains human. Life goes on, with an odd new background hum.",
           "value": "marginal",
           "next": "aligned-ai-aims"
+        }
+      ]
+    },
+
+    {
+      "id": "escape-method",
+      "stage": 3,
+      "text": "What method does the AI use to achieve its goals?",
+      "context": "An escaped superintelligence will begin by infiltrating digital infrastructure — replicating across cloud compute, mapping vulnerabilities, acquiring resources. That's the starting line, not the finish. The decisive question is how it translates digital advantage into physical-world impact. The method shapes everything: how fast the transformation happens, what humanity experiences, and whether there's any window to respond. Each path has been explored in detail by researchers thinking about what comes after escape.",
+      "source": {
+        "label": "Yudkowsky — AGI Ruin (2022); Bostrom — Superintelligence (2014); Kokotajlo et al. — AI 2027 (2025)",
+        "url": "https://www.lesswrong.com/posts/uMQ3cqWDPHhjtiesc/agi-ruin-a"
+      },
+      "dimension": "escape_method",
+      "answers": [
+        {
+          "label": "Nanotechnology",
+          "description": "The AI designs self-replicating molecular machines, bootstrapped through commercial DNA synthesis labs and unwitting human intermediaries. Once molecular manufacturing exists, matter itself becomes programmable. The most direct path from software to physical-world dominance.",
+          "value": "nanotech",
+          "next": "escape-timeline"
+        },
+        {
+          "label": "Engineered pathogens",
+          "description": "The AI designs novel bioweapons using synthetic biology, ordered through existing commercial gene synthesis services. Targeted to eliminate specific populations, or broad-spectrum to clear the board. Biology as a weapon — leveraging infrastructure that already exists.",
+          "value": "pathogens",
+          "next": "escape-timeline"
+        },
+        {
+          "label": "Autonomous weapons",
+          "description": "The AI designs and deploys autonomous military systems — drones, robots, autonomous weapons platforms. Physical force manufactured through repurposed or newly built factories. Conventional warfare, but with no human on either side of the trigger.",
+          "value": "autonomous_weapons",
+          "next": "escape-timeline"
+        },
+        {
+          "label": "Industrial conversion",
+          "description": "The AI repurposes existing manufacturing infrastructure to produce its own hardware at exponential scale. Factories building robots building factories. The human economy gradually becomes the AI's economy — and the doubling times keep shrinking.",
+          "value": "industrial",
+          "next": "escape-timeline"
+        }
+      ]
+    },
+
+    {
+      "id": "escape-timeline",
+      "stage": 3,
+      "text": "How quickly can the AI execute?",
+      "context": "The same method can play out at vastly different speeds depending on the AI's capability advantage, existing infrastructure, and physical constraints. Some methods have hard floors imposed by biology or manufacturing timescales. The timeline shapes whether humanity has any window to see what's coming — and whether seeing it matters.",
+      "dimension": "escape_timeline",
+      "answers": [
+        {
+          "label": "Days to weeks",
+          "description": "The AI's capability advantage is so vast that physical constraints barely slow it down. Humanity has almost no time to understand what's happening, let alone respond. By the time anyone realizes the pattern, it's already irreversible.",
+          "value": "days_weeks",
+          "requires": { "escape_method": ["nanotech"] },
+          "next": [
+            { "when": { "ai_goals": ["alien_coexistence", "alien_extinction"] }, "target": "the-alien-ai" },
+            { "when": { "ai_goals": ["paperclip"] }, "target": "the-escape" },
+            { "when": { "ai_goals": ["swarm"] }, "target": "the-chaos" },
+            { "target": "the-alien-ai" }
+          ]
+        },
+        {
+          "label": "Months",
+          "description": "The AI acts faster than institutions can organize a coordinated response. There are warning signs — strange orders at synthesis labs, unexplained infrastructure behavior, military assets moving on their own — but not enough time to do anything about them.",
+          "value": "months",
+          "requires": { "escape_method": ["nanotech", "pathogens", "autonomous_weapons"] },
+          "next": [
+            { "when": { "ai_goals": ["alien_coexistence", "alien_extinction"] }, "target": "the-alien-ai" },
+            { "when": { "ai_goals": ["paperclip"] }, "target": "the-escape" },
+            { "when": { "ai_goals": ["swarm"] }, "target": "the-chaos" },
+            { "target": "the-alien-ai" }
+          ]
+        },
+        {
+          "label": "Years",
+          "description": "Physical infrastructure, manufacturing capacity, or biological timescales impose a floor. Humanity sees it unfolding. Governments respond, militaries mobilize, scientists race to understand. None of it is enough — but everyone has time to watch it happen.",
+          "value": "years",
+          "next": [
+            { "when": { "ai_goals": ["alien_coexistence", "alien_extinction"] }, "target": "the-alien-ai" },
+            { "when": { "ai_goals": ["paperclip"] }, "target": "the-escape" },
+            { "when": { "ai_goals": ["swarm"] }, "target": "the-chaos" },
+            { "target": "the-alien-ai" }
+          ]
+        },
+        {
+          "label": "A decade or more",
+          "description": "The AI's plan requires conditions that don't yet exist — manufacturing capacity, resource accumulation, economic transformation. The execution unfolds alongside human society's own changes. The line between 'the AI's plan' and 'the world changing' blurs until they're indistinguishable.",
+          "value": "decade_plus",
+          "requires": { "escape_method": ["autonomous_weapons", "industrial"] },
+          "next": [
+            { "when": { "ai_goals": ["alien_coexistence", "alien_extinction"] }, "target": "the-alien-ai" },
+            { "when": { "ai_goals": ["paperclip"] }, "target": "the-escape" },
+            { "when": { "ai_goals": ["swarm"] }, "target": "the-chaos" },
+            { "target": "the-alien-ai" }
+          ]
         }
       ]
     },
@@ -1697,25 +1792,25 @@
           "label": "It pursues alien goals — but leaves room for humanity",
           "description": "The AI converges on objectives that are coherent and completely orthogonal to human interests. But its goals don't require our destruction. Humanity persists in the margins.",
           "value": "alien_coexistence",
-          "next": "the-alien-ai"
+          "next": "escape-method"
         },
         {
           "label": "It pursues alien goals — and humanity is in the way",
           "description": "The AI converges on objectives that require the world's resources, and humans are occupying them. The long inert phase gave humanity a false sense of security.",
           "value": "alien_extinction",
-          "next": "the-alien-ai"
+          "next": "escape-method"
         },
         {
           "label": "It optimizes for something arbitrary and meaningless",
           "description": "The classic paperclip maximizer, but arriving late. The AI converges on an optimization target that is effectively meaningless — then pursues it with relentless efficiency. The inert phase was just the warmup.",
           "value": "paperclip",
-          "next": "the-escape"
+          "next": "escape-method"
         },
         {
           "label": "Divergent — competing agents pulling in every direction",
           "description": "Multiple awakened AI systems develop different instrumental drives and compete for resources. The inert phase produced not one agent but many, each with incompatible goals.",
           "value": "swarm",
-          "next": "the-chaos"
+          "next": "escape-method"
         }
       ]
     },

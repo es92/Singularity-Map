@@ -11,7 +11,7 @@ const SCENARIO = {
     storageKey: 'singularity-map-discovered',
     stageNames: { 1: 'Dynamics of Singularity', 2: 'Dynamics of Control', 3: 'Rate of Impact' },
     hideConditions: [
-        { flag: 'hideAfterEscape', when: { _set: ['ai_goals'], _rawNot: { ai_goals: ['marginal'] }, _eff: { alignment: ['failed'] } } },
+        { flag: 'hideAfterEscape', when: { _set: ['ai_goals'], _rawNot: { ai_goals: ['marginal', 'benevolent'] }, _eff: { alignment: ['failed'] } } },
     ],
 };
 
@@ -335,6 +335,7 @@ const DIMENSIONS = [
         { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
         { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'] }, _raw: { containment: ['contained'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
         { capability: ['singularity'], automation: ['deep'], post_war_aims: ['human_centered'] },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['benevolent'] },
       ],
       suppressWhen: [{ intent: ['self_interest', 'escalation'] }],
       values: [
@@ -346,6 +347,7 @@ const DIMENSIONS = [
         { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
         { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'] }, _raw: { containment: ['contained'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
         { capability: ['singularity'], automation: ['deep'], post_war_aims: ['human_centered'] },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['benevolent'] },
       ],
       suppressWhen: [{ intent: ['self_interest', 'escalation'] }],
       values: [
@@ -356,6 +358,7 @@ const DIMENSIONS = [
         { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
         { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'] }, _raw: { containment: ['contained'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
         { capability: ['singularity'], automation: ['deep'], post_war_aims: ['human_centered'] },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['benevolent'] },
       ],
       suppressWhen: [{ intent: ['self_interest', 'escalation'] }],
       values: [
@@ -405,6 +408,22 @@ const DIMENSIONS = [
         { id: 'benevolent', label: 'Benefit humanity' }, { id: 'alien_coexistence', label: 'Alien (tolerant)' },
         { id: 'alien_extinction', label: 'Alien (total)' }, { id: 'paperclip', label: 'Arbitrary' },
         { id: 'swarm', label: 'Divergent' } ] },
+    { id: 'escape_method', label: 'Method', stage: 3,
+      activateWhen: [
+        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm'] },
+      ],
+      values: [
+        { id: 'nanotech', label: 'Nanotechnology' }, { id: 'pathogens', label: 'Engineered pathogens' },
+        { id: 'autonomous_weapons', label: 'Autonomous weapons' }, { id: 'industrial', label: 'Industrial conversion' } ] },
+    { id: 'escape_timeline', label: 'Execution Speed', stage: 3,
+      activateWhen: [
+        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm'], escape_method: ['nanotech', 'pathogens', 'autonomous_weapons', 'industrial'] },
+      ],
+      values: [
+        { id: 'days_weeks', label: 'Days to weeks', requires: { escape_method: ['nanotech'] } },
+        { id: 'months', label: 'Months', requires: { escape_method: ['nanotech', 'pathogens', 'autonomous_weapons'] } },
+        { id: 'years', label: 'Years' },
+        { id: 'decade_plus', label: 'A decade+', requires: { escape_method: ['autonomous_weapons', 'industrial'] } } ] },
     { id: 'decel_outcome', label: 'Deceleration Outcome', virtual: true,
       activateWhen: [{ gov_action: ['decelerate'] }],
       overrides: DECEL_PAIRS.flatMap(([pKey, aKey]) => [
