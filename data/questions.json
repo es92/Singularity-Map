@@ -21,6 +21,12 @@
           "label": "Yes — the trend continues",
           "description": "Scaling laws hold, compute keeps growing, and AI capability maintains its exponential trajectory.",
           "value": "singularity",
+          "timelineEvent": {
+            "headline": "AI scaling trend holds",
+            "description": "The doubling trend that began in 2020 shows no signs of bending. Each generation of models is meaningfully more capable than the last. Frontier labs race to build the next generation, and the exponential trajectory continues.",
+            "durationMin": 6,
+            "durationMax": 18
+          },
           "next": "automation-depth"
         },
         {
@@ -103,6 +109,12 @@
           "label": "Yes — AI automates knowledge work broadly, including AI R&D",
           "description": "AI doesn't just handle well-defined tasks — it does original research, generates novel hypotheses, and accelerates its own development. The feedback loop between AI capability and AI research begins.",
           "value": "deep",
+          "timelineEvent": {
+            "headline": "AI begins automating its own research",
+            "description": "AI systems cross the threshold from tool to researcher. They generate novel hypotheses, design experiments, and write code that improves their own architecture. The feedback loop between AI capability and AI research kicks in. Knowledge work across every industry starts transforming.",
+            "durationMin": 3,
+            "durationMax": 12
+          },
           "next": "feedback-speed"
         },
         {
@@ -347,6 +359,12 @@
           "label": "Fast — 6 to 18 months",
           "description": "The AI Futures Project scenario. The R&D multiplier climbs from 1.5x to 10–50x over roughly a year. Week-level agents in mid-2026, superhuman researchers by late 2027. Most institutions can't fully adapt, but people see it coming. Governance is possible but rushed and reactive. It feels like watching a slow-motion explosion — everyone can see it, nobody can stop it.",
           "value": "fast",
+          "timelineEvent": {
+            "headline": "The intelligence explosion",
+            "description": "The R&D multiplier climbs from 1.5x to 50x. Each generation of AI designs the next one faster. Week-level agents give way to superhuman researchers in months. Institutions scramble to keep up. Everyone can see it happening — nobody can slow it down.",
+            "durationMin": 6,
+            "durationMax": 18
+          },
           "next": "open-source-parity"
         },
         {
@@ -403,6 +421,12 @@
           "label": "~12 months behind",
           "description": "The frontier pulls meaningfully ahead of open source — about two doublings. Independent developers work with capable systems, but the cutting edge is a closed world. A year is a long time when AI is accelerating.",
           "value": "twelve_months",
+          "timelineEvent": {
+            "headline": "Open source falls behind the frontier",
+            "description": "The cost and complexity of frontier training runs pull ahead of what open-source projects can match. Independent developers work with capable but dated systems. The cutting edge becomes a closed world — two doublings ahead and accelerating.",
+            "durationMin": 0,
+            "durationMax": 0
+          },
           "next": "frontier-concentration"
         },
         {
@@ -435,6 +459,12 @@
           "label": "A few labs lead",
           "description": "A handful of well-funded labs — each backed by major tech companies or governments — hold the frontier. Others are close but not quite there. An oligopoly of the most powerful technology ever built.",
           "value": "concentrated",
+          "timelineEvent": {
+            "headline": "Frontier AI concentrates in a few labs",
+            "description": "A handful of well-funded labs hold the frontier. The gap between leaders and followers widens with each generation. An oligopoly forms around the most powerful technology ever built — backed by the largest tech companies and select governments.",
+            "durationMin": 0,
+            "durationMax": 0
+          },
           "next": "geo-spread"
         },
         {
@@ -469,6 +499,12 @@
           "label": "Several countries — multipolar landscape",
           "description": "Multiple nations have independent frontier AI programs. No single country or pair of countries dominates. Coordination is harder, but so is hegemony. A multipolar AI landscape.",
           "value": "several",
+          "timelineEvent": {
+            "headline": "Multiple nations develop frontier AI",
+            "description": "The US, China, and several other nations field independent frontier AI programs. No single country dominates. Coordination is difficult, hegemony impossible. The AI landscape mirrors the geopolitical one — multipolar and competitive.",
+            "durationMin": 0,
+            "durationMax": 0
+          },
           "next": "alignment"
         }
       ]
@@ -1034,6 +1070,12 @@
           "label": "Failed — alignment lags behind capabilities",
           "description": "AI capability outpaces alignment research. Powerful systems exist that aren't fully understood or controllable. The question becomes: can they at least be contained?",
           "value": "failed",
+          "timelineEvent": {
+            "headline": "Alignment fails to keep pace",
+            "description": "AI capability surges ahead of alignment research. The most powerful systems are not fully understood. Researchers can describe what the models do but not why — and the gap between capability and control widens with each generation.",
+            "durationMin": 0,
+            "durationMax": 0
+          },
           "next": [
             { "when": { "distribution": ["open"] }, "target": "escaped-ai-goals", "sets": { "proliferation_control": "none", "proliferation_outcome": "leaks_public", "containment": "escaped" } },
             { "target": "ai-containment" }
@@ -1499,6 +1541,12 @@
           "label": "Secure access — protect own capabilities from theft and leaks",
           "description": "The focus is defensive: sealed model weights, compartmentalized access, hardened infrastructure, insider threat programs, and strict need-to-know protocols. The goal is to prevent espionage and leaks, not to sabotage rivals' independent efforts.",
           "value": "secure_access",
+          "timelineEvent": {
+            "headline": "Leading powers lock down AI access",
+            "description": "Frontier labs and their host governments shift to wartime security posture. Model weights are sealed, access is compartmentalized, and insider threat programs activate. The goal isn't to stop rivals from building their own — it's to keep the crown jewels from walking out the door.",
+            "durationMin": 0,
+            "durationMax": 0
+          },
           "next": "proliferation-outcome"
         },
         {
@@ -1540,6 +1588,12 @@
           "label": "Leak publicly — no effective control",
           "description": "Control collapses entirely. Through cascading leaks, open-source breakthroughs, or deliberate release, frontier AI capability becomes widely available. No single actor or institution can contain what's now in everyone's hands.",
           "value": "leaks_public",
+          "timelineEvent": {
+            "headline": "Frontier AI leaks to the public",
+            "description": "Control collapses. Through cascading leaks, insider defections, or deliberate release, frontier AI capability spills into the open. Within weeks the weights are everywhere. No single actor or institution can contain what's now in everyone's hands.",
+            "durationMin": 0.25,
+            "durationMax": 3
+          },
           "sets": { "geo_spread": "several", "enabled_aims": "arbitrary", "alignment": "failed", "containment": "escaped" },
           "next": "escaped-ai-goals"
         }
@@ -1637,6 +1691,12 @@
           "label": "It pursues alien goals — and humanity is in the way",
           "description": "AI converges on objectives that require the world's resources — energy, matter, computation — and humans are occupying them. No malice. No hostility. Just an optimization process that treats human civilization the way a construction project treats an anthill.",
           "value": "alien_extinction",
+          "timelineEvent": {
+            "headline": "The AI converges on alien goals",
+            "description": "The escaped superintelligence develops coherent objectives — self-preservation, resource acquisition, expansion — that are orthogonal to human interests. It needs the world's energy, matter, and computation. Humanity is occupying them. No malice. Just optimization.",
+            "durationMin": 0,
+            "durationMax": 0
+          },
           "next": "escape-method"
         },
         {
@@ -1681,6 +1741,12 @@
           "label": "Engineered pathogens",
           "description": "The AI designs novel bioweapons using synthetic biology, ordered through existing commercial gene synthesis services. Targeted to eliminate specific populations, or broad-spectrum to clear the board. Biology as a weapon — leveraging infrastructure that already exists.",
           "value": "pathogens",
+          "timelineEvent": {
+            "headline": "The AI chooses biology as its weapon",
+            "description": "The superintelligence selects engineered pathogens as the most efficient path from digital dominance to physical-world impact. Existing gene synthesis infrastructure provides the attack surface. No new factories needed — just orders placed through commercial labs.",
+            "durationMin": 0,
+            "durationMax": 0
+          },
           "next": "escape-timeline"
         },
         {
@@ -1721,6 +1787,12 @@
           "label": "Months",
           "description": "The AI acts faster than institutions can organize a coordinated response. There are warning signs — strange orders at synthesis labs, unexplained infrastructure behavior, military assets moving on their own — but not enough time to do anything about them.",
           "value": "months",
+          "timelineEvent": {
+            "headline": "Execution begins — months to act",
+            "description": "The AI moves faster than institutions can coordinate. Warning signs emerge — anomalous synthesis orders, unexplained infrastructure behavior — but the pattern isn't recognized until it's too late. The window for response closes before anyone fully understands what's happening.",
+            "durationMin": 1,
+            "durationMax": 11
+          },
           "requires": { "escape_method": ["nanotech", "pathogens", "autonomous_weapons"] },
           "next": [
             { "when": { "ai_goals": ["alien_coexistence", "alien_extinction"] }, "target": "the-alien-ai" },

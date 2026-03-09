@@ -258,8 +258,47 @@
             font-size: 0.8rem; font-weight: 700; color: var(--accent);
             letter-spacing: 0.04em; margin-bottom: 0.2rem;
         }
-        .timeline-headline { font-weight: 600; margin-bottom: 0.2rem; font-size: 0.98rem; }
+        .timeline-headline { font-weight: 600; margin-bottom: 0.2rem; font-size: 0.98rem; display: flex; align-items: baseline; flex-wrap: wrap; }
+        .timeline-param-wrap {
+            margin-left: auto; display: flex; align-items: baseline; gap: 0.35rem; white-space: nowrap;
+        }
+        .timeline-param {
+            font-size: 0.7rem; font-weight: 500; padding: 0.15rem 0.5rem;
+            border-radius: 12px; border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+        .timeline-param-dim {
+            font-size: 0.7rem; color: var(--text-dim); font-weight: 400;
+        }
         .timeline-desc { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6; }
+        .timeline-slider {
+            display: flex; align-items: center; gap: 0.6rem;
+            margin-top: 0.5rem; padding: 0.3rem 0;
+        }
+        .timeline-slider input[type="range"] {
+            -webkit-appearance: none; appearance: none;
+            height: 4px; border-radius: 2px;
+            background: var(--border);
+            outline: none; cursor: pointer;
+        }
+        .timeline-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 4px; height: 18px; border-radius: 2px;
+            background: var(--accent);
+            box-shadow: 0 0 6px var(--accent-glow);
+            cursor: ew-resize;
+        }
+        .timeline-slider input[type="range"]::-moz-range-thumb {
+            width: 4px; height: 18px; border-radius: 2px; border: none;
+            background: var(--accent);
+            box-shadow: 0 0 6px var(--accent-glow);
+            cursor: ew-resize;
+        }
+        .timeline-slider-label {
+            font-size: 0.75rem; color: var(--text-dim);
+            white-space: nowrap; min-width: 5rem; text-align: right;
+        }
+        .timeline-year { transition: none; }
 
         /* ---- Path Summary ---- */
         .path-summary {
@@ -460,9 +499,43 @@
             background: var(--bg-surface); border: 1px solid var(--border);
             border-radius: var(--radius); padding: 0.85rem 1.1rem; margin-bottom: 2rem;
         }
+        .outcome-dims-header {
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; user-select: none;
+        }
         .outcome-dims-label {
             font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 0.65rem;
+            letter-spacing: 0.08em; color: var(--text-dim); margin: 0;
+        }
+        .outcome-dims-toggle {
+            background: none; border: none; font-family: inherit;
+            font-size: 0.78rem; color: var(--text-dim); cursor: pointer;
+            display: flex; align-items: center; gap: 0.35rem;
+            padding: 0.15rem 0; transition: color 0.15s var(--ease);
+        }
+        .outcome-dims-toggle:hover { color: var(--text-secondary); }
+        .outcome-dims-toggle .chevron {
+            display: inline-block; font-size: 0.6rem;
+            transition: transform 0.25s var(--ease);
+        }
+        .outcome-dims.expanded .outcome-dims-toggle .chevron { transform: rotate(180deg); }
+        .outcome-dims .dim-stages {
+            position: relative;
+            max-height: 4.5rem; overflow: hidden;
+            transition: max-height 0.35s var(--ease), margin 0.25s var(--ease);
+            margin-top: 0.65rem;
+        }
+        .outcome-dims .dim-stages::after {
+            content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+            height: 3rem; pointer-events: none;
+            background: linear-gradient(to bottom, transparent, var(--bg-surface));
+            transition: opacity 0.25s var(--ease);
+        }
+        .outcome-dims.expanded .dim-stages {
+            max-height: 3000px;
+        }
+        .outcome-dims.expanded .dim-stages::after {
+            opacity: 0;
         }
 
         /* ---- Explorer ---- */
@@ -747,6 +820,34 @@
                 if (s.dims) Object.assign(d, s.dims);
             }
             return d;
+        }
+
+        const _timelineStart = new Date();
+        const _monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        function formatMonths(m) {
+            const d = new Date(_timelineStart.getFullYear(), _timelineStart.getMonth() + m);
+            return { year: d.getFullYear(), month: _monthNames[d.getMonth()] };
+        }
+
+        function formatRange(startMonths, endMonths) {
+            const s = formatMonths(startMonths);
+            const e = formatMonths(endMonths);
+            if (startMonths === endMonths || s.year === e.year && s.month === e.month) {
+                return s.year + ' ' + s.month;
+            }
+            if (s.year === e.year) {
+                return s.year + ' ' + s.month + ' – ' + e.month;
+            }
+            return s.year + ' ' + s.month + ' – ' + e.year + ' ' + e.month;
+        }
+
+        function formatDuration(m) {
+            if (m < 0.25) { const d = Math.max(1, Math.round(m * 30)); return d + (d === 1 ? ' day' : ' days'); }
+            if (m < 1) { const w = Math.max(1, Math.round(m * 4.33)); return w + (w === 1 ? ' week' : ' weeks'); }
+            if (m < 12) { const mo = Math.round(m * 10) / 10; return mo + (mo === 1 ? ' month' : ' months'); }
+            const y = Math.round(m / 12 * 10) / 10;
+            return y + (y === 1 ? ' year' : ' years');
         }
 
         function resolveTimeline(rawTimeline, dims) {
@@ -1301,13 +1402,10 @@
                 }
 
                 const timelineEl = app.querySelector('.timeline');
-                if (timelineEl && resolved.timeline) {
-                    timelineEl.innerHTML = resolved.timeline.map(e => `
-                        <div class="timeline-event">
-                            <div class="timeline-year">${esc(e.year)}</div>
-                            <div class="timeline-headline">${esc(e.headline)}</div>
-                            <div class="timeline-desc">${esc(e.description)}</div>
-                        </div>`).join('');
+                if (timelineEl) {
+                    fullTimeline = composeTimeline(resolved.timeline);
+                    timelineEl.innerHTML = buildTimelineHtml(fullTimeline);
+                    wireTimelineSliders();
                 }
 
                 for (const dim of relevantDims) {
@@ -1357,12 +1455,119 @@
             const storyHtml = (Array.isArray(initResolved.story) ? initResolved.story : [initResolved.story])
                 .map(p => `<p>${esc(p)}</p>`).join('');
 
-            const timelineHtml = initResolved.timeline.map(e => `
-                <div class="timeline-event">
-                    <div class="timeline-year">${esc(e.year)}</div>
-                    <div class="timeline-headline">${esc(e.headline)}</div>
-                    <div class="timeline-desc">${esc(e.description)}</div>
-                </div>`).join('');
+            function composeTimeline(outcomeTimeline) {
+                let pathEvents;
+                if (path.length > 0) {
+                    pathEvents = path
+                        .map(step => {
+                            const q = questionsMap[step.questionId];
+                            const a = q && q.answers[step.answerIndex];
+                            if (!a || !a.timelineEvent) return null;
+                            const dim = DIM_MAP[q.dimension];
+                            return { ...a.timelineEvent, year: '', paramLabel: a.label, dimLabel: dim ? dim.label : '' };
+                        })
+                        .filter(Boolean);
+                } else {
+                    pathEvents = [];
+                    let curId = rootId;
+                    const visited = new Set();
+                    while (curId && questionsMap[curId] && !visited.has(curId)) {
+                        visited.add(curId);
+                        const q = questionsMap[curId];
+                        const dimVal = localDims[q.dimension];
+                        if (!dimVal) break;
+                        const a = q.answers.find(ans =>
+                            ans.value === dimVal || (ans.sets && ans.sets[q.dimension] === dimVal)
+                        );
+                        if (!a) break;
+                        if (a.timelineEvent) {
+                            const dim = DIM_MAP[q.dimension];
+                            pathEvents.push({ ...a.timelineEvent, year: '', paramLabel: a.label, dimLabel: dim ? dim.label : '' });
+                        }
+                        const stepDims = collectStepDims(q, a);
+                        const allDims = { ...localDims, ...stepDims };
+                        const res = resolveConditionalNext(a.next, allDims);
+                        curId = res ? res.target : (typeof a.next === 'string' ? a.next : null);
+                    }
+                }
+                return [...pathEvents, ...(outcomeTimeline || [])];
+            }
+
+            let fullTimeline = composeTimeline(initResolved.timeline);
+            let timelineDurations = [];
+            const isInteractive = fullTimeline.some(e => e.durationMin != null);
+
+            function buildTimelineHtml(events) {
+                if (!isInteractive) {
+                    return events.map(e => {
+                        const pillHtml = e.paramLabel ? `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.dimLabel)}</span><span class="timeline-param">${esc(e.paramLabel)}</span></span>` : '';
+                        return `
+                        <div class="timeline-event">
+                            <div class="timeline-year">${esc(e.year)}</div>
+                            <div class="timeline-headline">${esc(e.headline)}${pillHtml}</div>
+                            <div class="timeline-desc">${esc(e.description)}</div>
+                        </div>`;
+                    }).join('');
+                }
+                timelineDurations = events.map(e => {
+                    const min = e.durationMin || 0;
+                    const max = e.durationMax != null ? e.durationMax : min;
+                    return { min, max, current: (min + max) / 2 };
+                });
+                const ranges = timelineDurations.filter(d => d.max > d.min).map(d => d.max - d.min);
+                const meanRange = ranges.length ? ranges.reduce((a, b) => a + b, 0) / ranges.length : 1;
+                let cumulative = 0;
+                return events.map((e, i) => {
+                    const d = timelineDurations[i];
+                    const yearLabel = formatRange(cumulative, cumulative + d.current);
+                    cumulative += d.current;
+                    const hasRange = d.max > d.min;
+                    let sliderHtml = '';
+                    if (hasRange) {
+                        const ratio = (d.max - d.min) / meanRange;
+                        const t = Math.sqrt(ratio);
+                        const pct = Math.min(100, Math.max(15, t * 50));
+                        sliderHtml = `
+                        <div class="timeline-slider">
+                            <input type="range" min="${d.min}" max="${d.max}" step="${(d.max - d.min) / 100}" value="${d.current}" data-tsi="${i}" style="width:${pct.toFixed(0)}%">
+                            <span class="timeline-slider-label" data-tsl="${i}">${formatDuration(d.current)}</span>
+                        </div>`;
+                    }
+                    const pillHtml = e.paramLabel ? `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.dimLabel)}</span><span class="timeline-param">${esc(e.paramLabel)}</span></span>` : '';
+                    return `
+                        <div class="timeline-event">
+                            <div class="timeline-year" data-tsy="${i}">${esc(yearLabel)}</div>
+                            <div class="timeline-headline">${esc(e.headline)}${pillHtml}</div>
+                            <div class="timeline-desc">${esc(e.description)}</div>
+                            ${sliderHtml}
+                        </div>`;
+                }).join('');
+            }
+
+            function updateTimelineLabels() {
+                let cumulative = 0;
+                const events = app.querySelectorAll('.timeline-event');
+                timelineDurations.forEach((d, i) => {
+                    const yearLabel = formatRange(cumulative, cumulative + d.current);
+                    const yearEl = app.querySelector('[data-tsy="' + i + '"]');
+                    if (yearEl) yearEl.textContent = yearLabel;
+                    const slLabel = app.querySelector('[data-tsl="' + i + '"]');
+                    if (slLabel) slLabel.textContent = formatDuration(d.current);
+                    cumulative += d.current;
+                });
+            }
+
+            function wireTimelineSliders() {
+                app.querySelectorAll('.timeline-slider input[type="range"]').forEach(slider => {
+                    slider.addEventListener('input', () => {
+                        const idx = parseInt(slider.dataset.tsi);
+                        timelineDurations[idx].current = parseFloat(slider.value);
+                        updateTimelineLabels();
+                    });
+                });
+            }
+
+            const timelineHtml = buildTimelineHtml(fullTimeline);
 
             let initFlavorsHtml = '';
             if (initResolved.flavors && initResolved.flavors.length > 0) {
@@ -1413,7 +1618,10 @@
                 }).join('');
                 dimSelectorHtml = `
                     <div class="outcome-dims">
-                        <div class="outcome-dims-label">Parameters</div>
+                        <div class="outcome-dims-header">
+                            <span class="outcome-dims-label">Parameters</span>
+                            <button class="outcome-dims-toggle">${allOutcomeDims.length} dimensions &mdash; tap to adjust <span class="chevron">&#9660;</span></button>
+                        </div>
                         <div class="dim-stages">${stagePanels}</div>
                     </div>`;
             }
@@ -1444,6 +1652,13 @@
                     </div>
                 </div>`;
 
+            const dimsHeader = app.querySelector('.outcome-dims-header');
+            if (dimsHeader) {
+                dimsHeader.addEventListener('click', () => {
+                    dimsHeader.closest('.outcome-dims').classList.toggle('expanded');
+                });
+            }
+
             relevantDims.forEach(dim => {
                 const row = app.querySelector('[data-odim="' + dim.id + '"]');
                 if (!row) return;
@@ -1455,6 +1670,8 @@
                     });
                 });
             });
+
+            wireTimelineSliders();
 
             listen('[data-action="back-to-q"]', 'click', () => {
                 const prev = path.pop();
