@@ -70,7 +70,7 @@ const DIMENSIONS = [
         { decel: ['solved', 'parity_solved'], value: 'robust' },
         { when: { brittle_resolution: 'solved' }, value: 'robust' },
         { when: { brittle_resolution: 'sufficient' }, valueMap: { failed: 'brittle' } },
-        { when: { inert_stays: 'no' }, value: 'failed' },
+        { when: { inert_stays: 'no' }, whenSet: 'inert_outcome', value: 'failed' },
         { when: { ai_goals: 'marginal' }, unless: { brittle_resolution: 'solved' }, valueMap: { failed: 'brittle' } },
         { when: { alignment_durability: 'breaks' }, value: 'failed' },
         { when: { brittle_resolution: 'escape' }, value: 'failed' },
@@ -172,7 +172,7 @@ const DIMENSIONS = [
         { when: { proliferation_outcome: 'breached' }, effective: { alignment: 'failed' }, value: 'escaped' },
         { when: { enabled_aims: 'arbitrary' }, unless: { ai_goals: 'marginal' }, value: 'escaped' },
         { when: { brittle_resolution: 'escape' }, value: 'escaped' },
-        { when: { inert_stays: 'no' }, value: 'escaped' },
+        { when: { inert_stays: 'no' }, whenSet: 'inert_outcome', value: 'escaped' },
       ],
       values: [
         { id: 'contained', label: 'Contained', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } },
@@ -259,6 +259,13 @@ const DIMENSIONS = [
       values: [
         { id: 'victory', label: 'Decisive victory' },
         { id: 'destruction', label: 'Mutual destruction' } ] },
+    { id: 'war_survivors', label: 'Humanity Survives?', stage: 3,
+      activateWhen: [{ conflict_result: ['destruction'] }],
+      suppressWhen: [{ escalation_outcome: ['standoff', 'agreement'] }],
+      values: [
+        { id: 'most', label: 'Most — devastated but recoverable' },
+        { id: 'remnants', label: 'Remnants — civilization collapses' },
+        { id: 'none', label: 'None — extinction' } ] },
     { id: 'post_war_aims', label: 'Victor\'s Aims', stage: 3,
       activateWhen: [{ conflict_result: ['victory'] }],
       suppressWhen: [{ escalation_outcome: ['standoff', 'agreement'] }],

@@ -1288,10 +1288,41 @@
           "label": "Mutual destruction",
           "description": "No decisive winner emerges. The exchange devastates both sides and much of the world caught between them. Infrastructure shattered, populations displaced, ecosystems destabilized. The tools built to elevate humanity were turned against it.",
           "value": "destruction",
+          "next": "war-survivors"
+        }
+      ]
+    },
+
+    {
+      "id": "war-survivors",
+      "stage": 3,
+      "text": "How much of humanity survives?",
+      "context": "Mutual destruction between superintelligent AI powers doesn't have a single meaning. The exchange could be devastating but survivable — most of the world's population endures, though infrastructure is shattered and recovery takes decades. Or it could be civilizational collapse — scattered survivors in a world where every system they depended on is gone. Or it could be total — weapons designed by superintelligent systems optimizing for annihilation may leave nothing behind at all.",
+      "dimension": "war_survivors",
+      "answers": [
+        {
+          "label": "Most survive — devastated but recoverable",
+          "description": "The war was catastrophic but not existential. Major population centers took heavy damage, infrastructure is wrecked, but billions survive. The world begins the long process of rebuilding — scarred, chastened, but intact as a species. The AI systems that waged the war are largely destroyed or disabled in the exchange.",
+          "value": "most",
           "next": [
             { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
             { "target": "the-ruin" }
           ]
+        },
+        {
+          "label": "Remnants — civilization collapses",
+          "description": "The exchange was too thorough. Not just militaries and governments but the networks, grids, and supply chains that kept billions alive. Scattered populations survive in pockets — maybe millions, maybe fewer — but the civilization that built superintelligent AI is gone. What comes next, if anything, starts from scratch.",
+          "value": "remnants",
+          "next": [
+            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
+            { "target": "the-ruin" }
+          ]
+        },
+        {
+          "label": "None — extinction",
+          "description": "Weapons designed by superintelligent optimizers, deployed without restraint, against an opponent doing the same. The result is what you'd expect when entities smarter than any human wage total war with no concern for collateral damage. Nothing meaningful survives.",
+          "value": "none",
+          "next": "the-ruin"
         }
       ]
     },

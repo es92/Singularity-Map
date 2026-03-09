@@ -532,25 +532,24 @@ function runExplorer() {
                     const dimIdx = DIMENSIONS.indexOf(dim);
                     for (let ui = 0; ui < dimIdx; ui++) {
                         const up = DIMENSIONS[ui];
-                        if (!sel[up.id] || !next[up.id]) continue;
-                        if (sel[up.id] !== next[up.id]) {
-                            const k = `${dim.id}:${val.id}->${up.id}`;
-                            if (!seen.switchUpstreamChanged.has(k)) {
-                                seen.switchUpstreamChanged.add(k);
-                                violations.switchUpstreamChanged.push({
-                                    dim: dim.id, val: val.id,
-                                    upstream: up.id, from: sel[up.id], to: next[up.id],
-                                    url: selToUrl(sel)
-                                });
-                            }
-                        }
-                        if (!next[up.id] && sel[up.id]) {
+                        if (!sel[up.id]) continue;
+                        if (!next[up.id]) {
                             const k = `${dim.id}:${val.id}->${up.id}`;
                             if (!seen.switchUpstreamChanged.has(k)) {
                                 seen.switchUpstreamChanged.add(k);
                                 violations.switchUpstreamChanged.push({
                                     dim: dim.id, val: val.id,
                                     upstream: up.id, from: sel[up.id], to: '(deleted)',
+                                    url: selToUrl(sel)
+                                });
+                            }
+                        } else if (sel[up.id] !== next[up.id]) {
+                            const k = `${dim.id}:${val.id}->${up.id}`;
+                            if (!seen.switchUpstreamChanged.has(k)) {
+                                seen.switchUpstreamChanged.add(k);
+                                violations.switchUpstreamChanged.push({
+                                    dim: dim.id, val: val.id,
+                                    upstream: up.id, from: sel[up.id], to: next[up.id],
                                     url: selToUrl(sel)
                                 });
                             }

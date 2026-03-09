@@ -179,13 +179,19 @@ function isDimLocked(sel, dim) {
     if (dim.id === 'gov_action' && sel.alignment === 'robust' && !decelOutcome(sel)) return 'accelerate';
     if (dim.id === 'containment') {
         if (sel.brittle_resolution === 'escape') return 'escaped';
-        if (sel.brittle_resolution === 'solved' || sel.brittle_resolution === 'sufficient') return 'contained';
+        if (sel.brittle_resolution === 'solved' || sel.brittle_resolution === 'sufficient') {
+            if (!sel.containment || sel.containment === 'contained') return 'contained';
+        }
         const out = decelOutcome(sel);
         if (out === 'escapes') return 'escaped';
-        if (effectiveVal(sel, 'alignment') === 'robust') return 'contained';
+        if (effectiveVal(sel, 'alignment') === 'robust') {
+            if (!sel.containment || sel.containment === 'contained') return 'contained';
+        }
     }
     if (dim.id === 'ai_goals' && sel.alignment === 'brittle' && sel.alignment_durability === 'holds') {
-        if (sel.brittle_resolution === 'solved' || sel.brittle_resolution === 'sufficient') return 'benevolent';
+        if (sel.brittle_resolution === 'solved' || sel.brittle_resolution === 'sufficient') {
+            if (!sel.ai_goals || sel.ai_goals === 'benevolent') return 'benevolent';
+        }
     }
     if (dim.id === 'failure_mode' && sel.enabled_aims === 'proxy') return 'whimper';
     if (!dim.lockedWhen) {
@@ -255,15 +261,26 @@ function applySelection(sel, dimId, newValue) {
         }
     } else {
         const hadValue = sel[dimId] !== undefined;
+        const wasZombie = new Set();
+        if (hadValue) {
+            for (let i = idx + 1; i < DIMENSIONS.length; i++) {
+                const d = DIMENSIONS[i];
+                if (sel[d.id] === undefined) continue;
+                const saved = sel[d.id];
+                delete sel[d.id];
+                if (!isDimVisible(sel, d)) wasZombie.add(d.id);
+                sel[d.id] = saved;
+            }
+        }
         sel[dimId] = newValue;
         if (hadValue) {
             for (let round = 0; round < 3; round++) {
                 for (let pass = 0; pass < 5; pass++) {
                     let changed = false;
-                    for (let i = 0; i < DIMENSIONS.length; i++) {
+                    for (let i = idx + 1; i < DIMENSIONS.length; i++) {
                         const d = DIMENSIONS[i];
-                        if (d.id === dimId) continue;
                         if (sel[d.id] === undefined) continue;
+                        if (wasZombie.has(d.id)) continue;
                         const saved = sel[d.id];
                         delete sel[d.id];
                         if (isDimVisible(sel, d)) {

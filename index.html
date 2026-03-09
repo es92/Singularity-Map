@@ -1599,8 +1599,9 @@
                     const locked = isDimLocked(dim);
                     const answered = !!sel[dim.id];
                     const userAnswered = answered && locked === null;
-                    const isNextQuestion = visible && locked === null && !answered;
-                    const shouldHide = !visible || (shownNextQuestion && !userAnswered);
+                    const isLocked = locked !== null;
+                    const isNextQuestion = visible && !isLocked && !answered;
+                    const shouldHide = !visible || (shownNextQuestion && !userAnswered && !isLocked);
                     row.classList.toggle('hidden', shouldHide);
                     if (shouldHide) return;
                     if (isNextQuestion) shownNextQuestion = true;
