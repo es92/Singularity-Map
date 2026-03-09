@@ -1017,7 +1017,7 @@
           "description": "Researchers achieve genuine, durable alignment. AI systems reliably pursue human values even under novel conditions, adversarial pressure, and recursive self-improvement. The technology is controllable in the deepest sense.",
           "value": "robust",
           "next": [
-            { "when": { "distribution": ["open"] }, "target": "aligned-ai-aims", "sets": { "proliferation_control": "none", "geo_spread": "several" } },
+            { "when": { "distribution": ["open"] }, "target": "aligned-ai-aims", "sets": { "proliferation_control": "none", "proliferation_outcome": "leaks_public", "geo_spread": "several" } },
             { "target": "ai-containment" }
           ]
         },
@@ -1026,7 +1026,7 @@
           "description": "Alignment techniques pass every test and benchmark. The systems appear safe. But the alignment is shallow — it holds under normal conditions and breaks under adversarial pressure, distribution shift, or recursive self-improvement. It looks solved until it isn't.",
           "value": "brittle",
           "next": [
-            { "when": { "distribution": ["open"] }, "target": "alignment-durability", "sets": { "proliferation_control": "none", "geo_spread": "several" } },
+            { "when": { "distribution": ["open"] }, "target": "alignment-durability", "sets": { "proliferation_control": "none", "proliferation_outcome": "leaks_public", "geo_spread": "several" } },
             { "target": "alignment-durability" }
           ]
         },
@@ -1035,7 +1035,7 @@
           "description": "AI capability outpaces alignment research. Powerful systems exist that aren't fully understood or controllable. The question becomes: can they at least be contained?",
           "value": "failed",
           "next": [
-            { "when": { "distribution": ["open"] }, "target": "escaped-ai-goals", "sets": { "proliferation_control": "none", "containment": "escaped" } },
+            { "when": { "distribution": ["open"] }, "target": "escaped-ai-goals", "sets": { "proliferation_control": "none", "proliferation_outcome": "leaks_public", "containment": "escaped" } },
             { "target": "ai-containment" }
           ]
         }
@@ -1058,7 +1058,7 @@
           "description": "The alignment techniques turn out to be more robust than anyone expected. Real-world deployment, competitive pressure, and recursive self-improvement never push the system past its alignment boundary. The brittleness was theoretical — in practice, it holds.",
           "value": "holds",
           "next": [
-            { "when": { "distribution": ["open"] }, "target": "aligned-ai-aims", "sets": { "proliferation_control": "none", "geo_spread": "several" } },
+            { "when": { "distribution": ["open"] }, "target": "aligned-ai-aims", "sets": { "proliferation_control": "none", "proliferation_outcome": "leaks_public", "geo_spread": "several" } },
             { "target": "ai-containment" }
           ]
         },
@@ -1068,7 +1068,7 @@
           "value": "breaks",
           "sets": { "alignment": "failed", "alignment_durability": "breaks" },
           "next": [
-            { "when": { "distribution": ["open"] }, "target": "escaped-ai-goals", "sets": { "proliferation_control": "none", "containment": "escaped" } },
+            { "when": { "distribution": ["open"] }, "target": "escaped-ai-goals", "sets": { "proliferation_control": "none", "proliferation_outcome": "leaks_public", "containment": "escaped" } },
             { "target": "containment-durability" }
           ]
         }
@@ -1104,8 +1104,7 @@
             { "distribution": ["open"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"] },
             { "distribution": ["lagging", "concentrated"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"], "geo_spread": ["two", "several"] },
             { "geo_spread": ["two"] },
-            { "proliferation_control": ["none"] },
-            { "proliferation_outcome": ["breached"] }
+            { "proliferation_outcome": ["leaks_rivals", "leaks_public"] }
           ],
           "next": [
             { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
@@ -1121,8 +1120,7 @@
             { "distribution": ["open"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"] },
             { "distribution": ["lagging", "concentrated"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"], "geo_spread": ["two", "several"] },
             { "geo_spread": ["two"] },
-            { "proliferation_control": ["none"] },
-            { "proliferation_outcome": ["breached"] }
+            { "proliferation_outcome": ["leaks_rivals", "leaks_public"] }
           ],
           "next": [
             { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
@@ -1503,13 +1501,10 @@
           "next": "proliferation-outcome"
         },
         {
-          "label": "No durable control — coordination fails and capability spreads",
-          "description": "No durable control regime emerges. Capability spreads through rival programs, leaks, and replication. What happens next depends on whether AI is aligned.",
+          "label": "No secure controls — coordination fails and capability spreads",
+          "description": "No secure control regime emerges. Capability spreads through rival programs, leaks, and replication. The question is how far it spreads.",
           "value": "none",
-          "next": [
-            { "when": { "alignment": ["robust", "brittle"] }, "target": "aligned-ai-aims", "sets": { "geo_spread": "two" } },
-            { "target": "escaped-ai-goals", "sets": { "containment": "escaped" } }
-          ]
+          "next": "proliferation-outcome"
         }
       ]
     },
@@ -1517,12 +1512,12 @@
     {
       "id": "proliferation-outcome",
       "stage": 2,
-      "text": "Does that control hold?",
-      "context": "Proliferation control is attempted — but the pressure is relentless. Espionage, insider leaks, independent rival development, and strategic defection can all collapse the regime. The question is whether the attempt succeeds or is breached.",
+      "text": "What happens to advanced AI systems?",
+      "context": "Proliferation control is attempted — but the pressure is relentless. Espionage, insider leaks, independent rival development, and strategic defection can all collapse the regime. The question is whether the systems stay contained, leak to specific rivals, or spread publicly.",
       "dimension": "proliferation_outcome",
       "answers": [
         {
-          "label": "Yes — control holds",
+          "label": "Stay contained — control holds",
           "description": "The control regime endures. Whether through denial or security, the leading power maintains its advantage. Frontier capability remains concentrated.",
           "value": "holds",
           "next": [
@@ -1531,14 +1526,21 @@
           ]
         },
         {
-          "label": "No — control is breached",
-          "description": "Despite efforts, the regime fails. Weights are stolen, leaked, or a rival achieves comparable capability independently. Frontier AI is now in multiple hands.",
-          "value": "breached",
+          "label": "Leak to rival states",
+          "description": "Despite efforts, the regime is breached. Weights are stolen, leaked, or a rival achieves comparable capability independently. Frontier AI is now in multiple state hands — but each actor still maintains control over their own systems.",
+          "value": "leaks_rivals",
           "sets": { "geo_spread": "two" },
           "next": [
             { "when": { "alignment": ["robust", "brittle"] }, "target": "aligned-ai-aims" },
-            { "target": "escaped-ai-goals", "sets": { "containment": "escaped" } }
+            { "target": "containment-durability" }
           ]
+        },
+        {
+          "label": "Leak publicly — no effective control",
+          "description": "Control collapses entirely. Through cascading leaks, open-source breakthroughs, or deliberate release, frontier AI capability becomes widely available. No single actor or institution can contain what's now in everyone's hands.",
+          "value": "leaks_public",
+          "sets": { "geo_spread": "several", "enabled_aims": "arbitrary", "alignment": "failed", "containment": "escaped" },
+          "next": "escaped-ai-goals"
         }
       ]
     },
@@ -1567,7 +1569,7 @@
           "label": "Arbitrary or unconstrained aims",
           "description": "Without durable control, systems are enabled to pursue objectives that become detached from broad human interests. The deployed goal structure drifts into an escape-like trajectory.",
           "value": "arbitrary",
-          "requires": [{ "proliferation_control": ["none"] }, { "proliferation_outcome": ["breached"] }],
+          "requires": [{ "proliferation_control": ["none"] }, { "proliferation_outcome": ["leaks_public"] }],
           "sets": { "alignment": "failed", "containment": "escaped" },
           "next": "escaped-ai-goals"
         }

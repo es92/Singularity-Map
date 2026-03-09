@@ -4,47 +4,14 @@
 
 (function() {
 
-const { DIMENSIONS, DIM_MAP, DECEL_PAIRS } = (typeof module !== 'undefined' && module.exports)
+const { DIMENSIONS, DIM_MAP } = (typeof module !== 'undefined' && module.exports)
     ? require('./dimensions.js') : window.Dimensions;
-
-// ════════════════════════════════════════════════════════
-// Deceleration helpers
-// ════════════════════════════════════════════════════════
-
-function decelOutcome(sel) {
-    if (sel.gov_action !== 'decelerate') return null;
-    for (const [pKey, aKey] of DECEL_PAIRS) {
-        const progress = sel[pKey], action = sel[aKey];
-        if (!progress || !action) return null;
-        if (action === 'continue') continue;
-        if (action === 'accelerate') return progress === 'robust' ? 'solved' : 'abandon';
-        if (action === 'rival') {
-            if (progress === 'robust') return 'parity_solved';
-            if (progress === 'unsolved') return 'parity_failed';
-            return 'rival';
-        }
-        if (action === 'escapes') return 'escapes';
-    }
-    return null;
-}
-
-function decelAlignProgress(sel) {
-    if (sel.gov_action !== 'decelerate') return null;
-    for (const [pKey, aKey] of DECEL_PAIRS) {
-        const progress = sel[pKey], action = sel[aKey];
-        if (!progress || !action) return null;
-        if (action === 'continue') continue;
-        return progress;
-    }
-    return null;
-}
 
 // ════════════════════════════════════════════════════════
 // Override engine (declarative)
 // ════════════════════════════════════════════════════════
 
-function matchesOverride(rule, sel, decel) {
-    if (rule.decel && !rule.decel.includes(decel)) return false;
+function matchesOverride(rule, sel) {
     if (rule.when) {
         for (const [key, val] of Object.entries(rule.when)) {
             if (sel[key] !== val) return false;
@@ -53,7 +20,8 @@ function matchesOverride(rule, sel, decel) {
     if (rule.whenSet && !sel[rule.whenSet]) return false;
     if (rule.effective) {
         for (const [key, val] of Object.entries(rule.effective)) {
-            if (effectiveVal(sel, key) !== val) return false;
+            const eff = effectiveVal(sel, key);
+            if (Array.isArray(val) ? !val.includes(eff) : eff !== val) return false;
         }
     }
     if (rule.unless) {
@@ -64,9 +32,9 @@ function matchesOverride(rule, sel, decel) {
     return true;
 }
 
-function applyOverrides(overrides, sel, k, decel) {
+function applyOverrides(overrides, sel, k) {
     for (const rule of overrides) {
-        if (!matchesOverride(rule, sel, decel)) continue;
+        if (!matchesOverride(rule, sel)) continue;
         if (rule.fromDim) return sel[rule.fromDim];
         if (rule.valueMap) return rule.valueMap[sel[k]] ?? sel[k];
         return rule.value;
@@ -75,18 +43,9 @@ function applyOverrides(overrides, sel, k, decel) {
 }
 
 function effectiveVal(sel, k) {
-    if (k === 'governance') {
-        const out = decelOutcome(sel);
-        const effGov = effectiveVal(sel, 'gov_action');
-        if (effGov === 'accelerate') return 'race';
-        if (out === 'abandon') return 'race';
-        if (effGov === 'decelerate') return 'slowdown';
-        if (sel.governance_window) return sel.governance_window;
-        return sel[k];
-    }
     const dim = DIM_MAP[k];
     if (dim && dim.overrides) {
-        const result = applyOverrides(dim.overrides, sel, k, decelOutcome(sel));
+        const result = applyOverrides(dim.overrides, sel, k);
         if (result !== undefined) return result;
     }
     return sel[k];
@@ -106,19 +65,15 @@ function isEscapedNonMarginal(sel) {
     return sel.ai_goals && sel.ai_goals !== 'marginal' && effectiveVal(sel, 'alignment') === 'failed';
 }
 
+const TERM_SET = new Set(DIMENSIONS.filter(d => d.terminal).map(d => d.id));
+
 const CUSTOM_CHECKS = {
-    decelProgressBrittle(sel) {
-        return decelAlignProgress(sel) === 'brittle';
-    },
     allPrecedingAnswered(sel, dim) {
-        const TERM = new Set(['benefit_distribution', 'knowledge_replacement', 'physical_automation',
-            'plateau_knowledge_rate', 'plateau_physical_rate',
-            'auto_knowledge_rate', 'auto_physical_rate']);
         const brIdx = DIMENSIONS.indexOf(dim);
         const adIdx = DIMENSIONS.findIndex(d => d.id === 'alignment_durability');
         for (let i = adIdx + 1; i < brIdx; i++) {
             const mid = DIMENSIONS[i];
-            if (TERM.has(mid.id)) continue;
+            if (mid.terminal || mid.virtual) continue;
             if (!isDimVisible(sel, mid)) continue;
             if (isDimLocked(sel, mid) !== null) continue;
             if (!sel[mid.id]) return false;
@@ -128,10 +83,11 @@ const CUSTOM_CHECKS = {
 };
 
 function matchCondition(sel, cond, dim) {
-    const out = decelOutcome(sel);
-    if (cond._noDecel && out !== null) return false;
-    if (cond._decel && !cond._decel.includes(out)) return false;
-    if (cond._notDecel && cond._notDecel.includes(out)) return false;
+    if (cond._notSet) {
+        for (const k of cond._notSet) {
+            if (effectiveVal(sel, k) != null) return false;
+        }
+    }
     if (cond._set) {
         for (const k of cond._set) {
             if (!sel[k]) return false;
@@ -148,10 +104,17 @@ function matchCondition(sel, cond, dim) {
             if (!v || !allowed.includes(v)) return false;
         }
     }
+    if (cond._effNot) {
+        for (const [k, excluded] of Object.entries(cond._effNot)) {
+            const v = effectiveVal(sel, k);
+            if (v && excluded.includes(v)) return false;
+        }
+    }
+    const decelActive = dim.useRawUnlessDecel ? effectiveVal(sel, 'decel_outcome') != null : false;
     for (const [k, allowed] of Object.entries(cond)) {
         if (k.startsWith('_')) continue;
         const useRaw = dim.useRawFor && dim.useRawFor.includes(k)
-            && (!dim.useRawUnlessDecel || !out);
+            && (!dim.useRawUnlessDecel || !decelActive);
         const v = useRaw ? sel[k] : effectiveVal(sel, k);
         if (!v || !allowed.includes(v)) return false;
     }
@@ -176,14 +139,13 @@ function isDimVisible(sel, dim) {
 // ════════════════════════════════════════════════════════
 
 function isDimLocked(sel, dim) {
-    if (dim.id === 'gov_action' && sel.alignment === 'robust' && !decelOutcome(sel)) return 'accelerate';
+    if (dim.id === 'gov_action' && sel.alignment === 'robust' && effectiveVal(sel, 'decel_outcome') == null) return 'accelerate';
     if (dim.id === 'containment') {
         if (sel.brittle_resolution === 'escape') return 'escaped';
         if (sel.brittle_resolution === 'solved' || sel.brittle_resolution === 'sufficient') {
             if (!sel.containment || sel.containment === 'contained') return 'contained';
         }
-        const out = decelOutcome(sel);
-        if (out === 'escapes') return 'escaped';
+        if (effectiveVal(sel, 'decel_outcome') === 'escapes') return 'escaped';
         if (effectiveVal(sel, 'alignment') === 'robust') {
             if (!sel.containment || sel.containment === 'contained') return 'contained';
         }
@@ -207,7 +169,7 @@ function isDimLocked(sel, dim) {
 
 function isValueDisabled(sel, dim, val) {
     if (dim.id === 'enabled_aims' && val.id === 'arbitrary') {
-        const out = decelOutcome(sel);
+        const out = effectiveVal(sel, 'decel_outcome');
         if (['solved', 'parity_solved'].includes(out)) return true;
     }
     if (dim.id === 'intent' && val.id === 'self_interest' && sel.enabled_aims === 'human_centered') return true;
@@ -308,7 +270,6 @@ function effectiveDims(sel) {
         const locked = isDimLocked(sel, dim);
         if (locked !== null) d[dim.id] = locked;
     }
-    d.governance = effectiveVal(sel, 'governance');
     if (!d.rival_dynamics) {
         const pending = ['rival_dynamics', 'block_entrants', 'block_outcome', 'new_entrants'].some(id => {
             const dim = DIM_MAP[id];
@@ -332,10 +293,6 @@ function effectiveDims(sel) {
     const brDim = DIM_MAP['brittle_resolution'];
     if (brDim && isDimVisible(sel, brDim) && isDimLocked(sel, brDim) === null && !sel.brittle_resolution) {
         delete d.alignment;
-    }
-    const out = decelOutcome(sel);
-    if (['parity_solved', 'parity_failed', 'rival'].includes(out)) {
-        d.rival_emerges = 'yes';
     }
     return d;
 }
@@ -369,12 +326,12 @@ function templatePartialMatch(t, dims) {
 // ════════════════════════════════════════════════════════
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { DIMENSIONS, DIM_MAP, DECEL_PAIRS, decelOutcome, decelAlignProgress,
+    module.exports = { DIMENSIONS, DIM_MAP,
         matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimLocked, isValueDisabled,
         cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch };
 }
 if (typeof window !== 'undefined') {
-    window.Engine = { DIMENSIONS, DIM_MAP, DECEL_PAIRS, decelOutcome, decelAlignProgress,
+    window.Engine = { DIMENSIONS, DIM_MAP,
         matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimLocked, isValueDisabled,
         cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch };
 }

@@ -4,6 +4,16 @@
 
 (function() {
 
+const DECEL_PAIRS = [
+    ['decel_2mo_progress', 'decel_2mo_action'],
+    ['decel_4mo_progress', 'decel_4mo_action'],
+    ['decel_6mo_progress', 'decel_6mo_action'],
+    ['decel_9mo_progress', 'decel_9mo_action'],
+    ['decel_12mo_progress', 'decel_12mo_action'],
+    ['decel_18mo_progress', 'decel_18mo_action'],
+    ['decel_24mo_progress', 'decel_24mo_action'],
+];
+
 const DIMENSIONS = [
     { id: 'capability', label: 'AI Scaling', stage: 1,
       overrides: [
@@ -53,8 +63,9 @@ const DIMENSIONS = [
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], open_source: ['six_months', 'twelve_months', 'twenty_four_months'] }],
       lockedWhen: { takeoff: { equals: 'hard', value: 'one' }, distribution: { equals: 'monopoly', value: 'one' } },
       overrides: [
-        { decel: ['rival', 'parity_solved', 'parity_failed'], value: 'two' },
-        { when: { proliferation_outcome: 'breached' }, value: 'two' },
+        { effective: { decel_outcome: ['rival', 'parity_solved', 'parity_failed'] }, value: 'two' },
+        { when: { proliferation_outcome: 'leaks_rivals' }, value: 'two' },
+        { when: { proliferation_outcome: 'leaks_public' }, value: 'several' },
       ],
       values: [
         { id: 'one', label: 'One country' }, { id: 'two', label: 'Two powers' },
@@ -67,7 +78,7 @@ const DIMENSIONS = [
     { id: 'alignment', label: 'Alignment', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
       overrides: [
-        { decel: ['solved', 'parity_solved'], value: 'robust' },
+        { effective: { decel_outcome: ['solved', 'parity_solved'] }, value: 'robust' },
         { when: { brittle_resolution: 'solved' }, value: 'robust' },
         { when: { brittle_resolution: 'sufficient' }, valueMap: { failed: 'brittle' } },
         { when: { inert_stays: 'no' }, whenSet: 'inert_outcome', value: 'failed' },
@@ -75,8 +86,8 @@ const DIMENSIONS = [
         { when: { alignment_durability: 'breaks' }, value: 'failed' },
         { when: { brittle_resolution: 'escape' }, value: 'failed' },
         { when: { enabled_aims: 'arbitrary' }, value: 'failed' },
-        { decel: ['rival'], value: 'brittle' },
-        { decel: ['escapes', 'abandon', 'parity_failed'], value: 'failed' },
+        { effective: { decel_outcome: ['rival'] }, value: 'brittle' },
+        { effective: { decel_outcome: ['escapes', 'abandon', 'parity_failed'] }, value: 'failed' },
       ],
       values: [
         { id: 'robust', label: 'Robust' }, { id: 'brittle', label: 'Brittle / Partial' },
@@ -154,23 +165,43 @@ const DIMENSIONS = [
         { id: 'rival', label: 'Rival reaches parity' } ] },
     { id: 'alignment_durability', label: 'Alignment Durability', stage: 2,
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['brittle'], _noDecel: true },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['brittle'], _decel: ['rival'], _fn: 'decelProgressBrittle' },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['brittle'], _notSet: ['decel_outcome'] },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['brittle'], _eff: { decel_outcome: ['rival'], decel_align_progress: ['brittle'] } },
       ],
       useRawFor: ['alignment'], useRawUnlessDecel: true,
       values: [
         { id: 'holds', label: 'Holds for now' }, { id: 'breaks', label: 'Breaks' } ] },
+    { id: 'proliferation_control', label: 'Proliferation Control', stage: 2,
+      activateWhen: [
+        { capability: ['singularity'], automation: ['deep'], _effNot: { decel_outcome: ['escapes', 'parity_failed'] } },
+      ],
+      lockedWhen: { distribution: { equals: 'open', value: 'none' } }, values: [
+        { id: 'deny_rivals', label: 'Deny rivals' },
+        { id: 'secure_access', label: 'Secure access' },
+        { id: 'none', label: 'No secure controls' } ] },
+    { id: 'proliferation_outcome', label: 'Control Outcome', stage: 2,
+      activateWhen: [{ capability: ['singularity'], automation: ['deep'], proliferation_control: ['deny_rivals', 'secure_access', 'none'] }],
+      values: [
+        { id: 'holds', label: 'Holds', requires: { proliferation_control: ['deny_rivals', 'secure_access'] } },
+        { id: 'leaks_rivals', label: 'Leaks to rivals' },
+        { id: 'leaks_public', label: 'Leaks publicly' } ] },
+    { id: 'enabled_aims', label: 'Enabled Aims', stage: 2,
+      activateWhen: [{ capability: ['singularity'], automation: ['deep'], proliferation_control: ['deny_rivals', 'secure_access', 'none'] }],
+      lockedWhen: { proliferation_outcome: { equals: 'leaks_public', value: 'arbitrary' } },
+      values: [
+        { id: 'human_centered', label: 'Human-centered' },
+        { id: 'proxy', label: 'Proxy / institutional' },
+        { id: 'arbitrary', label: 'Arbitrary / unconstrained', requires: [{ proliferation_outcome: ['leaks_public'] }] } ] },
     { id: 'containment', label: 'Containment', stage: 2,
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], _raw: { alignment: ['brittle'], alignment_durability: ['holds'], brittle_resolution: ['escape'] } },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], _notDecel: ['solved', 'parity_solved'] },
-        { capability: ['singularity'], automation: ['deep'], _raw: { ai_goals: ['marginal'] }, _notDecel: ['solved', 'parity_solved'] },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], _effNot: { decel_outcome: ['solved', 'parity_solved'] } },
+        { capability: ['singularity'], automation: ['deep'], _raw: { ai_goals: ['marginal'] }, _effNot: { decel_outcome: ['solved', 'parity_solved'] } },
       ],
+      lockedWhen: { proliferation_outcome: { equals: 'leaks_public', value: 'escaped' } },
       overrides: [
-        { decel: ['escapes'], value: 'escaped' },
-        { when: { proliferation_control: 'none' }, effective: { alignment: 'failed' }, value: 'escaped' },
-        { when: { proliferation_outcome: 'breached' }, effective: { alignment: 'failed' }, value: 'escaped' },
-        { when: { enabled_aims: 'arbitrary' }, unless: { ai_goals: 'marginal' }, value: 'escaped' },
+        { effective: { decel_outcome: ['escapes'] }, value: 'escaped' },
+        { when: { proliferation_outcome: 'leaks_public' }, value: 'escaped' },
         { when: { brittle_resolution: 'escape' }, value: 'escaped' },
         { when: { inert_stays: 'no' }, whenSet: 'inert_outcome', value: 'escaped' },
       ],
@@ -187,25 +218,6 @@ const DIMENSIONS = [
         { id: 'benevolent', label: 'Benefit humanity' }, { id: 'alien_coexistence', label: 'Alien (tolerant)' },
         { id: 'alien_extinction', label: 'Alien (total)' }, { id: 'paperclip', label: 'Arbitrary' },
         { id: 'swarm', label: 'Divergent' }, { id: 'marginal', label: 'Inert (for now)' } ] },
-    { id: 'proliferation_control', label: 'Proliferation Control', stage: 2,
-      activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], _notDecel: ['escapes', 'parity_failed'] },
-      ],
-      lockedWhen: { distribution: { equals: 'open', value: 'none' } }, values: [
-        { id: 'deny_rivals', label: 'Deny rivals' },
-        { id: 'secure_access', label: 'Secure access' },
-        { id: 'none', label: 'No durable control' } ] },
-    { id: 'proliferation_outcome', label: 'Control Outcome', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], proliferation_control: ['deny_rivals', 'secure_access'] }],
-      values: [
-        { id: 'holds', label: 'Holds' },
-        { id: 'breached', label: 'Breached' } ] },
-    { id: 'enabled_aims', label: 'Enabled Aims', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], proliferation_control: ['deny_rivals', 'secure_access', 'none'] }],
-      values: [
-        { id: 'human_centered', label: 'Human-centered' },
-        { id: 'proxy', label: 'Proxy / institutional' },
-        { id: 'arbitrary', label: 'Arbitrary / unconstrained' } ] },
     { id: 'intent', label: 'Intent', stage: 2,
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'] },
@@ -220,8 +232,8 @@ const DIMENSIONS = [
       ],
       values: [
         { id: 'self_interest', label: 'Self-interest', requires: [{ distribution: ['monopoly'], geo_spread: ['one'], proliferation_control: ['deny_rivals', 'secure_access'] }, { distribution: ['concentrated', 'lagging'], geo_spread: ['one'], sovereignty: ['state'], proliferation_control: ['deny_rivals', 'secure_access'] }] },
-        { id: 'coexistence', label: 'Coexistence', requires: [{ distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { distribution: ['lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'], geo_spread: ['two', 'several'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] },
-        { id: 'escalation', label: 'Escalation', requires: [{ distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { distribution: ['lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'], geo_spread: ['two', 'several'] }, { geo_spread: ['two'] }, { proliferation_control: ['none'] }, { proliferation_outcome: ['breached'] }] },
+        { id: 'coexistence', label: 'Coexistence', requires: [{ distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { distribution: ['lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'], geo_spread: ['two', 'several'] }, { geo_spread: ['two'] }, { proliferation_outcome: ['leaks_rivals', 'leaks_public'] }] },
+        { id: 'escalation', label: 'Escalation', requires: [{ distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { distribution: ['lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'], geo_spread: ['two', 'several'] }, { geo_spread: ['two'] }, { proliferation_outcome: ['leaks_rivals', 'leaks_public'] }] },
         { id: 'international', label: 'International' } ] },
     { id: 'block_entrants', label: 'Block New Entrants?', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], proliferation_control: ['secure_access'], proliferation_outcome: ['holds'], intent: ['self_interest', 'international'] }],
@@ -287,7 +299,7 @@ const DIMENSIONS = [
       values: [
         { id: 'none', label: 'Succeeds' }, { id: 'whimper', label: 'Wrong metrics' },
         { id: 'disempowerment', label: 'Human irrelevance' } ] },
-    { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3,
+    { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
       activateWhen: [
         { capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] },
         { capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] },
@@ -300,7 +312,7 @@ const DIMENSIONS = [
       values: [
         { id: 'equal', label: 'Shared equally' }, { id: 'unequal', label: 'Wealth concentrates' },
         { id: 'extreme', label: 'Power concentrates' } ] },
-    { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3,
+    { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, terminal: true,
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], failure_mode: ['none', 'whimper', 'disempowerment'] },
         { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
@@ -310,7 +322,7 @@ const DIMENSIONS = [
       suppressWhen: [{ intent: ['self_interest', 'escalation'] }],
       values: [
         { id: 'rapid', label: 'Rapid (1–2 yrs)' }, { id: 'gradual', label: 'Gradual (3–10 yrs)' }, { id: 'uneven', label: 'Uneven (1–20 yrs)' } ] },
-    { id: 'physical_automation', label: 'Physical Automation', stage: 3,
+    { id: 'physical_automation', label: 'Physical Automation', stage: 3, terminal: true,
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], failure_mode: ['none', 'whimper', 'disempowerment'] },
         { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
@@ -320,24 +332,24 @@ const DIMENSIONS = [
       suppressWhen: [{ intent: ['self_interest', 'escalation'] }],
       values: [
         { id: 'rapid', label: 'Rapid (2–5 yrs)' }, { id: 'gradual', label: 'Gradual (5–20 yrs)' }, { id: 'uneven', label: 'Uneven (2–20+ yrs)' } ] },
-    { id: 'plateau_knowledge_rate', label: 'Knowledge Work', stage: 3,
+    { id: 'plateau_knowledge_rate', label: 'Knowledge Work', stage: 3, terminal: true,
       activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }],
       values: [
         { id: 'rapid', label: 'Rapid (2–5 yrs)', requires: { capability: ['weeks', 'months'] } },
         { id: 'gradual', label: 'Gradual (5–15 yrs)', requires: { capability: ['days', 'weeks', 'months'] } },
         { id: 'uneven', label: 'Uneven (2–20+ yrs)' },
         { id: 'limited', label: 'Limited', requires: { capability: ['hours', 'days'] } } ] },
-    { id: 'plateau_physical_rate', label: 'Physical Automation', stage: 3,
+    { id: 'plateau_physical_rate', label: 'Physical Automation', stage: 3, terminal: true,
       activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }],
       values: [
         { id: 'gradual', label: 'Gradual (10–25 yrs)', requires: { capability: ['days', 'weeks', 'months'] } },
         { id: 'uneven', label: 'Uneven (5–20+ yrs)' },
         { id: 'limited', label: 'Limited' } ] },
-    { id: 'auto_knowledge_rate', label: 'Knowledge Work', stage: 3,
+    { id: 'auto_knowledge_rate', label: 'Knowledge Work', stage: 3, terminal: true,
       activateWhen: [{ capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }],
       values: [
         { id: 'rapid', label: 'Rapid (2–4 yrs)' }, { id: 'gradual', label: 'Gradual (5–15 yrs)' }, { id: 'uneven', label: 'Uneven (2–20+ yrs)' } ] },
-    { id: 'auto_physical_rate', label: 'Physical Automation', stage: 3,
+    { id: 'auto_physical_rate', label: 'Physical Automation', stage: 3, terminal: true,
       activateWhen: [{ capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }],
       values: [
         { id: 'rapid', label: 'Rapid (3–7 yrs)' }, { id: 'gradual', label: 'Gradual (10–25 yrs)' }, { id: 'uneven', label: 'Uneven (3–20+ yrs)' }, { id: 'limited', label: 'Limited' } ] },
@@ -364,27 +376,51 @@ const DIMENSIONS = [
       values: [
         { id: 'benevolent', label: 'Benefit humanity' }, { id: 'alien_coexistence', label: 'Alien (tolerant)' },
         { id: 'alien_extinction', label: 'Alien (total)' }, { id: 'paperclip', label: 'Arbitrary' },
-        { id: 'swarm', label: 'Divergent' } ] }
+        { id: 'swarm', label: 'Divergent' } ] },
+    { id: 'decel_outcome', label: 'Deceleration Outcome', virtual: true,
+      activateWhen: [{ gov_action: ['decelerate'] }],
+      overrides: DECEL_PAIRS.flatMap(([pKey, aKey]) => [
+        { when: { [aKey]: 'escapes' }, value: 'escapes' },
+        { when: { [aKey]: 'accelerate', [pKey]: 'robust' }, value: 'solved' },
+        { when: { [aKey]: 'accelerate' }, value: 'abandon' },
+        { when: { [aKey]: 'rival', [pKey]: 'robust' }, value: 'parity_solved' },
+        { when: { [aKey]: 'rival', [pKey]: 'unsolved' }, value: 'parity_failed' },
+        { when: { [aKey]: 'rival' }, value: 'rival' },
+      ]),
+      values: [
+        { id: 'solved' }, { id: 'abandon' }, { id: 'rival' },
+        { id: 'parity_solved' }, { id: 'parity_failed' }, { id: 'escapes' } ] },
+    { id: 'decel_align_progress', label: 'Decel Alignment Progress', virtual: true,
+      activateWhen: [{ gov_action: ['decelerate'] }],
+      overrides: DECEL_PAIRS.flatMap(([pKey, aKey]) => [
+        { when: { [aKey]: 'escapes' }, fromDim: pKey },
+        { when: { [aKey]: 'accelerate' }, fromDim: pKey },
+        { when: { [aKey]: 'rival' }, fromDim: pKey },
+      ]),
+      values: [{ id: 'robust' }, { id: 'brittle' }, { id: 'unsolved' }] },
+    { id: 'governance', label: 'Governance', virtual: true,
+      overrides: [
+        { effective: { gov_action: ['accelerate'] }, value: 'race' },
+        { effective: { decel_outcome: ['abandon'] }, value: 'race' },
+        { effective: { gov_action: ['decelerate'] }, value: 'slowdown' },
+        { whenSet: 'governance_window', fromDim: 'governance_window' },
+      ],
+      values: [{ id: 'race' }, { id: 'slowdown' }, { id: 'governed' }] },
+    { id: 'rival_emerges', label: 'Rival Emerges', virtual: true,
+      overrides: [
+        { effective: { decel_outcome: ['parity_solved', 'parity_failed', 'rival'] }, value: 'yes' },
+      ],
+      values: [{ id: 'yes' }] },
 ];
 
 const DIM_MAP = {};
 for (const d of DIMENSIONS) DIM_MAP[d.id] = d;
 
-const DECEL_PAIRS = [
-    ['decel_2mo_progress', 'decel_2mo_action'],
-    ['decel_4mo_progress', 'decel_4mo_action'],
-    ['decel_6mo_progress', 'decel_6mo_action'],
-    ['decel_9mo_progress', 'decel_9mo_action'],
-    ['decel_12mo_progress', 'decel_12mo_action'],
-    ['decel_18mo_progress', 'decel_18mo_action'],
-    ['decel_24mo_progress', 'decel_24mo_action'],
-];
-
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { DIMENSIONS, DIM_MAP, DECEL_PAIRS };
+    module.exports = { DIMENSIONS, DIM_MAP };
 }
 if (typeof window !== 'undefined') {
-    window.Dimensions = { DIMENSIONS, DIM_MAP, DECEL_PAIRS };
+    window.Dimensions = { DIMENSIONS, DIM_MAP };
 }
 
 })();

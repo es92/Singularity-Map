@@ -1558,14 +1558,11 @@
         function renderExplorer(initialDims) {
             let sel = initialDims ? { ...initialDims } : {};
 
-            const { DECEL_PAIRS } = window.Dimensions;
-            const { decelOutcome: _decelOutcome, decelAlignProgress: _decelAlignProgress,
+            const {
                 effectiveVal: _effectiveVal, isDimVisible: _isDimVisible, isDimLocked: _isDimLocked,
                 isValueDisabled: _isValueDisabled, cleanSelection: _cleanSelection,
                 applySelection: _applySelection, effectiveDims: _effectiveDims,
                 templateMatches, templatePartialMatch } = window.Engine;
-            function decelOutcome() { return _decelOutcome(sel); }
-            function decelAlignProgress() { return _decelAlignProgress(sel); }
             function effectiveVal(k) { return _effectiveVal(sel, k); }
             function isDimVisible(dim) { return _isDimVisible(sel, dim); }
             function isDimLocked(dim) { return _isDimLocked(sel, dim); }
@@ -1636,13 +1633,8 @@
                     else dimmed.push(t);
                 }
 
-                const TERMINAL_IDS = new Set([
-                    'benefit_distribution', 'knowledge_replacement', 'physical_automation',
-                    'plateau_knowledge_rate', 'plateau_physical_rate',
-                    'auto_knowledge_rate', 'auto_physical_rate'
-                ]);
                 const hasUnsetVisibleDims = DIMENSIONS.some(dim => {
-                    if (TERMINAL_IDS.has(dim.id)) return false;
+                    if (dim.terminal || dim.virtual) return false;
                     if (!isDimVisible(dim)) return false;
                     if (isDimLocked(dim) !== null) return false;
                     return !dims[dim.id];
@@ -1703,7 +1695,7 @@
 
             cleanSelection();
             const stageGroups = { 1: [], 2: [], 3: [] };
-            DIMENSIONS.forEach(d => { if (!stageGroups[d.stage]) stageGroups[d.stage] = []; stageGroups[d.stage].push(d); });
+            DIMENSIONS.filter(d => !d.virtual).forEach(d => { if (!stageGroups[d.stage]) stageGroups[d.stage] = []; stageGroups[d.stage].push(d); });
             const stageNames = { 1: 'Dynamics of Singularity', 2: 'Dynamics of Control', 3: 'Rate of Impact' };
 
             let dimsHtml = '';
