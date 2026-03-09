@@ -1393,6 +1393,7 @@
           "label": "Equally — abundance is broadly shared",
           "description": "The extraordinary productivity of superintelligent AI flows broadly — through policy, through markets, through deliberate redistribution. The gains are too large to hoard entirely. Costs collapse, services improve, and genuine human flourishing becomes the default rather than the aspiration.",
           "value": "equal",
+          "disabledWhen": [{ "enabled_aims": ["corporate_profit"] }],
           "next": "knowledge-replacement"
         },
         {
@@ -1548,8 +1549,8 @@
     {
       "id": "aligned-ai-aims",
       "stage": 2,
-      "text": "What aims are these aligned systems enabled to pursue?",
-      "context": "Even when systems are technically aligned, outcomes depend on which objectives institutions allow them to optimize for. Are they constrained to broad human benefit, pushed toward narrow proxies and state/corporate priorities, or granted latitude that drifts into non-human agendas?",
+      "text": "What aims are these aligned systems intended to pursue?",
+      "context": "Even when systems are technically aligned, outcomes depend on which objectives they're pointed at. Are they constrained to broad human benefit, directed toward corporate or state priorities, or granted latitude that drifts into non-human agendas?",
       "dimension": "enabled_aims",
       "answers": [
         {
@@ -1559,9 +1560,16 @@
           "next": "power-dynamics"
         },
         {
-          "label": "Narrow proxy / institutional aims",
-          "description": "Systems are aligned to what institutions ask for, but those objectives are narrow, proxy-driven, or legitimacy-poor. This risks optimization that looks successful on dashboards while harming real wellbeing.",
-          "value": "proxy",
+          "label": "Corporate profit & shareholder value",
+          "description": "Systems are aligned to maximize economic output, shareholder returns, and market efficiency. The AI does exactly what corporations ask — and what they ask for is growth, cost reduction, and competitive advantage. GDP soars while communities hollow out.",
+          "value": "corporate_profit",
+          "sets": { "failure_mode": "whimper" },
+          "next": "power-dynamics"
+        },
+        {
+          "label": "State security & control",
+          "description": "Systems are aligned to state priorities: stability, surveillance, threat suppression, and bureaucratic efficiency. The AI does exactly what governments ask — and what they ask for is order, not flourishing. Crime drops, dissent vanishes, and the metrics glow green.",
+          "value": "state_security",
           "sets": { "failure_mode": "whimper" },
           "next": "power-dynamics"
         },

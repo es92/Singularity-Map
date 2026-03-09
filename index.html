@@ -656,6 +656,15 @@
         }
 
         function answerVisible(answer, dims) {
+            if (answer.disabledWhen) {
+                const dSets = Array.isArray(answer.disabledWhen) ? answer.disabledWhen : [answer.disabledWhen];
+                for (const conds of dSets) {
+                    if (Object.entries(conds).every(([dim, vals]) => {
+                        const allowed = Array.isArray(vals) ? vals : [vals];
+                        return dims[dim] && allowed.includes(dims[dim]);
+                    })) return false;
+                }
+            }
             if (!answer.requires) return true;
             const condSets = Array.isArray(answer.requires) ? answer.requires : [answer.requires];
             return condSets.some(conds => {
@@ -1468,6 +1477,15 @@
                 return { match: notes.length === 0, possible: true, notes };
             }
             function overviewVisible(answer, dims) {
+                if (answer.disabledWhen) {
+                    const dSets = Array.isArray(answer.disabledWhen) ? answer.disabledWhen : [answer.disabledWhen];
+                    for (const conds of dSets) {
+                        if (Object.entries(conds).every(([dim, vals]) => {
+                            const allowed = Array.isArray(vals) ? vals : [vals];
+                            return dims[dim] && allowed.includes(dims[dim]);
+                        })) return { show: false, note: '' };
+                    }
+                }
                 if (!answer.requires) return { show: true, note: '' };
                 const condSets = Array.isArray(answer.requires) ? answer.requires : [answer.requires];
                 let allNotes = [];

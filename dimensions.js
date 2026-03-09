@@ -199,12 +199,13 @@ const DIMENSIONS = [
         { id: 'holds', label: 'Holds', requires: { proliferation_control: ['deny_rivals', 'secure_access'] } },
         { id: 'leaks_rivals', label: 'Leaks to rivals' },
         { id: 'leaks_public', label: 'Leaks publicly' } ] },
-    { id: 'enabled_aims', label: 'Enabled Aims', stage: 2, hideAfterEscape: true,
+    { id: 'enabled_aims', label: 'Intended Aims', stage: 2, hideAfterEscape: true,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], proliferation_control: ['deny_rivals', 'secure_access', 'none'] }],
       lockedWhen: [{ when: { proliferation_outcome: ['leaks_public'] }, value: 'arbitrary' }],
       values: [
         { id: 'human_centered', label: 'Human-centered' },
-        { id: 'proxy', label: 'Proxy / institutional' },
+        { id: 'corporate_profit', label: 'Corporate profit' },
+        { id: 'state_security', label: 'State security' },
         { id: 'arbitrary', label: 'Arbitrary / unconstrained', requires: [{ proliferation_outcome: ['leaks_public'] }], disabledWhen: [{ decel_outcome: ['solved', 'parity_solved'] }] } ] },
     { id: 'containment', label: 'Containment', stage: 2, forwardKey: true,
       renderAfter: [{ when: { brittle_resolution: 'escape' }, after: 'brittle_resolution' }],
@@ -311,18 +312,18 @@ const DIMENSIONS = [
         { id: 'self_interest', label: 'Consolidate power' } ] },
     { id: 'failure_mode', label: 'Implementation', stage: 3, hideAfterEscape: true, forwardKey: true,
       lockedWhen: [
-        { when: { _raw: { enabled_aims: ['proxy'] } }, value: 'whimper' },
+        { when: { _raw: { enabled_aims: ['corporate_profit', 'state_security'] } }, value: 'whimper' },
       ],
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], _raw: { enabled_aims: ['proxy'] } },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], _raw: { enabled_aims: ['corporate_profit', 'state_security'] } },
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'] },
-        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'], enabled_aims: ['proxy'] } },
+        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'], enabled_aims: ['corporate_profit', 'state_security'] } },
         { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'] },
         { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'] }, _raw: { containment: ['contained'] }, intent: ['international', 'coexistence'] },
       ],
       suppressWhen: [{ intent: ['self_interest', 'escalation'] }, { _set: ['post_war_aims'] }],
       overrides: [
-        { when: { enabled_aims: 'proxy' }, value: 'whimper' },
+        { when: { enabled_aims: ['corporate_profit', 'state_security'] }, value: 'whimper' },
       ],
       values: [
         { id: 'none', label: 'Succeeds' }, { id: 'whimper', label: 'Wrong metrics' },
@@ -341,7 +342,7 @@ const DIMENSIONS = [
       ],
       suppressWhen: [{ intent: ['escalation'], _notSet: ['post_war_aims'] }],
       values: [
-        { id: 'equal', label: 'Shared equally' }, { id: 'unequal', label: 'Wealth concentrates' },
+        { id: 'equal', label: 'Shared equally', disabledWhen: [{ enabled_aims: ['corporate_profit'] }] }, { id: 'unequal', label: 'Wealth concentrates' },
         { id: 'extreme', label: 'Power concentrates' } ] },
     { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, terminal: true, hideAfterEscape: true,
       activateWhen: [

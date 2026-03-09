@@ -29,7 +29,7 @@ The questionnaire collects a set of **dimensions** — the key variables that de
 | `alignment_tax` | `accepted`, `eroded`, `split` | alignment-tax |
 | `proliferation_control` | `deny_rivals`, `secure_access`, `none` | ai-containment |
 | `proliferation_outcome` | `holds`, `breached` | proliferation-outcome |
-| `enabled_aims` | `human_centered`, `proxy`, `arbitrary` | aligned-ai-aims |
+| `enabled_aims` | `human_centered`, `corporate_profit`, `state_security`, `arbitrary` | aligned-ai-aims |
 | `containment` | `contained`, `escaped` | containment-durability (or implicitly set by various paths) |
 | `block_entrants` | `attempt`, `no_attempt` | block-entrants |
 | `block_outcome` | `holds`, `fails` | block-outcome |

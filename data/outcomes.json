@@ -159,8 +159,8 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["international"], "failure_mode": ["none"], "enabled_aims": ["human_centered", "proxy"] },
-        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["international"], "failure_mode": ["none"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
+        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["international"], "failure_mode": ["none"], "enabled_aims": ["human_centered", "corporate_profit", "state_security"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["international"], "failure_mode": ["none"], "enabled_aims": ["human_centered", "corporate_profit", "state_security"], "brittle_resolution": ["solved", "sufficient"] },
         { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "intent": ["international"], "failure_mode": ["none"] },
         { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["international"], "failure_mode": ["none"] },
         { "capability": ["singularity"], "alignment": ["robust"], "escalation_outcome": ["conflict"], "conflict_result": ["victory"], "post_war_aims": ["human_centered"] },
@@ -219,8 +219,8 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["self_interest"], "enabled_aims": ["human_centered", "proxy"] },
-        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["self_interest"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
+        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["self_interest"], "enabled_aims": ["human_centered", "corporate_profit", "state_security"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["self_interest"], "enabled_aims": ["human_centered", "corporate_profit", "state_security"], "brittle_resolution": ["solved", "sufficient"] },
         { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "intent": ["self_interest"] },
         { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["self_interest"] },
         { "capability": ["singularity"], "alignment": ["robust"], "escalation_outcome": ["conflict"], "conflict_result": ["victory"], "post_war_aims": ["self_interest"] },
@@ -262,8 +262,8 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["robust"], "escalation_outcome": ["standoff"], "enabled_aims": ["human_centered", "proxy"] },
-        { "capability": ["singularity"], "alignment": ["brittle"], "escalation_outcome": ["standoff"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
+        { "capability": ["singularity"], "alignment": ["robust"], "escalation_outcome": ["standoff"], "enabled_aims": ["human_centered", "corporate_profit", "state_security"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "escalation_outcome": ["standoff"], "enabled_aims": ["human_centered", "corporate_profit", "state_security"], "brittle_resolution": ["solved", "sufficient"] },
         { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "escalation_outcome": ["standoff"] },
         { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "escalation_outcome": ["standoff"] }
       ],
@@ -295,8 +295,8 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["robust"], "escalation_outcome": ["conflict"], "conflict_result": ["destruction"], "enabled_aims": ["human_centered", "proxy"] },
-        { "capability": ["singularity"], "alignment": ["brittle"], "escalation_outcome": ["conflict"], "conflict_result": ["destruction"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
+        { "capability": ["singularity"], "alignment": ["robust"], "escalation_outcome": ["conflict"], "conflict_result": ["destruction"], "enabled_aims": ["human_centered", "corporate_profit", "state_security"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "escalation_outcome": ["conflict"], "conflict_result": ["destruction"], "enabled_aims": ["human_centered", "corporate_profit", "state_security"], "brittle_resolution": ["solved", "sufficient"] },
         { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "escalation_outcome": ["conflict"], "conflict_result": ["destruction"] },
         { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "escalation_outcome": ["conflict"], "conflict_result": ["destruction"] },
         { "capability": ["singularity"], "alignment": ["failed"], "ai_goals": ["marginal"], "escalation_outcome": ["conflict"], "conflict_result": ["destruction"] }
@@ -349,8 +349,8 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["coexistence"], "failure_mode": ["none"], "enabled_aims": ["human_centered", "proxy"] },
-        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["coexistence"], "failure_mode": ["none"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
+        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["coexistence"], "failure_mode": ["none"], "enabled_aims": ["human_centered", "corporate_profit", "state_security"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["coexistence"], "failure_mode": ["none"], "enabled_aims": ["human_centered", "corporate_profit", "state_security"], "brittle_resolution": ["solved", "sufficient"] },
         { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "intent": ["coexistence"], "failure_mode": ["none"] },
         { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["coexistence"], "failure_mode": ["none"] }
       ],
@@ -399,8 +399,8 @@
         }
       },
       "reachable": [
-        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["international", "coexistence"], "failure_mode": ["whimper", "disempowerment"], "enabled_aims": ["human_centered", "proxy"] },
-        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["international", "coexistence"], "failure_mode": ["whimper", "disempowerment"], "enabled_aims": ["human_centered", "proxy"], "brittle_resolution": ["solved", "sufficient"] },
+        { "capability": ["singularity"], "alignment": ["robust"], "intent": ["international", "coexistence"], "failure_mode": ["whimper", "disempowerment"], "enabled_aims": ["human_centered", "corporate_profit", "state_security"] },
+        { "capability": ["singularity"], "alignment": ["brittle"], "intent": ["international", "coexistence"], "failure_mode": ["whimper", "disempowerment"], "enabled_aims": ["human_centered", "corporate_profit", "state_security"], "brittle_resolution": ["solved", "sufficient"] },
         { "capability": ["singularity"], "alignment": ["brittle"], "ai_goals": ["marginal"], "intent": ["international", "coexistence"], "failure_mode": ["whimper", "disempowerment"] },
         { "capability": ["singularity"], "alignment": ["failed"], "containment": ["contained"], "intent": ["international", "coexistence"], "failure_mode": ["whimper", "disempowerment"] }
       ],
