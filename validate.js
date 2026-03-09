@@ -14,7 +14,7 @@ const { DIMENSIONS, DIM_MAP } = require('./dimensions.js');
 const {
     matchesOverride, applyOverrides, effectiveVal,
     isDimVisible, isDimLocked, isValueDisabled,
-    cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch
+    cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch, getRenderAfter
 } = require('./engine.js');
 
 const questions = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/questions.json'), 'utf8'));
@@ -207,7 +207,7 @@ function runStaticAnalysis() {
             const condSets = Array.isArray(a.requires) ? a.requires : [a.requires];
             for (const conds of condSets) {
                 for (const [dim, vals] of Object.entries(conds)) {
-                    if (!metaDims.has(dim) && !virtualDims.has(dim)) {
+                    if (!metaDims.has(dim) && !DIM_MAP[dim]) {
                         errors.push(`[requires] Question "${q.id}" answer "${a.label}" requires unknown dimension "${dim}"`);
                     }
                     if (DIM_MAP[dim]) {
@@ -254,8 +254,7 @@ function getEnabledValues(sel, dim) {
     return dim.values.filter(v => !isValueDisabled(sel, dim, v));
 }
 
-const FORWARD_KEY_DIMS = ['capability', 'automation', 'alignment', 'intent',
-    'failure_mode', 'containment', 'ai_goals', 'governance'];
+const FORWARD_KEY_DIMS = DIMENSIONS.filter(d => d.forwardKey).map(d => d.id);
 
 function forwardKey(sel) {
     const parts = [];
@@ -296,6 +295,16 @@ function runExplorer() {
     const violations = { vanish: [], appearAboveAnswered: [], deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], premature: [], lockedAfterUnanswered: [], progressiveVanish: [], selectionErasedUpward: [], selectionOverriddenUpward: [], selectionOverriddenDownward: [], switchOrphan: [], switchErased: [], switchUpstreamChanged: [] };
     const seen = { vanish: new Set(), appearAbove: new Set(), clickErased: new Set(), premature: new Set(), lockedAfterUnanswered: new Set(), progressiveVanish: new Set(), selectionErasedUpward: new Set(), selectionOverriddenUpward: new Set(), selectionOverriddenDownward: new Set(), switchOrphan: new Set(), switchErased: new Set(), switchUpstreamChanged: new Set() };
 
+    function resolveRenderIdx(sel, dim) {
+        const afterId = getRenderAfter(sel, dim);
+        if (!afterId) return null;
+        const afterDim = DIM_MAP[afterId];
+        if (!afterDim) return null;
+        const parentIdx = resolveRenderIdx(sel, afterDim);
+        const baseIdx = parentIdx !== null ? parentIdx : DIMENSIONS.indexOf(afterDim);
+        return baseIdx + 1;
+    }
+
     function checkVanishUpward(sel) {
         const visible = new Set(DIMENSIONS.filter(d => !d.virtual && isDimVisible(sel, d)).map(d => d.id));
         for (const dim of DIMENSIONS) {
@@ -304,8 +313,8 @@ function runExplorer() {
             const myIdx = DIMENSIONS.indexOf(dim);
             for (const val of getEnabledValues(sel, dim)) {
                 if (sel[dim.id] === val.id) continue;
-                const next = { ...sel, [dim.id]: val.id };
-                cleanSelection(next);
+                const next = { ...sel };
+                applySelection(next, dim.id, val.id);
                 for (let i = 0; i < myIdx; i++) {
                     const upper = DIMENSIONS[i];
                     if (!visible.has(upper.id)) continue;
@@ -329,8 +338,8 @@ function runExplorer() {
             if (!visibleBefore.has(dim.id) || isDimLocked(sel, dim) !== null) continue;
             if (sel[dim.id]) continue;
             for (const val of getEnabledValues(sel, dim)) {
-                const next = { ...sel, [dim.id]: val.id };
-                cleanSelection(next);
+                const next = { ...sel };
+                applySelection(next, dim.id, val.id);
                 const answeredRef = new Set(answeredBefore);
                 answeredRef.add(dim.id);
                 for (let i = 0; i < DIMENSIONS.length; i++) {
@@ -341,8 +350,11 @@ function runExplorer() {
                     if (isDimLocked(next, newDim) !== null) continue;
                     const k = `${dim.id}:${val.id}->${newDim.id}`;
                     if (seen.appearAbove.has(k)) continue;
+                    let effectiveIdx = i;
+                    const renderPos = resolveRenderIdx(next, newDim);
+                    if (renderPos !== null) effectiveIdx = renderPos;
                     let hasAnsweredBelow = false;
-                    for (let j = i + 1; j < DIMENSIONS.length; j++) {
+                    for (let j = effectiveIdx + 1; j < DIMENSIONS.length; j++) {
                         if (answeredRef.has(DIMENSIONS[j].id)) { hasAnsweredBelow = true; break; }
                     }
                     if (hasAnsweredBelow) {
@@ -363,8 +375,8 @@ function runExplorer() {
             const myIdx = DIMENSIONS.indexOf(dim);
             for (const val of getEnabledValues(sel, dim)) {
                 if (sel[dim.id] === val.id) continue;
-                const next = { ...sel, [dim.id]: val.id };
-                cleanSelection(next);
+                const next = { ...sel };
+                applySelection(next, dim.id, val.id);
                 const shownAfter = progressivelyShown(next);
                 for (const wasShown of shownBefore) {
                     if (shownAfter.has(wasShown)) continue;
@@ -424,8 +436,8 @@ function runExplorer() {
             if (isDimLocked(sel, dim) !== null) continue;
             for (const val of getEnabledValues(sel, dim)) {
                 if (sel[dim.id] === val.id) continue;
-                const next = { ...sel, [dim.id]: val.id };
-                cleanSelection(next);
+                const next = { ...sel };
+                applySelection(next, dim.id, val.id);
                 if (!next[dim.id]) {
                     const k = `${dim.id}:${val.id}`;
                     if (seen.clickErased.has(k)) continue;
@@ -444,8 +456,8 @@ function runExplorer() {
             if (sel[dim.id]) continue;
             const myIdx = DIMENSIONS.indexOf(dim);
             for (const val of getEnabledValues(sel, dim)) {
-                const next = { ...sel, [dim.id]: val.id };
-                cleanSelection(next);
+                const next = { ...sel };
+                applySelection(next, dim.id, val.id);
                 for (let i = 0; i < myIdx; i++) {
                     const upper = DIMENSIONS[i];
                     if (!sel[upper.id]) continue;
@@ -498,12 +510,12 @@ function runExplorer() {
             if (isDimLocked(sel, dim) !== null) continue;
             if (!sel[dim.id]) continue;
 
+            const dimIdx = DIMENSIONS.indexOf(dim);
             for (const val of getEnabledValues(sel, dim)) {
                 if (val.id === sel[dim.id]) continue;
 
                 const next = { ...sel };
                 applySelection(next, dim.id, val.id);
-                cleanSelection(next);
 
                 if (next[dim.id] !== val.id) {
                     const k = `${dim.id}:${val.id}`;
@@ -514,7 +526,6 @@ function runExplorer() {
                 }
 
                 if (next[dim.id] === val.id) {
-                    const dimIdx = DIMENSIONS.indexOf(dim);
                     for (let ui = 0; ui < dimIdx; ui++) {
                         const up = DIMENSIONS[ui];
                         if (!sel[up.id]) continue;
@@ -542,9 +553,9 @@ function runExplorer() {
                     }
                 }
 
-                for (const check of DIMENSIONS) {
+                for (let ci = dimIdx + 1; ci < DIMENSIONS.length; ci++) {
+                    const check = DIMENSIONS[ci];
                     if (next[check.id] === undefined) continue;
-                    if (check.id === dim.id) continue;
                     if (isDimLocked(next, check) !== null) continue;
 
                     const savedPre = sel[check.id];
@@ -582,8 +593,8 @@ function runExplorer() {
         const currentOutcome = matched[0].id;
         const enabled = getEnabledValues(sel, nextDim);
         for (const val of enabled) {
-            const next = { ...sel, [nextDim.id]: val.id };
-            cleanSelection(next);
+            const next = { ...sel };
+            applySelection(next, nextDim.id, val.id);
             const childDims = effectiveDims(next);
             const childMatched = templatesList.filter(t => templateMatches(t, childDims));
             if (childMatched.length !== 1 || childMatched[0].id !== currentOutcome) {

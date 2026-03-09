@@ -4,7 +4,7 @@
 
 (function() {
 
-const { DIMENSIONS, DIM_MAP } = (typeof module !== 'undefined' && module.exports)
+const { DIMENSIONS, DIM_MAP, EFFECTIVE_EXCLUSIONS } = (typeof module !== 'undefined' && module.exports)
     ? require('./dimensions.js') : window.Dimensions;
 
 // ════════════════════════════════════════════════════════
@@ -55,11 +55,7 @@ function effectiveVal(sel, k) {
 // Activation engine (generic isDimVisible)
 // ════════════════════════════════════════════════════════
 
-const HIDE_AFTER_ESCAPE = new Set([
-    'proliferation_control', 'proliferation_outcome', 'block_entrants', 'block_outcome',
-    'new_entrants', 'rival_dynamics', 'enabled_aims', 'intent', 'failure_mode',
-    'knowledge_replacement', 'physical_automation', 'brittle_resolution'
-]);
+const HIDE_AFTER_ESCAPE = new Set(DIMENSIONS.filter(d => d.hideAfterEscape).map(d => d.id));
 
 function isEscapedNonMarginal(sel) {
     return sel.ai_goals && sel.ai_goals !== 'marginal' && effectiveVal(sel, 'alignment') === 'failed';
@@ -68,9 +64,10 @@ function isEscapedNonMarginal(sel) {
 const TERM_SET = new Set(DIMENSIONS.filter(d => d.terminal).map(d => d.id));
 
 const CUSTOM_CHECKS = {
-    allPrecedingAnswered(sel, dim) {
+    allPrecedingAnswered(sel, dim, cond) {
         const brIdx = DIMENSIONS.indexOf(dim);
-        const adIdx = DIMENSIONS.findIndex(d => d.id === 'alignment_durability');
+        const anchor = cond && cond._fnAnchor;
+        const adIdx = anchor ? DIMENSIONS.findIndex(d => d.id === anchor) : 0;
         for (let i = adIdx + 1; i < brIdx; i++) {
             const mid = DIMENSIONS[i];
             if (mid.terminal || mid.virtual) continue;
@@ -118,7 +115,7 @@ function matchCondition(sel, cond, dim) {
         const v = useRaw ? sel[k] : effectiveVal(sel, k);
         if (!v || !allowed.includes(v)) return false;
     }
-    if (cond._fn && !CUSTOM_CHECKS[cond._fn](sel, dim)) return false;
+    if (cond._fn && !CUSTOM_CHECKS[cond._fn](sel, dim, cond)) return false;
     return true;
 }
 
@@ -139,41 +136,25 @@ function isDimVisible(sel, dim) {
 // ════════════════════════════════════════════════════════
 
 function isDimLocked(sel, dim) {
-    if (dim.id === 'gov_action' && sel.alignment === 'robust' && effectiveVal(sel, 'decel_outcome') == null) return 'accelerate';
-    if (dim.id === 'containment') {
-        if (sel.brittle_resolution === 'escape') return 'escaped';
-        if (sel.brittle_resolution === 'solved' || sel.brittle_resolution === 'sufficient') {
-            if (!sel.containment || sel.containment === 'contained') return 'contained';
-        }
-        if (effectiveVal(sel, 'decel_outcome') === 'escapes') return 'escaped';
-        if (effectiveVal(sel, 'alignment') === 'robust') {
-            if (!sel.containment || sel.containment === 'contained') return 'contained';
+    if (dim.lockedWhen) {
+        for (const rule of dim.lockedWhen) {
+            if (matchCondition(sel, rule.when, {})) {
+                if (rule.soft && sel[dim.id] && sel[dim.id] !== rule.value) continue;
+                return rule.value;
+            }
         }
     }
-    if (dim.id === 'ai_goals' && sel.alignment === 'brittle' && sel.alignment_durability === 'holds') {
-        if (sel.brittle_resolution === 'solved' || sel.brittle_resolution === 'sufficient') {
-            if (!sel.ai_goals || sel.ai_goals === 'benevolent') return 'benevolent';
-        }
-    }
-    if (dim.id === 'failure_mode' && sel.enabled_aims === 'proxy') return 'whimper';
-    if (!dim.lockedWhen) {
-        const enabled = dim.values.filter(v => !isValueDisabled(sel, dim, v));
-        return enabled.length === 1 ? enabled[0].id : null;
-    }
-    for (const [triggerDim, rule] of Object.entries(dim.lockedWhen)) {
-        if (effectiveVal(sel, triggerDim) === rule.equals) return rule.value;
-    }
+    if (!dim.values) return null;
     const enabled = dim.values.filter(v => !isValueDisabled(sel, dim, v));
     return enabled.length === 1 ? enabled[0].id : null;
 }
 
 function isValueDisabled(sel, dim, val) {
-    if (dim.id === 'enabled_aims' && val.id === 'arbitrary') {
-        const out = effectiveVal(sel, 'decel_outcome');
-        if (['solved', 'parity_solved'].includes(out)) return true;
+    if (val.disabledWhen) {
+        for (const cond of val.disabledWhen) {
+            if (matchCondition(sel, cond, {})) return true;
+        }
     }
-    if (dim.id === 'intent' && val.id === 'self_interest' && sel.enabled_aims === 'human_centered') return true;
-    if (dim.id === 'gov_action' && val.id === 'decelerate' && sel.alignment === 'robust') return true;
     if (!val.requires) return false;
     const condSets = Array.isArray(val.requires) ? val.requires : [val.requires];
     return condSets.every(conds => {
@@ -216,10 +197,29 @@ function applySelection(sel, dimId, newValue) {
     const dim = DIM_MAP[dimId];
     if (!dim) return;
     const idx = DIMENSIONS.indexOf(dim);
+
+    const savedUpstream = {};
+    for (let i = 0; i < idx; i++) {
+        const id = DIMENSIONS[i].id;
+        if (sel[id] !== undefined) savedUpstream[id] = sel[id];
+    }
+
     if (sel[dimId] === newValue) {
         delete sel[dimId];
-        for (let i = idx + 1; i < DIMENSIONS.length; i++) {
-            delete sel[DIMENSIONS[i].id];
+        for (let pass = 0; pass < 5; pass++) {
+            let changed = false;
+            for (let i = idx + 1; i < DIMENSIONS.length; i++) {
+                const d = DIMENSIONS[i];
+                if (sel[d.id] === undefined) continue;
+                const saved = sel[d.id];
+                delete sel[d.id];
+                if (isDimVisible(sel, d)) {
+                    sel[d.id] = saved;
+                } else {
+                    changed = true;
+                }
+            }
+            if (!changed) break;
         }
     } else {
         const hadValue = sel[dimId] !== undefined;
@@ -259,6 +259,15 @@ function applySelection(sel, dimId, newValue) {
             }
         }
     }
+
+    for (let i = 0; i < idx; i++) {
+        const id = DIMENSIONS[i].id;
+        if (id in savedUpstream) {
+            sel[id] = savedUpstream[id];
+        } else {
+            delete sel[id];
+        }
+    }
 }
 
 function effectiveDims(sel) {
@@ -270,29 +279,16 @@ function effectiveDims(sel) {
         const locked = isDimLocked(sel, dim);
         if (locked !== null) d[dim.id] = locked;
     }
-    if (!d.rival_dynamics) {
-        const pending = ['rival_dynamics', 'block_entrants', 'block_outcome', 'new_entrants'].some(id => {
+    for (const rule of EFFECTIVE_EXCLUSIONS) {
+        if (rule.when && !matchCondition(sel, rule.when, {})) continue;
+        if (rule.unlessEffective && rule.unlessEffective.some(id => d[id])) continue;
+        const hasPending = rule.anyPending.some(id => {
             const dim = DIM_MAP[id];
             return dim && isDimVisible(sel, dim) && isDimLocked(sel, dim) === null && !sel[id];
         });
-        if (pending) delete d.intent;
-    }
-    if (sel.ai_goals === 'marginal' && !sel.inert_stays) {
-        const iDim = DIM_MAP['inert_stays'];
-        if (iDim && isDimVisible(sel, iDim) && isDimLocked(sel, iDim) === null) {
-            delete d.intent;
-            delete d.ai_goals;
+        if (hasPending) {
+            for (const id of rule.exclude) delete d[id];
         }
-    }
-    if (sel.inert_stays === 'no' && !sel.inert_outcome) {
-        const ioDim = DIM_MAP['inert_outcome'];
-        if (ioDim && isDimVisible(sel, ioDim) && isDimLocked(sel, ioDim) === null) {
-            delete d.ai_goals;
-        }
-    }
-    const brDim = DIM_MAP['brittle_resolution'];
-    if (brDim && isDimVisible(sel, brDim) && isDimLocked(sel, brDim) === null && !sel.brittle_resolution) {
-        delete d.alignment;
     }
     return d;
 }
@@ -322,18 +318,34 @@ function templatePartialMatch(t, dims) {
 }
 
 // ════════════════════════════════════════════════════════
+// Render positioning
+// ════════════════════════════════════════════════════════
+
+function getRenderAfter(sel, dim) {
+    if (!dim.renderAfter) return null;
+    for (const rule of dim.renderAfter) {
+        let match = true;
+        for (const [k, v] of Object.entries(rule.when)) {
+            if (sel[k] !== v) { match = false; break; }
+        }
+        if (match) return rule.after;
+    }
+    return null;
+}
+
+// ════════════════════════════════════════════════════════
 // Exports
 // ════════════════════════════════════════════════════════
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { DIMENSIONS, DIM_MAP,
         matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimLocked, isValueDisabled,
-        cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch };
+        cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch, getRenderAfter };
 }
 if (typeof window !== 'undefined') {
     window.Engine = { DIMENSIONS, DIM_MAP,
         matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimLocked, isValueDisabled,
-        cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch };
+        cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch, getRenderAfter };
 }
 
 })();

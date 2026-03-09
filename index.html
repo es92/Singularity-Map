@@ -1562,12 +1562,13 @@
                 effectiveVal: _effectiveVal, isDimVisible: _isDimVisible, isDimLocked: _isDimLocked,
                 isValueDisabled: _isValueDisabled, cleanSelection: _cleanSelection,
                 applySelection: _applySelection, effectiveDims: _effectiveDims,
-                templateMatches, templatePartialMatch } = window.Engine;
+                templateMatches, templatePartialMatch, getRenderAfter: _getRenderAfter } = window.Engine;
             function effectiveVal(k) { return _effectiveVal(sel, k); }
             function isDimVisible(dim) { return _isDimVisible(sel, dim); }
             function isDimLocked(dim) { return _isDimLocked(sel, dim); }
             function isValueDisabled(dim, val) { return _isValueDisabled(sel, dim, val); }
             function cleanSelection() { _cleanSelection(sel); }
+            function getRenderAfter(dim) { return _getRenderAfter(sel, dim); }
             function effectiveDims() { return _effectiveDims(sel); }
             function moodColor(mood) {
                 const map = { utopian:'var(--mood-utopian)', dystopian:'var(--mood-dystopian)',
@@ -1614,15 +1615,13 @@
                     });
                 });
 
-                const brittleRow = app.querySelector('[data-dim-row="brittle_resolution"]');
-                const containmentRow = app.querySelector('[data-dim-row="containment"]');
-                const aiGoalsRow = app.querySelector('[data-dim-row="ai_goals"]');
-                if (brittleRow && sel.brittle_resolution) {
-                    const parent = brittleRow.parentNode;
-                    if (containmentRow && !containmentRow.classList.contains('hidden')) parent.insertBefore(containmentRow, brittleRow.nextSibling);
-                    if (aiGoalsRow && !aiGoalsRow.classList.contains('hidden')) {
-                        const after = containmentRow && !containmentRow.classList.contains('hidden') ? containmentRow.nextSibling : brittleRow.nextSibling;
-                        parent.insertBefore(aiGoalsRow, after);
+                for (const dim of DIMENSIONS) {
+                    const afterId = getRenderAfter(dim);
+                    if (!afterId) continue;
+                    const row = app.querySelector(`[data-dim-row="${dim.id}"]`);
+                    const anchorRow = app.querySelector(`[data-dim-row="${afterId}"]`);
+                    if (row && anchorRow && !row.classList.contains('hidden')) {
+                        anchorRow.parentNode.insertBefore(row, anchorRow.nextSibling);
                     }
                 }
 
