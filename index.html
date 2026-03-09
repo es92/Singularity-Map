@@ -755,10 +755,10 @@
             return texts;
         }
 
-        const { DIMENSIONS, DIM_MAP } = window.Dimensions;
+        const { SCENARIO, DIMENSIONS, DIM_MAP } = window.Dimensions;
 
         // --- Persistence ---
-        const STORAGE_KEY = 'singularity-map-discovered';
+        const STORAGE_KEY = SCENARIO.storageKey;
         function loadDiscovered() {
             try {
                 discovered = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
@@ -1091,15 +1091,20 @@
                 localDims[t.primaryDimension] = variantKey;
             }
 
-            const isSingularityOutcome = t.reachable && t.reachable.some(c => c.capability && c.capability.includes('singularity'));
-
             const adjustableIds = new Set();
             if (t.primaryDimension) adjustableIds.add(t.primaryDimension);
             if (t.flavors) for (const k of Object.keys(t.flavors)) adjustableIds.add(k);
-            adjustableIds.add('capability');
-            if (isSingularityOutcome) { adjustableIds.add('automation'); adjustableIds.add('automation_recovery'); }
-            if (t.flavors && t.flavors.stall_recovery) adjustableIds.add('stall_recovery');
-            if (t.flavors && t.flavors.automation_recovery) adjustableIds.add('automation_recovery');
+            if (t.reachable) {
+                for (const cond of t.reachable) {
+                    for (const dimId of Object.keys(cond)) adjustableIds.add(dimId);
+                }
+            }
+            for (const dim of DIMENSIONS) {
+                if (adjustableIds.has(dim.id) || !dim.activateWhen) continue;
+                if (dim.activateWhen.some(cond =>
+                    Object.keys(cond).some(k => !k.startsWith('_') && adjustableIds.has(k))
+                )) adjustableIds.add(dim.id);
+            }
             const relevantDims = DIMENSIONS.filter(d => adjustableIds.has(d.id));
 
             const validValues = {};
@@ -1111,10 +1116,13 @@
                 if (t.flavors && t.flavors[dimId]) {
                     for (const k of Object.keys(t.flavors[dimId])) s.add(k);
                 }
-                const meta = DIM_MAP[dimId];
-                if (dimId === 'capability' && meta && isSingularityOutcome) {
-                    meta.values.forEach(v => s.add(v.id));
+                if (t.reachable) {
+                    for (const cond of t.reachable) {
+                        if (cond[dimId]) for (const v of cond[dimId]) s.add(v);
+                    }
                 }
+                const meta = DIM_MAP[dimId];
+                if (meta && s.size === 0) meta.values.forEach(v => s.add(v.id));
                 validValues[dimId] = s;
             }
 
@@ -1136,10 +1144,24 @@
                 }
             }
 
-            if (!localDims.capability && t.reachable) {
-                for (const cond of t.reachable) {
-                    if (cond.capability) { localDims.capability = cond.capability[0]; break; }
+            if (t.reachable) {
+                for (const dimId of adjustableIds) {
+                    if (localDims[dimId]) continue;
+                    for (const cond of t.reachable) {
+                        if (cond[dimId]) { localDims[dimId] = cond[dimId][0]; break; }
+                    }
                 }
+            }
+
+            function isOutcomeDimActive(dim) {
+                if (!dim.activateWhen) return true;
+                return dim.activateWhen.some(cond => {
+                    for (const [k, allowed] of Object.entries(cond)) {
+                        if (k.startsWith('_')) continue;
+                        if (!localDims[k] || !allowed.includes(localDims[k])) return false;
+                    }
+                    return true;
+                });
             }
 
             function isPillDisabled(dim, valObj) {
@@ -1183,41 +1205,32 @@
                     }
                 }
 
-                const isStallCap = ['hours', 'days', 'weeks', 'months'].includes(localDims.capability);
-                if (!isStallCap) {
-                    delete localDims.stall_recovery;
-                } else if (isSingularityOutcome) {
-                    localDims.stall_recovery = 'mild';
-                }
-
-                const isShallowAuto = localDims.automation === 'shallow';
-                const isDeepOutcome = t.reachable && t.reachable.some(c => c.automation && c.automation.includes('deep'));
-                if (!isShallowAuto) {
-                    delete localDims.automation_recovery;
-                } else if (isDeepOutcome) {
-                    localDims.automation_recovery = 'mild';
+                for (const dim of relevantDims) {
+                    const active = isOutcomeDimActive(dim);
+                    if (!active) {
+                        delete localDims[dim.id];
+                    } else if (!localDims[dim.id]) {
+                        const valid = validValues[dim.id];
+                        if (valid && valid.size > 0) localDims[dim.id] = [...valid][0];
+                    }
                 }
 
                 relevantDims.forEach(dim => {
                     const row = app.querySelector('[data-odim="' + dim.id + '"]');
                     if (!row) return;
-                    if (dim.id === 'stall_recovery') {
-                        row.classList.toggle('hidden', !isStallCap);
-                        if (!isStallCap) return;
-                    }
-                    if (dim.id === 'automation_recovery') {
-                        row.classList.toggle('hidden', !isShallowAuto);
-                        if (!isShallowAuto) return;
-                    }
-                    const forceLockedRecovery = (dim.id === 'stall_recovery' && isSingularityOutcome) || (dim.id === 'automation_recovery' && isDeepOutcome);
+                    const active = isOutcomeDimActive(dim);
+                    row.classList.toggle('hidden', !active);
+                    if (!active) return;
+                    const enabledCount = dim.values.filter(v => !isPillDisabled(dim, v)).length;
+                    const forceLocked = enabledCount <= 1;
                     row.querySelectorAll('.dim-pill').forEach(pill => {
                         const vid = pill.dataset.val;
                         const valObj = dim.values.find(v => v.id === vid);
                         const disabled = valObj ? isPillDisabled(dim, valObj) : false;
                         const isActive = localDims[dim.id] === vid;
                         pill.classList.toggle('active', isActive);
-                        pill.classList.toggle('disabled', (disabled && !isActive) || (forceLockedRecovery && !isActive));
-                        pill.classList.toggle('locked', forceLockedRecovery);
+                        pill.classList.toggle('disabled', (disabled && !isActive) || (forceLocked && !isActive));
+                        pill.classList.toggle('locked', forceLocked);
                     });
                 });
 
@@ -1264,7 +1277,7 @@
             const allOutcomeDims = [...lockedDims, ...relevantDims];
             let dimSelectorHtml = '';
             if (allOutcomeDims.length > 0) {
-                const stageNames = { 1: 'Dynamics of Singularity', 2: 'Dynamics of Control', 3: 'Rate of Impact' };
+                const stageNames = SCENARIO.stageNames || {};
                 const byStage = {};
                 allOutcomeDims.forEach(dim => {
                     if (!byStage[dim.stage]) byStage[dim.stage] = [];
@@ -1695,7 +1708,7 @@
             cleanSelection();
             const stageGroups = { 1: [], 2: [], 3: [] };
             DIMENSIONS.filter(d => !d.virtual).forEach(d => { if (!stageGroups[d.stage]) stageGroups[d.stage] = []; stageGroups[d.stage].push(d); });
-            const stageNames = { 1: 'Dynamics of Singularity', 2: 'Dynamics of Control', 3: 'Rate of Impact' };
+            const stageNames = SCENARIO.stageNames || {};
 
             let dimsHtml = '';
             for (const [stageId, dims] of Object.entries(stageGroups)) {

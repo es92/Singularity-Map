@@ -4,7 +4,7 @@
 
 (function() {
 
-const { DIMENSIONS, DIM_MAP, EFFECTIVE_EXCLUSIONS } = (typeof module !== 'undefined' && module.exports)
+const { SCENARIO, DIMENSIONS, DIM_MAP, EFFECTIVE_EXCLUSIONS } = (typeof module !== 'undefined' && module.exports)
     ? require('./dimensions.js') : window.Dimensions;
 
 // ════════════════════════════════════════════════════════
@@ -55,11 +55,10 @@ function effectiveVal(sel, k) {
 // Activation engine (generic isDimVisible)
 // ════════════════════════════════════════════════════════
 
-const HIDE_AFTER_ESCAPE = new Set(DIMENSIONS.filter(d => d.hideAfterEscape).map(d => d.id));
-
-function isEscapedNonMarginal(sel) {
-    return sel.ai_goals && sel.ai_goals !== 'marginal' && effectiveVal(sel, 'alignment') === 'failed';
-}
+const HIDE_FLAG_RULES = (SCENARIO && SCENARIO.hideConditions || []).map(hc => ({
+    dims: new Set(DIMENSIONS.filter(d => d[hc.flag]).map(d => d.id)),
+    when: hc.when,
+}));
 
 const TERM_SET = new Set(DIMENSIONS.filter(d => d.terminal).map(d => d.id));
 
@@ -95,6 +94,11 @@ function matchCondition(sel, cond, dim) {
             if (!sel[k] || !allowed.includes(sel[k])) return false;
         }
     }
+    if (cond._rawNot) {
+        for (const [k, excluded] of Object.entries(cond._rawNot)) {
+            if (sel[k] && excluded.includes(sel[k])) return false;
+        }
+    }
     if (cond._eff) {
         for (const [k, allowed] of Object.entries(cond._eff)) {
             const v = effectiveVal(sel, k);
@@ -107,11 +111,11 @@ function matchCondition(sel, cond, dim) {
             if (v && excluded.includes(v)) return false;
         }
     }
-    const decelActive = dim.useRawUnlessDecel ? effectiveVal(sel, 'decel_outcome') != null : false;
+    const rawUnlessActive = dim.useRawUnless ? effectiveVal(sel, dim.useRawUnless) != null : false;
     for (const [k, allowed] of Object.entries(cond)) {
         if (k.startsWith('_')) continue;
         const useRaw = dim.useRawFor && dim.useRawFor.includes(k)
-            && (!dim.useRawUnlessDecel || !decelActive);
+            && (!dim.useRawUnless || !rawUnlessActive);
         const v = useRaw ? sel[k] : effectiveVal(sel, k);
         if (!v || !allowed.includes(v)) return false;
     }
@@ -120,7 +124,9 @@ function matchCondition(sel, cond, dim) {
 }
 
 function isDimActivated(sel, dim) {
-    if (isEscapedNonMarginal(sel) && HIDE_AFTER_ESCAPE.has(dim.id)) return false;
+    for (const rule of HIDE_FLAG_RULES) {
+        if (rule.dims.has(dim.id) && matchCondition(sel, rule.when, {})) return false;
+    }
     if (!dim.activateWhen) return true;
     return dim.activateWhen.some(c => matchCondition(sel, c, dim));
 }

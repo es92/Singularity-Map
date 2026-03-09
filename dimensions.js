@@ -4,6 +4,17 @@
 
 (function() {
 
+const SCENARIO = {
+    id: 'singularity-map',
+    title: 'Singularity Map',
+    description: 'Navigate the branching futures of artificial intelligence.',
+    storageKey: 'singularity-map-discovered',
+    stageNames: { 1: 'Dynamics of Singularity', 2: 'Dynamics of Control', 3: 'Rate of Impact' },
+    hideConditions: [
+        { flag: 'hideAfterEscape', when: { _set: ['ai_goals'], _rawNot: { ai_goals: ['marginal'] }, _eff: { alignment: ['failed'] } } },
+    ],
+};
+
 const DECEL_PAIRS = [
     ['decel_2mo_progress', 'decel_2mo_action'],
     ['decel_4mo_progress', 'decel_4mo_action'],
@@ -171,7 +182,7 @@ const DIMENSIONS = [
         { capability: ['singularity'], automation: ['deep'], alignment: ['brittle'], _notSet: ['decel_outcome'] },
         { capability: ['singularity'], automation: ['deep'], alignment: ['brittle'], _eff: { decel_outcome: ['rival'], decel_align_progress: ['brittle'] } },
       ],
-      useRawFor: ['alignment'], useRawUnlessDecel: true,
+      useRawFor: ['alignment'], useRawUnless: 'decel_outcome',
       values: [
         { id: 'holds', label: 'Holds for now' }, { id: 'breaks', label: 'Breaks' } ] },
     { id: 'proliferation_control', label: 'Proliferation Control', stage: 2, hideAfterEscape: true,
@@ -238,7 +249,7 @@ const DIMENSIONS = [
         { capability: ['singularity'], automation: ['deep'], _raw: { alignment: ['failed'], containment: ['contained'] } },
         { capability: ['singularity'], automation: ['deep'], _raw: { ai_goals: ['marginal'] } },
       ],
-      useRawFor: ['alignment'], useRawUnlessDecel: true,
+      useRawFor: ['alignment'], useRawUnless: 'decel_outcome',
       overrides: [
         { when: { escalation_outcome: 'agreement' }, value: 'coexistence' },
         { when: { post_war_aims: 'human_centered' }, value: 'coexistence' },
@@ -251,7 +262,7 @@ const DIMENSIONS = [
         { id: 'international', label: 'International' } ] },
     { id: 'block_entrants', label: 'Block New Entrants?', stage: 2, hideAfterEscape: true,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], proliferation_control: ['secure_access'], proliferation_outcome: ['holds'], intent: ['self_interest', 'international'] }],
-      useRawFor: ['alignment', 'intent'], useRawUnlessDecel: true,
+      useRawFor: ['alignment', 'intent'], useRawUnless: 'decel_outcome',
       values: [
         { id: 'attempt', label: 'Attempt to block' },
         { id: 'no_attempt', label: 'No attempt' } ] },
@@ -377,7 +388,7 @@ const DIMENSIONS = [
       suppressWhen: [
         { _raw: { enabled_aims: ['arbitrary'] } },
       ],
-      useRawFor: ['alignment'], useRawUnlessDecel: true,
+      useRawFor: ['alignment'], useRawUnless: 'decel_outcome',
       values: [
         { id: 'solved', label: 'Alignment fully solved' },
         { id: 'sufficient', label: 'Brittle alignment holds' },
@@ -441,10 +452,10 @@ const EFFECTIVE_EXCLUSIONS = [
 ];
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { DIMENSIONS, DIM_MAP, EFFECTIVE_EXCLUSIONS };
+    module.exports = { SCENARIO, DIMENSIONS, DIM_MAP, EFFECTIVE_EXCLUSIONS };
 }
 if (typeof window !== 'undefined') {
-    window.Dimensions = { DIMENSIONS, DIM_MAP, EFFECTIVE_EXCLUSIONS };
+    window.Dimensions = { SCENARIO, DIMENSIONS, DIM_MAP, EFFECTIVE_EXCLUSIONS };
 }
 
 })();
