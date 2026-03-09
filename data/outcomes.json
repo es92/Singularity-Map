@@ -201,6 +201,21 @@
         },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
+        },
+        "benefit_distribution": {
+          "equal": "Within the controlling power's sphere, the benefits were broadly shared. Citizens saw rising living standards, lower costs, better services. The capture was real — but the captor chose to share the spoils domestically, buying legitimacy through prosperity.",
+          "unequal": "The benefits concentrated among those closest to the AI systems — the companies that deployed them, the officials who oversaw them. Ordinary citizens saw some improvement, but the gap between the connected and everyone else widened into a permanent feature.",
+          "extreme": "Even within the controlling power's own territory, the benefits flowed almost entirely to those who held political and institutional power. The AI became a tool of internal entrenchment as much as external dominance. A small elite captured the captor."
+        },
+        "knowledge_replacement": {
+          "rapid": "Within the controlling power's sphere, AI replaced virtually all routine knowledge work within one to two years. The speed was a feature, not a bug — rapid automation concentrated the productivity gains before anyone could negotiate for a share.",
+          "gradual": "Knowledge work was displaced over a decade — sector by sector, firm by firm. The pace gave institutions time to adapt, but also gave the controlling power time to shape exactly who benefited from the transition.",
+          "uneven": "Some sectors were transformed overnight; others held out for years behind regulation and institutional resistance. The unevenness created pockets of the old economy alongside the new — and the controlling power used the contrast as leverage."
+        },
+        "physical_automation": {
+          "rapid": "Factories, logistics, agriculture — all transformed within a few years under the controlling power's direction. The physical economy was rebuilt to serve the interests of those who held the AI. Efficiency was the justification; control was the result.",
+          "gradual": "Physical automation followed knowledge work but more slowly. Atoms are harder than bits. The transformation took a decade or two — visible, steady, and always shaped by the priorities of those in power.",
+          "uneven": "Advanced manufacturing was automated quickly; other sectors lagged. The controlling power automated what served its interests first. What didn't matter to them waited — sometimes indefinitely."
         }
       },
       "reachable": [

@@ -33,7 +33,6 @@ for (const t of templatesList) oMap[t.id] = t;
 
 function runStaticAnalysis() {
     const errors = [];
-    const warnings = [];
 
     // 1. Routing completeness
     function collectNextTargets(nextSpec) {
@@ -59,7 +58,7 @@ function runStaticAnalysis() {
             if (Array.isArray(a.next)) {
                 const hasFallback = a.next.some(r => !r.when);
                 if (!hasFallback) {
-                    warnings.push(`[routing] Question "${q.id}" answer "${a.label}" has conditional next with no fallback entry`);
+                    errors.push(`[routing] Question "${q.id}" answer "${a.label}" has conditional next with no fallback entry`);
                 }
                 for (const route of a.next) {
                     if (route.when) {
@@ -92,12 +91,12 @@ function runStaticAnalysis() {
 
     for (const t of templatesList) {
         if (!reachedNodes.has(t.id)) {
-            warnings.push(`[reachability] Outcome "${t.id}" (${t.title}) is never reached from the question tree`);
+            errors.push(`[reachability] Outcome "${t.id}" (${t.title}) is never reached from the question tree`);
         }
     }
     for (const q of questions.questions) {
         if (!reachedNodes.has(q.id)) {
-            warnings.push(`[reachability] Question "${q.id}" is never reached from the question tree`);
+            errors.push(`[reachability] Question "${q.id}" is never reached from the question tree`);
         }
     }
 
@@ -136,13 +135,13 @@ function runStaticAnalysis() {
 
     for (const dim of questionDims) {
         if (!metaDims.has(dim)) {
-            warnings.push(`[consistency] Dimension "${dim}" is set in questions.json but not defined in DIMENSIONS`);
+            errors.push(`[consistency] Dimension "${dim}" is set in questions.json but not defined in DIMENSIONS`);
         }
     }
     for (const dim of DIMENSIONS) {
         if (dim.virtual) continue;
         if (!questionDims.has(dim.id)) {
-            warnings.push(`[consistency] Dimension "${dim.id}" is in DIMENSIONS but never set by any question`);
+            errors.push(`[consistency] Dimension "${dim.id}" is in DIMENSIONS but never set by any question`);
         }
     }
 
@@ -152,7 +151,7 @@ function runStaticAnalysis() {
         for (const v of dim.values) {
             if (!qVals.has(v.id)) {
                 const key = `${dim.id}.${v.id}`;
-                warnings.push(`[consistency] DIMENSIONS value "${key}" never appears in any question answer`);
+                errors.push(`[consistency] DIMENSIONS value "${key}" never appears in any question answer`);
             }
         }
     }
@@ -195,7 +194,7 @@ function runStaticAnalysis() {
             const vDeps = visibilityDeps[depDim];
             if (!vDeps) continue;
             if (vDeps.has('effective:' + dimId)) {
-                warnings.push(`[circular] effectiveVal("${dimId}") depends on effectiveVal("${depDim}"), and isDimVisible("${depDim}") depends on effectiveVal("${dimId}")`);
+                errors.push(`[circular] effectiveVal("${dimId}") depends on effectiveVal("${depDim}"), and isDimVisible("${depDim}") depends on effectiveVal("${dimId}")`);
             }
         }
     }
@@ -223,7 +222,7 @@ function runStaticAnalysis() {
         }
     }
 
-    return { errors, warnings, overrideDeps };
+    return { errors, overrideDeps };
 }
 
 // ════════════════════════════════════════════════════════
@@ -667,16 +666,11 @@ function samplePaths(n) {
 // ════════════════════════════════════════════════════════
 
 function printPhase1(result) {
-    const { errors, warnings } = result;
+    const { errors } = result;
     if (errors.length) {
         console.log(`  ERRORS (${errors.length}):`);
         for (const e of errors) console.log('    ✗ ' + e);
-    }
-    if (warnings.length) {
-        console.log(`  WARNINGS (${warnings.length}):`);
-        for (const w of warnings) console.log('    ⚠ ' + w);
-    }
-    if (!errors.length && !warnings.length) {
+    } else {
         console.log('  ✓ All static checks passed');
     }
 }
@@ -763,11 +757,11 @@ const violationCount = printPhase2(phase2);
 console.log();
 
 // Summary
-const totalIssues = phase1.errors.length + phase1.warnings.length + violationCount;
+const totalIssues = phase1.errors.length + violationCount;
 if (totalIssues === 0) {
     console.log('✓ All checks passed!');
 } else {
-    console.log(`${phase1.errors.length} error(s), ${phase1.warnings.length} warning(s), ${violationCount} violation(s)`);
+    console.log(`${phase1.errors.length} error(s), ${violationCount} violation(s)`);
 }
 
 process.exit(phase1.errors.length || violationCount ? 1 : 0);
