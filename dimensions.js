@@ -51,6 +51,10 @@ const DIMENSIONS = [
       useRawFor: ['automation'],
       values: [
         { id: 'mild', label: 'Months/years' }, { id: 'substantial', label: 'Years/decades' }, { id: 'never', label: 'Never' } ] },
+    { id: 'metr_milestone', label: 'R&D Milestone', stage: 1,
+      activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
+      values: [
+        { id: 'twenty_four_hours', label: '24-hour tasks' }, { id: 'multi_day', label: 'Multi-day tasks' }, { id: 'weeks', label: 'Week-long tasks' }, { id: 'months', label: 'Month-long tasks' } ] },
     { id: 'takeoff', label: 'Feedback Loop', stage: 1,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
       values: [

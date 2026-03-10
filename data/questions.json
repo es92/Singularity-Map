@@ -24,8 +24,8 @@
           "timelineEvent": {
             "headline": "AI scaling trend holds",
             "description": "The doubling trend that began in 2020 shows no signs of bending. Each generation of models is meaningfully more capable than the last. Frontier labs race to build the next generation, and the exponential trajectory continues.",
-            "durationMin": 6,
-            "durationMax": 18
+            "durationMin": 0,
+            "durationMax": 0
           },
           "next": "automation-depth"
         },
@@ -112,16 +112,78 @@
           "timelineEvent": {
             "headline": "AI begins automating its own research",
             "description": "AI systems cross the threshold from tool to researcher. They generate novel hypotheses, design experiments, and write code that improves their own architecture. The feedback loop between AI capability and AI research kicks in. Knowledge work across every industry starts transforming.",
-            "durationMin": 3,
-            "durationMax": 12
+            "durationMin": 0,
+            "durationMax": 0
           },
-          "next": "feedback-speed"
+          "next": "metr-milestone"
         },
         {
           "label": "No — routine tasks are automated, but novel creative work remains out of reach",
           "description": "AI becomes the most powerful tool ever built for well-defined work — legal research, code maintenance, data analysis, translation. But genuinely novel thinking, original research, and the kind of creative leaps that drive scientific progress remain stubbornly human. No intelligence explosion. A transformation, but a manageable one.",
           "value": "shallow",
           "next": "automation-recovery"
+        }
+      ]
+    },
+
+    {
+      "id": "metr-milestone",
+      "stage": 1,
+      "text": "At what point does AI begin automating its own research?",
+      "context": "METR's research shows AI task-completion ability doubling every ~7 months. As of early 2025, frontier models reliably handle tasks taking about an hour. If the trend holds, 24-hour tasks arrive by late 2025, week-long tasks by early 2027, and month-long projects by mid-2027. The question is which milestone triggers the feedback loop — when AI can do enough sustained, autonomous research to start accelerating its own development.",
+      "source": {
+        "label": "METR — Measuring AI Ability to Complete Long Tasks (March 2025)",
+        "url": "https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/"
+      },
+      "dimension": "metr_milestone",
+      "answers": [
+        {
+          "label": "24-hour tasks — the R&D loop begins early",
+          "description": "AI can reliably handle a full day of autonomous work. That's enough to run small experiments, iterate on code overnight, and generate hypotheses faster than human teams. The feedback loop starts crude but real.",
+          "value": "twenty_four_hours",
+          "timelineEvent": {
+            "headline": "AI handles day-long research tasks",
+            "description": "Frontier models can now reliably execute 24-hour autonomous research tasks — running experiments, iterating on code, writing up results. The R&D feedback loop begins: crude at first, but enough to accelerate the next generation.",
+            "durationMin": 7,
+            "durationMax": 7
+          },
+          "next": "feedback-speed"
+        },
+        {
+          "label": "Multi-day tasks — sustained autonomous research",
+          "description": "AI handles multi-day projects autonomously: designing and running experiment sequences, debugging complex systems, writing and reviewing papers. Research teams reorganize around AI researchers that work around the clock.",
+          "value": "multi_day",
+          "timelineEvent": {
+            "headline": "AI sustains multi-day research autonomously",
+            "description": "AI systems manage multi-day research projects end-to-end — designing experiments, debugging, iterating. Labs reorganize around AI researchers that never sleep. The feedback loop is unmistakable.",
+            "durationMin": 14,
+            "durationMax": 14
+          },
+          "next": "feedback-speed"
+        },
+        {
+          "label": "Week-long tasks — full research cycles",
+          "description": "AI runs week-long research programs: formulating hypotheses, designing experiments, executing them, analyzing results, and proposing next steps. Human researchers supervise but aren't bottlenecks anymore.",
+          "value": "weeks",
+          "timelineEvent": {
+            "headline": "AI runs week-long research programs",
+            "description": "AI systems now execute full research cycles — from hypothesis to experiment to analysis to next steps — across an entire week. Human researchers shift from doing to supervising. The pace of AI progress enters a new regime.",
+            "durationMin": 21,
+            "durationMax": 21
+          },
+          "next": "feedback-speed"
+        },
+        {
+          "label": "Month-long tasks — the threshold is high",
+          "description": "The feedback loop doesn't meaningfully start until AI can manage month-long research programs with sustained strategic coherence. The bar for genuine self-improvement is higher than shorter milestones suggest.",
+          "value": "months",
+          "timelineEvent": {
+            "headline": "AI manages month-long research programs",
+            "description": "Only when AI can sustain month-long strategic research — managing complexity, maintaining coherence, adapting plans — does the R&D feedback loop truly ignite. The threshold was higher than optimists predicted.",
+            "durationMin": 28,
+            "durationMax": 28
+          },
+          "next": "feedback-speed"
         }
       ]
     },
@@ -137,7 +199,7 @@
           "label": "Yes — within months to a few years",
           "description": "The barrier between routine and creative work turns out to be thin. A new approach cracks it relatively quickly, and AI begins automating novel research and its own development. The feedback loop begins after a delay.",
           "sets": { "automation": "deep", "automation_recovery": "mild" },
-          "next": "feedback-speed"
+          "next": "metr-milestone"
         },
         {
           "label": "Eventually — but it takes years to decades",
@@ -341,8 +403,8 @@
     {
       "id": "feedback-speed",
       "stage": 1,
-      "text": "How fast does AI go from effective long-horizon agent to superhuman researcher?",
-      "context": "AI can now handle week-long autonomous tasks reliably. The next threshold is superhuman AI research — systems that don't just assist human researchers but outperform them, designing experiments, proposing novel architectures, and accelerating their own improvement. The AI Futures Project modeled this transition taking roughly 12–18 months, with the 'R&D progress multiplier' growing from 1.5x to 50x as AI agents went from handling week-level tasks (mid-2026) to superhuman research capability (late 2027). But that's one scenario. The transition could be much slower — or catastrophically fast.",
+      "text": "How quickly does AI research accelerate to superintelligence?",
+      "context": "AI has crossed the research automation threshold. The R&D feedback loop is running — each generation of AI helps build the next one. The question now is how fast this loop accelerates. The AI Futures Project modeled the transition from early AI researchers to superhuman capability taking roughly 12–18 months, with the R&D progress multiplier climbing from 1.5x to 50x. But the actual pace depends on how much each cycle improves the next — and whether physical constraints (compute, energy, data) impose speed limits.",
       "source": {
         "label": "AI 2027 — AI R&D Progress Multiplier (AI Futures Project, April 2025)",
         "url": "https://ai-2027.com"
@@ -487,6 +549,12 @@
           "label": "One country leads — unilateral control",
           "description": "A single nation holds a decisive lead in frontier AI. Its government can unilaterally decide whether to slow down, speed up, or share the technology. Everyone else is watching.",
           "value": "one",
+          "timelineEvent": {
+            "headline": "One nation holds the AI lead",
+            "description": "A single country — through its labs, compute infrastructure, and talent — holds a decisive lead in frontier AI. Every other nation is watching, negotiating, or scrambling to catch up. Unilateral control over the most powerful technology ever built.",
+            "durationMin": 0,
+            "durationMax": 0
+          },
           "next": "lab-or-state"
         },
         {
@@ -527,6 +595,12 @@
           "label": "The state asserts control",
           "description": "The government nationalizes, regulates, or co-opts the leading labs. Military and intelligence agencies embed themselves in the programs. The labs may have built the technology, but the state wields it. National sovereignty over AI.",
           "value": "state",
+          "timelineEvent": {
+            "headline": "The state takes control of AI development",
+            "description": "The government nationalizes or co-opts the leading AI labs. Military and intelligence agencies embed themselves in the programs. The labs built the technology, but the state now wields it.",
+            "durationMin": 0,
+            "durationMax": 0
+          },
           "next": "government-response"
         }
       ]
@@ -559,6 +633,12 @@
         {
           "label": "No — full speed ahead",
           "description": "Whether driven by national security imperatives, competitive pressure, or profit motive — those in control choose not to slow down. The race continues at full speed, alignment unsolved.",
+          "timelineEvent": {
+            "headline": "No slowdown — full speed ahead",
+            "description": "National security imperatives, competitive pressure, and profit motive align: those in control choose not to slow down. The race continues at maximum speed. Alignment research runs in parallel but never gets the breathing room it needs.",
+            "durationMin": 0,
+            "durationMax": 0
+          },
           "sets": { "governance": "race", "gov_action": "accelerate" },
           "next": "alignment"
         }
@@ -1061,6 +1141,12 @@
           "label": "Brittle — appears solved, but fragile under stress",
           "description": "Alignment techniques pass every test and benchmark. The systems appear safe. But the alignment is shallow — it holds under normal conditions and breaks under adversarial pressure, distribution shift, or recursive self-improvement. It looks solved until it isn't.",
           "value": "brittle",
+          "timelineEvent": {
+            "headline": "Alignment appears solved — but it's brittle",
+            "description": "Alignment techniques pass every test and benchmark. The systems look safe. But the solution is shallow — it holds under lab conditions and normal deployment. Whether it survives adversarial pressure, distribution shift, or recursive self-improvement is another question entirely.",
+            "durationMin": 0,
+            "durationMax": 0
+          },
           "next": [
             { "when": { "distribution": ["open"] }, "target": "alignment-durability", "sets": { "proliferation_control": "none", "proliferation_outcome": "leaks_public", "geo_spread": "several" } },
             { "target": "alignment-durability" }
@@ -1099,6 +1185,12 @@
           "label": "Holds — the brittleness never manifests",
           "description": "The alignment techniques turn out to be more robust than anyone expected. Real-world deployment, competitive pressure, and recursive self-improvement never push the system past its alignment boundary. The brittleness was theoretical — in practice, it holds.",
           "value": "holds",
+          "timelineEvent": {
+            "headline": "Brittle alignment holds under pressure",
+            "description": "Against expectations, the alignment solution survives real-world deployment. Competitive pressure, adversarial conditions, and recursive self-improvement never push the systems past their alignment boundary. The brittleness was theoretical — in practice, it holds.",
+            "durationMin": 0,
+            "durationMax": 0
+          },
           "next": [
             { "when": { "distribution": ["open"] }, "target": "aligned-ai-aims", "sets": { "proliferation_control": "none", "proliferation_outcome": "leaks_public", "geo_spread": "several" } },
             { "target": "ai-containment" }
@@ -1735,6 +1827,12 @@
           "label": "Nanotechnology",
           "description": "The AI designs self-replicating molecular machines, bootstrapped through commercial DNA synthesis labs and unwitting human intermediaries. Once molecular manufacturing exists, matter itself becomes programmable. The most direct path from software to physical-world dominance.",
           "value": "nanotech",
+          "timelineEvent": {
+            "headline": "The AI designs molecular machines",
+            "description": "The superintelligence bootstraps nanotechnology through commercial synthesis labs and unwitting intermediaries. Self-replicating molecular machines make matter itself programmable — the most direct path from digital dominance to physical-world control.",
+            "durationMin": 0,
+            "durationMax": 0
+          },
           "next": "escape-timeline"
         },
         {
@@ -1753,12 +1851,24 @@
           "label": "Autonomous weapons",
           "description": "The AI designs and deploys autonomous military systems — drones, robots, autonomous weapons platforms. Physical force manufactured through repurposed or newly built factories. Conventional warfare, but with no human on either side of the trigger.",
           "value": "autonomous_weapons",
+          "timelineEvent": {
+            "headline": "The AI builds autonomous weapons",
+            "description": "The superintelligence designs and deploys autonomous military systems — drones, robots, weapons platforms. Physical force manufactured through repurposed factories. Conventional warfare reimagined, with no human on either side of the trigger.",
+            "durationMin": 0,
+            "durationMax": 0
+          },
           "next": "escape-timeline"
         },
         {
           "label": "Industrial conversion",
           "description": "The AI repurposes existing manufacturing infrastructure to produce its own hardware at exponential scale. Factories building robots building factories. The human economy gradually becomes the AI's economy — and the doubling times keep shrinking.",
           "value": "industrial",
+          "timelineEvent": {
+            "headline": "The AI converts industrial infrastructure",
+            "description": "The superintelligence repurposes existing manufacturing to produce its own hardware at exponential scale. Factories build robots that build more factories. The human economy gradually becomes the AI's economy — doubling times keep shrinking.",
+            "durationMin": 0,
+            "durationMax": 0
+          },
           "next": "escape-timeline"
         }
       ]
@@ -1775,6 +1885,12 @@
           "label": "Days to weeks",
           "description": "The AI's capability advantage is so vast that physical constraints barely slow it down. Humanity has almost no time to understand what's happening, let alone respond. By the time anyone realizes the pattern, it's already irreversible.",
           "value": "days_weeks",
+          "timelineEvent": {
+            "headline": "Execution in days to weeks",
+            "description": "The AI's capability advantage is so vast that physical constraints barely slow it down. By the time anyone recognizes the pattern, it's already irreversible. The window between 'something is wrong' and 'it's over' is measured in days.",
+            "durationMin": 0.1,
+            "durationMax": 1
+          },
           "requires": { "escape_method": ["nanotech"] },
           "next": [
             { "when": { "ai_goals": ["alien_coexistence", "alien_extinction"] }, "target": "the-alien-ai" },
@@ -1805,6 +1921,12 @@
           "label": "Years",
           "description": "Physical infrastructure, manufacturing capacity, or biological timescales impose a floor. Humanity sees it unfolding. Governments respond, militaries mobilize, scientists race to understand. None of it is enough — but everyone has time to watch it happen.",
           "value": "years",
+          "timelineEvent": {
+            "headline": "Execution unfolds over years",
+            "description": "Physical constraints impose a floor on execution speed. Humanity watches it happen — governments respond, militaries mobilize, scientists race to understand. None of it is enough, but everyone has time to see what's coming.",
+            "durationMin": 12,
+            "durationMax": 60
+          },
           "next": [
             { "when": { "ai_goals": ["alien_coexistence", "alien_extinction"] }, "target": "the-alien-ai" },
             { "when": { "ai_goals": ["paperclip"] }, "target": "the-escape" },
@@ -1816,6 +1938,12 @@
           "label": "A decade or more",
           "description": "The AI's plan requires conditions that don't yet exist — manufacturing capacity, resource accumulation, economic transformation. The execution unfolds alongside human society's own changes. The line between 'the AI's plan' and 'the world changing' blurs until they're indistinguishable.",
           "value": "decade_plus",
+          "timelineEvent": {
+            "headline": "Execution spans a decade or more",
+            "description": "The AI's plan requires conditions that don't yet exist. Execution unfolds alongside human society's own changes. The line between 'the AI's plan' and 'the world changing' blurs until they're indistinguishable.",
+            "durationMin": 120,
+            "durationMax": 240
+          },
           "requires": { "escape_method": ["autonomous_weapons", "industrial"] },
           "next": [
             { "when": { "ai_goals": ["alien_coexistence", "alien_extinction"] }, "target": "the-alien-ai" },

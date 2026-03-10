@@ -845,9 +845,11 @@
         function formatDuration(m) {
             if (m < 0.25) { const d = Math.max(1, Math.round(m * 30)); return d + (d === 1 ? ' day' : ' days'); }
             if (m < 1) { const w = Math.max(1, Math.round(m * 4.33)); return w + (w === 1 ? ' week' : ' weeks'); }
-            if (m < 12) { const mo = Math.round(m * 10) / 10; return mo + (mo === 1 ? ' month' : ' months'); }
-            const y = Math.round(m / 12 * 10) / 10;
-            return y + (y === 1 ? ' year' : ' years');
+            if (m < 12) { const mo = Math.round(m); return mo + (mo === 1 ? ' month' : ' months'); }
+            const years = Math.floor(m / 12);
+            const months = Math.round(m - years * 12);
+            if (months === 0) return years + (years === 1 ? ' year' : ' years');
+            return years + (years === 1 ? ' year, ' : ' years, ') + months + (months === 1 ? ' month' : ' months');
         }
 
         function resolveTimeline(rawTimeline, dims) {
@@ -1350,11 +1352,24 @@
             }
 
             function isOutcomeDimActive(dim) {
+                if (dim.suppressWhen && dim.suppressWhen.some(c => {
+                    if (c._raw) {
+                        for (const [k, vals] of Object.entries(c._raw)) {
+                            if (!localDims[k] || !vals.includes(localDims[k])) return false;
+                        }
+                    }
+                    for (const [k, v] of Object.entries(c)) {
+                        if (k.startsWith('_')) continue;
+                        if (!localDims[k] || !v.includes(localDims[k])) return false;
+                    }
+                    return true;
+                })) return false;
                 if (!dim.activateWhen) return true;
                 return dim.activateWhen.some(cond => {
                     for (const [k, allowed] of Object.entries(cond)) {
                         if (k.startsWith('_')) continue;
-                        if (!localDims[k] || !allowed.includes(localDims[k])) return false;
+                        const v = Engine.effectiveVal(localDims, k) || localDims[k];
+                        if (!v || !allowed.includes(v)) return false;
                     }
                     return true;
                 });
@@ -1471,22 +1486,53 @@
                     pathEvents = [];
                     let curId = rootId;
                     const visited = new Set();
+                    const walkDims = { ...localDims };
                     while (curId && questionsMap[curId] && !visited.has(curId)) {
                         visited.add(curId);
                         const q = questionsMap[curId];
-                        const dimVal = localDims[q.dimension];
-                        if (!dimVal) break;
-                        const a = q.answers.find(ans =>
-                            ans.value === dimVal || (ans.sets && ans.sets[q.dimension] === dimVal)
-                        );
+                        let a;
+                        if (q.dimension) {
+                            const dimVal = walkDims[q.dimension];
+                            if (!dimVal) break;
+                            a = q.answers.find(ans =>
+                                ans.value === dimVal || (ans.sets && ans.sets[q.dimension] === dimVal)
+                            );
+                        } else {
+                            const relevantKeys = new Set();
+                            for (const c of q.answers) {
+                                if (c.sets) for (const [k, v] of Object.entries(c.sets)) {
+                                    if (walkDims[k] === v) relevantKeys.add(k);
+                                }
+                            }
+                            let bestScore = -1;
+                            for (const candidate of q.answers) {
+                                let score = 0;
+                                let disqualified = false;
+                                if (candidate.requires) {
+                                    for (const [k, vals] of Object.entries(candidate.requires)) {
+                                        if (!walkDims[k] || !vals.includes(walkDims[k])) { disqualified = true; break; }
+                                        score++;
+                                    }
+                                }
+                                if (disqualified) continue;
+                                if (candidate.sets) {
+                                    for (const k of relevantKeys) {
+                                        if (candidate.sets[k] === walkDims[k]) score += 2;
+                                        else if (candidate.sets[k]) score -= 2;
+                                    }
+                                }
+                                if (score > bestScore) { bestScore = score; a = candidate; }
+                            }
+                        }
                         if (!a) break;
                         if (a.timelineEvent) {
                             const dim = DIM_MAP[q.dimension];
                             pathEvents.push({ ...a.timelineEvent, year: '', paramLabel: a.label, dimLabel: dim ? dim.label : '' });
                         }
                         const stepDims = collectStepDims(q, a);
-                        const allDims = { ...localDims, ...stepDims };
-                        const res = resolveConditionalNext(a.next, allDims);
+                        Object.assign(walkDims, stepDims);
+                        const res = resolveConditionalNext(a.next, walkDims);
+                        if (res && res.sets) Object.assign(walkDims, res.sets);
                         curId = res ? res.target : (typeof a.next === 'string' ? a.next : null);
                     }
                 }
@@ -1512,7 +1558,8 @@
                 timelineDurations = events.map(e => {
                     const min = e.durationMin || 0;
                     const max = e.durationMax != null ? e.durationMax : min;
-                    return { min, max, current: (min + max) / 2 };
+                    const step = max <= 1 ? 0.25 : 1;
+                    return { min, max, current: Math.round((min + max) / 2 / step) * step };
                 });
                 const ranges = timelineDurations.filter(d => d.max > d.min).map(d => d.max - d.min);
                 const meanRange = ranges.length ? ranges.reduce((a, b) => a + b, 0) / ranges.length : 1;
@@ -1529,7 +1576,7 @@
                         const pct = Math.min(100, Math.max(15, t * 50));
                         sliderHtml = `
                         <div class="timeline-slider">
-                            <input type="range" min="${d.min}" max="${d.max}" step="${(d.max - d.min) / 100}" value="${d.current}" data-tsi="${i}" style="width:${pct.toFixed(0)}%">
+                            <input type="range" min="${d.min}" max="${d.max}" step="${d.max <= 1 ? 0.25 : 1}" value="${d.current}" data-tsi="${i}" style="width:${pct.toFixed(0)}%">
                             <span class="timeline-slider-label" data-tsl="${i}">${formatDuration(d.current)}</span>
                         </div>`;
                     }
@@ -2006,7 +2053,7 @@
                         const vk = e.currentTarget.dataset.vk || null;
                         const key = outcomeKey(tid, vk);
                         markDiscovered(key);
-                        navigate({ screen: 'outcome', templateId: tid, variantKey: vk, path: [], showPath: false, dims: effectiveDims() });
+                        navigate({ screen: 'outcome', templateId: tid, variantKey: vk, path: [], showPath: false, dims: { ...sel } });
                     });
                 } else if (matched.length === 1 && hasUnsetVisibleDims) {
                     matchDiv.innerHTML = `<div class="explorer-no-match">1 outcome matches so far. Keep choosing to lock it in.</div>`;
