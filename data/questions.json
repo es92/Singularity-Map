@@ -3,17 +3,17 @@
   "stages": [
     {
       "id": 1,
-      "label": "Dynamics of Singularity",
+      "label": "Singularity Dynamics",
       "description": "What happens with AI capability, and who has access?"
     },
     {
       "id": 2,
-      "label": "Dynamics of Control",
+      "label": "Control Determination",
       "description": "Is AI aligned? Who holds power, and what do they do with it?"
     },
     {
       "id": 3,
-      "label": "Rate of Impact",
+      "label": "Impact",
       "description": "How fast does the transformation reach humanity?"
     }
   ],
@@ -2357,7 +2357,7 @@
               "target": "brittle-long-term"
             },
             {
-              "target": "the-capture"
+              "target": "implementation-risk"
             }
           ],
           "timelineEvent": {
@@ -2430,7 +2430,7 @@
               "target": "brittle-long-term"
             },
             {
-              "target": "the-mosaic"
+              "target": "implementation-risk"
             }
           ],
           "timelineEvent": {
@@ -2672,7 +2672,7 @@
               "target": "brittle-long-term"
             },
             {
-              "target": "the-mosaic"
+              "target": "implementation-risk"
             }
           ],
           "timelineEvent": {
@@ -2916,7 +2916,7 @@
               "target": "brittle-long-term"
             },
             {
-              "target": "the-capture"
+              "target": "implementation-risk"
             }
           ],
           "timelineEvent": {
@@ -3115,6 +3115,38 @@
               "target": "the-failure"
             },
             {
+              "when": {
+                "intent": [
+                  "coexistence"
+                ]
+              },
+              "target": "the-mosaic"
+            },
+            {
+              "when": {
+                "intent": [
+                  "self_interest"
+                ]
+              },
+              "target": "the-capture"
+            },
+            {
+              "when": {
+                "rival_dynamics": [
+                  "coexistence"
+                ]
+              },
+              "target": "the-mosaic"
+            },
+            {
+              "when": {
+                "post_war_aims": [
+                  "self_interest"
+                ]
+              },
+              "target": "the-capture"
+            },
+            {
               "target": "the-flourishing"
             }
           ],
@@ -3159,6 +3191,38 @@
               "target": "the-failure"
             },
             {
+              "when": {
+                "intent": [
+                  "coexistence"
+                ]
+              },
+              "target": "the-mosaic"
+            },
+            {
+              "when": {
+                "intent": [
+                  "self_interest"
+                ]
+              },
+              "target": "the-capture"
+            },
+            {
+              "when": {
+                "rival_dynamics": [
+                  "coexistence"
+                ]
+              },
+              "target": "the-mosaic"
+            },
+            {
+              "when": {
+                "post_war_aims": [
+                  "self_interest"
+                ]
+              },
+              "target": "the-capture"
+            },
+            {
               "target": "the-flourishing"
             }
           ],
@@ -3201,6 +3265,38 @@
                 ]
               },
               "target": "the-failure"
+            },
+            {
+              "when": {
+                "intent": [
+                  "coexistence"
+                ]
+              },
+              "target": "the-mosaic"
+            },
+            {
+              "when": {
+                "intent": [
+                  "self_interest"
+                ]
+              },
+              "target": "the-capture"
+            },
+            {
+              "when": {
+                "rival_dynamics": [
+                  "coexistence"
+                ]
+              },
+              "target": "the-mosaic"
+            },
+            {
+              "when": {
+                "post_war_aims": [
+                  "self_interest"
+                ]
+              },
+              "target": "the-capture"
             },
             {
               "target": "the-flourishing"

@@ -244,23 +244,34 @@
             background: linear-gradient(to bottom, var(--accent), var(--accent-2));
             opacity: 0.3; border-radius: 1px;
         }
-        .timeline-event { position: relative; margin-bottom: 1.75rem; }
+        .timeline-event { position: relative; margin-bottom: 1rem; padding-top: 1.4rem; }
         .timeline-event:last-child { margin-bottom: 0; }
         .timeline-event::before {
             content: ''; position: absolute;
-            left: -2.5rem; top: 0.55rem;
+            left: calc(-2.5rem + 3px); top: 0.55rem;
             width: 10px; height: 10px; border-radius: 50%;
             background: var(--accent);
             box-shadow: 0 0 8px var(--accent-glow);
-            border: 2px solid var(--bg);
+            border: 2px solid var(--bg); z-index: 1;
+        }
+        .timeline-event::after {
+            content: ''; position: absolute;
+            left: -1.85rem; top: calc(0.55rem + 4px);
+            right: 0; height: 1px;
+            background: var(--border); opacity: 0.6;
+            z-index: -1;
+        }
+        .timeline-light .timeline-event::after { display: none; }
+        .timeline-top-row {
+            display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem;
         }
         .timeline-year {
             font-size: 0.8rem; font-weight: 700; color: var(--accent);
-            letter-spacing: 0.04em; margin-bottom: 0.2rem;
+            letter-spacing: 0.04em; margin-left: auto; white-space: nowrap;
         }
-        .timeline-headline { font-weight: 600; margin-bottom: 0.2rem; font-size: 0.98rem; display: flex; align-items: baseline; flex-wrap: wrap; }
+        .timeline-headline { font-weight: 600; margin-bottom: 0.2rem; font-size: 0.98rem; }
         .timeline-param-wrap {
-            margin-left: auto; display: flex; align-items: baseline; gap: 0.35rem; white-space: nowrap;
+            display: flex; align-items: flex-start; gap: 0.75rem;
         }
         .timeline-param {
             font-size: 0.7rem; font-weight: 500; padding: 0.15rem 0.5rem;
@@ -268,9 +279,47 @@
             color: var(--accent);
         }
         .timeline-param-dim {
-            font-size: 0.7rem; color: var(--text-dim); font-weight: 400;
+            flex-shrink: 0; width: 110px; font-size: 0.82rem; font-weight: 500;
+            color: var(--text-secondary); padding-top: 0.3rem;
         }
+        .tl-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+        .tl-pill {
+            font-size: 0.78rem; font-weight: 500; padding: 0.28rem 0.7rem;
+            border-radius: 20px; border: 1px solid var(--border); background: var(--bg-card);
+            color: var(--text-secondary); cursor: pointer; transition: all 0.15s var(--ease);
+            user-select: none; white-space: nowrap;
+        }
+        .tl-pill:hover:not(.active):not(.locked):not(.disabled) { border-color: var(--border-hover); color: var(--text); }
+        .tl-pill.active {
+            background: var(--accent); color: var(--pill-active-text);
+            border-color: var(--accent); font-weight: 600; cursor: default;
+        }
+        .tl-pill.locked {
+            background: var(--bg-card); color: var(--text-dim); border-color: var(--border);
+            border-style: dashed; cursor: default; font-style: italic;
+        }
+        .tl-pill.locked.active {
+            background: var(--accent-glow); color: var(--accent); border-color: var(--accent); border-style: dashed;
+        }
+        .tl-pill.disabled { opacity: 0.3; cursor: not-allowed; }
         .timeline-desc { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6; }
+        .timeline-light .timeline-headline,
+        .timeline-light .timeline-desc,
+        .timeline-light .timeline-slider { display: none; }
+        .timeline-light .timeline-event { margin-bottom: 0.65rem; padding-top: 0; }
+        .timeline-light .timeline-event::before { top: 0.35rem; }
+        .timeline-header-row { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 0.5rem; }
+        .timeline-header-row h2 { margin: 0; }
+        .tl-mode-toggle {
+            display: flex; gap: 0; border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+        }
+        .tl-mode-btn {
+            font-size: 0.7rem; padding: 0.15rem 0.55rem; cursor: pointer;
+            background: transparent; color: var(--text-secondary); border: none;
+            transition: all 0.15s var(--ease); user-select: none;
+        }
+        .tl-mode-btn:hover:not(.active) { color: var(--text); }
+        .tl-mode-btn.active { background: var(--accent); color: var(--pill-active-text); font-weight: 600; }
         .timeline-slider {
             display: flex; align-items: center; gap: 0.6rem;
             margin-top: 0.5rem; padding: 0.3rem 0;
@@ -299,6 +348,23 @@
             white-space: nowrap; min-width: 5rem; text-align: right;
         }
         .timeline-year { transition: none; }
+        .timeline-stage-header {
+            display: flex; align-items: center; gap: 0.65rem;
+            padding: 0.5rem 0.9rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin: 1.2rem 0 0.6rem; position: relative;
+        }
+        .timeline > .timeline-stage-header:first-child { margin-top: 0; }
+        .timeline-stage-num {
+            font-size: 0.68rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.08em;
+            color: var(--accent); white-space: nowrap;
+        }
+        .timeline-stage-label {
+            font-weight: 600; font-size: 0.88rem; color: var(--text);
+        }
 
         /* ---- Path Summary ---- */
         .path-summary {
@@ -498,6 +564,7 @@
         .outcome-dims {
             background: var(--bg-surface); border: 1px solid var(--border);
             border-radius: var(--radius); padding: 0.85rem 1.1rem; margin-bottom: 2rem;
+            display: none;
         }
         .outcome-dims-header {
             display: flex; align-items: center; justify-content: space-between;
@@ -734,9 +801,10 @@
 
         // --- Data Loading ---
         async function loadData() {
+            const cacheBust = '?v=' + Date.now();
             const [qRes, oRes] = await Promise.all([
-                fetch('data/questions.json'),
-                fetch('data/outcomes.json')
+                fetch('data/questions.json' + cacheBust),
+                fetch('data/outcomes.json' + cacheBust)
             ]);
             if (!qRes.ok || !oRes.ok) {
                 throw new Error('Could not load data files. Are you running a local server?');
@@ -1285,6 +1353,9 @@
 
             const pathDims = dimensionsFromPath(path);
             const localDims = { ...pathDims, ...(passedDims || {}) };
+            let tlMode = localDims.tl_mode || 'full';
+            delete localDims.tl_mode;
+            const userDims = { ...localDims };
             if (variantKey && t.primaryDimension && !localDims[t.primaryDimension]) {
                 localDims[t.primaryDimension] = variantKey;
             }
@@ -1416,13 +1487,6 @@
                     }
                 }
 
-                const timelineEl = app.querySelector('.timeline');
-                if (timelineEl) {
-                    fullTimeline = composeTimeline(resolved.timeline);
-                    timelineEl.innerHTML = buildTimelineHtml(fullTimeline);
-                    wireTimelineSliders();
-                }
-
                 for (const dim of relevantDims) {
                     const active = isOutcomeDimActive(dim);
                     if (!active) {
@@ -1431,6 +1495,14 @@
                         const valid = validValues[dim.id];
                         if (valid && valid.size > 0) localDims[dim.id] = [...valid][0];
                     }
+                }
+
+                const timelineEl = app.querySelector('.timeline');
+                if (timelineEl) {
+                    fullTimeline = composeTimeline(resolved.timeline);
+                    timelineEl.innerHTML = buildTimelineHtml(fullTimeline);
+                    wireTimelineSliders();
+                    wireTimelinePills();
                 }
 
                 relevantDims.forEach(dim => {
@@ -1455,8 +1527,10 @@
                 const newKey = outcomeKey(templateId, resolved.variantKey);
                 markDiscovered(newKey);
                 let hashStr = '/outcome/' + templateId + (resolved.variantKey ? '/' + resolved.variantKey : '');
-                if (Object.keys(localDims).length > 0) {
-                    hashStr += '?' + Object.entries(localDims).map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
+                const urlDims = { ...localDims };
+                if (tlMode !== 'full') urlDims.tl_mode = tlMode;
+                if (Object.keys(urlDims).length > 0) {
+                    hashStr += '?' + Object.entries(urlDims).map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
                 }
                 history.replaceState(
                     { screen: 'outcome', templateId, variantKey: resolved.variantKey, path: [...path], showPath, dims: { ...localDims } },
@@ -1470,8 +1544,21 @@
             const storyHtml = (Array.isArray(initResolved.story) ? initResolved.story : [initResolved.story])
                 .map(p => `<p>${esc(p)}</p>`).join('');
 
+            const panelDimIds = new Set([...adjustableIds, ...Object.keys(lockedValues)]);
+
             function composeTimeline(outcomeTimeline) {
                 let pathEvents;
+                function dimValLabel(dim, valId, fallback) {
+                    if (dim) {
+                        const v = dim.values.find(v => v.id === valId);
+                        if (v) return v.label;
+                    }
+                    return fallback;
+                }
+                function dimSiblings(dim) {
+                    if (!dim) return null;
+                    return dim.values.map(v => ({ value: v.id, label: v.label }));
+                }
                 if (path.length > 0) {
                     pathEvents = path
                         .map(step => {
@@ -1479,24 +1566,32 @@
                             const a = q && q.answers[step.answerIndex];
                             if (!a || !a.timelineEvent) return null;
                             const dim = DIM_MAP[q.dimension];
-                            return { ...a.timelineEvent, year: '', paramLabel: a.label, dimLabel: dim ? dim.label : '' };
+                            const siblings = dimSiblings(dim);
+                            const selectedValue = a.value || (a.sets && a.sets[q.dimension]) || '';
+                            return { ...a.timelineEvent, stage: q.stage, year: '', paramLabel: dimValLabel(dim, selectedValue, a.label), dimLabel: dim ? dim.label : '',
+                                questionId: q.id, dimension: q.dimension || null, selectedValue, siblings };
                         })
                         .filter(Boolean);
                 } else {
                     pathEvents = [];
                     let curId = rootId;
                     const visited = new Set();
-                    const walkDims = { ...localDims };
+                    const walkDims = { ...userDims };
                     while (curId && questionsMap[curId] && !visited.has(curId)) {
                         visited.add(curId);
                         const q = questionsMap[curId];
                         let a;
+                        let dimMissing = false;
                         if (q.dimension) {
                             const dimVal = walkDims[q.dimension];
-                            if (!dimVal) break;
-                            a = q.answers.find(ans =>
-                                ans.value === dimVal || (ans.sets && ans.sets[q.dimension] === dimVal)
-                            );
+                            if (dimVal) {
+                                a = q.answers.find(ans =>
+                                    ans.value === dimVal || (ans.sets && ans.sets[q.dimension] === dimVal)
+                                );
+                            } else {
+                                dimMissing = true;
+                                a = q.answers[0];
+                            }
                         } else {
                             const relevantKeys = new Set();
                             for (const c of q.answers) {
@@ -1525,9 +1620,12 @@
                             }
                         }
                         if (!a) break;
-                        if (a.timelineEvent) {
+                        if (a.timelineEvent && !dimMissing) {
                             const dim = DIM_MAP[q.dimension];
-                            pathEvents.push({ ...a.timelineEvent, year: '', paramLabel: a.label, dimLabel: dim ? dim.label : '' });
+                            const siblings = dimSiblings(dim);
+                            const selectedValue = a.value || (a.sets && a.sets[q.dimension]) || '';
+                            pathEvents.push({ ...a.timelineEvent, stage: q.stage, year: '', paramLabel: dimValLabel(dim, selectedValue, a.label), dimLabel: dim ? dim.label : '',
+                                questionId: q.id, dimension: q.dimension || null, selectedValue, siblings });
                         }
                         const stepDims = collectStepDims(q, a);
                         Object.assign(walkDims, stepDims);
@@ -1536,22 +1634,94 @@
                         curId = res ? res.target : (typeof a.next === 'string' ? a.next : null);
                     }
                 }
+                const visibleDimIds = new Set();
+                for (const dim of [...relevantDims, ...lockedDims]) {
+                    if (dim.virtual) continue;
+                    if (isOutcomeDimActive(dim)) visibleDimIds.add(dim.id);
+                }
+                pathEvents = pathEvents.filter(e => {
+                    if (!e.dimension) return true;
+                    return visibleDimIds.has(e.dimension);
+                });
+                const coveredDims = new Set(pathEvents.map(e => e.dimension).filter(Boolean));
+                for (const dim of relevantDims) {
+                    if (coveredDims.has(dim.id)) continue;
+                    if (!visibleDimIds.has(dim.id)) continue;
+                    const val = localDims[dim.id];
+                    if (!val) continue;
+                    const siblings = dim.values.map(v => ({ value: v.id, label: v.label }));
+                    const valLabel = (dim.values.find(v => v.id === val) || {}).label || val;
+                    const insertIdx = pathEvents.findIndex(e => e.stage > dim.stage);
+                    const stub = {
+                        headline: '', description: '', durationMin: 0, durationMax: 0,
+                        stage: dim.stage, year: '', paramLabel: valLabel, dimLabel: dim.label,
+                        questionId: null, dimension: dim.id, selectedValue: val, siblings
+                    };
+                    if (insertIdx >= 0) pathEvents.splice(insertIdx, 0, stub);
+                    else pathEvents.push(stub);
+                }
                 return [...pathEvents, ...(outcomeTimeline || [])];
+            }
+
+            for (const dim of relevantDims) {
+                const active = isOutcomeDimActive(dim);
+                if (!active) {
+                    delete localDims[dim.id];
+                } else if (!localDims[dim.id]) {
+                    const valid = validValues[dim.id];
+                    if (valid && valid.size > 0) localDims[dim.id] = [...valid][0];
+                }
             }
 
             let fullTimeline = composeTimeline(initResolved.timeline);
             let timelineDurations = [];
             const isInteractive = fullTimeline.some(e => e.durationMin != null);
 
+            function stageHeaderHtml(stage) {
+                const info = stagesMap[stage];
+                if (!info) return '';
+                return `<div class="timeline-stage-header">
+                    <span class="timeline-stage-label">${esc(info.label)}</span>
+                </div>`;
+            }
+
+            function timelinePillHtml(e) {
+                if (!e.siblings || e.siblings.length < 2 || !panelDimIds.has(e.dimension)) {
+                    if (!e.paramLabel) return '';
+                    return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.dimLabel)}</span><span class="timeline-param">${esc(e.paramLabel)}</span></span>`;
+                }
+                const dim = DIM_MAP[e.dimension];
+                const locked = lockedValues[e.dimension];
+                const isLocked = !!locked;
+                const enabledCount = dim ? dim.values.filter(v => !isPillDisabled(dim, v)).length : e.siblings.length;
+                const forceLocked = enabledCount <= 1;
+                const pills = e.siblings.map(s => {
+                    const active = s.value === e.selectedValue;
+                    if (isLocked) {
+                        const isAllowed = locked.has(s.value);
+                        return `<span class="tl-pill locked${isAllowed ? ' active' : ' disabled'}">${esc(s.label)}</span>`;
+                    }
+                    const valObj = dim && dim.values.find(v => v.id === s.value);
+                    const disabled = valObj ? isPillDisabled(dim, valObj) : false;
+                    const lk = forceLocked;
+                    return `<span class="tl-pill${active ? ' active' : ''}${disabled && !active ? ' disabled' : ''}${lk ? ' locked' : ''}" data-dim="${esc(e.dimension || '')}" data-val="${esc(s.value)}">${esc(s.label)}</span>`;
+                }).join('');
+                return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.dimLabel)}</span><span class="tl-pills">${pills}</span></span>`;
+            }
+
             function buildTimelineHtml(events) {
+                let lastStage = 0;
                 if (!isInteractive) {
                     return events.map(e => {
-                        const pillHtml = e.paramLabel ? `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.dimLabel)}</span><span class="timeline-param">${esc(e.paramLabel)}</span></span>` : '';
-                        return `
+                        let headerHtml = '';
+                        if (e.stage && e.stage !== lastStage) { lastStage = e.stage; headerHtml = stageHeaderHtml(e.stage); }
+                        const headlineHtml = e.headline ? `<div class="timeline-headline">${esc(e.headline)}</div>` : '';
+                        const descHtml = e.description ? `<div class="timeline-desc">${esc(e.description)}</div>` : '';
+                        return `${headerHtml}
                         <div class="timeline-event">
-                            <div class="timeline-year">${esc(e.year)}</div>
-                            <div class="timeline-headline">${esc(e.headline)}${pillHtml}</div>
-                            <div class="timeline-desc">${esc(e.description)}</div>
+                            <div class="timeline-top-row">${timelinePillHtml(e)}<div class="timeline-year">${esc(e.year)}</div></div>
+                            ${headlineHtml}
+                            ${descHtml}
                         </div>`;
                     }).join('');
                 }
@@ -1565,6 +1735,8 @@
                 const meanRange = ranges.length ? ranges.reduce((a, b) => a + b, 0) / ranges.length : 1;
                 let cumulative = 0;
                 return events.map((e, i) => {
+                    let headerHtml = '';
+                    if (e.stage && e.stage !== lastStage) { lastStage = e.stage; headerHtml = stageHeaderHtml(e.stage); }
                     const d = timelineDurations[i];
                     const yearLabel = formatRange(cumulative, cumulative + d.current);
                     cumulative += d.current;
@@ -1580,12 +1752,15 @@
                             <span class="timeline-slider-label" data-tsl="${i}">${formatDuration(d.current)}</span>
                         </div>`;
                     }
-                    const pillHtml = e.paramLabel ? `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.dimLabel)}</span><span class="timeline-param">${esc(e.paramLabel)}</span></span>` : '';
-                    return `
+                    const isPoint = d.min === 0 && d.max === 0 && i > 0;
+                    const yearHtml = isPoint ? '' : `<div class="timeline-year" data-tsy="${i}">${esc(yearLabel)}</div>`;
+                    const headlineHtml = e.headline ? `<div class="timeline-headline">${esc(e.headline)}</div>` : '';
+                    const descHtml = e.description ? `<div class="timeline-desc">${esc(e.description)}</div>` : '';
+                    return `${headerHtml}
                         <div class="timeline-event">
-                            <div class="timeline-year" data-tsy="${i}">${esc(yearLabel)}</div>
-                            <div class="timeline-headline">${esc(e.headline)}${pillHtml}</div>
-                            <div class="timeline-desc">${esc(e.description)}</div>
+                            <div class="timeline-top-row">${timelinePillHtml(e)}${yearHtml}</div>
+                            ${headlineHtml}
+                            ${descHtml}
                             ${sliderHtml}
                         </div>`;
                 }).join('');
@@ -1610,6 +1785,20 @@
                         const idx = parseInt(slider.dataset.tsi);
                         timelineDurations[idx].current = parseFloat(slider.value);
                         updateTimelineLabels();
+                    });
+                });
+            }
+
+            function wireTimelinePills() {
+                app.querySelectorAll('.tl-pill').forEach(pill => {
+                    pill.addEventListener('click', () => {
+                        if (pill.classList.contains('active')) return;
+                        const dim = pill.dataset.dim;
+                        const val = pill.dataset.val;
+                        if (!dim) return;
+                        localDims[dim] = val;
+                        userDims[dim] = val;
+                        updateContent();
                     });
                 });
             }
@@ -1685,7 +1874,13 @@
                     ${dimSelectorHtml}
                     <div class="outcome-story">${storyHtml}</div>
                     <div class="timeline-section">
-                        <h2>Timeline</h2>
+                        <div class="timeline-header-row">
+                            <h2>Timeline</h2>
+                            <div class="tl-mode-toggle">
+                                <span class="tl-mode-btn active" data-tl-mode="full">Full</span>
+                                <span class="tl-mode-btn" data-tl-mode="light">Light</span>
+                            </div>
+                        </div>
                         <div class="timeline">${timelineHtml}</div>
                     </div>
                     ${pathHtml}
@@ -1719,6 +1914,22 @@
             });
 
             wireTimelineSliders();
+            wireTimelinePills();
+
+            if (tlMode === 'light') {
+                const tl = app.querySelector('.timeline');
+                if (tl) tl.classList.add('timeline-light');
+                app.querySelectorAll('.tl-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.tlMode === 'light'));
+            }
+            app.querySelectorAll('.tl-mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tlMode = btn.dataset.tlMode;
+                    app.querySelectorAll('.tl-mode-btn').forEach(b => b.classList.toggle('active', b === btn));
+                    const tl = app.querySelector('.timeline');
+                    if (tl) tl.classList.toggle('timeline-light', tlMode === 'light');
+                    updateContent();
+                });
+            });
 
             listen('[data-action="back-to-q"]', 'click', () => {
                 const prev = path.pop();
