@@ -340,18 +340,278 @@ function getRenderAfter(sel, dim) {
 }
 
 // ════════════════════════════════════════════════════════
+// Path helpers (shared between story mode and engine)
+// ════════════════════════════════════════════════════════
+
+function collectStepDims(question, answer) {
+    const dims = {};
+    if (answer.value !== undefined && question.dimension) dims[question.dimension] = answer.value;
+    if (answer.sets) Object.assign(dims, answer.sets);
+    return dims;
+}
+
+function resolveConditionalNext(nextSpec, dims) {
+    if (typeof nextSpec === 'string') return { target: nextSpec };
+    if (!Array.isArray(nextSpec)) return null;
+    for (const route of nextSpec) {
+        if (!route.when) return { target: route.target, sets: route.sets };
+        const match = Object.entries(route.when).every(([k, allowed]) =>
+            dims[k] && allowed.includes(dims[k]));
+        if (match) return { target: route.target, sets: route.sets };
+    }
+    return null;
+}
+
+function answerVisible(answer, dims) {
+    if (answer.disabledWhen) {
+        const dSets = Array.isArray(answer.disabledWhen) ? answer.disabledWhen : [answer.disabledWhen];
+        for (const conds of dSets) {
+            if (Object.entries(conds).every(([dim, vals]) => {
+                const allowed = Array.isArray(vals) ? vals : [vals];
+                return dims[dim] && allowed.includes(dims[dim]);
+            })) return false;
+        }
+    }
+    if (!answer.requires) return true;
+    const condSets = Array.isArray(answer.requires) ? answer.requires : [answer.requires];
+    return condSets.some(conds => {
+        for (const [dim, allowed] of Object.entries(conds)) {
+            if (!dims[dim] || !allowed.includes(dims[dim])) return false;
+        }
+        return true;
+    });
+}
+
+// ════════════════════════════════════════════════════════
+// Path-based game tree navigation
+// ════════════════════════════════════════════════════════
+
+function replayPath(questionsMap, rootId, path) {
+    let curId = rootId;
+    const dims = {};
+    for (let i = 0; i < path.length; i++) {
+        const step = path[i];
+        if (step.questionId !== curId) return { ok: false, failIndex: i, dims, nextId: curId };
+        const q = questionsMap[curId];
+        if (!q) return { ok: false, failIndex: i, dims, nextId: curId };
+        const a = q.answers[step.answerIndex];
+        if (!a) return { ok: false, failIndex: i, dims, nextId: curId };
+        if (!answerVisible(a, dims)) return { ok: false, failIndex: i, dims, nextId: curId };
+        const stepDims = collectStepDims(q, a);
+        Object.assign(dims, stepDims);
+        const res = resolveConditionalNext(a.next, dims);
+        if (res && res.sets) Object.assign(dims, res.sets);
+        curId = res ? res.target : null;
+    }
+    return { ok: true, dims, nextId: curId };
+}
+
+function matchesOutcome(templatesMap, targetId, dims, outcome) {
+    if (!outcome) return targetId != null && !!(templatesMap || {})[targetId];
+    if (targetId === '__resolve__') {
+        const t = (templatesMap || {})[outcome.templateId];
+        if (!t) return false;
+        if (!templateMatches(t, dims)) return false;
+        if (outcome.variantKey && t.primaryDimension) {
+            const v = effectiveVal(dims, t.primaryDimension) || dims[t.primaryDimension];
+            if (v !== outcome.variantKey) return false;
+        }
+        return true;
+    }
+    if (targetId !== outcome.templateId) return false;
+    if (outcome.variantKey) {
+        const t = (templatesMap || {})[outcome.templateId];
+        if (t && t.primaryDimension) {
+            const v = effectiveVal(dims, t.primaryDimension) || dims[t.primaryDimension];
+            if (v !== outcome.variantKey) return false;
+        }
+    }
+    return true;
+}
+
+function dimFingerprint(dims) {
+    const keys = Object.keys(dims).sort();
+    let fp = '';
+    for (const k of keys) fp += k + '=' + dims[k] + '|';
+    return fp;
+}
+
+function canReachOutcome(questionsMap, templatesMap, questionId, dims, outcome, depth, cache) {
+    if (depth <= 0) return false;
+    if (!questionId) return false;
+    if (!cache) cache = new Map();
+    const cacheKey = questionId + '||' + dimFingerprint(dims);
+    if (cache.has(cacheKey)) return cache.get(cacheKey);
+    const q = questionsMap[questionId];
+    if (!q) {
+        const result = matchesOutcome(templatesMap, questionId, dims, outcome);
+        cache.set(cacheKey, result);
+        return result;
+    }
+    for (const a of q.answers) {
+        if (!answerVisible(a, dims)) continue;
+        const newDims = { ...dims, ...collectStepDims(q, a) };
+        const res = resolveConditionalNext(a.next, newDims);
+        if (res && res.sets) Object.assign(newDims, res.sets);
+        const nextId = res ? res.target : null;
+        if (canReachOutcome(questionsMap, templatesMap, nextId, newDims, outcome, depth - 1, cache)) {
+            cache.set(cacheKey, true);
+            return true;
+        }
+    }
+    cache.set(cacheKey, false);
+    return false;
+}
+
+function isValidPathToOutcome(questionsMap, templatesMap, rootId, path, outcome) {
+    const cache = new Map();
+    const replay = replayPath(questionsMap, rootId, path);
+    if (!replay.ok) {
+        const validStructural = path.slice(0, replay.failIndex);
+        if (!outcome) return { valid: false, prefix: validStructural, dims: replay.dims, nextQuestionId: replay.nextId };
+        let bestIdx = -1, bestDims = {}, bestNext = rootId;
+        let cur = rootId, accDims = {};
+        if (canReachOutcome(questionsMap, templatesMap, rootId, {}, outcome, 100, cache)) {
+            bestIdx = -1; bestDims = {}; bestNext = rootId;
+        }
+        for (let i = 0; i < validStructural.length; i++) {
+            const step = validStructural[i];
+            const q = questionsMap[cur];
+            const a = q.answers[step.answerIndex];
+            Object.assign(accDims, collectStepDims(q, a));
+            const res = resolveConditionalNext(a.next, accDims);
+            if (res && res.sets) Object.assign(accDims, res.sets);
+            cur = res ? res.target : null;
+            if (canReachOutcome(questionsMap, templatesMap, cur, accDims, outcome, 100, cache)) {
+                bestIdx = i; bestDims = { ...accDims }; bestNext = cur;
+            }
+        }
+        const prefix = bestIdx >= 0 ? validStructural.slice(0, bestIdx + 1) : [];
+        return { valid: false, prefix, dims: bestIdx >= 0 ? bestDims : {}, nextQuestionId: bestIdx >= 0 ? bestNext : rootId };
+    }
+    if (!outcome) return { valid: true, prefix: path, dims: replay.dims, nextQuestionId: replay.nextId };
+    if (canReachOutcome(questionsMap, templatesMap, replay.nextId, replay.dims, outcome, 100, cache)) {
+        return { valid: true, prefix: path, dims: replay.dims, nextQuestionId: replay.nextId };
+    }
+    let bestIdx = -1, bestDims = {}, bestNext = rootId;
+    let cur = rootId, accDims = {};
+    if (canReachOutcome(questionsMap, templatesMap, rootId, {}, outcome, 100, cache)) {
+        bestIdx = -1; bestDims = {}; bestNext = rootId;
+    }
+    for (let i = 0; i < path.length; i++) {
+        const step = path[i];
+        const q = questionsMap[cur];
+        const a = q.answers[step.answerIndex];
+        Object.assign(accDims, collectStepDims(q, a));
+        const res = resolveConditionalNext(a.next, accDims);
+        if (res && res.sets) Object.assign(accDims, res.sets);
+        cur = res ? res.target : null;
+        if (canReachOutcome(questionsMap, templatesMap, cur, accDims, outcome, 100, cache)) {
+            bestIdx = i; bestDims = { ...accDims }; bestNext = cur;
+        }
+    }
+    const prefix = bestIdx >= 0 ? path.slice(0, bestIdx + 1) : [];
+    return { valid: false, prefix, dims: bestIdx >= 0 ? bestDims : {}, nextQuestionId: bestIdx >= 0 ? bestNext : rootId };
+}
+
+function getNextOptions(questionsMap, templatesMap, rootId, path, outcome, cache) {
+    if (!cache) cache = new Map();
+    const replay = replayPath(questionsMap, rootId, path);
+    if (!replay.ok || !replay.nextId) return [];
+    const q = questionsMap[replay.nextId];
+    if (!q) return [];
+    const options = [];
+    for (let i = 0; i < q.answers.length; i++) {
+        const a = q.answers[i];
+        if (!answerVisible(a, replay.dims)) continue;
+        if (outcome) {
+            const newDims = { ...replay.dims, ...collectStepDims(q, a) };
+            const res = resolveConditionalNext(a.next, newDims);
+            if (res && res.sets) Object.assign(newDims, res.sets);
+            const nextId = res ? res.target : null;
+            if (!canReachOutcome(questionsMap, templatesMap, nextId, newDims, outcome, 100, cache)) continue;
+        }
+        const dimValue = a.value !== undefined ? a.value : (a.sets && q.dimension && a.sets[q.dimension]) || undefined;
+        options.push({
+            answerIndex: i,
+            label: a.label,
+            description: a.description || '',
+            dimension: q.dimension || null,
+            value: dimValue,
+            sets: a.sets || null,
+            questionId: q.id,
+            questionText: q.text,
+            timelineEvent: a.timelineEvent || null,
+            forced: false
+        });
+    }
+    if (options.length === 1) options[0].forced = true;
+    return options;
+}
+
+// ════════════════════════════════════════════════════════
 // Exports
 // ════════════════════════════════════════════════════════
+
+function buildPathFromDims(questionsMap, rootId, dims) {
+    const path = [];
+    let curId = rootId;
+    const walkDims = { ...dims };
+    const visited = new Set();
+    while (curId && questionsMap[curId] && !visited.has(curId)) {
+        visited.add(curId);
+        const q = questionsMap[curId];
+        let answerIndex = -1;
+        if (q.dimension) {
+            const dimVal = walkDims[q.dimension];
+            if (dimVal) {
+                answerIndex = q.answers.findIndex(a =>
+                    a.value === dimVal || (a.sets && a.sets[q.dimension] === dimVal));
+            }
+            if (answerIndex < 0) break;
+        } else {
+            let bestScore = -1;
+            for (let i = 0; i < q.answers.length; i++) {
+                const a = q.answers[i];
+                if (!answerVisible(a, walkDims)) continue;
+                let score = 0;
+                if (a.sets) {
+                    for (const [k, v] of Object.entries(a.sets)) {
+                        if (walkDims[k] === v) score += 2;
+                    }
+                }
+                if (score > bestScore) { bestScore = score; answerIndex = i; }
+            }
+            if (answerIndex < 0) break;
+        }
+        const a = q.answers[answerIndex];
+        if (!a) break;
+        path.push({ questionId: q.id, answerIndex });
+        Object.assign(walkDims, collectStepDims(q, a));
+        const res = resolveConditionalNext(a.next, walkDims);
+        if (res && res.sets) Object.assign(walkDims, res.sets);
+        curId = res ? res.target : null;
+    }
+    return path;
+}
+
+const pathExports = {
+    collectStepDims, resolveConditionalNext, answerVisible, replayPath,
+    matchesOutcome, canReachOutcome, isValidPathToOutcome, getNextOptions,
+    buildPathFromDims
+};
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { DIMENSIONS, DIM_MAP,
         matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimLocked, isValueDisabled,
-        cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch, getRenderAfter };
+        cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch, getRenderAfter,
+        ...pathExports };
 }
 if (typeof window !== 'undefined') {
     window.Engine = { DIMENSIONS, DIM_MAP,
         matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimLocked, isValueDisabled,
-        cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch, getRenderAfter };
+        cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch, getRenderAfter,
+        ...pathExports };
 }
 
 })();
