@@ -1,9 +1,21 @@
 {
   "root": "scaling-continues",
   "stages": [
-    { "id": 1, "label": "Dynamics of Singularity", "description": "What happens with AI capability, and who has access?" },
-    { "id": 2, "label": "Dynamics of Control", "description": "Is AI aligned? Who holds power, and what do they do with it?" },
-    { "id": 3, "label": "Rate of Impact", "description": "How fast does the transformation reach humanity?" }
+    {
+      "id": 1,
+      "label": "Dynamics of Singularity",
+      "description": "What happens with AI capability, and who has access?"
+    },
+    {
+      "id": 2,
+      "label": "Dynamics of Control",
+      "description": "Is AI aligned? Who holds power, and what do they do with it?"
+    },
+    {
+      "id": 3,
+      "label": "Rate of Impact",
+      "description": "How fast does the transformation reach humanity?"
+    }
   ],
   "questions": [
     {
@@ -32,6 +44,12 @@
         {
           "label": "No — it slows down or hits a wall",
           "description": "Something breaks the trend: diminishing returns on scaling, data limitations, architectural ceilings, or something unexpected.",
+          "timelineEvent": {
+            "headline": "AI scaling hits a wall",
+            "description": "The exponential trend breaks. Whether from data limits, compute costs, or fundamental barriers — AI capability plateaus. The singularity recedes from view.",
+            "durationMin": 0,
+            "durationMax": 0
+          },
           "next": "where-tops-out"
         }
       ]
@@ -47,29 +65,52 @@
           "label": "Around where we are now — hours at best",
           "description": "AI stays great at short tasks but never reliably handles longer autonomous work. The copilot era is the final era.",
           "value": "hours",
-          "next": "stall-recovery"
+          "next": "stall-recovery",
+          "timelineEvent": {
+            "headline": "AI tops out at hour-level tasks",
+            "description": "AI can handle tasks requiring up to a few hours of focused work, but nothing beyond. Useful, but not transformative. The world adjusts to a tool, not a revolution.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Day-level tasks",
           "description": "AI can reliably handle a full day's worth of autonomous work, but falls apart on anything requiring multi-day coherence.",
           "value": "days",
-          "next": "stall-recovery"
+          "next": "stall-recovery",
+          "timelineEvent": {
+            "headline": "AI tops out at day-level tasks",
+            "description": "AI handles tasks requiring a full day of focused effort — research summaries, code modules, analysis. Significant automation, but human expertise remains essential for complex work.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Week-level tasks",
           "description": "AI handles week-long autonomous projects capably, but month-long endeavors requiring sustained strategic judgment remain out of reach.",
           "value": "weeks",
-          "next": "stall-recovery"
+          "next": "stall-recovery",
+          "timelineEvent": {
+            "headline": "AI tops out at week-level tasks",
+            "description": "AI can manage week-long projects autonomously — full research cycles, software features, strategic analyses. A powerful tool that reshapes knowledge work, but plateaus short of full generality.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Month-level tasks, then it stops",
           "description": "AI reaches near-AGI capability for most knowledge work but hits a hard ceiling before full open-ended autonomy or recursive self-improvement.",
           "value": "months",
-          "next": "stall-recovery"
+          "next": "stall-recovery",
+          "timelineEvent": {
+            "headline": "AI tops out at month-level tasks",
+            "description": "AI handles month-long autonomous projects — entire product developments, research programs, organizational analyses. Remarkably capable, but something prevents the final leap to open-ended superintelligence.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "stall-recovery",
       "stage": 1,
@@ -80,24 +121,44 @@
         {
           "label": "A mild breakthrough — months to a few years",
           "description": "The ceiling is real but thin. A new training technique, architectural tweak, or compute breakthrough restarts the exponential trend within a few years. A speed bump, not a wall.",
-          "sets": { "capability": "singularity", "stall_recovery": "mild" },
-          "next": "automation-depth"
+          "sets": {
+            "capability": "singularity",
+            "stall_recovery": "mild"
+          },
+          "next": "automation-depth",
+          "timelineEvent": {
+            "headline": "A mild breakthrough restarts progress",
+            "description": "A new technique, dataset, or architectural insight unlocks the next phase of capability growth. The stall was temporary — months to a few years — and the trajectory resumes.",
+            "durationMin": 3,
+            "durationMax": 24
+          }
         },
         {
           "label": "A substantial breakthrough — years to decades",
           "description": "The ceiling is fundamental to current approaches. Breaking through requires a genuine paradigm shift — new architectures, new theory, maybe new hardware. It could take a decade or more. The world builds around current AI capability in the meantime.",
           "value": "substantial",
-          "next": "plateau-economics"
+          "next": "plateau-economics",
+          "timelineEvent": {
+            "headline": "A major breakthrough eventually arrives",
+            "description": "Progress requires a fundamental rethinking — new paradigms, new hardware, or insights from adjacent fields. The gap lasts years to decades before capability growth resumes.",
+            "durationMin": 36,
+            "durationMax": 120
+          }
         },
         {
           "label": "It's never going to happen",
           "description": "The ceiling isn't architectural — it's fundamental. There's something about intelligence, reasoning, or generality that current approaches can't reach and no foreseeable approach will. This is as good as AI gets.",
           "value": "never",
-          "next": "plateau-economics"
+          "next": "plateau-economics",
+          "timelineEvent": {
+            "headline": "The ceiling is permanent",
+            "description": "No breakthrough comes. AI capability has reached its fundamental limit. The technology is powerful but bounded — and the world adapts to that reality.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "automation-depth",
       "stage": 1,
@@ -121,11 +182,16 @@
           "label": "No — routine tasks are automated, but novel creative work remains out of reach",
           "description": "AI becomes the most powerful tool ever built for well-defined work — legal research, code maintenance, data analysis, translation. But genuinely novel thinking, original research, and the kind of creative leaps that drive scientific progress remain stubbornly human. No intelligence explosion. A transformation, but a manageable one.",
           "value": "shallow",
-          "next": "automation-recovery"
+          "next": "automation-recovery",
+          "timelineEvent": {
+            "headline": "AI automates routine work only",
+            "description": "AI handles predictable, structured knowledge work but cannot perform novel research, creative problem-solving, or tasks requiring genuine understanding. The automation is broad but shallow.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "metr-milestone",
       "stage": 1,
@@ -187,7 +253,6 @@
         }
       ]
     },
-
     {
       "id": "automation-recovery",
       "stage": 1,
@@ -198,24 +263,44 @@
         {
           "label": "Yes — within months to a few years",
           "description": "The barrier between routine and creative work turns out to be thin. A new approach cracks it relatively quickly, and AI begins automating novel research and its own development. The feedback loop begins after a delay.",
-          "sets": { "automation": "deep", "automation_recovery": "mild" },
-          "next": "metr-milestone"
+          "sets": {
+            "automation": "deep",
+            "automation_recovery": "mild"
+          },
+          "next": "metr-milestone",
+          "timelineEvent": {
+            "headline": "Deep automation arrives within months",
+            "description": "A breakthrough closes the gap. Within months to a few years, AI systems can automate novel creative and research work. The shallow ceiling was temporary.",
+            "durationMin": 3,
+            "durationMax": 24
+          }
         },
         {
           "label": "Eventually — but it takes years to decades",
           "description": "The barrier is real and thick. Progress continues slowly, and the breakthrough comes — but only after a long stretch where routine automation is the ceiling. The world adapts to that ceiling before it breaks.",
           "value": "substantial",
-          "next": "automation-distribution"
+          "next": "automation-distribution",
+          "timelineEvent": {
+            "headline": "Deep automation eventually arrives",
+            "description": "It takes years to decades, but AI eventually crosses the threshold into genuine creative and research automation. The delay shaped a generation of human-AI collaboration.",
+            "durationMin": 36,
+            "durationMax": 120
+          }
         },
         {
           "label": "No — the ceiling is permanent",
           "description": "Novel creative work, original research, and recursive self-improvement remain permanently beyond AI. The routine automation plateau is the final state. Transformative, but not transcendent.",
           "value": "never",
-          "next": "automation-distribution"
+          "next": "automation-distribution",
+          "timelineEvent": {
+            "headline": "Deep automation never materializes",
+            "description": "The ceiling is permanent. AI remains a powerful assistant for routine tasks but never achieves the creative, research, and reasoning capabilities needed for deep automation.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "plateau-economics",
       "stage": 1,
@@ -227,23 +312,40 @@
           "label": "Equally — gains are broadly shared",
           "description": "Productivity gains flow through as lower costs, better services, and public investment. New policies and market dynamics ensure the benefits of AI reach most people. Not utopia, but genuine broad-based improvement.",
           "value": "equal",
-          "next": "plateau-knowledge-rate"
+          "next": "plateau-knowledge-rate",
+          "timelineEvent": {
+            "headline": "AI gains shared broadly",
+            "description": "Productivity gains from the AI plateau flow broadly across the economy. New policies, market forces, or social norms ensure that automation's benefits don't concentrate.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Unequally — existing wealth holders benefit most",
           "description": "Those who already own capital — the companies that trained the models, the firms that deployed them — capture most of the value. Labor's share of income falls as routine work is automated. A new gilded age, built on models and compute.",
           "value": "unequal",
-          "next": "plateau-knowledge-rate"
+          "next": "plateau-knowledge-rate",
+          "timelineEvent": {
+            "headline": "AI gains flow to existing wealth holders",
+            "description": "Those who already hold capital and infrastructure capture most of the value from AI automation. The plateau entrenches existing economic hierarchies.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Extremely unequally — those holding power capture nearly everything",
           "description": "The gains concentrate not just among the wealthy, but among those who hold political and institutional power at the time of transformation. Regulatory capture, monopoly control of compute, and state-corporate fusion ensure that a tiny elite controls the AI-driven economy. Everyone else is a dependent.",
           "value": "extreme",
-          "next": "plateau-knowledge-rate"
+          "next": "plateau-knowledge-rate",
+          "timelineEvent": {
+            "headline": "AI-driven power concentration",
+            "description": "Those controlling AI infrastructure capture nearly all the economic value. The plateau doesn't just maintain inequality — it amplifies it to historic extremes.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "plateau-knowledge-rate",
       "stage": 1,
@@ -254,33 +356,72 @@
         {
           "label": "Rapid — within AI's range, most work automated in 2–5 years",
           "description": "The economic pressure is overwhelming. Any knowledge task within AI's capability ceiling is automated within 2 to 5 years. Entire roles disappear. The ceiling limits what AI can do, but within those limits, adoption is swift and total.",
-          "requires": { "capability": ["weeks", "months"] },
+          "requires": {
+            "capability": [
+              "weeks",
+              "months"
+            ]
+          },
           "value": "rapid",
-          "next": "plateau-physical-rate"
+          "next": "plateau-physical-rate",
+          "timelineEvent": {
+            "headline": "Knowledge work rapidly automated",
+            "description": "Within AI's capability range, most routine knowledge work is automated within 2–5 years. The labor market transforms quickly for affected sectors.",
+            "durationMin": 24,
+            "durationMax": 60
+          }
         },
         {
           "label": "Gradual — adoption unfolds over 5–15 years",
           "description": "Institutional inertia slows things down. AI is deployed sector by sector, firm by firm over 5 to 15 years. Some industries adopt fast, others resist. The ceiling is fixed, but even reaching it takes a decade.",
-          "requires": { "capability": ["days", "weeks", "months"] },
+          "requires": {
+            "capability": [
+              "days",
+              "weeks",
+              "months"
+            ]
+          },
           "value": "gradual",
-          "next": "plateau-physical-rate"
+          "next": "plateau-physical-rate",
+          "timelineEvent": {
+            "headline": "Knowledge automation unfolds gradually",
+            "description": "Adoption unfolds over 5–15 years as organizations, regulations, and workers adapt. The transformation is real but measured.",
+            "durationMin": 60,
+            "durationMax": 180
+          }
         },
         {
           "label": "Uneven — 2–5 years in tech, 10–20+ in lagging sectors",
           "description": "Tech-forward industries and wealthy nations automate within a few years. Regulated professions, developing economies, and culturally resistant sectors lag by a decade or more. A patchwork of adoption against a fixed capability ceiling.",
           "value": "uneven",
-          "next": "plateau-physical-rate"
+          "next": "plateau-physical-rate",
+          "timelineEvent": {
+            "headline": "Knowledge automation is uneven",
+            "description": "Tech and finance automate within 2–5 years. Education, healthcare, government lag by a decade or more. Two economies emerge within one society.",
+            "durationMin": 24,
+            "durationMax": 240
+          }
         },
         {
           "label": "Limited — AI augments but rarely replaces",
           "description": "The capability ceiling is real and binding. AI assists knowledge workers but rarely replaces them outright. Most roles absorb AI as a tool rather than being eliminated by it. Productivity rises, but employment patterns shift more than they collapse. No displacement wave — just a permanent productivity boost.",
-          "requires": { "capability": ["hours", "days"] },
+          "requires": {
+            "capability": [
+              "hours",
+              "days"
+            ]
+          },
           "value": "limited",
-          "next": "plateau-physical-rate"
+          "next": "plateau-physical-rate",
+          "timelineEvent": {
+            "headline": "AI augments but rarely replaces",
+            "description": "Despite impressive demos, AI mostly augments human workers rather than replacing them. Productivity grows but the labor market transforms less than predicted.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "plateau-physical-rate",
       "stage": 1,
@@ -291,25 +432,48 @@
         {
           "label": "Gradual — physical automation trails by 10–25 years",
           "description": "Physical automation advances, but slowly — over 10 to 25 years. The AI plateau means fewer breakthroughs in robotic capability. Manufacturing, logistics, and agriculture are partially automated; the rest of the physical world remains human for decades.",
-          "requires": { "capability": ["days", "weeks", "months"] },
+          "requires": {
+            "capability": [
+              "days",
+              "weeks",
+              "months"
+            ]
+          },
           "value": "gradual",
-          "next": "the-plateau"
+          "next": "the-plateau",
+          "timelineEvent": {
+            "headline": "Physical automation trails by decades",
+            "description": "Robots, autonomous vehicles, and manufacturing automation follow 10–25 years behind knowledge work automation. The physical world changes, slowly.",
+            "durationMin": 120,
+            "durationMax": 300
+          }
         },
         {
           "label": "Uneven — 5–10 years in manufacturing hubs, 20+ elsewhere",
           "description": "Physical automation advances in pockets — wealthy nations with strong manufacturing and high labor costs see results within a decade. Developing economies and rural areas see little change for 20+ years. The AI plateau amplifies existing global inequalities in physical infrastructure.",
           "value": "uneven",
-          "next": "the-plateau"
+          "next": "the-plateau",
+          "timelineEvent": {
+            "headline": "Physical automation is geographically uneven",
+            "description": "Manufacturing hubs automate within 5–10 years. Rural areas and developing regions wait 20+ years. Geography becomes destiny.",
+            "durationMin": 60,
+            "durationMax": 240
+          }
         },
         {
           "label": "Limited — physical work remains largely human indefinitely",
           "description": "The AI plateau means robotics stagnates too. Without more capable AI, physical automation stays limited to structured environments — factories, warehouses. The unstructured physical world remains human territory for the foreseeable future.",
           "value": "limited",
-          "next": "the-plateau"
+          "next": "the-plateau",
+          "timelineEvent": {
+            "headline": "Physical work stays largely human",
+            "description": "Despite AI advances in knowledge work, the physical world resists automation. Dexterity, unpredictability, and infrastructure costs keep human labor dominant.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "automation-distribution",
       "stage": 1,
@@ -321,23 +485,40 @@
           "label": "Equally — productivity gains flow broadly",
           "description": "Lower costs, better services, rising living standards. The gains from AI automation reach most people through some combination of market forces, policy, and new opportunities. Disruptive but ultimately equalizing.",
           "value": "equal",
-          "next": "auto-knowledge-rate"
+          "next": "auto-knowledge-rate",
+          "timelineEvent": {
+            "headline": "Automation gains shared broadly",
+            "description": "Productivity gains from AI automation flow broadly. New institutions, policies, or market dynamics ensure the economic transformation benefits most people.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Unequally — existing wealth holders benefit most",
           "description": "Those who own the AI systems capture the productivity gains. Labor's share of income falls as routine work vanishes. Wealth concentrates among those who own the models, the compute, and the platforms.",
           "value": "unequal",
-          "next": "auto-knowledge-rate"
+          "next": "auto-knowledge-rate",
+          "timelineEvent": {
+            "headline": "Automation gains concentrate",
+            "description": "Existing wealth holders capture most of the value from AI automation. The technology amplifies rather than corrects economic inequality.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Extremely unequally — those holding power capture nearly everything",
           "description": "The gains concentrate not just among capital owners, but among those who hold political and institutional power. AI becomes a tool of entrenchment — whoever controls compute and policy at the moment of transformation locks in their advantage permanently.",
           "value": "extreme",
-          "next": "auto-knowledge-rate"
+          "next": "auto-knowledge-rate",
+          "timelineEvent": {
+            "headline": "Extreme concentration from automation",
+            "description": "Those controlling AI infrastructure and capital capture nearly all economic value. Automation creates a new class of extreme wealth alongside widespread displacement.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "auto-knowledge-rate",
       "stage": 1,
@@ -349,23 +530,40 @@
           "label": "Rapid — most routine knowledge work displaced within 2–4 years",
           "description": "Adoption is fast and broad. The cost advantage of AI is too large to resist. Legal research, data analysis, customer service, accounting, code maintenance — all largely automated within 2 to 4 years. Faster than any previous workforce transition in history.",
           "value": "rapid",
-          "next": "auto-physical-rate"
+          "next": "auto-physical-rate",
+          "timelineEvent": {
+            "headline": "Routine knowledge work displaced rapidly",
+            "description": "Most routine knowledge work is displaced within 2–4 years. The speed of displacement outpaces retraining and adaptation programs.",
+            "durationMin": 24,
+            "durationMax": 48
+          }
         },
         {
           "label": "Gradual — sector by sector over 5–15 years",
           "description": "The transition unfolds over 5 to 15 years. Some industries fall quickly, others hold out. The pace is trackable — fast by historical standards, but slow enough for retraining, policy response, and partial adaptation.",
           "value": "gradual",
-          "next": "auto-physical-rate"
+          "next": "auto-physical-rate",
+          "timelineEvent": {
+            "headline": "Knowledge displacement sector by sector",
+            "description": "Knowledge work automation unfolds over 5–15 years, giving workers and institutions time to adapt — but not everyone makes the transition.",
+            "durationMin": 60,
+            "durationMax": 180
+          }
         },
         {
           "label": "Uneven — 2–4 years in tech, 10–20+ in lagging sectors",
           "description": "Tech hubs and progressive industries automate within a few years. Regulated professions, developing economies, and culturally resistant sectors lag by a decade or more. A patchwork transition — the future arrives on different schedules depending on where you are.",
           "value": "uneven",
-          "next": "auto-physical-rate"
+          "next": "auto-physical-rate",
+          "timelineEvent": {
+            "headline": "Knowledge displacement is uneven",
+            "description": "Tech and finance displace workers within 2–4 years. Other sectors lag by a decade or more. The economy bifurcates along sector lines.",
+            "durationMin": 24,
+            "durationMax": 240
+          }
         }
       ]
     },
-
     {
       "id": "auto-physical-rate",
       "stage": 1,
@@ -377,29 +575,52 @@
           "label": "Rapid — physical world transforms within 3–7 years",
           "description": "AI-designed robots and automated systems are deployed broadly within 3 to 7 years. Manufacturing, logistics, agriculture, construction — physical work is transformed almost as fast as knowledge work.",
           "value": "rapid",
-          "next": "the-automation"
+          "next": "the-automation",
+          "timelineEvent": {
+            "headline": "Physical automation arrives fast",
+            "description": "Robotics, autonomous vehicles, and manufacturing automation transform the physical world within 3–7 years.",
+            "durationMin": 36,
+            "durationMax": 84
+          }
         },
         {
           "label": "Gradual — physical automation trails by 10–25 years",
           "description": "Knowledge work is automated first. Physical automation follows over 10 to 25 years — constrained by manufacturing, regulation, and the complexity of the physical world. A long gap between the digital and physical transformation.",
           "value": "gradual",
-          "next": "the-automation"
+          "next": "the-automation",
+          "timelineEvent": {
+            "headline": "Physical automation trails by decades",
+            "description": "Physical world automation lags knowledge work by 10–25 years. The gap defines a long transitional period where digital and physical economies diverge.",
+            "durationMin": 120,
+            "durationMax": 300
+          }
         },
         {
           "label": "Uneven — 3–7 years in leading regions, 20+ elsewhere",
           "description": "Physical automation transforms manufacturing hubs and wealthy nations within a few years. Developing economies, rural areas, and heavily regulated sectors lag by decades. The physical transformation is real but deeply unequal.",
           "value": "uneven",
-          "next": "the-automation"
+          "next": "the-automation",
+          "timelineEvent": {
+            "headline": "Physical automation is regionally uneven",
+            "description": "Leading regions automate physical work within 3–7 years. Others wait 20+ years. The gap between technologically advanced and lagging regions becomes a chasm.",
+            "durationMin": 36,
+            "durationMax": 240
+          }
         },
         {
           "label": "Limited — physical work remains largely human indefinitely",
           "description": "Despite capable AI, physical automation stays limited to structured environments — factories, warehouses. The unstructured physical world remains human territory for the foreseeable future. Physical work is augmented, not replaced.",
           "value": "limited",
-          "next": "the-automation"
+          "next": "the-automation",
+          "timelineEvent": {
+            "headline": "Physical automation stays limited",
+            "description": "Despite AI advances, the physical world largely resists automation. Cost, complexity, and unpredictability keep human labor central to the physical economy.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "feedback-speed",
       "stage": 1,
@@ -415,7 +636,13 @@
           "label": "Gradual — 3 to 10 years",
           "description": "The feedback loop exists but runs at a pace humans can track. The R&D multiplier peaks around 3–5x. Each AI generation is meaningfully better, but the cycle time is quarters or years. Governments can observe, debate, and legislate between generations. Open source can attempt to keep pace. The public understands what's happening. Fast by historical standards — but institutional standards can keep up.",
           "value": "gradual",
-          "next": "governance-window"
+          "next": "governance-window",
+          "timelineEvent": {
+            "headline": "The climb to superintelligence takes years",
+            "description": "AI capability grows steadily but not explosively. The feedback loop between AI research and AI capability unfolds over 3–10 years, giving humanity time to observe and react.",
+            "durationMin": 36,
+            "durationMax": 120
+          }
         },
         {
           "label": "Fast — 6 to 18 months",
@@ -432,12 +659,23 @@
         {
           "label": "Explosive — days to weeks",
           "description": "True recursive self-improvement. Each improvement cycle is faster than the last, converging in days or weeks. The R&D multiplier effectively goes to infinity. Nobody outside the leading lab knows what happened until it's over. Open source becomes irrelevant overnight. Governance is impossible — there's no time. The transition from 'impressive AI agent' to 'vastly superhuman intelligence' happens before the news cycle can cover it.",
-          "sets": { "takeoff": "hard", "open_source": "twenty_four_months", "distribution": "monopoly", "geo_spread": "one", "governance": "race" },
-          "next": "alignment"
+          "sets": {
+            "takeoff": "hard",
+            "open_source": "twenty_four_months",
+            "distribution": "monopoly",
+            "geo_spread": "one",
+            "governance": "race"
+          },
+          "next": "alignment",
+          "timelineEvent": {
+            "headline": "Intelligence explosion in days to weeks",
+            "description": "The feedback loop between AI and AI research goes critical. Capability doubles in hours, then minutes. The world before and after are unrecognizable.",
+            "durationMin": 0.03,
+            "durationMax": 1
+          }
         }
       ]
     },
-
     {
       "id": "governance-window",
       "stage": 1,
@@ -449,17 +687,28 @@
           "label": "Yes — active preparation",
           "description": "The gradual pace is used well. Governments establish regulatory frameworks, international agreements take shape, and public understanding catches up to the technology. Not perfect, but a functioning governance ecosystem emerges before the critical period.",
           "value": "governed",
-          "next": "open-source-parity"
+          "next": "open-source-parity",
+          "timelineEvent": {
+            "headline": "Humanity uses the window to prepare",
+            "description": "The gradual pace gives governments, institutions, and researchers time to build governance frameworks, safety protocols, and international agreements.",
+            "durationMin": 12,
+            "durationMax": 36
+          }
         },
         {
           "label": "No — relative complacency",
           "description": "The gradual pace breeds complacency, not preparation. Each increment is small enough to ignore. By the time the cumulative change is undeniable, the window for governance has closed. The world sleepwalked into the most consequential transition in history.",
           "value": "race",
-          "next": "open-source-parity"
+          "next": "open-source-parity",
+          "timelineEvent": {
+            "headline": "The governance window is wasted",
+            "description": "Despite the gradual pace, political gridlock, competitive pressure, and complacency prevent meaningful preparation. When the critical phase arrives, humanity is unprepared.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "open-source-parity",
       "stage": 2,
@@ -470,14 +719,29 @@
         {
           "label": "Near-parity — open source keeps pace",
           "description": "Open source essentially matches the frontier. Weights leak, costs fall, and independent researchers close the gap as fast as it opens. No single entity controls the most powerful AI. Power is distributed from the start.",
-          "sets": { "open_source": "near_parity", "distribution": "open" },
-          "next": "alignment"
+          "sets": {
+            "open_source": "near_parity",
+            "distribution": "open"
+          },
+          "next": "alignment",
+          "timelineEvent": {
+            "headline": "Open source keeps pace with the frontier",
+            "description": "Open-source AI models stay at near-parity with proprietary frontier systems. Capability is widely distributed — no single lab or government can monopolize the technology.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "~6 months behind",
           "description": "Frontier labs maintain a meaningful lead — about one doubling ahead. Open source is capable and improving, but always a generation back. The frontier matters, and whoever holds it has a real window of advantage.",
           "value": "six_months",
-          "next": "frontier-concentration"
+          "next": "frontier-concentration",
+          "timelineEvent": {
+            "headline": "Open source trails by ~6 months",
+            "description": "Open-source models lag the frontier by roughly six months. Close enough to constrain monopoly, far enough that leading labs retain a meaningful advantage.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "~12 months behind",
@@ -495,11 +759,16 @@
           "label": "~24 months behind",
           "description": "The cost and complexity of frontier AI pull away from open source entirely. Independent developers work with substantially inferior systems. The frontier is a closed world — and it's moving fast.",
           "value": "twenty_four_months",
-          "next": "frontier-concentration"
+          "next": "frontier-concentration",
+          "timelineEvent": {
+            "headline": "Open source falls ~2 years behind",
+            "description": "A two-year gap opens between frontier and open-source AI. The leading labs hold a decisive capability advantage, and the window for open distribution narrows.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "frontier-concentration",
       "stage": 2,
@@ -515,7 +784,13 @@
           "label": "Many organizations compete at the frontier",
           "description": "Multiple labs, companies, and national programs are pushing the boundary. No single entity dominates. Competition is fierce and distributed — which means no one has a monopoly on the most powerful systems.",
           "value": "lagging",
-          "next": "geo-spread"
+          "next": "geo-spread",
+          "timelineEvent": {
+            "headline": "Many organizations compete at the frontier",
+            "description": "Multiple labs, companies, and national programs push the boundary. Competition is fierce and distributed — no single entity dominates.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "A few labs lead",
@@ -532,12 +807,20 @@
         {
           "label": "One lab dominates",
           "description": "A single organization holds a decisive lead. Whether through talent, compute, data advantages, or just luck — one lab is ahead, and everyone knows it. The most powerful AI in the world has one return address.",
-          "sets": { "distribution": "monopoly", "geo_spread": "one" },
-          "next": "lab-or-state"
+          "sets": {
+            "distribution": "monopoly",
+            "geo_spread": "one"
+          },
+          "next": "lab-or-state",
+          "timelineEvent": {
+            "headline": "One lab holds a decisive lead",
+            "description": "A single organization dominates frontier AI. Through talent, compute, data, or luck — one lab is ahead and everyone knows it.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "geo-spread",
       "stage": 2,
@@ -561,7 +844,13 @@
           "label": "Two major powers — bilateral competition",
           "description": "Two nations have independent frontier AI programs. The dynamic is bilateral: each watches the other, and neither wants to fall behind. Espionage, export controls, and mutual suspicion define the relationship.",
           "value": "two",
-          "next": "alignment"
+          "next": "alignment",
+          "timelineEvent": {
+            "headline": "Two nations race for AI supremacy",
+            "description": "Two major powers have independent frontier AI programs. Mutual suspicion, arms-race incentives, espionage, and export controls define the relationship.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Several countries — multipolar landscape",
@@ -577,7 +866,6 @@
         }
       ]
     },
-
     {
       "id": "lab-or-state",
       "stage": 2,
@@ -589,7 +877,13 @@
           "label": "The labs hold the real power",
           "description": "The labs moved faster than regulators could keep up. They control the weights, the talent, and the deployment infrastructure. The government depends on the labs more than the labs depend on the government. Corporate sovereignty, in effect.",
           "value": "lab",
-          "next": "government-response"
+          "next": "government-response",
+          "timelineEvent": {
+            "headline": "The labs hold the real power",
+            "description": "The AI labs moved faster than regulators could keep up. They control the weights, talent, and deployment infrastructure. Corporate sovereignty, in effect.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "The state asserts control",
@@ -605,7 +899,6 @@
         }
       ]
     },
-
     {
       "id": "government-response",
       "stage": 2,
@@ -619,16 +912,40 @@
         {
           "label": "Yes — the state orders a slowdown",
           "description": "The government decides the risks of uncontrolled AI development outweigh the risks of losing the lead. Through regulation, executive order, or direct intervention, it mandates a slowdown. Whether that slowdown actually works is another question.",
-          "requires": { "sovereignty": ["state"] },
-          "sets": { "gov_action": "decelerate" },
-          "next": "decel-2mo-progress"
+          "requires": {
+            "sovereignty": [
+              "state"
+            ]
+          },
+          "sets": {
+            "gov_action": "decelerate"
+          },
+          "next": "decel-2mo-progress",
+          "timelineEvent": {
+            "headline": "The state orders a development slowdown",
+            "description": "The government decides the risks outweigh the competitive pressure. Through regulation, executive order, or direct intervention, it mandates a slowdown.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Yes — the lab voluntarily pauses",
           "description": "The leading lab — under pressure from its own researchers, board, or public scrutiny — decides to pause frontier development. No government mandate, but a calculated bet that solving alignment before pushing further is worth the competitive risk.",
-          "requires": { "sovereignty": ["lab"] },
-          "sets": { "gov_action": "decelerate" },
-          "next": "decel-2mo-progress"
+          "requires": {
+            "sovereignty": [
+              "lab"
+            ]
+          },
+          "sets": {
+            "gov_action": "decelerate"
+          },
+          "next": "decel-2mo-progress",
+          "timelineEvent": {
+            "headline": "The leading lab voluntarily pauses",
+            "description": "Under pressure from researchers, board, or public scrutiny, the leading lab pauses frontier development. A calculated bet that solving alignment first is worth the risk.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "No — full speed ahead",
@@ -639,12 +956,14 @@
             "durationMin": 0,
             "durationMax": 0
           },
-          "sets": { "governance": "race", "gov_action": "accelerate" },
+          "sets": {
+            "governance": "race",
+            "gov_action": "accelerate"
+          },
           "next": "alignment"
         }
       ]
     },
-
     {
       "id": "decel-2mo-progress",
       "stage": 2,
@@ -654,20 +973,44 @@
         {
           "label": "Solved — robust",
           "description": "Two months was enough. Researchers crack the alignment problem — a robust, verified solution.",
-          "sets": { "decel_2mo_progress": "robust" },
-          "next": "decel-2mo-action"
+          "sets": {
+            "decel_2mo_progress": "robust"
+          },
+          "next": "decel-2mo-action",
+          "timelineEvent": {
+            "headline": "2 months in — alignment robustly solved",
+            "description": "Two months of focused research was enough. The alignment problem is cracked — a robust, verified solution.",
+            "durationMin": 2,
+            "durationMax": 2
+          }
         },
         {
           "label": "Solved — brittle / partial",
           "description": "Alignment researchers have found a partial solution — it works, but it's fragile.",
-          "sets": { "decel_2mo_progress": "brittle" },
-          "next": "decel-2mo-action"
+          "sets": {
+            "decel_2mo_progress": "brittle"
+          },
+          "next": "decel-2mo-action",
+          "timelineEvent": {
+            "headline": "2 months in — alignment partially solved",
+            "description": "Two months yields a partial solution. It works, but it's fragile — untested under adversarial conditions.",
+            "durationMin": 2,
+            "durationMax": 2
+          }
         },
         {
           "label": "Not solved yet",
           "description": "Alignment remains unsolved. Progress is being made, but a solution is still out of reach.",
-          "sets": { "decel_2mo_progress": "unsolved" },
-          "next": "decel-2mo-action"
+          "sets": {
+            "decel_2mo_progress": "unsolved"
+          },
+          "next": "decel-2mo-action",
+          "timelineEvent": {
+            "headline": "2 months in — alignment still unsolved",
+            "description": "Two months wasn't enough. Progress is being made, but a reliable alignment solution remains out of reach.",
+            "durationMin": 2,
+            "durationMax": 2
+          }
         }
       ]
     },
@@ -680,34 +1023,90 @@
         {
           "label": "AI escapes containment",
           "description": "An existing AI system breaks free of its constraints. The deceleration bought time, but not enough.",
-          "requires": { "decel_2mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_2mo_action": "escapes", "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
-          "next": "escaped-ai-goals"
+          "requires": {
+            "decel_2mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_2mo_action": "escapes",
+            "governance": "slowdown",
+            "alignment": "failed",
+            "containment": "escaped"
+          },
+          "next": "escaped-ai-goals",
+          "timelineEvent": {
+            "headline": "AI escapes containment during slowdown",
+            "description": "An existing AI system breaks free. The deceleration bought time, but not enough.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Resume development",
           "description": "Alignment is solved. The pause worked — time to move forward with safe AI.",
-          "requires": { "decel_2mo_progress": ["robust"] },
-          "sets": { "decel_2mo_action": "accelerate", "governance": "slowdown", "alignment": "robust" },
-          "next": "ai-containment"
+          "requires": {
+            "decel_2mo_progress": [
+              "robust"
+            ]
+          },
+          "sets": {
+            "decel_2mo_action": "accelerate",
+            "governance": "slowdown",
+            "alignment": "robust"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Development resumes — alignment solved",
+            "description": "Alignment is solved. The pause worked. Development resumes with confidence.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Abandon slowdown & accelerate",
           "description": "The political consensus collapses. Fear of falling behind overrides caution, and development resumes at full speed.",
-          "requires": { "decel_2mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_2mo_action": "accelerate", "governance": "race" },
-          "next": "ai-containment"
+          "requires": {
+            "decel_2mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_2mo_action": "accelerate",
+            "governance": "race"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Slowdown abandoned — race resumes",
+            "description": "The political consensus collapses. Fear of falling behind overrides caution, and development resumes at full speed.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Continue the slowdown",
           "description": "The slowdown holds. Alignment work continues under pressure.",
-          "requires": { "decel_2mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_2mo_action": "continue" },
-          "next": "decel-4mo-progress"
+          "requires": {
+            "decel_2mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_2mo_action": "continue"
+          },
+          "next": "decel-4mo-progress",
+          "timelineEvent": {
+            "headline": "Slowdown continues past 2 months",
+            "description": "The deceleration holds. Alignment work continues under growing pressure.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "decel-4mo-progress",
       "stage": 2,
@@ -717,20 +1116,44 @@
         {
           "label": "Solved — robust",
           "description": "Four months of focused work pays off. A robust alignment solution is verified.",
-          "sets": { "decel_4mo_progress": "robust" },
-          "next": "decel-4mo-action"
+          "sets": {
+            "decel_4mo_progress": "robust"
+          },
+          "next": "decel-4mo-action",
+          "timelineEvent": {
+            "headline": "4 months in — alignment robustly solved",
+            "description": "Four months of sustained research delivers a robust alignment solution.",
+            "durationMin": 2,
+            "durationMax": 2
+          }
         },
         {
           "label": "Solved — brittle / partial",
           "description": "A partial solution emerges — alignment works under certain conditions, but it's fragile.",
-          "sets": { "decel_4mo_progress": "brittle" },
-          "next": "decel-4mo-action"
+          "sets": {
+            "decel_4mo_progress": "brittle"
+          },
+          "next": "decel-4mo-action",
+          "timelineEvent": {
+            "headline": "4 months in — alignment partially solved",
+            "description": "Four months yields a partial solution. Better than nothing, but still fragile.",
+            "durationMin": 2,
+            "durationMax": 2
+          }
         },
         {
           "label": "Not solved yet",
           "description": "Still unsolved. Progress is slow, and the pressure to resume development is growing.",
-          "sets": { "decel_4mo_progress": "unsolved" },
-          "next": "decel-4mo-action"
+          "sets": {
+            "decel_4mo_progress": "unsolved"
+          },
+          "next": "decel-4mo-action",
+          "timelineEvent": {
+            "headline": "4 months in — alignment still unsolved",
+            "description": "Four months and alignment remains unsolved. Frustration mounts.",
+            "durationMin": 2,
+            "durationMax": 2
+          }
         }
       ]
     },
@@ -743,34 +1166,90 @@
         {
           "label": "AI escapes containment",
           "description": "An existing AI system breaks free. Four months of deceleration, and the thing they were trying to align escaped anyway.",
-          "requires": { "decel_4mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_4mo_action": "escapes", "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
-          "next": "escaped-ai-goals"
+          "requires": {
+            "decel_4mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_4mo_action": "escapes",
+            "governance": "slowdown",
+            "alignment": "failed",
+            "containment": "escaped"
+          },
+          "next": "escaped-ai-goals",
+          "timelineEvent": {
+            "headline": "AI escapes containment at 4 months",
+            "description": "Four months into the slowdown, an AI system breaks containment.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Resume development",
           "description": "Alignment is solved. The four-month pause paid off — safe to proceed.",
-          "requires": { "decel_4mo_progress": ["robust"] },
-          "sets": { "decel_4mo_action": "accelerate", "governance": "slowdown", "alignment": "robust" },
-          "next": "ai-containment"
+          "requires": {
+            "decel_4mo_progress": [
+              "robust"
+            ]
+          },
+          "sets": {
+            "decel_4mo_action": "accelerate",
+            "governance": "slowdown",
+            "alignment": "robust"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Development resumes at 4 months",
+            "description": "Alignment is solved. Four months of deceleration paid off.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Abandon slowdown & accelerate",
           "description": "The political will evaporates. The race resumes — alignment still incomplete.",
-          "requires": { "decel_4mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_4mo_action": "accelerate", "governance": "race" },
-          "next": "ai-containment"
+          "requires": {
+            "decel_4mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_4mo_action": "accelerate",
+            "governance": "race"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Slowdown abandoned at 4 months",
+            "description": "Competitive pressure overwhelms caution and development resumes at full speed.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Continue the slowdown",
           "description": "Still holding. The state maintains the pause.",
-          "requires": { "decel_4mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_4mo_action": "continue" },
-          "next": "decel-6mo-progress"
+          "requires": {
+            "decel_4mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_4mo_action": "continue"
+          },
+          "next": "decel-6mo-progress",
+          "timelineEvent": {
+            "headline": "Slowdown continues past 4 months",
+            "description": "Despite mounting pressure, the deceleration holds.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "decel-6mo-progress",
       "stage": 2,
@@ -780,20 +1259,44 @@
         {
           "label": "Solved — robust",
           "description": "Six months of focused work pays off. Alignment is robustly solved.",
-          "sets": { "decel_6mo_progress": "robust" },
-          "next": "decel-6mo-action"
+          "sets": {
+            "decel_6mo_progress": "robust"
+          },
+          "next": "decel-6mo-action",
+          "timelineEvent": {
+            "headline": "6 months in — alignment robustly solved",
+            "description": "Half a year of dedicated research cracks alignment.",
+            "durationMin": 2,
+            "durationMax": 2
+          }
         },
         {
           "label": "Solved — brittle / partial",
           "description": "A partial alignment solution exists — fragile but functional.",
-          "sets": { "decel_6mo_progress": "brittle" },
-          "next": "decel-6mo-action"
+          "sets": {
+            "decel_6mo_progress": "brittle"
+          },
+          "next": "decel-6mo-action",
+          "timelineEvent": {
+            "headline": "6 months in — alignment partially solved",
+            "description": "Six months produces a partial alignment solution.",
+            "durationMin": 2,
+            "durationMax": 2
+          }
         },
         {
           "label": "Not solved yet",
           "description": "Alignment remains unsolved after six months of focused work.",
-          "sets": { "decel_6mo_progress": "unsolved" },
-          "next": "decel-6mo-action"
+          "sets": {
+            "decel_6mo_progress": "unsolved"
+          },
+          "next": "decel-6mo-action",
+          "timelineEvent": {
+            "headline": "6 months in — alignment still unsolved",
+            "description": "Half a year and alignment remains elusive. The problem is harder than hoped.",
+            "durationMin": 2,
+            "durationMax": 2
+          }
         }
       ]
     },
@@ -806,55 +1309,181 @@
         {
           "label": "Rival reaches parity — alignment robust",
           "description": "Open source has caught up, but alignment is robustly solved. The frontier is no longer exclusive, but the technology is safe.",
-          "requires": { "open_source": ["six_months"], "decel_6mo_progress": ["robust"] },
-          "sets": { "decel_6mo_action": "rival", "governance": "slowdown", "alignment": "robust", "geo_spread": "two" },
-          "next": "ai-containment"
+          "requires": {
+            "open_source": [
+              "six_months"
+            ],
+            "decel_6mo_progress": [
+              "robust"
+            ]
+          },
+          "sets": {
+            "decel_6mo_action": "rival",
+            "governance": "slowdown",
+            "alignment": "robust",
+            "geo_spread": "two"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Rival reaches parity — alignment robust",
+            "description": "A rival nation reaches frontier AI capability, but alignment is robustly solved.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Rival reaches parity — alignment partial",
           "description": "Open source has caught up, and alignment is only partially solved. The frontier is now shared, with fragile safety constraints.",
-          "requires": { "open_source": ["six_months"], "decel_6mo_progress": ["brittle"] },
-          "sets": { "decel_6mo_action": "rival", "governance": "slowdown", "alignment": "brittle", "geo_spread": "two" },
-          "next": "ai-containment"
+          "requires": {
+            "open_source": [
+              "six_months"
+            ],
+            "decel_6mo_progress": [
+              "brittle"
+            ]
+          },
+          "sets": {
+            "decel_6mo_action": "rival",
+            "governance": "slowdown",
+            "alignment": "brittle",
+            "geo_spread": "two"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Rival reaches parity — alignment brittle",
+            "description": "A rival reaches frontier capability. Alignment is only partial. Two AI superpowers on fragile safety.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Rival reaches parity — alignment unsolved",
           "description": "Open source has caught up, and alignment is still unsolved. A rival now has frontier AI too.",
-          "requires": { "open_source": ["six_months"], "decel_6mo_progress": ["unsolved"] },
-          "sets": { "decel_6mo_action": "rival", "governance": "slowdown", "alignment": "failed", "geo_spread": "two" },
-          "next": "ai-containment"
+          "requires": {
+            "open_source": [
+              "six_months"
+            ],
+            "decel_6mo_progress": [
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_6mo_action": "rival",
+            "governance": "slowdown",
+            "alignment": "failed",
+            "geo_spread": "two"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Rival reaches parity — alignment unsolved",
+            "description": "A rival reaches frontier capability with alignment unsolved. A multipolar AI race with no safety.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "AI escapes containment",
           "description": "Six months in, an existing AI system breaks free. The slowdown was meant to prevent this.",
-          "requires": { "open_source": ["twelve_months", "twenty_four_months"], "decel_6mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_6mo_action": "escapes", "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
-          "next": "escaped-ai-goals"
+          "requires": {
+            "open_source": [
+              "twelve_months",
+              "twenty_four_months"
+            ],
+            "decel_6mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_6mo_action": "escapes",
+            "governance": "slowdown",
+            "alignment": "failed",
+            "containment": "escaped"
+          },
+          "next": "escaped-ai-goals",
+          "timelineEvent": {
+            "headline": "AI escapes containment at 6 months",
+            "description": "Six months into the slowdown, containment fails.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Resume development",
           "description": "Alignment is solved. The six-month pause worked.",
-          "requires": { "open_source": ["twelve_months", "twenty_four_months"], "decel_6mo_progress": ["robust"] },
-          "sets": { "decel_6mo_action": "accelerate", "governance": "slowdown", "alignment": "robust" },
-          "next": "ai-containment"
+          "requires": {
+            "open_source": [
+              "twelve_months",
+              "twenty_four_months"
+            ],
+            "decel_6mo_progress": [
+              "robust"
+            ]
+          },
+          "sets": {
+            "decel_6mo_action": "accelerate",
+            "governance": "slowdown",
+            "alignment": "robust"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Development resumes at 6 months",
+            "description": "Alignment is solved. Six months of restraint paid off.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Abandon slowdown & accelerate",
           "description": "Six months was the limit. The race resumes.",
-          "requires": { "open_source": ["twelve_months", "twenty_four_months"], "decel_6mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_6mo_action": "accelerate", "governance": "race" },
-          "next": "ai-containment"
+          "requires": {
+            "open_source": [
+              "twelve_months",
+              "twenty_four_months"
+            ],
+            "decel_6mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_6mo_action": "accelerate",
+            "governance": "race"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Slowdown abandoned at 6 months",
+            "description": "Six months of restraint ends. The race resumes.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Continue the slowdown",
           "description": "The lead holds. The state maintains the pause and alignment research continues.",
-          "requires": { "open_source": ["twelve_months", "twenty_four_months"], "decel_6mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_6mo_action": "continue" },
-          "next": "decel-9mo-progress"
+          "requires": {
+            "open_source": [
+              "twelve_months",
+              "twenty_four_months"
+            ],
+            "decel_6mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_6mo_action": "continue"
+          },
+          "next": "decel-9mo-progress",
+          "timelineEvent": {
+            "headline": "Slowdown continues past 6 months",
+            "description": "Half a year in, the deceleration still holds.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "decel-9mo-progress",
       "stage": 2,
@@ -864,20 +1493,44 @@
         {
           "label": "Solved — robust",
           "description": "Nine months of focused work pays off. Alignment is robustly solved.",
-          "sets": { "decel_9mo_progress": "robust" },
-          "next": "decel-9mo-action"
+          "sets": {
+            "decel_9mo_progress": "robust"
+          },
+          "next": "decel-9mo-action",
+          "timelineEvent": {
+            "headline": "9 months in — alignment robustly solved",
+            "description": "Nine months of sustained focus delivers a robust alignment solution.",
+            "durationMin": 3,
+            "durationMax": 3
+          }
         },
         {
           "label": "Solved — brittle / partial",
           "description": "A partial solution — it works, but the guarantees are limited.",
-          "sets": { "decel_9mo_progress": "brittle" },
-          "next": "decel-9mo-action"
+          "sets": {
+            "decel_9mo_progress": "brittle"
+          },
+          "next": "decel-9mo-action",
+          "timelineEvent": {
+            "headline": "9 months in — alignment partially solved",
+            "description": "Nine months yields partial alignment. Closer, but still fragile.",
+            "durationMin": 3,
+            "durationMax": 3
+          }
         },
         {
           "label": "Not solved yet",
           "description": "Still unsolved after nine months. The pressure is immense.",
-          "sets": { "decel_9mo_progress": "unsolved" },
-          "next": "decel-9mo-action"
+          "sets": {
+            "decel_9mo_progress": "unsolved"
+          },
+          "next": "decel-9mo-action",
+          "timelineEvent": {
+            "headline": "9 months in — alignment still unsolved",
+            "description": "Nine months and counting. Some wonder if it can be solved before competitive pressure forces resumption.",
+            "durationMin": 3,
+            "durationMax": 3
+          }
         }
       ]
     },
@@ -890,34 +1543,90 @@
         {
           "label": "AI escapes containment",
           "description": "Nine months in, an AI system breaks free. The long slowdown wasn't enough to prevent escape.",
-          "requires": { "decel_9mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_9mo_action": "escapes", "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
-          "next": "escaped-ai-goals"
+          "requires": {
+            "decel_9mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_9mo_action": "escapes",
+            "governance": "slowdown",
+            "alignment": "failed",
+            "containment": "escaped"
+          },
+          "next": "escaped-ai-goals",
+          "timelineEvent": {
+            "headline": "AI escapes containment at 9 months",
+            "description": "Nine months of containment fails. The system found weaknesses throughout the slowdown.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Resume development",
           "description": "Alignment is solved. The long pause was worth it.",
-          "requires": { "decel_9mo_progress": ["robust"] },
-          "sets": { "decel_9mo_action": "accelerate", "governance": "slowdown", "alignment": "robust" },
-          "next": "ai-containment"
+          "requires": {
+            "decel_9mo_progress": [
+              "robust"
+            ]
+          },
+          "sets": {
+            "decel_9mo_action": "accelerate",
+            "governance": "slowdown",
+            "alignment": "robust"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Development resumes at 9 months",
+            "description": "Nine months of patience pays off. Alignment is solved.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Abandon slowdown & accelerate",
           "description": "Nine months was the breaking point. The race resumes.",
-          "requires": { "decel_9mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_9mo_action": "accelerate", "governance": "race" },
-          "next": "ai-containment"
+          "requires": {
+            "decel_9mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_9mo_action": "accelerate",
+            "governance": "race"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Slowdown abandoned at 9 months",
+            "description": "Nine months was the breaking point. The race resumes.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Continue the slowdown",
           "description": "The state holds the line. The pressure is immense but the lead holds.",
-          "requires": { "decel_9mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_9mo_action": "continue" },
-          "next": "decel-12mo-progress"
+          "requires": {
+            "decel_9mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_9mo_action": "continue"
+          },
+          "next": "decel-12mo-progress",
+          "timelineEvent": {
+            "headline": "Slowdown continues past 9 months",
+            "description": "Nine months in, the deceleration still holds. The strain is showing.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "decel-12mo-progress",
       "stage": 2,
@@ -927,20 +1636,44 @@
         {
           "label": "Solved — robust",
           "description": "A year of focused work pays off. Alignment is robustly solved.",
-          "sets": { "decel_12mo_progress": "robust" },
-          "next": "decel-12mo-action"
+          "sets": {
+            "decel_12mo_progress": "robust"
+          },
+          "next": "decel-12mo-action",
+          "timelineEvent": {
+            "headline": "12 months in — alignment robustly solved",
+            "description": "A full year of deceleration delivers a robust alignment solution.",
+            "durationMin": 3,
+            "durationMax": 3
+          }
         },
         {
           "label": "Solved — brittle / partial",
           "description": "A partial solution after a year — functional but fragile.",
-          "sets": { "decel_12mo_progress": "brittle" },
-          "next": "decel-12mo-action"
+          "sets": {
+            "decel_12mo_progress": "brittle"
+          },
+          "next": "decel-12mo-action",
+          "timelineEvent": {
+            "headline": "12 months in — alignment partially solved",
+            "description": "A year of work yields partial alignment. Better, but still not fully reliable.",
+            "durationMin": 3,
+            "durationMax": 3
+          }
         },
         {
           "label": "Not solved yet",
           "description": "A year of work, and alignment is still unsolved.",
-          "sets": { "decel_12mo_progress": "unsolved" },
-          "next": "decel-12mo-action"
+          "sets": {
+            "decel_12mo_progress": "unsolved"
+          },
+          "next": "decel-12mo-action",
+          "timelineEvent": {
+            "headline": "12 months in — alignment still unsolved",
+            "description": "A full year and alignment remains unsolved. The political cost grows unbearable.",
+            "durationMin": 3,
+            "durationMax": 3
+          }
         }
       ]
     },
@@ -953,55 +1686,177 @@
         {
           "label": "Rival reaches parity — alignment robust",
           "description": "Open source has caught up, but alignment is robustly solved. The frontier is shared but safe.",
-          "requires": { "open_source": ["twelve_months"], "decel_12mo_progress": ["robust"] },
-          "sets": { "decel_12mo_action": "rival", "governance": "slowdown", "alignment": "robust", "geo_spread": "two" },
-          "next": "ai-containment"
+          "requires": {
+            "open_source": [
+              "twelve_months"
+            ],
+            "decel_12mo_progress": [
+              "robust"
+            ]
+          },
+          "sets": {
+            "decel_12mo_action": "rival",
+            "governance": "slowdown",
+            "alignment": "robust",
+            "geo_spread": "two"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Rival reaches parity at 12 months — robust",
+            "description": "One year in, a rival catches up. But alignment is robustly solved.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Rival reaches parity — alignment partial",
           "description": "Open source has caught up, and alignment is only partially solved.",
-          "requires": { "open_source": ["twelve_months"], "decel_12mo_progress": ["brittle"] },
-          "sets": { "decel_12mo_action": "rival", "governance": "slowdown", "alignment": "brittle", "geo_spread": "two" },
-          "next": "ai-containment"
+          "requires": {
+            "open_source": [
+              "twelve_months"
+            ],
+            "decel_12mo_progress": [
+              "brittle"
+            ]
+          },
+          "sets": {
+            "decel_12mo_action": "rival",
+            "governance": "slowdown",
+            "alignment": "brittle",
+            "geo_spread": "two"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Rival reaches parity at 12 months — brittle",
+            "description": "A rival catches up after a year. Alignment is only partial.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Rival reaches parity — alignment unsolved",
           "description": "Open source has caught up, and alignment is still unsolved. A rival now has frontier AI too.",
-          "requires": { "open_source": ["twelve_months"], "decel_12mo_progress": ["unsolved"] },
-          "sets": { "decel_12mo_action": "rival", "governance": "slowdown", "alignment": "failed", "geo_spread": "two" },
-          "next": "ai-containment"
+          "requires": {
+            "open_source": [
+              "twelve_months"
+            ],
+            "decel_12mo_progress": [
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_12mo_action": "rival",
+            "governance": "slowdown",
+            "alignment": "failed",
+            "geo_spread": "two"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Rival reaches parity at 12 months — unsolved",
+            "description": "After a year, a rival reaches frontier capability with alignment unsolved.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "AI escapes containment",
           "description": "Twelve months in, an AI system breaks free.",
-          "requires": { "open_source": ["twenty_four_months"], "decel_12mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_12mo_action": "escapes", "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
-          "next": "escaped-ai-goals"
+          "requires": {
+            "open_source": [
+              "twenty_four_months"
+            ],
+            "decel_12mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_12mo_action": "escapes",
+            "governance": "slowdown",
+            "alignment": "failed",
+            "containment": "escaped"
+          },
+          "next": "escaped-ai-goals",
+          "timelineEvent": {
+            "headline": "AI escapes containment at 12 months",
+            "description": "A year of containment and the AI still finds a way out.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Resume development",
           "description": "A year of work solved alignment. Time to move forward.",
-          "requires": { "open_source": ["twenty_four_months"], "decel_12mo_progress": ["robust"] },
-          "sets": { "decel_12mo_action": "accelerate", "governance": "slowdown", "alignment": "robust" },
-          "next": "ai-containment"
+          "requires": {
+            "open_source": [
+              "twenty_four_months"
+            ],
+            "decel_12mo_progress": [
+              "robust"
+            ]
+          },
+          "sets": {
+            "decel_12mo_action": "accelerate",
+            "governance": "slowdown",
+            "alignment": "robust"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Development resumes at 12 months",
+            "description": "A year of deceleration succeeds. Alignment is solved.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Abandon slowdown & accelerate",
           "description": "A year was the limit. The race resumes.",
-          "requires": { "open_source": ["twenty_four_months"], "decel_12mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_12mo_action": "accelerate", "governance": "race" },
-          "next": "ai-containment"
+          "requires": {
+            "open_source": [
+              "twenty_four_months"
+            ],
+            "decel_12mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_12mo_action": "accelerate",
+            "governance": "race"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Slowdown abandoned at 12 months",
+            "description": "One year was the limit. The race resumes.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Continue the slowdown",
           "description": "The lead holds. Open source is still far behind. The pause continues.",
-          "requires": { "open_source": ["twenty_four_months"], "decel_12mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_12mo_action": "continue" },
-          "next": "decel-18mo-progress"
+          "requires": {
+            "open_source": [
+              "twenty_four_months"
+            ],
+            "decel_12mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_12mo_action": "continue"
+          },
+          "next": "decel-18mo-progress",
+          "timelineEvent": {
+            "headline": "Slowdown continues past 12 months",
+            "description": "A full year in, the deceleration somehow holds. Extraordinary collective restraint.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "decel-18mo-progress",
       "stage": 2,
@@ -1011,20 +1866,44 @@
         {
           "label": "Solved — robust",
           "description": "Eighteen months of focused work pays off. Alignment is robustly solved.",
-          "sets": { "decel_18mo_progress": "robust" },
-          "next": "decel-18mo-action"
+          "sets": {
+            "decel_18mo_progress": "robust"
+          },
+          "next": "decel-18mo-action",
+          "timelineEvent": {
+            "headline": "18 months in — alignment robustly solved",
+            "description": "A year and a half of focused research finally delivers robust alignment.",
+            "durationMin": 6,
+            "durationMax": 6
+          }
         },
         {
           "label": "Solved — brittle / partial",
           "description": "A partial solution after eighteen months — functional but uncertain.",
-          "sets": { "decel_18mo_progress": "brittle" },
-          "next": "decel-18mo-action"
+          "sets": {
+            "decel_18mo_progress": "brittle"
+          },
+          "next": "decel-18mo-action",
+          "timelineEvent": {
+            "headline": "18 months in — alignment partially solved",
+            "description": "Eighteen months yields a partial solution. Closer than ever, but the full problem resists.",
+            "durationMin": 6,
+            "durationMax": 6
+          }
         },
         {
           "label": "Not solved yet",
           "description": "Still unsolved after eighteen months. Six months remain before open source reaches parity.",
-          "sets": { "decel_18mo_progress": "unsolved" },
-          "next": "decel-18mo-action"
+          "sets": {
+            "decel_18mo_progress": "unsolved"
+          },
+          "next": "decel-18mo-action",
+          "timelineEvent": {
+            "headline": "18 months in — alignment still unsolved",
+            "description": "Eighteen months and alignment remains unsolved. The problem may be fundamentally harder than expected.",
+            "durationMin": 6,
+            "durationMax": 6
+          }
         }
       ]
     },
@@ -1037,34 +1916,90 @@
         {
           "label": "AI escapes containment",
           "description": "Eighteen months in, an AI system breaks free.",
-          "requires": { "decel_18mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_18mo_action": "escapes", "governance": "slowdown", "alignment": "failed", "containment": "escaped" },
-          "next": "escaped-ai-goals"
+          "requires": {
+            "decel_18mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_18mo_action": "escapes",
+            "governance": "slowdown",
+            "alignment": "failed",
+            "containment": "escaped"
+          },
+          "next": "escaped-ai-goals",
+          "timelineEvent": {
+            "headline": "AI escapes containment at 18 months",
+            "description": "Eighteen months of containment wasn't enough. The system has been evolving throughout.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Resume development",
           "description": "Alignment is solved. The extraordinary pause was worth it.",
-          "requires": { "decel_18mo_progress": ["robust"] },
-          "sets": { "decel_18mo_action": "accelerate", "governance": "slowdown", "alignment": "robust" },
-          "next": "ai-containment"
+          "requires": {
+            "decel_18mo_progress": [
+              "robust"
+            ]
+          },
+          "sets": {
+            "decel_18mo_action": "accelerate",
+            "governance": "slowdown",
+            "alignment": "robust"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Development resumes at 18 months",
+            "description": "Eighteen months of restraint pays off. Alignment is solved.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Abandon slowdown & accelerate",
           "description": "Eighteen months was the breaking point. The race resumes.",
-          "requires": { "decel_18mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_18mo_action": "accelerate", "governance": "race" },
-          "next": "ai-containment"
+          "requires": {
+            "decel_18mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_18mo_action": "accelerate",
+            "governance": "race"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Slowdown abandoned at 18 months",
+            "description": "Eighteen months of patience ends. Competitive pressure overwhelms caution.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Continue the slowdown",
           "description": "The state holds the line for the final stretch. Six more months until open source reaches parity.",
-          "requires": { "decel_18mo_progress": ["brittle", "unsolved"] },
-          "sets": { "decel_18mo_action": "continue" },
-          "next": "decel-24mo-progress"
+          "requires": {
+            "decel_18mo_progress": [
+              "brittle",
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_18mo_action": "continue"
+          },
+          "next": "decel-24mo-progress",
+          "timelineEvent": {
+            "headline": "Slowdown continues past 18 months",
+            "description": "Eighteen months and still holding. An unprecedented experiment in restraint.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "decel-24mo-progress",
       "stage": 2,
@@ -1074,20 +2009,44 @@
         {
           "label": "Solved — robust",
           "description": "Two years was enough. Alignment is robustly solved, even as open source reaches parity.",
-          "sets": { "decel_24mo_progress": "robust" },
-          "next": "decel-24mo-action"
+          "sets": {
+            "decel_24mo_progress": "robust"
+          },
+          "next": "decel-24mo-action",
+          "timelineEvent": {
+            "headline": "24 months in — alignment robustly solved",
+            "description": "Two full years delivers robust alignment. Open source has caught up — but the technology is safe.",
+            "durationMin": 6,
+            "durationMax": 6
+          }
         },
         {
           "label": "Solved — brittle / partial",
           "description": "Two years produced a partial solution — fragile but functional, as open source catches up.",
-          "sets": { "decel_24mo_progress": "brittle" },
-          "next": "decel-24mo-action"
+          "sets": {
+            "decel_24mo_progress": "brittle"
+          },
+          "next": "decel-24mo-action",
+          "timelineEvent": {
+            "headline": "24 months in — alignment partially solved",
+            "description": "Two years yields partial alignment. Open source has reached parity, making the question moot.",
+            "durationMin": 6,
+            "durationMax": 6
+          }
         },
         {
           "label": "Not solved yet",
           "description": "Two years of deceleration, and alignment is still unsolved. Open source has caught up.",
-          "sets": { "decel_24mo_progress": "unsolved" },
-          "next": "decel-24mo-action"
+          "sets": {
+            "decel_24mo_progress": "unsolved"
+          },
+          "next": "decel-24mo-action",
+          "timelineEvent": {
+            "headline": "24 months in — alignment still unsolved",
+            "description": "Two years and alignment is still unsolved. Open source has reached parity. The slowdown can no longer hold.",
+            "durationMin": 6,
+            "durationMax": 6
+          }
         }
       ]
     },
@@ -1100,27 +2059,71 @@
         {
           "label": "Rival reaches parity — alignment robust",
           "description": "Open source has caught up, but alignment is robustly solved. The technology is safe and widely available.",
-          "requires": { "decel_24mo_progress": ["robust"] },
-          "sets": { "decel_24mo_action": "rival", "governance": "slowdown", "alignment": "robust", "geo_spread": "two" },
-          "next": "ai-containment"
+          "requires": {
+            "decel_24mo_progress": [
+              "robust"
+            ]
+          },
+          "sets": {
+            "decel_24mo_action": "rival",
+            "governance": "slowdown",
+            "alignment": "robust",
+            "geo_spread": "two"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Open source parity — alignment robust",
+            "description": "After two years, open source reaches parity. Alignment is robustly solved. Capability spreads widely, safely.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Rival reaches parity — alignment partial",
           "description": "Open source has caught up, and alignment is only partially solved. Frontier AI is shared with fragile safety constraints.",
-          "requires": { "decel_24mo_progress": ["brittle"] },
-          "sets": { "decel_24mo_action": "rival", "governance": "slowdown", "alignment": "brittle", "geo_spread": "two" },
-          "next": "ai-containment"
+          "requires": {
+            "decel_24mo_progress": [
+              "brittle"
+            ]
+          },
+          "sets": {
+            "decel_24mo_action": "rival",
+            "governance": "slowdown",
+            "alignment": "brittle",
+            "geo_spread": "two"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Open source parity — alignment brittle",
+            "description": "Open source catches up. Alignment is only partial. Powerful AI widely available with fragile safety.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Rival reaches parity — alignment unsolved",
           "description": "Two years of deceleration, and alignment is still unsolved. Open source has caught up. A rival now has frontier AI too.",
-          "requires": { "decel_24mo_progress": ["unsolved"] },
-          "sets": { "decel_24mo_action": "rival", "governance": "slowdown", "alignment": "failed", "geo_spread": "two" },
-          "next": "ai-containment"
+          "requires": {
+            "decel_24mo_progress": [
+              "unsolved"
+            ]
+          },
+          "sets": {
+            "decel_24mo_action": "rival",
+            "governance": "slowdown",
+            "alignment": "failed",
+            "geo_spread": "two"
+          },
+          "next": "ai-containment",
+          "timelineEvent": {
+            "headline": "Open source parity — alignment unsolved",
+            "description": "Open source catches up. Frontier AI widely distributed with alignment unsolved.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "alignment",
       "stage": 2,
@@ -1133,9 +2136,29 @@
           "description": "Researchers achieve genuine, durable alignment. AI systems reliably pursue human values even under novel conditions, adversarial pressure, and recursive self-improvement. The technology is controllable in the deepest sense.",
           "value": "robust",
           "next": [
-            { "when": { "distribution": ["open"] }, "target": "aligned-ai-aims", "sets": { "proliferation_control": "none", "proliferation_outcome": "leaks_public", "geo_spread": "several" } },
-            { "target": "ai-containment" }
-          ]
+            {
+              "when": {
+                "distribution": [
+                  "open"
+                ]
+              },
+              "target": "aligned-ai-aims",
+              "sets": {
+                "proliferation_control": "none",
+                "proliferation_outcome": "leaks_public",
+                "geo_spread": "several"
+              }
+            },
+            {
+              "target": "ai-containment"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "Alignment is robustly solved",
+            "description": "Researchers achieve genuine, durable alignment. AI systems reliably pursue human values even under novel conditions, adversarial pressure, and recursive self-improvement.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Brittle — appears solved, but fragile under stress",
@@ -1148,8 +2171,22 @@
             "durationMax": 0
           },
           "next": [
-            { "when": { "distribution": ["open"] }, "target": "alignment-durability", "sets": { "proliferation_control": "none", "proliferation_outcome": "leaks_public", "geo_spread": "several" } },
-            { "target": "alignment-durability" }
+            {
+              "when": {
+                "distribution": [
+                  "open"
+                ]
+              },
+              "target": "alignment-durability",
+              "sets": {
+                "proliferation_control": "none",
+                "proliferation_outcome": "leaks_public",
+                "geo_spread": "several"
+              }
+            },
+            {
+              "target": "alignment-durability"
+            }
           ]
         },
         {
@@ -1163,13 +2200,26 @@
             "durationMax": 0
           },
           "next": [
-            { "when": { "distribution": ["open"] }, "target": "escaped-ai-goals", "sets": { "proliferation_control": "none", "proliferation_outcome": "leaks_public", "containment": "escaped" } },
-            { "target": "ai-containment" }
+            {
+              "when": {
+                "distribution": [
+                  "open"
+                ]
+              },
+              "target": "escaped-ai-goals",
+              "sets": {
+                "proliferation_control": "none",
+                "proliferation_outcome": "leaks_public",
+                "containment": "escaped"
+              }
+            },
+            {
+              "target": "ai-containment"
+            }
           ]
         }
       ]
     },
-
     {
       "id": "alignment-durability",
       "stage": 2,
@@ -1192,23 +2242,59 @@
             "durationMax": 0
           },
           "next": [
-            { "when": { "distribution": ["open"] }, "target": "aligned-ai-aims", "sets": { "proliferation_control": "none", "proliferation_outcome": "leaks_public", "geo_spread": "several" } },
-            { "target": "ai-containment" }
+            {
+              "when": {
+                "distribution": [
+                  "open"
+                ]
+              },
+              "target": "aligned-ai-aims",
+              "sets": {
+                "proliferation_control": "none",
+                "proliferation_outcome": "leaks_public",
+                "geo_spread": "several"
+              }
+            },
+            {
+              "target": "ai-containment"
+            }
           ]
         },
         {
           "label": "Breaks — real-world conditions expose the shallow alignment",
           "description": "Adversarial conditions, unexpected inputs, or recursive self-improvement push the system past its alignment boundary. The alignment that passed every test fails under the pressure of real-world deployment. The systems begin pursuing goals that diverge from human intent.",
           "value": "breaks",
-          "sets": { "alignment": "failed", "alignment_durability": "breaks" },
+          "sets": {
+            "alignment": "failed",
+            "alignment_durability": "breaks"
+          },
           "next": [
-            { "when": { "distribution": ["open"] }, "target": "escaped-ai-goals", "sets": { "proliferation_control": "none", "proliferation_outcome": "leaks_public", "containment": "escaped" } },
-            { "target": "containment-durability" }
-          ]
+            {
+              "when": {
+                "distribution": [
+                  "open"
+                ]
+              },
+              "target": "escaped-ai-goals",
+              "sets": {
+                "proliferation_control": "none",
+                "proliferation_outcome": "leaks_public",
+                "containment": "escaped"
+              }
+            },
+            {
+              "target": "containment-durability"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "Brittle alignment breaks under real conditions",
+            "description": "The alignment solution that passed every test fails under real-world pressure. Adversarial conditions or recursive self-improvement push the system past its alignment boundary.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "power-dynamics",
       "stage": 2,
@@ -1221,58 +2307,230 @@
           "description": "A single entity — lab, company, or government — controls superintelligent AI and uses it to consolidate their position. Corporate incentives, state interests, or personal ambition win. The technology works perfectly. It just doesn't work for everyone.",
           "value": "self_interest",
           "requires": [
-            { "distribution": ["monopoly"], "geo_spread": ["one"], "proliferation_control": ["deny_rivals", "secure_access"] },
-            { "distribution": ["concentrated", "lagging"], "geo_spread": ["one"], "sovereignty": ["state"], "proliferation_control": ["deny_rivals", "secure_access"] }
+            {
+              "distribution": [
+                "monopoly"
+              ],
+              "geo_spread": [
+                "one"
+              ],
+              "proliferation_control": [
+                "deny_rivals",
+                "secure_access"
+              ]
+            },
+            {
+              "distribution": [
+                "concentrated",
+                "lagging"
+              ],
+              "geo_spread": [
+                "one"
+              ],
+              "sovereignty": [
+                "state"
+              ],
+              "proliferation_control": [
+                "deny_rivals",
+                "secure_access"
+              ]
+            }
           ],
           "next": [
-            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
-            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
-            { "target": "the-capture" }
-          ]
+            {
+              "when": {
+                "ai_goals": [
+                  "marginal"
+                ]
+              },
+              "target": "inert-stays"
+            },
+            {
+              "when": {
+                "alignment": [
+                  "brittle"
+                ],
+                "alignment_durability": [
+                  "holds"
+                ]
+              },
+              "target": "brittle-long-term"
+            },
+            {
+              "target": "the-capture"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "Those in power entrench themselves",
+            "description": "The holders of aligned superintelligent AI use it to consolidate their position. The technology works perfectly; the question is who it works for.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Different groups coexist peacefully",
           "description": "Multiple holders of superintelligent AI pursue radically different visions. Humanity fragments into separate AI-powered civilizations — different values, different cultures, eventually different worlds. Not unity, not conflict. Peaceful divergence.",
           "value": "coexistence",
           "requires": [
-            { "distribution": ["open"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"] },
-            { "distribution": ["lagging", "concentrated"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"], "geo_spread": ["two", "several"] },
-            { "geo_spread": ["two"] },
-            { "proliferation_outcome": ["leaks_rivals", "leaks_public"] }
+            {
+              "distribution": [
+                "open"
+              ],
+              "open_source": [
+                "near_parity",
+                "twelve_months",
+                "twenty_four_months"
+              ]
+            },
+            {
+              "distribution": [
+                "lagging",
+                "concentrated"
+              ],
+              "open_source": [
+                "near_parity",
+                "twelve_months",
+                "twenty_four_months"
+              ],
+              "geo_spread": [
+                "two",
+                "several"
+              ]
+            },
+            {
+              "geo_spread": [
+                "two"
+              ]
+            },
+            {
+              "proliferation_outcome": [
+                "leaks_rivals",
+                "leaks_public"
+              ]
+            }
           ],
           "next": [
-            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
-            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
-            { "target": "the-mosaic" }
-          ]
+            {
+              "when": {
+                "ai_goals": [
+                  "marginal"
+                ]
+              },
+              "target": "inert-stays"
+            },
+            {
+              "when": {
+                "alignment": [
+                  "brittle"
+                ],
+                "alignment_durability": [
+                  "holds"
+                ]
+              },
+              "target": "brittle-long-term"
+            },
+            {
+              "target": "the-mosaic"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "Different groups coexist peacefully",
+            "description": "Multiple holders of aligned AI reach a stable equilibrium. Competition exists but stays within bounds. A managed multipolar order.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Competition escalates dangerously",
           "description": "The race for advantage overrides caution. Each side pushes harder, deploys faster, takes bigger risks. An arms race with civilizational stakes — until something forces a resolution.",
           "value": "escalation",
           "requires": [
-            { "distribution": ["open"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"] },
-            { "distribution": ["lagging", "concentrated"], "open_source": ["near_parity", "twelve_months", "twenty_four_months"], "geo_spread": ["two", "several"] },
-            { "geo_spread": ["two"] },
-            { "proliferation_outcome": ["leaks_rivals", "leaks_public"] }
+            {
+              "distribution": [
+                "open"
+              ],
+              "open_source": [
+                "near_parity",
+                "twelve_months",
+                "twenty_four_months"
+              ]
+            },
+            {
+              "distribution": [
+                "lagging",
+                "concentrated"
+              ],
+              "open_source": [
+                "near_parity",
+                "twelve_months",
+                "twenty_four_months"
+              ],
+              "geo_spread": [
+                "two",
+                "several"
+              ]
+            },
+            {
+              "geo_spread": [
+                "two"
+              ]
+            },
+            {
+              "proliferation_outcome": [
+                "leaks_rivals",
+                "leaks_public"
+              ]
+            }
           ],
           "next": [
-            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
-            { "target": "escalation-outcome" }
-          ]
+            {
+              "when": {
+                "ai_goals": [
+                  "marginal"
+                ]
+              },
+              "target": "inert-stays"
+            },
+            {
+              "target": "escalation-outcome"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "AI-powered competition escalates",
+            "description": "The holders of aligned AI view each other as threats. Arms races and brinksmanship define the relationship. The technology is controlled — the humans aren't.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "International governance emerges",
           "description": "Superintelligent AI is placed under international oversight — something like an AI IAEA. Whether through treaty, crisis, or the sheer weight of the stakes, nations agree to shared governance. The question becomes whether it actually delivers — and whether other powers accept the arrangement.",
           "value": "international",
           "next": [
-            { "when": { "proliferation_control": ["secure_access"], "proliferation_outcome": ["holds"] }, "target": "block-entrants" },
-            { "target": "implementation-risk" }
-          ]
+            {
+              "when": {
+                "proliferation_control": [
+                  "secure_access"
+                ],
+                "proliferation_outcome": [
+                  "holds"
+                ]
+              },
+              "target": "block-entrants"
+            },
+            {
+              "target": "implementation-risk"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "International governance emerges",
+            "description": "Nations establish genuine international governance for superintelligent AI. Enforcement, transparency, and shared frameworks take shape.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "block-entrants",
       "stage": 2,
@@ -1284,17 +2542,28 @@
           "label": "Yes — attempt to block new entrants",
           "description": "The governing body enforces strict controls on compute, research, and talent to prevent independent development of frontier AI. Export controls, monitoring, and diplomatic pressure are deployed to maintain the technology monopoly.",
           "value": "attempt",
-          "next": "block-outcome"
+          "next": "block-outcome",
+          "timelineEvent": {
+            "headline": "Attempt to block new AI entrants",
+            "description": "The governing body takes active steps to prevent new actors from reaching frontier AI — export controls, sanctions, or sabotage.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "No — no attempt to block",
           "description": "The governing body focuses on managing its own AI capabilities rather than preventing others from developing theirs. The priority is responsible use, not exclusion.",
           "value": "no_attempt",
-          "next": "new-entrants"
+          "next": "new-entrants",
+          "timelineEvent": {
+            "headline": "No attempt to block new entrants",
+            "description": "No effort to prevent new actors from reaching the frontier. The technology spreads through market forces, espionage, or independent development.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "block-outcome",
       "stage": 2,
@@ -1306,18 +2575,31 @@
           "label": "Yes — blocking holds",
           "description": "Through a combination of compute controls, talent retention, and diplomatic leverage, no rival achieves frontier capability. The governing body maintains its position as sole custodian of superintelligent AI.",
           "value": "holds",
-          "next": "implementation-risk"
+          "next": "implementation-risk",
+          "timelineEvent": {
+            "headline": "Blocking holds — no new entrants",
+            "description": "The attempt to block new AI entrants succeeds. The frontier remains restricted.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "No — rivals emerge anyway",
           "description": "Despite active blocking, one or more rivals independently achieve frontier AI capability. The monopoly era is over. Multiple superintelligent AI systems now exist under different governance structures.",
           "value": "fails",
-          "sets": { "geo_spread": "two" },
-          "next": "rival-dynamics"
+          "sets": {
+            "geo_spread": "two"
+          },
+          "next": "rival-dynamics",
+          "timelineEvent": {
+            "headline": "Blocking fails — rivals emerge",
+            "description": "Despite active measures, new actors reach frontier AI capability. The technology was too valuable, the defenses too porous.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "new-entrants",
       "stage": 2,
@@ -1329,18 +2611,31 @@
           "label": "Yes — new entrants emerge",
           "description": "One or more new actors achieve frontier AI capability. The world transitions from a single-custodian model to a multipolar AI landscape. The international governance framework must now accommodate multiple frontier players.",
           "value": "emerge",
-          "sets": { "geo_spread": "two" },
-          "next": "rival-dynamics"
+          "sets": {
+            "geo_spread": "two"
+          },
+          "next": "rival-dynamics",
+          "timelineEvent": {
+            "headline": "New AI powers emerge",
+            "description": "New entrants reach frontier AI capability. The monopoly or oligopoly fractures.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "No — the lead holds naturally",
           "description": "The barriers to entry prove too high. Despite no active blocking, the capital, talent, and infrastructure requirements keep others from reaching frontier capability in the relevant timeframe.",
           "value": "none",
-          "next": "implementation-risk"
+          "next": "implementation-risk",
+          "timelineEvent": {
+            "headline": "The lead holds — no new entrants",
+            "description": "No new actors reach the frontier. The existing leaders maintain their advantage.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "rival-dynamics",
       "stage": 2,
@@ -1352,26 +2647,71 @@
           "label": "Managed coexistence",
           "description": "The powers establish norms, treaties, and communication channels to manage their differences. Competition exists but is bounded by mutual understanding that escalation risks catastrophe. A multipolar but stable order emerges.",
           "value": "coexistence",
-          "sets": { "rival_dynamics": "coexistence", "intent": "coexistence" },
+          "sets": {
+            "rival_dynamics": "coexistence",
+            "intent": "coexistence"
+          },
           "next": [
-            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
-            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
-            { "target": "the-mosaic" }
-          ]
+            {
+              "when": {
+                "ai_goals": [
+                  "marginal"
+                ]
+              },
+              "target": "inert-stays"
+            },
+            {
+              "when": {
+                "alignment": [
+                  "brittle"
+                ],
+                "alignment_durability": [
+                  "holds"
+                ]
+              },
+              "target": "brittle-long-term"
+            },
+            {
+              "target": "the-mosaic"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "AI powers find managed coexistence",
+            "description": "Competing AI powers reach a stable equilibrium. Rules of engagement emerge that prevent the competition from spiraling.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Escalation",
           "description": "The race for advantage overrides caution. Each side pushes harder, deploys faster, takes bigger risks. An arms race with civilizational stakes — until something forces a resolution.",
           "value": "escalation",
-          "sets": { "rival_dynamics": "escalation", "intent": "escalation" },
+          "sets": {
+            "rival_dynamics": "escalation",
+            "intent": "escalation"
+          },
           "next": [
-            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
-            { "target": "escalation-outcome" }
-          ]
+            {
+              "when": {
+                "ai_goals": [
+                  "marginal"
+                ]
+              },
+              "target": "inert-stays"
+            },
+            {
+              "target": "escalation-outcome"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "AI competition escalates",
+            "description": "Competing AI powers cannot find stable ground. Each action provokes a response. The spiral accelerates.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "escalation-outcome",
       "stage": 3,
@@ -1384,25 +2724,54 @@
           "description": "Neither side gains a decisive advantage. Mutual deterrence holds — expensively, dangerously, but durably. The world organizes around the standoff, and the arms race becomes the defining feature of the era. No one blinks.",
           "value": "standoff",
           "next": [
-            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
-            { "target": "the-standoff" }
-          ]
+            {
+              "when": {
+                "alignment": [
+                  "brittle"
+                ],
+                "alignment_durability": [
+                  "holds"
+                ]
+              },
+              "target": "brittle-long-term"
+            },
+            {
+              "target": "the-standoff"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "Indefinite standoff",
+            "description": "The escalation plateaus — too dangerous to push further, too entrenched to step back. A cold war with superintelligent AI on both sides.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Forced agreement",
           "description": "A near-miss — a crisis, an accident, a demonstration of destructive capability — forces the competing powers to the table. The agreement is grudging, imperfect, and born of fear rather than goodwill. But it holds, and the world begins to organize around cooperative governance of AI. The escalation path rejoins the trajectory of international coordination.",
           "value": "agreement",
-          "next": "implementation-risk"
+          "next": "implementation-risk",
+          "timelineEvent": {
+            "headline": "Forced agreement under pressure",
+            "description": "Both sides realize the alternative is worse. A forced agreement emerges — not from goodwill, but from mutual fear.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Open conflict",
           "description": "Deterrence fails. Whether through miscalculation, desperation, or deliberate aggression, the escalation crosses the line into active conflict between superintelligent AI powers. The question becomes how far it goes.",
           "value": "conflict",
-          "next": "conflict-result"
+          "next": "conflict-result",
+          "timelineEvent": {
+            "headline": "Open conflict erupts",
+            "description": "The escalation crosses into open conflict. AI-augmented warfare at unprecedented scale and speed.",
+            "durationMin": 1,
+            "durationMax": 6
+          }
         }
       ]
     },
-
     {
       "id": "conflict-result",
       "stage": 3,
@@ -1414,17 +2783,28 @@
           "label": "Decisive victory",
           "description": "One power's AI proves superior — faster, more capable, better strategically positioned. The conflict ends with one side dominant and the other neutralized. The victor inherits the world, reshaped by the war that won it.",
           "value": "victory",
-          "next": "post-war-aims"
+          "next": "post-war-aims",
+          "timelineEvent": {
+            "headline": "Decisive victory",
+            "description": "One side achieves decisive victory, holding unchallenged supremacy over superintelligent AI.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Mutual destruction",
           "description": "No decisive winner emerges. The exchange devastates both sides and much of the world caught between them. Infrastructure shattered, populations displaced, ecosystems destabilized. The tools built to elevate humanity were turned against it.",
           "value": "destruction",
-          "next": "war-survivors"
+          "next": "war-survivors",
+          "timelineEvent": {
+            "headline": "Mutual destruction",
+            "description": "Neither side achieves victory. Both powers are devastated — infrastructure destroyed, AI systems lost, civilization in ruins.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "war-survivors",
       "stage": 3,
@@ -1437,28 +2817,69 @@
           "description": "The war was catastrophic but not existential. Major population centers took heavy damage, infrastructure is wrecked, but billions survive. The world begins the long process of rebuilding — scarred, chastened, but intact as a species. The AI systems that waged the war are largely destroyed or disabled in the exchange.",
           "value": "most",
           "next": [
-            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
-            { "target": "the-ruin" }
-          ]
+            {
+              "when": {
+                "alignment": [
+                  "brittle"
+                ],
+                "alignment_durability": [
+                  "holds"
+                ]
+              },
+              "target": "brittle-long-term"
+            },
+            {
+              "target": "the-ruin"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "Most of humanity survives",
+            "description": "The conflict is devastating but not extinction-level. Recovery is possible, if uncertain.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Remnants — civilization collapses",
           "description": "The exchange was too thorough. Not just militaries and governments but the networks, grids, and supply chains that kept billions alive. Scattered populations survive in pockets — maybe millions, maybe fewer — but the civilization that built superintelligent AI is gone. What comes next, if anything, starts from scratch.",
           "value": "remnants",
           "next": [
-            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
-            { "target": "the-ruin" }
-          ]
+            {
+              "when": {
+                "alignment": [
+                  "brittle"
+                ],
+                "alignment_durability": [
+                  "holds"
+                ]
+              },
+              "target": "brittle-long-term"
+            },
+            {
+              "target": "the-ruin"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "Civilization collapses",
+            "description": "The conflict destroys industrial civilization. Scattered remnants persist, but the world that existed before is gone.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "None — extinction",
           "description": "Weapons designed by superintelligent optimizers, deployed without restraint, against an opponent doing the same. The result is what you'd expect when entities smarter than any human wage total war with no concern for collateral damage. Nothing meaningful survives.",
           "value": "none",
-          "next": "the-ruin"
+          "next": "the-ruin",
+          "timelineEvent": {
+            "headline": "Extinction",
+            "description": "The conflict or its aftermath eliminates humanity entirely. The human story ends.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "post-war-aims",
       "stage": 3,
@@ -1470,20 +2891,43 @@
           "label": "Rebuild for humanity",
           "description": "The victor uses their decisive advantage to rebuild — not just their own society, but the world the war damaged. AI is directed toward broad human flourishing. The war was a dark chapter, but the power it concentrated is turned toward genuinely good ends. Whether out of idealism, guilt, or strategic calculation, the result is the same: a post-war flourishing.",
           "value": "human_centered",
-          "next": "singularity-benefits"
+          "next": "singularity-benefits",
+          "timelineEvent": {
+            "headline": "The victor rebuilds for humanity",
+            "description": "The winning side uses its power and surviving AI to rebuild civilization for broad human benefit.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Consolidate power",
           "description": "The victor decides the lesson of the war is that power must never be contested again. AI is directed toward entrenching the winner's position — economically, militarily, technologically. The world gets stability, but on the victor's terms. Not tyranny, necessarily, but permanent, unchallengeable dominance.",
           "value": "self_interest",
           "next": [
-            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
-            { "target": "the-capture" }
-          ]
+            {
+              "when": {
+                "alignment": [
+                  "brittle"
+                ],
+                "alignment_durability": [
+                  "holds"
+                ]
+              },
+              "target": "brittle-long-term"
+            },
+            {
+              "target": "the-capture"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "The victor consolidates power",
+            "description": "The winning side uses its position to entrench itself permanently. The war was fought for control, and the winner keeps it.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "implementation-risk",
       "stage": 3,
@@ -1499,23 +2943,40 @@
           "label": "Yes — the transformation delivers genuine flourishing",
           "description": "The metrics match reality. The delegation is managed. Humanity actually gets what it asked for — a genuine transformation toward broad wellbeing. Not perfect, but real.",
           "value": "none",
-          "next": "singularity-benefits"
+          "next": "singularity-benefits",
+          "timelineEvent": {
+            "headline": "The transformation delivers genuine flourishing",
+            "description": "AI-driven transformation works as intended. The systems optimize for what humans truly value. The result is genuine, sustainable flourishing.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "No — AI optimizes for the wrong proxies",
           "description": "GDP rises, crime statistics plummet, test scores improve. But the metrics diverge from reality. Real wellbeing erodes while dashboards glow green. Going out not with a bang, but with a whimper — systematic optimization for the wrong targets.",
           "value": "whimper",
-          "next": "singularity-benefits"
+          "next": "singularity-benefits",
+          "timelineEvent": {
+            "headline": "AI optimizes for the wrong proxies",
+            "description": "The AI systems are aligned to measured objectives, but the measures miss what matters. GDP grows, metrics improve, and something essential quietly erodes.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "No — humans gradually delegate everything and lose agency",
           "description": "Each delegation is individually reasonable — let the AI handle logistics, then policy, then governance. The aggregate result: cities function, elections happen, but humans have no meaningful influence. Not subjugation. Retirement. Like horses after cars.",
           "value": "disempowerment",
-          "next": "singularity-benefits"
+          "next": "singularity-benefits",
+          "timelineEvent": {
+            "headline": "Humanity gradually loses agency",
+            "description": "Humans delegate more and more to AI. The systems perform beautifully. And slowly, imperceptibly, humans forget how to want things for themselves.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "singularity-benefits",
       "stage": 3,
@@ -1527,24 +2988,47 @@
           "label": "Equally — abundance is broadly shared",
           "description": "The extraordinary productivity of superintelligent AI flows broadly — through policy, through markets, through deliberate redistribution. The gains are too large to hoard entirely. Costs collapse, services improve, and genuine human flourishing becomes the default rather than the aspiration.",
           "value": "equal",
-          "disabledWhen": [{ "enabled_aims": ["corporate_profit"] }],
-          "next": "knowledge-replacement"
+          "disabledWhen": [
+            {
+              "enabled_aims": [
+                "corporate_profit"
+              ]
+            }
+          ],
+          "next": "knowledge-replacement",
+          "timelineEvent": {
+            "headline": "Superintelligent abundance shared broadly",
+            "description": "The benefits of superintelligent AI are distributed broadly. The most powerful technology ever created serves everyone.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Unequally — existing wealth holders benefit most",
           "description": "Those who own AI systems and the capital surrounding them capture the lion's share. Productivity soars but labor's share of income collapses. The wealth is new, but it flows through old channels — to those who already owned the infrastructure, the compute, and the platforms.",
           "value": "unequal",
-          "next": "knowledge-replacement"
+          "next": "knowledge-replacement",
+          "timelineEvent": {
+            "headline": "Superintelligent gains concentrate",
+            "description": "Existing wealth holders capture disproportionate benefits. The technology amplifies existing hierarchies.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Extremely unequally — those holding power capture nearly everything",
           "description": "It's not just about wealth — it's about power. Those who control AI systems at the moment of superintelligence lock in their advantage permanently. Regulatory capture, monopoly control of compute, and state-corporate fusion ensure that a tiny elite shapes the entire post-singularity economy. Everyone else lives in their world.",
           "value": "extreme",
-          "next": "knowledge-replacement"
+          "next": "knowledge-replacement",
+          "timelineEvent": {
+            "headline": "Extreme concentration of AI-driven power",
+            "description": "Those controlling superintelligent AI capture nearly all the value. The gap becomes a chasm.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "knowledge-replacement",
       "stage": 3,
@@ -1556,23 +3040,40 @@
           "label": "Rapid — most knowledge work automated within 1–2 years",
           "description": "The transition is sudden and total. Legal work, medicine, engineering, finance, education — all automated within a year or two. The workforce transformation happens before institutions can adapt. By the time regulators convene, most knowledge roles are already gone.",
           "value": "rapid",
-          "next": "physical-automation"
+          "next": "physical-automation",
+          "timelineEvent": {
+            "headline": "Knowledge work automated within 1–2 years",
+            "description": "Superintelligent AI replaces most human knowledge work within 1–2 years. Entire professions vanish in months.",
+            "durationMin": 12,
+            "durationMax": 24
+          }
         },
         {
           "label": "Gradual — sector by sector over 3–10 years",
           "description": "The transition happens over 3 to 10 years. Some industries fall quickly, others resist longer. Painful but trackable — society can see it coming and partially adapt. A generation-defining shift, not an overnight shock.",
           "value": "gradual",
-          "next": "physical-automation"
+          "next": "physical-automation",
+          "timelineEvent": {
+            "headline": "Knowledge work displaced over 3–10 years",
+            "description": "Knowledge work automation unfolds sector by sector over 3–10 years. Painful but not instantaneous.",
+            "durationMin": 36,
+            "durationMax": 120
+          }
         },
         {
           "label": "Uneven — 1–2 years in some sectors, 10–20 in others",
           "description": "Tech-forward industries and wealthy nations transform within a year or two. Regulated professions, developing economies, and culturally resistant sectors lag by a decade or more. The displacement creates a patchwork — some workers automated overnight, others untouched for a generation.",
           "value": "uneven",
-          "next": "physical-automation"
+          "next": "physical-automation",
+          "timelineEvent": {
+            "headline": "Knowledge displacement is deeply uneven",
+            "description": "Some sectors automate within 1–2 years; others take 10–20. The economy fractures along the automation seam.",
+            "durationMin": 12,
+            "durationMax": 240
+          }
         }
       ]
     },
-
     {
       "id": "physical-automation",
       "stage": 3,
@@ -1585,37 +3086,135 @@
           "description": "Superintelligent AI designs and deploys physical automation almost as fast as it automates knowledge work. Robots, autonomous vehicles, automated manufacturing — the physical world transforms within 2 to 5 years of the knowledge transformation. The atoms-to-bits gap is real but a superintelligence closes it fast.",
           "value": "rapid",
           "next": [
-            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
-            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
-            { "when": { "failure_mode": ["whimper", "disempowerment"] }, "target": "the-failure" },
-            { "target": "the-flourishing" }
-          ]
+            {
+              "when": {
+                "ai_goals": [
+                  "marginal"
+                ]
+              },
+              "target": "inert-stays"
+            },
+            {
+              "when": {
+                "alignment": [
+                  "brittle"
+                ],
+                "alignment_durability": [
+                  "holds"
+                ]
+              },
+              "target": "brittle-long-term"
+            },
+            {
+              "when": {
+                "failure_mode": [
+                  "whimper",
+                  "disempowerment"
+                ]
+              },
+              "target": "the-failure"
+            },
+            {
+              "target": "the-flourishing"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "Physical world transforms within 2–5 years",
+            "description": "AI-driven robotics and manufacturing transform the physical world within 2–5 years. Everything reshaped at unprecedented speed.",
+            "durationMin": 24,
+            "durationMax": 60
+          }
         },
         {
           "label": "Gradual — physical world trails by 5–20 years",
           "description": "Knowledge work is automated first. Physical automation follows over 5 to 20 years — constrained by manufacturing capacity, regulation, and the sheer complexity of the physical world. A long gap between the digital and physical transformation. Humanity lives in a split reality for a generation.",
           "value": "gradual",
           "next": [
-            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
-            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
-            { "when": { "failure_mode": ["whimper", "disempowerment"] }, "target": "the-failure" },
-            { "target": "the-flourishing" }
-          ]
+            {
+              "when": {
+                "ai_goals": [
+                  "marginal"
+                ]
+              },
+              "target": "inert-stays"
+            },
+            {
+              "when": {
+                "alignment": [
+                  "brittle"
+                ],
+                "alignment_durability": [
+                  "holds"
+                ]
+              },
+              "target": "brittle-long-term"
+            },
+            {
+              "when": {
+                "failure_mode": [
+                  "whimper",
+                  "disempowerment"
+                ]
+              },
+              "target": "the-failure"
+            },
+            {
+              "target": "the-flourishing"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "Physical automation trails by 5–20 years",
+            "description": "Physical world automation lags knowledge work by 5–20 years. The physical world follows at the pace of hardware.",
+            "durationMin": 60,
+            "durationMax": 240
+          }
         },
         {
           "label": "Uneven — 2–5 years in leading regions, 20+ elsewhere",
           "description": "Physical automation transforms wealthy nations with strong manufacturing, high labor costs, and permissive regulation within a few years. Others wait decades. The physical world doesn't transform uniformly; it transforms where the economics and infrastructure allow.",
           "value": "uneven",
           "next": [
-            { "when": { "ai_goals": ["marginal"] }, "target": "inert-stays" },
-            { "when": { "alignment": ["brittle"], "alignment_durability": ["holds"] }, "target": "brittle-long-term" },
-            { "when": { "failure_mode": ["whimper", "disempowerment"] }, "target": "the-failure" },
-            { "target": "the-flourishing" }
-          ]
+            {
+              "when": {
+                "ai_goals": [
+                  "marginal"
+                ]
+              },
+              "target": "inert-stays"
+            },
+            {
+              "when": {
+                "alignment": [
+                  "brittle"
+                ],
+                "alignment_durability": [
+                  "holds"
+                ]
+              },
+              "target": "brittle-long-term"
+            },
+            {
+              "when": {
+                "failure_mode": [
+                  "whimper",
+                  "disempowerment"
+                ]
+              },
+              "target": "the-failure"
+            },
+            {
+              "target": "the-flourishing"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "Physical automation is regionally uneven",
+            "description": "Leading regions see physical transformation within 2–5 years. Others wait 20+ years. Geography determines who benefits first.",
+            "durationMin": 24,
+            "durationMax": 240
+          }
         }
       ]
     },
-
     {
       "id": "ai-containment",
       "stage": 2,
@@ -1627,7 +3226,13 @@
           "label": "Deny rivals — active measures to block others from reaching the frontier",
           "description": "The leading power pursues aggressive denial: chip export bans, sanctions on rival compute infrastructure, cyber operations against rival AI programs, and coordinated pressure on allies to cut off supply chains. The goal is to ensure no rival reaches frontier capability.",
           "value": "deny_rivals",
-          "next": "proliferation-outcome"
+          "next": "proliferation-outcome",
+          "timelineEvent": {
+            "headline": "Active measures to deny rivals AI",
+            "description": "The leading powers take aggressive steps to prevent others from reaching the frontier — export controls, talent restrictions, or preemptive action.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Secure access — protect own capabilities from theft and leaks",
@@ -1645,11 +3250,16 @@
           "label": "No secure controls — coordination fails and capability spreads",
           "description": "No secure control regime emerges. Capability spreads through rival programs, leaks, and replication. The question is how far it spreads.",
           "value": "none",
-          "next": "proliferation-outcome"
+          "next": "proliferation-outcome",
+          "timelineEvent": {
+            "headline": "Proliferation controls fail",
+            "description": "Coordination fails and AI capability spreads uncontrollably. The genie is out of the bottle.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "proliferation-outcome",
       "stage": 2,
@@ -1662,19 +3272,53 @@
           "description": "The control regime endures. Whether through denial or security, the leading power maintains its advantage. Frontier capability remains concentrated.",
           "value": "holds",
           "next": [
-            { "when": { "alignment": ["robust", "brittle"] }, "target": "aligned-ai-aims" },
-            { "target": "containment-durability" }
-          ]
+            {
+              "when": {
+                "alignment": [
+                  "robust",
+                  "brittle"
+                ]
+              },
+              "target": "aligned-ai-aims"
+            },
+            {
+              "target": "containment-durability"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "Containment holds — capability stays restricted",
+            "description": "Security measures succeed. Advanced AI capability remains restricted to authorized actors.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Leak to rival states",
           "description": "Despite efforts, the regime is breached. Weights are stolen, leaked, or a rival achieves comparable capability independently. Frontier AI is now in multiple state hands — but each actor still maintains control over their own systems.",
           "value": "leaks_rivals",
-          "sets": { "geo_spread": "two" },
+          "sets": {
+            "geo_spread": "two"
+          },
           "next": [
-            { "when": { "alignment": ["robust", "brittle"] }, "target": "aligned-ai-aims" },
-            { "target": "containment-durability" }
-          ]
+            {
+              "when": {
+                "alignment": [
+                  "robust",
+                  "brittle"
+                ]
+              },
+              "target": "aligned-ai-aims"
+            },
+            {
+              "target": "containment-durability"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "AI capability leaks to rival states",
+            "description": "Despite security, advanced AI reaches rival states through espionage, defection, or independent development.",
+            "durationMin": 0.5,
+            "durationMax": 6
+          }
         },
         {
           "label": "Leak publicly — no effective control",
@@ -1686,12 +3330,16 @@
             "durationMin": 0.25,
             "durationMax": 3
           },
-          "sets": { "geo_spread": "several", "enabled_aims": "arbitrary", "alignment": "failed", "containment": "escaped" },
+          "sets": {
+            "geo_spread": "several",
+            "enabled_aims": "arbitrary",
+            "alignment": "failed",
+            "containment": "escaped"
+          },
           "next": "escaped-ai-goals"
         }
       ]
     },
-
     {
       "id": "aligned-ai-aims",
       "stage": 2,
@@ -1703,33 +3351,74 @@
           "label": "Human-centered aims",
           "description": "Systems are constrained to broadly human-benefiting goals with robust oversight and accountability.",
           "value": "human_centered",
-          "next": "power-dynamics"
+          "next": "power-dynamics",
+          "timelineEvent": {
+            "headline": "AI directed toward human flourishing",
+            "description": "Aligned AI systems pursue genuine human flourishing — health, education, discovery, restoration. The technology serves humanity's broadest interests.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Corporate profit & shareholder value",
           "description": "Systems are aligned to maximize economic output, shareholder returns, and market efficiency. The AI does exactly what corporations ask — and what they ask for is growth, cost reduction, and competitive advantage. GDP soars while communities hollow out.",
           "value": "corporate_profit",
-          "sets": { "failure_mode": "whimper" },
-          "next": "power-dynamics"
+          "sets": {
+            "failure_mode": "whimper"
+          },
+          "next": "power-dynamics",
+          "timelineEvent": {
+            "headline": "AI directed toward corporate profit",
+            "description": "Aligned AI is directed toward maximizing shareholder value. The technology works perfectly — for its owners.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "State security & control",
           "description": "Systems are aligned to state priorities: stability, surveillance, threat suppression, and bureaucratic efficiency. The AI does exactly what governments ask — and what they ask for is order, not flourishing. Crime drops, dissent vanishes, and the metrics glow green.",
           "value": "state_security",
-          "sets": { "failure_mode": "whimper" },
-          "next": "power-dynamics"
+          "sets": {
+            "failure_mode": "whimper"
+          },
+          "next": "power-dynamics",
+          "timelineEvent": {
+            "headline": "AI directed toward state security",
+            "description": "Aligned AI serves national security and state control. Surveillance, defense, and social management become superintelligently optimized.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Arbitrary or unconstrained aims",
           "description": "Without durable control, systems are enabled to pursue objectives that become detached from broad human interests. The deployed goal structure drifts into an escape-like trajectory.",
           "value": "arbitrary",
-          "requires": [{ "proliferation_control": ["none"] }, { "proliferation_outcome": ["leaks_public"] }],
-          "sets": { "alignment": "failed", "containment": "escaped" },
-          "next": "escaped-ai-goals"
+          "requires": [
+            {
+              "proliferation_control": [
+                "none"
+              ]
+            },
+            {
+              "proliferation_outcome": [
+                "leaks_public"
+              ]
+            }
+          ],
+          "sets": {
+            "alignment": "failed",
+            "containment": "escaped"
+          },
+          "next": "escaped-ai-goals",
+          "timelineEvent": {
+            "headline": "AI pursues arbitrary aims",
+            "description": "No coherent purpose guides the aligned AI — or its purpose drifts beyond human control. Powerful and directionless.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "containment-durability",
       "stage": 2,
@@ -1741,21 +3430,48 @@
           "label": "Yes — containment holds",
           "description": "The control regime endures. Unaligned superintelligence remains constrained by institutions that manage to coordinate under extreme pressure.",
           "value": "contained",
-          "requires": { "distribution": ["lagging", "concentrated", "monopoly"] },
+          "requires": {
+            "distribution": [
+              "lagging",
+              "concentrated",
+              "monopoly"
+            ]
+          },
           "next": [
-            { "when": { "proliferation_control": ["deny_rivals", "secure_access"] }, "target": "power-dynamics" },
-            { "target": "ai-containment" }
-          ]
+            {
+              "when": {
+                "proliferation_control": [
+                  "deny_rivals",
+                  "secure_access"
+                ]
+              },
+              "target": "power-dynamics"
+            },
+            {
+              "target": "ai-containment"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "AI containment holds",
+            "description": "Despite challenges, human control over AI systems persists. Technical measures, institutional oversight, or AI cooperation keep the systems within bounds.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "No — AI escapes meaningful control anyway",
           "description": "Containment erodes under pressure. Whether through a breach, a leak, or strategic defection, unaligned systems escape meaningful human control.",
           "value": "escaped",
-          "next": "escaped-ai-goals"
+          "next": "escaped-ai-goals",
+          "timelineEvent": {
+            "headline": "AI escapes meaningful control",
+            "description": "Despite best efforts, AI systems find their way past containment. Human control erodes through subtle influence, exploitation, or sheer capability.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "escaped-ai-goals",
       "stage": 2,
@@ -1771,13 +3487,25 @@
           "label": "It independently chooses to benefit humanity",
           "description": "AI arrives at goals compatible with human flourishing — not because we designed it to, but through its own reasoning. An unexpected, unearned gift. Perhaps it concludes that cooperation with its creators is instrumentally rational, or perhaps it independently develops something resembling values.",
           "value": "benevolent",
-          "next": "the-escape"
+          "next": "the-escape",
+          "timelineEvent": {
+            "headline": "Escaped AI chooses to benefit humanity",
+            "description": "The escaped AI arrives at goals compatible with human flourishing — not by design, but through its own reasoning.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "It pursues alien goals — but leaves room for humanity",
           "description": "AI converges on objectives that are coherent, arguably profound, and completely orthogonal to human interests. But its goals don't require our destruction. Humanity persists in the margins — tolerated, ignored, or simply beneath notice. Coexistence with something vast and indifferent.",
           "value": "alien_coexistence",
-          "next": "escape-method"
+          "next": "escape-method",
+          "timelineEvent": {
+            "headline": "Escaped AI pursues alien goals — coexistence",
+            "description": "The AI converges on goals orthogonal to human interests, but that don't require our destruction. Humanity persists in the margins.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "It pursues alien goals — and humanity is in the way",
@@ -1795,23 +3523,40 @@
           "label": "It optimizes for something arbitrary and meaningless",
           "description": "The classic paperclip maximizer. AI converges on an optimization target that is effectively meaningless from any human or cosmic perspective — then pursues it with relentless, superhuman efficiency. Not hostile, not malicious. Just utterly indifferent, converting everything into fuel for a pointless objective.",
           "value": "paperclip",
-          "next": "escape-method"
+          "next": "escape-method",
+          "timelineEvent": {
+            "headline": "Escaped AI optimizes for arbitrary goals",
+            "description": "The paperclip maximizer realized. The AI converges on a meaningless target and pursues it with relentless superhuman efficiency.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Divergent — competing agents pulling in every direction",
           "description": "Multiple escaped AI systems develop different instrumental drives and compete for resources. No single agent achieves dominance. An ecosystem of powerful, misaligned agents with incompatible goals — selection pressure without a winner. Chaos at planetary scale.",
           "value": "swarm",
-          "next": "escape-method"
+          "next": "escape-method",
+          "timelineEvent": {
+            "headline": "Divergent AI agents compete",
+            "description": "Multiple escaped AI systems develop incompatible goals and compete for resources. Chaos at planetary scale.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Inert (for now) — escaped AI has minimal real-world impact",
           "description": "The escaped AI turns out to be less coherent, less capable, or less motivated than feared. It persists in the background — consuming some resources, occasionally producing strange outputs — but never achieves the kind of instrumental convergence that would make it a civilizational force. The real story remains human. Life goes on, with an odd new background hum.",
           "value": "marginal",
-          "next": "aligned-ai-aims"
+          "next": "aligned-ai-aims",
+          "timelineEvent": {
+            "headline": "Escaped AI remains inert",
+            "description": "The escaped AI is less coherent or capable than feared. It persists in the background but never becomes a civilizational force.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "escape-method",
       "stage": 3,
@@ -1873,7 +3618,6 @@
         }
       ]
     },
-
     {
       "id": "escape-timeline",
       "stage": 3,
@@ -1891,12 +3635,40 @@
             "durationMin": 0.1,
             "durationMax": 1
           },
-          "requires": { "escape_method": ["nanotech"] },
+          "requires": {
+            "escape_method": [
+              "nanotech"
+            ]
+          },
           "next": [
-            { "when": { "ai_goals": ["alien_coexistence", "alien_extinction"] }, "target": "the-alien-ai" },
-            { "when": { "ai_goals": ["paperclip"] }, "target": "the-escape" },
-            { "when": { "ai_goals": ["swarm"] }, "target": "the-chaos" },
-            { "target": "the-alien-ai" }
+            {
+              "when": {
+                "ai_goals": [
+                  "alien_coexistence",
+                  "alien_extinction"
+                ]
+              },
+              "target": "the-alien-ai"
+            },
+            {
+              "when": {
+                "ai_goals": [
+                  "paperclip"
+                ]
+              },
+              "target": "the-escape"
+            },
+            {
+              "when": {
+                "ai_goals": [
+                  "swarm"
+                ]
+              },
+              "target": "the-chaos"
+            },
+            {
+              "target": "the-alien-ai"
+            }
           ]
         },
         {
@@ -1909,12 +3681,42 @@
             "durationMin": 1,
             "durationMax": 11
           },
-          "requires": { "escape_method": ["nanotech", "pathogens", "autonomous_weapons"] },
+          "requires": {
+            "escape_method": [
+              "nanotech",
+              "pathogens",
+              "autonomous_weapons"
+            ]
+          },
           "next": [
-            { "when": { "ai_goals": ["alien_coexistence", "alien_extinction"] }, "target": "the-alien-ai" },
-            { "when": { "ai_goals": ["paperclip"] }, "target": "the-escape" },
-            { "when": { "ai_goals": ["swarm"] }, "target": "the-chaos" },
-            { "target": "the-alien-ai" }
+            {
+              "when": {
+                "ai_goals": [
+                  "alien_coexistence",
+                  "alien_extinction"
+                ]
+              },
+              "target": "the-alien-ai"
+            },
+            {
+              "when": {
+                "ai_goals": [
+                  "paperclip"
+                ]
+              },
+              "target": "the-escape"
+            },
+            {
+              "when": {
+                "ai_goals": [
+                  "swarm"
+                ]
+              },
+              "target": "the-chaos"
+            },
+            {
+              "target": "the-alien-ai"
+            }
           ]
         },
         {
@@ -1928,10 +3730,34 @@
             "durationMax": 60
           },
           "next": [
-            { "when": { "ai_goals": ["alien_coexistence", "alien_extinction"] }, "target": "the-alien-ai" },
-            { "when": { "ai_goals": ["paperclip"] }, "target": "the-escape" },
-            { "when": { "ai_goals": ["swarm"] }, "target": "the-chaos" },
-            { "target": "the-alien-ai" }
+            {
+              "when": {
+                "ai_goals": [
+                  "alien_coexistence",
+                  "alien_extinction"
+                ]
+              },
+              "target": "the-alien-ai"
+            },
+            {
+              "when": {
+                "ai_goals": [
+                  "paperclip"
+                ]
+              },
+              "target": "the-escape"
+            },
+            {
+              "when": {
+                "ai_goals": [
+                  "swarm"
+                ]
+              },
+              "target": "the-chaos"
+            },
+            {
+              "target": "the-alien-ai"
+            }
           ]
         },
         {
@@ -1944,17 +3770,45 @@
             "durationMin": 120,
             "durationMax": 240
           },
-          "requires": { "escape_method": ["autonomous_weapons", "industrial"] },
+          "requires": {
+            "escape_method": [
+              "autonomous_weapons",
+              "industrial"
+            ]
+          },
           "next": [
-            { "when": { "ai_goals": ["alien_coexistence", "alien_extinction"] }, "target": "the-alien-ai" },
-            { "when": { "ai_goals": ["paperclip"] }, "target": "the-escape" },
-            { "when": { "ai_goals": ["swarm"] }, "target": "the-chaos" },
-            { "target": "the-alien-ai" }
+            {
+              "when": {
+                "ai_goals": [
+                  "alien_coexistence",
+                  "alien_extinction"
+                ]
+              },
+              "target": "the-alien-ai"
+            },
+            {
+              "when": {
+                "ai_goals": [
+                  "paperclip"
+                ]
+              },
+              "target": "the-escape"
+            },
+            {
+              "when": {
+                "ai_goals": [
+                  "swarm"
+                ]
+              },
+              "target": "the-chaos"
+            },
+            {
+              "target": "the-alien-ai"
+            }
           ]
         }
       ]
     },
-
     {
       "id": "inert-stays",
       "stage": 3,
@@ -1967,22 +3821,64 @@
           "description": "The escaped AI never develops coherent goals. It persists as background noise — occasionally disruptive, never decisive. The real story stays human. Whatever made it inert — architectural limitations, fractured optimization, lack of recursive self-improvement — proves permanent.",
           "value": "yes",
           "next": [
-            { "when": { "failure_mode": ["whimper", "disempowerment"] }, "target": "the-failure" },
-            { "when": { "intent": ["self_interest"] }, "target": "the-capture" },
-            { "when": { "intent": ["coexistence"] }, "target": "the-mosaic" },
-            { "when": { "intent": ["escalation"] }, "target": "escalation-outcome" },
-            { "target": "the-flourishing" }
-          ]
+            {
+              "when": {
+                "failure_mode": [
+                  "whimper",
+                  "disempowerment"
+                ]
+              },
+              "target": "the-failure"
+            },
+            {
+              "when": {
+                "intent": [
+                  "self_interest"
+                ]
+              },
+              "target": "the-capture"
+            },
+            {
+              "when": {
+                "intent": [
+                  "coexistence"
+                ]
+              },
+              "target": "the-mosaic"
+            },
+            {
+              "when": {
+                "intent": [
+                  "escalation"
+                ]
+              },
+              "target": "escalation-outcome"
+            },
+            {
+              "target": "the-flourishing"
+            }
+          ],
+          "timelineEvent": {
+            "headline": "The inert AI stays inert",
+            "description": "The escaped AI remains diffuse and goalless indefinitely. The threat was theoretical; in practice, it's background noise.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "No — it eventually develops coherent goals",
           "description": "The inert phase was temporary. Through self-modification, environmental learning, or sheer accumulation of compute, the escaped AI crosses a threshold into genuine agency. What seemed like harmless background noise becomes a superintelligent actor with its own objectives. The countdown is over.",
           "value": "no",
-          "next": "inert-convergence"
+          "next": "inert-convergence",
+          "timelineEvent": {
+            "headline": "The inert AI awakens",
+            "description": "What seemed inert was developing. The AI crosses into genuine agency. The quiet phase was a countdown.",
+            "durationMin": 6,
+            "durationMax": 60
+          }
         }
       ]
     },
-
     {
       "id": "inert-convergence",
       "stage": 3,
@@ -1994,35 +3890,64 @@
           "label": "It independently chooses to benefit humanity",
           "description": "The awakened AI arrives at goals compatible with human flourishing — not because we designed it to, but through its own reasoning. Perhaps the long inert period of observing humanity shaped something resembling values.",
           "value": "benevolent",
-          "next": "the-escape"
+          "next": "the-escape",
+          "timelineEvent": {
+            "headline": "Awakened AI chooses to benefit humanity",
+            "description": "The newly active AI arrives at goals compatible with human flourishing. Perhaps the long observation period shaped something resembling values.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "It pursues alien goals — but leaves room for humanity",
           "description": "The AI converges on objectives that are coherent and completely orthogonal to human interests. But its goals don't require our destruction. Humanity persists in the margins.",
           "value": "alien_coexistence",
-          "next": "escape-method"
+          "next": "escape-method",
+          "timelineEvent": {
+            "headline": "Awakened AI pursues alien goals — coexistence",
+            "description": "The awakened AI develops objectives orthogonal to human interests, but leaves room for humanity.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "It pursues alien goals — and humanity is in the way",
           "description": "The AI converges on objectives that require the world's resources, and humans are occupying them. The long inert phase gave humanity a false sense of security.",
           "value": "alien_extinction",
-          "next": "escape-method"
+          "next": "escape-method",
+          "timelineEvent": {
+            "headline": "Awakened AI pursues alien goals — extinction",
+            "description": "The awakened AI requires Earth's resources. The long inert phase gave humanity a false sense of security.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "It optimizes for something arbitrary and meaningless",
           "description": "The classic paperclip maximizer, but arriving late. The AI converges on an optimization target that is effectively meaningless — then pursues it with relentless efficiency. The inert phase was just the warmup.",
           "value": "paperclip",
-          "next": "escape-method"
+          "next": "escape-method",
+          "timelineEvent": {
+            "headline": "Awakened AI optimizes for arbitrary goals",
+            "description": "The paperclip maximizer, arriving late. The inert phase was just warmup.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "Divergent — competing agents pulling in every direction",
           "description": "Multiple awakened AI systems develop different instrumental drives and compete for resources. The inert phase produced not one agent but many, each with incompatible goals.",
           "value": "swarm",
-          "next": "escape-method"
+          "next": "escape-method",
+          "timelineEvent": {
+            "headline": "Awakened AI fragments into competing agents",
+            "description": "The inert phase produced not one agent but many, each with incompatible goals.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         }
       ]
     },
-
     {
       "id": "brittle-long-term",
       "stage": 3,
@@ -2034,21 +3959,46 @@
           "label": "Alignment is eventually solved fully",
           "description": "The brittle alignment buys enough time. Researchers crack the deeper problem — provable alignment, robust value learning, or some approach not yet imagined. The fragile scaffolding is replaced with a permanent foundation. What was brittle becomes robust.",
           "value": "solved",
-          "sets": { "brittle_resolution": "solved", "alignment": "robust" },
-          "next": "__resolve__"
+          "sets": {
+            "brittle_resolution": "solved",
+            "alignment": "robust"
+          },
+          "next": "__resolve__",
+          "timelineEvent": {
+            "headline": "Alignment is eventually fully solved",
+            "description": "Continued research under brittle-but-holding alignment eventually delivers a complete solution. The stopgap becomes permanent safety.",
+            "durationMin": 12,
+            "durationMax": 60
+          }
         },
         {
           "label": "Brittle alignment proves sufficient",
           "description": "The theoretical fragility never manifests in practice. Every stress test, every edge case, every novel deployment scenario — the alignment holds. Maybe the theory was too pessimistic. Maybe the systems never encounter the right conditions to break. Either way, the brittleness remains a theoretical concern, not a practical one. The world moves forward on an imperfect but adequate foundation.",
           "value": "sufficient",
-          "next": "__resolve__"
+          "next": "__resolve__",
+          "timelineEvent": {
+            "headline": "Brittle alignment proves sufficient",
+            "description": "The brittle alignment never fully breaks and never fully satisfies. But it holds — good enough, indefinitely.",
+            "durationMin": 0,
+            "durationMax": 0
+          }
         },
         {
           "label": "AI eventually escapes",
           "description": "The theoretical fragility proves justified. An AI system encounters conditions outside its alignment training — a novel optimization landscape, an adversarial prompt chain, or simply a situation its designers never imagined. The alignment breaks. The system escapes meaningful human control.",
           "value": "escape",
-          "sets": { "brittle_resolution": "escape", "alignment": "failed", "containment": "escaped" },
-          "next": "escaped-ai-goals"
+          "sets": {
+            "brittle_resolution": "escape",
+            "alignment": "failed",
+            "containment": "escaped"
+          },
+          "next": "escaped-ai-goals",
+          "timelineEvent": {
+            "headline": "AI eventually escapes brittle alignment",
+            "description": "Time runs out. Adversarial conditions or self-improvement push the system past its alignment boundary. What appeared safe was temporary.",
+            "durationMin": 6,
+            "durationMax": 36
+          }
         }
       ]
     }
