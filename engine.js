@@ -340,91 +340,18 @@ function getRenderAfter(sel, dim) {
 }
 
 // ════════════════════════════════════════════════════════
-// Path helpers (shared between story mode and engine)
-// ════════════════════════════════════════════════════════
-
-function collectStepDims(question, answer) {
-    const dims = {};
-    if (answer.value !== undefined && question.dimension) dims[question.dimension] = answer.value;
-    if (answer.sets) Object.assign(dims, answer.sets);
-    return dims;
-}
-
-function resolveConditionalNext(nextSpec, dims) {
-    if (typeof nextSpec === 'string') return { target: nextSpec };
-    if (!Array.isArray(nextSpec)) return null;
-    for (const route of nextSpec) {
-        if (!route.when) return { target: route.target, sets: route.sets };
-        const match = Object.entries(route.when).every(([k, allowed]) =>
-            dims[k] && allowed.includes(dims[k]));
-        if (match) return { target: route.target, sets: route.sets };
-    }
-    return null;
-}
-
-function answerVisible(answer, dims) {
-    if (answer.disabledWhen) {
-        const dSets = Array.isArray(answer.disabledWhen) ? answer.disabledWhen : [answer.disabledWhen];
-        for (const conds of dSets) {
-            if (Object.entries(conds).every(([dim, vals]) => {
-                const allowed = Array.isArray(vals) ? vals : [vals];
-                return dims[dim] && allowed.includes(dims[dim]);
-            })) return false;
-        }
-    }
-    if (!answer.requires) return true;
-    const condSets = Array.isArray(answer.requires) ? answer.requires : [answer.requires];
-    return condSets.some(conds => {
-        for (const [dim, allowed] of Object.entries(conds)) {
-            if (!dims[dim] || !allowed.includes(dims[dim])) return false;
-        }
-        return true;
-    });
-}
-
-// ════════════════════════════════════════════════════════
-// Path-based game tree navigation
-// ════════════════════════════════════════════════════════
-
-function replayPath(questionsMap, rootId, path) {
-    let curId = rootId;
-    const dims = {};
-    for (let i = 0; i < path.length; i++) {
-        const step = path[i];
-        if (step.questionId !== curId) return { ok: false, failIndex: i, dims, nextId: curId };
-        const q = questionsMap[curId];
-        if (!q) return { ok: false, failIndex: i, dims, nextId: curId };
-        const a = q.answers[step.answerIndex];
-        if (!a) return { ok: false, failIndex: i, dims, nextId: curId };
-        if (!answerVisible(a, dims)) return { ok: false, failIndex: i, dims, nextId: curId };
-        const stepDims = collectStepDims(q, a);
-        Object.assign(dims, stepDims);
-        const res = resolveConditionalNext(a.next, dims);
-        if (res && res.sets) Object.assign(dims, res.sets);
-        curId = res ? res.target : null;
-    }
-    return { ok: true, dims, nextId: curId };
-}
-
-// ════════════════════════════════════════════════════════
 // Exports
 // ════════════════════════════════════════════════════════
-
-const pathExports = {
-    collectStepDims, resolveConditionalNext, answerVisible, replayPath
-};
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { DIMENSIONS, DIM_MAP,
         matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimLocked, isValueDisabled,
-        cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch, getRenderAfter,
-        ...pathExports };
+        cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch, getRenderAfter };
 }
 if (typeof window !== 'undefined') {
     window.Engine = { DIMENSIONS, DIM_MAP,
         matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimLocked, isValueDisabled,
-        cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch, getRenderAfter,
-        ...pathExports };
+        cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch, getRenderAfter };
 }
 
 })();

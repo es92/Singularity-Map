@@ -17,12 +17,9 @@ const {
     cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch, getRenderAfter
 } = require('./engine.js');
 
-const questions = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/questions.json'), 'utf8'));
 const outcomes = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/outcomes.json'), 'utf8'));
 const templatesList = outcomes.templates;
 
-const qMap = {};
-for (const q of questions.questions) qMap[q.id] = q;
 const oMap = {};
 for (const t of templatesList) oMap[t.id] = t;
 
@@ -34,37 +31,43 @@ for (const t of templatesList) oMap[t.id] = t;
 function runStaticAnalysis() {
     const errors = [];
 
-    // 1. Routing completeness
-    function collectNextTargets(nextSpec) {
-        if (typeof nextSpec === 'string') return [nextSpec];
-        if (Array.isArray(nextSpec)) return nextSpec.map(r => r.target);
-        return [];
+    const metaDims = new Set(DIMENSIONS.map(d => d.id));
+
+    // 1. Dimension structure validation
+    for (const dim of DIMENSIONS) {
+        if (!dim.id) errors.push(`[structure] Dimension missing id`);
+        if (!dim.values || dim.values.length === 0) {
+            errors.push(`[structure] Dimension "${dim.id}" has no values`);
+        }
+        if (dim.activateWhen) {
+            for (const cond of dim.activateWhen) {
+                for (const [k] of Object.entries(cond)) {
+                    if (k.startsWith('_')) continue;
+                    if (!metaDims.has(k)) {
+                        errors.push(`[structure] Dimension "${dim.id}" activateWhen references unknown dimension "${k}"`);
+                    }
+                }
+            }
+        }
     }
 
-    for (const q of questions.questions) {
-        for (const a of q.answers) {
-            if (!a.next) {
-                if (a.next !== '__resolve__') {
-                    errors.push(`[routing] Question "${q.id}" answer "${a.label}" has no 'next' property`);
-                }
-                continue;
-            }
-            const targets = collectNextTargets(a.next);
-            for (const t of targets) {
-                if (!qMap[t] && !oMap[t] && t !== '__resolve__') {
-                    errors.push(`[routing] Question "${q.id}" answer "${a.label}" → target "${t}" not found in questions or outcomes`);
-                }
-            }
-            if (Array.isArray(a.next)) {
-                const hasFallback = a.next.some(r => !r.when);
-                if (!hasFallback) {
-                    errors.push(`[routing] Question "${q.id}" answer "${a.label}" has conditional next with no fallback entry`);
-                }
-                for (const route of a.next) {
-                    if (route.when) {
-                        for (const [dim] of Object.entries(route.when)) {
-                            if (!DIM_MAP[dim]) {
-                                errors.push(`[routing] Question "${q.id}" answer "${a.label}" conditional when references unknown dimension "${dim}"`);
+    // 2. Requires validation on dimension values
+    for (const dim of DIMENSIONS) {
+        if (!dim.values) continue;
+        for (const v of dim.values) {
+            if (!v.requires) continue;
+            const condSets = Array.isArray(v.requires) ? v.requires : [v.requires];
+            for (const conds of condSets) {
+                for (const [dk, vals] of Object.entries(conds)) {
+                    if (!metaDims.has(dk)) {
+                        errors.push(`[requires] Dimension "${dim.id}" value "${v.id}" requires unknown dimension "${dk}"`);
+                    }
+                    if (DIM_MAP[dk]) {
+                        const validIds = new Set(DIM_MAP[dk].values.map(vv => vv.id));
+                        const arr = Array.isArray(vals) ? vals : [vals];
+                        for (const vv of arr) {
+                            if (!validIds.has(vv)) {
+                                errors.push(`[requires] Dimension "${dim.id}" value "${v.id}" requires unknown value "${dk}=${vv}"`);
                             }
                         }
                     }
@@ -73,90 +76,7 @@ function runStaticAnalysis() {
         }
     }
 
-    // 2. Reachability (BFS from root)
-    const reachedNodes = new Set();
-    const bfsQueue = [questions.questions[0].id];
-    while (bfsQueue.length) {
-        const nodeId = bfsQueue.shift();
-        if (reachedNodes.has(nodeId)) continue;
-        reachedNodes.add(nodeId);
-        if (oMap[nodeId] || !qMap[nodeId]) continue;
-        const q = qMap[nodeId];
-        for (const a of q.answers) {
-            for (const t of collectNextTargets(a.next)) {
-                if (!reachedNodes.has(t)) bfsQueue.push(t);
-            }
-        }
-    }
-
-    for (const t of templatesList) {
-        if (!reachedNodes.has(t.id)) {
-            errors.push(`[reachability] Outcome "${t.id}" (${t.title}) is never reached from the question tree`);
-        }
-    }
-    for (const q of questions.questions) {
-        if (!reachedNodes.has(q.id)) {
-            errors.push(`[reachability] Question "${q.id}" is never reached from the question tree`);
-        }
-    }
-
-    // 3. Dimension consistency
-    const questionDims = new Set();
-    const questionDimValues = {};
-    for (const q of questions.questions) {
-        if (q.dimension) {
-            questionDims.add(q.dimension);
-            if (!questionDimValues[q.dimension]) questionDimValues[q.dimension] = new Set();
-        }
-        for (const a of q.answers) {
-            if (a.value !== undefined && q.dimension) questionDimValues[q.dimension].add(a.value);
-            if (a.sets) {
-                for (const [k, v] of Object.entries(a.sets)) {
-                    questionDims.add(k);
-                    if (!questionDimValues[k]) questionDimValues[k] = new Set();
-                    questionDimValues[k].add(v);
-                }
-            }
-            if (Array.isArray(a.next)) {
-                for (const route of a.next) {
-                    if (route.sets) {
-                        for (const [k, v] of Object.entries(route.sets)) {
-                            questionDims.add(k);
-                            if (!questionDimValues[k]) questionDimValues[k] = new Set();
-                            questionDimValues[k].add(v);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    const metaDims = new Set(DIMENSIONS.map(d => d.id));
-
-    for (const dim of questionDims) {
-        if (!metaDims.has(dim)) {
-            errors.push(`[consistency] Dimension "${dim}" is set in questions.json but not defined in DIMENSIONS`);
-        }
-    }
-    for (const dim of DIMENSIONS) {
-        if (dim.virtual) continue;
-        if (!questionDims.has(dim.id)) {
-            errors.push(`[consistency] Dimension "${dim.id}" is in DIMENSIONS but never set by any question`);
-        }
-    }
-
-    for (const dim of DIMENSIONS) {
-        if (dim.virtual) continue;
-        const qVals = questionDimValues[dim.id] || new Set();
-        for (const v of dim.values) {
-            if (!qVals.has(v.id)) {
-                const key = `${dim.id}.${v.id}`;
-                errors.push(`[consistency] DIMENSIONS value "${key}" never appears in any question answer`);
-            }
-        }
-    }
-
-    // 4. Override dependency / circular detection
+    // 3. Override dependency / circular detection
     const overrideDeps = {};
     for (const dim of DIMENSIONS) {
         if (!dim.overrides) continue;
@@ -199,23 +119,14 @@ function runStaticAnalysis() {
         }
     }
 
-    // 5. Requires validation
-    for (const q of questions.questions) {
-        for (const a of q.answers) {
-            if (!a.requires) continue;
-            const condSets = Array.isArray(a.requires) ? a.requires : [a.requires];
-            for (const conds of condSets) {
-                for (const [dim, vals] of Object.entries(conds)) {
-                    if (!metaDims.has(dim) && !DIM_MAP[dim]) {
-                        errors.push(`[requires] Question "${q.id}" answer "${a.label}" requires unknown dimension "${dim}"`);
-                    }
-                    if (DIM_MAP[dim]) {
-                        const validIds = new Set(DIM_MAP[dim].values.map(v => v.id));
-                        for (const v of vals) {
-                            if (!validIds.has(v)) {
-                                errors.push(`[requires] Question "${q.id}" answer "${a.label}" requires unknown value "${dim}=${v}"`);
-                            }
-                        }
+    // 4. Outcome template dimension references
+    for (const t of templatesList) {
+        if (t.reachable) {
+            const condList = Array.isArray(t.reachable) ? t.reachable : [t.reachable];
+            for (const cond of condList) {
+                for (const [dk] of Object.entries(cond)) {
+                    if (!metaDims.has(dk)) {
+                        errors.push(`[outcome] Template "${t.id}" reachable references unknown dimension "${dk}"`);
                     }
                 }
             }
@@ -734,7 +645,7 @@ if (arg === 'sample') {
 
 console.log('Singularity Map — Validation Report');
 console.log('═'.repeat(50));
-console.log(`${questions.questions.length} questions, ${templatesList.length} outcomes, ${DIMENSIONS.length} dimensions\n`);
+console.log(`${DIMENSIONS.filter(d => !d.virtual && !d.terminal).length} non-virtual dimensions, ${templatesList.length} outcomes, ${DIMENSIONS.length} total dimensions\n`);
 
 // Phase 1
 const t0 = Date.now();

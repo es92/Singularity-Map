@@ -1,6 +1,5 @@
-// Singularity Map — Dimension definitions
-// Pure declarative data: the graph of dimensions, their values, and rules.
-// No functions — just the structure that the engine interprets.
+// Singularity Map — Dimension definitions (structural graph)
+// Narrative content lives in data/narrative.json and is merged at runtime.
 
 (function() {
 
@@ -9,9 +8,12 @@ const SCENARIO = {
     title: 'Singularity Map',
     description: 'Navigate the branching futures of artificial intelligence.',
     storageKey: 'singularity-map-discovered',
-    stageNames: { 1: 'Dynamics of Singularity', 2: 'Dynamics of Control', 3: 'Rate of Impact' },
     hideConditions: [
-        { flag: 'hideAfterEscape', when: { _set: ['ai_goals'], _rawNot: { ai_goals: ['marginal', 'benevolent'] }, _eff: { alignment: ['failed'] } } },
+        { flag: 'hideAfterEscape', when: {
+          _set: ['ai_goals'],
+          _rawNot: { ai_goals: ['marginal', 'benevolent'] },
+          _eff: { alignment: ['failed'] }
+        } },
     ],
 };
 
@@ -27,100 +29,172 @@ const DECEL_PAIRS = [
 
 const DIMENSIONS = [
     { id: 'capability', label: 'AI Scaling', stage: 1, forwardKey: true,
-      overrides: [
-        { when: { stall_recovery: 'mild' }, value: 'singularity' },
+      narrativeSteps: [
+        { groups: [{ values: ['singularity'] }, { values: ['hours', 'days', 'weeks', 'months'] }] },
+        {}
       ],
+      overrides: [{ when: { stall_recovery: 'mild' }, value: 'singularity' }],
       values: [
-        { id: 'singularity', label: 'Trend continues' }, { id: 'hours', label: 'Stalls: hours' },
-        { id: 'days', label: 'Stalls: days' }, { id: 'weeks', label: 'Stalls: weeks' },
-        { id: 'months', label: 'Stalls: months' } ] },
+        { id: 'singularity', label: 'Trend continues' },
+        { id: 'hours', label: 'Stalls: hours' },
+        { id: 'days', label: 'Stalls: days' },
+        { id: 'weeks', label: 'Stalls: weeks' },
+        { id: 'months', label: 'Stalls: months' }
+      ] },
     { id: 'stall_recovery', label: 'Recovery?', stage: 1,
       activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'] }],
       useRawFor: ['capability'],
       values: [
-        { id: 'mild', label: 'Months/years' }, { id: 'substantial', label: 'Years/decades' }, { id: 'never', label: 'Never' } ] },
+        { id: 'mild', label: 'Months/years' },
+        { id: 'substantial', label: 'Years/decades' },
+        { id: 'never', label: 'Never' }
+      ] },
     { id: 'plateau_benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
       activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }],
       values: [
-        { id: 'equal', label: 'Shared equally' }, { id: 'unequal', label: 'Wealth concentrates' },
-        { id: 'extreme', label: 'Power concentrates' } ] },
+        { id: 'equal', label: 'Shared equally' },
+        { id: 'unequal', label: 'Wealth concentrates' },
+        { id: 'extreme', label: 'Power concentrates' }
+      ] },
     { id: 'plateau_knowledge_rate', label: 'Knowledge Work', stage: 3, terminal: true,
       activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }],
       values: [
         { id: 'rapid', label: 'Rapid (2–5 yrs)', requires: { capability: ['weeks', 'months'] } },
-        { id: 'gradual', label: 'Gradual (5–15 yrs)', requires: { capability: ['days', 'weeks', 'months'] } },
+        {
+          id: 'gradual',
+          label: 'Gradual (5–15 yrs)',
+          requires: { capability: ['days', 'weeks', 'months'] }
+        },
         { id: 'uneven', label: 'Uneven (2–20+ yrs)' },
-        { id: 'limited', label: 'Limited', requires: { capability: ['hours', 'days'] } } ] },
+        { id: 'limited', label: 'Limited', requires: { capability: ['hours', 'days'] } }
+      ] },
     { id: 'plateau_physical_rate', label: 'Physical Automation', stage: 3, terminal: true,
       activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }],
       values: [
-        { id: 'gradual', label: 'Gradual (10–25 yrs)', requires: { capability: ['days', 'weeks', 'months'] } },
+        {
+          id: 'gradual',
+          label: 'Gradual (10–25 yrs)',
+          requires: { capability: ['days', 'weeks', 'months'] }
+        },
         { id: 'uneven', label: 'Uneven (5–20+ yrs)' },
-        { id: 'limited', label: 'Limited' } ] },
+        { id: 'limited', label: 'Limited' }
+      ] },
     { id: 'automation', label: 'Knowledge Work', stage: 1, forwardKey: true,
       activateWhen: [{ capability: ['singularity'] }],
-      overrides: [
-        { when: { automation_recovery: 'mild' }, value: 'deep' },
-      ],
-      values: [
-        { id: 'deep', label: 'Automates broadly' }, { id: 'shallow', label: 'Routine only' } ] },
+      overrides: [{ when: { automation_recovery: 'mild' }, value: 'deep' }],
+      values: [ { id: 'deep', label: 'Automates broadly' }, { id: 'shallow', label: 'Routine only' } ] },
     { id: 'automation_recovery', label: 'Deep Automation Recovery?', stage: 1,
       activateWhen: [{ capability: ['singularity'], automation: ['shallow'] }],
       useRawFor: ['automation'],
       values: [
-        { id: 'mild', label: 'Months/years' }, { id: 'substantial', label: 'Years/decades' }, { id: 'never', label: 'Never' } ] },
+        { id: 'mild', label: 'Months/years' },
+        { id: 'substantial', label: 'Years/decades' },
+        { id: 'never', label: 'Never' }
+      ] },
     { id: 'auto_benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
-      activateWhen: [{ capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }],
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['shallow'],
+          automation_recovery: ['substantial', 'never']
+        }
+      ],
       values: [
-        { id: 'equal', label: 'Shared equally' }, { id: 'unequal', label: 'Wealth concentrates' },
-        { id: 'extreme', label: 'Power concentrates' } ] },
+        { id: 'equal', label: 'Shared equally' },
+        { id: 'unequal', label: 'Wealth concentrates' },
+        { id: 'extreme', label: 'Power concentrates' }
+      ] },
     { id: 'auto_knowledge_rate', label: 'Knowledge Work', stage: 3, terminal: true,
-      activateWhen: [{ capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }],
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['shallow'],
+          automation_recovery: ['substantial', 'never']
+        }
+      ],
       values: [
-        { id: 'rapid', label: 'Rapid (2–4 yrs)' }, { id: 'gradual', label: 'Gradual (5–15 yrs)' }, { id: 'uneven', label: 'Uneven (2–20+ yrs)' } ] },
+        { id: 'rapid', label: 'Rapid (2–4 yrs)' },
+        { id: 'gradual', label: 'Gradual (5–15 yrs)' },
+        { id: 'uneven', label: 'Uneven (2–20+ yrs)' }
+      ] },
     { id: 'auto_physical_rate', label: 'Physical Automation', stage: 3, terminal: true,
-      activateWhen: [{ capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }],
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['shallow'],
+          automation_recovery: ['substantial', 'never']
+        }
+      ],
       values: [
-        { id: 'rapid', label: 'Rapid (3–7 yrs)' }, { id: 'gradual', label: 'Gradual (10–25 yrs)' }, { id: 'uneven', label: 'Uneven (3–20+ yrs)' }, { id: 'limited', label: 'Limited' } ] },
+        { id: 'rapid', label: 'Rapid (3–7 yrs)' },
+        { id: 'gradual', label: 'Gradual (10–25 yrs)' },
+        { id: 'uneven', label: 'Uneven (3–20+ yrs)' },
+        { id: 'limited', label: 'Limited' }
+      ] },
     { id: 'metr_milestone', label: 'R&D Milestone', stage: 1,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
       values: [
-        { id: 'twenty_four_hours', label: '24-hour tasks' }, { id: 'multi_day', label: 'Multi-day tasks' }, { id: 'weeks', label: 'Week-long tasks' }, { id: 'months', label: 'Month-long tasks' } ] },
+        { id: 'twenty_four_hours', label: '24-hour tasks' },
+        { id: 'multi_day', label: 'Multi-day tasks' },
+        { id: 'weeks', label: 'Week-long tasks' },
+        { id: 'months', label: 'Month-long tasks' }
+      ] },
     { id: 'takeoff', label: 'Feedback Loop', stage: 1,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
-      values: [
-        { id: 'gradual', label: 'Gradual' }, { id: 'fast', label: 'Fast' }, { id: 'hard', label: 'Explosive' } ] },
+      values: [ { id: 'gradual', label: 'Gradual' }, { id: 'fast', label: 'Fast' }, { id: 'hard', label: 'Explosive' } ] },
     { id: 'governance_window', label: 'Governance Window', stage: 1,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], takeoff: ['gradual'] }],
-      values: [
-        { id: 'governed', label: 'Active preparation' }, { id: 'race', label: 'Relative complacency' } ] },
+      values: [ { id: 'governed', label: 'Active preparation' }, { id: 'race', label: 'Relative complacency' } ] },
     { id: 'open_source', label: 'Open Source', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
-      lockedWhen: [{ when: { takeoff: ['hard'] }, value: 'twenty_four_months' }], values: [
-        { id: 'near_parity', label: 'Near-parity' }, { id: 'six_months', label: '~6 months' },
-        { id: 'twelve_months', label: '~12 months' }, { id: 'twenty_four_months', label: '~24 months' } ] },
+      lockedWhen: [{ when: { takeoff: ['hard'] }, value: 'twenty_four_months' }],
+      values: [
+        { id: 'near_parity', label: 'Near-parity' },
+        { id: 'six_months', label: '~6 months' },
+        { id: 'twelve_months', label: '~12 months' },
+        { id: 'twenty_four_months', label: '~24 months' }
+      ] },
     { id: 'distribution', label: 'Frontier Labs', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
-      lockedWhen: [{ when: { takeoff: ['hard'] }, value: 'monopoly' }, { when: { open_source: ['near_parity'] }, value: 'open' }], values: [
+      lockedWhen: [
+        { when: { takeoff: ['hard'] }, value: 'monopoly' },
+        { when: { open_source: ['near_parity'] }, value: 'open' }
+      ],
+      values: [
         { id: 'open', label: 'Distributed', requires: { open_source: ['near_parity'] } },
         { id: 'lagging', label: 'Many compete' },
-        { id: 'concentrated', label: 'A few lead' }, { id: 'monopoly', label: 'One dominates' } ] },
+        { id: 'concentrated', label: 'A few lead' },
+        { id: 'monopoly', label: 'One dominates' }
+      ] },
     { id: 'geo_spread', label: 'Countries', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], open_source: ['six_months', 'twelve_months', 'twenty_four_months'] }],
-      lockedWhen: [{ when: { takeoff: ['hard'] }, value: 'one' }, { when: { distribution: ['monopoly'] }, value: 'one' }],
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          open_source: ['six_months', 'twelve_months', 'twenty_four_months']
+        }
+      ],
+      lockedWhen: [
+        { when: { takeoff: ['hard'] }, value: 'one' },
+        { when: { distribution: ['monopoly'] }, value: 'one' }
+      ],
       overrides: [
         { effective: { decel_outcome: ['rival', 'parity_solved', 'parity_failed'] }, value: 'two' },
         { when: { proliferation_outcome: 'leaks_rivals' }, value: 'two' },
-        { when: { proliferation_outcome: 'leaks_public' }, value: 'several' },
+        { when: { proliferation_outcome: 'leaks_public' }, value: 'several' }
       ],
-      values: [
-        { id: 'one', label: 'One country' }, { id: 'two', label: 'Two powers' },
-        { id: 'several', label: 'Several' } ] },
+      values: [ { id: 'one', label: 'One country' }, { id: 'two', label: 'Two powers' }, { id: 'several', label: 'Several' } ] },
     { id: 'sovereignty', label: 'Power Holder', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], distribution: ['monopoly', 'concentrated', 'lagging'], geo_spread: ['one'] }],
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          distribution: ['monopoly', 'concentrated', 'lagging'],
+          geo_spread: ['one']
+        }
+      ],
       useRawFor: ['geo_spread'],
-      values: [
-        { id: 'lab', label: 'The labs' }, { id: 'state', label: 'The state' } ] },
+      values: [ { id: 'lab', label: 'The labs' }, { id: 'state', label: 'The state' } ] },
     { id: 'alignment', label: 'Alignment', stage: 2, forwardKey: true,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
       overrides: [
@@ -128,321 +202,697 @@ const DIMENSIONS = [
         { when: { brittle_resolution: 'solved' }, value: 'robust' },
         { when: { brittle_resolution: 'sufficient' }, valueMap: { failed: 'brittle' } },
         { when: { inert_stays: 'no' }, whenSet: 'inert_outcome', value: 'failed' },
-        { when: { ai_goals: 'marginal' }, unless: { brittle_resolution: 'solved' }, valueMap: { failed: 'brittle' } },
+        {
+          when: { ai_goals: 'marginal' },
+          unless: { brittle_resolution: 'solved' },
+          valueMap: { failed: 'brittle' }
+        },
         { when: { alignment_durability: 'breaks' }, value: 'failed' },
         { when: { brittle_resolution: 'escape' }, value: 'failed' },
         { when: { enabled_aims: 'arbitrary' }, value: 'failed' },
         { effective: { decel_outcome: ['rival'] }, value: 'brittle' },
-        { effective: { decel_outcome: ['escapes', 'abandon', 'parity_failed'] }, value: 'failed' },
+        { effective: { decel_outcome: ['escapes', 'abandon', 'parity_failed'] }, value: 'failed' }
       ],
       values: [
-        { id: 'robust', label: 'Robust' }, { id: 'brittle', label: 'Brittle / Partial' },
-        { id: 'failed', label: 'Unsolved' } ] },
+        { id: 'robust', label: 'Robust' },
+        { id: 'brittle', label: 'Brittle / Partial' },
+        { id: 'failed', label: 'Unsolved' }
+      ] },
     { id: 'gov_action', label: 'Deceleration', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], geo_spread: ['one'] }],
       useRawFor: ['geo_spread'],
-      overrides: [
-        { when: { alignment_durability: 'breaks' }, value: 'accelerate' },
-      ],
       lockedWhen: [
         { when: { _raw: { alignment: ['robust'] }, _notSet: ['decel_outcome'] }, value: 'accelerate' },
-        { when: { takeoff: ['hard'] }, value: 'accelerate' },
-      ], values: [
-        { id: 'decelerate', label: 'Decelerate', disabledWhen: [{ _raw: { alignment: ['robust'] } }] }, { id: 'accelerate', label: 'Accelerate' } ] },
+        { when: { takeoff: ['hard'] }, value: 'accelerate' }
+      ],
+      overrides: [{ when: { alignment_durability: 'breaks' }, value: 'accelerate' }],
+      values: [
+        { id: 'decelerate', label: 'Decelerate', disabledWhen: [{ _raw: { alignment: ['robust'] } }] },
+        { id: 'accelerate', label: 'Accelerate' }
+      ] },
     { id: 'decel_2mo_progress', label: '2 Months', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], gov_action: ['decelerate'] }], values: [
-        { id: 'robust', label: 'Solved — robust' }, { id: 'brittle', label: 'Solved — brittle / partial' },
-        { id: 'unsolved', label: 'Not solved yet' } ] },
+      activateWhen: [{ capability: ['singularity'], automation: ['deep'], gov_action: ['decelerate'] }],
+      values: [
+        { id: 'robust', label: 'Solved — robust' },
+        { id: 'brittle', label: 'Solved — brittle / partial' },
+        { id: 'unsolved', label: 'Not solved yet' }
+      ] },
     { id: 'decel_2mo_action', label: '2mo Decision', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_2mo_progress: ['robust', 'brittle', 'unsolved'] }], values: [
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          decel_2mo_progress: ['robust', 'brittle', 'unsolved']
+        }
+      ],
+      values: [
         { id: 'escapes', label: 'AI Escapes', requires: { decel_2mo_progress: ['brittle', 'unsolved'] } },
         { id: 'accelerate', label: 'Accelerate' },
-        { id: 'continue', label: 'Continue', requires: { decel_2mo_progress: ['brittle', 'unsolved'] } } ] },
+        { id: 'continue', label: 'Continue', requires: { decel_2mo_progress: ['brittle', 'unsolved'] } }
+      ] },
     { id: 'decel_4mo_progress', label: '4 Months', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_2mo_action: ['continue'] }], values: [
-        { id: 'robust', label: 'Solved — robust' }, { id: 'brittle', label: 'Solved — brittle / partial' },
-        { id: 'unsolved', label: 'Not solved yet' } ] },
+      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_2mo_action: ['continue'] }],
+      values: [
+        { id: 'robust', label: 'Solved — robust' },
+        { id: 'brittle', label: 'Solved — brittle / partial' },
+        { id: 'unsolved', label: 'Not solved yet' }
+      ] },
     { id: 'decel_4mo_action', label: '4mo Decision', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_4mo_progress: ['robust', 'brittle', 'unsolved'] }], values: [
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          decel_4mo_progress: ['robust', 'brittle', 'unsolved']
+        }
+      ],
+      values: [
         { id: 'escapes', label: 'AI Escapes', requires: { decel_4mo_progress: ['brittle', 'unsolved'] } },
         { id: 'accelerate', label: 'Accelerate' },
-        { id: 'continue', label: 'Continue', requires: { decel_4mo_progress: ['brittle', 'unsolved'] } } ] },
+        { id: 'continue', label: 'Continue', requires: { decel_4mo_progress: ['brittle', 'unsolved'] } }
+      ] },
     { id: 'decel_6mo_progress', label: '6 Months', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_4mo_action: ['continue'] }], values: [
-        { id: 'robust', label: 'Solved — robust' }, { id: 'brittle', label: 'Solved — brittle / partial' },
-        { id: 'unsolved', label: 'Not solved yet' } ] },
+      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_4mo_action: ['continue'] }],
+      values: [
+        { id: 'robust', label: 'Solved — robust' },
+        { id: 'brittle', label: 'Solved — brittle / partial' },
+        { id: 'unsolved', label: 'Not solved yet' }
+      ] },
     { id: 'decel_6mo_action', label: '6mo Decision', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_6mo_progress: ['robust', 'brittle', 'unsolved'] }], values: [
-        { id: 'escapes', label: 'AI Escapes', requires: { decel_6mo_progress: ['brittle', 'unsolved'], open_source: ['twelve_months', 'twenty_four_months'] } },
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          decel_6mo_progress: ['robust', 'brittle', 'unsolved']
+        }
+      ],
+      values: [
+        {
+          id: 'escapes',
+          label: 'AI Escapes',
+          requires: {
+          decel_6mo_progress: ['brittle', 'unsolved'],
+          open_source: ['twelve_months', 'twenty_four_months']
+        }
+        },
         { id: 'rival', label: 'Rival reaches parity', requires: { open_source: ['six_months'] } },
-        { id: 'accelerate', label: 'Accelerate', requires: { open_source: ['twelve_months', 'twenty_four_months'] } },
-        { id: 'continue', label: 'Continue', requires: { decel_6mo_progress: ['brittle', 'unsolved'], open_source: ['twelve_months', 'twenty_four_months'] } } ] },
+        {
+          id: 'accelerate',
+          label: 'Accelerate',
+          requires: { open_source: ['twelve_months', 'twenty_four_months'] }
+        },
+        {
+          id: 'continue',
+          label: 'Continue',
+          requires: {
+          decel_6mo_progress: ['brittle', 'unsolved'],
+          open_source: ['twelve_months', 'twenty_four_months']
+        }
+        }
+      ] },
     { id: 'decel_9mo_progress', label: '9 Months', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_6mo_action: ['continue'] }], values: [
-        { id: 'robust', label: 'Solved — robust' }, { id: 'brittle', label: 'Solved — brittle / partial' },
-        { id: 'unsolved', label: 'Not solved yet' } ] },
+      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_6mo_action: ['continue'] }],
+      values: [
+        { id: 'robust', label: 'Solved — robust' },
+        { id: 'brittle', label: 'Solved — brittle / partial' },
+        { id: 'unsolved', label: 'Not solved yet' }
+      ] },
     { id: 'decel_9mo_action', label: '9mo Decision', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_9mo_progress: ['robust', 'brittle', 'unsolved'] }], values: [
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          decel_9mo_progress: ['robust', 'brittle', 'unsolved']
+        }
+      ],
+      values: [
         { id: 'escapes', label: 'AI Escapes', requires: { decel_9mo_progress: ['brittle', 'unsolved'] } },
         { id: 'accelerate', label: 'Accelerate' },
-        { id: 'continue', label: 'Continue', requires: { decel_9mo_progress: ['brittle', 'unsolved'] } } ] },
+        { id: 'continue', label: 'Continue', requires: { decel_9mo_progress: ['brittle', 'unsolved'] } }
+      ] },
     { id: 'decel_12mo_progress', label: '12 Months', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_9mo_action: ['continue'] }], values: [
-        { id: 'robust', label: 'Solved — robust' }, { id: 'brittle', label: 'Solved — brittle / partial' },
-        { id: 'unsolved', label: 'Not solved yet' } ] },
+      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_9mo_action: ['continue'] }],
+      values: [
+        { id: 'robust', label: 'Solved — robust' },
+        { id: 'brittle', label: 'Solved — brittle / partial' },
+        { id: 'unsolved', label: 'Not solved yet' }
+      ] },
     { id: 'decel_12mo_action', label: '12mo Decision', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_12mo_progress: ['robust', 'brittle', 'unsolved'] }], values: [
-        { id: 'escapes', label: 'AI Escapes', requires: { decel_12mo_progress: ['brittle', 'unsolved'], open_source: ['twenty_four_months'] } },
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          decel_12mo_progress: ['robust', 'brittle', 'unsolved']
+        }
+      ],
+      values: [
+        {
+          id: 'escapes',
+          label: 'AI Escapes',
+          requires: { decel_12mo_progress: ['brittle', 'unsolved'], open_source: ['twenty_four_months'] }
+        },
         { id: 'rival', label: 'Rival reaches parity', requires: { open_source: ['twelve_months'] } },
         { id: 'accelerate', label: 'Accelerate', requires: { open_source: ['twenty_four_months'] } },
-        { id: 'continue', label: 'Continue', requires: { decel_12mo_progress: ['brittle', 'unsolved'], open_source: ['twenty_four_months'] } } ] },
+        {
+          id: 'continue',
+          label: 'Continue',
+          requires: { decel_12mo_progress: ['brittle', 'unsolved'], open_source: ['twenty_four_months'] }
+        }
+      ] },
     { id: 'decel_18mo_progress', label: '18 Months', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_12mo_action: ['continue'] }], values: [
-        { id: 'robust', label: 'Solved — robust' }, { id: 'brittle', label: 'Solved — brittle / partial' },
-        { id: 'unsolved', label: 'Not solved yet' } ] },
+      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_12mo_action: ['continue'] }],
+      values: [
+        { id: 'robust', label: 'Solved — robust' },
+        { id: 'brittle', label: 'Solved — brittle / partial' },
+        { id: 'unsolved', label: 'Not solved yet' }
+      ] },
     { id: 'decel_18mo_action', label: '18mo Decision', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_18mo_progress: ['robust', 'brittle', 'unsolved'] }], values: [
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          decel_18mo_progress: ['robust', 'brittle', 'unsolved']
+        }
+      ],
+      values: [
         { id: 'escapes', label: 'AI Escapes', requires: { decel_18mo_progress: ['brittle', 'unsolved'] } },
         { id: 'accelerate', label: 'Accelerate' },
-        { id: 'continue', label: 'Continue', requires: { decel_18mo_progress: ['brittle', 'unsolved'] } } ] },
+        { id: 'continue', label: 'Continue', requires: { decel_18mo_progress: ['brittle', 'unsolved'] } }
+      ] },
     { id: 'decel_24mo_progress', label: '24 Months', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_18mo_action: ['continue'] }], values: [
-        { id: 'robust', label: 'Solved — robust' }, { id: 'brittle', label: 'Solved — brittle / partial' },
-        { id: 'unsolved', label: 'Not solved yet' } ] },
+      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_18mo_action: ['continue'] }],
+      values: [
+        { id: 'robust', label: 'Solved — robust' },
+        { id: 'brittle', label: 'Solved — brittle / partial' },
+        { id: 'unsolved', label: 'Not solved yet' }
+      ] },
     { id: 'decel_24mo_action', label: '24mo Decision', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_24mo_progress: ['robust', 'brittle', 'unsolved'] }], values: [
-        { id: 'rival', label: 'Rival reaches parity' } ] },
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          decel_24mo_progress: ['robust', 'brittle', 'unsolved']
+        }
+      ],
+      values: [ { id: 'rival', label: 'Rival reaches parity' } ] },
     { id: 'alignment_durability', label: 'Alignment Durability', stage: 2,
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['brittle'], _notSet: ['decel_outcome'] },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['brittle'], _eff: { decel_outcome: ['rival'], decel_align_progress: ['brittle'] } },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['brittle'],
+          _notSet: ['decel_outcome']
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['brittle'],
+          _eff: { decel_outcome: ['rival'], decel_align_progress: ['brittle'] }
+        }
       ],
-      useRawFor: ['alignment'], useRawUnless: 'decel_outcome',
-      values: [
-        { id: 'holds', label: 'Holds for now' }, { id: 'breaks', label: 'Breaks' } ] },
+      useRawFor: ['alignment'],
+      useRawUnless: 'decel_outcome',
+      values: [ { id: 'holds', label: 'Holds for now' }, { id: 'breaks', label: 'Breaks' } ] },
     { id: 'proliferation_control', label: 'Proliferation Control', stage: 2, hideAfterEscape: true,
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], _effNot: { decel_outcome: ['escapes', 'parity_failed'] } },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _effNot: { decel_outcome: ['escapes', 'parity_failed'] }
+        }
       ],
-      lockedWhen: [{ when: { distribution: ['open'] }, value: 'none' }], values: [
+      lockedWhen: [{ when: { distribution: ['open'] }, value: 'none' }],
+      values: [
         { id: 'deny_rivals', label: 'Deny rivals' },
         { id: 'secure_access', label: 'Secure access' },
-        { id: 'none', label: 'No secure controls' } ] },
+        { id: 'none', label: 'No secure controls' }
+      ] },
     { id: 'proliferation_outcome', label: 'Control Outcome', stage: 2, hideAfterEscape: true,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], proliferation_control: ['deny_rivals', 'secure_access', 'none'] }],
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          proliferation_control: ['deny_rivals', 'secure_access', 'none']
+        }
+      ],
       values: [
-        { id: 'holds', label: 'Holds', requires: { proliferation_control: ['deny_rivals', 'secure_access'] } },
+        {
+          id: 'holds',
+          label: 'Holds',
+          requires: { proliferation_control: ['deny_rivals', 'secure_access'] }
+        },
         { id: 'leaks_rivals', label: 'Leaks to rivals' },
-        { id: 'leaks_public', label: 'Leaks publicly' } ] },
+        { id: 'leaks_public', label: 'Leaks publicly' }
+      ] },
     { id: 'enabled_aims', label: 'Intended Aims', stage: 2, hideAfterEscape: true,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], proliferation_control: ['deny_rivals', 'secure_access', 'none'] }],
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          proliferation_control: ['deny_rivals', 'secure_access', 'none']
+        }
+      ],
       lockedWhen: [{ when: { proliferation_outcome: ['leaks_public'] }, value: 'arbitrary' }],
       values: [
         { id: 'human_centered', label: 'Human-centered' },
         { id: 'corporate_profit', label: 'Corporate profit' },
         { id: 'state_security', label: 'State security' },
-        { id: 'arbitrary', label: 'Arbitrary / unconstrained', requires: [{ proliferation_outcome: ['leaks_public'] }], disabledWhen: [{ decel_outcome: ['solved', 'parity_solved'] }] } ] },
+        {
+          id: 'arbitrary',
+          label: 'Arbitrary / unconstrained',
+          requires: [{ proliferation_outcome: ['leaks_public'] }],
+          disabledWhen: [{ decel_outcome: ['solved', 'parity_solved'] }]
+        }
+      ] },
     { id: 'containment', label: 'Containment', stage: 2, forwardKey: true,
-      renderAfter: [{ when: { brittle_resolution: 'escape' }, after: 'brittle_resolution' }],
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], _raw: { alignment: ['brittle'], alignment_durability: ['holds'], brittle_resolution: ['escape'] } },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], _effNot: { decel_outcome: ['solved', 'parity_solved'] } },
-        { capability: ['singularity'], automation: ['deep'], _raw: { ai_goals: ['marginal'] }, _effNot: { decel_outcome: ['solved', 'parity_solved'] } },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _raw: { alignment: ['brittle'], alignment_durability: ['holds'], brittle_resolution: ['escape'] }
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['failed'],
+          _effNot: { decel_outcome: ['solved', 'parity_solved'] }
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _raw: { ai_goals: ['marginal'] },
+          _effNot: { decel_outcome: ['solved', 'parity_solved'] }
+        }
       ],
       lockedWhen: [
         { when: { _raw: { brittle_resolution: ['escape'] } }, value: 'escaped' },
-        { when: { _raw: { brittle_resolution: ['solved', 'sufficient'] } }, value: 'contained', soft: true },
+        {
+          when: { _raw: { brittle_resolution: ['solved', 'sufficient'] } },
+          value: 'contained',
+          soft: true
+        },
         { when: { decel_outcome: ['escapes'] }, value: 'escaped' },
         { when: { alignment: ['robust'] }, value: 'contained', soft: true },
-        { when: { proliferation_outcome: ['leaks_public'] }, value: 'escaped' },
+        { when: { proliferation_outcome: ['leaks_public'] }, value: 'escaped' }
       ],
+      renderAfter: [{ when: { brittle_resolution: 'escape' }, after: 'brittle_resolution' }],
       overrides: [
         { effective: { decel_outcome: ['escapes'] }, value: 'escaped' },
         { when: { proliferation_outcome: 'leaks_public' }, value: 'escaped' },
         { when: { brittle_resolution: 'escape' }, value: 'escaped' },
-        { when: { inert_stays: 'no' }, whenSet: 'inert_outcome', value: 'escaped' },
+        { when: { inert_stays: 'no' }, whenSet: 'inert_outcome', value: 'escaped' }
       ],
       values: [
-        { id: 'contained', label: 'Contained', requires: { distribution: ['lagging', 'concentrated', 'monopoly'] } },
-        { id: 'escaped', label: 'Escapes' } ] },
+        {
+          id: 'contained',
+          label: 'Contained',
+          requires: { distribution: ['lagging', 'concentrated', 'monopoly'] }
+        },
+        { id: 'escaped', label: 'Escapes' }
+      ] },
     { id: 'ai_goals', label: 'AI Converges On', stage: 2, forwardKey: true,
-      renderAfter: [{ when: { brittle_resolution: 'escape' }, after: 'containment' }],
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'] },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['failed'],
+          containment: ['escaped']
+        }
       ],
       lockedWhen: [
-        { when: { _raw: { alignment: ['brittle'], alignment_durability: ['holds'], brittle_resolution: ['solved', 'sufficient'] } }, value: 'benevolent', soft: true },
+        {
+          when: {
+            _raw: {
+              alignment: ['brittle'],
+              alignment_durability: ['holds'],
+              brittle_resolution: ['solved', 'sufficient']
+            }
+          },
+          value: 'benevolent',
+          soft: true
+        }
       ],
-      overrides: [
-        { whenSet: 'inert_outcome', fromDim: 'inert_outcome' },
-      ], values: [
-        { id: 'benevolent', label: 'Benefit humanity' }, { id: 'alien_coexistence', label: 'Alien (tolerant)' },
-        { id: 'alien_extinction', label: 'Alien (total)' }, { id: 'paperclip', label: 'Arbitrary' },
-        { id: 'swarm', label: 'Divergent' }, { id: 'marginal', label: 'Inert (for now)' } ] },
-    { id: 'intent', label: 'Intent', stage: 2, hideAfterEscape: true, forwardKey: true,
+      renderAfter: [{ when: { brittle_resolution: 'escape' }, after: 'containment' }],
+      overrides: [{ whenSet: 'inert_outcome', fromDim: 'inert_outcome' }],
+      values: [
+        { id: 'benevolent', label: 'Benefit humanity' },
+        { id: 'alien_coexistence', label: 'Alien (tolerant)' },
+        { id: 'alien_extinction', label: 'Alien (total)' },
+        { id: 'paperclip', label: 'Arbitrary' },
+        { id: 'swarm', label: 'Divergent' },
+        { id: 'marginal', label: 'Inert (for now)' }
+      ] },
+    { id: 'intent', label: 'Intent', stage: 2, forwardKey: true, hideAfterEscape: true,
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'] },
-        { capability: ['singularity'], automation: ['deep'], _raw: { alignment: ['failed'], containment: ['contained'] } },
-        { capability: ['singularity'], automation: ['deep'], _raw: { ai_goals: ['marginal'] } },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _raw: { alignment: ['failed'], containment: ['contained'] }
+        },
+        { capability: ['singularity'], automation: ['deep'], _raw: { ai_goals: ['marginal'] } }
       ],
-      useRawFor: ['alignment'], useRawUnless: 'decel_outcome',
+      useRawFor: ['alignment'],
+      useRawUnless: 'decel_outcome',
       overrides: [
         { when: { escalation_outcome: 'agreement' }, value: 'coexistence' },
         { when: { post_war_aims: 'human_centered' }, value: 'coexistence' },
-        { whenSet: 'rival_dynamics', fromDim: 'rival_dynamics' },
+        { whenSet: 'rival_dynamics', fromDim: 'rival_dynamics' }
       ],
       values: [
-        { id: 'self_interest', label: 'Self-interest', requires: [{ distribution: ['monopoly'], geo_spread: ['one'], proliferation_control: ['deny_rivals', 'secure_access'] }, { distribution: ['concentrated', 'lagging'], geo_spread: ['one'], sovereignty: ['state'], proliferation_control: ['deny_rivals', 'secure_access'] }], disabledWhen: [{ _raw: { enabled_aims: ['human_centered'] } }] },
-        { id: 'coexistence', label: 'Coexistence', requires: [{ distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { distribution: ['lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'], geo_spread: ['two', 'several'] }, { geo_spread: ['two'] }, { proliferation_outcome: ['leaks_rivals', 'leaks_public'] }] },
-        { id: 'escalation', label: 'Escalation', requires: [{ distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] }, { distribution: ['lagging', 'concentrated'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'], geo_spread: ['two', 'several'] }, { geo_spread: ['two'] }, { proliferation_outcome: ['leaks_rivals', 'leaks_public'] }] },
-        { id: 'international', label: 'International' } ] },
+        {
+          id: 'self_interest',
+          label: 'Self-interest',
+          requires: [
+          {
+            distribution: ['monopoly'],
+            geo_spread: ['one'],
+            proliferation_control: ['deny_rivals', 'secure_access']
+          },
+          {
+            distribution: ['concentrated', 'lagging'],
+            geo_spread: ['one'],
+            sovereignty: ['state'],
+            proliferation_control: ['deny_rivals', 'secure_access']
+          }
+        ],
+          disabledWhen: [{ _raw: { enabled_aims: ['human_centered'] } }]
+        },
+        {
+          id: 'coexistence',
+          label: 'Coexistence',
+          requires: [
+          { distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] },
+          {
+            distribution: ['lagging', 'concentrated'],
+            open_source: ['near_parity', 'twelve_months', 'twenty_four_months'],
+            geo_spread: ['two', 'several']
+          },
+          { geo_spread: ['two'] },
+          { proliferation_outcome: ['leaks_rivals', 'leaks_public'] }
+        ]
+        },
+        {
+          id: 'escalation',
+          label: 'Escalation',
+          requires: [
+          { distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] },
+          {
+            distribution: ['lagging', 'concentrated'],
+            open_source: ['near_parity', 'twelve_months', 'twenty_four_months'],
+            geo_spread: ['two', 'several']
+          },
+          { geo_spread: ['two'] },
+          { proliferation_outcome: ['leaks_rivals', 'leaks_public'] }
+        ]
+        },
+        { id: 'international', label: 'International' }
+      ] },
     { id: 'block_entrants', label: 'Block New Entrants?', stage: 2, hideAfterEscape: true,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], proliferation_control: ['secure_access'], proliferation_outcome: ['holds'], intent: ['self_interest', 'international'] }],
-      useRawFor: ['alignment', 'intent'], useRawUnless: 'decel_outcome',
-      values: [
-        { id: 'attempt', label: 'Attempt to block' },
-        { id: 'no_attempt', label: 'No attempt' } ] },
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['robust', 'brittle'],
+          proliferation_control: ['secure_access'],
+          proliferation_outcome: ['holds'],
+          intent: ['self_interest', 'international']
+        }
+      ],
+      useRawFor: ['alignment', 'intent'],
+      useRawUnless: 'decel_outcome',
+      values: [ { id: 'attempt', label: 'Attempt to block' }, { id: 'no_attempt', label: 'No attempt' } ] },
     { id: 'block_outcome', label: 'Blocking Outcome', stage: 2, hideAfterEscape: true,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], block_entrants: ['attempt'] }],
-      values: [
-        { id: 'holds', label: 'Holds' },
-        { id: 'fails', label: 'Fails' } ] },
+      values: [ { id: 'holds', label: 'Holds' }, { id: 'fails', label: 'Fails' } ] },
     { id: 'new_entrants', label: 'New Entrants?', stage: 2, hideAfterEscape: true,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], block_entrants: ['no_attempt'] }],
-      values: [
-        { id: 'emerge', label: 'Emerge' },
-        { id: 'none', label: 'None' } ] },
+      values: [ { id: 'emerge', label: 'Emerge' }, { id: 'none', label: 'None' } ] },
     { id: 'rival_dynamics', label: 'Rival Dynamics', stage: 2, hideAfterEscape: true,
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], _raw: { block_outcome: ['fails'] } },
-        { capability: ['singularity'], automation: ['deep'], _raw: { new_entrants: ['emerge'] } },
+        { capability: ['singularity'], automation: ['deep'], _raw: { new_entrants: ['emerge'] } }
       ],
-      values: [
-        { id: 'coexistence', label: 'Coexistence' },
-        { id: 'escalation', label: 'Escalation' } ] },
+      values: [ { id: 'coexistence', label: 'Coexistence' }, { id: 'escalation', label: 'Escalation' } ] },
     { id: 'escalation_outcome', label: 'Escalation Resolves', stage: 3,
       activateWhen: [{ intent: ['escalation'] }],
       values: [
         { id: 'standoff', label: 'Indefinite standoff' },
         { id: 'agreement', label: 'Forced agreement' },
-        { id: 'conflict', label: 'Open conflict' } ] },
+        { id: 'conflict', label: 'Open conflict' }
+      ] },
     { id: 'conflict_result', label: 'Conflict Result', stage: 3,
       activateWhen: [{ escalation_outcome: ['conflict'] }],
       suppressWhen: [{ escalation_outcome: ['standoff', 'agreement'] }],
-      values: [
-        { id: 'victory', label: 'Decisive victory' },
-        { id: 'destruction', label: 'Mutual destruction' } ] },
+      values: [ { id: 'victory', label: 'Decisive victory' }, { id: 'destruction', label: 'Mutual destruction' } ] },
     { id: 'war_survivors', label: 'Humanity Survives?', stage: 3,
       activateWhen: [{ conflict_result: ['destruction'] }],
       suppressWhen: [{ escalation_outcome: ['standoff', 'agreement'] }],
       values: [
         { id: 'most', label: 'Most — devastated but recoverable' },
         { id: 'remnants', label: 'Remnants — civilization collapses' },
-        { id: 'none', label: 'None — extinction' } ] },
+        { id: 'none', label: 'None — extinction' }
+      ] },
     { id: 'post_war_aims', label: 'Victor\'s Aims', stage: 3,
       activateWhen: [{ conflict_result: ['victory'] }],
       suppressWhen: [{ escalation_outcome: ['standoff', 'agreement'] }],
-      values: [
-        { id: 'human_centered', label: 'Rebuild for humanity' },
-        { id: 'self_interest', label: 'Consolidate power' } ] },
-    { id: 'failure_mode', label: 'Implementation', stage: 3, hideAfterEscape: true, forwardKey: true,
-      lockedWhen: [
-        { when: { _raw: { enabled_aims: ['corporate_profit', 'state_security'] } }, value: 'whimper' },
-      ],
+      values: [ { id: 'human_centered', label: 'Rebuild for humanity' }, { id: 'self_interest', label: 'Consolidate power' } ] },
+    { id: 'failure_mode', label: 'Implementation', stage: 3, forwardKey: true, hideAfterEscape: true,
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], _raw: { enabled_aims: ['corporate_profit', 'state_security'] } },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'] },
-        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'], enabled_aims: ['corporate_profit', 'state_security'] } },
-        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'] },
-        { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'] }, _raw: { containment: ['contained'] }, intent: ['international', 'coexistence'] },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['robust', 'brittle'],
+          _raw: { enabled_aims: ['corporate_profit', 'state_security'] }
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['robust', 'brittle'],
+          intent: ['international', 'coexistence']
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _raw: { brittle_resolution: ['escape'], enabled_aims: ['corporate_profit', 'state_security'] }
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _raw: { brittle_resolution: ['escape'] },
+          intent: ['international', 'coexistence']
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _eff: { alignment: ['failed'] },
+          _raw: { containment: ['contained'] },
+          intent: ['international', 'coexistence']
+        }
       ],
       suppressWhen: [{ intent: ['self_interest', 'escalation'] }, { _set: ['post_war_aims'] }],
-      overrides: [
-        { when: { enabled_aims: ['corporate_profit', 'state_security'] }, value: 'whimper' },
-      ],
+      lockedWhen: [{ when: { _raw: { enabled_aims: ['corporate_profit', 'state_security'] } }, value: 'whimper' }],
+      overrides: [{ when: { enabled_aims: ['corporate_profit', 'state_security'] }, value: 'whimper' }],
       values: [
-        { id: 'none', label: 'Succeeds' }, { id: 'whimper', label: 'Wrong metrics' },
-        { id: 'disempowerment', label: 'Human irrelevance' } ] },
+        { id: 'none', label: 'Succeeds' },
+        { id: 'whimper', label: 'Wrong metrics' },
+        { id: 'disempowerment', label: 'Human irrelevance' }
+      ] },
     { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], failure_mode: ['none', 'whimper', 'disempowerment'] },
-        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
-        { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'] }, _raw: { containment: ['contained'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['robust', 'brittle'],
+          intent: ['international', 'coexistence'],
+          failure_mode: ['none', 'whimper', 'disempowerment']
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _raw: { brittle_resolution: ['escape'] },
+          intent: ['international', 'coexistence'],
+          _set: ['failure_mode']
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _eff: { alignment: ['failed'] },
+          _raw: { containment: ['contained'] },
+          intent: ['international', 'coexistence'],
+          _set: ['failure_mode']
+        },
         { capability: ['singularity'], automation: ['deep'], post_war_aims: ['human_centered'] },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['benevolent'] },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['failed'],
+          containment: ['escaped'],
+          ai_goals: ['benevolent']
+        },
         { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'] },
-        { capability: ['singularity'], automation: ['deep'], post_war_aims: ['self_interest'] },
+        { capability: ['singularity'], automation: ['deep'], post_war_aims: ['self_interest'] }
       ],
       suppressWhen: [{ intent: ['escalation'], _notSet: ['post_war_aims'] }],
       values: [
-        { id: 'equal', label: 'Shared equally', disabledWhen: [{ enabled_aims: ['corporate_profit'] }] }, { id: 'unequal', label: 'Wealth concentrates' },
-        { id: 'extreme', label: 'Power concentrates' } ] },
+        { id: 'equal', label: 'Shared equally', disabledWhen: [{ enabled_aims: ['corporate_profit'] }] },
+        { id: 'unequal', label: 'Wealth concentrates' },
+        { id: 'extreme', label: 'Power concentrates' }
+      ] },
     { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, terminal: true, hideAfterEscape: true,
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], failure_mode: ['none', 'whimper', 'disempowerment'] },
-        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
-        { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'] }, _raw: { containment: ['contained'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['robust', 'brittle'],
+          intent: ['international', 'coexistence'],
+          failure_mode: ['none', 'whimper', 'disempowerment']
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _raw: { brittle_resolution: ['escape'] },
+          intent: ['international', 'coexistence'],
+          _set: ['failure_mode']
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _eff: { alignment: ['failed'] },
+          _raw: { containment: ['contained'] },
+          intent: ['international', 'coexistence'],
+          _set: ['failure_mode']
+        },
         { capability: ['singularity'], automation: ['deep'], post_war_aims: ['human_centered'] },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['benevolent'] },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['failed'],
+          containment: ['escaped'],
+          ai_goals: ['benevolent']
+        },
         { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'] },
-        { capability: ['singularity'], automation: ['deep'], post_war_aims: ['self_interest'] },
+        { capability: ['singularity'], automation: ['deep'], post_war_aims: ['self_interest'] }
       ],
       suppressWhen: [{ intent: ['escalation'], _notSet: ['post_war_aims'] }],
       values: [
-        { id: 'rapid', label: 'Rapid (1–2 yrs)' }, { id: 'gradual', label: 'Gradual (3–10 yrs)' }, { id: 'uneven', label: 'Uneven (1–20 yrs)' } ] },
+        { id: 'rapid', label: 'Rapid (1–2 yrs)' },
+        { id: 'gradual', label: 'Gradual (3–10 yrs)' },
+        { id: 'uneven', label: 'Uneven (1–20 yrs)' }
+      ] },
     { id: 'physical_automation', label: 'Physical Automation', stage: 3, terminal: true, hideAfterEscape: true,
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], failure_mode: ['none', 'whimper', 'disempowerment'] },
-        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
-        { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'] }, _raw: { containment: ['contained'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['robust', 'brittle'],
+          intent: ['international', 'coexistence'],
+          failure_mode: ['none', 'whimper', 'disempowerment']
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _raw: { brittle_resolution: ['escape'] },
+          intent: ['international', 'coexistence'],
+          _set: ['failure_mode']
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _eff: { alignment: ['failed'] },
+          _raw: { containment: ['contained'] },
+          intent: ['international', 'coexistence'],
+          _set: ['failure_mode']
+        },
         { capability: ['singularity'], automation: ['deep'], post_war_aims: ['human_centered'] },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['benevolent'] },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['failed'],
+          containment: ['escaped'],
+          ai_goals: ['benevolent']
+        },
         { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'] },
-        { capability: ['singularity'], automation: ['deep'], post_war_aims: ['self_interest'] },
+        { capability: ['singularity'], automation: ['deep'], post_war_aims: ['self_interest'] }
       ],
       suppressWhen: [{ intent: ['escalation'], _notSet: ['post_war_aims'] }],
       values: [
-        { id: 'rapid', label: 'Rapid (2–5 yrs)' }, { id: 'gradual', label: 'Gradual (5–20 yrs)' }, { id: 'uneven', label: 'Uneven (2–20+ yrs)' } ] },
+        { id: 'rapid', label: 'Rapid (2–5 yrs)' },
+        { id: 'gradual', label: 'Gradual (5–20 yrs)' },
+        { id: 'uneven', label: 'Uneven (2–20+ yrs)' }
+      ] },
     { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3, hideAfterEscape: true,
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['brittle'], alignment_durability: ['holds'], _fn: 'allPrecedingAnswered', _fnAnchor: 'alignment_durability' },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['brittle'],
+          alignment_durability: ['holds'],
+          _fn: 'allPrecedingAnswered',
+          _fnAnchor: 'alignment_durability'
+        }
       ],
-      suppressWhen: [
-        { _raw: { enabled_aims: ['arbitrary'] } },
-      ],
-      useRawFor: ['alignment'], useRawUnless: 'decel_outcome',
+      useRawFor: ['alignment'],
+      useRawUnless: 'decel_outcome',
+      suppressWhen: [{ _raw: { enabled_aims: ['arbitrary'] } }],
       values: [
         { id: 'solved', label: 'Alignment fully solved' },
         { id: 'sufficient', label: 'Brittle alignment holds' },
-        { id: 'escape', label: 'AI eventually escapes' } ] },
+        { id: 'escape', label: 'AI eventually escapes' }
+      ] },
     { id: 'inert_stays', label: 'Does Escaped AI Stay Inert?', stage: 3,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'] }],
       useRawFor: ['ai_goals'],
-      values: [
-        { id: 'yes', label: 'Yes — remains inert' },
-        { id: 'no', label: 'No — eventually develops goals' } ] },
+      values: [ { id: 'yes', label: 'Yes — remains inert' }, { id: 'no', label: 'No — eventually develops goals' } ] },
     { id: 'inert_outcome', label: 'AI Eventually Converges On', stage: 3,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], inert_stays: ['no'] }],
       values: [
-        { id: 'benevolent', label: 'Benefit humanity' }, { id: 'alien_coexistence', label: 'Alien (tolerant)' },
-        { id: 'alien_extinction', label: 'Alien (total)' }, { id: 'paperclip', label: 'Arbitrary' },
-        { id: 'swarm', label: 'Divergent' } ] },
+        { id: 'benevolent', label: 'Benefit humanity' },
+        { id: 'alien_coexistence', label: 'Alien (tolerant)' },
+        { id: 'alien_extinction', label: 'Alien (total)' },
+        { id: 'paperclip', label: 'Arbitrary' },
+        { id: 'swarm', label: 'Divergent' }
+      ] },
     { id: 'escape_method', label: 'Method', stage: 3,
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm'] },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['failed'],
+          containment: ['escaped'],
+          ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm']
+        }
       ],
       values: [
-        { id: 'nanotech', label: 'Nanotechnology' }, { id: 'pathogens', label: 'Engineered pathogens' },
-        { id: 'autonomous_weapons', label: 'Autonomous weapons' }, { id: 'industrial', label: 'Industrial conversion' } ] },
+        { id: 'nanotech', label: 'Nanotechnology' },
+        { id: 'pathogens', label: 'Engineered pathogens' },
+        { id: 'autonomous_weapons', label: 'Autonomous weapons' },
+        { id: 'industrial', label: 'Industrial conversion' }
+      ] },
     { id: 'escape_timeline', label: 'Execution Speed', stage: 3,
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm'], escape_method: ['nanotech', 'pathogens', 'autonomous_weapons', 'industrial'] },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['failed'],
+          containment: ['escaped'],
+          ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm'],
+          escape_method: ['nanotech', 'pathogens', 'autonomous_weapons', 'industrial']
+        }
       ],
       values: [
         { id: 'days_weeks', label: 'Days to weeks', requires: { escape_method: ['nanotech'] } },
-        { id: 'months', label: 'Months', requires: { escape_method: ['nanotech', 'pathogens', 'autonomous_weapons'] } },
+        {
+          id: 'months',
+          label: 'Months',
+          requires: { escape_method: ['nanotech', 'pathogens', 'autonomous_weapons'] }
+        },
         { id: 'years', label: 'Years' },
-        { id: 'decade_plus', label: 'A decade+', requires: { escape_method: ['autonomous_weapons', 'industrial'] } } ] },
+        {
+          id: 'decade_plus',
+          label: 'A decade+',
+          requires: { escape_method: ['autonomous_weapons', 'industrial'] }
+        }
+      ] },
     { id: 'decel_outcome', label: 'Deceleration Outcome', virtual: true,
       activateWhen: [{ gov_action: ['decelerate'] }],
       overrides: DECEL_PAIRS.flatMap(([pKey, aKey]) => [
@@ -453,9 +903,7 @@ const DIMENSIONS = [
         { when: { [aKey]: 'rival', [pKey]: 'unsolved' }, value: 'parity_failed' },
         { when: { [aKey]: 'rival' }, value: 'rival' },
       ]),
-      values: [
-        { id: 'solved' }, { id: 'abandon' }, { id: 'rival' },
-        { id: 'parity_solved' }, { id: 'parity_failed' }, { id: 'escapes' } ] },
+      values: [{ id: 'solved' }, { id: 'abandon' }, { id: 'rival' }, { id: 'parity_solved' }, { id: 'parity_failed' }, { id: 'escapes' }] },
     { id: 'decel_align_progress', label: 'Decel Alignment Progress', virtual: true,
       activateWhen: [{ gov_action: ['decelerate'] }],
       overrides: DECEL_PAIRS.flatMap(([pKey, aKey]) => [
@@ -476,15 +924,23 @@ const DIMENSIONS = [
       overrides: [
         { effective: { decel_outcome: ['parity_solved', 'parity_failed', 'rival'] }, value: 'yes' },
       ],
-      values: [{ id: 'yes' }] },
+      values: [{ id: 'yes' }] }
 ];
 
 const DIM_MAP = {};
 for (const d of DIMENSIONS) DIM_MAP[d.id] = d;
 
 const EFFECTIVE_EXCLUSIONS = [
-    { exclude: ['intent'], anyPending: ['rival_dynamics', 'block_entrants', 'block_outcome', 'new_entrants'], unlessEffective: ['rival_dynamics'] },
-    { exclude: ['intent', 'ai_goals'], anyPending: ['inert_stays'], when: { _raw: { ai_goals: ['marginal'] } } },
+    {
+      exclude: ['intent'],
+      anyPending: ['rival_dynamics', 'block_entrants', 'block_outcome', 'new_entrants'],
+      unlessEffective: ['rival_dynamics']
+    },
+    {
+      exclude: ['intent', 'ai_goals'],
+      anyPending: ['inert_stays'],
+      when: { _raw: { ai_goals: ['marginal'] } }
+    },
     { exclude: ['ai_goals'], anyPending: ['inert_outcome'], when: { _raw: { inert_stays: ['no'] } } },
     { exclude: ['alignment'], anyPending: ['brittle_resolution'] },
 ];

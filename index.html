@@ -784,15 +784,11 @@
         const app = document.getElementById('app');
         const toastEl = document.getElementById('toast');
 
-        let questionsMap = {};
         let templatesMap = {};
         let templatesList = [];
         let allVariants = [];
-        let stagesMap = {};
-        let dimNarrative = {};
-        let rootId = null;
-        let path = [];
         let discovered = new Set();
+        const { SCENARIO, DIMENSIONS, DIM_MAP } = window.Dimensions;
 
         loadDiscovered();
         loadData().then(() => {
@@ -801,66 +797,61 @@
             renderError(err);
         });
 
-        function buildDimNarrative(qMap) {
-            const narr = {};
-            const questions = Object.values(qMap);
-            for (const q of questions) {
-                if (!q.dimension) continue;
-                for (const a of q.answers) {
-                    const valueId = a.value || (a.sets && a.sets[q.dimension]);
-                    if (!valueId || !a.timelineEvent) continue;
-                    if (!narr[q.dimension]) narr[q.dimension] = {};
-                    if (!narr[q.dimension][valueId]) {
-                        narr[q.dimension][valueId] = {
-                            headline: a.timelineEvent.headline || '',
-                            description: a.timelineEvent.description || '',
-                            durationMin: a.timelineEvent.durationMin,
-                            durationMax: a.timelineEvent.durationMax,
-                            answerLabel: a.label,
-                            answerDesc: a.description,
-                            stage: q.stage,
-                        };
-                    }
-                }
+        function dimNarrativeFor(dimId, valueId, sel) {
+            const dim = DIM_MAP[dimId];
+            if (!dim) return {};
+            const v = dim.values && dim.values.find(vv => vv.id === valueId);
+            if (!v) return {};
+            let variant = null;
+            if (v.narrativeVariants && sel) {
+                variant = resolveNarrativeVariant(v.narrativeVariants, sel);
             }
-            for (const q of questions) {
-                for (const a of q.answers) {
-                    if (!a.sets || !a.timelineEvent) continue;
-                    for (const [sk, sv] of Object.entries(a.sets)) {
-                        if (!narr[sk]) narr[sk] = {};
-                        if (!narr[sk][sv]) {
-                            narr[sk][sv] = {
-                                headline: a.timelineEvent.headline || '',
-                                description: a.timelineEvent.description || '',
-                                durationMin: a.timelineEvent.durationMin,
-                                durationMax: a.timelineEvent.durationMax,
-                                answerLabel: a.label,
-                                answerDesc: a.description,
-                                stage: q.stage,
-                            };
-                        }
-                    }
-                }
-            }
-            return narr;
+            const te = (variant && variant.timelineEvent) || v.timelineEvent || {};
+            return {
+                headline: te.headline || '',
+                description: te.description || '',
+                durationMin: te.durationMin,
+                durationMax: te.durationMax,
+                answerLabel: (variant && variant.answerLabel) || v.answerLabel || v.label,
+                answerDesc: (variant && variant.answerDesc) || v.answerDesc || '',
+                stage: dim.stage,
+            };
         }
 
         // --- Data Loading ---
         async function loadData() {
             const cacheBust = '?v=' + Date.now();
-            const [qRes, oRes] = await Promise.all([
-                fetch('data/questions.json' + cacheBust),
-                fetch('data/outcomes.json' + cacheBust)
+            const [oRes, nRes] = await Promise.all([
+                fetch('data/outcomes.json' + cacheBust),
+                fetch('data/narrative.json' + cacheBust),
             ]);
-            if (!qRes.ok || !oRes.ok) {
+            if (!oRes.ok || !nRes.ok) {
                 throw new Error('Could not load data files. Are you running a local server?');
             }
-            const qData = await qRes.json();
             const oData = await oRes.json();
-            rootId = qData.root;
-            for (const q of qData.questions) questionsMap[q.id] = q;
-            if (qData.stages) for (const s of qData.stages) stagesMap[s.id] = s;
-            dimNarrative = buildDimNarrative(questionsMap);
+            const narrative = await nRes.json();
+
+            if (narrative._stages) SCENARIO.stages = narrative._stages;
+            for (const [dimId, narr] of Object.entries(narrative)) {
+                if (dimId === '_stages') continue;
+                const dim = DIM_MAP[dimId];
+                if (!dim) continue;
+                if (narr.questionText) dim.questionText = narr.questionText;
+                if (narr.questionContext) dim.questionContext = narr.questionContext;
+                if (narr.source) dim.source = narr.source;
+                if (narr.narrativeSteps && dim.narrativeSteps) {
+                    for (let i = 0; i < narr.narrativeSteps.length && i < dim.narrativeSteps.length; i++) {
+                        Object.assign(dim.narrativeSteps[i], narr.narrativeSteps[i]);
+                    }
+                }
+                if (narr.values) {
+                    for (const [valId, vn] of Object.entries(narr.values)) {
+                        const v = dim.values && dim.values.find(vv => vv.id === valId);
+                        if (v) Object.assign(v, vn);
+                    }
+                }
+            }
+
             templatesList = oData.templates;
             for (const t of templatesList) templatesMap[t.id] = t;
 
@@ -890,52 +881,7 @@
             }
         }
 
-        // --- Dimensions ---
-        function collectStepDims(question, answer) {
-            const dims = {};
-            if (answer.value !== undefined && question.dimension) dims[question.dimension] = answer.value;
-            if (answer.sets) Object.assign(dims, answer.sets);
-            return dims;
-        }
-
-        function resolveConditionalNext(nextSpec, dims) {
-            if (typeof nextSpec === 'string') return { target: nextSpec };
-            for (const route of nextSpec) {
-                if (!route.when) return { target: route.target, sets: route.sets };
-                const match = Object.entries(route.when).every(([k, allowed]) =>
-                    dims[k] && allowed.includes(dims[k]));
-                if (match) return { target: route.target, sets: route.sets };
-            }
-            return null;
-        }
-
-        function answerVisible(answer, dims) {
-            if (answer.disabledWhen) {
-                const dSets = Array.isArray(answer.disabledWhen) ? answer.disabledWhen : [answer.disabledWhen];
-                for (const conds of dSets) {
-                    if (Object.entries(conds).every(([dim, vals]) => {
-                        const allowed = Array.isArray(vals) ? vals : [vals];
-                        return dims[dim] && allowed.includes(dims[dim]);
-                    })) return false;
-                }
-            }
-            if (!answer.requires) return true;
-            const condSets = Array.isArray(answer.requires) ? answer.requires : [answer.requires];
-            return condSets.some(conds => {
-                for (const [dim, allowed] of Object.entries(conds)) {
-                    if (!dims[dim] || !allowed.includes(dims[dim])) return false;
-                }
-                return true;
-            });
-        }
-
-        function dimensionsFromPath(p) {
-            const d = {};
-            for (const s of p) {
-                if (s.dims) Object.assign(d, s.dims);
-            }
-            return d;
-        }
+        // --- Dimension helpers ---
 
         const _timelineStart = new Date();
         const _monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -1068,8 +1014,6 @@
             return texts;
         }
 
-        const { SCENARIO, DIMENSIONS, DIM_MAP } = window.Dimensions;
-
         // --- Persistence ---
         const STORAGE_KEY = SCENARIO.storageKey;
         function loadDiscovered() {
@@ -1123,57 +1067,22 @@
                     const extraParams = {};
                     const dims = {};
                     for (const [k, v] of Object.entries(params)) {
-                        if (k === 'path') continue;
                         if (k === 'tl_mode') { extraParams[k] = v; continue; }
                         dims[k] = v;
-                    }
-                    if (params.path) {
-                        const treePath = params.path.split(',').map(pair => {
-                            const [qid, aidx] = pair.split(':');
-                            return { questionId: decodeURIComponent(qid), answerIndex: parseInt(aidx, 10) };
-                        }).filter(s => s.questionId && !isNaN(s.answerIndex));
-                        return { screen: 'outcome', templateId: tid, variantKey: vk, treePath, showPath: false, dims, extraParams };
                     }
                     return { screen: 'outcome', templateId: tid, variantKey: vk, showPath: false, dims: Object.keys(dims).length ? dims : undefined, extraParams: Object.keys(extraParams).length ? extraParams : undefined };
                 }
             }
-            if (hash.startsWith('/story/')) {
-                let rest = hash.slice('/story/'.length);
-                const qIdx = rest.indexOf('?');
-                let questionId, pathStr;
+            if (hash.startsWith('/story')) {
+                const dims = {};
+                const qIdx = hash.indexOf('?');
                 if (qIdx >= 0) {
-                    questionId = rest.slice(0, qIdx);
-                    pathStr = rest.slice(qIdx + 1);
-                } else {
-                    questionId = rest;
-                    pathStr = '';
+                    hash.slice(qIdx + 1).split('&').forEach(pair => {
+                        const [k, v] = pair.split('=');
+                        if (k && v) dims[decodeURIComponent(k)] = decodeURIComponent(v);
+                    });
                 }
-                const restoredPath = [];
-                if (pathStr) {
-                    for (const pair of pathStr.split(',')) {
-                        const [qid, aidx] = pair.split(':');
-                        const decodedQid = decodeURIComponent(qid);
-                        const idx = parseInt(aidx, 10);
-                        const q = questionsMap[decodedQid];
-                        if (q && q.answers[idx]) {
-                            const answer = q.answers[idx];
-                            const stepDims = collectStepDims(q, answer);
-                            const allDims = { ...dimensionsFromPath(restoredPath), ...stepDims };
-                            const resolved = resolveConditionalNext(answer.next, allDims);
-                            if (resolved && resolved.sets) Object.assign(stepDims, resolved.sets);
-                            restoredPath.push({
-                                questionId: decodedQid,
-                                answerIndex: idx,
-                                answerLabel: answer.label,
-                                questionText: q.text,
-                                dims: stepDims
-                            });
-                        }
-                    }
-                }
-                if (questionsMap[questionId]) {
-                    return { screen: 'question', questionId, path: restoredPath };
-                }
+                return { screen: 'question', dims };
             }
             if (hash === '/gallery') return { screen: 'gallery' };
             if (hash === '/tree') return { screen: 'tree' };
@@ -1211,9 +1120,9 @@
                     hash += '?' + Object.entries(state.dims).map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
                 }
             } else if (state.screen === 'question') {
-                hash = '/story/' + state.questionId;
-                if (state.path && state.path.length > 0) {
-                    hash += '?' + state.path.map(s => encodeURIComponent(s.questionId) + ':' + s.answerIndex).join(',');
+                hash = '/story';
+                if (state.dims && Object.keys(state.dims).length > 0) {
+                    hash += '?' + Object.entries(state.dims).map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
                 }
             }
             history.pushState(state, '', hash ? '#' + hash : location.pathname);
@@ -1223,20 +1132,16 @@
         function renderState(state, animated) {
             const render = () => {
                 if (state.screen === 'outcome') {
-                    if (state.path) path = state.path;
                     renderOutcome(state.templateId, state.variantKey, state.showPath, state.dims, state.treePath, state.extraParams);
                 } else if (state.screen === 'gallery') {
-                    path = [];
                     renderGallery();
                 } else if (state.screen === 'tree') {
                     renderTree();
                 } else if (state.screen === 'explore') {
                     renderExplorer(state.dims);
                 } else if (state.screen === 'question') {
-                    if (state.path) path = state.path;
-                    renderQuestion(state.questionId);
+                    renderQuestion(state.dims);
                 } else {
-                    path = [];
                     renderIntro();
                 }
             };
@@ -1290,48 +1195,156 @@
                     ${count > 0 ? `<p class="discovery">${count} of ${total} future${total !== 1 ? 's' : ''} discovered</p>` : ''}
                 </div>`;
             listen('[data-action="start"]', 'click', () => {
-                path = [];
-                navigate({ screen: 'question', questionId: rootId, path: [] });
+                navigate({ screen: 'question', dims: {} });
             });
             listen('[data-action="explore"]', 'click', () => navigate({ screen: 'explore' }));
         }
 
-        // --- Render: Question ---
-        function renderQuestion(questionId) {
-            const q = questionsMap[questionId];
-            if (!q) { renderIntro(); return; }
+        // --- Render: Question (DIMENSIONS-based story mode) ---
+        function findNextStoryDim(sel) {
+            for (const dim of DIMENSIONS) {
+                if (dim.virtual || dim.terminal) continue;
+                if (!Engine.isDimVisible(sel, dim)) continue;
+                const locked = Engine.isDimLocked(sel, dim);
+                if (locked) continue;
+                if (sel[dim.id]) continue;
+                return dim;
+            }
+            return null;
+        }
 
+        function resolveNarrativeVariant(variants, sel) {
+            if (!variants || variants.length === 0) return null;
+            for (const v of variants) {
+                if (!v.when) return v;
+                const match = Object.entries(v.when).every(([k, allowed]) => {
+                    const arr = Array.isArray(allowed) ? allowed : [allowed];
+                    return sel[k] && arr.includes(sel[k]);
+                });
+                if (match) return v;
+            }
+            return variants[0];
+        }
+
+        function renderQuestion(passedDims) {
+            const sel = passedDims ? { ...passedDims } : {};
+            Engine.cleanSelection(sel);
+
+            const dim = findNextStoryDim(sel);
+            if (!dim) {
+                const eff = Engine.effectiveDims(sel);
+                const matched = templatesList.filter(t => Engine.templateMatches(t, eff));
+                if (matched.length >= 1) {
+                    const tid = matched[0].id;
+                    const resolved = resolveTemplate(tid, eff);
+                    const key = outcomeKey(tid, resolved.variantKey);
+                    markDiscovered(key);
+                    navigate({ screen: 'outcome', templateId: tid, variantKey: resolved.variantKey, showPath: true, dims: sel });
+                } else {
+                    renderIntro();
+                }
+                return;
+            }
+
+            const narrowDim = sel._storyNarrowDim;
+            const narrowValues = sel._storyNarrowValues ? sel._storyNarrowValues.split(',') : null;
+            delete sel._storyNarrowDim;
+            delete sel._storyNarrowValues;
+
+            let narrativeStep = null;
+            if (narrowDim === dim.id && narrowValues) {
+                const laterStep = dim.narrativeSteps && dim.narrativeSteps.find(s => !s.groups);
+                narrativeStep = laterStep || null;
+            } else if (dim.narrativeSteps && dim.narrativeSteps.length > 0) {
+                for (const step of dim.narrativeSteps) {
+                    if (step.groups) {
+                        const anyGroupNeedsChoice = step.groups.some(g => g.values.length > 1 || !sel[dim.id]);
+                        if (anyGroupNeedsChoice && !sel[dim.id]) { narrativeStep = step; break; }
+                    } else {
+                        if (!sel[dim.id]) { narrativeStep = step; break; }
+                    }
+                }
+            }
+
+            const questionText = (narrativeStep && narrativeStep.text) || dim.questionText || dim.label;
+            const questionContext = (narrativeStep && narrativeStep.context) || dim.questionContext || '';
+            const questionSource = (narrativeStep && narrativeStep.source) || dim.source;
+
+            let answerCards = [];
+            if (narrativeStep && narrativeStep.groups) {
+                for (const group of narrativeStep.groups) {
+                    if (group.values.length === 1) {
+                        const valId = group.values[0];
+                        const dimVal = dim.values.find(v => v.id === valId);
+                        if (dimVal && Engine.isValueDisabled(sel, dim, dimVal)) continue;
+                        answerCards.push({
+                            label: group.label || (dimVal && dimVal.answerLabel) || (dimVal && dimVal.label) || valId,
+                            desc: group.desc || (dimVal && dimVal.answerDesc) || '',
+                            action: { [dim.id]: valId }
+                        });
+                    } else {
+                        const anyEnabled = group.values.some(vid => {
+                            const dv = dim.values.find(v => v.id === vid);
+                            return dv && !Engine.isValueDisabled(sel, dim, dv);
+                        });
+                        if (!anyEnabled) continue;
+                        answerCards.push({
+                            label: group.label,
+                            desc: group.desc || '',
+                            action: '_next_step',
+                            groupValues: group.values
+                        });
+                    }
+                }
+            } else {
+                const valuesToShow = narrowValues
+                    ? dim.values.filter(v => narrowValues.includes(v.id))
+                    : dim.values;
+                for (const v of valuesToShow) {
+                    if (Engine.isValueDisabled(sel, dim, v)) continue;
+                    const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, sel) : null;
+                    answerCards.push({
+                        label: (variant && variant.answerLabel) || v.answerLabel || v.label,
+                        desc: (variant && variant.answerDesc) || v.answerDesc || '',
+                        action: { [dim.id]: v.id }
+                    });
+                }
+            }
+
+            const crumbDims = [];
+            for (const d of DIMENSIONS) {
+                if (d.virtual || d.terminal) continue;
+                if (!sel[d.id]) continue;
+                if (!Engine.isDimVisible(sel, d)) continue;
+                const val = d.values.find(v => v.id === sel[d.id]);
+                if (val) crumbDims.push({ dimId: d.id, label: val.answerLabel || val.label, questionText: d.questionText || d.label });
+            }
             let crumbs = '';
-            if (path.length > 0) {
-                const parts = path.map((p, i) => `<span class="crumb" data-step="${i}" title="${esc(p.questionText)}">${esc(p.answerLabel)}</span>`);
+            if (crumbDims.length > 0) {
+                const parts = crumbDims.map((c, i) => `<span class="crumb" data-crumb-dim="${c.dimId}" title="${esc(c.questionText)}">${esc(c.label)}</span>`);
                 crumbs = `<div class="breadcrumbs">${parts.join('<span class="sep">\u2192</span>')}</div>`;
             }
 
             let source = '';
-            if (q.source) {
-                source = `<div class="question-source"><a href="${esc(q.source.url)}" target="_blank" rel="noopener">${esc(q.source.label)} \u2197</a></div>`;
+            if (questionSource) {
+                source = `<div class="question-source"><a href="${esc(questionSource.url)}" target="_blank" rel="noopener">${esc(questionSource.label)} \u2197</a></div>`;
             }
 
-            const dims = dimensionsFromPath(path);
-            const visibleAnswers = q.answers
-                .map((a, i) => ({ ...a, originalIndex: i }))
-                .filter(a => answerVisible(a, dims));
-
-            const answers = visibleAnswers.map(a => `
-                <div class="answer-card" data-idx="${a.originalIndex}">
+            const answersHtml = answerCards.map((a, i) => `
+                <div class="answer-card" data-aidx="${i}">
                     <div class="label">${esc(a.label)}</div>
-                    ${a.description ? `<div class="desc">${esc(a.description)}</div>` : ''}
+                    ${a.desc ? `<div class="desc">${esc(a.desc)}</div>` : ''}
                 </div>`).join('');
 
             app.innerHTML = `
                 <div class="question-screen">
                     ${crumbs}
-                    <div class="question-text">${esc(q.text)}</div>
-                    ${q.context ? `<div class="question-context">${esc(q.context)}</div>` : ''}
+                    <div class="question-text">${esc(questionText)}</div>
+                    ${questionContext ? `<div class="question-context">${esc(questionContext)}</div>` : ''}
                     ${source}
-                    <div class="answers">${answers}</div>
+                    <div class="answers">${answersHtml}</div>
                     <div class="question-nav">
-                        ${path.length > 0
+                        ${crumbDims.length > 0
                             ? '<button class="btn btn-ghost" data-action="back">\u2190 Back</button>'
                             : '<button class="btn btn-ghost" data-action="home">\u2190 Home</button>'}
                     </div>
@@ -1339,93 +1352,60 @@
 
             app.querySelectorAll('.answer-card').forEach(card => {
                 card.addEventListener('click', () => {
-                    const idx = parseInt(card.dataset.idx, 10);
-                    const answer = q.answers[idx];
-                    const stepDims = collectStepDims(q, answer);
-                    const allDims = { ...dimensionsFromPath(path), ...stepDims };
-                    const resolved = resolveConditionalNext(answer.next, allDims);
-                    if (resolved && resolved.sets) Object.assign(stepDims, resolved.sets);
-                    path.push({
-                        questionId: q.id,
-                        answerIndex: idx,
-                        answerLabel: answer.label,
-                        questionText: q.text,
-                        dims: stepDims
-                    });
-                    const next = resolved ? resolved.target : answer.next;
-                    if (questionsMap[next]) {
-                        navigate({ screen: 'question', questionId: next, path: [...path] });
-                    } else if (templatesMap[next]) {
-                        const dims = dimensionsFromPath(path);
-                        const resolved = resolveTemplate(next, dims);
-                        const key = outcomeKey(next, resolved.variantKey);
-                        markDiscovered(key);
-                        navigate({
-                            screen: 'outcome',
-                            templateId: next,
-                            variantKey: resolved.variantKey,
-                            path: [...path],
-                            showPath: true,
-                            dims: dims
-                        });
-                    } else if (next === '__resolve__') {
-                        const dims = dimensionsFromPath(path);
-                        const { templateMatches } = window.Engine;
-                        const matched = templatesList.filter(t => templateMatches(t, dims));
-                        if (matched.length === 1) {
-                            const tid = matched[0].id;
-                            const resolved = resolveTemplate(tid, dims);
-                            const key = outcomeKey(tid, resolved.variantKey);
-                            markDiscovered(key);
-                            navigate({
-                                screen: 'outcome',
-                                templateId: tid,
-                                variantKey: resolved.variantKey,
-                                path: [...path],
-                                showPath: true,
-                                dims: dims
-                            });
-                        } else {
-                            console.error('__resolve__: expected 1 match, got', matched.length, matched.map(t => t.id));
-                        }
-                    } else {
-                        console.error('Unknown next node:', next);
+                    const idx = parseInt(card.dataset.aidx, 10);
+                    const chosen = answerCards[idx];
+                    if (!chosen) return;
+
+                    if (chosen.action === '_next_step') {
+                        const subSel = { ...sel, _storyNarrowValues: chosen.groupValues.join(','), _storyNarrowDim: dim.id };
+                        navigate({ screen: 'question', dims: subSel });
+                        return;
                     }
+
+                    const newSel = { ...sel, ...chosen.action };
+                    Engine.cleanSelection(newSel);
+                    navigate({ screen: 'question', dims: newSel });
                 });
             });
 
-            app.querySelectorAll('.breadcrumbs .crumb[data-step]').forEach(crumb => {
+            app.querySelectorAll('.breadcrumbs .crumb[data-crumb-dim]').forEach(crumb => {
                 crumb.addEventListener('click', () => {
-                    const step = parseInt(crumb.dataset.step, 10);
-                    const target = path[step];
-                    path = path.slice(0, step);
-                    navigate({ screen: 'question', questionId: target.questionId, path: [...path] });
+                    const dimId = crumb.dataset.crumbDim;
+                    const newSel = {};
+                    for (const d of DIMENSIONS) {
+                        if (d.id === dimId) break;
+                        if (sel[d.id]) newSel[d.id] = sel[d.id];
+                    }
+                    Engine.cleanSelection(newSel);
+                    navigate({ screen: 'question', dims: newSel });
                 });
             });
 
             listen('[data-action="back"]', 'click', () => {
-                const prev = path.pop();
-                if (prev) navigate({ screen: 'question', questionId: prev.questionId, path: [...path] });
+                const answered = crumbDims.map(c => c.dimId);
+                if (answered.length === 0) { navigate({ screen: 'intro' }); return; }
+                const lastDim = answered[answered.length - 1];
+                const newSel = {};
+                for (const d of DIMENSIONS) {
+                    if (d.id === lastDim) break;
+                    if (sel[d.id]) newSel[d.id] = sel[d.id];
+                }
+                Engine.cleanSelection(newSel);
+                navigate({ screen: 'question', dims: newSel });
             });
             listen('[data-action="home"]', 'click', () => navigate({ screen: 'intro' }));
         }
 
         // --- Render: Outcome ---
-        function renderOutcome(templateId, variantKey, showPath, passedDims, treePath, extraParams) {
+        function renderOutcome(templateId, variantKey, showPath, passedDims, _unused, extraParams) {
             const t = templatesMap[templateId];
             if (!t) { renderIntro(); return; }
 
             let tlMode = (extraParams && extraParams.tl_mode) || (passedDims && passedDims.tl_mode) || 'full';
 
             const sel = {};
-            if (treePath && treePath.length > 0) {
-                const replay = Engine.replayPath(questionsMap, rootId, treePath);
-                Object.assign(sel, replay.dims);
-            } else {
-                const pathDims = dimensionsFromPath(path);
-                Object.assign(sel, pathDims, passedDims || {});
-                delete sel.tl_mode;
-            }
+            Object.assign(sel, passedDims || {});
+            delete sel.tl_mode;
             if (variantKey && t.primaryDimension && !sel[t.primaryDimension]) {
                 sel[t.primaryDimension] = variantKey;
             }
@@ -1492,7 +1472,7 @@
                         continue;
                     }
 
-                    const narr = (dimNarrative[dim.id] && dimNarrative[dim.id][value]) || {};
+                    const narr = dimNarrativeFor(dim.id, value, sel);
                     const dimValue = dim.values.find(v => v.id === value);
                     const paramLabel = dimValue ? dimValue.label : value;
                     const isLockedDim = locked !== null;
@@ -1521,7 +1501,7 @@
             }
 
             function stageHeaderHtml(stage) {
-                const info = stagesMap[stage];
+                const info = SCENARIO.stages[stage];
                 if (!info) return '';
                 return `<div class="timeline-stage-header">
                     <span class="timeline-stage-label">${esc(info.label)}</span>
@@ -1827,14 +1807,14 @@
                 card.addEventListener('click', () => {
                     const tid = card.dataset.tid;
                     const vk = card.dataset.vk || null;
-                    navigate({ screen: 'outcome', templateId: tid, variantKey: vk, path: [], showPath: false });
+                    navigate({ screen: 'outcome', templateId: tid, variantKey: vk, showPath: false });
                 });
             });
 
             listen('[data-action="home"]', 'click', () => navigate({ screen: 'intro' }));
         }
 
-        // --- Render: Tree ---
+        // --- Render: Tree (DIMENSIONS-based) ---
         function renderTree() {
             function moodColor(mood) {
                 const map = { utopian:'var(--mood-utopian)', dystopian:'var(--mood-dystopian)',
@@ -1842,98 +1822,129 @@
                 return map[mood] || 'var(--text-dim)';
             }
 
-            const treePaths = {};
-            let tpId = 0;
+            const treeSels = {};
+            let tsId = 0;
 
-            function checkCondSet(conds, dims) {
-                const notes = [];
-                for (const [dim, allowed] of Object.entries(conds)) {
-                    if (dim in dims) {
-                        if (!allowed.includes(dims[dim])) return { match: false, possible: false, notes: [] };
-                    } else {
-                        notes.push('if ' + dim.replace(/_/g, ' ') + ': ' + allowed.join(' / '));
-                    }
-                }
-                return { match: notes.length === 0, possible: true, notes };
-            }
-            function overviewVisible(answer, dims) {
-                if (answer.disabledWhen) {
-                    const dSets = Array.isArray(answer.disabledWhen) ? answer.disabledWhen : [answer.disabledWhen];
-                    for (const conds of dSets) {
-                        if (Object.entries(conds).every(([dim, vals]) => {
-                            const allowed = Array.isArray(vals) ? vals : [vals];
-                            return dims[dim] && allowed.includes(dims[dim]);
-                        })) return { show: false, note: '' };
-                    }
-                }
-                if (!answer.requires) return { show: true, note: '' };
-                const condSets = Array.isArray(answer.requires) ? answer.requires : [answer.requires];
+            function valueVisible(dim, val, dimsSoFar) {
+                if (Engine.isValueDisabled(dimsSoFar, dim, val)) return { show: false, note: '' };
+                if (!val.requires) return { show: true, note: '' };
+                const condSets = Array.isArray(val.requires) ? val.requires : [val.requires];
                 let allNotes = [];
                 for (const conds of condSets) {
-                    const r = checkCondSet(conds, dims);
-                    if (r.match) return { show: true, note: '' };
-                    if (r.possible) allNotes.push(r.notes.join('; '));
+                    const notes = [];
+                    let possible = true;
+                    for (const [dk, allowed] of Object.entries(conds)) {
+                        const arr = Array.isArray(allowed) ? allowed : [allowed];
+                        if (dk in dimsSoFar) {
+                            if (!arr.includes(dimsSoFar[dk])) { possible = false; break; }
+                        } else {
+                            notes.push('if ' + dk.replace(/_/g, ' ') + ': ' + arr.join(' / '));
+                        }
+                    }
+                    if (!possible) continue;
+                    if (notes.length === 0) return { show: true, note: '' };
+                    allNotes.push(notes.join('; '));
                 }
                 if (allNotes.length > 0) return { show: true, note: allNotes.join(' or ') };
                 return { show: false, note: '' };
             }
 
-            function buildStageTree(nodeId, stageNum, pathSoFar, dimsSoFar) {
-                if (templatesMap[nodeId]) {
-                    const resolved = resolveTemplate(nodeId, dimsSoFar);
-                    if (!resolved) return `<span style="color:var(--mood-dystopian)">[error: ${esc(nodeId)}]</span>`;
-                    return `<span class="tree-outcome" data-tid="${esc(nodeId)}" data-vk="${esc(resolved.variantKey || '')}">`
-                        + `<span class="tree-dot" style="background:${moodColor(resolved.mood)}"></span>`
-                        + `${esc(resolved.title)}${resolved.subtitle ? ` <span class="tree-subtitle">— ${esc(resolved.subtitle)}</span>` : ''}</span>`;
+            function buildDimTree(dimsSoFar, stageNum, depth) {
+                if (depth > 60) return '<span class="tree-condition">[depth limit]</span>';
+
+                let nextDim = null;
+                for (const d of DIMENSIONS) {
+                    if (d.virtual || d.terminal) continue;
+                    if (dimsSoFar[d.id]) continue;
+                    if (!Engine.isDimVisible(dimsSoFar, d)) continue;
+                    if (Engine.isDimLocked(dimsSoFar, d)) continue;
+                    nextDim = d;
+                    break;
                 }
 
-                const q = questionsMap[nodeId];
-                if (!q) return `<span style="color:var(--mood-dystopian)">[missing: ${esc(nodeId)}]</span>`;
-
-                if (q.stage > stageNum) {
-                    const info = stagesMap[q.stage];
-                    return `<span class="tree-stage-link" data-stage="${q.stage}">\u2192 Round ${q.stage}${info ? ': ' + esc(info.label) : ''}</span>`;
+                if (!nextDim) {
+                    const eff = Engine.effectiveDims(dimsSoFar);
+                    const matched = templatesList.filter(t => Engine.templateMatches(t, eff));
+                    if (matched.length >= 1) {
+                        const tid = matched[0].id;
+                        const resolved = resolveTemplate(tid, eff);
+                        if (!resolved) return '';
+                        return `<span class="tree-outcome" data-tid="${esc(tid)}" data-vk="${esc(resolved.variantKey || '')}">`
+                            + `<span class="tree-dot" style="background:${moodColor(resolved.mood)}"></span>`
+                            + `${esc(resolved.title)}${resolved.subtitle ? ` <span class="tree-subtitle">— ${esc(resolved.subtitle)}</span>` : ''}</span>`;
+                    }
+                    return '<span class="tree-condition">[no matching outcome]</span>';
                 }
 
-                const pid = tpId++;
-                treePaths[pid] = pathSoFar;
+                if (nextDim.stage > stageNum) {
+                    const info = SCENARIO.stages[nextDim.stage];
+                    return `<span class="tree-stage-link" data-stage="${nextDim.stage}">\u2192 Round ${nextDim.stage}${info ? ': ' + esc(info.label) : ''}</span>`;
+                }
 
-                const answersHtml = q.answers
-                    .map((a, i) => {
-                        const { show, note } = overviewVisible(a, dimsSoFar);
-                        if (!show) return '';
+                const sid = tsId++;
+                treeSels[sid] = { ...dimsSoFar };
 
-                        const stepDims = {};
-                        if (a.value !== undefined && q.dimension) stepDims[q.dimension] = a.value;
-                        if (a.sets) Object.assign(stepDims, a.sets);
+                const step0 = nextDim.narrativeSteps && nextDim.narrativeSteps[0];
+                const hasGroups = step0 && step0.groups;
+                const questionText = (hasGroups ? step0.text : nextDim.questionText) || nextDim.label;
 
-                        const childDimsBase = { ...dimsSoFar, ...stepDims };
-                        const resolved = resolveConditionalNext(a.next, childDimsBase);
-                        if (resolved && resolved.sets) Object.assign(stepDims, resolved.sets);
-                        const childPath = [...pathSoFar, {
-                            questionId: q.id, answerIndex: i,
-                            answerLabel: a.label, questionText: q.text,
-                            dims: stepDims
-                        }];
-                        const childDims = { ...dimsSoFar, ...stepDims };
-                        const nextTarget = resolved ? resolved.target : a.next;
+                let answersHtml;
+                if (hasGroups) {
+                    const laterStep = nextDim.narrativeSteps.find(s => !s.groups);
+                    answersHtml = step0.groups.map(g => {
+                        const enabledVals = g.values.filter(vid => {
+                            const dv = nextDim.values.find(v => v.id === vid);
+                            return dv && !Engine.isValueDisabled(dimsSoFar, nextDim, dv);
+                        });
+                        if (enabledVals.length === 0) return '';
+                        if (enabledVals.length === 1) {
+                            const vid = enabledVals[0];
+                            const dv = nextDim.values.find(v => v.id === vid);
+                            const childDims = { ...dimsSoFar, [nextDim.id]: vid };
+                            Engine.cleanSelection(childDims);
+                            const label = g.label || (dv && dv.answerLabel) || (dv && dv.label) || vid;
+                            return `<li><span class="tree-answer">${esc(label)}</span><ul><li>${buildDimTree(childDims, stageNum, depth + 1)}</li></ul></li>`;
+                        }
+                        const subText = (laterStep && laterStep.text) || nextDim.questionText || nextDim.label;
+                        const subAnswers = enabledVals.map(vid => {
+                            const dv = nextDim.values.find(v => v.id === vid);
+                            if (!dv) return '';
+                            const { show, note } = valueVisible(nextDim, dv, dimsSoFar);
+                            if (!show) return '';
+                            const childDims = { ...dimsSoFar, [nextDim.id]: vid };
+                            Engine.cleanSelection(childDims);
+                            const noteHtml = note ? ` <span class="tree-condition">(${esc(note)})</span>` : '';
+                            const label = dv.answerLabel || dv.label;
+                            return `<li><span class="tree-answer">${esc(label)}</span>${noteHtml}<ul><li>${buildDimTree(childDims, stageNum, depth + 1)}</li></ul></li>`;
+                        }).filter(Boolean).join('');
+                        return `<li><span class="tree-answer">${esc(g.label)}</span>`
+                            + `<ul><li><span class="tree-question" data-sid="${sid}">${esc(subText)}</span>`
+                            + `<ul>${subAnswers}</ul></li></ul></li>`;
+                    }).filter(Boolean).join('');
+                } else {
+                    answersHtml = nextDim.values
+                        .map(v => {
+                            const { show, note } = valueVisible(nextDim, v, dimsSoFar);
+                            if (!show) return '';
+                            const childDims = { ...dimsSoFar, [nextDim.id]: v.id };
+                            Engine.cleanSelection(childDims);
+                            const noteHtml = note ? ` <span class="tree-condition">(${esc(note)})</span>` : '';
+                            const label = v.answerLabel || v.label;
+                            return `<li><span class="tree-answer">${esc(label)}</span>${noteHtml}<ul><li>${buildDimTree(childDims, stageNum, depth + 1)}</li></ul></li>`;
+                        })
+                        .filter(Boolean)
+                        .join('');
+                }
 
-                        const noteHtml = note ? ` <span class="tree-condition">(${esc(note)})</span>` : '';
-
-                        return `<li><span class="tree-answer">${esc(a.label)}</span>${noteHtml}<ul><li>${buildStageTree(nextTarget, stageNum, childPath, childDims)}</li></ul></li>`;
-                    })
-                    .filter(Boolean)
-                    .join('');
-
-                return `<span class="tree-question" data-qid="${esc(q.id)}" data-pid="${pid}">${esc(q.text)}</span><ul>${answersHtml}</ul>`;
+                return `<span class="tree-question" data-did="${esc(nextDim.id)}" data-sid="${sid}">${esc(questionText)}</span><ul>${answersHtml}</ul>`;
             }
 
-            const stage1Html = buildStageTree(rootId, 1, [], {});
-            const stage2Html = buildStageTree('open-source-parity', 2, [], {});
-            const stage3Html = buildStageTree('knowledge-replacement', 3, [], {});
+            const stage1Html = buildDimTree({}, 1, 0);
+            const stage2Html = buildDimTree({}, 2, 0);
+            const stage3Html = buildDimTree({}, 3, 0);
 
             function stagePanel(id, body) {
-                const info = stagesMap[id];
+                const info = SCENARIO.stages[id];
                 if (!info) return '';
                 return `<div class="tree-stage" data-stage="${id}">
                     <div class="tree-stage-header">
@@ -1948,12 +1959,13 @@
                 </div>`;
             }
 
+            const dimCount = DIMENSIONS.filter(d => !d.virtual && !d.terminal).length;
             const variantCount = allVariants.length;
 
             app.innerHTML = `
                 <div class="tree-screen">
-                    <h1>Question Tree</h1>
-                    <p class="tree-subtitle">${Object.keys(questionsMap).length} questions \u2022 ${variantCount} outcomes (${templatesList.length} templates)</p>
+                    <h1>Dimension Tree</h1>
+                    <p class="tree-subtitle">${dimCount} dimensions \u2022 ${variantCount} outcomes (${templatesList.length} templates)</p>
                     ${stagePanel(1, stage1Html)}
                     ${stagePanel(2, stage2Html)}
                     ${stagePanel(3, stage3Html)}
@@ -1964,14 +1976,14 @@
 
             app.querySelectorAll('.tree-outcome').forEach(el => {
                 el.addEventListener('click', () => {
-                    navigate({ screen: 'outcome', templateId: el.dataset.tid, variantKey: el.dataset.vk || null, path: [], showPath: false });
+                    navigate({ screen: 'outcome', templateId: el.dataset.tid, variantKey: el.dataset.vk || null, showPath: false });
                 });
             });
 
             app.querySelectorAll('.tree-question').forEach(el => {
                 el.addEventListener('click', () => {
-                    const p = treePaths[parseInt(el.dataset.pid)] || [];
-                    navigate({ screen: 'question', questionId: el.dataset.qid, path: p });
+                    const s = treeSels[parseInt(el.dataset.sid)] || {};
+                    navigate({ screen: 'question', dims: s });
                 });
             });
 
@@ -2019,7 +2031,7 @@
 
             function syncHash() {
                 let hash = '/explore';
-                const entries = Object.entries(sel).filter(([, v]) => v != null);
+                const entries = Object.entries(sel).filter(([k, v]) => v != null && !k.startsWith('_'));
                 if (entries.length > 0) {
                     hash += '?' + entries.map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
                 }
@@ -2042,18 +2054,46 @@
                     const isNextQuestion = visible && !isLocked && !answered;
                     const shouldHide = !visible || (shownNextQuestion && !userAnswered && !isLocked);
                     row.classList.toggle('hidden', shouldHide);
-                    if (shouldHide) return;
+                    if (shouldHide) {
+                        const subRow = app.querySelector('[data-dim-sub="' + dim.id + '"]');
+                        if (subRow) subRow.classList.add('hidden');
+                        return;
+                    }
                     if (isNextQuestion) shownNextQuestion = true;
-                    row.querySelectorAll('.dim-pill').forEach(pill => {
-                        const vid = pill.dataset.val;
-                        const val = dim.values.find(v => v.id === vid);
-                        const disabled = val && isValueDisabled(dim, val);
-                        const isLocked = locked !== null;
-                        const isActive = isLocked ? vid === locked : sel[dim.id] === vid;
-                        pill.classList.toggle('active', isActive);
-                        pill.classList.toggle('locked', isLocked);
-                        pill.classList.toggle('disabled', disabled && !isActive);
-                    });
+
+                    if (steppedDims.has(dim.id)) {
+                        const step0 = dim.narrativeSteps[0];
+                        const subRow = app.querySelector('[data-dim-sub="' + dim.id + '"]');
+                        let multiGroupActive = false;
+                        row.querySelectorAll('.dim-pill[data-group-vals]').forEach(pill => {
+                            const gVals = pill.dataset.groupVals.split(',');
+                            const isActive = gVals.includes(sel[dim.id]);
+                            const isExpanded = gVals.length > 1 && sel._expandedGroup === dim.id;
+                            pill.classList.toggle('active', isActive || isExpanded);
+                            if ((isActive && gVals.length > 1) || isExpanded) multiGroupActive = true;
+                        });
+                        if (subRow) {
+                            subRow.classList.toggle('hidden', !multiGroupActive);
+                            subRow.querySelectorAll('.dim-pill[data-val]').forEach(pill => {
+                                const vid = pill.dataset.val;
+                                const val = dim.values.find(v => v.id === vid);
+                                const disabled = val && isValueDisabled(dim, val);
+                                pill.classList.toggle('active', sel[dim.id] === vid);
+                                pill.classList.toggle('disabled', disabled && sel[dim.id] !== vid);
+                            });
+                        }
+                    } else {
+                        row.querySelectorAll('.dim-pill').forEach(pill => {
+                            const vid = pill.dataset.val;
+                            const val = dim.values.find(v => v.id === vid);
+                            const disabled = val && isValueDisabled(dim, val);
+                            const isLocked = locked !== null;
+                            const isActive = isLocked ? vid === locked : sel[dim.id] === vid;
+                            pill.classList.toggle('active', isActive);
+                            pill.classList.toggle('locked', isLocked);
+                            pill.classList.toggle('disabled', disabled && !isActive);
+                        });
+                    }
                 });
 
                 for (const dim of DIMENSIONS) {
@@ -2103,7 +2143,7 @@
                         const vk = e.currentTarget.dataset.vk || null;
                         const key = outcomeKey(tid, vk);
                         markDiscovered(key);
-                        navigate({ screen: 'outcome', templateId: tid, variantKey: vk, path: [], showPath: false, dims: { ...sel } });
+                        navigate({ screen: 'outcome', templateId: tid, variantKey: vk, showPath: false, dims: { ...sel } });
                     });
                 } else if (matched.length === 1 && hasUnsetVisibleDims) {
                     matchDiv.innerHTML = `<div class="explorer-no-match">1 outcome matches so far. Keep choosing to lock it in.</div>`;
@@ -2136,14 +2176,37 @@
             cleanSelection();
             const stageGroups = { 1: [], 2: [], 3: [] };
             DIMENSIONS.filter(d => !d.virtual).forEach(d => { if (!stageGroups[d.stage]) stageGroups[d.stage] = []; stageGroups[d.stage].push(d); });
-            const stageNames = SCENARIO.stageNames || {};
-
+            const steppedDims = new Set();
             let dimsHtml = '';
             for (const [stageId, dims] of Object.entries(stageGroups)) {
                 if (dims.length === 0) continue;
+                const stageInfo = SCENARIO.stages[stageId] || {};
                 const rows = dims.map(dim => {
                     const visible = isDimVisible(dim);
                     const locked = isDimLocked(dim);
+                    const step0 = dim.narrativeSteps && dim.narrativeSteps[0];
+                    if (step0 && step0.groups) {
+                        steppedDims.add(dim.id);
+                        const laterStep = dim.narrativeSteps.find(s => !s.groups);
+                        const groupPills = step0.groups.map(g => {
+                            const gVals = g.values;
+                            const isActive = gVals.includes(sel[dim.id]);
+                            return `<span class="dim-pill${isActive?' active':''}" data-group-vals="${esc(gVals.join(','))}">${esc(g.label)}</span>`;
+                        }).join('');
+                        const subPills = dim.values.filter(v => {
+                            const singleGroup = step0.groups.find(g => g.values.length === 1 && g.values[0] === v.id);
+                            return !singleGroup;
+                        }).map(v => {
+                            const disabled = isValueDisabled(dim, v);
+                            const isActive = sel[dim.id] === v.id;
+                            return `<span class="dim-pill${isActive?' active':''}${disabled&&!isActive?' disabled':''}" data-val="${esc(v.id)}">${esc(v.label)}</span>`;
+                        }).join('');
+                        const subLabel = dim.label + ' Level';
+                        return `<div class="dim-row${visible?'':' hidden'}" data-dim-row="${esc(dim.id)}">
+                            <span class="dim-label">${esc(dim.label)}</span><div class="dim-pills">${groupPills}</div></div>`
+                            + `<div class="dim-row hidden" data-dim-sub="${esc(dim.id)}">
+                            <span class="dim-label">${esc(subLabel)}</span><div class="dim-pills">${subPills}</div></div>`;
+                    }
                     const pills = dim.values.map(v => {
                         const disabled = isValueDisabled(dim, v);
                         const isLocked = locked !== null;
@@ -2153,7 +2216,7 @@
                     return `<div class="dim-row${visible?'':' hidden'}" data-dim-row="${esc(dim.id)}">
                         <span class="dim-label">${esc(dim.label)}</span><div class="dim-pills">${pills}</div></div>`;
                 }).join('');
-                dimsHtml += `<div class="dim-stage-panel"><div class="dim-stage-label">Round ${stageId}: ${esc(stageNames[stageId]||'')}</div>${rows}</div>`;
+                dimsHtml += `<div class="dim-stage-panel"><div class="dim-stage-label">Round ${stageId}: ${esc(stageInfo.label||'')}</div>${rows}</div>`;
             }
 
             const cards = templatesList.map(t => {
@@ -2185,13 +2248,47 @@
             DIMENSIONS.forEach(dim => {
                 const row = app.querySelector('[data-dim-row="' + dim.id + '"]');
                 if (!row) return;
-                row.querySelectorAll('.dim-pill').forEach(pill => {
-                    pill.addEventListener('click', () => {
-                        if (pill.classList.contains('locked') || pill.classList.contains('disabled')) return;
-                        _applySelection(sel, dim.id, pill.dataset.val);
-                        update();
+
+                if (steppedDims.has(dim.id)) {
+                    const step0 = dim.narrativeSteps[0];
+                    row.querySelectorAll('.dim-pill[data-group-vals]').forEach(pill => {
+                        pill.addEventListener('click', () => {
+                            const gVals = pill.dataset.groupVals.split(',');
+                            if (gVals.length === 1) {
+                                delete sel._expandedGroup;
+                                _applySelection(sel, dim.id, gVals[0]);
+                            } else {
+                                if (sel._expandedGroup === dim.id) {
+                                    delete sel._expandedGroup;
+                                    delete sel[dim.id];
+                                } else {
+                                    delete sel[dim.id];
+                                    sel._expandedGroup = dim.id;
+                                }
+                            }
+                            update();
+                        });
                     });
-                });
+                    const subRow = app.querySelector('[data-dim-sub="' + dim.id + '"]');
+                    if (subRow) {
+                        subRow.querySelectorAll('.dim-pill[data-val]').forEach(pill => {
+                            pill.addEventListener('click', () => {
+                                if (pill.classList.contains('disabled')) return;
+                                delete sel._expandedGroup;
+                                _applySelection(sel, dim.id, pill.dataset.val);
+                                update();
+                            });
+                        });
+                    }
+                } else {
+                    row.querySelectorAll('.dim-pill').forEach(pill => {
+                        pill.addEventListener('click', () => {
+                            if (pill.classList.contains('locked') || pill.classList.contains('disabled')) return;
+                            _applySelection(sel, dim.id, pill.dataset.val);
+                            update();
+                        });
+                    });
+                }
             });
 
             app.querySelectorAll('.explorer-card').forEach(card => {
@@ -2200,12 +2297,12 @@
                     const dims = effectiveDims();
                     const resolved = resolveTemplate(tid, dims);
                     const vk = resolved ? resolved.variantKey : null;
-                    navigate({ screen: 'outcome', templateId: tid, variantKey: vk, path: [], showPath: false, dims: dims });
+                    navigate({ screen: 'outcome', templateId: tid, variantKey: vk, showPath: false, dims: dims });
                 });
             });
 
             listen('[data-action="home"]', 'click', () => navigate({ screen: 'intro' }));
-            listen('[data-action="reset-dims"]', 'click', () => { sel = {}; update(); });
+            listen('[data-action="reset-dims"]', 'click', () => { sel = {}; delete sel._expandedGroup; update(); });
             update();
         }
 
