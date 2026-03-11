@@ -150,7 +150,7 @@ function isDimLocked(sel, dim) {
             }
         }
     }
-    if (!dim.values) return null;
+    if (!dim.values || dim.virtual) return null;
     const enabled = dim.values.filter(v => !isValueDisabled(sel, dim, v));
     return enabled.length === 1 ? enabled[0].id : null;
 }

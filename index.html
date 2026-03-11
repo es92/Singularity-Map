@@ -1411,6 +1411,13 @@
             }
             Engine.cleanSelection(sel);
 
+            const eff = Engine.effectiveDims(sel);
+            if (!Engine.templatePartialMatch(t, eff)) {
+                for (const k of Object.keys(sel)) delete sel[k];
+                if (variantKey && t.primaryDimension) sel[t.primaryDimension] = variantKey;
+                Engine.cleanSelection(sel);
+            }
+
             function currentDims() {
                 return Engine.effectiveDims(sel);
             }
@@ -1517,12 +1524,13 @@
                 const pills = e.siblings.map(s => {
                     const active = e.isFrontier ? false : s.value === e.selectedValue;
                     if (e.isFrontier) {
+                        if (!s.reachable) return `<span class="tl-pill disabled">${esc(s.label)}</span>`;
                         return `<span class="tl-pill" data-pathaction="frontier" data-dim="${esc(s.dimension)}" data-val="${esc(s.value)}">${esc(s.label)}</span>`;
                     }
                     if (active) {
                         return `<span class="tl-pill active${allLocked ? ' locked' : ''}" data-pathaction="unclick" data-dim="${esc(e.dimension)}">${esc(s.label)}</span>`;
                     }
-                    if (allLocked) {
+                    if (allLocked || !s.reachable) {
                         return `<span class="tl-pill disabled">${esc(s.label)}</span>`;
                     }
                     return `<span class="tl-pill" data-pathaction="change" data-dim="${esc(s.dimension)}" data-val="${esc(s.value)}">${esc(s.label)}</span>`;
@@ -1631,12 +1639,9 @@
             }
 
             function updateContent() {
+                Engine.cleanSelection(sel);
                 const dims = currentDims();
                 const resolved = resolveTemplate(templateId, dims);
-                if (!resolved) {
-                    navigate({ screen: 'explore', dims: { ...sel } });
-                    return;
-                }
 
                 const header = app.querySelector('.outcome-header');
                 if (header) {
@@ -2293,6 +2298,7 @@
 
             app.querySelectorAll('.explorer-card').forEach(card => {
                 card.addEventListener('click', () => {
+                    if (card.classList.contains('dimmed')) return;
                     const tid = card.dataset.tid;
                     const dims = effectiveDims();
                     const resolved = resolveTemplate(tid, dims);
