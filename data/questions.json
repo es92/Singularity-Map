@@ -306,7 +306,7 @@
       "stage": 1,
       "text": "Who benefits from the AI plateau?",
       "context": "AI has hit its ceiling — but even at this level, it's the most powerful tool ever built. Entire industries have already reorganized around it. The economic question isn't whether AI transforms the economy — it already has. The question is who captures the value. Does the productivity surge flow broadly, or do a narrowing set of people capture most of the gains? The answer depends on policy, market structure, and whether the institutions that redistribute gains can keep pace with the technology that's concentrating them.",
-      "dimension": "benefit_distribution",
+      "dimension": "plateau_benefit_distribution",
       "answers": [
         {
           "label": "Equally — gains are broadly shared",
@@ -479,7 +479,7 @@
       "stage": 1,
       "text": "Who captures the economic value from AI automation?",
       "context": "AI automates routine knowledge work across every industry. Productivity soars. But productivity gains don't distribute themselves — someone captures them. Historically, the gains from automation have flowed disproportionately to capital owners, with workers eventually benefiting through lower prices and new industries, but often after prolonged pain. AI automation could follow the same pattern, or policy and market structure could steer toward broader distribution. The question is who benefits — and how quickly.",
-      "dimension": "benefit_distribution",
+      "dimension": "auto_benefit_distribution",
       "answers": [
         {
           "label": "Equally — productivity gains flow broadly",

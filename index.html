@@ -789,6 +789,7 @@
         let templatesList = [];
         let allVariants = [];
         let stagesMap = {};
+        let dimNarrative = {};
         let rootId = null;
         let path = [];
         let discovered = new Set();
@@ -799,6 +800,50 @@
         }).catch(err => {
             renderError(err);
         });
+
+        function buildDimNarrative(qMap) {
+            const narr = {};
+            const questions = Object.values(qMap);
+            for (const q of questions) {
+                if (!q.dimension) continue;
+                for (const a of q.answers) {
+                    const valueId = a.value || (a.sets && a.sets[q.dimension]);
+                    if (!valueId || !a.timelineEvent) continue;
+                    if (!narr[q.dimension]) narr[q.dimension] = {};
+                    if (!narr[q.dimension][valueId]) {
+                        narr[q.dimension][valueId] = {
+                            headline: a.timelineEvent.headline || '',
+                            description: a.timelineEvent.description || '',
+                            durationMin: a.timelineEvent.durationMin,
+                            durationMax: a.timelineEvent.durationMax,
+                            answerLabel: a.label,
+                            answerDesc: a.description,
+                            stage: q.stage,
+                        };
+                    }
+                }
+            }
+            for (const q of questions) {
+                for (const a of q.answers) {
+                    if (!a.sets || !a.timelineEvent) continue;
+                    for (const [sk, sv] of Object.entries(a.sets)) {
+                        if (!narr[sk]) narr[sk] = {};
+                        if (!narr[sk][sv]) {
+                            narr[sk][sv] = {
+                                headline: a.timelineEvent.headline || '',
+                                description: a.timelineEvent.description || '',
+                                durationMin: a.timelineEvent.durationMin,
+                                durationMax: a.timelineEvent.durationMax,
+                                answerLabel: a.label,
+                                answerDesc: a.description,
+                                stage: q.stage,
+                            };
+                        }
+                    }
+                }
+            }
+            return narr;
+        }
 
         // --- Data Loading ---
         async function loadData() {
@@ -815,6 +860,7 @@
             rootId = qData.root;
             for (const q of qData.questions) questionsMap[q.id] = q;
             if (qData.stages) for (const s of qData.stages) stagesMap[s.id] = s;
+            dimNarrative = buildDimNarrative(questionsMap);
             templatesList = oData.templates;
             for (const t of templatesList) templatesMap[t.id] = t;
 
@@ -1075,19 +1121,20 @@
                 }
                 if (templatesMap[tid]) {
                     const extraParams = {};
+                    const dims = {};
                     for (const [k, v] of Object.entries(params)) {
-                        if (k !== 'path') extraParams[k] = v;
+                        if (k === 'path') continue;
+                        if (k === 'tl_mode') { extraParams[k] = v; continue; }
+                        dims[k] = v;
                     }
                     if (params.path) {
                         const treePath = params.path.split(',').map(pair => {
                             const [qid, aidx] = pair.split(':');
                             return { questionId: decodeURIComponent(qid), answerIndex: parseInt(aidx, 10) };
                         }).filter(s => s.questionId && !isNaN(s.answerIndex));
-                        return { screen: 'outcome', templateId: tid, variantKey: vk, treePath, showPath: false, extraParams };
+                        return { screen: 'outcome', templateId: tid, variantKey: vk, treePath, showPath: false, dims, extraParams };
                     }
-                    const dims = {};
-                    for (const [k, v] of Object.entries(params)) dims[k] = v;
-                    return { screen: 'outcome', templateId: tid, variantKey: vk, path: [], showPath: false, dims: Object.keys(dims).length ? dims : undefined };
+                    return { screen: 'outcome', templateId: tid, variantKey: vk, showPath: false, dims: Object.keys(dims).length ? dims : undefined, extraParams: Object.keys(extraParams).length ? extraParams : undefined };
                 }
             }
             if (hash.startsWith('/story/')) {
@@ -1148,14 +1195,11 @@
             let hash = '';
             if (state.screen === 'outcome') {
                 hash = '/outcome/' + state.templateId + (state.variantKey ? '/' + state.variantKey : '');
-                if (state.treePath && state.treePath.length > 0) {
-                    const pathStr = state.treePath.map(s => encodeURIComponent(s.questionId) + ':' + s.answerIndex).join(',');
+                if (state.dims && Object.keys(state.dims).length > 0) {
+                    const params = Object.entries(state.dims).map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v));
                     const extra = state.extraParams || {};
-                    const params = ['path=' + pathStr];
                     for (const [k, v] of Object.entries(extra)) params.push(encodeURIComponent(k) + '=' + encodeURIComponent(v));
                     hash += '?' + params.join('&');
-                } else if (state.dims && Object.keys(state.dims).length > 0) {
-                    hash += '?' + Object.entries(state.dims).map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
                 }
             } else if (state.screen === 'gallery') {
                 hash = '/gallery';
@@ -1371,121 +1415,107 @@
             const t = templatesMap[templateId];
             if (!t) { renderIntro(); return; }
 
-            const outcome = { templateId, variantKey };
             let tlMode = (extraParams && extraParams.tl_mode) || (passedDims && passedDims.tl_mode) || 'full';
 
-            let currentPath;
+            const sel = {};
             if (treePath && treePath.length > 0) {
-                const validation = Engine.isValidPathToOutcome(questionsMap, templatesMap, rootId, treePath, outcome);
-                currentPath = validation.prefix;
+                const replay = Engine.replayPath(questionsMap, rootId, treePath);
+                Object.assign(sel, replay.dims);
             } else {
                 const pathDims = dimensionsFromPath(path);
-                const allDims = { ...pathDims, ...(passedDims || {}) };
-                delete allDims.tl_mode;
-                if (variantKey && t.primaryDimension && !allDims[t.primaryDimension]) {
-                    allDims[t.primaryDimension] = variantKey;
-                }
-                const reconstructed = Engine.buildPathFromDims(questionsMap, rootId, allDims);
-                const validation = Engine.isValidPathToOutcome(questionsMap, templatesMap, rootId, reconstructed, outcome);
-                currentPath = validation.prefix;
+                Object.assign(sel, pathDims, passedDims || {});
+                delete sel.tl_mode;
             }
-
-            function autoAdvance() {
-                let safety = 50;
-                while (safety-- > 0) {
-                    const opts = Engine.getNextOptions(questionsMap, templatesMap, rootId, currentPath, outcome);
-                    if (opts.length !== 1 || !opts[0].forced) break;
-                    currentPath = [...currentPath, { questionId: opts[0].questionId, answerIndex: opts[0].answerIndex }];
-                }
+            if (variantKey && t.primaryDimension && !sel[t.primaryDimension]) {
+                sel[t.primaryDimension] = variantKey;
             }
-            autoAdvance();
+            Engine.cleanSelection(sel);
 
             function currentDims() {
-                const replay = Engine.replayPath(questionsMap, rootId, currentPath);
-                return replay.dims;
+                return Engine.effectiveDims(sel);
+            }
+
+            function wouldReachOutcome(dimId, valueId) {
+                const test = { ...sel };
+                test[dimId] = valueId;
+                Engine.cleanSelection(test);
+                const eff = Engine.effectiveDims(test);
+                return Engine.templatePartialMatch(t, eff);
             }
 
             function buildTimelineEvents() {
                 const events = [];
-                const replay = Engine.replayPath(questionsMap, rootId, currentPath);
-                const dfsCache = new Map();
+                let foundFrontier = false;
+                const renderOrder = [];
+                for (const dim of DIMENSIONS) {
+                    if (dim.virtual) continue;
+                    if (!Engine.isDimVisible(sel, dim)) continue;
+                    renderOrder.push(dim);
+                }
+                const afterMap = {};
+                for (const dim of renderOrder) {
+                    const after = Engine.getRenderAfter(sel, dim);
+                    if (after) afterMap[dim.id] = after;
+                }
+                const ordered = [];
+                const placed = new Set();
+                const deferred = [];
+                for (const dim of renderOrder) {
+                    if (afterMap[dim.id]) { deferred.push(dim); continue; }
+                    ordered.push(dim);
+                    placed.add(dim.id);
+                    for (const d of deferred) {
+                        if (placed.has(afterMap[d.id])) { ordered.push(d); placed.add(d.id); }
+                    }
+                }
+                for (const d of deferred) { if (!placed.has(d.id)) ordered.push(d); }
 
-                for (let i = 0; i < currentPath.length; i++) {
-                    const step = currentPath[i];
-                    const q = questionsMap[step.questionId];
-                    if (!q) continue;
-                    const a = q.answers[step.answerIndex];
-                    if (!a) continue;
+                for (const dim of ordered) {
+                    const locked = Engine.isDimLocked(sel, dim);
+                    const value = sel[dim.id] || locked;
 
-                    const truncated = currentPath.slice(0, i);
-                    const truncReplay = Engine.replayPath(questionsMap, rootId, truncated);
-                    const dimsAtStep = truncReplay.dims;
-                    const reachableOpts = Engine.getNextOptions(questionsMap, templatesMap, rootId, truncated, outcome, dfsCache);
-                    const reachableSet = new Set(reachableOpts.map(o => o.answerIndex));
-
-                    const dim = DIM_MAP[q.dimension];
-                    const siblings = [];
-                    for (let j = 0; j < q.answers.length; j++) {
-                        const sa = q.answers[j];
-                        if (!Engine.answerVisible(sa, dimsAtStep)) continue;
-                        const sibValue = sa.value !== undefined ? sa.value : (sa.sets && q.dimension && sa.sets[q.dimension]) || undefined;
-                        let shortLabel = sa.label;
-                        if (dim && sibValue) {
-                            const dv = dim.values.find(v => v.id === sibValue);
-                            if (dv) shortLabel = dv.label;
+                    if (!value) {
+                        if (!foundFrontier) {
+                            foundFrontier = true;
+                            const siblings = dim.values
+                                .filter(v => !Engine.isValueDisabled(sel, dim, v))
+                                .map(v => ({ value: v.id, label: v.label, dimension: dim.id, reachable: wouldReachOutcome(dim.id, v.id) }));
+                            if (siblings.length > 0) {
+                                events.push({
+                                    headline: '', description: '', durationMin: 0, durationMax: 0,
+                                    stage: dim.stage, year: '', paramLabel: '', dimLabel: dim.label,
+                                    dimension: dim.id, selectedValue: null, siblings,
+                                    isFrontier: true
+                                });
+                            }
                         }
-                        if (shortLabel === sa.label && shortLabel.includes(' — ')) {
-                            shortLabel = shortLabel.split(' — ')[0];
-                        }
-                        siblings.push({
-                            value: sibValue,
-                            label: shortLabel,
-                            answerIndex: j,
-                            dimension: q.dimension || null,
-                            reachable: reachableSet.has(j)
-                        });
+                        continue;
                     }
 
-                    if (!a.timelineEvent) continue;
-                    const selectedValue = a.value || (a.sets && a.sets[q.dimension]) || '';
-                    const dimLabel = dim ? dim.label : '';
-                    const paramLabel = dim ? ((dim.values.find(v => v.id === selectedValue) || {}).label || a.label) : a.label;
+                    const narr = (dimNarrative[dim.id] && dimNarrative[dim.id][value]) || {};
+                    const dimValue = dim.values.find(v => v.id === value);
+                    const paramLabel = dimValue ? dimValue.label : value;
+                    const isLockedDim = locked !== null;
+
+                    const siblings = dim.values
+                        .filter(v => !Engine.isValueDisabled(sel, dim, v) || v.id === value)
+                        .map(v => ({ value: v.id, label: v.label, dimension: dim.id, reachable: v.id === value || wouldReachOutcome(dim.id, v.id) }));
 
                     events.push({
-                        ...a.timelineEvent, stage: q.stage, year: '',
-                        paramLabel, dimLabel, questionId: q.id,
-                        dimension: q.dimension || null, selectedValue, siblings,
-                        pathIndex: i, isFrontier: false,
-                        selectedAnswerIndex: step.answerIndex
+                        headline: narr.headline || '',
+                        description: narr.description || '',
+                        durationMin: narr.durationMin != null ? narr.durationMin : null,
+                        durationMax: narr.durationMax != null ? narr.durationMax : null,
+                        stage: narr.stage || dim.stage,
+                        year: '',
+                        paramLabel,
+                        dimLabel: dim.label,
+                        dimension: dim.id,
+                        selectedValue: value,
+                        siblings,
+                        isFrontier: false,
+                        isLocked: isLockedDim
                     });
-                }
-
-                const nextOpts = Engine.getNextOptions(questionsMap, templatesMap, rootId, currentPath, outcome, dfsCache);
-                if (nextOpts.length > 0 && replay.ok) {
-                    const firstOpt = nextOpts[0];
-                    const q = questionsMap[firstOpt.questionId];
-                    if (q) {
-                        const dim = DIM_MAP[q.dimension];
-                        const dimLabel = dim ? dim.label : (q.text || '');
-                        const siblings = nextOpts.map(o => {
-                            let shortLabel = o.label;
-                            if (dim && o.value) {
-                                const dv = dim.values.find(v => v.id === o.value);
-                                if (dv) shortLabel = dv.label;
-                            }
-                            if (shortLabel === o.label && shortLabel.includes(' — ')) {
-                                shortLabel = shortLabel.split(' — ')[0];
-                            }
-                            return { value: o.value, label: shortLabel, answerIndex: o.answerIndex, dimension: o.dimension };
-                        });
-                        events.push({
-                            headline: '', description: '', durationMin: 0, durationMax: 0,
-                            stage: q.stage, year: '', paramLabel: '', dimLabel,
-                            questionId: q.id, dimension: q.dimension || null,
-                            selectedValue: null, siblings,
-                            pathIndex: null, isFrontier: true
-                        });
-                    }
                 }
                 return events;
             }
@@ -1503,22 +1533,19 @@
                     if (!e.paramLabel) return '';
                     return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.dimLabel)}</span><span class="timeline-param">${esc(e.paramLabel)}</span></span>`;
                 }
-                const isForced = e.siblings.length === 1;
-                const reachableCount = e.isFrontier ? e.siblings.length : e.siblings.filter(s => s.reachable).length;
-                const allLocked = !e.isFrontier && reachableCount <= 1;
+                const allLocked = e.isLocked;
                 const pills = e.siblings.map(s => {
-                    const active = e.isFrontier ? false : s.answerIndex === e.selectedAnswerIndex;
+                    const active = e.isFrontier ? false : s.value === e.selectedValue;
                     if (e.isFrontier) {
-                        return `<span class="tl-pill${isForced ? ' locked active' : ''}" data-pathaction="frontier" data-aidx="${s.answerIndex}" data-qid="${esc(e.questionId)}">${esc(s.label)}</span>`;
+                        return `<span class="tl-pill" data-pathaction="frontier" data-dim="${esc(s.dimension)}" data-val="${esc(s.value)}">${esc(s.label)}</span>`;
                     }
-                    const unreachable = s.reachable === false;
                     if (active) {
-                        return `<span class="tl-pill active${allLocked ? ' locked' : ''}" data-pathaction="unclick" data-pidx="${e.pathIndex}">${esc(s.label)}</span>`;
+                        return `<span class="tl-pill active${allLocked ? ' locked' : ''}" data-pathaction="unclick" data-dim="${esc(e.dimension)}">${esc(s.label)}</span>`;
                     }
-                    if (unreachable) {
+                    if (allLocked) {
                         return `<span class="tl-pill disabled">${esc(s.label)}</span>`;
                     }
-                    return `<span class="tl-pill${allLocked ? ' locked' : ''}" data-pathaction="change" data-pidx="${e.pathIndex}" data-aidx="${s.answerIndex}" data-qid="${esc(e.questionId)}">${esc(s.label)}</span>`;
+                    return `<span class="tl-pill" data-pathaction="change" data-dim="${esc(s.dimension)}" data-val="${esc(s.value)}">${esc(s.label)}</span>`;
                 }).join('');
                 return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.dimLabel)}</span><span class="tl-pills">${pills}</span></span>`;
             }
@@ -1611,22 +1638,12 @@
                     pill.addEventListener('click', () => {
                         const action = pill.dataset.pathaction;
                         if (!action) return;
-                        if (action === 'frontier') {
-                            const aidx = parseInt(pill.dataset.aidx);
-                            const qid = pill.dataset.qid;
-                            currentPath = [...currentPath, { questionId: qid, answerIndex: aidx }];
-                            autoAdvance();
-                        } else if (action === 'change') {
-                            const pidx = parseInt(pill.dataset.pidx);
-                            const aidx = parseInt(pill.dataset.aidx);
-                            const qid = pill.dataset.qid;
-                            currentPath = [...currentPath.slice(0, pidx), { questionId: qid, answerIndex: aidx }];
-                            const validation = Engine.isValidPathToOutcome(questionsMap, templatesMap, rootId, currentPath, outcome);
-                            currentPath = validation.prefix;
-                            autoAdvance();
+                        const dimId = pill.dataset.dim;
+                        const val = pill.dataset.val;
+                        if (action === 'frontier' || action === 'change') {
+                            Engine.applySelection(sel, dimId, val);
                         } else if (action === 'unclick') {
-                            const pidx = parseInt(pill.dataset.pidx);
-                            currentPath = currentPath.slice(0, pidx);
+                            if (sel[dimId]) Engine.applySelection(sel, dimId, sel[dimId]);
                         }
                         updateContent();
                     });
@@ -1636,7 +1653,10 @@
             function updateContent() {
                 const dims = currentDims();
                 const resolved = resolveTemplate(templateId, dims);
-                if (!resolved) return;
+                if (!resolved) {
+                    navigate({ screen: 'explore', dims: { ...sel } });
+                    return;
+                }
 
                 const header = app.querySelector('.outcome-header');
                 if (header) {
@@ -1675,14 +1695,17 @@
                 const newKey = outcomeKey(templateId, resolved.variantKey);
                 markDiscovered(newKey);
                 let hashStr = '/outcome/' + templateId + (resolved.variantKey ? '/' + resolved.variantKey : '');
-                if (currentPath.length > 0) {
-                    const pathStr = currentPath.map(s => encodeURIComponent(s.questionId) + ':' + s.answerIndex).join(',');
-                    const params = ['path=' + pathStr];
+                const dimParams = [];
+                for (const dim of DIMENSIONS) {
+                    if (sel[dim.id]) dimParams.push(encodeURIComponent(dim.id) + '=' + encodeURIComponent(sel[dim.id]));
+                }
+                if (dimParams.length > 0 || tlMode !== 'full') {
+                    const params = [...dimParams];
                     if (tlMode !== 'full') params.push('tl_mode=' + tlMode);
                     hashStr += '?' + params.join('&');
                 }
                 history.replaceState(
-                    { screen: 'outcome', templateId, variantKey: resolved.variantKey, treePath: [...currentPath], showPath, extraParams: tlMode !== 'full' ? { tl_mode: tlMode } : {} },
+                    { screen: 'outcome', templateId, variantKey: resolved.variantKey, dims: { ...sel }, showPath: false, extraParams: tlMode !== 'full' ? { tl_mode: tlMode } : {} },
                     '', '#' + hashStr
                 );
             }
@@ -1699,16 +1722,6 @@
             let initFlavorsHtml = '';
             if (initResolved.flavors && initResolved.flavors.length > 0) {
                 initFlavorsHtml = initResolved.flavors.map(f => `<p>${esc(f)}</p>`).join('');
-            }
-
-            let pathHtml = '';
-            if (showPath && path.length > 0) {
-                const steps = path.map(p =>
-                    `<div class="path-step">
-                        <span class="step-q">${esc(p.questionText)}</span>
-                        <span class="step-a">\u2192 ${esc(p.answerLabel)}</span>
-                    </div>`).join('');
-                pathHtml = `<div class="path-summary"><h3>Your choices</h3>${steps}</div>`;
             }
 
             app.innerHTML = `
@@ -1731,11 +1744,7 @@
                         </div>
                         <div class="timeline">${timelineHtml}</div>
                     </div>
-                    ${pathHtml}
                     <div class="outcome-actions">
-                        ${showPath && path.length > 0
-                            ? '<button class="btn btn-ghost btn-small" data-action="back-to-q">\u2190 Change last answer</button>'
-                            : ''}
                         <button class="btn btn-secondary btn-small" data-action="restart">Start Over</button>
                         <button class="btn btn-secondary btn-small" data-action="gallery">Browse All Futures</button>
                         <button class="btn btn-secondary btn-small" data-action="share">Copy Link</button>
@@ -1760,10 +1769,6 @@
                 });
             });
 
-            listen('[data-action="back-to-q"]', 'click', () => {
-                const prev = path.pop();
-                if (prev) navigate({ screen: 'question', questionId: prev.questionId, path: [...path] });
-            });
             listen('[data-action="restart"]', 'click', () => navigate({ screen: 'intro' }));
             listen('[data-action="gallery"]', 'click', () => navigate({ screen: 'explore', dims: currentDims() }));
             listen('[data-action="share"]', 'click', () => {
@@ -1772,10 +1777,11 @@
                 const vk = resolved ? resolved.variantKey : variantKey;
                 const currentKey = outcomeKey(templateId, vk);
                 let url = location.origin + location.pathname + '#/outcome/' + currentKey;
-                if (currentPath.length > 0) {
-                    const pathStr = currentPath.map(s => encodeURIComponent(s.questionId) + ':' + s.answerIndex).join(',');
-                    url += '?path=' + pathStr;
+                const dimParams = [];
+                for (const dim of DIMENSIONS) {
+                    if (sel[dim.id]) dimParams.push(encodeURIComponent(dim.id) + '=' + encodeURIComponent(sel[dim.id]));
                 }
+                if (dimParams.length > 0) url += '?' + dimParams.join('&');
                 if (navigator.clipboard) {
                     navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
                 } else {

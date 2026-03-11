@@ -39,6 +39,24 @@ const DIMENSIONS = [
       useRawFor: ['capability'],
       values: [
         { id: 'mild', label: 'Months/years' }, { id: 'substantial', label: 'Years/decades' }, { id: 'never', label: 'Never' } ] },
+    { id: 'plateau_benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
+      activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }],
+      values: [
+        { id: 'equal', label: 'Shared equally' }, { id: 'unequal', label: 'Wealth concentrates' },
+        { id: 'extreme', label: 'Power concentrates' } ] },
+    { id: 'plateau_knowledge_rate', label: 'Knowledge Work', stage: 3, terminal: true,
+      activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }],
+      values: [
+        { id: 'rapid', label: 'Rapid (2–5 yrs)', requires: { capability: ['weeks', 'months'] } },
+        { id: 'gradual', label: 'Gradual (5–15 yrs)', requires: { capability: ['days', 'weeks', 'months'] } },
+        { id: 'uneven', label: 'Uneven (2–20+ yrs)' },
+        { id: 'limited', label: 'Limited', requires: { capability: ['hours', 'days'] } } ] },
+    { id: 'plateau_physical_rate', label: 'Physical Automation', stage: 3, terminal: true,
+      activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }],
+      values: [
+        { id: 'gradual', label: 'Gradual (10–25 yrs)', requires: { capability: ['days', 'weeks', 'months'] } },
+        { id: 'uneven', label: 'Uneven (5–20+ yrs)' },
+        { id: 'limited', label: 'Limited' } ] },
     { id: 'automation', label: 'Knowledge Work', stage: 1, forwardKey: true,
       activateWhen: [{ capability: ['singularity'] }],
       overrides: [
@@ -51,6 +69,19 @@ const DIMENSIONS = [
       useRawFor: ['automation'],
       values: [
         { id: 'mild', label: 'Months/years' }, { id: 'substantial', label: 'Years/decades' }, { id: 'never', label: 'Never' } ] },
+    { id: 'auto_benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
+      activateWhen: [{ capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }],
+      values: [
+        { id: 'equal', label: 'Shared equally' }, { id: 'unequal', label: 'Wealth concentrates' },
+        { id: 'extreme', label: 'Power concentrates' } ] },
+    { id: 'auto_knowledge_rate', label: 'Knowledge Work', stage: 3, terminal: true,
+      activateWhen: [{ capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }],
+      values: [
+        { id: 'rapid', label: 'Rapid (2–4 yrs)' }, { id: 'gradual', label: 'Gradual (5–15 yrs)' }, { id: 'uneven', label: 'Uneven (2–20+ yrs)' } ] },
+    { id: 'auto_physical_rate', label: 'Physical Automation', stage: 3, terminal: true,
+      activateWhen: [{ capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }],
+      values: [
+        { id: 'rapid', label: 'Rapid (3–7 yrs)' }, { id: 'gradual', label: 'Gradual (10–25 yrs)' }, { id: 'uneven', label: 'Uneven (3–20+ yrs)' }, { id: 'limited', label: 'Limited' } ] },
     { id: 'metr_milestone', label: 'R&D Milestone', stage: 1,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
       values: [
@@ -334,8 +365,6 @@ const DIMENSIONS = [
         { id: 'disempowerment', label: 'Human irrelevance' } ] },
     { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
       activateWhen: [
-        { capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] },
-        { capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] },
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], failure_mode: ['none', 'whimper', 'disempowerment'] },
         { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
         { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'] }, _raw: { containment: ['contained'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
@@ -374,27 +403,6 @@ const DIMENSIONS = [
       suppressWhen: [{ intent: ['escalation'], _notSet: ['post_war_aims'] }],
       values: [
         { id: 'rapid', label: 'Rapid (2–5 yrs)' }, { id: 'gradual', label: 'Gradual (5–20 yrs)' }, { id: 'uneven', label: 'Uneven (2–20+ yrs)' } ] },
-    { id: 'plateau_knowledge_rate', label: 'Knowledge Work', stage: 3, terminal: true,
-      activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }],
-      values: [
-        { id: 'rapid', label: 'Rapid (2–5 yrs)', requires: { capability: ['weeks', 'months'] } },
-        { id: 'gradual', label: 'Gradual (5–15 yrs)', requires: { capability: ['days', 'weeks', 'months'] } },
-        { id: 'uneven', label: 'Uneven (2–20+ yrs)' },
-        { id: 'limited', label: 'Limited', requires: { capability: ['hours', 'days'] } } ] },
-    { id: 'plateau_physical_rate', label: 'Physical Automation', stage: 3, terminal: true,
-      activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }],
-      values: [
-        { id: 'gradual', label: 'Gradual (10–25 yrs)', requires: { capability: ['days', 'weeks', 'months'] } },
-        { id: 'uneven', label: 'Uneven (5–20+ yrs)' },
-        { id: 'limited', label: 'Limited' } ] },
-    { id: 'auto_knowledge_rate', label: 'Knowledge Work', stage: 3, terminal: true,
-      activateWhen: [{ capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }],
-      values: [
-        { id: 'rapid', label: 'Rapid (2–4 yrs)' }, { id: 'gradual', label: 'Gradual (5–15 yrs)' }, { id: 'uneven', label: 'Uneven (2–20+ yrs)' } ] },
-    { id: 'auto_physical_rate', label: 'Physical Automation', stage: 3, terminal: true,
-      activateWhen: [{ capability: ['singularity'], automation: ['shallow'], automation_recovery: ['substantial', 'never'] }],
-      values: [
-        { id: 'rapid', label: 'Rapid (3–7 yrs)' }, { id: 'gradual', label: 'Gradual (10–25 yrs)' }, { id: 'uneven', label: 'Uneven (3–20+ yrs)' }, { id: 'limited', label: 'Limited' } ] },
     { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3, hideAfterEscape: true,
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], alignment: ['brittle'], alignment_durability: ['holds'], _fn: 'allPrecedingAnswered', _fnAnchor: 'alignment_durability' },
