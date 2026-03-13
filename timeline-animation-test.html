@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timeline Animation Test</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f1117;
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+  }
+
+  h1 {
+    font-size: 1.2rem;
+    color: #888;
+    margin-bottom: 24px;
+  }
+
+  #stack {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .small-box {
+    background: #1a1d27;
+    border: 1px solid #2a2d3a;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    color: #aaa;
+  }
+
+  .big-box {
+    background: #1e2233;
+    border: 2px solid #3a4060;
+    border-radius: 12px;
+    padding: 24px;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .big-box:hover { border-color: #6080ff; }
+
+  .big-box .label {
+    font-size: 1.1rem;
+    color: #ccc;
+  }
+
+  .big-box .plus-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #3a5ccc;
+    color: #fff;
+    font-size: 1.5rem;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  /* Overlay ghosts used during animation */
+  .morph-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1000;
+    overflow: hidden;
+    transition-property: top, left, width, height, opacity;
+    transition-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .morph-ghost { transition-duration: 0.01s !important; }
+    * { transition-duration: 0.01s !important; }
+  }
+
+  .controls {
+    margin-top: 32px;
+    display: flex;
+    gap: 12px;
+  }
+  .controls button {
+    padding: 8px 20px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background: #222;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  .controls button:hover { background: #333; }
+
+  #counter-display {
+    margin-top: 16px;
+    color: #666;
+    font-size: 0.8rem;
+  }
+
+  .speed-controls {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    color: #666;
+    font-size: 0.8rem;
+  }
+  .speed-controls button {
+    padding: 4px 12px;
+    border-radius: 4px;
+    border: 1px solid #444;
+    background: #222;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 0.8rem;
+  }
+  .speed-controls button.active { background: #3a5ccc; border-color: #3a5ccc; color: #fff; }
+</style>
+</head>
+<body>
+
+<h1>Timeline Animation Test</h1>
+<div id="stack"></div>
+<div class="controls">
+  <button onclick="resetStack()">Reset</button>
+</div>
+<div class="speed-controls">
+  Speed:
+  <button onclick="setSpeed(3000)" id="speed-slow">Slow (3s)</button>
+  <button onclick="setSpeed(1500)" id="speed-med">Med (1.5s)</button>
+  <button onclick="setSpeed(600)" id="speed-fast">Fast (0.6s)</button>
+  <button onclick="setSpeed(350)" id="speed-prod">Prod (0.35s)</button>
+  <button onclick="setSpeed(300)" id="speed-vfast">V.Fast (0.3s)</button>
+</div>
+<div id="counter-display"></div>
+
+<script>
+let counter = 0;
+let animDuration = 3000;
+let animating = false;
+
+function setSpeed(ms) {
+  animDuration = ms;
+  document.querySelectorAll('.speed-controls button').forEach(b => b.classList.remove('active'));
+  if (ms === 3000) document.getElementById('speed-slow').classList.add('active');
+  else if (ms === 1500) document.getElementById('speed-med').classList.add('active');
+  else if (ms === 600) document.getElementById('speed-fast').classList.add('active');
+  else if (ms === 350) document.getElementById('speed-prod').classList.add('active');
+  else document.getElementById('speed-vfast').classList.add('active');
+}
+
+function render(includeQuestion) {
+  const stack = document.getElementById('stack');
+  let html = '';
+
+  for (let i = 0; i < counter; i++) {
+    html += `<div class="small-box" id="item-${i}">Item ${i + 1}</div>`;
+  }
+
+  if (includeQuestion !== false) {
+    html += `<div class="big-box">
+      <span class="label">Question ${counter + 1} — click to answer</span>
+      <div style="display:flex;gap:12px">
+        <span class="plus-btn" onclick="addItem(1)">+</span>
+        <span class="plus-btn" onclick="addItem(3)" style="background:#7c3aed;font-size:1rem">+3</span>
+      </div>
+    </div>`;
+  }
+
+  stack.innerHTML = html;
+  document.getElementById('counter-display').textContent = `${counter} items in stack`;
+}
+
+function addItem(count) {
+  count = count || 1;
+  if (animating) return;
+  animating = true;
+
+  const bigBox = document.querySelector('.big-box');
+  if (!bigBox) return;
+
+  // 1) Capture the big box's rect and clone its HTML
+  const startRect = bigBox.getBoundingClientRect();
+  const bigCloneHtml = bigBox.outerHTML;
+
+  // Lock the stack min-height before DOM swap to prevent jump (but allow growth)
+  const stack = document.getElementById('stack');
+  const stackBefore = stack.offsetHeight;
+  stack.style.minHeight = stackBefore + 'px';
+
+  // 2) Swap DOM: remove big box, add small boxes (no next question yet)
+  counter += count;
+  render(false);
+
+  // 3) Capture the first new small box's final rect (morph target)
+  const firstNewIndex = counter - count;
+  const newSmallBox = document.getElementById(`item-${firstNewIndex}`);
+  const endRect = newSmallBox.getBoundingClientRect();
+  const smallCloneHtml = newSmallBox.outerHTML;
+
+  // Smoothly transition min-height down to the new natural size
+  const stackAfter = stack.scrollHeight;
+  stack.offsetHeight;
+  stack.style.transition = 'min-height ' + animDuration + 'ms cubic-bezier(0.42, 0, 0.58, 1)';
+  stack.style.minHeight = stackAfter + 'px';
+
+  // Hide all new small boxes during animation
+  const newItems = [];
+  for (let i = firstNewIndex; i < counter; i++) {
+    const el = document.getElementById(`item-${i}`);
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(10px)';
+    newItems.push(el);
+  }
+
+  // 4) Create ghost overlay for old question only
+  const ghostOld = document.createElement('div');
+  ghostOld.className = 'morph-ghost';
+  ghostOld.innerHTML = bigCloneHtml;
+  ghostOld.firstChild.style.width = '100%';
+  ghostOld.firstChild.style.height = '100%';
+  ghostOld.firstChild.style.margin = '0';
+
+  document.body.appendChild(ghostOld);
+
+  const dur = animDuration + 'ms';
+  ghostOld.style.transitionDuration = dur;
+
+  function applyRect(el, r) {
+    el.style.top = r.top + 'px';
+    el.style.left = r.left + 'px';
+    el.style.width = r.width + 'px';
+    el.style.height = r.height + 'px';
+  }
+
+  // Old ghost: starts at big box, shrinks to first new item
+  applyRect(ghostOld, startRect);
+  ghostOld.style.opacity = '1';
+
+  ghostOld.offsetHeight;
+
+  // Shrink over full duration, fade content + ghost background over 80%
+  applyRect(ghostOld, endRect);
+  const fadeDur = Math.round(animDuration * 0.8) + 'ms';
+  ghostOld.firstChild.style.transition = `opacity ${fadeDur} linear, background ${fadeDur} linear, border-color ${fadeDur} linear`;
+  ghostOld.firstChild.style.opacity = '0';
+  ghostOld.firstChild.style.background = 'transparent';
+  ghostOld.firstChild.style.borderColor = 'transparent';
+
+  const rollDelay = animDuration * 0.5;
+  setTimeout(() => {
+    const stack = document.getElementById('stack');
+
+    const wrapper = document.createElement('div');
+    wrapper.style.overflow = 'hidden';
+    wrapper.style.height = '0px';
+
+    const nextBox = document.createElement('div');
+    nextBox.className = 'big-box';
+    nextBox.innerHTML = `<span class="label">Question ${counter + 1} — click to answer</span>
+      <div style="display:flex;gap:12px">
+        <span class="plus-btn" onclick="addItem(1)">+</span>
+        <span class="plus-btn" onclick="addItem(3)" style="background:#7c3aed;font-size:1rem">+3</span>
+      </div>`;
+
+    wrapper.appendChild(nextBox);
+    stack.appendChild(wrapper);
+
+    const targetHeight = wrapper.scrollHeight;
+
+    requestAnimationFrame(() => {
+      wrapper.style.transition = 'height ' + Math.round(animDuration * 0.7) + 'ms cubic-bezier(0.42, 0, 0.58, 1)';
+      wrapper.style.height = targetHeight + 'px';
+    });
+
+    // Start scrolling as the roll-down animates
+    const rollDur = Math.round(animDuration * 0.7);
+    const stackGap = 8;
+    const scrollCheck = setInterval(() => {
+      const box = wrapper.querySelector('.big-box');
+      if (box) {
+        const rect = box.getBoundingClientRect();
+        const viewH = window.innerHeight;
+        if (rect.height + stackGap >= viewH) {
+          window.scrollBy({ top: rect.top - stackGap, behavior: 'smooth' });
+        } else if (rect.bottom + stackGap > viewH) {
+          window.scrollBy({ top: rect.bottom + stackGap - viewH, behavior: 'smooth' });
+        }
+      }
+    }, 16);
+
+    setTimeout(() => {
+      clearInterval(scrollCheck);
+      // Unwrap: move the question out of the wrapper into the stack directly
+      wrapper.parentNode.insertBefore(nextBox, wrapper);
+      wrapper.remove();
+      animating = false;
+    }, rollDur + 50);
+  }, rollDelay);
+
+  // Reveal all new items together
+  const revealStart = animDuration * 0.3;
+  setTimeout(() => {
+    newItems.forEach(el => {
+      el.style.transition = `opacity ${animDuration * 0.4}ms cubic-bezier(0.42, 0, 0.58, 1), transform ${animDuration * 0.4}ms cubic-bezier(0.42, 0, 0.58, 1)`;
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    });
+  }, revealStart);
+
+  // Cleanup ghosts after morph completes, unlock stack
+  setTimeout(() => {
+    ghostOld.remove();
+    newItems.forEach(el => {
+      el.style.opacity = '1';
+      el.style.transform = '';
+      el.style.transition = '';
+    });
+    stack.style.minHeight = '';
+    stack.style.transition = '';
+  }, animDuration + 50);
+}
+
+function resetStack() {
+  counter = 0;
+  animating = false;
+  document.querySelectorAll('.morph-ghost').forEach(g => g.remove());
+  render();
+}
+
+setSpeed(350);
+render();
+</script>
+
+</body>
+</html>

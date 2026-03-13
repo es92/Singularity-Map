@@ -736,6 +736,124 @@
         }
         #toast.visible { transform: translateX(-50%) translateY(0); }
 
+        /* ---- Map View ---- */
+        .map-screen { padding-top: 1.5rem; }
+        .map-toolbar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;
+        }
+        .map-locker-wrap {
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .map-locker-label {
+            font-size: 0.78rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--text-secondary);
+        }
+        .map-outcome-locker {
+            background: var(--bg-card); color: var(--text);
+            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            padding: 0.35rem 0.7rem; font-size: 0.82rem;
+            cursor: pointer; outline: none;
+            transition: border-color 0.15s var(--ease);
+        }
+        .map-outcome-locker:hover, .map-outcome-locker:focus {
+            border-color: var(--accent);
+        }
+        .map-toggles {
+            display: flex; flex-direction: column; gap: 0.45rem;
+        }
+        .map-toggle {
+            display: flex; align-items: center; gap: 0.55rem;
+            cursor: pointer; user-select: none;
+            font-size: 0.8rem; color: var(--text-secondary);
+        }
+        .map-toggle:hover { color: var(--text); }
+        .map-toggle input[type="checkbox"] {
+            appearance: none; -webkit-appearance: none;
+            width: 34px; height: 20px; border-radius: 10px;
+            background: var(--border); cursor: pointer;
+            position: relative; flex-shrink: 0;
+            transition: background 0.2s var(--ease);
+            border: none; outline: none;
+        }
+        .map-toggle input[type="checkbox"]::after {
+            content: ''; position: absolute;
+            top: 2px; left: 2px;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: var(--bg-card); box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            transition: transform 0.2s var(--ease);
+        }
+        .map-toggle input[type="checkbox"]:checked {
+            background: var(--accent);
+        }
+        .map-toggle input[type="checkbox"]:checked::after {
+            transform: translateX(14px);
+        }
+        .map-reset-btn {
+            background: none; border: 1px solid var(--border); border-radius: var(--radius-sm);
+            color: var(--text-secondary); font-size: 0.75rem; padding: 0.3rem 0.6rem;
+            cursor: pointer; transition: all 0.15s var(--ease);
+        }
+        .map-reset-btn:hover {
+            border-color: var(--border-hover); color: var(--text);
+        }
+        .map-timeline { margin-bottom: 1.5rem; }
+        .map-question-card {
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .map-question-card .question-text {
+            font-size: 1.15rem; margin-bottom: 0.75rem;
+        }
+        .map-question-card .question-context {
+            font-size: 0.88rem; margin-bottom: 0.75rem;
+        }
+        .map-question-card .answers {
+            display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem;
+        }
+        .map-question-card .answer-card {
+            flex: 1 1 auto; min-width: 140px;
+        }
+        .map-question-card .answer-card.disabled {
+            opacity: 0.35; pointer-events: none;
+        }
+        .map-question-card.compact { padding: 1rem 1.25rem; }
+        .map-question-card.compact .question-text { font-size: 1rem; margin-bottom: 0.5rem; }
+        .map-question-card.compact .answers { gap: 0.4rem; }
+        .map-question-card.compact .answer-card { padding: 0.55rem 0.85rem; min-width: 100px; }
+        .map-outcome-section {
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* View Transitions — slow defaults for debugging */
+        ::view-transition-group(question-morph) {
+            animation-duration: 1.5s;
+        }
+        ::view-transition-old(question-morph) {
+            animation-duration: 1.5s;
+        }
+        ::view-transition-new(question-morph) {
+            animation-duration: 1.5s;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            ::view-transition-group(*),
+            ::view-transition-old(*),
+            ::view-transition-new(*) {
+                animation-duration: 0.01s !important;
+            }
+        }
+        .map-outcome-section .outcome-header { margin-bottom: 1rem; }
+        .map-outcome-section .outcome-summary { margin-bottom: 1rem; }
+        .map-outcome-section .outcome-story { margin-top: 1rem; }
+        .map-outcome-section .outcome-story p { margin-bottom: 0.6rem; line-height: 1.65; }
+        .map-actions {
+            display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;
+        }
+
         @media (min-width: 580px) {
             .gallery-grid { grid-template-columns: repeat(2, 1fr); }
         }
@@ -1097,6 +1215,25 @@
                 }
                 return { screen: 'explore', dims };
             }
+            if (hash.startsWith('/map')) {
+                const dims = {};
+                let lockedOutcomeId = '';
+                const flags = { fullQuestions: true, expandTimeline: true };
+                const qIdx = hash.indexOf('?');
+                if (qIdx >= 0) {
+                    hash.slice(qIdx + 1).split('&').forEach(pair => {
+                        const [k, v] = pair.split('=');
+                        if (!k || !v) return;
+                        const dk = decodeURIComponent(k);
+                        const dv = decodeURIComponent(v);
+                        if (dk === 'locked') { lockedOutcomeId = dv; }
+                        else if (dk === 'fq') { flags.fullQuestions = dv !== '0'; }
+                        else if (dk === 'et') { flags.expandTimeline = dv !== '0'; }
+                        else { dims[dk] = dv; }
+                    });
+                }
+                return { screen: 'map', dims, lockedOutcomeId, flags };
+            }
             return { screen: 'intro' };
         }
 
@@ -1119,6 +1256,19 @@
                 if (state.dims && Object.keys(state.dims).length > 0) {
                     hash += '?' + Object.entries(state.dims).map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
                 }
+            } else if (state.screen === 'map') {
+                hash = '/map';
+                const params = [];
+                if (state.dims) {
+                    for (const [k, v] of Object.entries(state.dims)) {
+                        if (v != null) params.push(encodeURIComponent(k) + '=' + encodeURIComponent(v));
+                    }
+                }
+                if (state.lockedOutcomeId) params.push('locked=' + encodeURIComponent(state.lockedOutcomeId));
+                const f = state.flags || {};
+                if (f.fullQuestions === false) params.push('fq=0');
+                if (f.expandTimeline === false) params.push('et=0');
+                if (params.length > 0) hash += '?' + params.join('&');
             } else if (state.screen === 'question') {
                 hash = '/story';
                 if (state.dims && Object.keys(state.dims).length > 0) {
@@ -1139,6 +1289,8 @@
                     renderTree();
                 } else if (state.screen === 'explore') {
                     renderExplorer(state.dims);
+                } else if (state.screen === 'map') {
+                    renderMap(state.dims, state.lockedOutcomeId, state.flags);
                 } else if (state.screen === 'question') {
                     renderQuestion(state.dims);
                 } else {
@@ -1191,6 +1343,7 @@
                     <div class="actions">
                         <button class="btn btn-primary" data-action="start">Story Mode</button>
                         <button class="btn btn-secondary" data-action="explore">Explore Futures</button>
+                        <button class="btn btn-secondary" data-action="map">Map View</button>
                     </div>
                     ${count > 0 ? `<p class="discovery">${count} of ${total} future${total !== 1 ? 's' : ''} discovered</p>` : ''}
                 </div>`;
@@ -1198,6 +1351,7 @@
                 navigate({ screen: 'question', dims: {} });
             });
             listen('[data-action="explore"]', 'click', () => navigate({ screen: 'explore' }));
+            listen('[data-action="map"]', 'click', () => navigate({ screen: 'map' }));
         }
 
         // --- Render: Question (DIMENSIONS-based story mode) ---
@@ -1396,6 +1550,38 @@
             listen('[data-action="home"]', 'click', () => navigate({ screen: 'intro' }));
         }
 
+        // --- Shared timeline helpers ---
+        function stageHeaderHtml(stage) {
+            const info = SCENARIO.stages[stage];
+            if (!info) return '';
+            return `<div class="timeline-stage-header">
+                <span class="timeline-stage-label">${esc(info.label)}</span>
+            </div>`;
+        }
+
+        function timelinePillHtml(e) {
+            if (!e.siblings || e.siblings.length < 2) {
+                if (!e.paramLabel) return '';
+                return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.dimLabel)}</span><span class="timeline-param">${esc(e.paramLabel)}</span></span>`;
+            }
+            const allLocked = e.isLocked;
+            const pills = e.siblings.map(s => {
+                const active = e.isFrontier ? false : s.value === e.selectedValue;
+                if (e.isFrontier) {
+                    if (!s.reachable) return `<span class="tl-pill disabled">${esc(s.label)}</span>`;
+                    return `<span class="tl-pill" data-pathaction="frontier" data-dim="${esc(s.dimension)}" data-val="${esc(s.value)}">${esc(s.label)}</span>`;
+                }
+                if (active) {
+                    return `<span class="tl-pill active${allLocked ? ' locked' : ''}" data-pathaction="unclick" data-dim="${esc(e.dimension)}">${esc(s.label)}</span>`;
+                }
+                if (allLocked || !s.reachable) {
+                    return `<span class="tl-pill disabled">${esc(s.label)}</span>`;
+                }
+                return `<span class="tl-pill" data-pathaction="change" data-dim="${esc(s.dimension)}" data-val="${esc(s.value)}">${esc(s.label)}</span>`;
+            }).join('');
+            return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.dimLabel)}</span><span class="tl-pills">${pills}</span></span>`;
+        }
+
         // --- Render: Outcome ---
         function renderOutcome(templateId, variantKey, showPath, passedDims, _unused, extraParams) {
             const t = templatesMap[templateId];
@@ -1468,7 +1654,7 @@
                                 .filter(v => !Engine.isValueDisabled(sel, dim, v))
                                 .map(v => ({ value: v.id, label: v.label, dimension: dim.id, reachable: wouldReachOutcome(dim.id, v.id) }));
                             if (siblings.length > 0) {
-                                events.push({
+                    events.push({
                                     headline: '', description: '', durationMin: 0, durationMax: 0,
                                     stage: dim.stage, year: '', paramLabel: '', dimLabel: dim.label,
                                     dimension: dim.id, selectedValue: null, siblings,
@@ -1488,7 +1674,7 @@
                         .filter(v => !Engine.isValueDisabled(sel, dim, v) || v.id === value)
                         .map(v => ({ value: v.id, label: v.label, dimension: dim.id, reachable: v.id === value || wouldReachOutcome(dim.id, v.id) }));
 
-                    events.push({
+                        events.push({
                         headline: narr.headline || '',
                         description: narr.description || '',
                         durationMin: narr.durationMin != null ? narr.durationMin : null,
@@ -1505,37 +1691,6 @@
                     });
                 }
                 return events;
-            }
-
-            function stageHeaderHtml(stage) {
-                const info = SCENARIO.stages[stage];
-                if (!info) return '';
-                return `<div class="timeline-stage-header">
-                    <span class="timeline-stage-label">${esc(info.label)}</span>
-                </div>`;
-            }
-
-            function timelinePillHtml(e) {
-                if (!e.siblings || e.siblings.length < 2) {
-                    if (!e.paramLabel) return '';
-                    return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.dimLabel)}</span><span class="timeline-param">${esc(e.paramLabel)}</span></span>`;
-                }
-                const allLocked = e.isLocked;
-                const pills = e.siblings.map(s => {
-                    const active = e.isFrontier ? false : s.value === e.selectedValue;
-                    if (e.isFrontier) {
-                        if (!s.reachable) return `<span class="tl-pill disabled">${esc(s.label)}</span>`;
-                        return `<span class="tl-pill" data-pathaction="frontier" data-dim="${esc(s.dimension)}" data-val="${esc(s.value)}">${esc(s.label)}</span>`;
-                    }
-                    if (active) {
-                        return `<span class="tl-pill active${allLocked ? ' locked' : ''}" data-pathaction="unclick" data-dim="${esc(e.dimension)}">${esc(s.label)}</span>`;
-                    }
-                    if (allLocked || !s.reachable) {
-                        return `<span class="tl-pill disabled">${esc(s.label)}</span>`;
-                    }
-                    return `<span class="tl-pill" data-pathaction="change" data-dim="${esc(s.dimension)}" data-val="${esc(s.value)}">${esc(s.label)}</span>`;
-                }).join('');
-                return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.dimLabel)}</span><span class="tl-pills">${pills}</span></span>`;
             }
 
             let fullTimeline = buildTimelineEvents();
@@ -1836,13 +1991,13 @@
                 const condSets = Array.isArray(val.requires) ? val.requires : [val.requires];
                 let allNotes = [];
                 for (const conds of condSets) {
-                    const notes = [];
+                const notes = [];
                     let possible = true;
                     for (const [dk, allowed] of Object.entries(conds)) {
                         const arr = Array.isArray(allowed) ? allowed : [allowed];
                         if (dk in dimsSoFar) {
                             if (!arr.includes(dimsSoFar[dk])) { possible = false; break; }
-                        } else {
+                    } else {
                             notes.push('if ' + dk.replace(/_/g, ' ') + ': ' + arr.join(' / '));
                         }
                     }
@@ -1875,8 +2030,8 @@
                         const resolved = resolveTemplate(tid, eff);
                         if (!resolved) return '';
                         return `<span class="tree-outcome" data-tid="${esc(tid)}" data-vk="${esc(resolved.variantKey || '')}">`
-                            + `<span class="tree-dot" style="background:${moodColor(resolved.mood)}"></span>`
-                            + `${esc(resolved.title)}${resolved.subtitle ? ` <span class="tree-subtitle">— ${esc(resolved.subtitle)}</span>` : ''}</span>`;
+                        + `<span class="tree-dot" style="background:${moodColor(resolved.mood)}"></span>`
+                        + `${esc(resolved.title)}${resolved.subtitle ? ` <span class="tree-subtitle">— ${esc(resolved.subtitle)}</span>` : ''}</span>`;
                     }
                     return '<span class="tree-condition">[no matching outcome]</span>';
                 }
@@ -1918,7 +2073,7 @@
                             if (!show) return '';
                             const childDims = { ...dimsSoFar, [nextDim.id]: vid };
                             Engine.cleanSelection(childDims);
-                            const noteHtml = note ? ` <span class="tree-condition">(${esc(note)})</span>` : '';
+                        const noteHtml = note ? ` <span class="tree-condition">(${esc(note)})</span>` : '';
                             const label = dv.answerLabel || dv.label;
                             return `<li><span class="tree-answer">${esc(label)}</span>${noteHtml}<ul><li>${buildDimTree(childDims, stageNum, depth + 1)}</li></ul></li>`;
                         }).filter(Boolean).join('');
@@ -1936,9 +2091,9 @@
                             const noteHtml = note ? ` <span class="tree-condition">(${esc(note)})</span>` : '';
                             const label = v.answerLabel || v.label;
                             return `<li><span class="tree-answer">${esc(label)}</span>${noteHtml}<ul><li>${buildDimTree(childDims, stageNum, depth + 1)}</li></ul></li>`;
-                        })
-                        .filter(Boolean)
-                        .join('');
+                    })
+                    .filter(Boolean)
+                    .join('');
                 }
 
                 return `<span class="tree-question" data-did="${esc(nextDim.id)}" data-sid="${sid}">${esc(questionText)}</span><ul>${answersHtml}</ul>`;
@@ -2088,16 +2243,16 @@
                             });
                         }
                     } else {
-                        row.querySelectorAll('.dim-pill').forEach(pill => {
-                            const vid = pill.dataset.val;
-                            const val = dim.values.find(v => v.id === vid);
-                            const disabled = val && isValueDisabled(dim, val);
-                            const isLocked = locked !== null;
-                            const isActive = isLocked ? vid === locked : sel[dim.id] === vid;
-                            pill.classList.toggle('active', isActive);
-                            pill.classList.toggle('locked', isLocked);
-                            pill.classList.toggle('disabled', disabled && !isActive);
-                        });
+                    row.querySelectorAll('.dim-pill').forEach(pill => {
+                        const vid = pill.dataset.val;
+                        const val = dim.values.find(v => v.id === vid);
+                        const disabled = val && isValueDisabled(dim, val);
+                        const isLocked = locked !== null;
+                        const isActive = isLocked ? vid === locked : sel[dim.id] === vid;
+                        pill.classList.toggle('active', isActive);
+                        pill.classList.toggle('locked', isLocked);
+                        pill.classList.toggle('disabled', disabled && !isActive);
+                    });
                     }
                 });
 
@@ -2286,13 +2441,13 @@
                         });
                     }
                 } else {
-                    row.querySelectorAll('.dim-pill').forEach(pill => {
-                        pill.addEventListener('click', () => {
-                            if (pill.classList.contains('locked') || pill.classList.contains('disabled')) return;
-                            _applySelection(sel, dim.id, pill.dataset.val);
-                            update();
-                        });
+                row.querySelectorAll('.dim-pill').forEach(pill => {
+                    pill.addEventListener('click', () => {
+                        if (pill.classList.contains('locked') || pill.classList.contains('disabled')) return;
+                        _applySelection(sel, dim.id, pill.dataset.val);
+                        update();
                     });
+                });
                 }
             });
 
@@ -2309,6 +2464,561 @@
 
             listen('[data-action="home"]', 'click', () => navigate({ screen: 'intro' }));
             listen('[data-action="reset-dims"]', 'click', () => { sel = {}; delete sel._expandedGroup; update(); });
+            update();
+        }
+
+        // --- Render: Map (unified view) ---
+        function renderMap(initialDims, lockedOutcomeId, initialFlags) {
+            let sel = initialDims ? { ...initialDims } : {};
+            let lockedId = (lockedOutcomeId && templatesMap[lockedOutcomeId]) ? lockedOutcomeId : '';
+            const flags = initialFlags || {};
+            let fullQuestions = flags.fullQuestions !== false;
+            let expandTimeline = flags.expandTimeline !== false;
+            let narrowDim = null;
+            let narrowValues = null;
+            let timelineDurations = [];
+
+            delete sel._storyNarrowDim;
+            delete sel._storyNarrowValues;
+            delete sel._expandedGroup;
+            Engine.cleanSelection(sel);
+
+            function getLockedTemplate() {
+                return lockedId ? templatesMap[lockedId] : null;
+            }
+
+            function wouldReachOutcome(dimId, valueId) {
+                const t = getLockedTemplate();
+                if (!t) return true;
+                const test = { ...sel };
+                test[dimId] = valueId;
+                Engine.cleanSelection(test);
+                const eff = Engine.effectiveDims(test);
+                return Engine.templatePartialMatch(t, eff);
+            }
+
+            function buildTimelineEvents() {
+                const events = [];
+                let foundFrontier = false;
+                const renderOrder = [];
+                for (const dim of DIMENSIONS) {
+                    if (dim.virtual) continue;
+                    if (!Engine.isDimVisible(sel, dim)) continue;
+                    renderOrder.push(dim);
+                }
+                const afterMap = {};
+                for (const dim of renderOrder) {
+                    const after = Engine.getRenderAfter(sel, dim);
+                    if (after) afterMap[dim.id] = after;
+                }
+                const ordered = [];
+                const placed = new Set();
+                const deferred = [];
+                for (const dim of renderOrder) {
+                    if (afterMap[dim.id]) { deferred.push(dim); continue; }
+                    ordered.push(dim);
+                    placed.add(dim.id);
+                    for (const d of deferred) {
+                        if (placed.has(afterMap[d.id])) { ordered.push(d); placed.add(d.id); }
+                    }
+                }
+                for (const d of deferred) { if (!placed.has(d.id)) ordered.push(d); }
+
+                for (const dim of ordered) {
+                    const locked = Engine.isDimLocked(sel, dim);
+                    const value = sel[dim.id] || locked;
+                    const step0 = dim.narrativeSteps && dim.narrativeSteps[0];
+                    const hasGroups = step0 && step0.groups;
+                    const isLockedDim = locked !== null;
+
+                    if (!value) {
+                        if (!fullQuestions && !foundFrontier) {
+                            foundFrontier = true;
+                            if (hasGroups && !(narrowDim === dim.id && narrowValues)) {
+                                const siblings = [];
+                                for (const g of step0.groups) {
+                                    if (g.values.length === 1) {
+                                        const vid = g.values[0];
+                                        const dv = dim.values.find(v => v.id === vid);
+                                        if (dv && Engine.isValueDisabled(sel, dim, dv)) continue;
+                                        siblings.push({ value: vid, label: g.label || (dv && dv.label) || vid, dimension: dim.id, reachable: wouldReachOutcome(dim.id, vid) });
+                                    } else {
+                                        const anyEnabled = g.values.some(vid => { const dv = dim.values.find(v => v.id === vid); return dv && !Engine.isValueDisabled(sel, dim, dv); });
+                                        if (!anyEnabled) continue;
+                                        siblings.push({ value: '_grp:' + g.values.join(','), label: g.label || '...', dimension: dim.id, reachable: g.values.some(vid => wouldReachOutcome(dim.id, vid)) });
+                                    }
+                                }
+                                if (siblings.length > 0) {
+                                    events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: dim.stage, year: '', paramLabel: '', dimLabel: dim.label, dimension: dim.id, selectedValue: null, siblings, isFrontier: true });
+                                }
+                            } else if (hasGroups && narrowDim === dim.id && narrowValues) {
+                                const siblings = narrowValues
+                                    .map(vid => dim.values.find(v => v.id === vid))
+                                    .filter(dv => dv && !Engine.isValueDisabled(sel, dim, dv))
+                                    .map(dv => ({ value: dv.id, label: dv.label, dimension: dim.id, reachable: wouldReachOutcome(dim.id, dv.id) }));
+                                if (siblings.length > 0) {
+                                    events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: dim.stage, year: '', paramLabel: '', dimLabel: dim.label + ' Level', dimension: dim.id, selectedValue: null, siblings, isFrontier: true });
+                                }
+                            } else {
+                                const siblings = dim.values
+                                    .filter(v => !Engine.isValueDisabled(sel, dim, v))
+                                    .map(v => ({ value: v.id, label: v.label, dimension: dim.id, reachable: wouldReachOutcome(dim.id, v.id) }));
+                                if (siblings.length > 0) {
+                                    events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: dim.stage, year: '', paramLabel: '', dimLabel: dim.label, dimension: dim.id, selectedValue: null, siblings, isFrontier: true });
+                                }
+                            }
+                        }
+                        continue;
+                    }
+
+                    if (hasGroups) {
+                        const activeGroup = step0.groups.find(g => g.values.includes(value));
+                        const groupSiblings = step0.groups.map(g => {
+                            if (g.values.length === 1) {
+                                const vid = g.values[0];
+                                const dv = dim.values.find(v => v.id === vid);
+                                return { value: vid, label: g.label || (dv && dv.label) || vid, dimension: dim.id, reachable: vid === value || wouldReachOutcome(dim.id, vid) };
+                            }
+                            return { value: '_grp:' + g.values.join(','), label: g.label || '...', dimension: dim.id, reachable: g === activeGroup || g.values.some(vid => wouldReachOutcome(dim.id, vid)) };
+                        });
+                        const groupSelVal = activeGroup
+                            ? (activeGroup.values.length === 1 ? activeGroup.values[0] : '_grp:' + activeGroup.values.join(','))
+                            : null;
+                        const isSingle = activeGroup && activeGroup.values.length === 1;
+                        const grpTE = activeGroup && activeGroup.timelineEvent ? activeGroup.timelineEvent : {};
+                        const narr0 = isSingle ? dimNarrativeFor(dim.id, value, sel) : grpTE;
+                        events.push({
+                            headline: narr0.headline || '',
+                            description: narr0.description || '',
+                            durationMin: narr0.durationMin != null ? narr0.durationMin : null,
+                            durationMax: narr0.durationMax != null ? narr0.durationMax : null,
+                            stage: dim.stage, year: '',
+                            paramLabel: activeGroup ? (activeGroup.label || dim.label) : dim.label,
+                            dimLabel: dim.label,
+                            dimension: dim.id, selectedValue: groupSelVal,
+                            siblings: groupSiblings, isFrontier: false, isLocked: isLockedDim
+                        });
+                        if (activeGroup && activeGroup.values.length > 1) {
+                            const narr = dimNarrativeFor(dim.id, value, sel);
+                            const subSiblings = activeGroup.values
+                                .map(vid => dim.values.find(v => v.id === vid))
+                                .filter(dv => dv && (!Engine.isValueDisabled(sel, dim, dv) || dv.id === value))
+                                .map(dv => ({ value: dv.id, label: dv.label, dimension: dim.id, reachable: dv.id === value || wouldReachOutcome(dim.id, dv.id) }));
+                            events.push({
+                                headline: narr.headline || '', description: narr.description || '',
+                                durationMin: narr.durationMin != null ? narr.durationMin : null,
+                                durationMax: narr.durationMax != null ? narr.durationMax : null,
+                                stage: dim.stage, year: '',
+                                paramLabel: (dim.values.find(v => v.id === value) || {}).label || value,
+                                dimLabel: dim.label + ' Level',
+                                dimension: dim.id, selectedValue: value,
+                                siblings: subSiblings, isFrontier: false, isLocked: isLockedDim
+                            });
+                        }
+                    } else {
+                        const narr = dimNarrativeFor(dim.id, value, sel);
+                        const dimValue = dim.values.find(v => v.id === value);
+                        const paramLabel = dimValue ? dimValue.label : value;
+                        const siblings = dim.values
+                            .filter(v => !Engine.isValueDisabled(sel, dim, v) || v.id === value)
+                            .map(v => ({ value: v.id, label: v.label, dimension: dim.id, reachable: v.id === value || wouldReachOutcome(dim.id, v.id) }));
+                        events.push({
+                            headline: narr.headline || '', description: narr.description || '',
+                            durationMin: narr.durationMin != null ? narr.durationMin : null,
+                            durationMax: narr.durationMax != null ? narr.durationMax : null,
+                            stage: narr.stage || dim.stage, year: '', paramLabel,
+                            dimLabel: dim.label, dimension: dim.id, selectedValue: value,
+                            siblings, isFrontier: false, isLocked: isLockedDim
+                        });
+                    }
+                }
+                return events;
+            }
+
+            function buildTimelineHtml(events) {
+                let lastStage = 0;
+                const hasDurations = events.some(e => e.durationMin != null);
+
+                timelineDurations = events.map(e => {
+                    const min = e.durationMin || 0;
+                    const max = e.durationMax != null ? e.durationMax : min;
+                    const step = max <= 1 ? 0.25 : 1;
+                    return { min, max, current: Math.round((min + max) / 2 / step) * step };
+                });
+                const ranges = timelineDurations.filter(d => d.max > d.min).map(d => d.max - d.min);
+                const meanRange = ranges.length ? ranges.reduce((a, b) => a + b, 0) / ranges.length : 1;
+                let cumulative = 0;
+
+                return events.map((e, i) => {
+                    let headerHtml = '';
+                    if (e.stage && e.stage !== lastStage) { lastStage = e.stage; headerHtml = stageHeaderHtml(e.stage); }
+                    const d = timelineDurations[i];
+                    const yearLabel = hasDurations ? formatRange(cumulative, cumulative + d.current) : '';
+                    cumulative += d.current;
+
+                    const isPoint = d.min === 0 && d.max === 0 && i > 0;
+                    const yearHtml = (isPoint || !yearLabel) ? '' : `<div class="timeline-year" data-tsy="${i}">${esc(yearLabel)}</div>`;
+
+                    const headlineHtml = (expandTimeline && e.headline) ? `<div class="timeline-headline">${esc(e.headline)}</div>` : '';
+                    const descHtml = (expandTimeline && e.description) ? `<div class="timeline-desc">${esc(e.description)}</div>` : '';
+
+                    let sliderHtml = '';
+                    if (expandTimeline && d.max > d.min) {
+                        const ratio = (d.max - d.min) / meanRange;
+                        const tt = Math.sqrt(ratio);
+                        const pct = Math.min(100, Math.max(15, tt * 50));
+                        sliderHtml = `
+                        <div class="timeline-slider">
+                            <input type="range" min="${d.min}" max="${d.max}" step="${d.max <= 1 ? 0.25 : 1}" value="${d.current}" data-tsi="${i}" style="width:${pct.toFixed(0)}%">
+                            <span class="timeline-slider-label" data-tsl="${i}">${formatDuration(d.current)}</span>
+                        </div>`;
+                    }
+
+                    const frontierCls = e.isFrontier ? ' frontier-event' : '';
+                    return `${headerHtml}
+                        <div class="timeline-event${frontierCls}" data-dim="${esc(e.dimension || '')}">
+                            <div class="timeline-top-row">${timelinePillHtml(e)}${yearHtml}</div>
+                            ${headlineHtml}
+                            ${descHtml}
+                            ${sliderHtml}
+                        </div>`;
+                }).join('');
+            }
+
+            function updateTimelineLabels() {
+                let cumulative = 0;
+                timelineDurations.forEach((d, i) => {
+                    const yearLabel = formatRange(cumulative, cumulative + d.current);
+                    const yearEl = app.querySelector('[data-tsy="' + i + '"]');
+                    if (yearEl) yearEl.textContent = yearLabel;
+                    const slLabel = app.querySelector('[data-tsl="' + i + '"]');
+                    if (slLabel) slLabel.textContent = formatDuration(d.current);
+                    cumulative += d.current;
+                });
+            }
+
+            function buildQuestionCardHtml() {
+                const dim = findNextStoryDim(sel);
+                if (!dim) return null;
+
+                let narrativeStep = null;
+                if (narrowDim === dim.id && narrowValues) {
+                    const laterStep = dim.narrativeSteps && dim.narrativeSteps.find(s => !s.groups);
+                    narrativeStep = laterStep || null;
+                } else if (dim.narrativeSteps && dim.narrativeSteps.length > 0) {
+                    for (const step of dim.narrativeSteps) {
+                        if (step.groups) {
+                            const anyGroupNeedsChoice = step.groups.some(g => g.values.length > 1 || !sel[dim.id]);
+                            if (anyGroupNeedsChoice && !sel[dim.id]) { narrativeStep = step; break; }
+                        } else {
+                            if (!sel[dim.id]) { narrativeStep = step; break; }
+                        }
+                    }
+                }
+
+                const questionText = (narrativeStep && narrativeStep.text) || dim.questionText || dim.label;
+                const questionContext = (narrativeStep && narrativeStep.context) || dim.questionContext || '';
+                const questionSource = (narrativeStep && narrativeStep.source) || dim.source;
+
+                let answerCards = [];
+                if (narrativeStep && narrativeStep.groups) {
+                    for (const group of narrativeStep.groups) {
+                        if (group.values.length === 1) {
+                            const valId = group.values[0];
+                            const dimVal = dim.values.find(v => v.id === valId);
+                            if (dimVal && Engine.isValueDisabled(sel, dim, dimVal)) continue;
+                            const disabled = !wouldReachOutcome(dim.id, valId);
+                            answerCards.push({
+                                label: group.label || (dimVal && dimVal.answerLabel) || (dimVal && dimVal.label) || valId,
+                                desc: group.desc || (dimVal && dimVal.answerDesc) || '',
+                                action: { [dim.id]: valId },
+                                disabled
+                            });
+                        } else {
+                            const anyEnabled = group.values.some(vid => {
+                                const dv = dim.values.find(v => v.id === vid);
+                                return dv && !Engine.isValueDisabled(sel, dim, dv);
+                            });
+                            if (!anyEnabled) continue;
+                            answerCards.push({
+                                label: group.label,
+                                desc: group.desc || '',
+                                action: '_next_step',
+                                groupValues: group.values,
+                                disabled: false
+                            });
+                        }
+                    }
+                } else {
+                    const valuesToShow = narrowValues
+                        ? dim.values.filter(v => narrowValues.includes(v.id))
+                        : dim.values;
+                    for (const v of valuesToShow) {
+                        if (Engine.isValueDisabled(sel, dim, v)) continue;
+                        const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, sel) : null;
+                        const disabled = !wouldReachOutcome(dim.id, v.id);
+                        answerCards.push({
+                            label: (variant && variant.answerLabel) || v.answerLabel || v.label,
+                            desc: (variant && variant.answerDesc) || v.answerDesc || '',
+                            action: { [dim.id]: v.id },
+                            disabled
+                        });
+                    }
+                }
+
+                let source = '';
+                if (questionSource) {
+                    source = `<div class="question-source"><a href="${esc(questionSource.url)}" target="_blank" rel="noopener">${esc(questionSource.label)} \u2197</a></div>`;
+                }
+
+                const answersHtml = answerCards.map((a, i) => `
+                    <div class="answer-card${a.disabled ? ' disabled' : ''}" data-aidx="${i}">
+                        <div class="label">${esc(a.label)}</div>
+                        ${fullQuestions && a.desc ? `<div class="desc">${esc(a.desc)}</div>` : ''}
+                    </div>`).join('');
+
+                return {
+                    dim,
+                    answerCards,
+                    html: `<div class="map-question-card${fullQuestions ? '' : ' compact'}">
+                        <div class="question-text">${esc(questionText)}</div>
+                        ${fullQuestions && questionContext ? `<div class="question-context">${esc(questionContext)}</div>` : ''}
+                        ${fullQuestions ? source : ''}
+                        <div class="answers">${answersHtml}</div>
+                    </div>`
+                };
+            }
+
+            function buildOutcomeSectionHtml() {
+                const eff = Engine.effectiveDims(sel);
+                const matched = templatesList.filter(t => Engine.templateMatches(t, eff));
+                if (matched.length === 0) return '';
+
+                const t = matched[0];
+                const resolved = resolveTemplate(t.id, eff);
+                if (!resolved) return '';
+
+                const key = outcomeKey(t.id, resolved.variantKey);
+                markDiscovered(key);
+
+                const storyHtml = (Array.isArray(resolved.story) ? resolved.story : [resolved.story])
+                    .map(p => `<p>${esc(p)}</p>`).join('');
+
+                let flavorsHtml = '';
+                if (resolved.flavors && resolved.flavors.length > 0) {
+                    flavorsHtml = resolved.flavors.map(f => `<p>${esc(f)}</p>`).join('');
+                }
+
+                return `<div class="map-outcome-section">
+                    <div class="outcome-header">
+                        <h1>${esc(resolved.title)}</h1>
+                        ${resolved.subtitle ? `<div class="outcome-subtitle">${esc(resolved.subtitle)}</div>` : ''}
+                        <span class="mood-badge mood-${resolved.mood}">${esc(resolved.mood)}</span>
+                    </div>
+                    <div class="outcome-summary">${esc(resolved.summary)}</div>
+                    ${flavorsHtml ? `<div class="outcome-flavors">${flavorsHtml}</div>` : ''}
+                    <div class="outcome-story">${storyHtml}</div>
+                </div>`;
+            }
+
+            const lockerOptions = [`<option value="">Open (no lock)</option>`]
+                .concat(templatesList.map(t => {
+                    return `<option value="${esc(t.id)}"${t.id === lockedId ? ' selected' : ''}>${esc(t.title)}</option>`;
+                })).join('');
+
+            function syncHash() {
+                let hash = '/map';
+                const entries = [];
+                for (const dim of DIMENSIONS) {
+                    if (sel[dim.id]) entries.push(encodeURIComponent(dim.id) + '=' + encodeURIComponent(sel[dim.id]));
+                }
+                if (lockedId) entries.push('locked=' + encodeURIComponent(lockedId));
+                if (!fullQuestions) entries.push('fq=0');
+                if (!expandTimeline) entries.push('et=0');
+                if (entries.length > 0) hash += '?' + entries.join('&');
+                const stateFlags = { fullQuestions, expandTimeline };
+                history.replaceState({ screen: 'map', dims: { ...sel }, lockedOutcomeId: lockedId, flags: stateFlags }, '', '#' + hash);
+            }
+
+            function update() {
+                Engine.cleanSelection(sel);
+
+                const events = buildTimelineEvents();
+                const timelineEl = app.querySelector('.map-timeline');
+                if (timelineEl) {
+                    timelineEl.innerHTML = buildTimelineHtml(events);
+                    timelineEl.querySelectorAll('.timeline-slider input[type="range"]').forEach(slider => {
+                        slider.addEventListener('input', () => {
+                            const idx = parseInt(slider.dataset.tsi);
+                            timelineDurations[idx].current = parseFloat(slider.value);
+                            updateTimelineLabels();
+                        });
+                    });
+                    timelineEl.querySelectorAll('.tl-pill').forEach(pill => {
+                        pill.addEventListener('click', () => {
+                            const action = pill.dataset.pathaction;
+                            if (!action) return;
+                            const dimId = pill.dataset.dim;
+                            const val = pill.dataset.val;
+                            const isGrp = val && val.startsWith('_grp:');
+                            if (isGrp) {
+                                const groupVals = val.slice(5).split(',');
+                                if (sel[dimId]) delete sel[dimId];
+                                narrowDim = dimId;
+                                narrowValues = groupVals;
+                            } else if (action === 'frontier' || action === 'change') {
+                                Engine.applySelection(sel, dimId, val);
+                                narrowDim = null;
+                                narrowValues = null;
+                            } else if (action === 'unclick') {
+                                if (sel[dimId]) Engine.applySelection(sel, dimId, sel[dimId]);
+                                narrowDim = null;
+                                narrowValues = null;
+                            }
+                            update();
+                        });
+                    });
+                }
+
+                const questionZone = app.querySelector('.map-question-zone');
+                if (questionZone) {
+                    const qResult = fullQuestions ? buildQuestionCardHtml() : null;
+                    if (qResult) {
+                        questionZone.innerHTML = qResult.html;
+                        questionZone.style.display = '';
+                        questionZone.querySelectorAll('.answer-card').forEach(cardEl => {
+                            cardEl.addEventListener('click', () => {
+                                if (cardEl.classList.contains('disabled')) return;
+                                const idx = parseInt(cardEl.dataset.aidx, 10);
+                                const chosen = qResult.answerCards[idx];
+                                if (!chosen || chosen.disabled) return;
+
+                                if (chosen.action === '_next_step') {
+                                    narrowDim = qResult.dim.id;
+                                    narrowValues = chosen.groupValues;
+                                    collapseCardThenUpdate(null);
+                                    return;
+                                }
+
+                                const [dimId, valueId] = Object.entries(chosen.action)[0];
+                                Engine.applySelection(sel, dimId, valueId);
+                                Engine.cleanSelection(sel);
+                                narrowDim = null;
+                                narrowValues = null;
+                                collapseCardThenUpdate(dimId);
+                            });
+                        });
+                    } else {
+                        questionZone.innerHTML = '';
+                        questionZone.style.display = 'none';
+                    }
+                }
+
+                const outcomeZone = app.querySelector('.map-outcome-zone');
+                if (outcomeZone) {
+                    const nextDim = findNextStoryDim(sel);
+                    if (!nextDim) {
+                        outcomeZone.innerHTML = buildOutcomeSectionHtml();
+                        outcomeZone.style.display = '';
+                    } else {
+                        outcomeZone.innerHTML = '';
+                        outcomeZone.style.display = 'none';
+                    }
+                }
+
+                syncHash();
+            }
+
+            function collapseCardThenUpdate(answeredDimId) {
+                const card = app.querySelector('.map-question-zone .map-question-card');
+                if (!card) { update(); return; }
+
+                if (!document.startViewTransition) {
+                    update();
+                    return;
+                }
+
+                card.style.viewTransitionName = 'question-morph';
+
+                const transition = document.startViewTransition(() => {
+                    update();
+
+                    if (answeredDimId) {
+                        const newTimelineEl = app.querySelector('.map-timeline');
+                        const newEvts = newTimelineEl.querySelectorAll('.timeline-event[data-dim="' + answeredDimId + '"]');
+                        const lastEvt = newEvts.length ? newEvts[newEvts.length - 1] : null;
+                        console.log('[morph] dim=' + answeredDimId, 'found=' + newEvts.length, lastEvt);
+                        if (lastEvt) lastEvt.style.viewTransitionName = 'question-morph';
+                    }
+
+                    const nextCard = app.querySelector('.map-question-zone .map-question-card');
+                    if (nextCard) nextCard.style.viewTransitionName = 'question-enter';
+                });
+
+                transition.finished.then(() => {
+                    app.querySelectorAll('[style*="view-transition-name"]').forEach(el => {
+                        el.style.viewTransitionName = '';
+                    });
+                });
+            }
+
+
+            app.innerHTML = `
+                <div class="map-screen">
+                    <div class="map-toolbar">
+                        <div class="map-locker-wrap">
+                            <label class="map-locker-label">Outcome</label>
+                            <select class="map-outcome-locker">${lockerOptions}</select>
+                            <button class="map-reset-btn" data-action="reset-sel">Reset</button>
+                        </div>
+                        <div class="map-toggles">
+                            <label class="map-toggle"><input type="checkbox" data-flag="fq"${fullQuestions ? ' checked' : ''}><span>Full Questions</span></label>
+                            <label class="map-toggle"><input type="checkbox" data-flag="et"${expandTimeline ? ' checked' : ''}><span>Expand Timeline</span></label>
+                        </div>
+                    </div>
+                    <div class="map-timeline timeline"></div>
+                    <div class="map-question-zone"></div>
+                    <div class="map-outcome-zone" style="display:none"></div>
+                    <div class="map-actions">
+                        <button class="btn btn-ghost" data-action="home">\u2190 Back to Start</button>
+                        <button class="btn btn-ghost" data-action="reset">Reset</button>
+                        <button class="btn btn-ghost" data-action="share">Copy Link</button>
+                    </div>
+                </div>`;
+
+            const lockerEl = app.querySelector('.map-outcome-locker');
+            lockerEl.addEventListener('change', () => {
+                lockedId = lockerEl.value;
+                update();
+            });
+
+            app.querySelectorAll('.map-toggle input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', () => {
+                    if (cb.dataset.flag === 'fq') fullQuestions = cb.checked;
+                    if (cb.dataset.flag === 'et') expandTimeline = cb.checked;
+                    update();
+                });
+            });
+
+            function resetSelections() {
+                sel = {};
+                narrowDim = null;
+                narrowValues = null;
+                update();
+            }
+
+            listen('[data-action="reset-sel"]', 'click', resetSelections);
+            listen('[data-action="home"]', 'click', () => navigate({ screen: 'intro' }));
+            listen('[data-action="reset"]', 'click', resetSelections);
+            listen('[data-action="share"]', 'click', () => {
+                const url = location.origin + location.pathname + location.hash;
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
+                } else {
+                    showToast(url);
+                }
+            });
+
             update();
         }
 
