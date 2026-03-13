@@ -118,17 +118,11 @@
             filter: brightness(1.15);
             box-shadow: 0 0 24px var(--accent-glow);
         }
-        .btn-secondary {
-            background: var(--bg-card); color: var(--text);
-            border: 1px solid var(--border);
-        }
-        .btn-secondary:hover { background: var(--bg-card-hover); border-color: var(--border-hover); }
         .btn-ghost {
             background: transparent; color: var(--text-secondary);
             padding: 0.5rem 0.75rem; font-size: 0.9rem;
         }
         .btn-ghost:hover { color: var(--text); }
-        .btn-small { padding: 0.5rem 1rem; font-size: 0.85rem; }
 
         /* ---- Intro ---- */
         .intro {
@@ -148,13 +142,7 @@
             margin-bottom: 3rem; max-width: 480px; line-height: 1.7;
         }
         .intro .actions { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
-        .intro .discovery {
-            margin-top: 2.5rem; color: var(--text-dim);
-            font-size: 0.85rem; letter-spacing: 0.02em;
-        }
 
-        .timeline-section { margin-bottom: 3rem; }
-        .timeline-section h2 { margin-bottom: 1.75rem; }
         .timeline { position: relative; padding-left: 2.5rem; }
         .timeline::before {
             content: ''; position: absolute;
@@ -227,18 +215,6 @@
         .timeline-light .timeline-slider { display: none; }
         .timeline-light .timeline-event { margin-bottom: 0.65rem; padding-top: 0; }
         .timeline-light .timeline-event::before { top: calc(0.67rem); }
-        .timeline-header-row { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 0.5rem; }
-        .timeline-header-row h2 { margin: 0; }
-        .tl-mode-toggle {
-            display: flex; gap: 0; border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
-        }
-        .tl-mode-btn {
-            font-size: 0.7rem; padding: 0.15rem 0.55rem; cursor: pointer;
-            background: transparent; color: var(--text-secondary); border: none;
-            transition: all 0.15s var(--ease); user-select: none;
-        }
-        .tl-mode-btn:hover:not(.active) { color: var(--text); }
-        .tl-mode-btn.active { background: var(--accent); color: var(--pill-active-text); font-weight: 600; }
         .timeline-slider {
             display: flex; align-items: center; gap: 0.6rem;
             margin-top: 0.5rem; padding: 0.3rem 0;
@@ -293,11 +269,6 @@
             z-index: -1;
         }
         .timeline > .timeline-stage-header:first-child { margin-top: 0; }
-        .timeline-stage-num {
-            font-size: 0.68rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.08em;
-            color: var(--accent); white-space: nowrap;
-        }
         .timeline-stage-label {
             font-weight: 600; font-size: 0.88rem; color: var(--text);
         }
@@ -320,11 +291,6 @@
             display: inline-block; width: 8px; height: 8px; border-radius: 50%;
             margin-right: 0.4rem; vertical-align: middle;
         }
-        .explorer-grid-label {
-            font-size: 0.78rem; font-weight: 600; color: var(--text-dim);
-            text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; margin-top: 0.5rem;
-        }
-
         @media (min-width: 580px) { .explorer-grid { grid-template-columns: repeat(2, 1fr); } }
         /* ---- Error / Loading ---- */
         .loading, .error-screen {
@@ -714,37 +680,6 @@
                 timeline: resolveTimeline(t.timeline, dims),
                 flavors: resolveFlavors(t.flavors, dims)
             };
-        }
-
-        function resolveVariantDirect(templateId, variantKey) {
-            const t = templatesMap[templateId];
-            if (!t) return null;
-            if (t.variants && variantKey && t.variants[variantKey]) {
-                const v = t.variants[variantKey];
-                return {
-                    variantKey,
-                    title: t.title,
-                    subtitle: v.subtitle,
-                    mood: v.mood || t.mood,
-                    summary: v.summary,
-                    story: t.story,
-                    timeline: resolveTimeline(t.timeline, {}),
-                    flavors: []
-                };
-            }
-            if (!t.variants) {
-                return {
-                    variantKey: null,
-                    title: t.title,
-                    subtitle: null,
-                    mood: t.mood,
-                    summary: t.summary,
-                    story: t.story,
-                    timeline: resolveTimeline(t.timeline, {}),
-                    flavors: []
-                };
-            }
-            return resolveTemplate(templateId, {});
         }
 
         function resolveFlavors(flavors, dims) {
