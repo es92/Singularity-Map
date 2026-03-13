@@ -308,7 +308,7 @@
         .timeline-light .timeline-desc,
         .timeline-light .timeline-slider { display: none; }
         .timeline-light .timeline-event { margin-bottom: 0.65rem; padding-top: 0; }
-        .timeline-light .timeline-event::before { top: 0.35rem; }
+        .timeline-light .timeline-event::before { top: calc(0.67rem); }
         .timeline-header-row { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 0.5rem; }
         .timeline-header-row h2 { margin: 0; }
         .tl-mode-toggle {
@@ -355,7 +355,24 @@
             background: var(--bg-surface);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            margin: 1.2rem 0 0.6rem; position: relative;
+        }
+        .map-timeline .timeline-stage-header {
+            background: transparent;
+            border: none;
+            padding: 0.5rem 0.6rem;
+            margin: 1.2rem 0 0.6rem;
+            margin-left: calc(-2.5rem - 4px - 0.6rem);
+            position: relative;
+            z-index: 2;
+        }
+        .map-timeline .timeline-stage-header::after {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0;
+            left: calc(4px + 0.6rem + 6px);
+            width: 4px;
+            background: var(--bg);
+            z-index: -1;
         }
         .timeline > .timeline-stage-header:first-child { margin-top: 0; }
         .timeline-stage-num {
@@ -798,9 +815,10 @@
             border-color: var(--border-hover); color: var(--text);
         }
         .map-timeline { margin-bottom: 1.5rem; }
+        .map-question-zone { padding-left: 2.5rem; }
         .map-question-card {
             background: var(--bg-surface); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: 1.5rem;
+            border-radius: var(--radius); padding: 1.5rem 1.5rem 0.75rem;
             margin-bottom: 1.5rem;
         }
         .map-question-card .question-text {
@@ -810,7 +828,7 @@
             font-size: 0.88rem; margin-bottom: 0.75rem;
         }
         .map-question-card .answers {
-            display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem;
+            display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; margin-bottom: 0.75rem;
         }
         .map-question-card .answer-card {
             flex: 1 1 auto; min-width: 140px;
@@ -828,24 +846,25 @@
             margin-bottom: 1.5rem;
         }
 
-        /* View Transitions — slow defaults for debugging */
-        ::view-transition-group(question-morph) {
-            animation-duration: 1.5s;
-        }
-        ::view-transition-old(question-morph) {
-            animation-duration: 1.5s;
-        }
-        ::view-transition-new(question-morph) {
-            animation-duration: 1.5s;
+        /* Ghost overlay for card-to-timeline morph animation */
+        .morph-ghost {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+            overflow: hidden;
+            transition-property: top, left, width, height, opacity;
+            transition-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
         }
 
         @media (prefers-reduced-motion: reduce) {
-            ::view-transition-group(*),
-            ::view-transition-old(*),
-            ::view-transition-new(*) {
-                animation-duration: 0.01s !important;
-            }
+            .morph-ghost { transition-duration: 0.01s !important; }
+            .morph-ghost * { transition-duration: 0.01s !important; }
         }
+        .map-outcomes-zone { margin-bottom: 1.5rem; padding-left: 2.5rem; }
+        .map-outcomes-label {
+            font-weight: 600; font-size: 0.92rem; margin-bottom: 0.75rem; color: var(--text-secondary);
+        }
+        .map-outcomes-count { font-weight: 400; font-size: 0.82rem; color: var(--text-dim); }
         .map-outcome-section .outcome-header { margin-bottom: 1rem; }
         .map-outcome-section .outcome-summary { margin-bottom: 1rem; }
         .map-outcome-section .outcome-story { margin-top: 1rem; }
@@ -1229,6 +1248,7 @@
                         if (dk === 'locked') { lockedOutcomeId = dv; }
                         else if (dk === 'fq') { flags.fullQuestions = dv !== '0'; }
                         else if (dk === 'et') { flags.expandTimeline = dv !== '0'; }
+                        else if (dk === 'so') { flags.showOutcomes = dv === '1'; }
                         else { dims[dk] = dv; }
                     });
                 }
@@ -2474,6 +2494,7 @@
             const flags = initialFlags || {};
             let fullQuestions = flags.fullQuestions !== false;
             let expandTimeline = flags.expandTimeline !== false;
+            let showOutcomes = flags.showOutcomes === true;
             let narrowDim = null;
             let narrowValues = null;
             let timelineDurations = [];
@@ -2482,6 +2503,12 @@
             delete sel._storyNarrowValues;
             delete sel._expandedGroup;
             Engine.cleanSelection(sel);
+
+            function moodColor(mood) {
+                const map = { utopian:'var(--mood-utopian)', dystopian:'var(--mood-dystopian)',
+                    mixed:'var(--mood-mixed)', stagnant:'var(--mood-stagnant)', chaotic:'var(--mood-chaotic)' };
+                return map[mood] || 'var(--text-dim)';
+            }
 
             function getLockedTemplate() {
                 return lockedId ? templatesMap[lockedId] : null;
@@ -2649,9 +2676,14 @@
                 const meanRange = ranges.length ? ranges.reduce((a, b) => a + b, 0) / ranges.length : 1;
                 let cumulative = 0;
 
-                return events.map((e, i) => {
+                const seenStages = new Set();
+                const html = events.map((e, i) => {
                     let headerHtml = '';
-                    if (e.stage && e.stage !== lastStage) { lastStage = e.stage; headerHtml = stageHeaderHtml(e.stage); }
+                    if (e.stage && e.stage !== lastStage) {
+                        lastStage = e.stage;
+                        seenStages.add(String(e.stage));
+                        headerHtml = stageHeaderHtml(e.stage);
+                    }
                     const d = timelineDurations[i];
                     const yearLabel = hasDurations ? formatRange(cumulative, cumulative + d.current) : '';
                     cumulative += d.current;
@@ -2683,6 +2715,17 @@
                             ${sliderHtml}
                         </div>`;
                 }).join('');
+
+                if (!expandTimeline && !fullQuestions && SCENARIO.stages) {
+                    let trailingHeaders = '';
+                    for (const key of Object.keys(SCENARIO.stages).sort((a, b) => Number(a) - Number(b))) {
+                        if (!seenStages.has(key)) {
+                            trailingHeaders += stageHeaderHtml(Number(key));
+                        }
+                    }
+                    return html + trailingHeaders;
+                }
+                return html;
             }
 
             function updateTimelineLabels() {
@@ -2835,8 +2878,9 @@
                 if (lockedId) entries.push('locked=' + encodeURIComponent(lockedId));
                 if (!fullQuestions) entries.push('fq=0');
                 if (!expandTimeline) entries.push('et=0');
+                if (showOutcomes) entries.push('so=1');
                 if (entries.length > 0) hash += '?' + entries.join('&');
-                const stateFlags = { fullQuestions, expandTimeline };
+                const stateFlags = { fullQuestions, expandTimeline, showOutcomes };
                 history.replaceState({ screen: 'map', dims: { ...sel }, lockedOutcomeId: lockedId, flags: stateFlags }, '', '#' + hash);
             }
 
@@ -2846,6 +2890,7 @@
                 const events = buildTimelineEvents();
                 const timelineEl = app.querySelector('.map-timeline');
                 if (timelineEl) {
+                    timelineEl.classList.toggle('timeline-light', !expandTimeline);
                     timelineEl.innerHTML = buildTimelineHtml(events);
                     timelineEl.querySelectorAll('.timeline-slider input[type="range"]').forEach(slider => {
                         slider.addEventListener('input', () => {
@@ -2914,6 +2959,50 @@
                     }
                 }
 
+                const outcomesGrid = app.querySelector('.map-outcomes-zone');
+                if (outcomesGrid) {
+                    if (showOutcomes) {
+                        const eff = Engine.effectiveDims(sel);
+                        const matched = [], partial = [];
+                        for (const t of templatesList) {
+                            if (Engine.templateMatches(t, eff)) matched.push(t);
+                            else if (Engine.templatePartialMatch(t, eff)) partial.push(t);
+                        }
+
+                        const cardsHtml = templatesList.map(t => {
+                            const resolved = resolveTemplate(t.id, eff);
+                            const title = resolved ? resolved.title : t.title || t.id;
+                            const subtitle = resolved ? resolved.subtitle : null;
+                            const mood = resolved ? resolved.mood : t.mood || 'mixed';
+                            const summary = resolved ? resolved.summary : t.summary || '';
+                            const isMatch = matched.includes(t);
+                            const isPartial = partial.includes(t);
+                            const cls = isMatch ? ' matched' : (!isMatch && !isPartial ? ' dimmed' : '');
+                            return `<div class="explorer-card${cls}" data-tid="${esc(t.id)}">
+                                <div class="ec-title"><span class="ec-dot" style="background:${moodColor(mood)}"></span>${esc(title)}${subtitle ? ` <span class="ec-subtitle">\u2014 ${esc(subtitle)}</span>` : ''}</div>
+                                <div class="ec-summary">${esc(summary)}</div></div>`;
+                        }).join('');
+
+                        const matchLabel = matched.length === 1 ? '1 outcome matches' :
+                            matched.length > 1 ? matched.length + ' outcomes match' : '';
+
+                        outcomesGrid.innerHTML = `
+                            <div class="map-outcomes-label">Possible Outcomes${matchLabel ? ` <span class="map-outcomes-count">(${matchLabel})</span>` : ''}</div>
+                            <div class="explorer-grid">${cardsHtml}</div>`;
+                        outcomesGrid.style.display = '';
+
+                        outcomesGrid.querySelectorAll('.explorer-card').forEach(card => {
+                            card.addEventListener('click', () => {
+                                const tid = card.dataset.tid;
+                                if (tid) renderOutcome(tid, { ...sel });
+                            });
+                        });
+                    } else {
+                        outcomesGrid.innerHTML = '';
+                        outcomesGrid.style.display = 'none';
+                    }
+                }
+
                 const outcomeZone = app.querySelector('.map-outcome-zone');
                 if (outcomeZone) {
                     const nextDim = findNextStoryDim(sel);
@@ -2929,37 +3018,163 @@
                 syncHash();
             }
 
+            const MORPH_DURATION = 600;
+            let morphAnimating = false;
+
             function collapseCardThenUpdate(answeredDimId) {
                 const card = app.querySelector('.map-question-zone .map-question-card');
                 if (!card) { update(); return; }
+                if (morphAnimating) { update(); return; }
+                morphAnimating = true;
 
-                if (!document.startViewTransition) {
-                    update();
-                    return;
+                const startRect = card.getBoundingClientRect();
+                const cardCloneHtml = card.outerHTML;
+
+                const questionZone = app.querySelector('.map-question-zone');
+                const mapScreen = app.querySelector('.map-screen');
+
+                // Lock question zone height before update to prevent content below from shifting
+                const qzHeightBefore = questionZone ? questionZone.offsetHeight : 0;
+                if (questionZone) {
+                    questionZone.style.height = qzHeightBefore + 'px';
+                    questionZone.style.overflow = 'visible';
                 }
 
-                card.style.viewTransitionName = 'question-morph';
+                // Count timeline children before update
+                const timelineEl = app.querySelector('.map-timeline');
+                const oldChildCount = timelineEl ? timelineEl.childElementCount : 0;
 
-                const transition = document.startViewTransition(() => {
-                    update();
+                update();
 
-                    if (answeredDimId) {
-                        const newTimelineEl = app.querySelector('.map-timeline');
-                        const newEvts = newTimelineEl.querySelectorAll('.timeline-event[data-dim="' + answeredDimId + '"]');
-                        const lastEvt = newEvts.length ? newEvts[newEvts.length - 1] : null;
-                        console.log('[morph] dim=' + answeredDimId, 'found=' + newEvts.length, lastEvt);
-                        if (lastEvt) lastEvt.style.viewTransitionName = 'question-morph';
+                // Identify new timeline children (events + stage headers added by this answer)
+                let endRect = startRect;
+                const newTimelineItems = [];
+                if (timelineEl) {
+                    const allChildren = Array.from(timelineEl.children);
+                    for (let i = oldChildCount; i < allChildren.length; i++) {
+                        newTimelineItems.push(allChildren[i]);
                     }
+                    if (newTimelineItems.length > 0) {
+                        endRect = newTimelineItems[0].getBoundingClientRect();
+                    }
+                }
 
-                    const nextCard = app.querySelector('.map-question-zone .map-question-card');
-                    if (nextCard) nextCard.style.viewTransitionName = 'question-enter';
+
+                // Hide all new timeline items (events + headers), fade them in together
+                newTimelineItems.forEach(el => {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(10px)';
                 });
 
-                transition.finished.then(() => {
-                    app.querySelectorAll('[style*="view-transition-name"]').forEach(el => {
-                        el.style.viewTransitionName = '';
+                // Create ghost of old question card
+                const ghostOld = document.createElement('div');
+                ghostOld.className = 'morph-ghost';
+                ghostOld.innerHTML = cardCloneHtml;
+                ghostOld.firstChild.style.width = '100%';
+                ghostOld.firstChild.style.height = '100%';
+                ghostOld.firstChild.style.margin = '0';
+                document.body.appendChild(ghostOld);
+
+                const dur = MORPH_DURATION + 'ms';
+                ghostOld.style.transitionDuration = dur;
+
+                function applyRect(el, r) {
+                    el.style.top = r.top + 'px';
+                    el.style.left = r.left + 'px';
+                    el.style.width = r.width + 'px';
+                    el.style.height = r.height + 'px';
+                }
+
+                applyRect(ghostOld, startRect);
+                ghostOld.style.opacity = '1';
+                ghostOld.offsetHeight;
+
+                applyRect(ghostOld, endRect);
+                const fadeDur = Math.round(MORPH_DURATION * 0.8) + 'ms';
+                ghostOld.firstChild.style.transition = `opacity ${fadeDur} linear, background ${fadeDur} linear, border-color ${fadeDur} linear`;
+                ghostOld.firstChild.style.opacity = '0';
+                ghostOld.firstChild.style.background = 'transparent';
+                ghostOld.firstChild.style.borderColor = 'transparent';
+
+                // Reveal all new timeline items together
+                const revealStart = MORPH_DURATION * 0.3;
+                setTimeout(() => {
+                    newTimelineItems.forEach(el => {
+                        el.style.transition = `opacity ${MORPH_DURATION * 0.4}ms cubic-bezier(0.42, 0, 0.58, 1), transform ${MORPH_DURATION * 0.4}ms cubic-bezier(0.42, 0, 0.58, 1)`;
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateY(0)';
                     });
-                });
+                }, revealStart);
+
+                // Roll down next question card at 50%
+                const rollDelay = MORPH_DURATION * 0.5;
+                const nextCard = app.querySelector('.map-question-zone .map-question-card');
+                if (nextCard) {
+                    const wrapper = document.createElement('div');
+                    wrapper.style.overflow = 'hidden';
+                    wrapper.style.height = '0px';
+                    nextCard.parentNode.insertBefore(wrapper, nextCard);
+                    wrapper.appendChild(nextCard);
+                }
+
+                // Transition question zone height from old size to wrapped (collapsed) size
+                if (questionZone) {
+                    const qzHeightAfter = questionZone.scrollHeight;
+                    questionZone.offsetHeight;
+                    questionZone.style.transition = 'height ' + MORPH_DURATION + 'ms cubic-bezier(0.42, 0, 0.58, 1)';
+                    questionZone.style.height = qzHeightAfter + 'px';
+                }
+
+                if (nextCard) {
+                    const wrapper = nextCard.parentNode;
+                    setTimeout(() => {
+                        const targetHeight = wrapper.scrollHeight;
+                        requestAnimationFrame(() => {
+                            wrapper.style.transition = 'height ' + Math.round(MORPH_DURATION * 0.7) + 'ms cubic-bezier(0.42, 0, 0.58, 1)';
+                            wrapper.style.height = targetHeight + 'px';
+                            // Transition question zone to new height including expanded card
+                            if (questionZone) {
+                                const newQzHeight = questionZone.scrollHeight - wrapper.offsetHeight + targetHeight;
+                                questionZone.style.height = newQzHeight + 'px';
+                            }
+                        });
+
+                        const rollDur = Math.round(MORPH_DURATION * 0.7);
+                        const topPad = 50;
+                        const scrollCheck = setInterval(() => {
+                            const rect = nextCard.getBoundingClientRect();
+                            const viewH = window.innerHeight;
+                            const gap = 8;
+                            if (rect.height + topPad + gap >= viewH) {
+                                window.scrollBy({ top: rect.top - topPad, behavior: 'smooth' });
+                            } else if (rect.bottom + gap > viewH) {
+                                window.scrollBy({ top: rect.bottom + gap - viewH, behavior: 'smooth' });
+                            }
+                        }, 16);
+
+                        setTimeout(() => {
+                            clearInterval(scrollCheck);
+                            wrapper.parentNode.insertBefore(nextCard, wrapper);
+                            wrapper.remove();
+                        }, rollDur + 50);
+                    }, rollDelay);
+                }
+
+                // Cleanup after morph completes
+                setTimeout(() => {
+                    ghostOld.remove();
+                    newTimelineItems.forEach(el => {
+                        el.style.opacity = '1';
+                        el.style.transform = '';
+                        el.style.transition = '';
+                    });
+                    if (questionZone) {
+                        questionZone.style.height = '';
+                        questionZone.style.overflow = '';
+                        questionZone.style.transition = '';
+                    }
+                    morphAnimating = false;
+                }, MORPH_DURATION + 50);
             }
 
 
@@ -2974,10 +3189,12 @@
                         <div class="map-toggles">
                             <label class="map-toggle"><input type="checkbox" data-flag="fq"${fullQuestions ? ' checked' : ''}><span>Full Questions</span></label>
                             <label class="map-toggle"><input type="checkbox" data-flag="et"${expandTimeline ? ' checked' : ''}><span>Expand Timeline</span></label>
+                            <label class="map-toggle"><input type="checkbox" data-flag="so"${showOutcomes ? ' checked' : ''}><span>Show Outcomes</span></label>
                         </div>
                     </div>
                     <div class="map-timeline timeline"></div>
                     <div class="map-question-zone"></div>
+                    <div class="map-outcomes-zone" style="display:none"></div>
                     <div class="map-outcome-zone" style="display:none"></div>
                     <div class="map-actions">
                         <button class="btn btn-ghost" data-action="home">\u2190 Back to Start</button>
@@ -2996,6 +3213,7 @@
                 cb.addEventListener('change', () => {
                     if (cb.dataset.flag === 'fq') fullQuestions = cb.checked;
                     if (cb.dataset.flag === 'et') expandTimeline = cb.checked;
+                    if (cb.dataset.flag === 'so') showOutcomes = cb.checked;
                     update();
                 });
             });
