@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timeline Animation Test</title>
+<style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+        --bg: #08080f;
+        --bg-surface: #0e0e18;
+        --bg-card: #141422;
+        --bg-card-hover: #1c1c32;
+        --text: #e4e4f0;
+        --text-secondary: #9898b0;
+        --text-dim: #5c5c74;
+        --accent: #00c8ff;
+        --accent-glow: rgba(0, 200, 255, 0.1);
+        --accent-2: #7c5cff;
+        --border: #222238;
+        --border-hover: #3a3a58;
+        --radius: 12px;
+        --radius-sm: 8px;
+        --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="light"] {
+        --bg: #f6f6fb;
+        --bg-surface: #eeeef6;
+        --bg-card: #ffffff;
+        --bg-card-hover: #f0f0f8;
+        --text: #1a1a2e;
+        --text-secondary: #4e4e6a;
+        --text-dim: #8888a4;
+        --accent: #0090cc;
+        --accent-glow: rgba(0, 144, 204, 0.08);
+        --accent-2: #6a48e0;
+        --border: #d4d4e4;
+        --border-hover: #b0b0c8;
+    }
+
+    body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        line-height: 1.6;
+        min-height: 100vh;
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background:
+            radial-gradient(ellipse at 25% 50%, var(--accent-glow) 0%, transparent 60%),
+            radial-gradient(ellipse at 75% 20%, rgba(124, 92, 255, 0.025) 0%, transparent 60%);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    #app {
+        position: relative; z-index: 1;
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+    }
+
+    h1 {
+        font-size: 1.5rem; margin-bottom: 1.5rem;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Timeline */
+    .timeline { position: relative; padding-left: 2.5rem; display: flow-root; }
+    .timeline::before {
+        content: ''; position: absolute;
+        left: 7px; top: 8px; bottom: 0.6rem; width: 2px;
+        background: linear-gradient(to bottom, var(--accent), var(--accent-2));
+        opacity: 0.3; border-radius: 1px;
+    }
+    .timeline-event { position: relative; padding-top: 1.4rem; }
+    .timeline-event::before {
+        content: ''; position: absolute;
+        left: calc(-2.5rem + 3px); top: 0.55rem;
+        width: 10px; height: 10px; border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 8px var(--accent-glow);
+        border: 2px solid var(--bg); z-index: 1;
+    }
+    .timeline-event::after {
+        content: ''; position: absolute;
+        left: -1.85rem; top: calc(0.55rem + 4px);
+        right: 0; height: 1px;
+        background: var(--border); opacity: 0.6;
+        z-index: -1;
+    }
+
+    .timeline-headline { font-weight: 600; margin-bottom: 0.2rem; font-size: 0.98rem; }
+    .timeline-desc { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6; }
+    .timeline-top-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem; }
+    .timeline-param-wrap { display: flex; align-items: flex-start; gap: 0.75rem; }
+    .timeline-param-dim { flex-shrink: 0; width: 110px; font-size: 0.82rem; font-weight: 500; color: var(--text-secondary); padding-top: 0.3rem; }
+    .timeline-param { font-size: 0.7rem; font-weight: 500; padding: 0.15rem 0.5rem; border-radius: 12px; border: 1px solid var(--accent); color: var(--accent); }
+
+    /* Stage headers */
+    .timeline-stage-header {
+        display: flex; align-items: center; gap: 0.65rem;
+        background: transparent; border: none;
+        padding: 0.5rem 0.6rem;
+        margin: 1.2rem 0 0.6rem;
+        margin-left: calc(-2.5rem - 4px - 0.6rem);
+        position: relative; z-index: 2;
+    }
+    .timeline > .timeline-stage-header:first-child { margin-top: 0; }
+    .timeline-stage-header::after {
+        content: ''; position: absolute;
+        top: 0; bottom: 0;
+        left: calc(4px + 0.6rem + 6px);
+        width: 4px; z-index: -1;
+        background:
+            radial-gradient(ellipse at 25% 50%, var(--accent-glow) 0%, transparent 60%),
+            radial-gradient(ellipse at 75% 20%, rgba(124, 92, 255, 0.025) 0%, transparent 60%),
+            var(--bg);
+        background-attachment: fixed;
+    }
+    .timeline-stage-label { font-weight: 600; font-size: 0.88rem; color: var(--text); }
+
+    /* Question zone */
+    .question-zone {
+        padding-left: 2.5rem;
+        position: relative;
+    }
+    .question-zone::before {
+        content: ''; position: absolute;
+        left: 7px; top: -0.6rem;
+        height: calc(0.55rem + 7px + 0.6rem);
+        width: 2px;
+        background: linear-gradient(to bottom, var(--accent), var(--accent-2));
+        opacity: 0.3; border-radius: 1px;
+        transition: opacity 0.3s ease;
+    }
+    .question-zone .question-card.hide-decorations::before,
+    .question-zone .question-card.hide-decorations::after {
+        opacity: 0 !important;
+    }
+    .question-card.no-transition::before,
+    .question-card.no-transition::after {
+        transition: none !important;
+    }
+    .timeline-event.morph-no-decorations::before,
+    .timeline-event.morph-no-decorations::after {
+        display: none !important;
+    }
+
+    .question-card {
+        background: none; border: none;
+        padding: 1.4rem 0 0.75rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+    .question-card::before {
+        content: ''; position: absolute;
+        left: calc(-2.5rem + 3px); top: 0.55rem;
+        width: 10px; height: 10px; border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 8px var(--accent-glow);
+        border: 2px solid var(--bg); z-index: 1;
+        transition: opacity 0.3s ease;
+    }
+    .question-card::after {
+        content: ''; position: absolute;
+        left: -1.85rem; top: calc(0.55rem + 4px);
+        right: 0; height: 1px;
+        background: var(--border); opacity: 0.6;
+        z-index: -1;
+        transition: opacity 0.3s ease;
+    }
+
+    .question-card .question-text {
+        font-size: 1.15rem; font-weight: 600; margin-bottom: 0.75rem; line-height: 1.4;
+    }
+    .question-card .answers {
+        display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; margin-bottom: 0.75rem;
+    }
+    .answer-btn {
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 0.65rem 1.2rem;
+        cursor: pointer; transition: all 0.2s var(--ease);
+        color: var(--text); font-size: 0.9rem; font-weight: 600;
+    }
+    .answer-btn:hover {
+        background: var(--bg-card-hover); border-color: var(--accent);
+        box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    /* Outcome card */
+    .outcome-card {
+        margin-left: 2.5rem;
+        margin-top: 1rem;
+        padding: 1.2rem 1.4rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+    }
+
+    /* Speed controls */
+    .controls {
+        display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .speed-btn {
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); padding: 0.3rem 0.7rem;
+        cursor: pointer; color: var(--text-secondary); font-size: 0.78rem;
+        transition: all 0.15s;
+    }
+    .speed-btn:hover { border-color: var(--border-hover); color: var(--text); }
+    .speed-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+
+    .control-row {
+        display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
+    }
+    .control-row + .control-row { margin-top: 0.5rem; }
+    .control-label {
+        font-size: 0.72rem; color: var(--text-secondary); min-width: 5.5rem;
+        font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;
+    }
+
+    .theme-toggle {
+        display: flex; align-items: center; gap: 0.4rem;
+        margin-left: auto; font-size: 0.78rem; color: var(--text-secondary);
+        cursor: pointer; user-select: none;
+    }
+    .theme-toggle input[type="checkbox"] {
+        appearance: none; -webkit-appearance: none;
+        width: 34px; height: 20px; border-radius: 10px;
+        background: var(--border); cursor: pointer;
+        position: relative; flex-shrink: 0;
+        transition: background 0.2s var(--ease);
+        border: none; outline: none;
+    }
+    .theme-toggle input[type="checkbox"]::after {
+        content: ''; position: absolute;
+        top: 2px; left: 2px;
+        width: 16px; height: 16px; border-radius: 50%;
+        background: var(--bg-card); box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        transition: transform 0.2s var(--ease);
+    }
+    .theme-toggle input[type="checkbox"]:checked { background: var(--accent); }
+    .theme-toggle input[type="checkbox"]:checked::after { transform: translateX(14px); }
+</style>
+</head>
+<body>
+<div id="app">
+    <h1>Timeline Animation Test</h1>
+    <div class="controls">
+        <div class="control-row">
+            <span class="control-label">Main</span>
+            <button class="speed-btn" data-speed="300">0.3s</button>
+            <button class="speed-btn" data-speed="600">0.6s</button>
+            <button class="speed-btn active" data-speed="1500">1.5s</button>
+            <button class="speed-btn" data-speed="3000">3s</button>
+            <button class="speed-btn" id="resetBtn">Reset</button>
+            <label class="theme-toggle"><input type="checkbox" id="themeToggle" checked> Light</label>
+        </div>
+        <div class="control-row">
+            <span class="control-label">New Q</span>
+            <button class="speed-btn roll-btn" data-roll="match">Match</button>
+            <button class="speed-btn roll-btn" data-roll="300">0.3s</button>
+            <button class="speed-btn roll-btn" data-roll="600">0.6s</button>
+            <button class="speed-btn roll-btn active" data-roll="1500">1.5s</button>
+            <button class="speed-btn roll-btn" data-roll="3000">3s</button>
+        </div>
+    </div>
+    <div class="timeline" id="timeline"></div>
+    <div class="question-zone" id="qzone"></div>
+    <div class="outcome-card" id="outcome-card">
+        <div style="font-weight:600; margin-bottom:0.5rem;">Projected Outcome</div>
+        <div style="color:var(--text-secondary); font-size:0.88rem; line-height:1.6;">Based on your responses, the most likely trajectory involves a gradual transition period with significant economic restructuring over 5–10 years. Key risk factors include alignment challenges and coordination failures between major actors.</div>
+    </div>
+</div>
+
+<script src="timeline-animator.js"></script>
+<script>
+'use strict';
+
+let counter = 0;
+
+const headlines = [
+    'AI capability reaches human level',
+    'Recursive self-improvement begins',
+    'Economic transformation accelerates',
+    'Global governance adapts',
+    'Energy infrastructure scales',
+    'Public trust shifts dramatically',
+    'New institutions emerge',
+    'Resource allocation transforms',
+    'Education systems reimagined',
+    'Healthcare revolutionized',
+    'Scientific discovery accelerates',
+    'Creative industries transformed',
+    'Military balance shifts',
+    'Space exploration expands',
+    'Biological integration advances',
+];
+
+const descs = [
+    'Systems demonstrate broad competence across domains previously thought to require human intuition.',
+    'Each generation of AI contributes to designing the next, compressing timelines dramatically.',
+    'Entire sectors restructure within months as automation reaches critical mass.',
+    'International frameworks struggle to keep pace with the rate of change.',
+    'Demand for compute drives unprecedented investment in power generation.',
+    'Society grapples with fundamental questions about the role of human labor.',
+    'Novel organizational structures arise to manage the transition period.',
+    'Markets develop new mechanisms to handle the abundance-scarcity paradox.',
+    'Traditional credentialing gives way to demonstrated capability.',
+    'Diagnostic accuracy and treatment personalization improve by orders of magnitude.',
+];
+
+const stages = [
+    { id: 1, label: 'Singularity Dynamics' },
+    { id: 2, label: 'Control Determination' },
+    { id: 3, label: 'Impact' },
+];
+
+const dims = ['AI Scaling', 'AI Alignment', 'AI Access', 'Development Speed', 'AI Governance', 'AI Integration', 'Public Trust', 'Resources'];
+const params = ['Rapid', 'Cooperative', 'Open', 'Fast', 'Proactive', 'Deep', 'High', 'Abundant'];
+
+function stageForIndex(idx) {
+    if (idx < 5) return 1;
+    if (idx < 10) return 2;
+    return 3;
+}
+
+function stageHeaderHtml(stageId) {
+    const s = stages.find(st => st.id === stageId);
+    if (!s) return '';
+    return `<div class="timeline-stage-header"><span class="timeline-stage-label">${s.label}</span></div>`;
+}
+
+function eventHtml(idx) {
+    return `<div class="timeline-event" data-idx="${idx}">
+        <div class="timeline-top-row"><span class="timeline-param-wrap"><span class="timeline-param-dim">${dims[idx % dims.length]}</span><span class="timeline-param">${params[idx % params.length]}</span></span></div>
+        <div class="timeline-headline">${headlines[idx % headlines.length]}</div>
+        <div class="timeline-desc">${descs[idx % descs.length]}</div>
+    </div>`;
+}
+
+function questionInnerHtml() {
+    return `<div class="timeline-top-row"><span class="timeline-param-wrap"><span class="timeline-param-dim">${dims[counter % dims.length]}</span></span></div>
+        <div class="question-text">As AI capability continues to grow, will the next development be positive or negative for humanity?</div>
+        <div class="question-context" style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:0.75rem; line-height:1.6;">Consider the pace of change, the state of governance, and how previous transitions have unfolded. Each path leads to different downstream consequences for society.</div>
+        <div class="answers" style="flex-direction:column;">
+            <button class="answer-btn" data-count="1" style="text-align:left; white-space:normal;"><strong>Positive</strong><br><span style="font-weight:normal;">Institutions adapt quickly, distributing benefits broadly. Open research norms persist, enabling smaller players to participate meaningfully in shaping outcomes.</span></button>
+            <button class="answer-btn" data-count="3" style="text-align:left; white-space:normal;"><strong>Negative</strong><br><span style="font-weight:normal;">Concentration of power accelerates faster than safeguards can keep up. A small number of actors capture disproportionate control over critical infrastructure and decision-making.</span></button>
+        </div>`;
+}
+
+const animator = new TimelineAnimator({
+    containerEl: document.getElementById('app'),
+    timelineEl: document.getElementById('timeline'),
+    questionZoneEl: document.getElementById('qzone'),
+    outcomeEl: document.getElementById('outcome-card'),
+    morphDuration: 1500,
+    stripFromAnimation: '.timeline-param-dim',
+    dataProvider: {
+        getEventCount: () => headlines.length,
+        getCurrentCount: () => counter,
+        setCurrentCount: (n) => { counter = n; },
+        eventHtml,
+        stageForIndex,
+        stageHeaderHtml,
+        questionInnerHtml,
+        hasMoreQuestions: () => counter < headlines.length,
+    },
+});
+
+// Main speed controls
+document.querySelectorAll('.speed-btn[data-speed]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.speed-btn[data-speed]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        animator.setMorphDuration(parseInt(btn.dataset.speed));
+    });
+});
+
+// New question speed controls
+document.querySelectorAll('.roll-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.roll-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        animator.setRollDuration(btn.dataset.roll === 'match' ? null : parseInt(btn.dataset.roll));
+    });
+});
+
+// Reset
+document.getElementById('resetBtn').addEventListener('click', () => {
+    counter = 0;
+    animator.reset();
+});
+
+// Theme toggle
+document.getElementById('themeToggle').addEventListener('change', function() {
+    document.documentElement.setAttribute('data-theme', this.checked ? 'light' : '');
+});
+
+animator.render();
+</script>
+</body>
+</html>
