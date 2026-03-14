@@ -35,6 +35,9 @@
 
             --pill-active-text: #000;
             --shadow-card: rgba(0, 0, 0, 0.25);
+
+            --bg-glow-1: var(--accent-glow);
+            --bg-glow-2: rgba(124, 92, 255, 0.025);
         }
 
         [data-theme="light"] {
@@ -59,6 +62,9 @@
 
             --pill-active-text: #fff;
             --shadow-card: rgba(0, 0, 0, 0.08);
+
+            --bg-glow-1: rgba(0, 144, 204, 0.04);
+            --bg-glow-2: rgba(124, 92, 255, 0.0125);
         }
 
         html { scroll-behavior: smooth; }
@@ -78,12 +84,11 @@
             position: fixed;
             inset: 0;
             background:
-                radial-gradient(ellipse at 25% 50%, var(--accent-glow) 0%, transparent 60%),
-                radial-gradient(ellipse at 75% 20%, rgba(124, 92, 255, 0.025) 0%, transparent 60%);
+                radial-gradient(ellipse at 25% 50%, var(--bg-glow-1) 0%, transparent 60%),
+                radial-gradient(ellipse at 75% 20%, var(--bg-glow-2) 0%, transparent 60%);
             pointer-events: none;
             z-index: 0;
         }
-        [data-theme="light"] body::before { opacity: 0.5; }
 
         #app {
             position: relative;
@@ -250,7 +255,8 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
         }
-        .map-timeline .timeline-stage-header {
+        .map-timeline .timeline-stage-header,
+        .map-question-zone .timeline-stage-header {
             background: transparent;
             border: none;
             padding: 0.5rem 0.6rem;
@@ -259,15 +265,16 @@
             position: relative;
             z-index: 2;
         }
-        .map-timeline .timeline-stage-header::after {
+        .map-timeline .timeline-stage-header::after,
+        .map-question-zone .timeline-stage-header::after {
             content: '';
             position: absolute;
             top: 0; bottom: 0;
             left: calc(4px + 0.6rem + 6px);
             width: 4px; z-index: -1;
             background:
-                radial-gradient(ellipse at 25% 50%, var(--accent-glow) 0%, transparent 60%),
-                radial-gradient(ellipse at 75% 20%, rgba(124, 92, 255, 0.025) 0%, transparent 60%),
+                radial-gradient(ellipse at 25% 50%, var(--bg-glow-1) 0%, transparent 60%),
+                radial-gradient(ellipse at 75% 20%, var(--bg-glow-2) 0%, transparent 60%),
                 var(--bg);
             background-attachment: fixed;
         }
@@ -1252,6 +1259,7 @@
                     dim,
                     answerCards,
                     html: `<div class="map-question-card${fullQuestions ? '' : ' compact'}">
+                        <div class="timeline-top-row"><span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(dim.label)}</span></span></div>
                         <div class="question-text">${esc(questionText)}</div>
                         ${fullQuestions && questionContext ? `<div class="question-context">${esc(questionContext)}</div>` : ''}
                         ${fullQuestions ? source : ''}
@@ -1558,6 +1566,9 @@
                 outcomeEl: null,
                 cardClass: 'map-question-card',
                 contentSelector: '.question-text, .question-context, .question-source, .answers',
+                morphDuration: 1500,
+                rollDuration: 1500,
+                stripFromAnimation: '.timeline-param-dim',
                 render: () => update(),
                 wireAnswerButtons: () => {},
             });

@@ -150,7 +150,7 @@ class TimelineAnimator {
             oldWrapper.appendChild(oldInner);
 
             const fadeGradient = document.createElement('div');
-            fadeGradient.style.cssText = `position:absolute; top:0; left:0; right:0; height:50px; background:radial-gradient(ellipse at 25% 50%, var(--accent-glow) 0%, transparent 60%), radial-gradient(ellipse at 75% 20%, rgba(124,92,255,0.025) 0%, transparent 60%), var(--bg); background-attachment:fixed; -webkit-mask-image:linear-gradient(to bottom, black, transparent); mask-image:linear-gradient(to bottom, black, transparent); opacity:0; z-index:2; pointer-events:none;`;
+            fadeGradient.style.cssText = `position:absolute; top:0; left:0; right:0; height:50px; background:radial-gradient(ellipse at 25% 50%, var(--bg-glow-1, var(--accent-glow)) 0%, transparent 60%), radial-gradient(ellipse at 75% 20%, var(--bg-glow-2, rgba(124,92,255,0.025)) 0%, transparent 60%), var(--bg); background-attachment:fixed; -webkit-mask-image:linear-gradient(to bottom, black, transparent); mask-image:linear-gradient(to bottom, black, transparent); opacity:0; z-index:2; pointer-events:none;`;
             oldWrapper.appendChild(fadeGradient);
 
             oldInner.offsetHeight;
@@ -300,7 +300,7 @@ class TimelineAnimator {
                 rollWrapper.appendChild(rollCard);
 
                 const rollFade = document.createElement('div');
-                rollFade.style.cssText = `position:absolute; bottom:0; left:0; right:0; height:40px; background:radial-gradient(ellipse at 25% 50%, var(--accent-glow) 0%, transparent 60%), radial-gradient(ellipse at 75% 20%, rgba(124,92,255,0.025) 0%, transparent 60%), var(--bg); background-attachment:fixed; -webkit-mask-image:linear-gradient(to top, black, transparent); mask-image:linear-gradient(to top, black, transparent); pointer-events:none; z-index:2; transition:opacity ${Math.round(rollDurMs * 0.3)}ms ease;`;
+                rollFade.style.cssText = `position:absolute; bottom:0; left:0; right:0; height:40px; background:radial-gradient(ellipse at 25% 50%, var(--bg-glow-1, var(--accent-glow)) 0%, transparent 60%), radial-gradient(ellipse at 75% 20%, var(--bg-glow-2, rgba(124,92,255,0.025)) 0%, transparent 60%), var(--bg); background-attachment:fixed; -webkit-mask-image:linear-gradient(to top, black, transparent); mask-image:linear-gradient(to top, black, transparent); pointer-events:none; z-index:2; transition:opacity ${Math.round(rollDurMs * 0.3)}ms ease;`;
                 rollWrapper.appendChild(rollFade);
 
                 questionZone.appendChild(rollWrapper);
@@ -458,22 +458,17 @@ class TimelineAnimator {
 
         // Capture new timeline items by comparing child counts
         const allNewChildren = Array.from(timeline.children);
-        const rawNewItems = allNewChildren.slice(oldChildCount);
+        const animatedItems = allNewChildren.slice(oldChildCount);
 
-        // Separate trailing header from animated items
-        let trailingHeader = null;
-        if (rawNewItems.length > 0) {
-            const last = rawNewItems[rawNewItems.length - 1];
-            if (last.classList.contains('timeline-stage-header')) {
-                trailingHeader = last;
-            }
+        // Measure from actual rendered DOM (use bounding rects to include margins)
+        let targetHeight = 0;
+        if (animatedItems.length > 0) {
+            const firstRect = animatedItems[0].getBoundingClientRect();
+            const lastItem = animatedItems[animatedItems.length - 1];
+            const lastRect = lastItem.getBoundingClientRect();
+            const lastMargin = parseFloat(getComputedStyle(lastItem).marginBottom) || 0;
+            targetHeight = lastRect.bottom - firstRect.top + lastMargin;
         }
-        const animatedItems = trailingHeader
-            ? rawNewItems.filter(el => el !== trailingHeader)
-            : rawNewItems;
-
-        // Measure from actual rendered DOM
-        const targetHeight = animatedItems.reduce((h, el) => h + el.offsetHeight, 0);
         const tempItemCount = animatedItems.length;
         const firstEvent = animatedItems.find(el => el.classList.contains('timeline-event'));
         const newContentHtml = tempItemCount <= 1 && firstEvent
