@@ -904,16 +904,6 @@
             return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.dimLabel)}</span><span class="tl-pills">${pills}</span></span>`;
         }
 
-        function findNextStoryDim(sel) {
-            for (const dim of DIMENSIONS) {
-                if (dim.virtual || dim.terminal) continue;
-                if (!Engine.isDimVisible(sel, dim)) continue;
-                if (Engine.isDimLocked(sel, dim) !== null) continue;
-                if (!sel[dim.id]) return dim;
-            }
-            return null;
-        }
-
         // --- Render: Map (unified view) ---
         function renderMap(initialDims, lockedOutcomeId, initialFlags) {
             let sel = initialDims ? { ...initialDims } : {};
@@ -969,9 +959,30 @@
                 }
             }
 
-            function buildTimelineEvents() {
+            function findNextQuestion() {
+                for (const dim of Engine.getDisplayOrder(sel)) {
+                    if (Engine.isDimLocked(sel, dim) !== null) continue;
+                    if (sel[dim.id]) continue;
+                    const options = dim.values
+                        .filter(v => !Engine.isValueDisabled(sel, dim, v))
+                        .map(v => {
+                            const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, sel) : null;
+                            return {
+                                value: v.id,
+                                label: v.label,
+                                answerLabel: (variant && variant.answerLabel) || v.answerLabel || v.label,
+                                answerDesc: (variant && variant.answerDesc) || v.answerDesc || '',
+                                dimension: dim.id,
+                                reachable: wouldReachOutcome(dim.id, v.id),
+                            };
+                        });
+                    if (options.length > 0) return { dim, options };
+                }
+                return null;
+            }
+
+            function buildTimelineEvents(nextQ) {
                 const events = [];
-                let foundFrontier = false;
 
                 for (const dim of Engine.getDisplayOrder(sel)) {
                     const locked = Engine.isDimLocked(sel, dim);
@@ -979,14 +990,12 @@
                     const isLockedDim = locked !== null;
 
                     if (!value) {
-                        if (!fullQuestions && !foundFrontier) {
-                            foundFrontier = true;
-                            const siblings = dim.values
-                                .filter(v => !Engine.isValueDisabled(sel, dim, v))
-                                .map(v => ({ value: v.id, label: v.label, dimension: dim.id, reachable: wouldReachOutcome(dim.id, v.id) }));
-                            if (siblings.length > 0) {
-                                events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: dim.stage, year: '', paramLabel: '', dimLabel: dim.label, dimension: dim.id, selectedValue: null, siblings, isFrontier: true });
-                            }
+                        if (!fullQuestions && nextQ && nextQ.dim.id === dim.id) {
+                            const siblings = nextQ.options.map(o => ({
+                                value: o.value, label: o.label,
+                                dimension: o.dimension, reachable: o.reachable
+                            }));
+                            events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: dim.stage, year: '', paramLabel: '', dimLabel: dim.label, dimension: dim.id, selectedValue: null, siblings, isFrontier: true });
                         }
                         continue;
                     }
@@ -1009,7 +1018,7 @@
                 return events;
             }
 
-            function buildTimelineHtml(events) {
+            function buildTimelineHtml(events, nextQ) {
                 let lastStage = 0;
                 const hasDurations = events.some(e => e.durationMin != null);
 
@@ -1081,9 +1090,8 @@
                         }
                         return leadingHeader + html + trailingHeaders;
                     }
-                    const nextDim = findNextStoryDim(sel);
-                    if (nextDim && nextDim.stage && !seenStages.has(String(nextDim.stage))) {
-                        return leadingHeader + html + stageHeaderHtml(nextDim.stage);
+                    if (nextQ && nextQ.dim.stage && !seenStages.has(String(nextQ.dim.stage))) {
+                        return leadingHeader + html + stageHeaderHtml(nextQ.dim.stage);
                     }
                 }
                 return leadingHeader + html;
@@ -1101,26 +1109,18 @@
                 });
             }
 
-            function buildQuestionCardHtml() {
-                const dim = findNextStoryDim(sel);
-                if (!dim) return null;
-
+            function buildQuestionCardHtml(nextQ) {
+                const dim = nextQ.dim;
                 const questionText = dim.questionText || dim.label;
                 const questionContext = dim.questionContext || '';
                 const questionSource = dim.source;
 
-                let answerCards = [];
-                for (const v of dim.values) {
-                    if (Engine.isValueDisabled(sel, dim, v)) continue;
-                    const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, sel) : null;
-                    const disabled = !wouldReachOutcome(dim.id, v.id);
-                    answerCards.push({
-                        label: (variant && variant.answerLabel) || v.answerLabel || v.label,
-                        desc: (variant && variant.answerDesc) || v.answerDesc || '',
-                        action: { [dim.id]: v.id },
-                        disabled
-                    });
-                }
+                const answerCards = nextQ.options.map(o => ({
+                    label: o.answerLabel,
+                    desc: o.answerDesc,
+                    action: { [o.dimension]: o.value },
+                    disabled: !o.reachable,
+                }));
 
                 let source = '';
                 if (questionSource) {
@@ -1201,11 +1201,12 @@
             function update() {
                 Engine.cleanSelection(sel);
 
-                const events = buildTimelineEvents();
+                const nextQ = findNextQuestion();
+                const events = buildTimelineEvents(nextQ);
                 const timelineEl = app.querySelector('.map-timeline');
                 if (timelineEl) {
                     timelineEl.classList.toggle('timeline-light', !expandTimeline);
-                    timelineEl.innerHTML = buildTimelineHtml(events);
+                    timelineEl.innerHTML = buildTimelineHtml(events, nextQ);
                     timelineEl.querySelectorAll('.timeline-slider input[type="range"]').forEach(slider => {
                         slider.addEventListener('input', () => {
                             const idx = parseInt(slider.dataset.tsi);
@@ -1231,7 +1232,7 @@
 
                 const questionZone = app.querySelector('.map-question-zone');
                 if (questionZone) {
-                    const qResult = fullQuestions ? buildQuestionCardHtml() : null;
+                    const qResult = (fullQuestions && nextQ) ? buildQuestionCardHtml(nextQ) : null;
                     if (qResult) {
                         questionZone.innerHTML = qResult.html;
                         questionZone.style.display = '';
@@ -1259,10 +1260,11 @@
                 if (outcomesGrid) {
                     if (showOutcomes) {
                         const eff = Engine.effectiveDims(sel);
+                        const effPartial = Engine.effectiveDimsForPartialMatch(sel);
                         const matched = [], partial = [];
                         for (const t of templatesList) {
                             if (Engine.templateMatches(t, eff)) matched.push(t);
-                            else if (Engine.templatePartialMatch(t, eff)) partial.push(t);
+                            else if (Engine.templatePartialMatch(t, effPartial)) partial.push(t);
                         }
 
                         const cardsHtml = templatesList.map(t => {
@@ -1306,8 +1308,7 @@
 
                 const outcomeZone = app.querySelector('.map-outcome-zone');
                 if (outcomeZone) {
-                    const nextDim = findNextStoryDim(sel);
-                    if (!nextDim) {
+                    if (!nextQ) {
                         outcomeZone.innerHTML = buildOutcomeSectionHtml();
                         outcomeZone.style.display = '';
                     } else {
@@ -1335,8 +1336,8 @@
                     </div>
                     <div class="map-timeline timeline"></div>
                     <div class="map-question-zone"></div>
-                    <div class="map-outcomes-zone" style="display:none"></div>
                     <div class="map-outcome-zone" style="display:none"></div>
+                    <div class="map-outcomes-zone" style="display:none"></div>
                     <div class="map-actions">
                         <button class="btn btn-ghost" data-action="home">\u2190 Back to Start</button>
                         <button class="btn btn-ghost" data-action="reset">Reset</button>

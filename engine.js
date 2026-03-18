@@ -299,6 +299,23 @@ function effectiveDims(sel) {
     return d;
 }
 
+function effectiveDimsForPartialMatch(sel) {
+    const d = effectiveDims(sel);
+    for (const dim of DIMENSIONS) {
+        if (!dim.overrides || !d[dim.id]) continue;
+        for (const ov of dim.overrides) {
+            if (!ov.when) continue;
+            const unresolved = Object.keys(ov.when).some(k => {
+                const triggerDim = DIM_MAP[k];
+                return triggerDim && isDimVisible(sel, triggerDim)
+                    && isDimLocked(sel, triggerDim) === null && !sel[k];
+            });
+            if (unresolved) { delete d[dim.id]; break; }
+        }
+    }
+    return d;
+}
+
 // ════════════════════════════════════════════════════════
 // Template matching
 // ════════════════════════════════════════════════════════
@@ -381,13 +398,13 @@ function removeSelection(sel, dimId) {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { DIMENSIONS, DIM_MAP,
         matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimLocked, isValueDisabled,
-        cleanSelection, applySelection, removeSelection, effectiveDims,
+        cleanSelection, applySelection, removeSelection, effectiveDims, effectiveDimsForPartialMatch,
         templateMatches, templatePartialMatch, getRenderAfter, getDisplayOrder };
 }
 if (typeof window !== 'undefined') {
     window.Engine = { DIMENSIONS, DIM_MAP,
         matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimLocked, isValueDisabled,
-        cleanSelection, applySelection, removeSelection, effectiveDims,
+        cleanSelection, applySelection, removeSelection, effectiveDims, effectiveDimsForPartialMatch,
         templateMatches, templatePartialMatch, getRenderAfter, getDisplayOrder };
 }
 
