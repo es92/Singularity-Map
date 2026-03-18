@@ -1,50 +1,11 @@
 {
   "capability": {
-    "narrativeSteps": [
-      {
-        "text": "Do you think AI will continue to double in task-completion ability every ~7 months?",
-        "context": "In March 2025, METR published research showing that the length of tasks AI agents can reliably complete has been doubling approximately every 7 months for the past 6 years. At that time, frontier models like Claude 3.7 Sonnet could reliably handle autonomous tasks taking humans about an hour. If the trend holds, AI agents would handle week-long tasks by 2027 and month-long projects by the end of the decade.",
-        "source": {
-          "label": "METR — Measuring AI Ability to Complete Long Tasks (March 2025)",
-          "url": "https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/"
-        },
-        "groups": [
-          {
-            "values": [
-              "singularity"
-            ],
-            "label": "Yes — the trend continues",
-            "desc": "Scaling laws hold, compute keeps growing, and AI capability maintains its exponential trajectory.",
-            "timelineEvent": {
-              "headline": "AI scaling trend holds",
-              "description": "The doubling trend that began in 2020 shows no signs of bending. Each generation of models is meaningfully more capable than the last. Frontier labs race to build the next generation, and the exponential trajectory continues.",
-              "durationMin": 0,
-              "durationMax": 0
-            }
-          },
-          {
-            "values": [
-              "hours",
-              "days",
-              "weeks",
-              "months"
-            ],
-            "label": "No — it slows down or hits a wall",
-            "desc": "Something breaks the trend: diminishing returns on scaling, data limitations, architectural ceilings, or something unexpected.",
-            "timelineEvent": {
-              "headline": "AI scaling hits a wall",
-              "description": "The exponential trend breaks. Whether from data limits, compute costs, or fundamental barriers — AI capability plateaus. The singularity recedes from view.",
-              "durationMin": 0,
-              "durationMax": 0
-            }
-          }
-        ]
-      },
-      {
-        "text": "Where do you think autonomous AI capability tops out?",
-        "context": "If the exponential trend doesn't hold, AI will hit a ceiling somewhere. The question is where. Think not about what AI can do with constant human guidance, but what it can handle reliably on its own — start to finish, no hand-holding."
-      }
-    ],
+    "questionText": "Do you think AI will continue to double in task-completion ability every ~7 months?",
+    "questionContext": "In March 2025, METR published research showing that the length of tasks AI agents can reliably complete has been doubling approximately every 7 months for the past 6 years. At that time, frontier models like Claude 3.7 Sonnet could reliably handle autonomous tasks taking humans about an hour. If the trend holds, AI agents would handle week-long tasks by 2027 and month-long projects by the end of the decade.",
+    "source": {
+      "label": "METR — Measuring AI Ability to Complete Long Tasks (March 2025)",
+      "url": "https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/"
+    },
     "values": {
       "singularity": {
         "answerLabel": "Yes — the trend continues",
@@ -56,6 +17,22 @@
           "durationMax": 0
         }
       },
+      "stalls": {
+        "answerLabel": "No — it slows down or hits a wall",
+        "answerDesc": "Something breaks the trend: diminishing returns on scaling, data limitations, architectural ceilings, or something unexpected.",
+        "timelineEvent": {
+          "headline": "AI scaling hits a wall",
+          "description": "The exponential trend breaks. Whether from data limits, compute costs, or fundamental barriers — AI capability plateaus. The singularity recedes from view.",
+          "durationMin": 0,
+          "durationMax": 0
+        }
+      }
+    }
+  },
+  "stall_duration": {
+    "questionText": "Where do you think autonomous AI capability tops out?",
+    "questionContext": "If the exponential trend doesn't hold, AI will hit a ceiling somewhere. The question is where. Think not about what AI can do with constant human guidance, but what it can handle reliably on its own — start to finish, no hand-holding.",
+    "values": {
       "hours": {
         "answerLabel": "Around where we are now — hours at best",
         "answerDesc": "AI stays great at short tasks but never reliably handles longer autonomous work. The copilot era is the final era.",

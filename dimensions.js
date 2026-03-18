@@ -29,20 +29,22 @@ const DECEL_PAIRS = [
 
 const DIMENSIONS = [
     { id: 'capability', label: 'AI Scaling', stage: 1, forwardKey: true,
-      narrativeSteps: [
-        { groups: [{ values: ['singularity'] }, { values: ['hours', 'days', 'weeks', 'months'] }] },
-        {}
-      ],
       overrides: [{ when: { stall_recovery: 'mild' }, value: 'singularity' }],
       values: [
         { id: 'singularity', label: 'Trend continues' },
+        { id: 'stalls', label: 'Stalls' }
+      ] },
+    { id: 'stall_duration', label: 'Stall Duration', stage: 1,
+      activateWhen: [{ capability: ['stalls'] }],
+      useRawFor: ['capability'],
+      values: [
         { id: 'hours', label: 'Stalls: hours' },
         { id: 'days', label: 'Stalls: days' },
         { id: 'weeks', label: 'Stalls: weeks' },
         { id: 'months', label: 'Stalls: months' }
       ] },
     { id: 'stall_recovery', label: 'Recovery?', stage: 1,
-      activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'] }],
+      activateWhen: [{ capability: ['stalls'] }],
       useRawFor: ['capability'],
       values: [
         { id: 'mild', label: 'Months/years' },
@@ -50,31 +52,31 @@ const DIMENSIONS = [
         { id: 'never', label: 'Never' }
       ] },
     { id: 'plateau_benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
-      activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }],
+      activateWhen: [{ capability: ['stalls'], stall_recovery: ['substantial', 'never'] }],
       values: [
         { id: 'equal', label: 'Shared equally' },
         { id: 'unequal', label: 'Wealth concentrates' },
         { id: 'extreme', label: 'Power concentrates' }
       ] },
     { id: 'plateau_knowledge_rate', label: 'Knowledge Work', stage: 3, terminal: true,
-      activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }],
+      activateWhen: [{ capability: ['stalls'], stall_recovery: ['substantial', 'never'] }],
       values: [
-        { id: 'rapid', label: 'Rapid (2–5 yrs)', requires: { capability: ['weeks', 'months'] } },
+        { id: 'rapid', label: 'Rapid (2–5 yrs)', requires: { stall_duration: ['weeks', 'months'] } },
         {
           id: 'gradual',
           label: 'Gradual (5–15 yrs)',
-          requires: { capability: ['days', 'weeks', 'months'] }
+          requires: { stall_duration: ['days', 'weeks', 'months'] }
         },
         { id: 'uneven', label: 'Uneven (2–20+ yrs)' },
-        { id: 'limited', label: 'Limited', requires: { capability: ['hours', 'days'] } }
+        { id: 'limited', label: 'Limited', requires: { stall_duration: ['hours', 'days'] } }
       ] },
     { id: 'plateau_physical_rate', label: 'Physical Automation', stage: 3, terminal: true,
-      activateWhen: [{ capability: ['hours', 'days', 'weeks', 'months'], stall_recovery: ['substantial', 'never'] }],
+      activateWhen: [{ capability: ['stalls'], stall_recovery: ['substantial', 'never'] }],
       values: [
         {
           id: 'gradual',
           label: 'Gradual (10–25 yrs)',
-          requires: { capability: ['days', 'weeks', 'months'] }
+          requires: { stall_duration: ['days', 'weeks', 'months'] }
         },
         { id: 'uneven', label: 'Uneven (5–20+ yrs)' },
         { id: 'limited', label: 'Limited' }

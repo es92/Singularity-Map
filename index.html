@@ -575,6 +575,18 @@
             renderError(err);
         });
 
+        function resolveNarrativeVariant(variants, sel) {
+            if (!variants || !sel) return null;
+            for (const v of variants) {
+                if (!v.when) return v;
+                const match = Object.entries(v.when).every(([dimId, vals]) =>
+                    sel[dimId] && vals.includes(sel[dimId])
+                );
+                if (match) return v;
+            }
+            return null;
+        }
+
         function dimNarrativeFor(dimId, valueId, sel) {
             const dim = DIM_MAP[dimId];
             if (!dim) return {};
@@ -617,11 +629,6 @@
                 if (narr.questionText) dim.questionText = narr.questionText;
                 if (narr.questionContext) dim.questionContext = narr.questionContext;
                 if (narr.source) dim.source = narr.source;
-                if (narr.narrativeSteps && dim.narrativeSteps) {
-                    for (let i = 0; i < narr.narrativeSteps.length && i < dim.narrativeSteps.length; i++) {
-                        Object.assign(dim.narrativeSteps[i], narr.narrativeSteps[i]);
-                    }
-                }
                 if (narr.values) {
                     for (const [valId, vn] of Object.entries(narr.values)) {
                         const v = dim.values && dim.values.find(vv => vv.id === valId);
@@ -915,14 +922,9 @@
             let fullQuestions = flags.fullQuestions !== false;
             let expandTimeline = flags.expandTimeline !== false;
             let showOutcomes = flags.showOutcomes === true;
-            let narrowDim = null;
-            let narrowValues = null;
             let timelineDurations = [];
             let mapAnimator = null;
 
-            delete sel._storyNarrowDim;
-            delete sel._storyNarrowValues;
-            delete sel._expandedGroup;
             Engine.cleanSelection(sel);
 
             function moodColor(mood) {
@@ -975,95 +977,22 @@
                 for (const dim of ordered) {
                     const locked = Engine.isDimLocked(sel, dim);
                     const value = sel[dim.id] || locked;
-                    const step0 = dim.narrativeSteps && dim.narrativeSteps[0];
-                    const hasGroups = step0 && step0.groups;
                     const isLockedDim = locked !== null;
 
                     if (!value) {
                         if (!fullQuestions && !foundFrontier) {
                             foundFrontier = true;
-                            if (hasGroups && !(narrowDim === dim.id && narrowValues)) {
-                                const siblings = [];
-                                for (const g of step0.groups) {
-                                    if (g.values.length === 1) {
-                                        const vid = g.values[0];
-                                        const dv = dim.values.find(v => v.id === vid);
-                                        if (dv && Engine.isValueDisabled(sel, dim, dv)) continue;
-                                        siblings.push({ value: vid, label: g.label || (dv && dv.label) || vid, dimension: dim.id, reachable: wouldReachOutcome(dim.id, vid) });
-                                    } else {
-                                        const anyEnabled = g.values.some(vid => { const dv = dim.values.find(v => v.id === vid); return dv && !Engine.isValueDisabled(sel, dim, dv); });
-                                        if (!anyEnabled) continue;
-                                        siblings.push({ value: '_grp:' + g.values.join(','), label: g.label || '...', dimension: dim.id, reachable: g.values.some(vid => wouldReachOutcome(dim.id, vid)) });
-                                    }
-                                }
-                                if (siblings.length > 0) {
-                                    events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: dim.stage, year: '', paramLabel: '', dimLabel: dim.label, dimension: dim.id, selectedValue: null, siblings, isFrontier: true });
-                                }
-                            } else if (hasGroups && narrowDim === dim.id && narrowValues) {
-                                const siblings = narrowValues
-                                    .map(vid => dim.values.find(v => v.id === vid))
-                                    .filter(dv => dv && !Engine.isValueDisabled(sel, dim, dv))
-                                    .map(dv => ({ value: dv.id, label: dv.label, dimension: dim.id, reachable: wouldReachOutcome(dim.id, dv.id) }));
-                                if (siblings.length > 0) {
-                                    events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: dim.stage, year: '', paramLabel: '', dimLabel: dim.label + ' Level', dimension: dim.id, selectedValue: null, siblings, isFrontier: true });
-                                }
-                            } else {
-                                const siblings = dim.values
-                                    .filter(v => !Engine.isValueDisabled(sel, dim, v))
-                                    .map(v => ({ value: v.id, label: v.label, dimension: dim.id, reachable: wouldReachOutcome(dim.id, v.id) }));
-                                if (siblings.length > 0) {
-                                    events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: dim.stage, year: '', paramLabel: '', dimLabel: dim.label, dimension: dim.id, selectedValue: null, siblings, isFrontier: true });
-                                }
+                            const siblings = dim.values
+                                .filter(v => !Engine.isValueDisabled(sel, dim, v))
+                                .map(v => ({ value: v.id, label: v.label, dimension: dim.id, reachable: wouldReachOutcome(dim.id, v.id) }));
+                            if (siblings.length > 0) {
+                                events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: dim.stage, year: '', paramLabel: '', dimLabel: dim.label, dimension: dim.id, selectedValue: null, siblings, isFrontier: true });
                             }
                         }
                         continue;
                     }
 
-                    if (hasGroups) {
-                        const activeGroup = step0.groups.find(g => g.values.includes(value));
-                        const groupSiblings = step0.groups.map(g => {
-                            if (g.values.length === 1) {
-                                const vid = g.values[0];
-                                const dv = dim.values.find(v => v.id === vid);
-                                return { value: vid, label: g.label || (dv && dv.label) || vid, dimension: dim.id, reachable: vid === value || wouldReachOutcome(dim.id, vid) };
-                            }
-                            return { value: '_grp:' + g.values.join(','), label: g.label || '...', dimension: dim.id, reachable: g === activeGroup || g.values.some(vid => wouldReachOutcome(dim.id, vid)) };
-                        });
-                        const groupSelVal = activeGroup
-                            ? (activeGroup.values.length === 1 ? activeGroup.values[0] : '_grp:' + activeGroup.values.join(','))
-                            : null;
-                        const isSingle = activeGroup && activeGroup.values.length === 1;
-                        const grpTE = activeGroup && activeGroup.timelineEvent ? activeGroup.timelineEvent : {};
-                        const narr0 = isSingle ? dimNarrativeFor(dim.id, value, sel) : grpTE;
-                        events.push({
-                            headline: narr0.headline || '',
-                            description: narr0.description || '',
-                            durationMin: narr0.durationMin != null ? narr0.durationMin : null,
-                            durationMax: narr0.durationMax != null ? narr0.durationMax : null,
-                            stage: dim.stage, year: '',
-                            paramLabel: activeGroup ? (activeGroup.label || dim.label) : dim.label,
-                            dimLabel: dim.label,
-                            dimension: dim.id, selectedValue: groupSelVal,
-                            siblings: groupSiblings, isFrontier: false, isLocked: isLockedDim
-                        });
-                        if (activeGroup && activeGroup.values.length > 1) {
-                            const narr = dimNarrativeFor(dim.id, value, sel);
-                            const subSiblings = activeGroup.values
-                                .map(vid => dim.values.find(v => v.id === vid))
-                                .filter(dv => dv && (!Engine.isValueDisabled(sel, dim, dv) || dv.id === value))
-                                .map(dv => ({ value: dv.id, label: dv.label, dimension: dim.id, reachable: dv.id === value || wouldReachOutcome(dim.id, dv.id) }));
-                            events.push({
-                                headline: narr.headline || '', description: narr.description || '',
-                                durationMin: narr.durationMin != null ? narr.durationMin : null,
-                                durationMax: narr.durationMax != null ? narr.durationMax : null,
-                                stage: dim.stage, year: '',
-                                paramLabel: (dim.values.find(v => v.id === value) || {}).label || value,
-                                dimLabel: dim.label + ' Level',
-                                dimension: dim.id, selectedValue: value,
-                                siblings: subSiblings, isFrontier: false, isLocked: isLockedDim
-                            });
-                        }
-                    } else {
+                    {
                         const narr = dimNarrativeFor(dim.id, value, sel);
                         const dimValue = dim.values.find(v => v.id === value);
                         const paramLabel = dimValue ? dimValue.label : value;
@@ -1179,69 +1108,21 @@
                 const dim = findNextStoryDim(sel);
                 if (!dim) return null;
 
-                let narrativeStep = null;
-                if (narrowDim === dim.id && narrowValues) {
-                    const laterStep = dim.narrativeSteps && dim.narrativeSteps.find(s => !s.groups);
-                    narrativeStep = laterStep || null;
-                } else if (dim.narrativeSteps && dim.narrativeSteps.length > 0) {
-                    for (const step of dim.narrativeSteps) {
-                        if (step.groups) {
-                            const anyGroupNeedsChoice = step.groups.some(g => g.values.length > 1 || !sel[dim.id]);
-                            if (anyGroupNeedsChoice && !sel[dim.id]) { narrativeStep = step; break; }
-                        } else {
-                            if (!sel[dim.id]) { narrativeStep = step; break; }
-                        }
-                    }
-                }
-
-                const questionText = (narrativeStep && narrativeStep.text) || dim.questionText || dim.label;
-                const questionContext = (narrativeStep && narrativeStep.context) || dim.questionContext || '';
-                const questionSource = (narrativeStep && narrativeStep.source) || dim.source;
+                const questionText = dim.questionText || dim.label;
+                const questionContext = dim.questionContext || '';
+                const questionSource = dim.source;
 
                 let answerCards = [];
-                if (narrativeStep && narrativeStep.groups) {
-                    for (const group of narrativeStep.groups) {
-                        if (group.values.length === 1) {
-                            const valId = group.values[0];
-                            const dimVal = dim.values.find(v => v.id === valId);
-                            if (dimVal && Engine.isValueDisabled(sel, dim, dimVal)) continue;
-                            const disabled = !wouldReachOutcome(dim.id, valId);
-                            answerCards.push({
-                                label: group.label || (dimVal && dimVal.answerLabel) || (dimVal && dimVal.label) || valId,
-                                desc: group.desc || (dimVal && dimVal.answerDesc) || '',
-                                action: { [dim.id]: valId },
-                                disabled
-                            });
-                        } else {
-                            const anyEnabled = group.values.some(vid => {
-                                const dv = dim.values.find(v => v.id === vid);
-                                return dv && !Engine.isValueDisabled(sel, dim, dv);
-                            });
-                            if (!anyEnabled) continue;
-                            answerCards.push({
-                                label: group.label,
-                                desc: group.desc || '',
-                                action: '_next_step',
-                                groupValues: group.values,
-                                disabled: false
-                            });
-                        }
-                    }
-                    } else {
-                    const valuesToShow = narrowValues
-                        ? dim.values.filter(v => narrowValues.includes(v.id))
-                        : dim.values;
-                    for (const v of valuesToShow) {
-                        if (Engine.isValueDisabled(sel, dim, v)) continue;
-                        const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, sel) : null;
-                        const disabled = !wouldReachOutcome(dim.id, v.id);
-                        answerCards.push({
-                            label: (variant && variant.answerLabel) || v.answerLabel || v.label,
-                            desc: (variant && variant.answerDesc) || v.answerDesc || '',
-                            action: { [dim.id]: v.id },
-                            disabled
-                        });
-                    }
+                for (const v of dim.values) {
+                    if (Engine.isValueDisabled(sel, dim, v)) continue;
+                    const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, sel) : null;
+                    const disabled = !wouldReachOutcome(dim.id, v.id);
+                    answerCards.push({
+                        label: (variant && variant.answerLabel) || v.answerLabel || v.label,
+                        desc: (variant && variant.answerDesc) || v.answerDesc || '',
+                        action: { [dim.id]: v.id },
+                        disabled
+                    });
                 }
 
                 let source = '';
@@ -1341,20 +1222,10 @@
                             if (!action) return;
                             const dimId = pill.dataset.dim;
                             const val = pill.dataset.val;
-                            const isGrp = val && val.startsWith('_grp:');
-                            if (isGrp) {
-                                const groupVals = val.slice(5).split(',');
-                                if (sel[dimId]) delete sel[dimId];
-                                narrowDim = dimId;
-                                narrowValues = groupVals;
-                            } else if (action === 'frontier' || action === 'change') {
+                            if (action === 'frontier' || action === 'change') {
                                 Engine.applySelection(sel, dimId, val);
-                                narrowDim = null;
-                                narrowValues = null;
                             } else if (action === 'unclick') {
                                 if (sel[dimId]) Engine.applySelection(sel, dimId, sel[dimId]);
-                                narrowDim = null;
-                                narrowValues = null;
                             }
                             update();
                         });
@@ -1375,31 +1246,8 @@
                                 const chosen = qResult.answerCards[idx];
                                 if (!chosen || chosen.disabled) return;
 
-                                if (chosen.action === '_next_step') {
-                                    const savedNarrow = { dim: narrowDim, values: narrowValues };
-                                    if (mapAnimator) {
-                                        mapAnimator.animateTransition({
-                                            applyChange: () => {
-                                                narrowDim = qResult.dim.id;
-                                                narrowValues = chosen.groupValues;
-                                            },
-                                            revertChange: () => {
-                                                narrowDim = savedNarrow.dim;
-                                                narrowValues = savedNarrow.values;
-                                            },
-                                            onComplete: () => syncHash(),
-                                        });
-                                    } else {
-                                        narrowDim = qResult.dim.id;
-                                        narrowValues = chosen.groupValues;
-                                        update();
-                                    }
-                                    return;
-                                }
-
                                 const [dimId, valueId] = Object.entries(chosen.action)[0];
                                 const savedSel = JSON.parse(JSON.stringify(sel));
-                                const savedNarrow = { dim: narrowDim, values: narrowValues };
 
                                 if (mapAnimator) {
                                     mapAnimator.animateTransition({
@@ -1408,14 +1256,10 @@
                                             Object.assign(sel, JSON.parse(JSON.stringify(savedSel)));
                                             Engine.applySelection(sel, dimId, valueId);
                                             Engine.cleanSelection(sel);
-                                            narrowDim = null;
-                                            narrowValues = null;
                                         },
                                         revertChange: () => {
                                             Object.keys(sel).forEach(k => delete sel[k]);
                                             Object.assign(sel, savedSel);
-                                            narrowDim = savedNarrow.dim;
-                                            narrowValues = savedNarrow.values;
                                         },
                                         count: 1,
                                         onComplete: () => syncHash(),
@@ -1423,8 +1267,6 @@
                                 } else {
                                     Engine.applySelection(sel, dimId, valueId);
                                     Engine.cleanSelection(sel);
-                                    narrowDim = null;
-                                    narrowValues = null;
                                     update();
                                 }
                             });
@@ -1542,8 +1384,6 @@
 
             function resetSelections() {
                 sel = {};
-                narrowDim = null;
-                narrowValues = null;
                 update();
             }
 

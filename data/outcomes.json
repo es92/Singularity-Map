@@ -3,7 +3,7 @@
     {
       "id": "the-plateau",
       "title": "The Plateau",
-      "primaryDimension": "capability",
+      "primaryDimension": "stall_duration",
       "variants": {
         "hours": {
           "subtitle": "The Copilot",
@@ -51,10 +51,7 @@
       "reachable": [
         {
           "capability": [
-            "hours",
-            "days",
-            "weeks",
-            "months"
+            "stalls"
           ],
           "stall_recovery": [
             "substantial",
