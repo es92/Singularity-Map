@@ -339,6 +339,41 @@ function getRenderAfter(sel, dim) {
     return null;
 }
 
+function getDisplayOrder(sel) {
+    const visible = [];
+    for (const dim of DIMENSIONS) {
+        if (dim.virtual) continue;
+        if (!isDimVisible(sel, dim)) continue;
+        visible.push(dim);
+    }
+    const afterMap = {};
+    for (const dim of visible) {
+        const after = getRenderAfter(sel, dim);
+        if (after) afterMap[dim.id] = after;
+    }
+    const ordered = [];
+    const placed = new Set();
+    const deferred = [];
+    for (const dim of visible) {
+        if (afterMap[dim.id]) { deferred.push(dim); continue; }
+        ordered.push(dim);
+        placed.add(dim.id);
+        for (const d of deferred) {
+            if (placed.has(afterMap[d.id])) { ordered.push(d); placed.add(d.id); }
+        }
+    }
+    for (const d of deferred) {
+        if (!placed.has(d.id)) ordered.push(d);
+    }
+    return ordered;
+}
+
+function removeSelection(sel, dimId) {
+    if (sel[dimId] !== undefined) {
+        applySelection(sel, dimId, sel[dimId]);
+    }
+}
+
 // ════════════════════════════════════════════════════════
 // Exports
 // ════════════════════════════════════════════════════════
@@ -346,12 +381,14 @@ function getRenderAfter(sel, dim) {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { DIMENSIONS, DIM_MAP,
         matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimLocked, isValueDisabled,
-        cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch, getRenderAfter };
+        cleanSelection, applySelection, removeSelection, effectiveDims,
+        templateMatches, templatePartialMatch, getRenderAfter, getDisplayOrder };
 }
 if (typeof window !== 'undefined') {
     window.Engine = { DIMENSIONS, DIM_MAP,
         matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimLocked, isValueDisabled,
-        cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch, getRenderAfter };
+        cleanSelection, applySelection, removeSelection, effectiveDims,
+        templateMatches, templatePartialMatch, getRenderAfter, getDisplayOrder };
 }
 
 })();

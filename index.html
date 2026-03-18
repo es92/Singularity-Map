@@ -947,34 +947,33 @@
                 return Engine.templatePartialMatch(t, eff);
             }
 
+            function mutateSelection(changeFn) {
+                const savedSel = JSON.parse(JSON.stringify(sel));
+                if (mapAnimator) {
+                    mapAnimator.animateTransition({
+                        applyChange: () => {
+                            Object.keys(sel).forEach(k => delete sel[k]);
+                            Object.assign(sel, JSON.parse(JSON.stringify(savedSel)));
+                            changeFn();
+                        },
+                        revertChange: () => {
+                            Object.keys(sel).forEach(k => delete sel[k]);
+                            Object.assign(sel, savedSel);
+                        },
+                        count: 1,
+                        onComplete: () => syncHash(),
+                    });
+                } else {
+                    changeFn();
+                    update();
+                }
+            }
+
             function buildTimelineEvents() {
                 const events = [];
                 let foundFrontier = false;
-                const renderOrder = [];
-                for (const dim of DIMENSIONS) {
-                    if (dim.virtual) continue;
-                    if (!Engine.isDimVisible(sel, dim)) continue;
-                    renderOrder.push(dim);
-                }
-                const afterMap = {};
-                for (const dim of renderOrder) {
-                    const after = Engine.getRenderAfter(sel, dim);
-                    if (after) afterMap[dim.id] = after;
-                }
-                const ordered = [];
-                const placed = new Set();
-                const deferred = [];
-                for (const dim of renderOrder) {
-                    if (afterMap[dim.id]) { deferred.push(dim); continue; }
-                    ordered.push(dim);
-                    placed.add(dim.id);
-                    for (const d of deferred) {
-                        if (placed.has(afterMap[d.id])) { ordered.push(d); placed.add(d.id); }
-                    }
-                }
-                for (const d of deferred) { if (!placed.has(d.id)) ordered.push(d); }
 
-                for (const dim of ordered) {
+                for (const dim of Engine.getDisplayOrder(sel)) {
                     const locked = Engine.isDimLocked(sel, dim);
                     const value = sel[dim.id] || locked;
                     const isLockedDim = locked !== null;
@@ -992,22 +991,20 @@
                         continue;
                     }
 
-                    {
-                        const narr = dimNarrativeFor(dim.id, value, sel);
-                        const dimValue = dim.values.find(v => v.id === value);
-                        const paramLabel = dimValue ? dimValue.label : value;
-                        const siblings = dim.values
-                            .filter(v => !Engine.isValueDisabled(sel, dim, v) || v.id === value)
-                            .map(v => ({ value: v.id, label: v.label, dimension: dim.id, reachable: v.id === value || wouldReachOutcome(dim.id, v.id) }));
-                        events.push({
-                            headline: narr.headline || '', description: narr.description || '',
-                            durationMin: narr.durationMin != null ? narr.durationMin : null,
-                            durationMax: narr.durationMax != null ? narr.durationMax : null,
-                            stage: narr.stage || dim.stage, year: '', paramLabel,
-                            dimLabel: dim.label, dimension: dim.id, selectedValue: value,
-                            siblings, isFrontier: false, isLocked: isLockedDim
-                        });
-                    }
+                    const narr = dimNarrativeFor(dim.id, value, sel);
+                    const dimValue = dim.values.find(v => v.id === value);
+                    const paramLabel = dimValue ? dimValue.label : value;
+                    const siblings = dim.values
+                        .filter(v => !Engine.isValueDisabled(sel, dim, v) || v.id === value)
+                        .map(v => ({ value: v.id, label: v.label, dimension: dim.id, reachable: v.id === value || wouldReachOutcome(dim.id, v.id) }));
+                    events.push({
+                        headline: narr.headline || '', description: narr.description || '',
+                        durationMin: narr.durationMin != null ? narr.durationMin : null,
+                        durationMax: narr.durationMax != null ? narr.durationMax : null,
+                        stage: narr.stage || dim.stage, year: '', paramLabel,
+                        dimLabel: dim.label, dimension: dim.id, selectedValue: value,
+                        siblings, isFrontier: false, isLocked: isLockedDim
+                    });
                 }
                 return events;
             }
@@ -1214,8 +1211,8 @@
                             const idx = parseInt(slider.dataset.tsi);
                             timelineDurations[idx].current = parseFloat(slider.value);
                             updateTimelineLabels();
-                });
-            });
+                        });
+                    });
                     timelineEl.querySelectorAll('.tl-pill').forEach(pill => {
                         pill.addEventListener('click', () => {
                             const action = pill.dataset.pathaction;
@@ -1225,7 +1222,7 @@
                             if (action === 'frontier' || action === 'change') {
                                 Engine.applySelection(sel, dimId, val);
                             } else if (action === 'unclick') {
-                                if (sel[dimId]) Engine.applySelection(sel, dimId, sel[dimId]);
+                                Engine.removeSelection(sel, dimId);
                             }
                             update();
                         });
@@ -1245,30 +1242,11 @@
                                 const idx = parseInt(cardEl.dataset.aidx, 10);
                                 const chosen = qResult.answerCards[idx];
                                 if (!chosen || chosen.disabled) return;
-
                                 const [dimId, valueId] = Object.entries(chosen.action)[0];
-                                const savedSel = JSON.parse(JSON.stringify(sel));
-
-                                if (mapAnimator) {
-                                    mapAnimator.animateTransition({
-                                        applyChange: () => {
-                                            Object.keys(sel).forEach(k => delete sel[k]);
-                                            Object.assign(sel, JSON.parse(JSON.stringify(savedSel)));
-                                            Engine.applySelection(sel, dimId, valueId);
-                                            Engine.cleanSelection(sel);
-                                        },
-                                        revertChange: () => {
-                                            Object.keys(sel).forEach(k => delete sel[k]);
-                                            Object.assign(sel, savedSel);
-                                        },
-                                        count: 1,
-                                        onComplete: () => syncHash(),
-                                    });
-                                } else {
+                                mutateSelection(() => {
                                     Engine.applySelection(sel, dimId, valueId);
                                     Engine.cleanSelection(sel);
-                                    update();
-                                }
+                                });
                             });
                         });
                     } else {
@@ -1299,7 +1277,7 @@
                             return `<div class="explorer-card${cls}" data-tid="${esc(t.id)}">
                                 <div class="ec-title"><span class="ec-dot" style="background:${moodColor(mood)}"></span>${esc(title)}${subtitle ? ` <span class="ec-subtitle">\u2014 ${esc(subtitle)}</span>` : ''}</div>
                                 <div class="ec-summary">${esc(summary)}</div></div>`;
-            }).join('');
+                        }).join('');
 
                         const matchLabel = matched.length === 1 ? '1 outcome matches' :
                             matched.length > 1 ? matched.length + ' outcomes match' : '';
@@ -1310,16 +1288,16 @@
                         outcomesGrid.style.display = '';
 
                         outcomesGrid.querySelectorAll('.explorer-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    const tid = card.dataset.tid;
+                            card.addEventListener('click', () => {
+                                const tid = card.dataset.tid;
                                 if (tid) {
                                     lockedId = tid;
                                     const lockerEl = app.querySelector('.map-outcome-locker');
                                     if (lockerEl) lockerEl.value = tid;
                                     update();
                                 }
-                });
-            });
+                            });
+                        });
                     } else {
                         outcomesGrid.innerHTML = '';
                         outcomesGrid.style.display = 'none';
@@ -1340,7 +1318,6 @@
 
                 syncHash();
             }
-
 
             app.innerHTML = `
                 <div class="map-screen">
@@ -1370,7 +1347,7 @@
             const lockerEl = app.querySelector('.map-outcome-locker');
             lockerEl.addEventListener('change', () => {
                 lockedId = lockerEl.value;
-                        update();
+                update();
             });
 
             app.querySelectorAll('.map-toggle input[type="checkbox"]').forEach(cb => {
