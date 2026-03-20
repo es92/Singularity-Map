@@ -1224,11 +1224,23 @@
                             if (!action) return;
                             const dimId = pill.dataset.dim;
                             const val = pill.dataset.val;
+
+                            if (fullQuestions) {
+                                const order = Engine.getDisplayOrder(sel);
+                                const idx = order.findIndex(d => d.id === dimId);
+                                if (idx >= 0) {
+                                    for (let i = idx + 1; i < order.length; i++) {
+                                        delete sel[order[i].id];
+                                    }
+                                }
+                            }
+
                             if (action === 'frontier' || action === 'change') {
                                 Engine.applySelection(sel, dimId, val);
                             } else if (action === 'unclick') {
                                 Engine.removeSelection(sel, dimId);
                             }
+                            Engine.cleanSelection(sel);
                             update();
                         });
                     });
