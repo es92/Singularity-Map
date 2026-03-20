@@ -97,7 +97,8 @@ class TimelineAnimator {
         const fadeInDur = Math.round(MORPH_DURATION * 0.6) + 'ms';
         const fadeInDelay = MORPH_DURATION * 0.15;
         const decorDur = Math.round(MORPH_DURATION * 0.3) + 'ms';
-        const shrinkDur = Math.round(MORPH_DURATION * 0.7) + 'ms';
+        const shrinkDurMs = Math.round(MORPH_DURATION * 0.7);
+        const shrinkDur = shrinkDurMs + 'ms';
 
         let card = p.card;
         const cardRect = p.cardRect;
@@ -309,14 +310,11 @@ class TimelineAnimator {
             outcomeCard.style.top = (absTop + outcomeDelta) + 'px';
         }
 
-        // Scroll disabled for now
-        // if (postCardRect) {
-        //     const scrollDelta = postCardRect.top - cardRect.top;
-        //     if (scrollDelta > 0) {
-        //         const targetScroll = window.scrollY + scrollDelta;
-        //         window.scrollTo({ top: targetScroll, behavior: 'smooth' });
-        //     }
-        // }
+        // Smoothly scroll so the new question ends up at the old question's viewport position.
+        // Uses the same easing and duration as the card shrink so they move in lockstep.
+        if (flowTarget > 1) {
+            this._animateScroll(flowTarget, shrinkDurMs);
+        }
 
         // Move new content from center to top
         newLayer.style.transition = tempItemCount === 1
@@ -388,7 +386,8 @@ class TimelineAnimator {
             p.cleanup({
                 card, rollCard, rollWrapper, rollBefore: rollCard ? rollCard.getBoundingClientRect() : null,
                 outcomeCard, outcomeVisualTop: outcomeCard ? outcomeCard.getBoundingClientRect().top : 0,
-                hasNextQuestion, easing, questionZone, totalAnimDur
+                hasNextQuestion, easing, questionZone, totalAnimDur,
+                cardViewportTop: cardRect.top
             });
         }, totalAnimDur + 50);
     }
@@ -494,7 +493,7 @@ class TimelineAnimator {
 
                 if (dp.onItemsAdded) dp.onItemsAdded(count);
 
-                this._flipCleanup({ rollCard, rollWrapper, rollBefore, outcomeCard, outcomeVisualTop, hasNextQuestion: state.hasNextQuestion, easing, questionZone: state.questionZone });
+                this._flipCleanup({ rollCard, rollWrapper, rollBefore, outcomeCard, outcomeVisualTop, hasNextQuestion: state.hasNextQuestion, easing, questionZone: state.questionZone, anchorViewportTop: state.cardViewportTop });
             }
         });
     }
@@ -589,6 +588,18 @@ class TimelineAnimator {
                 // Apply change + render to get the real final state
                 applyChange();
                 this.render();
+
+                // Scroll to keep the new question at the old question's viewport position.
+                if (state.cardViewportTop != null) {
+                    const freshForScroll = this._getCard();
+                    if (freshForScroll) {
+                        const newTop = freshForScroll.getBoundingClientRect().top;
+                        const scrollDelta = newTop - state.cardViewportTop;
+                        if (Math.abs(scrollDelta) > 1) {
+                            window.scrollBy({ top: scrollDelta, behavior: 'instant' });
+                        }
+                    }
+                }
 
                 // FLIP newly added timeline items from animated position to natural position
                 const newChildren = Array.from(timeline.children).slice(oldChildCount);
@@ -697,12 +708,53 @@ class TimelineAnimator {
         return true;
     }
 
+    // JS easing matching CSS cubic-bezier(0.42, 0, 0.58, 1).
+    // Given linear progress t (0-1), returns eased progress.
+    _ease(t) {
+        // p1=(0.42,0), p2=(0.58,1); find parameter u where x(u)=t via binary search
+        let lo = 0, hi = 1;
+        for (let i = 0; i < 15; i++) {
+            const mid = (lo + hi) / 2;
+            const m = 1 - mid;
+            const x = 3 * m * m * mid * 0.42 + 3 * m * mid * mid * 0.58 + mid * mid * mid;
+            if (x < t) lo = mid; else hi = mid;
+        }
+        const u = (lo + hi) / 2;
+        return 3 * u * u - 2 * u * u * u;
+    }
+
+    // Smoothly scroll by `delta` pixels over `durationMs`, eased to match CSS transitions.
+    _animateScroll(delta, durationMs) {
+        if (Math.abs(delta) < 1) return;
+        const startScroll = window.scrollY;
+        const startTime = performance.now();
+
+        const tick = () => {
+            const elapsed = performance.now() - startTime;
+            const progress = Math.min(elapsed / durationMs, 1);
+            const eased = this._ease(progress);
+            window.scrollTo({ top: startScroll + delta * eased, behavior: 'instant' });
+            if (progress < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+    }
+
     // Shared FLIP cleanup for the counter-based addItems path
-    _flipCleanup({ rollCard, rollWrapper, rollBefore, outcomeCard, outcomeVisualTop, hasNextQuestion, easing, questionZone }) {
+    _flipCleanup({ rollCard, rollWrapper, rollBefore, outcomeCard, outcomeVisualTop, hasNextQuestion, easing, questionZone, anchorViewportTop }) {
         if (rollCard && rollCard.parentNode) {
             if (rollWrapper && rollWrapper.parentNode) {
                 rollWrapper.parentNode.insertBefore(rollCard, rollWrapper);
                 rollWrapper.remove();
+            }
+
+            // Scroll to keep the new question at the old question's viewport position.
+            // This is instant (same JS frame), so the user never sees the intermediate state.
+            if (anchorViewportTop != null) {
+                const currentTop = rollCard.getBoundingClientRect().top;
+                const scrollDelta = currentTop - anchorViewportTop;
+                if (Math.abs(scrollDelta) > 1) {
+                    window.scrollBy({ top: scrollDelta, behavior: 'instant' });
+                }
             }
 
             const rollAfter = rollCard.getBoundingClientRect();

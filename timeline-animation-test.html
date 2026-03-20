@@ -69,7 +69,7 @@
     }
 
     h1 {
-        font-size: 1.5rem; margin-bottom: 1.5rem;
+        font-size: 1.1rem; margin: 0;
         background: linear-gradient(135deg, var(--accent), var(--accent-2));
         -webkit-background-clip: text; background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -216,7 +216,12 @@
 
     /* Speed controls */
     .controls {
-        display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+        position: sticky; top: 0; z-index: 100;
+        display: flex; gap: 0.5rem; flex-wrap: wrap;
+        margin: -2rem -1.5rem 0.75rem;
+        padding: 0.75rem 1.5rem;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
     }
     .speed-btn {
         background: var(--bg-card); border: 1px solid var(--border);
@@ -262,8 +267,8 @@
 </head>
 <body>
 <div id="app">
-    <h1>Timeline Animation Test</h1>
     <div class="controls">
+        <h1>Timeline Animation Test</h1>
         <div class="control-row">
             <span class="control-label">Main</span>
             <button class="speed-btn" data-speed="300">0.3s</button>

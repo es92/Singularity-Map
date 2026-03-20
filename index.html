@@ -367,10 +367,13 @@
         .answer-card .desc { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; }
 
         /* ---- Map View ---- */
-        .map-screen { padding-top: 1.5rem; }
+        .map-screen { margin-top: -2rem; }
         .map-toolbar {
+            position: sticky; top: 0; z-index: 100;
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;
+            padding: 0.75rem 0; gap: 1rem; flex-wrap: wrap;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
         }
         .map-locker-wrap {
             display: flex; align-items: center; gap: 0.5rem;
@@ -523,6 +526,7 @@
             h1 { font-size: 2rem; }
             .intro h1 { font-size: 2.2rem; }
             #app { padding: 1.25rem 1rem 3rem; }
+            .map-screen { margin-top: -1.25rem; }
         }
     </style>
 </head>
