@@ -569,7 +569,10 @@ class TimelineAnimator {
 
                 const contentVisualTop = card.getBoundingClientRect().top;
 
-                // Save rollCard before re-rendering
+                // Save rollCard before re-rendering. Use rollBefore (measured
+                // while inside the wrapper with its compensating margin-top:-1.5rem)
+                // as the visual reference — re-measuring after extraction would lose
+                // that offset and introduce a ~1.5rem FLIP delta.
                 let savedRollCard = null;
                 let savedRollBefore = rollBefore;
                 if (rollCard && rollCard.parentNode) {
@@ -578,9 +581,6 @@ class TimelineAnimator {
                         rollWrapper.parentNode.insertBefore(rollCard, rollWrapper);
                         rollWrapper.remove();
                     }
-                    // Re-measure after extracting from wrapper so the position
-                    // reflects the card directly in question zone (no wrapper margins)
-                    savedRollBefore = savedRollCard.getBoundingClientRect();
                     savedRollCard.remove();
                 }
 
@@ -616,37 +616,17 @@ class TimelineAnimator {
 
                 if (savedRollCard) {
                     const freshCard = this._getCard();
+                    const lightMode = timeline && timeline.classList.contains('timeline-light');
 
+                    // Measure FLIP delta for rollCard
                     if (freshCard) {
                         freshCard.style.display = 'none';
                         questionZone.insertBefore(savedRollCard, freshCard);
                     } else {
                         questionZone.appendChild(savedRollCard);
                     }
-
-                    // FLIP rollCard from pre-cleanup position to new position
                     const rollAfter = savedRollCard.getBoundingClientRect();
                     const dy = savedRollBefore ? savedRollBefore.top - rollAfter.top : 0;
-
-                    const lightMode = timeline && timeline.classList.contains('timeline-light');
-                    savedRollCard.style.transform = Math.abs(dy) > 1 ? `translateY(${dy}px)` : '';
-                    savedRollCard.style.transition = 'none';
-                    if (!lightMode) {
-                        savedRollCard.classList.add('no-transition');
-                        savedRollCard.classList.remove('hide-decorations');
-                        savedRollCard.offsetHeight;
-                        savedRollCard.classList.remove('no-transition');
-                    } else {
-                        savedRollCard.offsetHeight;
-                        requestAnimationFrame(() => {
-                            savedRollCard.classList.remove('hide-decorations');
-                        });
-                    }
-
-                    if (Math.abs(dy) > 1) {
-                        savedRollCard.style.transition = `transform 300ms ${easing}`;
-                        savedRollCard.style.transform = 'translateY(0)';
-                    }
 
                     // FLIP outcome
                     if (outcomeCard) {
@@ -660,15 +640,47 @@ class TimelineAnimator {
                         }
                     }
 
-                    setTimeout(() => {
+                    if (Math.abs(dy) <= 1) {
+                        // No significant FLIP needed — swap to freshCard immediately.
+                        // Decorations appear at full opacity (the morph animation already
+                        // handled the visual transition via newDot/newHline/vline).
                         savedRollCard.remove();
                         if (freshCard) freshCard.style.display = '';
-                        if (outcomeCard) outcomeCard.style.cssText = '';
+                        if (outcomeCard) {
+                            setTimeout(() => { outcomeCard.style.cssText = ''; }, 350);
+                        }
                         const spacer = document.getElementById('scroll-spacer');
                         if (spacer) spacer.remove();
                         this.morphAnimating = false;
                         if (onComplete) onComplete();
-                    }, 350);
+                    } else {
+                        // Significant FLIP — animate savedRollCard, then swap after transition
+                        savedRollCard.style.transform = `translateY(${dy}px)`;
+                        savedRollCard.style.transition = 'none';
+                        if (!lightMode) {
+                            savedRollCard.classList.add('no-transition');
+                            savedRollCard.classList.remove('hide-decorations');
+                            savedRollCard.offsetHeight;
+                            savedRollCard.classList.remove('no-transition');
+                        } else {
+                            savedRollCard.offsetHeight;
+                            requestAnimationFrame(() => {
+                                savedRollCard.classList.remove('hide-decorations');
+                            });
+                        }
+                        savedRollCard.style.transition = `transform 300ms ${easing}`;
+                        savedRollCard.style.transform = 'translateY(0)';
+
+                        setTimeout(() => {
+                            savedRollCard.remove();
+                            if (freshCard) freshCard.style.display = '';
+                            if (outcomeCard) outcomeCard.style.cssText = '';
+                            const spacer = document.getElementById('scroll-spacer');
+                            if (spacer) spacer.remove();
+                            this.morphAnimating = false;
+                            if (onComplete) onComplete();
+                        }, 350);
+                    }
                 } else if (!_hasNextQuestion) {
                     if (outcomeCard) outcomeCard.style.cssText = '';
                     const spacer = document.getElementById('scroll-spacer');
