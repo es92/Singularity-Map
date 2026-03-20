@@ -157,6 +157,12 @@
         display: none !important;
     }
 
+    .timeline-light .timeline-event::after { display: none; }
+    .timeline-light .timeline-headline,
+    .timeline-light .timeline-desc { display: none; }
+    .timeline-light .timeline-event { margin-bottom: 0.65rem; padding-top: 0; }
+    .timeline-light .timeline-event::before { top: calc(0.67rem); }
+
     .question-card {
         background: none; border: none;
         padding: 1.4rem 0 0.75rem;
@@ -265,6 +271,7 @@
             <button class="speed-btn active" data-speed="1500">1.5s</button>
             <button class="speed-btn" data-speed="3000">3s</button>
             <button class="speed-btn" id="resetBtn">Reset</button>
+            <label class="theme-toggle"><input type="checkbox" id="expandToggle" checked> Expand</label>
             <label class="theme-toggle"><input type="checkbox" id="themeToggle" checked> Light</label>
         </div>
         <div class="control-row">
@@ -289,6 +296,21 @@
 'use strict';
 
 let counter = 0;
+
+function getUrlParams() {
+    const p = new URLSearchParams(window.location.search);
+    return { expand: p.get('et') !== '0' };
+}
+
+function setUrlParam(key, value) {
+    const p = new URLSearchParams(window.location.search);
+    if (value === null || value === undefined) p.delete(key);
+    else p.set(key, value);
+    const qs = p.toString();
+    history.replaceState(null, '', qs ? '?' + qs : window.location.pathname);
+}
+
+const urlState = getUrlParams();
 
 const headlines = [
     'AI capability reaches human level',
@@ -401,6 +423,18 @@ document.querySelectorAll('.roll-btn').forEach(btn => {
 document.getElementById('resetBtn').addEventListener('click', () => {
     counter = 0;
     animator.reset();
+});
+
+// Expand timeline toggle
+const expandToggle = document.getElementById('expandToggle');
+expandToggle.checked = urlState.expand;
+function applyExpand(on) {
+    document.getElementById('timeline').classList.toggle('timeline-light', !on);
+    setUrlParam('et', on ? null : '0');
+}
+applyExpand(urlState.expand);
+expandToggle.addEventListener('change', function() {
+    applyExpand(this.checked);
 });
 
 // Theme toggle

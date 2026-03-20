@@ -113,6 +113,12 @@ class TimelineAnimator {
 
         const hasNewContent = targetHeight > 0 && newContentHtml;
 
+        // flowTarget: the total space these events will occupy in the timeline.
+        // Use postCardRect delta for accuracy (captures inter-event margins, stage headers, etc.)
+        const flowTarget = postCardRect
+            ? (postCardRect.top - cardRect.top)
+            : targetHeight;
+
         const effectiveRollDur = ROLL_DURATION !== null ? ROLL_DURATION : MORPH_DURATION;
         const totalAnimDur = Math.max(MORPH_DURATION, effectiveRollDur);
 
@@ -126,6 +132,11 @@ class TimelineAnimator {
         const finalVlineHeight = finalDotCenterY - existingDotCenterY;
 
         card.style.position = 'relative';
+        const isLight = this.timelineEl && this.timelineEl.classList.contains('timeline-light');
+        if (isLight) {
+            card.classList.add('hide-decorations');
+            card.style.height = cardRect.height + 'px';
+        }
 
         if (!hasNewContent) {
             // Simple fade-out only (no morph to timeline content)
@@ -135,8 +146,17 @@ class TimelineAnimator {
         } else {
 
         // Step 1: Fade out + slide up old question content
-        const slideUpAmount = cardRect.height - targetHeight;
+        const slideUpAmount = cardRect.height - flowTarget;
         const contentEls = Array.from(card.querySelectorAll(this.contentSelector));
+        const contentSet = new Set(contentEls);
+        const otherCardEls = Array.from(card.children).filter(el => !contentSet.has(el) && el.nodeType === 1);
+
+        // In light mode, the param label moves to its final position instead of fading
+        const paramRow = isLight ? card.querySelector('.timeline-top-row') : null;
+        let paramRowStartTop = 0;
+        if (paramRow) {
+            paramRowStartTop = paramRow.getBoundingClientRect().top - card.getBoundingClientRect().top;
+        }
 
         if (contentEls.length > 0) {
             const oldWrapper = document.createElement('div');
@@ -160,13 +180,42 @@ class TimelineAnimator {
             fadeGradient.style.opacity = '1';
         }
 
+        // In light mode: fade out remaining card children, animate param label to final position
+        if (isLight) {
+            otherCardEls.forEach(el => {
+                if (el === paramRow) return;
+                el.style.transition = `opacity ${fadeOutDur} ease`;
+                el.offsetHeight;
+                el.style.opacity = '0';
+            });
+        }
+
+        if (paramRow) {
+            const spacer = document.createElement('div');
+            spacer.style.height = paramRow.offsetHeight + 'px';
+            paramRow.parentNode.insertBefore(spacer, paramRow);
+            paramRow.style.position = 'absolute';
+            paramRow.style.top = paramRowStartTop + 'px';
+            paramRow.style.left = '0';
+            paramRow.style.right = '0';
+            paramRow.style.zIndex = '4';
+            paramRow.offsetHeight;
+            paramRow.style.transition = `top ${shrinkDur} ${easing}`;
+            paramRow.style.top = '0px';
+        }
+
         // Step 2: Fade in new timeline event content, centered vertically on the card
         const centerOffset = Math.max(0, (cardRect.height - targetHeight) / 2);
         const newLayer = document.createElement('div');
         if (tempItemCount === 1) {
-            newLayer.style.cssText = `position:absolute; top:${centerOffset}px; left:0; right:0; opacity:0; padding-top:1.4rem;`;
+            newLayer.style.cssText = `position:absolute; top:${centerOffset}px; left:0; right:0; opacity:0;${isLight ? '' : ' padding-top:1.4rem;'}`;
         } else {
             newLayer.style.cssText = `position:absolute; top:${centerOffset}px; left:0; right:0; z-index:1;`;
+        }
+        if (this.timelineEl) {
+            for (const cls of this.timelineEl.classList) {
+                if (cls !== 'timeline') newLayer.classList.add(cls);
+            }
         }
         newLayer.innerHTML = newContentHtml;
         if (this._stripFromAnimation) {
@@ -175,7 +224,7 @@ class TimelineAnimator {
         }
         card.appendChild(newLayer);
 
-        if (count === 1) {
+        if (count === 1 && !isLight) {
             newLayer.querySelectorAll('.timeline-event').forEach(ev => {
                 ev.classList.add('morph-no-decorations');
             });
@@ -198,7 +247,18 @@ class TimelineAnimator {
             }
         }, fadeInDelay);
 
-        // Step 3: Fade in new event decorations below the question card
+        // Step 3: Animate decorations for the next question card position
+        // In light mode, also create a persistent dot to replace the fading current card ::before
+        if (isLight) {
+            const persistDot = document.createElement('div');
+            persistDot.style.cssText = `position:absolute; left:calc(-2.5rem + 3px); top:${dotInCard}px; width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent-glow); border:2px solid var(--bg); z-index:3;`;
+            card.appendChild(persistDot);
+            persistDot.offsetHeight;
+            const lightDotTarget = 0.67 * rootFontSize;
+            persistDot.style.transition = `top ${shrinkDur} ${easing}`;
+            persistDot.style.top = lightDotTarget + 'px';
+        }
+
         const newDotTop = cardRect.height;
         const newDot = document.createElement('div');
         newDot.style.cssText = `position:absolute; left:calc(-2.5rem + 3px); top:${newDotTop}px; width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent-glow); border:2px solid var(--bg); z-index:3; opacity:0;`;
@@ -218,8 +278,13 @@ class TimelineAnimator {
         card.style.clipPath = 'inset(0 -100vw -50px -100vw)';
         card.offsetHeight;
 
-        card.style.transition = `height ${shrinkDur} ${easing}`;
-        card.style.height = targetHeight + 'px';
+        if (isLight) {
+            card.style.transition = `height ${shrinkDur} ${easing}`;
+            card.style.height = flowTarget + 'px';
+        } else {
+            card.style.transition = `height ${shrinkDur} ${easing}`;
+            card.style.height = targetHeight + 'px';
+        }
 
         const spacer = document.getElementById('scroll-spacer') || document.createElement('div');
         spacer.id = 'scroll-spacer';
@@ -259,7 +324,7 @@ class TimelineAnimator {
             : `top ${shrinkDur} ${easing}`;
         newLayer.style.top = '0px';
 
-        // Fade in + move decorations up
+        // Fade in + move decorations up to next question card position
         newDot.style.transition = `opacity ${decorDur} ease, top ${shrinkDur} ${easing}`;
         newDot.style.opacity = '1';
         newDot.style.top = finalDotTop + 'px';
@@ -502,6 +567,8 @@ class TimelineAnimator {
 
                 if (outcomeCard) outcomeCard.style.cssText = 'transition:none;';
 
+                const contentVisualTop = card.getBoundingClientRect().top;
+
                 // Save rollCard before re-rendering
                 let savedRollCard = null;
                 let savedRollBefore = rollBefore;
@@ -511,6 +578,9 @@ class TimelineAnimator {
                         rollWrapper.parentNode.insertBefore(rollCard, rollWrapper);
                         rollWrapper.remove();
                     }
+                    // Re-measure after extracting from wrapper so the position
+                    // reflects the card directly in question zone (no wrapper margins)
+                    savedRollBefore = savedRollCard.getBoundingClientRect();
                     savedRollCard.remove();
                 }
 
@@ -519,6 +589,30 @@ class TimelineAnimator {
                 // Apply change + render to get the real final state
                 applyChange();
                 this.render();
+
+                // FLIP newly added timeline items from animated position to natural position
+                const newChildren = Array.from(timeline.children).slice(oldChildCount);
+                if (newChildren.length > 0) {
+                    const naturalTop = newChildren[0].getBoundingClientRect().top;
+                    const flipDy = contentVisualTop - naturalTop;
+                    if (Math.abs(flipDy) > 1) {
+                        newChildren.forEach(el => {
+                            el.style.transform = `translateY(${flipDy}px)`;
+                            el.style.transition = 'none';
+                        });
+                        newChildren[0].offsetHeight;
+                        newChildren.forEach(el => {
+                            el.style.transition = `transform 300ms ${easing}`;
+                            el.style.transform = 'translateY(0)';
+                        });
+                        setTimeout(() => {
+                            newChildren.forEach(el => {
+                                el.style.transform = '';
+                                el.style.transition = '';
+                            });
+                        }, 350);
+                    }
+                }
 
                 if (savedRollCard) {
                     const freshCard = this._getCard();
@@ -534,12 +628,20 @@ class TimelineAnimator {
                     const rollAfter = savedRollCard.getBoundingClientRect();
                     const dy = savedRollBefore ? savedRollBefore.top - rollAfter.top : 0;
 
+                    const lightMode = timeline && timeline.classList.contains('timeline-light');
                     savedRollCard.style.transform = Math.abs(dy) > 1 ? `translateY(${dy}px)` : '';
                     savedRollCard.style.transition = 'none';
-                    savedRollCard.classList.add('no-transition');
-                    savedRollCard.classList.remove('hide-decorations');
-                    savedRollCard.offsetHeight;
-                    savedRollCard.classList.remove('no-transition');
+                    if (!lightMode) {
+                        savedRollCard.classList.add('no-transition');
+                        savedRollCard.classList.remove('hide-decorations');
+                        savedRollCard.offsetHeight;
+                        savedRollCard.classList.remove('no-transition');
+                    } else {
+                        savedRollCard.offsetHeight;
+                        requestAnimationFrame(() => {
+                            savedRollCard.classList.remove('hide-decorations');
+                        });
+                    }
 
                     if (Math.abs(dy) > 1) {
                         savedRollCard.style.transition = `transform 300ms ${easing}`;
