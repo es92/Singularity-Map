@@ -1,17 +1,17 @@
 // Singularity Map — Engine
-// Interprets the declarative dimension rules defined in dimensions.js.
-// Handles overrides, activation, locking, state management, and template matching.
+// Interprets the declarative graph rules defined in graph.js.
+// Handles derivations, activation, locking, state management, and template matching.
 
 (function() {
 
-const { SCENARIO, DIMENSIONS, DIM_MAP, EFFECTIVE_EXCLUSIONS } = (typeof module !== 'undefined' && module.exports)
-    ? require('./dimensions.js') : window.Dimensions;
+const { SCENARIO, NODES, NODE_MAP } = (typeof module !== 'undefined' && module.exports)
+    ? require('./graph.js') : window.Graph;
 
 // ════════════════════════════════════════════════════════
-// Override engine (declarative)
+// Derivation engine (declarative)
 // ════════════════════════════════════════════════════════
 
-function matchesOverride(rule, sel) {
+function matchesDerivation(rule, sel) {
     if (rule.when) {
         for (const [key, val] of Object.entries(rule.when)) {
             if (sel[key] !== val) return false;
@@ -20,7 +20,7 @@ function matchesOverride(rule, sel) {
     if (rule.whenSet && !sel[rule.whenSet]) return false;
     if (rule.effective) {
         for (const [key, val] of Object.entries(rule.effective)) {
-            const eff = effectiveVal(sel, key);
+            const eff = resolvedVal(sel, key);
             if (Array.isArray(val) ? !val.includes(eff) : eff !== val) return false;
         }
     }
@@ -32,9 +32,9 @@ function matchesOverride(rule, sel) {
     return true;
 }
 
-function applyOverrides(overrides, sel, k) {
-    for (const rule of overrides) {
-        if (!matchesOverride(rule, sel)) continue;
+function applyDerivations(derivations, sel, k) {
+    for (const rule of derivations) {
+        if (!matchesDerivation(rule, sel)) continue;
         if (rule.fromDim) return sel[rule.fromDim];
         if (rule.valueMap) return rule.valueMap[sel[k]] ?? sel[k];
         return rule.value;
@@ -42,48 +42,45 @@ function applyOverrides(overrides, sel, k) {
     return undefined;
 }
 
-function effectiveVal(sel, k) {
-    const dim = DIM_MAP[k];
-    if (dim && dim.overrides) {
-        const result = applyOverrides(dim.overrides, sel, k);
+function resolvedVal(sel, k) {
+    const node = NODE_MAP[k];
+    if (node && node.derivedFrom) {
+        const result = applyDerivations(node.derivedFrom, sel, k);
         if (result !== undefined) return result;
     }
     return sel[k];
 }
 
 // ════════════════════════════════════════════════════════
-// Activation engine (generic isDimVisible)
+// Activation engine (generic isNodeVisible)
 // ════════════════════════════════════════════════════════
 
 const HIDE_FLAG_RULES = (SCENARIO && SCENARIO.hideConditions || []).map(hc => ({
-    dims: new Set(DIMENSIONS.filter(d => d[hc.flag]).map(d => d.id)),
+    nodes: new Set(NODES.filter(d => d[hc.flag]).map(d => d.id)),
     when: hc.when,
 }));
 
-const TERM_SET = new Set(DIMENSIONS.filter(d => d.terminal).map(d => d.id));
 
 const CUSTOM_CHECKS = {
-    allPrecedingAnswered(sel, dim, cond) {
-        const brIdx = DIMENSIONS.indexOf(dim);
+    allPrecedingAnswered(sel, node, cond) {
+        const brIdx = NODES.indexOf(node);
         const anchor = cond && cond._fnAnchor;
-        const adIdx = anchor ? DIMENSIONS.findIndex(d => d.id === anchor) : 0;
+        const adIdx = anchor ? NODES.findIndex(d => d.id === anchor) : 0;
         for (let i = adIdx + 1; i < brIdx; i++) {
-            const mid = DIMENSIONS[i];
-            if (mid.terminal || mid.virtual) continue;
-            if (!isDimVisible(sel, mid)) continue;
-            if (isDimLocked(sel, mid) !== null) continue;
+            const mid = NODES[i];
+            if (mid.terminal || mid.derived) continue;
+            if (!isNodeVisible(sel, mid)) continue;
+            if (isNodeLocked(sel, mid) !== null) continue;
             if (!sel[mid.id]) return false;
         }
         return true;
     },
 };
 
-function matchCondition(sel, cond, dim) {
-    // _notSet checks effective value (considers overrides) — "this dim has no resolved value"
-    // _set checks raw selection only — "user or lock has set this dim"
+function matchCondition(sel, cond, node) {
     if (cond._notSet) {
         for (const k of cond._notSet) {
-            if (effectiveVal(sel, k) != null) return false;
+            if (resolvedVal(sel, k) != null) return false;
         }
     }
     if (cond._set) {
@@ -103,68 +100,61 @@ function matchCondition(sel, cond, dim) {
     }
     if (cond._eff) {
         for (const [k, allowed] of Object.entries(cond._eff)) {
-            const v = effectiveVal(sel, k);
+            const v = resolvedVal(sel, k);
             if (!v || !allowed.includes(v)) return false;
         }
     }
     if (cond._effNot) {
         for (const [k, excluded] of Object.entries(cond._effNot)) {
-            const v = effectiveVal(sel, k);
+            const v = resolvedVal(sel, k);
             if (v && excluded.includes(v)) return false;
         }
     }
-    const rawUnlessActive = dim.useRawUnless ? effectiveVal(sel, dim.useRawUnless) != null : false;
     for (const [k, allowed] of Object.entries(cond)) {
         if (k.startsWith('_')) continue;
-        const useRaw = dim.useRawFor && dim.useRawFor.includes(k)
-            && (!dim.useRawUnless || !rawUnlessActive);
-        const v = useRaw ? sel[k] : effectiveVal(sel, k);
+        const v = resolvedVal(sel, k);
         if (!v || !allowed.includes(v)) return false;
     }
-    if (cond._fn && !CUSTOM_CHECKS[cond._fn](sel, dim, cond)) return false;
+    if (cond._fn && !CUSTOM_CHECKS[cond._fn](sel, node, cond)) return false;
     return true;
 }
 
-function isDimActivated(sel, dim) {
+function isNodeActivated(sel, node) {
     for (const rule of HIDE_FLAG_RULES) {
-        if (rule.dims.has(dim.id) && matchCondition(sel, rule.when, {})) return false;
+        if (rule.nodes.has(node.id) && matchCondition(sel, rule.when, {})) return false;
     }
-    if (!dim.activateWhen) return true;
-    return dim.activateWhen.some(c => matchCondition(sel, c, dim));
+    if (!node.activateWhen) return true;
+    return node.activateWhen.some(c => matchCondition(sel, c, node));
 }
 
-function isDimVisible(sel, dim) {
-    if (dim.suppressWhen && dim.suppressWhen.some(c => matchCondition(sel, c, dim))) return false;
-    if (sel[dim.id]) return true;
-    return isDimActivated(sel, dim);
+function isNodeVisible(sel, node) {
+    if (sel[node.id]) {
+        if (sel._locked && sel._locked[node.id]) {
+            return isNodeActivated(sel, node);
+        }
+        return true;
+    }
+    return isNodeActivated(sel, node);
 }
 
 // ════════════════════════════════════════════════════════
 // Locking and disabling
 // ════════════════════════════════════════════════════════
 
-function isDimLocked(sel, dim) {
-    if (dim.lockedWhen) {
-        for (const rule of dim.lockedWhen) {
-            if (matchCondition(sel, rule.when, {})) {
-                if (rule.soft && sel[dim.id] && sel[dim.id] !== rule.value) continue;
-                return rule.value;
-            }
-        }
-    }
-    if (!dim.values || dim.virtual) return null;
-    const enabled = dim.values.filter(v => !isValueDisabled(sel, dim, v));
+function isNodeLocked(sel, node) {
+    if (!node.edges || node.derived) return null;
+    const enabled = node.edges.filter(v => !isEdgeDisabled(sel, node, v));
     return enabled.length === 1 ? enabled[0].id : null;
 }
 
-function isValueDisabled(sel, dim, val) {
-    if (val.disabledWhen) {
-        for (const cond of val.disabledWhen) {
+function isEdgeDisabled(sel, node, edge) {
+    if (edge.disabledWhen) {
+        for (const cond of edge.disabledWhen) {
             if (matchCondition(sel, cond, {})) return true;
         }
     }
-    if (!val.requires) return false;
-    const condSets = Array.isArray(val.requires) ? val.requires : [val.requires];
+    if (!edge.requires) return false;
+    const condSets = Array.isArray(edge.requires) ? edge.requires : [edge.requires];
     return !condSets.some(cond => matchCondition(sel, cond, {}));
 }
 
@@ -173,21 +163,36 @@ function isValueDisabled(sel, dim, val) {
 // ════════════════════════════════════════════════════════
 
 function cleanSelection(sel) {
+    if (!sel._locked) sel._locked = {};
     for (let pass = 0; pass < 5; pass++) {
         let changed = false;
-        for (const dim of DIMENSIONS) {
-            if (!isDimVisible(sel, dim)) {
-                if (sel[dim.id] !== undefined) { delete sel[dim.id]; changed = true; }
+        for (const node of NODES) {
+            if (!isNodeVisible(sel, node)) {
+                if (sel[node.id] !== undefined) {
+                    delete sel[node.id];
+                    delete sel._locked[node.id];
+                    changed = true;
+                }
                 continue;
             }
-            const locked = isDimLocked(sel, dim);
+            const locked = isNodeLocked(sel, node);
             if (locked !== null) {
-                if (sel[dim.id] !== locked) { sel[dim.id] = locked; changed = true; }
+                if (sel[node.id] !== locked) {
+                    sel[node.id] = locked;
+                    sel._locked[node.id] = true;
+                    changed = true;
+                }
                 continue;
             }
-            if (sel[dim.id]) {
-                const val = dim.values.find(v => v.id === sel[dim.id]);
-                if (val && isValueDisabled(sel, dim, val)) { delete sel[dim.id]; changed = true; }
+            if (sel._locked[node.id]) {
+                delete sel._locked[node.id];
+            }
+            if (sel[node.id]) {
+                const edge = node.edges && node.edges.find(v => v.id === sel[node.id]);
+                if (edge && isEdgeDisabled(sel, node, edge)) {
+                    delete sel[node.id];
+                    changed = true;
+                }
             }
         }
         if (!changed) break;
@@ -195,119 +200,24 @@ function cleanSelection(sel) {
     return sel;
 }
 
-function applySelection(sel, dimId, newValue) {
-    const dim = DIM_MAP[dimId];
-    if (!dim) return;
-    const idx = DIMENSIONS.indexOf(dim);
-
-    const savedUpstream = {};
-    for (let i = 0; i < idx; i++) {
-        const id = DIMENSIONS[i].id;
-        if (sel[id] !== undefined) savedUpstream[id] = sel[id];
-    }
-
-    if (sel[dimId] === newValue) {
-        delete sel[dimId];
-        for (let pass = 0; pass < 5; pass++) {
-            let changed = false;
-            for (let i = idx + 1; i < DIMENSIONS.length; i++) {
-                const d = DIMENSIONS[i];
-                if (sel[d.id] === undefined) continue;
-                const saved = sel[d.id];
-                delete sel[d.id];
-                if (isDimVisible(sel, d)) {
-                    sel[d.id] = saved;
-                } else {
-                    changed = true;
-                }
-            }
-            if (!changed) break;
-        }
+function applySelection(sel, nodeId, newValue) {
+    if (sel[nodeId] === newValue) {
+        delete sel[nodeId];
     } else {
-        const hadValue = sel[dimId] !== undefined;
-        const wasZombie = new Set();
-        if (hadValue) {
-            for (let i = idx + 1; i < DIMENSIONS.length; i++) {
-                const d = DIMENSIONS[i];
-                if (sel[d.id] === undefined) continue;
-                const saved = sel[d.id];
-                delete sel[d.id];
-                if (!isDimVisible(sel, d)) wasZombie.add(d.id);
-                sel[d.id] = saved;
-            }
-        }
-        sel[dimId] = newValue;
-        if (hadValue) {
-            for (let round = 0; round < 3; round++) {
-                for (let pass = 0; pass < 5; pass++) {
-                    let changed = false;
-                    for (let i = idx + 1; i < DIMENSIONS.length; i++) {
-                        const d = DIMENSIONS[i];
-                        if (sel[d.id] === undefined) continue;
-                        if (wasZombie.has(d.id)) continue;
-                        const saved = sel[d.id];
-                        delete sel[d.id];
-                        if (isDimVisible(sel, d)) {
-                            sel[d.id] = saved;
-                        } else {
-                            changed = true;
-                        }
-                    }
-                    if (!changed) break;
-                }
-                const snapshot = DIMENSIONS.map(d => sel[d.id]);
-                cleanSelection(sel);
-                if (DIMENSIONS.every((d, i) => sel[d.id] === snapshot[i])) break;
-            }
-        }
+        sel[nodeId] = newValue;
     }
-
-    for (let i = 0; i < idx; i++) {
-        const id = DIMENSIONS[i].id;
-        if (id in savedUpstream) {
-            sel[id] = savedUpstream[id];
-        } else {
-            delete sel[id];
-        }
-    }
+    if (sel._locked) delete sel._locked[nodeId];
+    cleanSelection(sel);
 }
 
-function effectiveDims(sel) {
+function resolvedState(sel) {
     const d = {};
-    for (const dim of DIMENSIONS) {
-        if (!isDimVisible(sel, dim)) continue;
-        const ev = effectiveVal(sel, dim.id);
-        if (ev) { d[dim.id] = ev; continue; }
-        const locked = isDimLocked(sel, dim);
-        if (locked !== null) d[dim.id] = locked;
-    }
-    for (const rule of EFFECTIVE_EXCLUSIONS) {
-        if (rule.when && !matchCondition(sel, rule.when, {})) continue;
-        if (rule.unlessEffective && rule.unlessEffective.some(id => d[id])) continue;
-        const hasPending = rule.anyPending.some(id => {
-            const dim = DIM_MAP[id];
-            return dim && isDimVisible(sel, dim) && isDimLocked(sel, dim) === null && !sel[id];
-        });
-        if (hasPending) {
-            for (const id of rule.exclude) delete d[id];
-        }
-    }
-    return d;
-}
-
-function effectiveDimsForPartialMatch(sel) {
-    const d = effectiveDims(sel);
-    for (const dim of DIMENSIONS) {
-        if (!dim.overrides || !d[dim.id]) continue;
-        for (const ov of dim.overrides) {
-            if (!ov.when) continue;
-            const unresolved = Object.keys(ov.when).some(k => {
-                const triggerDim = DIM_MAP[k];
-                return triggerDim && isDimVisible(sel, triggerDim)
-                    && isDimLocked(sel, triggerDim) === null && !sel[k];
-            });
-            if (unresolved) { delete d[dim.id]; break; }
-        }
+    for (const node of NODES) {
+        if (!isNodeVisible(sel, node)) continue;
+        const ev = resolvedVal(sel, node.id);
+        if (ev) { d[node.id] = ev; continue; }
+        const locked = isNodeLocked(sel, node);
+        if (locked !== null) d[node.id] = locked;
     }
     return d;
 }
@@ -316,74 +226,43 @@ function effectiveDimsForPartialMatch(sel) {
 // Template matching
 // ════════════════════════════════════════════════════════
 
-function templateMatches(t, dims) {
+function templateMatches(t, state) {
     if (!t.reachable) return true;
     return t.reachable.some(cond => {
         for (const [k, allowed] of Object.entries(cond)) {
-            if (!dims[k] || !allowed.includes(dims[k])) return false;
+            if (!state[k] || !allowed.includes(state[k])) return false;
         }
         return true;
     });
 }
 
-function templatePartialMatch(t, dims) {
+function templatePartialMatch(t, state) {
     if (!t.reachable) return true;
     return t.reachable.some(cond => {
         for (const [k, allowed] of Object.entries(cond)) {
-            if (dims[k] && !allowed.includes(dims[k])) return false;
+            if (state[k] && !allowed.includes(state[k])) return false;
         }
         return true;
     });
 }
 
 // ════════════════════════════════════════════════════════
-// Render positioning
+// Display order
 // ════════════════════════════════════════════════════════
-
-function getRenderAfter(sel, dim) {
-    if (!dim.renderAfter) return null;
-    for (const rule of dim.renderAfter) {
-        let match = true;
-        for (const [k, v] of Object.entries(rule.when)) {
-            if (sel[k] !== v) { match = false; break; }
-        }
-        if (match) return rule.after;
-    }
-    return null;
-}
 
 function getDisplayOrder(sel) {
     const visible = [];
-    for (const dim of DIMENSIONS) {
-        if (dim.virtual) continue;
-        if (!isDimVisible(sel, dim)) continue;
-        visible.push(dim);
+    for (const node of NODES) {
+        if (node.derived) continue;
+        if (!isNodeVisible(sel, node)) continue;
+        visible.push(node);
     }
-    const afterMap = {};
-    for (const dim of visible) {
-        const after = getRenderAfter(sel, dim);
-        if (after) afterMap[dim.id] = after;
-    }
-    const ordered = [];
-    const placed = new Set();
-    const deferred = [];
-    for (const dim of visible) {
-        if (afterMap[dim.id]) { deferred.push(dim); continue; }
-        ordered.push(dim);
-        placed.add(dim.id);
-        for (const d of deferred) {
-            if (placed.has(afterMap[d.id])) { ordered.push(d); placed.add(d.id); }
-        }
-    }
-    for (const d of deferred) {
-        if (!placed.has(d.id)) ordered.push(d);
-    }
-    return ordered;
+    return visible;
 }
 
-function removeSelection(sel, dimId) {
-    if (sel[dimId] !== undefined) {
-        applySelection(sel, dimId, sel[dimId]);
+function removeSelection(sel, nodeId) {
+    if (sel[nodeId] !== undefined) {
+        applySelection(sel, nodeId, sel[nodeId]);
     }
 }
 
@@ -392,16 +271,16 @@ function removeSelection(sel, dimId) {
 // ════════════════════════════════════════════════════════
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { DIMENSIONS, DIM_MAP,
-        matchCondition, matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimActivated, isDimLocked, isValueDisabled,
-        cleanSelection, applySelection, removeSelection, effectiveDims, effectiveDimsForPartialMatch,
-        templateMatches, templatePartialMatch, getRenderAfter, getDisplayOrder };
+    module.exports = { NODES, NODE_MAP,
+        matchCondition, matchesDerivation, applyDerivations, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled,
+        cleanSelection, applySelection, removeSelection, resolvedState,
+        templateMatches, templatePartialMatch, getDisplayOrder };
 }
 if (typeof window !== 'undefined') {
-    window.Engine = { DIMENSIONS, DIM_MAP,
-        matchCondition, matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimActivated, isDimLocked, isValueDisabled,
-        cleanSelection, applySelection, removeSelection, effectiveDims, effectiveDimsForPartialMatch,
-        templateMatches, templatePartialMatch, getRenderAfter, getDisplayOrder };
+    window.Engine = { NODES, NODE_MAP,
+        matchCondition, matchesDerivation, applyDerivations, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled,
+        cleanSelection, applySelection, removeSelection, resolvedState,
+        templateMatches, templatePartialMatch, getDisplayOrder };
 }
 
 })();

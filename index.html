@@ -557,7 +557,7 @@
         });
     })();
     </script>
-    <script src="dimensions.js"></script>
+    <script src="graph.js"></script>
     <script src="engine.js"></script>
     <script src="timeline-animator.js"></script>
     <script>
@@ -570,7 +570,7 @@
         let templatesMap = {};
         let templatesList = [];
         let discovered = new Set();
-        const { SCENARIO, DIMENSIONS, DIM_MAP } = window.Dimensions;
+        const { SCENARIO, NODES, NODE_MAP } = window.Graph;
 
         loadDiscovered();
         loadData().then(() => {
@@ -583,18 +583,18 @@
             if (!variants || !sel) return null;
             for (const v of variants) {
                 if (!v.when) return v;
-                const match = Object.entries(v.when).every(([dimId, vals]) =>
-                    sel[dimId] && vals.includes(sel[dimId])
+                const match = Object.entries(v.when).every(([nodeId, vals]) =>
+                    sel[nodeId] && vals.includes(sel[nodeId])
                 );
                 if (match) return v;
             }
             return null;
         }
 
-        function dimNarrativeFor(dimId, valueId, sel) {
-            const dim = DIM_MAP[dimId];
-            if (!dim) return {};
-            const v = dim.values && dim.values.find(vv => vv.id === valueId);
+        function nodeNarrativeFor(nodeId, edgeId, sel) {
+            const node = NODE_MAP[nodeId];
+            if (!node) return {};
+            const v = node.edges && node.edges.find(vv => vv.id === edgeId);
             if (!v) return {};
             let variant = null;
             if (v.narrativeVariants && sel) {
@@ -608,7 +608,7 @@
                 durationMax: te.durationMax,
                 answerLabel: (variant && variant.answerLabel) || v.answerLabel || v.label,
                 answerDesc: (variant && variant.answerDesc) || v.answerDesc || '',
-                stage: dim.stage,
+                stage: node.stage,
             };
         }
 
@@ -626,16 +626,16 @@
             const narrative = await nRes.json();
 
             if (narrative._stages) SCENARIO.stages = narrative._stages;
-            for (const [dimId, narr] of Object.entries(narrative)) {
-                if (dimId === '_stages') continue;
-                const dim = DIM_MAP[dimId];
-                if (!dim) continue;
-                if (narr.questionText) dim.questionText = narr.questionText;
-                if (narr.questionContext) dim.questionContext = narr.questionContext;
-                if (narr.source) dim.source = narr.source;
+            for (const [nodeId, narr] of Object.entries(narrative)) {
+                if (nodeId === '_stages') continue;
+                const node = NODE_MAP[nodeId];
+                if (!node) continue;
+                if (narr.questionText) node.questionText = narr.questionText;
+                if (narr.questionContext) node.questionContext = narr.questionContext;
+                if (narr.source) node.source = narr.source;
                 if (narr.values) {
-                    for (const [valId, vn] of Object.entries(narr.values)) {
-                        const v = dim.values && dim.values.find(vv => vv.id === valId);
+                    for (const [edgeId, vn] of Object.entries(narr.values)) {
+                        const v = node.edges && node.edges.find(vv => vv.id === edgeId);
                         if (v) Object.assign(v, vn);
                     }
                 }
@@ -646,7 +646,7 @@
 
         }
 
-        // --- Dimension helpers ---
+        // --- Node helpers ---
 
         const _timelineStart = new Date();
         const _monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -678,10 +678,10 @@
             return years + (years === 1 ? ' year, ' : ' years, ') + months + (months === 1 ? ' month' : ' months');
         }
 
-        function resolveTimeline(rawTimeline, dims) {
+        function resolveTimeline(rawTimeline, state) {
             if (Array.isArray(rawTimeline)) return rawTimeline;
             if (!rawTimeline || typeof rawTimeline !== 'object') return [];
-            const method = dims.escape_method;
+            const method = state.escape_method;
             if (!method || !rawTimeline[method]) {
                 const firstMethod = Object.keys(rawTimeline)[0];
                 if (!firstMethod) return [];
@@ -692,14 +692,14 @@
             }
             const methodObj = rawTimeline[method];
             if (Array.isArray(methodObj)) return methodObj;
-            const timeline = dims.escape_timeline;
+            const timeline = state.escape_timeline;
             if (timeline && methodObj[timeline]) return methodObj[timeline];
             const firstKey = Object.keys(methodObj)[0];
             return firstKey ? methodObj[firstKey] : [];
         }
 
         // --- Template Resolution ---
-        function resolveTemplate(templateId, dims) {
+        function resolveTemplate(templateId, state) {
             const t = templatesMap[templateId];
             if (!t) return null;
 
@@ -707,7 +707,7 @@
             let variantKey = null;
 
             if (t.variants && t.primaryDimension) {
-                variantKey = dims[t.primaryDimension];
+                variantKey = state[t.primaryDimension];
                 const variant = variantKey ? t.variants[variantKey] : null;
                 if (variant) {
                     subtitle = variant.subtitle;
@@ -732,17 +732,17 @@
                 mood,
                 summary,
                 story: t.story,
-                timeline: resolveTimeline(t.timeline, dims),
-                flavors: resolveFlavors(t.flavors, dims)
+                timeline: resolveTimeline(t.timeline, state),
+                flavors: resolveFlavors(t.flavors, state)
             };
         }
 
-        function resolveFlavors(flavors, dims) {
+        function resolveFlavors(flavors, state) {
             if (!flavors) return [];
             const texts = [];
-            for (const [dim, options] of Object.entries(flavors)) {
-                if (dims[dim] && options[dims[dim]]) {
-                    texts.push(options[dims[dim]]);
+            for (const [nodeId, options] of Object.entries(flavors)) {
+                if (state[nodeId] && options[state[nodeId]]) {
+                    texts.push(options[state[nodeId]]);
                 }
             }
             return texts;
@@ -778,7 +778,7 @@
         function routeFromHash() {
             const hash = location.hash.slice(1);
             if (hash.startsWith('/map')) {
-                    const dims = {};
+                const selections = {};
                 let lockedOutcomeId = '';
                 const flags = { fullQuestions: true, expandTimeline: true };
                 const qIdx = hash.indexOf('?');
@@ -792,10 +792,10 @@
                         else if (dk === 'fq') { flags.fullQuestions = dv !== '0'; }
                         else if (dk === 'et') { flags.expandTimeline = dv !== '0'; }
                         else if (dk === 'so') { flags.showOutcomes = dv === '1'; }
-                        else { dims[dk] = dv; }
+                        else { selections[dk] = dv; }
                     });
                 }
-                return { screen: 'map', dims, lockedOutcomeId, flags };
+                return { screen: 'map', dims: selections, lockedOutcomeId, flags };
             }
             return { screen: 'intro' };
         }
@@ -888,24 +888,24 @@
         function timelinePillHtml(e) {
             if (!e.siblings || e.siblings.length < 2) {
                 if (!e.paramLabel) return '';
-                return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.dimLabel)}</span><span class="timeline-param">${esc(e.paramLabel)}</span></span>`;
+                return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.nodeLabel)}</span><span class="timeline-param">${esc(e.paramLabel)}</span></span>`;
             }
             const allLocked = e.isLocked;
             const pills = e.siblings.map(s => {
                 const active = e.isFrontier ? false : s.value === e.selectedValue;
                 if (e.isFrontier) {
                     if (!s.reachable) return `<span class="tl-pill disabled">${esc(s.label)}</span>`;
-                    return `<span class="tl-pill" data-pathaction="frontier" data-dim="${esc(s.dimension)}" data-val="${esc(s.value)}">${esc(s.label)}</span>`;
+                    return `<span class="tl-pill" data-pathaction="frontier" data-dim="${esc(s.nodeId)}" data-val="${esc(s.value)}">${esc(s.label)}</span>`;
                 }
                 if (active) {
-                    return `<span class="tl-pill active${allLocked ? ' locked' : ''}" data-pathaction="unclick" data-dim="${esc(e.dimension)}">${esc(s.label)}</span>`;
+                    return `<span class="tl-pill active${allLocked ? ' locked' : ''}" data-pathaction="unclick" data-dim="${esc(e.nodeId)}">${esc(s.label)}</span>`;
                 }
                 if (allLocked || !s.reachable) {
                     return `<span class="tl-pill disabled">${esc(s.label)}</span>`;
                 }
-                return `<span class="tl-pill" data-pathaction="change" data-dim="${esc(s.dimension)}" data-val="${esc(s.value)}">${esc(s.label)}</span>`;
+                return `<span class="tl-pill" data-pathaction="change" data-dim="${esc(s.nodeId)}" data-val="${esc(s.value)}">${esc(s.label)}</span>`;
             }).join('');
-            return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.dimLabel)}</span><span class="tl-pills">${pills}</span></span>`;
+            return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.nodeLabel)}</span><span class="tl-pills">${pills}</span></span>`;
         }
 
         // --- Render: Map (unified view) ---
@@ -931,13 +931,13 @@
                 return lockedId ? templatesMap[lockedId] : null;
             }
 
-            function wouldReachOutcome(dimId, valueId) {
+            function wouldReachOutcome(nodeId, edgeId) {
                 const t = getLockedTemplate();
                 if (!t) return true;
-                const test = { ...sel };
-                test[dimId] = valueId;
+                const test = { ...sel, _locked: { ...(sel._locked || {}) } };
+                test[nodeId] = edgeId;
                 Engine.cleanSelection(test);
-                const eff = Engine.effectiveDims(test);
+                const eff = Engine.resolvedState(test);
                 return Engine.templatePartialMatch(t, eff);
             }
 
@@ -964,11 +964,11 @@
             }
 
             function findNextQuestion() {
-                for (const dim of Engine.getDisplayOrder(sel)) {
-                    if (Engine.isDimLocked(sel, dim) !== null) continue;
-                    if (sel[dim.id]) continue;
-                    const options = dim.values
-                        .filter(v => !Engine.isValueDisabled(sel, dim, v))
+                for (const node of Engine.getDisplayOrder(sel)) {
+                    if (Engine.isNodeLocked(sel, node) !== null) continue;
+                    if (sel[node.id]) continue;
+                    const options = node.edges
+                        .filter(v => !Engine.isEdgeDisabled(sel, node, v))
                         .map(v => {
                             const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, sel) : null;
                             return {
@@ -976,11 +976,11 @@
                                 label: v.label,
                                 answerLabel: (variant && variant.answerLabel) || v.answerLabel || v.label,
                                 answerDesc: (variant && variant.answerDesc) || v.answerDesc || '',
-                                dimension: dim.id,
-                                reachable: wouldReachOutcome(dim.id, v.id),
+                                nodeId: node.id,
+                                reachable: wouldReachOutcome(node.id, v.id),
                             };
                         });
-                    if (options.length > 0) return { dim, options };
+                    if (options.length > 0) return { node, options };
                 }
                 return null;
             }
@@ -988,35 +988,35 @@
             function buildTimelineEvents(nextQ) {
                 const events = [];
 
-                for (const dim of Engine.getDisplayOrder(sel)) {
-                    const locked = Engine.isDimLocked(sel, dim);
-                    const value = sel[dim.id] || locked;
-                    const isLockedDim = locked !== null;
+                for (const node of Engine.getDisplayOrder(sel)) {
+                    const locked = Engine.isNodeLocked(sel, node);
+                    const value = sel[node.id] || locked;
+                    const isLockedNode = locked !== null;
 
                     if (!value) {
-                        if (!fullQuestions && nextQ && nextQ.dim.id === dim.id) {
+                        if (!fullQuestions && nextQ && nextQ.node.id === node.id) {
                             const siblings = nextQ.options.map(o => ({
                                 value: o.value, label: o.label,
-                                dimension: o.dimension, reachable: o.reachable
+                                nodeId: o.nodeId, reachable: o.reachable
                             }));
-                            events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: dim.stage, year: '', paramLabel: '', dimLabel: dim.label, dimension: dim.id, selectedValue: null, siblings, isFrontier: true });
+                            events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: node.stage, year: '', paramLabel: '', nodeLabel: node.label, nodeId: node.id, selectedValue: null, siblings, isFrontier: true });
                         }
                         break;
                     }
 
-                    const narr = dimNarrativeFor(dim.id, value, sel);
-                    const dimValue = dim.values.find(v => v.id === value);
-                    const paramLabel = dimValue ? dimValue.label : value;
-                    const siblings = dim.values
-                        .filter(v => !Engine.isValueDisabled(sel, dim, v) || v.id === value)
-                        .map(v => ({ value: v.id, label: v.label, dimension: dim.id, reachable: v.id === value || wouldReachOutcome(dim.id, v.id) }));
+                    const narr = nodeNarrativeFor(node.id, value, sel);
+                    const nodeEdge = node.edges.find(v => v.id === value);
+                    const paramLabel = nodeEdge ? nodeEdge.label : value;
+                    const siblings = node.edges
+                        .filter(v => !Engine.isEdgeDisabled(sel, node, v) || v.id === value)
+                        .map(v => ({ value: v.id, label: v.label, nodeId: node.id, reachable: v.id === value || wouldReachOutcome(node.id, v.id) }));
                     events.push({
                         headline: narr.headline || '', description: narr.description || '',
                         durationMin: narr.durationMin != null ? narr.durationMin : null,
                         durationMax: narr.durationMax != null ? narr.durationMax : null,
-                        stage: narr.stage || dim.stage, year: '', paramLabel,
-                        dimLabel: dim.label, dimension: dim.id, selectedValue: value,
-                        siblings, isFrontier: false, isLocked: isLockedDim
+                        stage: narr.stage || node.stage, year: '', paramLabel,
+                        nodeLabel: node.label, nodeId: node.id, selectedValue: value,
+                        siblings, isFrontier: false, isLocked: isLockedNode
                     });
                 }
                 return events;
@@ -1076,7 +1076,7 @@
 
                     const frontierCls = e.isFrontier ? ' frontier-event' : '';
                     return `${headerHtml}
-                        <div class="timeline-event${frontierCls}" data-dim="${esc(e.dimension || '')}">
+                        <div class="timeline-event${frontierCls}" data-dim="${esc(e.nodeId || '')}">
                             <div class="timeline-top-row">${timelinePillHtml(e)}${yearHtml}</div>
                             ${headlineHtml}
                             ${descHtml}
@@ -1095,8 +1095,8 @@
                         }
                         return leadingHeader + html + trailingHeaders;
                     }
-                    if (nextQ && nextQ.dim.stage && !seenStages.has(String(nextQ.dim.stage))) {
-                        return leadingHeader + html + stageHeaderHtml(nextQ.dim.stage);
+                    if (nextQ && nextQ.node.stage && !seenStages.has(String(nextQ.node.stage))) {
+                        return leadingHeader + html + stageHeaderHtml(nextQ.node.stage);
                     }
                 }
                 return leadingHeader + html;
@@ -1115,15 +1115,15 @@
             }
 
             function buildQuestionCardHtml(nextQ) {
-                const dim = nextQ.dim;
-                const questionText = dim.questionText || dim.label;
-                const questionContext = dim.questionContext || '';
-                const questionSource = dim.source;
+                const node = nextQ.node;
+                const questionText = node.questionText || node.label;
+                const questionContext = node.questionContext || '';
+                const questionSource = node.source;
 
                 const answerCards = nextQ.options.map(o => ({
                     label: o.answerLabel,
                     desc: o.answerDesc,
-                    action: { [o.dimension]: o.value },
+                    action: { [o.nodeId]: o.value },
                     disabled: !o.reachable,
                 }));
 
@@ -1139,10 +1139,10 @@
                     </div>`).join('');
 
                 return {
-                    dim,
+                    node,
                     answerCards,
                     html: `<div class="map-question-card${fullQuestions ? '' : ' compact'}">
-                        <div class="timeline-top-row"><span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(dim.label)}</span></span></div>
+                        <div class="timeline-top-row"><span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(node.label)}</span></span></div>
                         <div class="question-text">${esc(questionText)}</div>
                         ${fullQuestions && questionContext ? `<div class="question-context">${esc(questionContext)}</div>` : ''}
                         ${fullQuestions ? source : ''}
@@ -1152,7 +1152,7 @@
             }
 
             function buildOutcomeSectionHtml() {
-                const eff = Engine.effectiveDims(sel);
+                const eff = Engine.resolvedState(sel);
                 const matched = templatesList.filter(t => Engine.templateMatches(t, eff));
                 if (matched.length === 0) return '';
 
@@ -1191,8 +1191,8 @@
             function syncHash() {
                 let hash = '/map';
                 const entries = [];
-                for (const dim of DIMENSIONS) {
-                    if (sel[dim.id]) entries.push(encodeURIComponent(dim.id) + '=' + encodeURIComponent(sel[dim.id]));
+                for (const node of NODES) {
+                    if (sel[node.id]) entries.push(encodeURIComponent(node.id) + '=' + encodeURIComponent(sel[node.id]));
                 }
                 if (lockedId) entries.push('locked=' + encodeURIComponent(lockedId));
                 if (!fullQuestions) entries.push('fq=0');
@@ -1223,23 +1223,13 @@
                         pill.addEventListener('click', () => {
                             const action = pill.dataset.pathaction;
                             if (!action) return;
-                            const dimId = pill.dataset.dim;
+                            const nodeId = pill.dataset.dim;
                             const val = pill.dataset.val;
 
-                            if (fullQuestions) {
-                                const order = Engine.getDisplayOrder(sel);
-                                const idx = order.findIndex(d => d.id === dimId);
-                                if (idx >= 0) {
-                                    for (let i = idx + 1; i < order.length; i++) {
-                                        delete sel[order[i].id];
-                                    }
-                                }
-                            }
-
                             if (action === 'frontier' || action === 'change') {
-                                Engine.applySelection(sel, dimId, val);
+                                Engine.applySelection(sel, nodeId, val);
                             } else if (action === 'unclick') {
-                                Engine.removeSelection(sel, dimId);
+                                Engine.removeSelection(sel, nodeId);
                             }
                             Engine.cleanSelection(sel);
                             update();
@@ -1260,18 +1250,9 @@
                                 const idx = parseInt(cardEl.dataset.aidx, 10);
                                 const chosen = qResult.answerCards[idx];
                                 if (!chosen || chosen.disabled) return;
-                                const [dimId, valueId] = Object.entries(chosen.action)[0];
+                                const [nodeId, edgeId] = Object.entries(chosen.action)[0];
                                 mutateSelection(() => {
-                                    if (fullQuestions) {
-                                        const order = Engine.getDisplayOrder(sel);
-                                        const dIdx = order.findIndex(d => d.id === dimId);
-                                        if (dIdx >= 0) {
-                                            for (let i = dIdx + 1; i < order.length; i++) {
-                                                delete sel[order[i].id];
-                                            }
-                                        }
-                                    }
-                                    Engine.applySelection(sel, dimId, valueId);
+                                    Engine.applySelection(sel, nodeId, edgeId);
                                     Engine.cleanSelection(sel);
                                 });
                             });
@@ -1285,12 +1266,11 @@
                 const outcomesGrid = app.querySelector('.map-outcomes-zone');
                 if (outcomesGrid) {
                     if (showOutcomes) {
-                        const eff = Engine.effectiveDims(sel);
-                        const effPartial = Engine.effectiveDimsForPartialMatch(sel);
+                        const eff = Engine.resolvedState(sel);
                         const matched = [], partial = [];
                         for (const t of templatesList) {
                             if (Engine.templateMatches(t, eff)) matched.push(t);
-                            else if (Engine.templatePartialMatch(t, effPartial)) partial.push(t);
+                            else if (Engine.templatePartialMatch(t, eff)) partial.push(t);
                         }
 
                         const cardsHtml = templatesList.map(t => {
@@ -1418,6 +1398,18 @@
             });
 
             update();
+
+            requestAnimationFrame(() => {
+                const questionCard = app.querySelector('.map-question-card');
+                if (!questionCard) return;
+                const toolbar = app.querySelector('.map-toolbar');
+                const toolbarHeight = toolbar ? toolbar.offsetHeight : 0;
+                const cardTop = questionCard.getBoundingClientRect().top + window.scrollY;
+                const scrollTarget = cardTop - toolbarHeight - 12;
+                if (scrollTarget > 0) {
+                    window.scrollTo({ top: scrollTarget, behavior: 'instant' });
+                }
+            });
         }
 
         // --- Render: Error ---
