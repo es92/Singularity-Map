@@ -261,9 +261,14 @@ function getDisplayOrder(sel) {
 }
 
 function removeSelection(sel, nodeId) {
-    if (sel[nodeId] !== undefined) {
-        applySelection(sel, nodeId, sel[nodeId]);
+    if (sel[nodeId] === undefined) return;
+    const idx = NODES.findIndex(n => n.id === nodeId);
+    if (idx < 0) return;
+    for (let i = idx; i < NODES.length; i++) {
+        delete sel[NODES[i].id];
+        if (sel._locked) delete sel._locked[NODES[i].id];
     }
+    cleanSelection(sel);
 }
 
 // ════════════════════════════════════════════════════════
