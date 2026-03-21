@@ -12,8 +12,8 @@ const fs = require('fs');
 const path = require('path');
 const { DIMENSIONS, DIM_MAP } = require('./dimensions.js');
 const {
-    matchesOverride, applyOverrides, effectiveVal,
-    isDimVisible, isDimLocked, isValueDisabled,
+    matchCondition, matchesOverride, applyOverrides, effectiveVal,
+    isDimVisible, isDimActivated, isDimLocked, isValueDisabled,
     cleanSelection, applySelection, effectiveDims, templateMatches, templatePartialMatch, getRenderAfter
 } = require('./engine.js');
 
@@ -30,6 +30,7 @@ for (const t of templatesList) oMap[t.id] = t;
 
 function runStaticAnalysis() {
     const errors = [];
+    const warnings = [];
 
     const metaDims = new Set(DIMENSIONS.map(d => d.id));
 
@@ -51,6 +52,90 @@ function runStaticAnalysis() {
         }
     }
 
+    // Helper: validate keys/values in a matchCondition-style condition object
+    function validateCondition(cond, dimId, label) {
+        for (const [k, vals] of Object.entries(cond)) {
+            if (k.startsWith('_')) continue;
+            if (!metaDims.has(k)) {
+                errors.push(`[${label}] Dimension "${dimId}" references unknown dimension "${k}"`);
+            } else {
+                const validIds = new Set(DIM_MAP[k].values.map(v => v.id));
+                const arr = Array.isArray(vals) ? vals : [vals];
+                for (const v of arr) {
+                    if (!validIds.has(v)) errors.push(`[${label}] Dimension "${dimId}" references unknown value "${k}=${v}"`);
+                }
+            }
+        }
+        for (const sk of ['_raw', '_eff', '_rawNot', '_effNot']) {
+            if (!cond[sk]) continue;
+            for (const [k, vals] of Object.entries(cond[sk])) {
+                if (!metaDims.has(k)) {
+                    errors.push(`[${label}] Dimension "${dimId}" references unknown dimension "${k}" in ${sk}`);
+                } else {
+                    const validIds = new Set(DIM_MAP[k].values.map(v => v.id));
+                    const arr = Array.isArray(vals) ? vals : [vals];
+                    for (const v of arr) {
+                        if (!validIds.has(v)) errors.push(`[${label}] Dimension "${dimId}" references unknown value "${k}=${v}" in ${sk}`);
+                    }
+                }
+            }
+        }
+        for (const sk of ['_set', '_notSet']) {
+            if (!cond[sk]) continue;
+            for (const k of cond[sk]) {
+                if (!metaDims.has(k)) errors.push(`[${label}] Dimension "${dimId}" references unknown dimension "${k}" in ${sk}`);
+            }
+        }
+    }
+
+    // Helper: validate keys/values in a matchesOverride-style rule
+    function validateOverride(rule, dim) {
+        const dimId = dim.id;
+        const ownValues = dim.values ? new Set(dim.values.map(v => v.id)) : new Set();
+        for (const rk of ['when', 'unless']) {
+            if (!rule[rk]) continue;
+            for (const [k, val] of Object.entries(rule[rk])) {
+                if (!metaDims.has(k)) {
+                    errors.push(`[overrides] Dimension "${dimId}" references unknown dimension "${k}" in ${rk}`);
+                } else {
+                    const validIds = new Set(DIM_MAP[k].values.map(v => v.id));
+                    const vals = Array.isArray(val) ? val : [val];
+                    for (const v of vals) {
+                        if (!validIds.has(v)) warnings.push(`[overrides] Dimension "${dimId}" references unreachable value "${k}=${v}" in ${rk} (dead rule)`);
+                    }
+                }
+            }
+        }
+        if (rule.effective) {
+            for (const [k, val] of Object.entries(rule.effective)) {
+                if (!metaDims.has(k)) {
+                    errors.push(`[overrides] Dimension "${dimId}" references unknown dimension "${k}" in effective`);
+                } else {
+                    const validIds = new Set(DIM_MAP[k].values.map(v => v.id));
+                    const vals = Array.isArray(val) ? val : [val];
+                    for (const v of vals) {
+                        if (!validIds.has(v)) errors.push(`[overrides] Dimension "${dimId}" references unknown value "${k}=${v}" in effective`);
+                    }
+                }
+            }
+        }
+        if (rule.whenSet && !metaDims.has(rule.whenSet)) {
+            errors.push(`[overrides] Dimension "${dimId}" references unknown dimension "${rule.whenSet}" in whenSet`);
+        }
+        if (rule.fromDim && !metaDims.has(rule.fromDim)) {
+            errors.push(`[overrides] Dimension "${dimId}" references unknown dimension "${rule.fromDim}" in fromDim`);
+        }
+        if (rule.value !== undefined && !ownValues.has(rule.value)) {
+            errors.push(`[overrides] Dimension "${dimId}" override produces unknown value "${rule.value}"`);
+        }
+        if (rule.valueMap) {
+            for (const [from, to] of Object.entries(rule.valueMap)) {
+                if (!ownValues.has(from)) errors.push(`[overrides] Dimension "${dimId}" valueMap references unknown input "${from}"`);
+                if (!ownValues.has(to)) errors.push(`[overrides] Dimension "${dimId}" valueMap references unknown output "${to}"`);
+            }
+        }
+    }
+
     // 2. Requires validation on dimension values
     for (const dim of DIMENSIONS) {
         if (!dim.values) continue;
@@ -59,6 +144,7 @@ function runStaticAnalysis() {
             const condSets = Array.isArray(v.requires) ? v.requires : [v.requires];
             for (const conds of condSets) {
                 for (const [dk, vals] of Object.entries(conds)) {
+                    if (dk.startsWith('_')) continue;
                     if (!metaDims.has(dk)) {
                         errors.push(`[requires] Dimension "${dim.id}" value "${v.id}" requires unknown dimension "${dk}"`);
                     }
@@ -71,6 +157,126 @@ function runStaticAnalysis() {
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+
+    // 2b. lockedWhen validation
+    for (const dim of DIMENSIONS) {
+        if (!dim.lockedWhen) continue;
+        const ownValues = new Set(dim.values.map(v => v.id));
+        for (const rule of dim.lockedWhen) {
+            if (rule.when) validateCondition(rule.when, dim.id, 'lockedWhen');
+            if (!ownValues.has(rule.value)) {
+                errors.push(`[lockedWhen] Dimension "${dim.id}" locks to unknown value "${rule.value}"`);
+            }
+        }
+    }
+
+    // 2c. suppressWhen validation
+    for (const dim of DIMENSIONS) {
+        if (!dim.suppressWhen) continue;
+        for (const cond of dim.suppressWhen) {
+            validateCondition(cond, dim.id, 'suppressWhen');
+        }
+    }
+
+    // 2d. disabledWhen validation (on values)
+    for (const dim of DIMENSIONS) {
+        if (!dim.values) continue;
+        for (const v of dim.values) {
+            if (!v.disabledWhen) continue;
+            for (const cond of v.disabledWhen) {
+                validateCondition(cond, `${dim.id}.${v.id}`, 'disabledWhen');
+            }
+        }
+    }
+
+    // 2e. overrides validation
+    for (const dim of DIMENSIONS) {
+        if (!dim.overrides) continue;
+        for (const rule of dim.overrides) {
+            validateOverride(rule, dim);
+        }
+    }
+
+    // 2f. lockedWhen / overrides duplication detection
+    for (const dim of DIMENSIONS) {
+        if (!dim.lockedWhen || !dim.overrides) continue;
+        for (const lock of dim.lockedWhen) {
+            const lockDimKeys = new Set();
+            if (lock.when) {
+                for (const [k] of Object.entries(lock.when)) {
+                    if (!k.startsWith('_')) lockDimKeys.add(k);
+                }
+                if (lock.when._raw) for (const k of Object.keys(lock.when._raw)) lockDimKeys.add(k);
+                if (lock.when._eff) for (const k of Object.keys(lock.when._eff)) lockDimKeys.add(k);
+            }
+            for (const ovr of dim.overrides) {
+                if (ovr.value === undefined || ovr.value !== lock.value) continue;
+                const ovrDimKeys = new Set();
+                if (ovr.when) for (const k of Object.keys(ovr.when)) ovrDimKeys.add(k);
+                if (ovr.effective) for (const k of Object.keys(ovr.effective)) ovrDimKeys.add(k);
+                const shared = [...lockDimKeys].filter(k => ovrDimKeys.has(k));
+                if (shared.length > 0) {
+                    errors.push(`[redundant] Dimension "${dim.id}": lockedWhen and overrides both produce "${lock.value}" referencing ${shared.map(k => '"'+k+'"').join(', ')}`);
+                }
+            }
+        }
+    }
+
+    // 2g. Dead value detection: requires contradicted by disabledWhen
+    for (const dim of DIMENSIONS) {
+        if (!dim.values) continue;
+        for (const val of dim.values) {
+            if (!val.requires || !val.disabledWhen) continue;
+            const reqSets = Array.isArray(val.requires) ? val.requires : [val.requires];
+            let allBlocked = true;
+            for (const req of reqSets) {
+                let blocked = false;
+                for (const dis of val.disabledWhen) {
+                    let disImplied = true;
+                    for (const [dk, dvals] of Object.entries(dis)) {
+                        if (dk.startsWith('_')) { disImplied = false; break; }
+                        if (!req[dk]) { disImplied = false; break; }
+                        const reqArr = Array.isArray(req[dk]) ? req[dk] : [req[dk]];
+                        const disArr = Array.isArray(dvals) ? dvals : [dvals];
+                        if (!reqArr.every(rv => disArr.includes(rv))) { disImplied = false; break; }
+                    }
+                    if (disImplied) { blocked = true; break; }
+                }
+                if (!blocked) { allBlocked = false; break; }
+            }
+            if (allBlocked) {
+                warnings.push(`[dead-value] Dimension "${dim.id}" value "${val.id}": every requires clause is contradicted by disabledWhen`);
+            }
+        }
+    }
+
+    // 2h. _notSet referencing overridable dims (raw/effective asymmetry lint)
+    // _set checks raw, _notSet checks effective — flag when _notSet targets a non-virtual dim with overrides
+    // Virtual dims are excluded: they only exist through overrides, so effective IS the only value.
+    const overridableDims = new Set(DIMENSIONS.filter(d => d.overrides && !d.virtual).map(d => d.id));
+    for (const dim of DIMENSIONS) {
+        const condSources = [];
+        if (dim.activateWhen) for (const c of dim.activateWhen) condSources.push(['activateWhen', c]);
+        if (dim.suppressWhen) for (const c of dim.suppressWhen) condSources.push(['suppressWhen', c]);
+        if (dim.lockedWhen) for (const r of dim.lockedWhen) if (r.when) condSources.push(['lockedWhen', r.when]);
+        if (dim.values) {
+            for (const v of dim.values) {
+                if (v.disabledWhen) for (const c of v.disabledWhen) condSources.push([`disabledWhen(${v.id})`, c]);
+                if (v.requires) {
+                    const rs = Array.isArray(v.requires) ? v.requires : [v.requires];
+                    for (const c of rs) condSources.push([`requires(${v.id})`, c]);
+                }
+            }
+        }
+        for (const [source, cond] of condSources) {
+            if (!cond._notSet) continue;
+            for (const k of cond._notSet) {
+                if (overridableDims.has(k)) {
+                    warnings.push(`[raw-eff] Dimension "${dim.id}" ${source} uses _notSet on "${k}" which has overrides (checks effective, not raw)`);
                 }
             }
         }
@@ -97,8 +303,13 @@ function runStaticAnalysis() {
             for (const cond of dim.activateWhen) {
                 for (const [k] of Object.entries(cond)) {
                     if (k.startsWith('_')) continue;
-                    const useRaw = dim.useRawFor && dim.useRawFor.includes(k);
-                    deps.add(useRaw ? 'raw:' + k : 'effective:' + k);
+                    const inRawFor = dim.useRawFor && dim.useRawFor.includes(k);
+                    if (inRawFor && dim.useRawUnless) {
+                        deps.add('raw:' + k);
+                        deps.add('effective:' + k);
+                    } else {
+                        deps.add(inRawFor ? 'raw:' + k : 'effective:' + k);
+                    }
                 }
                 if (cond._raw) for (const k of Object.keys(cond._raw)) deps.add('raw:' + k);
                 if (cond._eff) for (const k of Object.keys(cond._eff)) deps.add('effective:' + k);
@@ -133,7 +344,7 @@ function runStaticAnalysis() {
         }
     }
 
-    return { errors, overrideDeps };
+    return { errors, warnings, overrideDeps };
 }
 
 // ════════════════════════════════════════════════════════
@@ -202,8 +413,8 @@ function progressivelyShown(sel) {
 }
 
 function runExplorer() {
-    const violations = { vanish: [], appearAboveAnswered: [], deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], premature: [], lockedAfterUnanswered: [], progressiveVanish: [], selectionErasedUpward: [], selectionOverriddenUpward: [], selectionOverriddenDownward: [], switchOrphan: [], switchErased: [], switchUpstreamChanged: [] };
-    const seen = { vanish: new Set(), appearAbove: new Set(), clickErased: new Set(), premature: new Set(), lockedAfterUnanswered: new Set(), progressiveVanish: new Set(), selectionErasedUpward: new Set(), selectionOverriddenUpward: new Set(), selectionOverriddenDownward: new Set(), switchOrphan: new Set(), switchErased: new Set(), switchUpstreamChanged: new Set() };
+    const violations = { vanish: [], appearAboveAnswered: [], deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], premature: [], progressiveVanish: [], selectionErasedUpward: [], selectionOverriddenUpward: [], selectionOverriddenDownward: [], switchOrphan: [], switchErased: [], switchUpstreamChanged: [] };
+    const seen = { vanish: new Set(), appearAbove: new Set(), clickErased: new Set(), premature: new Set(), progressiveVanish: new Set(), selectionErasedUpward: new Set(), selectionOverriddenUpward: new Set(), selectionOverriddenDownward: new Set(), switchOrphan: new Set(), switchErased: new Set(), switchUpstreamChanged: new Set() };
 
     function resolveRenderIdx(sel, dim) {
         const afterId = getRenderAfter(sel, dim);
@@ -263,29 +474,23 @@ function runExplorer() {
             }
         }
 
-        // lockedAfterUnanswered (no per-value iteration needed)
-        let firstUnansweredIdx = -1;
-        for (let i = 0; i < N; i++) {
-            if (!dimVis[i] || dimLock[i] !== null) continue;
-            if (dimHasVal[i]) continue;
-            firstUnansweredIdx = i;
-            break;
-        }
-        if (firstUnansweredIdx !== -1) {
-            for (let i = firstUnansweredIdx + 1; i < N; i++) {
-                if (!dimVis[i] || dimLock[i] === null) continue;
-                const k = `${DIMENSIONS[firstUnansweredIdx].id}|${DIMENSIONS[i].id}`;
-                if (seen.lockedAfterUnanswered.has(k)) continue;
-                seen.lockedAfterUnanswered.add(k);
-                violations.lockedAfterUnanswered.push({ unanswered: DIMENSIONS[firstUnansweredIdx].id, locked: DIMENSIONS[i].id, url: selToUrl(sel) });
-            }
-        }
 
         // stuck / singleOption (no per-value iteration needed)
         for (let i = 0; i < N; i++) {
             if (!dimVis[i] || dimLock[i] !== null || dimHasVal[i]) continue;
             const ena = dimEna[i];
-            if (ena.length === 0) violations.stuck.push({ dim: DIMENSIONS[i].id, url: selToUrl(sel) });
+            if (ena.length === 0) {
+                const reasons = [];
+                for (const v of DIMENSIONS[i].values) {
+                    if (v.disabledWhen && v.disabledWhen.some(c => matchCondition(sel, c, {}))) {
+                        reasons.push(`"${v.id}" disabled by disabledWhen`);
+                    } else if (v.requires) {
+                        const rs = Array.isArray(v.requires) ? v.requires : [v.requires];
+                        if (!rs.some(c => matchCondition(sel, c, {}))) reasons.push(`"${v.id}" blocked by requires`);
+                    }
+                }
+                violations.stuck.push({ dim: DIMENSIONS[i].id, url: selToUrl(sel), mechanism: reasons.join('; ') });
+            }
             if (ena.length === 1) violations.singleOption.push({ dim: DIMENSIONS[i].id, val: ena[0].id, url: selToUrl(sel) });
         }
 
@@ -358,7 +563,12 @@ function runExplorer() {
                     if (!upperVisible) {
                         if (!seen.vanish.has(k)) {
                             seen.vanish.add(k);
-                            violations.vanish.push({ dim: dimId, val: val.id, vanished: upper.id, url: selToUrl(sel) });
+                            let mechanism = 'activateWhen no longer matches';
+                            if (upper.suppressWhen) {
+                                const matchingSup = upper.suppressWhen.find(c => matchCondition(next, c, upper));
+                                if (matchingSup) mechanism = `suppressWhen matched: ${JSON.stringify(matchingSup)}`;
+                            }
+                            violations.vanish.push({ dim: dimId, val: val.id, vanished: upper.id, url: selToUrl(sel), mechanism });
                         }
                     } else if (isUnanswered && dimLock[ui] === null && next[upper.id] !== sel[upper.id]) {
                         const nowLocked = isDimLocked(next, upper) !== null;
@@ -430,7 +640,13 @@ function runExplorer() {
                         }
                         if (hasAnsweredBelow) {
                             seen.appearAbove.add(k);
-                            violations.appearAboveAnswered.push({ dim: dimId, val: val.id, appeared: DIMENSIONS[ni].id, url: selToUrl(sel) });
+                            const newDim = DIMENSIONS[ni];
+                            let mechanism = 'always active';
+                            if (newDim.activateWhen) {
+                                const mc = newDim.activateWhen.find(c => matchCondition(next, c, newDim));
+                                if (mc) mechanism = `activateWhen: ${JSON.stringify(mc)}`;
+                            }
+                            violations.appearAboveAnswered.push({ dim: dimId, val: val.id, appeared: DIMENSIONS[ni].id, url: selToUrl(sel), mechanism });
                         }
                     }
                 }
@@ -458,13 +674,15 @@ function runExplorer() {
         }
     }
 
-    // DFS with forward-key deduplication
+    // DFS with forward-key deduplication + value coverage tracking
     let totalStates = 0;
     let totalLeaves = 0;
     const visited = new Set();
     const rawVisited = new Set();
     const stack = [{}];
     let dedupSaved = 0;
+    const userSelected = new Set();
+    const autoLocked = new Set();
 
     while (stack.length > 0) {
         const sel = stack.pop();
@@ -486,6 +704,18 @@ function runExplorer() {
             process.stdout.write(`\r  ${totalStates.toLocaleString()} states...`);
         }
 
+        for (const dim of DIMENSIONS) {
+            if (sel[dim.id]) {
+                const key = `${dim.id}=${sel[dim.id]}`;
+                if (isDimLocked(sel, dim) !== null) autoLocked.add(key);
+                else userSelected.add(key);
+            }
+            if (dim.overrides) {
+                const eff = effectiveVal(sel, dim.id);
+                if (eff) autoLocked.add(`${dim.id}=${eff}`);
+            }
+        }
+
         runChecks(sel);
 
         const next = getNextDim(sel);
@@ -500,7 +730,8 @@ function runExplorer() {
         }
     }
 
-    return { violations, totalStates, totalLeaves, dedupSaved, rawUnique: rawVisited.size };
+    const coverage = { userSelected, autoLocked };
+    return { violations, totalStates, totalLeaves, dedupSaved, rawUnique: rawVisited.size, coverage };
 }
 
 // ════════════════════════════════════════════════════════
@@ -577,12 +808,16 @@ function samplePaths(n) {
 // ════════════════════════════════════════════════════════
 
 function printPhase1(result) {
-    const { errors } = result;
+    const { errors, warnings } = result;
     if (errors.length) {
         console.log(`  ERRORS (${errors.length}):`);
         for (const e of errors) console.log('    ✗ ' + e);
     } else {
         console.log('  ✓ All static checks passed');
+    }
+    if (warnings.length) {
+        console.log(`  WARNINGS (${warnings.length}):`);
+        for (const w of warnings) console.log('    ⚠ ' + w);
     }
 }
 
@@ -592,11 +827,11 @@ function printPhase2(result) {
     const cats = [
         { name: 'DEAD-END LEAF (no outcome)', items: violations.deadEnd, fmt: v => `    No outcome matches at leaf` },
         { name: 'AMBIGUOUS LEAF (multiple outcomes)', items: violations.ambiguous, fmt: v => `    ${v.outcomes.length} outcomes: [${v.outcomes.join(', ')}]` },
-        { name: 'STUCK DIM (visible, 0 enabled values)', items: violations.stuck, fmt: v => `    "${v.dim}" is visible but has no selectable values` },
+        { name: 'STUCK DIM (visible, 0 enabled values)', items: violations.stuck, fmt: v => `    "${v.dim}" is visible but has no selectable values${v.mechanism ? '\n      Because: ' + v.mechanism : ''}` },
         { name: 'UNLOCKED SINGLE OPTION', items: violations.singleOption, fmt: v => `    "${v.dim}" has only "${v.val}" enabled but is not locked` },
-        { name: 'ROW VANISHES UPWARD', items: violations.vanish, fmt: v => `    Click "${v.dim}=${v.val}" → "${v.vanished}" vanishes` },
+        { name: 'ROW VANISHES UPWARD', items: violations.vanish, fmt: v => `    Click "${v.dim}=${v.val}" → "${v.vanished}" vanishes${v.mechanism ? '\n      Because: ' + v.mechanism : ''}` },
         { name: 'PROGRESSIVE DISCLOSURE VANISH', items: violations.progressiveVanish, fmt: v => `    Click "${v.dim}=${v.val}" → "${v.vanished}" hidden` },
-        { name: 'ROW APPEARS ABOVE ANSWERED', items: violations.appearAboveAnswered, fmt: v => `    Click "${v.dim}=${v.val}" → "${v.appeared}" appears above answered row` },
+        { name: 'ROW APPEARS ABOVE ANSWERED', items: violations.appearAboveAnswered, fmt: v => `    Click "${v.dim}=${v.val}" → "${v.appeared}" appears above answered row${v.mechanism ? '\n      Because: ' + v.mechanism : ''}` },
         { name: 'CLICK ERASED', items: violations.clickErased, fmt: v => `    Click "${v.dim}=${v.val}" → immediately cleared` },
         { name: 'SELECTION ERASED UPWARD', items: violations.selectionErasedUpward, fmt: v => `    Click "${v.dim}=${v.val}" → erased "${v.erased}=${v.hadValue}" above` },
         { name: 'SELECTION OVERRIDDEN UPWARD', items: violations.selectionOverriddenUpward, fmt: v => `    Click "${v.dim}=${v.val}" → overrode "${v.overridden}" from "${v.from}" to "${v.to}" above` },
@@ -618,19 +853,63 @@ function printPhase2(result) {
         }
     }
 
-    if (violations.lockedAfterUnanswered.length) {
-        console.log(`  ━━━ LOCKED LEAKS PAST UNANSWERED — handled by progressive disclosure (${violations.lockedAfterUnanswered.length}) ━━━`);
-        for (const v of violations.lockedAfterUnanswered) {
-            console.log(`    "${v.locked}" is auto-locked but appears after unanswered "${v.unanswered}"`);
-            console.log(`    ${v.url}\n`);
-        }
-    }
 
     if (violationCount === 0) {
         console.log('  ✓ No violations found');
     }
 
     return violationCount;
+}
+
+function printPhase3(coverage) {
+    const { userSelected, autoLocked } = coverage;
+    const allReached = new Set([...userSelected, ...autoLocked]);
+    let totalChoice = 0, totalTerminal = 0, totalVirtual = 0;
+    const unreachedChoice = [], unreachedTerminal = [], unreachedVirtual = [];
+    for (const dim of DIMENSIONS) {
+        if (!dim.values) continue;
+        for (const val of dim.values) {
+            const key = `${dim.id}=${val.id}`;
+            const reached = allReached.has(key);
+            const entry = { dim: dim.id, val: val.id, hasRequires: !!val.requires };
+            if (dim.virtual) {
+                totalVirtual++;
+                if (!reached) unreachedVirtual.push(entry);
+            } else if (dim.terminal) {
+                totalTerminal++;
+                if (!reached) unreachedTerminal.push(entry);
+            } else {
+                totalChoice++;
+                if (!reached) unreachedChoice.push(entry);
+            }
+        }
+    }
+    const fmt = (reached, total) => {
+        const pct = total ? ((reached / total) * 100).toFixed(1) : '100.0';
+        return `${reached}/${total} (${pct}%)`;
+    };
+    console.log(`  Choice dims:   ${fmt(totalChoice - unreachedChoice.length, totalChoice)} values reached`);
+    console.log(`  Terminal dims:  ${fmt(totalTerminal - unreachedTerminal.length, totalTerminal)} values reached (not explored by DFS)`);
+    console.log(`  Virtual dims:   ${fmt(totalVirtual - unreachedVirtual.length, totalVirtual)} values reached via overrides`);
+    const lockedOnly = [...autoLocked].filter(k => !userSelected.has(k)).sort();
+    if (lockedOnly.length) {
+        console.log(`  ${lockedOnly.length} values reached only via auto-lock/override (never user-selectable):`);
+        for (const k of lockedOnly) console.log(`    ${k}`);
+    }
+    if (unreachedChoice.length) {
+        console.log(`  Unreached choice values (${unreachedChoice.length}):`);
+        for (const u of unreachedChoice) {
+            const tag = u.hasRequires ? '(has requires)' : '(no requires — forward-key dedup?)';
+            console.log(`    "${u.dim}" → "${u.val}" ${tag}`);
+        }
+    }
+    if (unreachedVirtual.length) {
+        console.log(`  Unreached virtual values (${unreachedVirtual.length}):`);
+        for (const u of unreachedVirtual) console.log(`    "${u.dim}" → "${u.val}"`);
+    }
+    if (!unreachedChoice.length && !unreachedVirtual.length) {
+        console.log('  ✓ All choice + virtual values reached');
+    }
 }
 
 // --- Main ---
@@ -665,6 +944,11 @@ const phase2 = runExplorer();
 const phase2ms = ((Date.now() - t1) / 1000).toFixed(1);
 console.log(`Phase 2: Explorer Simulation (${phase2ms}s, ${phase2.totalStates} states, ${phase2.totalLeaves} leaves)`);
 const violationCount = printPhase2(phase2);
+console.log();
+
+// Phase 3 — Coverage
+console.log('Phase 3: Value Coverage');
+printPhase3(phase2.coverage);
 console.log();
 
 // Summary

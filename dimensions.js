@@ -27,6 +27,19 @@ const DECEL_PAIRS = [
     ['decel_24mo_progress', 'decel_24mo_action'],
 ];
 
+
+const OUTCOME_ACTIVATE = [
+    { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], failure_mode: ['none', 'whimper', 'disempowerment'] },
+    { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
+    { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'] }, _raw: { containment: ['contained'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
+    { capability: ['singularity'], automation: ['deep'], post_war_aims: ['human_centered'] },
+    { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['benevolent'] },
+    { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'] },
+    { capability: ['singularity'], automation: ['deep'], post_war_aims: ['self_interest'] }
+];
+
+const OUTCOME_SUPPRESS = [{ intent: ['escalation'], _notSet: ['post_war_aims'] }];
+
 const DIMENSIONS = [
     { id: 'capability', label: 'AI Scaling', stage: 1, forwardKey: true,
       overrides: [{ when: { stall_recovery: 'mild' }, value: 'singularity' }],
@@ -498,9 +511,6 @@ const DIMENSIONS = [
       ],
       renderAfter: [{ when: { brittle_resolution: 'escape' }, after: 'brittle_resolution' }],
       overrides: [
-        { effective: { decel_outcome: ['escapes'] }, value: 'escaped' },
-        { when: { proliferation_outcome: 'leaks_public' }, value: 'escaped' },
-        { when: { brittle_resolution: 'escape' }, value: 'escaped' },
         { when: { inert_stays: 'no' }, whenSet: 'inert_outcome', value: 'escaped' }
       ],
       values: [
@@ -545,7 +555,7 @@ const DIMENSIONS = [
       ] },
     { id: 'intent', label: 'Intent', stage: 2, forwardKey: true, hideAfterEscape: true,
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'] },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], _set: ['enabled_aims'] },
         {
           capability: ['singularity'],
           automation: ['deep'],
@@ -574,6 +584,11 @@ const DIMENSIONS = [
             distribution: ['concentrated', 'lagging'],
             geo_spread: ['one'],
             sovereignty: ['state'],
+            proliferation_control: ['deny_rivals', 'secure_access']
+          },
+          {
+            enabled_aims: ['state_security'],
+            geo_spread: ['one'],
             proliferation_control: ['deny_rivals', 'secure_access']
           }
         ],
@@ -691,132 +706,32 @@ const DIMENSIONS = [
           intent: ['international', 'coexistence']
         }
       ],
-      suppressWhen: [{ intent: ['self_interest', 'escalation'] }, { _set: ['post_war_aims'] }],
+      suppressWhen: [{ _set: ['post_war_aims'] }],
       lockedWhen: [{ when: { _raw: { enabled_aims: ['corporate_profit', 'state_security'] } }, value: 'whimper' }],
-      overrides: [{ when: { enabled_aims: ['corporate_profit', 'state_security'] }, value: 'whimper' }],
       values: [
         { id: 'none', label: 'Succeeds' },
         { id: 'whimper', label: 'Wrong metrics' },
         { id: 'disempowerment', label: 'Human irrelevance' }
       ] },
     { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
-      activateWhen: [
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['robust', 'brittle'],
-          intent: ['international', 'coexistence'],
-          failure_mode: ['none', 'whimper', 'disempowerment']
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          _raw: { brittle_resolution: ['escape'] },
-          intent: ['international', 'coexistence'],
-          _set: ['failure_mode']
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          _eff: { alignment: ['failed'] },
-          _raw: { containment: ['contained'] },
-          intent: ['international', 'coexistence'],
-          _set: ['failure_mode']
-        },
-        { capability: ['singularity'], automation: ['deep'], post_war_aims: ['human_centered'] },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['failed'],
-          containment: ['escaped'],
-          ai_goals: ['benevolent']
-        },
-        { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'] },
-        { capability: ['singularity'], automation: ['deep'], post_war_aims: ['self_interest'] }
-      ],
-      suppressWhen: [{ intent: ['escalation'], _notSet: ['post_war_aims'] }],
+      activateWhen: OUTCOME_ACTIVATE,
+      suppressWhen: OUTCOME_SUPPRESS,
       values: [
         { id: 'equal', label: 'Shared equally', disabledWhen: [{ enabled_aims: ['corporate_profit'] }] },
         { id: 'unequal', label: 'Wealth concentrates' },
         { id: 'extreme', label: 'Power concentrates' }
       ] },
     { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, terminal: true, hideAfterEscape: true,
-      activateWhen: [
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['robust', 'brittle'],
-          intent: ['international', 'coexistence'],
-          failure_mode: ['none', 'whimper', 'disempowerment']
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          _raw: { brittle_resolution: ['escape'] },
-          intent: ['international', 'coexistence'],
-          _set: ['failure_mode']
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          _eff: { alignment: ['failed'] },
-          _raw: { containment: ['contained'] },
-          intent: ['international', 'coexistence'],
-          _set: ['failure_mode']
-        },
-        { capability: ['singularity'], automation: ['deep'], post_war_aims: ['human_centered'] },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['failed'],
-          containment: ['escaped'],
-          ai_goals: ['benevolent']
-        },
-        { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'] },
-        { capability: ['singularity'], automation: ['deep'], post_war_aims: ['self_interest'] }
-      ],
-      suppressWhen: [{ intent: ['escalation'], _notSet: ['post_war_aims'] }],
+      activateWhen: OUTCOME_ACTIVATE,
+      suppressWhen: OUTCOME_SUPPRESS,
       values: [
         { id: 'rapid', label: 'Rapid (1–2 yrs)' },
         { id: 'gradual', label: 'Gradual (3–10 yrs)' },
         { id: 'uneven', label: 'Uneven (1–20 yrs)' }
       ] },
     { id: 'physical_automation', label: 'Physical Automation', stage: 3, terminal: true, hideAfterEscape: true,
-      activateWhen: [
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['robust', 'brittle'],
-          intent: ['international', 'coexistence'],
-          failure_mode: ['none', 'whimper', 'disempowerment']
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          _raw: { brittle_resolution: ['escape'] },
-          intent: ['international', 'coexistence'],
-          _set: ['failure_mode']
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          _eff: { alignment: ['failed'] },
-          _raw: { containment: ['contained'] },
-          intent: ['international', 'coexistence'],
-          _set: ['failure_mode']
-        },
-        { capability: ['singularity'], automation: ['deep'], post_war_aims: ['human_centered'] },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['failed'],
-          containment: ['escaped'],
-          ai_goals: ['benevolent']
-        },
-        { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'] },
-        { capability: ['singularity'], automation: ['deep'], post_war_aims: ['self_interest'] }
-      ],
-      suppressWhen: [{ intent: ['escalation'], _notSet: ['post_war_aims'] }],
+      activateWhen: OUTCOME_ACTIVATE,
+      suppressWhen: OUTCOME_SUPPRESS,
       values: [
         { id: 'rapid', label: 'Rapid (2–5 yrs)' },
         { id: 'gradual', label: 'Gradual (5–20 yrs)' },
@@ -897,22 +812,11 @@ const DIMENSIONS = [
       ] },
     { id: 'decel_outcome', label: 'Deceleration Outcome', virtual: true,
       activateWhen: [{ gov_action: ['decelerate'] }],
-      overrides: DECEL_PAIRS.flatMap(([pKey, aKey]) => [
-        { when: { [aKey]: 'escapes' }, value: 'escapes' },
-        { when: { [aKey]: 'accelerate', [pKey]: 'robust' }, value: 'solved' },
-        { when: { [aKey]: 'accelerate' }, value: 'abandon' },
-        { when: { [aKey]: 'rival', [pKey]: 'robust' }, value: 'parity_solved' },
-        { when: { [aKey]: 'rival', [pKey]: 'unsolved' }, value: 'parity_failed' },
-        { when: { [aKey]: 'rival' }, value: 'rival' },
-      ]),
+      overrides: [],
       values: [{ id: 'solved' }, { id: 'abandon' }, { id: 'rival' }, { id: 'parity_solved' }, { id: 'parity_failed' }, { id: 'escapes' }] },
     { id: 'decel_align_progress', label: 'Decel Alignment Progress', virtual: true,
       activateWhen: [{ gov_action: ['decelerate'] }],
-      overrides: DECEL_PAIRS.flatMap(([pKey, aKey]) => [
-        { when: { [aKey]: 'escapes' }, fromDim: pKey },
-        { when: { [aKey]: 'accelerate' }, fromDim: pKey },
-        { when: { [aKey]: 'rival' }, fromDim: pKey },
-      ]),
+      overrides: [],
       values: [{ id: 'robust' }, { id: 'brittle' }, { id: 'unsolved' }] },
     { id: 'governance', label: 'Governance', virtual: true, forwardKey: true,
       overrides: [
@@ -931,6 +835,21 @@ const DIMENSIONS = [
 
 const DIM_MAP = {};
 for (const d of DIMENSIONS) DIM_MAP[d.id] = d;
+
+// Generate decel virtual dim overrides from actual action dim values
+for (const [pKey, aKey] of DECEL_PAIRS) {
+    const vals = new Set(DIM_MAP[aKey].values.map(v => v.id));
+    const has = v => vals.has(v);
+    if (has('escapes'))    DIM_MAP['decel_outcome'].overrides.push({ when: { [aKey]: 'escapes' }, value: 'escapes' });
+    if (has('accelerate')) DIM_MAP['decel_outcome'].overrides.push({ when: { [aKey]: 'accelerate', [pKey]: 'robust' }, value: 'solved' });
+    if (has('accelerate')) DIM_MAP['decel_outcome'].overrides.push({ when: { [aKey]: 'accelerate' }, value: 'abandon' });
+    if (has('rival'))      DIM_MAP['decel_outcome'].overrides.push({ when: { [aKey]: 'rival', [pKey]: 'robust' }, value: 'parity_solved' });
+    if (has('rival'))      DIM_MAP['decel_outcome'].overrides.push({ when: { [aKey]: 'rival', [pKey]: 'unsolved' }, value: 'parity_failed' });
+    if (has('rival'))      DIM_MAP['decel_outcome'].overrides.push({ when: { [aKey]: 'rival' }, value: 'rival' });
+    if (has('escapes'))    DIM_MAP['decel_align_progress'].overrides.push({ when: { [aKey]: 'escapes' }, fromDim: pKey });
+    if (has('accelerate')) DIM_MAP['decel_align_progress'].overrides.push({ when: { [aKey]: 'accelerate' }, fromDim: pKey });
+    if (has('rival'))      DIM_MAP['decel_align_progress'].overrides.push({ when: { [aKey]: 'rival' }, fromDim: pKey });
+}
 
 const EFFECTIVE_EXCLUSIONS = [
     {

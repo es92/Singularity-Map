@@ -1001,7 +1001,7 @@
                             }));
                             events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: dim.stage, year: '', paramLabel: '', dimLabel: dim.label, dimension: dim.id, selectedValue: null, siblings, isFrontier: true });
                         }
-                        continue;
+                        break;
                     }
 
                     const narr = dimNarrativeFor(dim.id, value, sel);
@@ -1086,9 +1086,10 @@
 
                 if (SCENARIO.stages) {
                     if (!fullQuestions) {
+                        const maxStage = events.length ? Math.max(...events.map(e => e.stage || 0)) : 0;
                         let trailingHeaders = '';
                         for (const key of Object.keys(SCENARIO.stages).sort((a, b) => Number(a) - Number(b))) {
-                            if (!seenStages.has(key)) {
+                            if (!seenStages.has(key) && Number(key) <= maxStage) {
                                 trailingHeaders += stageHeaderHtml(Number(key));
                             }
                         }
@@ -1261,6 +1262,15 @@
                                 if (!chosen || chosen.disabled) return;
                                 const [dimId, valueId] = Object.entries(chosen.action)[0];
                                 mutateSelection(() => {
+                                    if (fullQuestions) {
+                                        const order = Engine.getDisplayOrder(sel);
+                                        const dIdx = order.findIndex(d => d.id === dimId);
+                                        if (dIdx >= 0) {
+                                            for (let i = dIdx + 1; i < order.length; i++) {
+                                                delete sel[order[i].id];
+                                            }
+                                        }
+                                    }
                                     Engine.applySelection(sel, dimId, valueId);
                                     Engine.cleanSelection(sel);
                                 });

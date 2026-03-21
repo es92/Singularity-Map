@@ -79,6 +79,8 @@ const CUSTOM_CHECKS = {
 };
 
 function matchCondition(sel, cond, dim) {
+    // _notSet checks effective value (considers overrides) — "this dim has no resolved value"
+    // _set checks raw selection only — "user or lock has set this dim"
     if (cond._notSet) {
         for (const k of cond._notSet) {
             if (effectiveVal(sel, k) != null) return false;
@@ -163,13 +165,7 @@ function isValueDisabled(sel, dim, val) {
     }
     if (!val.requires) return false;
     const condSets = Array.isArray(val.requires) ? val.requires : [val.requires];
-    return condSets.every(conds => {
-        for (const [k, allowed] of Object.entries(conds)) {
-            const v = effectiveVal(sel, k);
-            if (v && !allowed.includes(v)) return true;
-        }
-        return false;
-    });
+    return !condSets.some(cond => matchCondition(sel, cond, {}));
 }
 
 // ════════════════════════════════════════════════════════
@@ -397,13 +393,13 @@ function removeSelection(sel, dimId) {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { DIMENSIONS, DIM_MAP,
-        matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimLocked, isValueDisabled,
+        matchCondition, matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimActivated, isDimLocked, isValueDisabled,
         cleanSelection, applySelection, removeSelection, effectiveDims, effectiveDimsForPartialMatch,
         templateMatches, templatePartialMatch, getRenderAfter, getDisplayOrder };
 }
 if (typeof window !== 'undefined') {
     window.Engine = { DIMENSIONS, DIM_MAP,
-        matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimLocked, isValueDisabled,
+        matchCondition, matchesOverride, applyOverrides, effectiveVal, isDimVisible, isDimActivated, isDimLocked, isValueDisabled,
         cleanSelection, applySelection, removeSelection, effectiveDims, effectiveDimsForPartialMatch,
         templateMatches, templatePartialMatch, getRenderAfter, getDisplayOrder };
 }
