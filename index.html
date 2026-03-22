@@ -7,97 +7,9 @@
     <meta name="description" content="Navigate the branching futures of artificial intelligence. Your beliefs shape the path.">
     <meta property="og:title" content="Singularity Map">
     <meta property="og:description" content="Choose your own adventure through the future of AI.">
+    <link rel="stylesheet" href="timeline.css">
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        :root {
-            --bg: #08080f;
-            --bg-surface: #0e0e18;
-            --bg-card: #141422;
-            --bg-card-hover: #1c1c32;
-            --text: #e4e4f0;
-            --text-secondary: #9898b0;
-            --text-dim: #5c5c74;
-            --accent: #00c8ff;
-            --accent-glow: rgba(0, 200, 255, 0.1);
-            --accent-2: #7c5cff;
-            --border: #222238;
-            --border-hover: #3a3a58;
-            --radius: 12px;
-            --radius-sm: 8px;
-            --ease: cubic-bezier(0.4, 0, 0.2, 1);
-
-            --mood-utopian: #00e088;
-            --mood-dystopian: #ff3366;
-            --mood-mixed: #ffaa22;
-            --mood-stagnant: #7888aa;
-            --mood-chaotic: #aa44ff;
-
-            --pill-active-text: #000;
-            --shadow-card: rgba(0, 0, 0, 0.25);
-
-            --bg-glow-1: var(--accent-glow);
-            --bg-glow-2: rgba(124, 92, 255, 0.025);
-        }
-
-        [data-theme="light"] {
-            --bg: #f6f6fb;
-            --bg-surface: #eeeef6;
-            --bg-card: #ffffff;
-            --bg-card-hover: #f0f0f8;
-            --text: #1a1a2e;
-            --text-secondary: #4e4e6a;
-            --text-dim: #8888a4;
-            --accent: #0090cc;
-            --accent-glow: rgba(0, 144, 204, 0.08);
-            --accent-2: #6a48e0;
-            --border: #d4d4e4;
-            --border-hover: #b0b0c8;
-
-            --mood-utopian: #00a060;
-            --mood-dystopian: #d42050;
-            --mood-mixed: #c88000;
-            --mood-stagnant: #607088;
-            --mood-chaotic: #8830cc;
-
-            --pill-active-text: #fff;
-            --shadow-card: rgba(0, 0, 0, 0.08);
-
-            --bg-glow-1: rgba(0, 144, 204, 0.04);
-            --bg-glow-2: rgba(124, 92, 255, 0.0125);
-        }
-
-        html { scroll-behavior: smooth; }
-
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            line-height: 1.6;
-            min-height: 100vh;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(ellipse at 25% 50%, var(--bg-glow-1) 0%, transparent 60%),
-                radial-gradient(ellipse at 75% 20%, var(--bg-glow-2) 0%, transparent 60%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        #app {
-            position: relative;
-            z-index: 1;
-            max-width: 760px;
-            margin: 0 auto;
-            padding: 2rem 1.5rem 4rem;
-            min-height: 100vh;
-        }
+        #app { min-height: 100vh; }
 
         #app.fade-out { animation: fadeOut 0.28s var(--ease) forwards; }
         #app.fade-in  { animation: fadeIn  0.28s var(--ease) forwards; }
@@ -147,141 +59,6 @@
             margin-bottom: 3rem; max-width: 480px; line-height: 1.7;
         }
         .intro .actions { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
-
-        .timeline { position: relative; padding-left: 2.5rem; }
-        .timeline::before {
-            content: ''; position: absolute;
-            left: 7px; top: 8px; bottom: 8px; width: 2px;
-            background: linear-gradient(to bottom, var(--accent), var(--accent-2));
-            opacity: 0.3; border-radius: 1px;
-        }
-        .timeline-event { position: relative; margin-bottom: 1rem; padding-top: 1.4rem; }
-        .timeline-event:last-child { margin-bottom: 0; }
-        .timeline-event::before {
-            content: ''; position: absolute;
-            left: calc(-2.5rem + 3px); top: 0.55rem;
-            width: 10px; height: 10px; border-radius: 50%;
-            background: var(--accent);
-            box-shadow: 0 0 8px var(--accent-glow);
-            border: 2px solid var(--bg); z-index: 1;
-        }
-        .timeline-event::after {
-            content: ''; position: absolute;
-            left: -1.85rem; top: calc(0.55rem + 4px);
-            right: 0; height: 1px;
-            background: var(--border); opacity: 0.6;
-            z-index: -1;
-        }
-        .timeline-light .timeline-event::after { display: none; }
-        .timeline-top-row {
-            display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem;
-        }
-        .timeline-year {
-            font-size: 0.8rem; font-weight: 700; color: var(--accent);
-            letter-spacing: 0.04em; margin-left: auto; white-space: nowrap;
-        }
-        .timeline-headline { font-weight: 600; margin-bottom: 0.2rem; font-size: 0.98rem; }
-        .timeline-param-wrap {
-            display: flex; align-items: flex-start; gap: 0.75rem;
-        }
-        .timeline-param {
-            font-size: 0.7rem; font-weight: 500; padding: 0.15rem 0.5rem;
-            border-radius: 12px; border: 1px solid var(--accent);
-            color: var(--accent);
-        }
-        .timeline-param-dim {
-            flex-shrink: 0; width: 110px; font-size: 0.82rem; font-weight: 500;
-            color: var(--text-secondary); padding-top: 0.3rem;
-        }
-        .tl-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-        .tl-pill {
-            font-size: 0.78rem; font-weight: 500; padding: 0.28rem 0.7rem;
-            border-radius: 20px; border: 1px solid var(--border); background: var(--bg-card);
-            color: var(--text-secondary); cursor: pointer; transition: all 0.15s var(--ease);
-            user-select: none; white-space: nowrap;
-        }
-        .tl-pill:hover:not(.active):not(.locked):not(.disabled) { border-color: var(--border-hover); color: var(--text); }
-        .tl-pill.active {
-            background: var(--accent); color: var(--pill-active-text);
-            border-color: var(--accent); font-weight: 600; cursor: default;
-        }
-        .tl-pill.locked {
-            background: var(--bg-card); color: var(--text-dim); border-color: var(--border);
-            border-style: dashed; cursor: default; font-style: italic;
-        }
-        .tl-pill.locked.active {
-            background: var(--accent-glow); color: var(--accent); border-color: var(--accent); border-style: dashed;
-        }
-        .tl-pill.disabled { opacity: 0.3; cursor: not-allowed; }
-        .tl-pill.pending { opacity: 0.25; cursor: default; font-style: italic; border-style: dotted; }
-        .timeline-desc { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6; }
-        .timeline-light .timeline-headline,
-        .timeline-light .timeline-desc,
-        .timeline-light .timeline-slider { display: none; }
-        .timeline-light .timeline-event { margin-bottom: 0.65rem; padding-top: 0; }
-        .timeline-light .timeline-event::before { top: calc(0.67rem); }
-        .timeline-slider {
-            display: flex; align-items: center; gap: 0.6rem;
-            margin-top: 0.5rem; padding: 0.3rem 0;
-        }
-        .timeline-slider input[type="range"] {
-            -webkit-appearance: none; appearance: none;
-            height: 4px; border-radius: 2px;
-            background: var(--border);
-            outline: none; cursor: pointer;
-        }
-        .timeline-slider input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none;
-            width: 4px; height: 18px; border-radius: 2px;
-            background: var(--accent);
-            box-shadow: 0 0 6px var(--accent-glow);
-            cursor: ew-resize;
-        }
-        .timeline-slider input[type="range"]::-moz-range-thumb {
-            width: 4px; height: 18px; border-radius: 2px; border: none;
-            background: var(--accent);
-            box-shadow: 0 0 6px var(--accent-glow);
-            cursor: ew-resize;
-        }
-        .timeline-slider-label {
-            font-size: 0.75rem; color: var(--text-dim);
-            white-space: nowrap; min-width: 5rem; text-align: right;
-        }
-        .timeline-year { transition: none; }
-        .timeline-stage-header {
-            display: flex; align-items: center; gap: 0.65rem;
-            padding: 0.5rem 0.9rem;
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-        }
-        .map-timeline .timeline-stage-header,
-        .map-question-zone .timeline-stage-header {
-            background: transparent;
-            border: none;
-            padding: 0.5rem 0.6rem;
-            margin: 1.2rem 0 0.6rem;
-            margin-left: calc(-2.5rem - 4px - 0.6rem);
-            position: relative;
-            z-index: 2;
-        }
-        .map-timeline .timeline-stage-header::after,
-        .map-question-zone .timeline-stage-header::after {
-            content: '';
-            position: absolute;
-            top: 0; bottom: 0;
-            left: calc(4px + 0.6rem + 6px);
-            width: 4px; z-index: -1;
-            background:
-                radial-gradient(ellipse at 25% 50%, var(--bg-glow-1) 0%, transparent 60%),
-                radial-gradient(ellipse at 75% 20%, var(--bg-glow-2) 0%, transparent 60%),
-                var(--bg);
-            background-attachment: fixed;
-        }
-        .timeline > .timeline-stage-header:first-child { margin-top: 0; }
-        .timeline-stage-label {
-            font-weight: 600; font-size: 0.88rem; color: var(--text);
-        }
 
         .explorer-grid { display: grid; gap: 0.75rem; grid-template-columns: 1fr; }
         .explorer-card {
@@ -344,27 +121,6 @@
             z-index: 100; pointer-events: none;
         }
         #toast.visible { transform: translateX(-50%) translateY(0); }
-
-        .question-text {
-            font-size: 1.45rem; font-weight: 600;
-            margin-bottom: 1rem; line-height: 1.4;
-        }
-        .question-context {
-            color: var(--text-secondary); margin-bottom: 0.75rem;
-            font-size: 0.95rem; line-height: 1.75;
-        }
-        .answers { display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 2.5rem; }
-        .answer-card {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: 1.15rem 1.4rem;
-            cursor: pointer; transition: all 0.2s var(--ease);
-        }
-        .answer-card:hover {
-            background: var(--bg-card-hover); border-color: var(--accent);
-            box-shadow: 0 0 20px var(--accent-glow); transform: translateX(4px);
-        }
-        .answer-card .label { font-weight: 600; font-size: 1.02rem; margin-bottom: 0.2rem; }
-        .answer-card .desc { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; }
 
         /* ---- Map View ---- */
         .map-screen { margin-top: -2rem; }
@@ -430,77 +186,7 @@
         .map-reset-btn:hover {
             border-color: var(--border-hover); color: var(--text);
         }
-        .map-timeline { margin-bottom: 0; display: flow-root; }
-        .map-timeline::before { bottom: 0.6rem; }
-        .map-timeline .timeline-event { margin-bottom: 0; }
-        .morph-inner::before { display: none !important; }
-        .timeline-event.morph-no-decorations::before,
-        .timeline-event.morph-no-decorations::after { display: none !important; }
-        .map-question-zone {
-            padding-left: 2.5rem;
-            position: relative;
-        }
-        .map-question-zone::before {
-            content: ''; position: absolute;
-            left: 7px; top: -0.6rem;
-            height: calc(0.55rem + 7px + 0.6rem);
-            width: 2px;
-            background: linear-gradient(to bottom, var(--accent), var(--accent-2));
-            opacity: 0.3; border-radius: 1px;
-            transition: opacity 0.3s ease;
-        }
-        .map-question-card::before,
-        .map-question-card::after {
-            transition: opacity 0.3s ease;
-        }
-        .map-question-zone .map-question-card.hide-decorations::before,
-        .map-question-zone .map-question-card.hide-decorations::after {
-            opacity: 0 !important;
-        }
-        .map-question-card.no-transition::before,
-        .map-question-card.no-transition::after {
-            transition: none !important;
-        }
-        .map-question-card {
-            background: none; border: none;
-            border-radius: 0; padding: 1.4rem 0 0.75rem;
-            margin-bottom: 1.5rem;
-            position: relative;
-        }
-        .map-question-card::before {
-            content: ''; position: absolute;
-            left: calc(-2.5rem + 3px); top: 0.55rem;
-            width: 10px; height: 10px; border-radius: 50%;
-            background: var(--accent);
-            box-shadow: 0 0 8px var(--accent-glow);
-            border: 2px solid var(--bg); z-index: 1;
-        }
-        .map-question-card::after {
-            content: ''; position: absolute;
-            left: -1.85rem; top: calc(0.55rem + 4px);
-            right: 0; height: 1px;
-            background: var(--border); opacity: 0.6;
-            z-index: -1;
-        }
-        .map-question-card .question-text {
-            font-size: 1.15rem; margin-bottom: 0.75rem;
-        }
-        .map-question-card .question-context {
-            font-size: 0.88rem; margin-bottom: 0.75rem;
-        }
-        .map-question-card .answers {
-            display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; margin-bottom: 0.75rem;
-        }
-        .map-question-card .answer-card {
-            flex: 1 1 auto; min-width: 140px;
-        }
-        .map-question-card .answer-card.disabled {
-            opacity: 0.35; pointer-events: none;
-        }
-        .map-question-card.compact { padding: 1rem 0; }
-        .map-question-card.compact .question-text { font-size: 1rem; margin-bottom: 0.5rem; }
-        .map-question-card.compact .answers { gap: 0.4rem; }
-        .map-question-card.compact .answer-card { padding: 0.55rem 0.85rem; min-width: 100px; }
+        .answer-card:hover { transform: translateX(4px); }
         .map-outcome-section {
             background: var(--bg-surface); border: 1px solid var(--border);
             border-radius: var(--radius); padding: 1.5rem;
@@ -876,38 +562,6 @@
             listen('[data-action="begin"]', 'click', () => navigate({ screen: 'map' }));
         }
 
-        // --- Shared timeline helpers ---
-        function stageHeaderHtml(stage) {
-            const info = SCENARIO.stages[stage];
-            if (!info) return '';
-            return `<div class="timeline-stage-header">
-                <span class="timeline-stage-label">${esc(info.label)}</span>
-            </div>`;
-        }
-
-        function timelinePillHtml(e) {
-            if (!e.siblings || e.siblings.length < 2) {
-                if (!e.paramLabel) return '';
-                return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.nodeLabel)}</span><span class="timeline-param">${esc(e.paramLabel)}</span></span>`;
-            }
-            const allLocked = e.isLocked;
-            const pills = e.siblings.map(s => {
-                const active = e.isFrontier ? false : s.value === e.selectedValue;
-                if (e.isFrontier) {
-                    if (!s.reachable) return `<span class="tl-pill disabled">${esc(s.label)}</span>`;
-                    return `<span class="tl-pill" data-pathaction="frontier" data-dim="${esc(s.nodeId)}" data-val="${esc(s.value)}">${esc(s.label)}</span>`;
-                }
-                if (active) {
-                    return `<span class="tl-pill active${allLocked ? ' locked' : ''}" data-pathaction="unclick" data-dim="${esc(e.nodeId)}">${esc(s.label)}</span>`;
-                }
-                if (allLocked || !s.reachable) {
-                    return `<span class="tl-pill disabled">${esc(s.label)}</span>`;
-                }
-                return `<span class="tl-pill" data-pathaction="change" data-dim="${esc(s.nodeId)}" data-val="${esc(s.value)}">${esc(s.label)}</span>`;
-            }).join('');
-            return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(e.nodeLabel)}</span><span class="tl-pills">${pills}</span></span>`;
-        }
-
         // --- Render: Map (unified view) ---
         function renderMap(initialDims, lockedOutcomeId, initialFlags) {
             let sel = initialDims ? { ...initialDims } : {};
@@ -1022,86 +676,6 @@
                 return events;
             }
 
-            function buildTimelineHtml(events, nextQ) {
-                let lastStage = 0;
-                const hasDurations = events.some(e => e.durationMin != null);
-
-                timelineDurations = events.map(e => {
-                    const min = e.durationMin || 0;
-                    const max = e.durationMax != null ? e.durationMax : min;
-                    const step = max <= 1 ? 0.25 : 1;
-                    return { min, max, current: Math.round((min + max) / 2 / step) * step };
-                });
-                const ranges = timelineDurations.filter(d => d.max > d.min).map(d => d.max - d.min);
-                const meanRange = ranges.length ? ranges.reduce((a, b) => a + b, 0) / ranges.length : 1;
-                let cumulative = 0;
-
-                const seenStages = new Set();
-                let leadingHeader = '';
-                if (events.length === 0 && fullQuestions && SCENARIO.stages) {
-                    const firstKey = Object.keys(SCENARIO.stages).sort((a, b) => Number(a) - Number(b))[0];
-                    if (firstKey) {
-                        leadingHeader = stageHeaderHtml(Number(firstKey));
-                        seenStages.add(firstKey);
-                    }
-                }
-                const html = events.map((e, i) => {
-                    let headerHtml = '';
-                    if (e.stage && e.stage !== lastStage) {
-                        lastStage = e.stage;
-                        seenStages.add(String(e.stage));
-                        headerHtml = stageHeaderHtml(e.stage);
-                    }
-                    const d = timelineDurations[i];
-                    const yearLabel = hasDurations ? formatRange(cumulative, cumulative + d.current) : '';
-                    cumulative += d.current;
-
-                    const isPoint = d.min === 0 && d.max === 0 && i > 0;
-                    const yearHtml = (isPoint || !yearLabel) ? '' : `<div class="timeline-year" data-tsy="${i}">${esc(yearLabel)}</div>`;
-
-                    const headlineHtml = (expandTimeline && e.headline) ? `<div class="timeline-headline">${esc(e.headline)}</div>` : '';
-                    const descHtml = (expandTimeline && e.description) ? `<div class="timeline-desc">${esc(e.description)}</div>` : '';
-
-                    let sliderHtml = '';
-                    if (expandTimeline && d.max > d.min) {
-                        const ratio = (d.max - d.min) / meanRange;
-                        const tt = Math.sqrt(ratio);
-                        const pct = Math.min(100, Math.max(15, tt * 50));
-                        sliderHtml = `
-                        <div class="timeline-slider">
-                            <input type="range" min="${d.min}" max="${d.max}" step="${d.max <= 1 ? 0.25 : 1}" value="${d.current}" data-tsi="${i}" style="width:${pct.toFixed(0)}%">
-                            <span class="timeline-slider-label" data-tsl="${i}">${formatDuration(d.current)}</span>
-                        </div>`;
-                    }
-
-                    const frontierCls = e.isFrontier ? ' frontier-event' : '';
-                    return `${headerHtml}
-                        <div class="timeline-event${frontierCls}" data-dim="${esc(e.nodeId || '')}">
-                            <div class="timeline-top-row">${timelinePillHtml(e)}${yearHtml}</div>
-                            ${headlineHtml}
-                            ${descHtml}
-                            ${sliderHtml}
-                        </div>`;
-                }).join('');
-
-                if (SCENARIO.stages) {
-                    if (!fullQuestions) {
-                        const maxStage = events.length ? Math.max(...events.map(e => e.stage || 0)) : 0;
-                        let trailingHeaders = '';
-                        for (const key of Object.keys(SCENARIO.stages).sort((a, b) => Number(a) - Number(b))) {
-                            if (!seenStages.has(key) && Number(key) <= maxStage) {
-                                trailingHeaders += stageHeaderHtml(Number(key));
-                            }
-                        }
-                        return leadingHeader + html + trailingHeaders;
-                    }
-                    if (nextQ && nextQ.node.stage && !seenStages.has(String(nextQ.node.stage))) {
-                        return leadingHeader + html + stageHeaderHtml(nextQ.node.stage);
-                    }
-                }
-                return leadingHeader + html;
-            }
-
             function updateTimelineLabels() {
                 let cumulative = 0;
                 timelineDurations.forEach((d, i) => {
@@ -1112,43 +686,6 @@
                     if (slLabel) slLabel.textContent = formatDuration(d.current);
                     cumulative += d.current;
                 });
-            }
-
-            function buildQuestionCardHtml(nextQ) {
-                const node = nextQ.node;
-                const questionText = node.questionText || node.label;
-                const questionContext = node.questionContext || '';
-                const questionSource = node.source;
-
-                const answerCards = nextQ.options.map(o => ({
-                    label: o.answerLabel,
-                    desc: o.answerDesc,
-                    action: { [o.nodeId]: o.value },
-                    disabled: !o.reachable,
-                }));
-
-                let source = '';
-                if (questionSource) {
-                    source = `<div class="question-source"><a href="${esc(questionSource.url)}" target="_blank" rel="noopener">${esc(questionSource.label)} \u2197</a></div>`;
-                }
-
-                const answersHtml = answerCards.map((a, i) => `
-                    <div class="answer-card${a.disabled ? ' disabled' : ''}" data-aidx="${i}">
-                        <div class="label">${esc(a.label)}</div>
-                        ${fullQuestions && a.desc ? `<div class="desc">${esc(a.desc)}</div>` : ''}
-                    </div>`).join('');
-
-                return {
-                    node,
-                    answerCards,
-                    html: `<div class="map-question-card${fullQuestions ? '' : ' compact'}">
-                        <div class="timeline-top-row"><span class="timeline-param-wrap"><span class="timeline-param-dim">${esc(node.label)}</span></span></div>
-                        <div class="question-text">${esc(questionText)}</div>
-                        ${fullQuestions && questionContext ? `<div class="question-context">${esc(questionContext)}</div>` : ''}
-                        ${fullQuestions ? source : ''}
-                        <div class="answers">${answersHtml}</div>
-                    </div>`
-                };
             }
 
             function buildOutcomeSectionHtml() {
@@ -1211,7 +748,15 @@
                 const timelineEl = app.querySelector('.map-timeline');
                 if (timelineEl) {
                     timelineEl.classList.toggle('timeline-light', !expandTimeline);
-                    timelineEl.innerHTML = buildTimelineHtml(events, nextQ);
+                    const tlResult = mapAnimator.renderTimeline(events, {
+                        expanded: expandTimeline,
+                        formatRange,
+                        formatDuration,
+                        nextQuestion: nextQ ? { stage: nextQ.node.stage } : null,
+                        fullQuestions,
+                    });
+                    timelineDurations = tlResult.durations;
+                    timelineEl.innerHTML = tlResult.html;
                     timelineEl.querySelectorAll('.timeline-slider input[type="range"]').forEach(slider => {
                         slider.addEventListener('input', () => {
                             const idx = parseInt(slider.dataset.tsi);
@@ -1237,10 +782,28 @@
                     });
                 }
 
-                const questionZone = app.querySelector('.map-question-zone');
+                const questionZone = app.querySelector('.question-zone');
                 if (questionZone) {
-                    const qResult = (fullQuestions && nextQ) ? buildQuestionCardHtml(nextQ) : null;
-                    if (qResult) {
+                    if (fullQuestions && nextQ) {
+                        const questionData = {
+                            nodeLabel: nextQ.node.label,
+                            questionText: nextQ.node.questionText || nextQ.node.label,
+                            questionContext: nextQ.node.questionContext || '',
+                            source: nextQ.node.source,
+                            answers: nextQ.options.map(o => ({
+                                label: o.answerLabel,
+                                desc: o.answerDesc,
+                                nodeId: o.nodeId,
+                                value: o.value,
+                                reachable: o.reachable,
+                            })),
+                        };
+                        const qResult = mapAnimator.renderQuestionCard(questionData, {
+                            compact: !fullQuestions,
+                            showContext: fullQuestions,
+                            showSource: fullQuestions,
+                            showDesc: fullQuestions,
+                        });
                         questionZone.innerHTML = qResult.html;
                         questionZone.style.display = '';
                         questionZone.querySelectorAll('.answer-card').forEach(cardEl => {
@@ -1248,11 +811,10 @@
                                 if (cardEl.classList.contains('disabled')) return;
                                 if (mapAnimator && mapAnimator.isAnimating()) return;
                                 const idx = parseInt(cardEl.dataset.aidx, 10);
-                                const chosen = qResult.answerCards[idx];
-                                if (!chosen || chosen.disabled) return;
-                                const [nodeId, edgeId] = Object.entries(chosen.action)[0];
+                                const answer = qResult.answerCards[idx];
+                                if (!answer || answer.disabled) return;
                                 mutateSelection(() => {
-                                    Engine.applySelection(sel, nodeId, edgeId);
+                                    Engine.applySelection(sel, answer.nodeId, answer.value);
                                     Engine.cleanSelection(sel);
                                 });
                             });
@@ -1341,7 +903,7 @@
                         </div>
                     </div>
                     <div class="map-timeline timeline"></div>
-                    <div class="map-question-zone"></div>
+                    <div class="question-zone"></div>
                     <div class="map-outcome-zone" style="display:none"></div>
                     <div class="map-outcomes-zone" style="display:none"></div>
                     <div class="map-actions">
@@ -1386,9 +948,9 @@
             mapAnimator = new TimelineAnimator({
                 containerEl: app,
                 timelineEl: app.querySelector('.map-timeline'),
-                questionZoneEl: app.querySelector('.map-question-zone'),
+                questionZoneEl: app.querySelector('.question-zone'),
                 outcomeEl: null,
-                cardClass: 'map-question-card',
+                stages: SCENARIO.stages,
                 contentSelector: '.question-text, .question-context, .question-source, .answers',
                 morphDuration: 1500,
                 rollDuration: 1500,
@@ -1400,7 +962,7 @@
             update();
 
             requestAnimationFrame(() => {
-                const questionCard = app.querySelector('.map-question-card');
+                const questionCard = app.querySelector('.question-card');
                 if (!questionCard) return;
                 const toolbar = app.querySelector('.map-toolbar');
                 const toolbarHeight = toolbar ? toolbar.offsetHeight : 0;

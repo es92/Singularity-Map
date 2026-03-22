@@ -18,6 +18,9 @@ class TimelineAnimator {
         this._customRender = options.render || null;
         this._customWireButtons = options.wireAnswerButtons || null;
         this._stripFromAnimation = options.stripFromAnimation || null;
+
+        this.stages = options.stages || null;
+        this._currentAnswerCards = null;
     }
 
     setMorphDuration(ms) { this.morphDuration = ms; }
@@ -28,13 +31,205 @@ class TimelineAnimator {
         return this.questionZoneEl.querySelector('.' + this.cardClass);
     }
 
+    _esc(str) {
+        if (!str && str !== 0) return '';
+        const d = document.createElement('div');
+        d.textContent = String(str);
+        return d.innerHTML;
+    }
+
+    // ---- Rendering methods ----
+
+    renderStageHeader(stageId) {
+        const info = this.stages ? this.stages[stageId] : null;
+        if (!info) return '';
+        return `<div class="timeline-stage-header"><span class="timeline-stage-label">${this._esc(info.label)}</span></div>`;
+    }
+
+    renderPills(event) {
+        if (!event.siblings || event.siblings.length < 2) {
+            if (!event.paramLabel) return '';
+            return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${this._esc(event.nodeLabel)}</span><span class="timeline-param">${this._esc(event.paramLabel)}</span></span>`;
+        }
+        const allLocked = event.isLocked;
+        const pills = event.siblings.map(s => {
+            const active = event.isFrontier ? false : s.value === event.selectedValue;
+            if (event.isFrontier) {
+                if (!s.reachable) return `<span class="tl-pill disabled">${this._esc(s.label)}</span>`;
+                return `<span class="tl-pill" data-pathaction="frontier" data-dim="${this._esc(s.nodeId)}" data-val="${this._esc(s.value)}">${this._esc(s.label)}</span>`;
+            }
+            if (active) {
+                return `<span class="tl-pill active${allLocked ? ' locked' : ''}" data-pathaction="unclick" data-dim="${this._esc(event.nodeId)}">${this._esc(s.label)}</span>`;
+            }
+            if (allLocked || !s.reachable) {
+                return `<span class="tl-pill disabled">${this._esc(s.label)}</span>`;
+            }
+            return `<span class="tl-pill" data-pathaction="change" data-dim="${this._esc(s.nodeId)}" data-val="${this._esc(s.value)}">${this._esc(s.label)}</span>`;
+        }).join('');
+        return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${this._esc(event.nodeLabel)}</span><span class="tl-pills">${pills}</span></span>`;
+    }
+
+    renderEvent(event, options) {
+        const opts = options || {};
+        const expanded = opts.expanded !== false;
+        const yearLabel = opts.yearLabel || '';
+        const sliderHtml = opts.sliderHtml || '';
+        const eventIndex = opts.eventIndex;
+
+        const yearHtml = yearLabel
+            ? `<div class="timeline-year"${eventIndex != null ? ` data-tsy="${eventIndex}"` : ''}>${this._esc(yearLabel)}</div>`
+            : '';
+        const headlineHtml = (expanded && event.headline) ? `<div class="timeline-headline">${this._esc(event.headline)}</div>` : '';
+        const descHtml = (expanded && event.description) ? `<div class="timeline-desc">${this._esc(event.description)}</div>` : '';
+        const frontierCls = event.isFrontier ? ' frontier-event' : '';
+
+        return `<div class="timeline-event${frontierCls}" data-dim="${this._esc(event.nodeId || '')}">
+            <div class="timeline-top-row">${this.renderPills(event)}${yearHtml}</div>
+            ${headlineHtml}
+            ${descHtml}
+            ${sliderHtml}
+        </div>`;
+    }
+
+    renderTimeline(events, options) {
+        const opts = options || {};
+        const expanded = opts.expanded !== false;
+        const formatRange = opts.formatRange || null;
+        const formatDuration = opts.formatDuration || null;
+        const nextQuestion = opts.nextQuestion || null;
+        const nextStage = opts.nextStage || null;
+        const fullQuestions = opts.fullQuestions !== false;
+
+        let lastStage = 0;
+        const hasDurations = events.some(e => e.durationMin != null);
+
+        const durations = events.map(e => {
+            const min = e.durationMin || 0;
+            const max = e.durationMax != null ? e.durationMax : min;
+            const step = max <= 1 ? 0.25 : 1;
+            return { min, max, current: Math.round((min + max) / 2 / step) * step };
+        });
+        const ranges = durations.filter(d => d.max > d.min).map(d => d.max - d.min);
+        const meanRange = ranges.length ? ranges.reduce((a, b) => a + b, 0) / ranges.length : 1;
+        let cumulative = 0;
+
+        const seenStages = new Set();
+        let leadingHeader = '';
+        if (events.length === 0 && fullQuestions && this.stages) {
+            const firstKey = Object.keys(this.stages).sort((a, b) => Number(a) - Number(b))[0];
+            if (firstKey) {
+                leadingHeader = this.renderStageHeader(Number(firstKey));
+                seenStages.add(firstKey);
+            }
+        }
+
+        const html = events.map((e, i) => {
+            let headerHtml = '';
+            if (e.stage && e.stage !== lastStage) {
+                lastStage = e.stage;
+                seenStages.add(String(e.stage));
+                headerHtml = this.renderStageHeader(e.stage);
+            }
+
+            const d = durations[i];
+            const yearLabel = (hasDurations && formatRange) ? formatRange(cumulative, cumulative + d.current) : '';
+            cumulative += d.current;
+
+            const isPoint = d.min === 0 && d.max === 0 && i > 0;
+
+            let sliderHtml = '';
+            if (expanded && d.max > d.min && formatDuration) {
+                const ratio = (d.max - d.min) / meanRange;
+                const tt = Math.sqrt(ratio);
+                const pct = Math.min(100, Math.max(15, tt * 50));
+                sliderHtml = `<div class="timeline-slider">
+                    <input type="range" min="${d.min}" max="${d.max}" step="${d.max <= 1 ? 0.25 : 1}" value="${d.current}" data-tsi="${i}" style="width:${pct.toFixed(0)}%">
+                    <span class="timeline-slider-label" data-tsl="${i}">${formatDuration(d.current)}</span>
+                </div>`;
+            }
+
+            return headerHtml + this.renderEvent(e, {
+                expanded,
+                yearLabel: (isPoint || !yearLabel) ? '' : yearLabel,
+                sliderHtml,
+                eventIndex: i,
+            });
+        }).join('');
+
+        let trailingHeaders = '';
+        if (this.stages) {
+            if (!fullQuestions) {
+                const maxStage = events.length ? Math.max(...events.map(e => e.stage || 0)) : 0;
+                for (const key of Object.keys(this.stages).sort((a, b) => Number(a) - Number(b))) {
+                    if (!seenStages.has(key) && Number(key) <= maxStage) {
+                        trailingHeaders += this.renderStageHeader(Number(key));
+                    }
+                }
+            } else {
+                const trailingStage = (nextQuestion && nextQuestion.stage) || nextStage;
+                if (trailingStage && !seenStages.has(String(trailingStage))) {
+                    trailingHeaders = this.renderStageHeader(trailingStage);
+                }
+            }
+        }
+
+        return { html: leadingHeader + html + trailingHeaders, durations };
+    }
+
+    renderQuestionCard(question, options) {
+        const opts = options || {};
+        const compact = opts.compact || false;
+        const showContext = opts.showContext !== false;
+        const showSource = opts.showSource !== false;
+        const showDesc = opts.showDesc !== false;
+
+        const nodeLabel = question.nodeLabel || '';
+        const questionText = question.questionText || '';
+        const questionContext = question.questionContext || '';
+        const source = question.source;
+        const answers = question.answers || [];
+
+        const answerCards = answers.map(a => ({
+            ...a,
+            disabled: a.reachable === false,
+        }));
+
+        let sourceHtml = '';
+        if (showSource && source) {
+            sourceHtml = `<div class="question-source"><a href="${this._esc(source.url)}" target="_blank" rel="noopener">${this._esc(source.label)} \u2197</a></div>`;
+        }
+
+        const answersHtml = answerCards.map((a, i) => `
+            <div class="answer-card${a.disabled ? ' disabled' : ''}" data-aidx="${i}">
+                <div class="label">${this._esc(a.label)}</div>
+                ${showDesc && a.desc ? `<div class="desc">${this._esc(a.desc)}</div>` : ''}
+            </div>`).join('');
+
+        const innerHtml = `<div class="timeline-top-row"><span class="timeline-param-wrap"><span class="timeline-param-dim">${this._esc(nodeLabel)}</span></span></div>
+            <div class="question-text">${this._esc(questionText)}</div>
+            ${showContext && questionContext ? `<div class="question-context">${this._esc(questionContext)}</div>` : ''}
+            ${sourceHtml}
+            <div class="answers">${answersHtml}</div>`;
+
+        const html = `<div class="${this.cardClass}${compact ? ' compact' : ''}">${innerHtml}</div>`;
+
+        return { html, innerHtml, answerCards };
+    }
+
+    // ---- Core methods ----
+
     _wireAnswerButtons(container) {
         if (this._customWireButtons) {
             this._customWireButtons(container, (count) => this.addItems(count));
             return;
         }
-        container.querySelectorAll('.answer-btn').forEach(btn => {
-            btn.addEventListener('click', () => this.addItems(parseInt(btn.dataset.count)));
+        const cards = this._currentAnswerCards || [];
+        container.querySelectorAll('.answer-card[data-aidx]').forEach(cardEl => {
+            const idx = parseInt(cardEl.dataset.aidx, 10);
+            const data = cards[idx];
+            if (data && data.count != null) {
+                cardEl.addEventListener('click', () => this.addItems(data.count));
+            }
         });
     }
 
@@ -54,31 +249,21 @@ class TimelineAnimator {
         }
 
         const dp = this.dp;
-        const counter = dp.getCurrentCount();
-        const totalEvents = dp.getEventCount();
+        const events = dp.getEvents();
 
-        let html = '';
-        let lastStage = 0;
-        const firstStage = dp.stageForIndex(0);
-        if (counter === 0) {
-            html += dp.stageHeaderHtml(firstStage);
-            lastStage = firstStage;
+        let nextStage = null;
+        if (dp.hasMoreQuestions() && dp.stageForIndex) {
+            nextStage = dp.stageForIndex(dp.getCurrentCount());
         }
-        for (let i = 0; i < counter; i++) {
-            const s = dp.stageForIndex(i);
-            if (s !== lastStage) { lastStage = s; html += dp.stageHeaderHtml(s); }
-            html += dp.eventHtml(i);
-        }
-        if (counter < totalEvents) {
-            const nextStage = dp.stageForIndex(counter);
-            if (nextStage !== lastStage) {
-                html += dp.stageHeaderHtml(nextStage);
-            }
-        }
+
+        const { html } = this.renderTimeline(events, { nextStage });
         this.timelineEl.innerHTML = html;
 
         if (dp.hasMoreQuestions()) {
-            this.questionZoneEl.innerHTML = `<div class="${this.cardClass}">${dp.questionInnerHtml()}</div>`;
+            const qData = dp.getQuestion();
+            const qResult = this.renderQuestionCard(qData);
+            this._currentAnswerCards = qResult.answerCards;
+            this.questionZoneEl.innerHTML = qResult.html;
             this._wireAnswerButtons(this.questionZoneEl);
         } else {
             this.questionZoneEl.innerHTML = '<p style="color:var(--text-dim); padding: 1rem 0;">All items added.</p>';
@@ -408,30 +593,36 @@ class TimelineAnimator {
         const outcomeCard = this.outcomeEl;
         const outcomeBefore = outcomeCard ? outcomeCard.getBoundingClientRect().top : 0;
 
-        // Measure combined height of new timeline items in a temp container
         const savedCounter = dp.getCurrentCount();
+
+        // Get event objects for the new items
+        dp.setCurrentCount(savedCounter + count);
+        const expandedEvents = dp.getEvents();
+        dp.setCurrentCount(savedCounter);
+        const newEvents = expandedEvents.slice(savedCounter, savedCounter + count);
+
+        // Measure combined height of new timeline items in a temp container
         const tempContainer = document.createElement('div');
         tempContainer.style.cssText = `visibility:hidden; position:absolute; width:${card.offsetWidth}px;`;
         let lastStageTemp = savedCounter > 0 ? dp.stageForIndex(savedCounter - 1) : dp.stageForIndex(0);
         const lastTlEl = timeline.lastElementChild;
         const hasTrailingHeader = lastTlEl && lastTlEl.classList.contains('timeline-stage-header');
-        if (hasTrailingHeader) {
-            lastStageTemp = dp.stageForIndex(savedCounter);
+        if (hasTrailingHeader && newEvents[0]) {
+            lastStageTemp = newEvents[0].stage;
         }
-        for (let i = 0; i < count; i++) {
-            const eventIdx = savedCounter + i;
-            const s = dp.stageForIndex(eventIdx);
-            if (s !== lastStageTemp) {
-                tempContainer.insertAdjacentHTML('beforeend', dp.stageHeaderHtml(s));
-                lastStageTemp = s;
+        for (const event of newEvents) {
+            if (event.stage !== lastStageTemp) {
+                tempContainer.insertAdjacentHTML('beforeend', this.renderStageHeader(event.stage));
+                lastStageTemp = event.stage;
             }
-            tempContainer.insertAdjacentHTML('beforeend', dp.eventHtml(eventIdx));
+            tempContainer.insertAdjacentHTML('beforeend', this.renderEvent(event));
         }
+        const totalEventCount = dp.getEventCount ? dp.getEventCount() : expandedEvents.length;
         const nextIdx = savedCounter + count;
-        if (nextIdx < dp.getEventCount() && !hasTrailingHeader) {
+        if (nextIdx < totalEventCount && !hasTrailingHeader) {
             const nextStage = dp.stageForIndex(nextIdx);
             if (nextStage !== lastStageTemp) {
-                tempContainer.insertAdjacentHTML('beforeend', dp.stageHeaderHtml(nextStage));
+                tempContainer.insertAdjacentHTML('beforeend', this.renderStageHeader(nextStage));
             }
         }
         card.parentNode.appendChild(tempContainer);
@@ -449,7 +640,8 @@ class TimelineAnimator {
         const outcomeAfterPrerender = outcomeCard ? outcomeCard.getBoundingClientRect().top : 0;
         const outcomeDelta = outcomeAfterPrerender - outcomeBefore;
         const hasNextQuestion = dp.hasMoreQuestions();
-        const nextQuestionHtml = dp.questionInnerHtml();
+        const nextQData = hasNextQuestion ? dp.getQuestion() : null;
+        const nextQInnerHtml = nextQData ? this.renderQuestionCard(nextQData).innerHtml : '';
         dp.setCurrentCount(savedCounter);
         this.render();
         card = this._getCard();
@@ -458,7 +650,7 @@ class TimelineAnimator {
             card, cardRect, questionZone, outcomeCard,
             targetHeight, newContentHtml, tempItemCount, count,
             postCardRect, outcomeDelta, hasNextQuestion,
-            questionHtml: () => nextQuestionHtml,
+            questionHtml: () => nextQInnerHtml,
             cleanup: (state) => {
                 const { rollCard, rollWrapper, rollBefore, outcomeVisualTop, easing } = state;
 
@@ -472,14 +664,12 @@ class TimelineAnimator {
                 if (trailingEl && trailingEl.classList.contains('timeline-stage-header')) {
                     lastStage = dp.stageForIndex(counter);
                 }
-                for (let i = 0; i < count; i++) {
-                    const eventIdx = counter + i;
-                    const s = dp.stageForIndex(eventIdx);
-                    if (s !== lastStage) {
-                        timeline.insertAdjacentHTML('beforeend', dp.stageHeaderHtml(s));
-                        lastStage = s;
+                for (const event of newEvents) {
+                    if (event.stage !== lastStage) {
+                        timeline.insertAdjacentHTML('beforeend', this.renderStageHeader(event.stage));
+                        lastStage = event.stage;
                     }
-                    timeline.insertAdjacentHTML('beforeend', dp.eventHtml(eventIdx));
+                    timeline.insertAdjacentHTML('beforeend', this.renderEvent(event));
                 }
                 dp.setCurrentCount(counter + count);
 
@@ -487,7 +677,7 @@ class TimelineAnimator {
                     const newCounter = dp.getCurrentCount();
                     const nextStage = dp.stageForIndex(newCounter);
                     if (nextStage !== lastStage) {
-                        timeline.insertAdjacentHTML('beforeend', dp.stageHeaderHtml(nextStage));
+                        timeline.insertAdjacentHTML('beforeend', this.renderStageHeader(nextStage));
                     }
                 }
 
@@ -653,8 +843,6 @@ class TimelineAnimator {
 
                     if (Math.abs(dy) <= 1) {
                         // No significant FLIP needed — swap to freshCard immediately.
-                        // Decorations appear at full opacity (the morph animation already
-                        // handled the visual transition via newDot/newHline/vline).
                         savedRollCard.remove();
                         if (freshCard) freshCard.style.display = '';
                         if (outcomeCard) {

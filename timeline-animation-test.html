@@ -4,204 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Timeline Animation Test</title>
+<link rel="stylesheet" href="timeline.css">
 <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-        --bg: #08080f;
-        --bg-surface: #0e0e18;
-        --bg-card: #141422;
-        --bg-card-hover: #1c1c32;
-        --text: #e4e4f0;
-        --text-secondary: #9898b0;
-        --text-dim: #5c5c74;
-        --accent: #00c8ff;
-        --accent-glow: rgba(0, 200, 255, 0.1);
-        --accent-2: #7c5cff;
-        --border: #222238;
-        --border-hover: #3a3a58;
-        --radius: 12px;
-        --radius-sm: 8px;
-        --ease: cubic-bezier(0.4, 0, 0.2, 1);
-        --bg-glow-1: var(--accent-glow);
-        --bg-glow-2: rgba(124, 92, 255, 0.025);
-    }
-
-    [data-theme="light"] {
-        --bg: #f6f6fb;
-        --bg-surface: #eeeef6;
-        --bg-card: #ffffff;
-        --bg-card-hover: #f0f0f8;
-        --text: #1a1a2e;
-        --text-secondary: #4e4e6a;
-        --text-dim: #8888a4;
-        --accent: #0090cc;
-        --accent-glow: rgba(0, 144, 204, 0.08);
-        --accent-2: #6a48e0;
-        --border: #d4d4e4;
-        --border-hover: #b0b0c8;
-    }
-
-    body {
-        background: var(--bg);
-        color: var(--text);
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        line-height: 1.6;
-        min-height: 100vh;
-    }
-
-    body::before {
-        content: '';
-        position: fixed;
-        inset: 0;
-        background:
-            radial-gradient(ellipse at 25% 50%, var(--bg-glow-1) 0%, transparent 60%),
-            radial-gradient(ellipse at 75% 20%, var(--bg-glow-2) 0%, transparent 60%);
-        pointer-events: none;
-        z-index: 0;
-    }
-
-    #app {
-        position: relative; z-index: 1;
-        max-width: 760px;
-        margin: 0 auto;
-        padding: 2rem 1.5rem 4rem;
-    }
-
     h1 {
         font-size: 1.1rem; margin: 0;
         background: linear-gradient(135deg, var(--accent), var(--accent-2));
         -webkit-background-clip: text; background-clip: text;
         -webkit-text-fill-color: transparent;
-    }
-
-    /* Timeline */
-    .timeline { position: relative; padding-left: 2.5rem; display: flow-root; }
-    .timeline::before {
-        content: ''; position: absolute;
-        left: 7px; top: 8px; bottom: 0.6rem; width: 2px;
-        background: linear-gradient(to bottom, var(--accent), var(--accent-2));
-        opacity: 0.3; border-radius: 1px;
-    }
-    .timeline-event { position: relative; padding-top: 1.4rem; }
-    .timeline-event::before {
-        content: ''; position: absolute;
-        left: calc(-2.5rem + 3px); top: 0.55rem;
-        width: 10px; height: 10px; border-radius: 50%;
-        background: var(--accent);
-        box-shadow: 0 0 8px var(--accent-glow);
-        border: 2px solid var(--bg); z-index: 1;
-    }
-    .timeline-event::after {
-        content: ''; position: absolute;
-        left: -1.85rem; top: calc(0.55rem + 4px);
-        right: 0; height: 1px;
-        background: var(--border); opacity: 0.6;
-        z-index: -1;
-    }
-
-    .timeline-headline { font-weight: 600; margin-bottom: 0.2rem; font-size: 0.98rem; }
-    .timeline-desc { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6; }
-    .timeline-top-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem; }
-    .timeline-param-wrap { display: flex; align-items: flex-start; gap: 0.75rem; }
-    .timeline-param-dim { flex-shrink: 0; width: 110px; font-size: 0.82rem; font-weight: 500; color: var(--text-secondary); padding-top: 0.3rem; }
-    .timeline-param { font-size: 0.7rem; font-weight: 500; padding: 0.15rem 0.5rem; border-radius: 12px; border: 1px solid var(--accent); color: var(--accent); }
-
-    /* Stage headers */
-    .timeline-stage-header {
-        display: flex; align-items: center; gap: 0.65rem;
-        background: transparent; border: none;
-        padding: 0.5rem 0.6rem;
-        margin: 1.2rem 0 0.6rem;
-        margin-left: calc(-2.5rem - 4px - 0.6rem);
-        position: relative; z-index: 2;
-    }
-    .timeline > .timeline-stage-header:first-child { margin-top: 0; }
-    .timeline-stage-header::after {
-        content: ''; position: absolute;
-        top: 0; bottom: 0;
-        left: calc(4px + 0.6rem + 6px);
-        width: 4px; z-index: -1;
-        background:
-            radial-gradient(ellipse at 25% 50%, var(--bg-glow-1) 0%, transparent 60%),
-            radial-gradient(ellipse at 75% 20%, var(--bg-glow-2) 0%, transparent 60%),
-            var(--bg);
-        background-attachment: fixed;
-    }
-    .timeline-stage-label { font-weight: 600; font-size: 0.88rem; color: var(--text); }
-
-    /* Question zone */
-    .question-zone {
-        padding-left: 2.5rem;
-        position: relative;
-    }
-    .question-zone::before {
-        content: ''; position: absolute;
-        left: 7px; top: -0.6rem;
-        height: calc(0.55rem + 7px + 0.6rem);
-        width: 2px;
-        background: linear-gradient(to bottom, var(--accent), var(--accent-2));
-        opacity: 0.3; border-radius: 1px;
-        transition: opacity 0.3s ease;
-    }
-    .question-zone .question-card.hide-decorations::before,
-    .question-zone .question-card.hide-decorations::after {
-        opacity: 0 !important;
-    }
-    .question-card.no-transition::before,
-    .question-card.no-transition::after {
-        transition: none !important;
-    }
-    .timeline-event.morph-no-decorations::before,
-    .timeline-event.morph-no-decorations::after {
-        display: none !important;
-    }
-
-    .timeline-light .timeline-event::after { display: none; }
-    .timeline-light .timeline-headline,
-    .timeline-light .timeline-desc { display: none; }
-    .timeline-light .timeline-event { margin-bottom: 0.65rem; padding-top: 0; }
-    .timeline-light .timeline-event::before { top: calc(0.67rem); }
-
-    .question-card {
-        background: none; border: none;
-        padding: 1.4rem 0 0.75rem;
-        margin-bottom: 1.5rem;
-        position: relative;
-    }
-    .question-card::before {
-        content: ''; position: absolute;
-        left: calc(-2.5rem + 3px); top: 0.55rem;
-        width: 10px; height: 10px; border-radius: 50%;
-        background: var(--accent);
-        box-shadow: 0 0 8px var(--accent-glow);
-        border: 2px solid var(--bg); z-index: 1;
-        transition: opacity 0.3s ease;
-    }
-    .question-card::after {
-        content: ''; position: absolute;
-        left: -1.85rem; top: calc(0.55rem + 4px);
-        right: 0; height: 1px;
-        background: var(--border); opacity: 0.6;
-        z-index: -1;
-        transition: opacity 0.3s ease;
-    }
-
-    .question-card .question-text {
-        font-size: 1.15rem; font-weight: 600; margin-bottom: 0.75rem; line-height: 1.4;
-    }
-    .question-card .answers {
-        display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; margin-bottom: 0.75rem;
-    }
-    .answer-btn {
-        background: var(--bg-card); border: 1px solid var(--border);
-        border-radius: var(--radius); padding: 0.65rem 1.2rem;
-        cursor: pointer; transition: all 0.2s var(--ease);
-        color: var(--text); font-size: 0.9rem; font-weight: 600;
-    }
-    .answer-btn:hover {
-        background: var(--bg-card-hover); border-color: var(--accent);
-        box-shadow: 0 0 20px var(--accent-glow);
     }
 
     /* Outcome card */
@@ -263,6 +72,102 @@
     }
     .theme-toggle input[type="checkbox"]:checked { background: var(--accent); }
     .theme-toggle input[type="checkbox"]:checked::after { transform: translateX(14px); }
+
+    /* Validation badge */
+    .val-badge {
+        display: inline-block; padding: 0.2rem 0.6rem;
+        border-radius: var(--radius-sm); font-size: 0.72rem; font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+    .val-badge.pass { background: #16a34a22; color: #16a34a; }
+    .val-badge.fail { background: #dc262622; color: #dc2626; }
+    .val-badge.idle { background: var(--border); color: var(--text-secondary); }
+
+    /* Fixed footer drawer */
+    .val-drawer {
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex; flex-direction: column;
+        max-height: 45vh;
+        background: var(--bg-card);
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
+    }
+    .val-drawer.open { transform: translateY(0); }
+    .val-drawer-handle {
+        display: flex; align-items: center; gap: 0.6rem;
+        padding: 0.5rem 1rem;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer; user-select: none; flex-shrink: 0;
+    }
+    .val-drawer-handle .grip {
+        width: 32px; height: 4px; border-radius: 2px;
+        background: var(--border); margin: 0 auto;
+    }
+    .val-drawer-body {
+        display: flex; gap: 0.8rem; padding: 0.6rem 1rem;
+        overflow: hidden; flex: 1; min-height: 0;
+    }
+    .val-col-left { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.5rem; overflow-y: auto; }
+    .val-col-right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.5rem; overflow-y: auto; }
+
+    /* Scrubber & playback */
+    .val-transport {
+        display: flex; gap: 0.4rem; align-items: center; flex-shrink: 0;
+    }
+    .val-transport input[type="range"] { flex: 1; }
+    .val-play-btn {
+        width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border);
+        background: var(--bg-card); cursor: pointer; display: flex;
+        align-items: center; justify-content: center; flex-shrink: 0;
+        color: var(--text); font-size: 0.72rem; transition: all 0.15s;
+    }
+    .val-play-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .val-play-btn.playing { background: var(--accent); color: #000; border-color: var(--accent); }
+    .val-speed-btns { display: flex; gap: 0.25rem; flex-shrink: 0; }
+    .val-speed-btns button {
+        background: var(--bg); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); padding: 0.15rem 0.4rem;
+        cursor: pointer; color: var(--text-secondary); font-size: 0.68rem;
+        transition: all 0.15s;
+    }
+    .val-speed-btns button:hover { border-color: var(--border-hover); color: var(--text); }
+    .val-speed-btns button.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+    .frame-label {
+        font-variant-numeric: tabular-nums;
+        color: var(--text-secondary); font-size: 0.72rem; white-space: nowrap;
+    }
+
+    /* Rules & violations */
+    .val-rules { list-style: none; padding: 0; margin: 0; font-size: 0.78rem; }
+    .val-rules li { padding: 0.2rem 0; display: flex; gap: 0.4rem; align-items: baseline; }
+    .val-rules .rule-icon { font-size: 0.75rem; flex-shrink: 0; }
+    .val-rules .rule-name { font-weight: 600; min-width: 8.5rem; }
+    .val-rules .rule-detail { color: var(--text-secondary); font-size: 0.72rem; }
+    .val-violations { padding: 0; list-style: none; margin: 0; }
+    .val-violations li {
+        padding: 0.25rem 0.5rem; margin-bottom: 0.2rem;
+        background: #dc262609; border-left: 3px solid #dc2626;
+        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        font-size: 0.72rem; cursor: pointer;
+    }
+    .val-violations li:hover { background: #dc262615; }
+
+    /* Frame data */
+    .val-frame-data {
+        background: var(--bg); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); padding: 0.5rem 0.7rem;
+        font-family: monospace; font-size: 0.68rem; line-height: 1.5;
+        overflow-y: auto; white-space: pre; flex: 1; min-height: 0;
+        color: var(--text-secondary);
+    }
+
+    /* Canvas overlay */
+    .val-overlay {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        pointer-events: none; z-index: 199;
+    }
 </style>
 </head>
 <body>
@@ -287,6 +192,11 @@
             <button class="speed-btn roll-btn active" data-roll="1500">1.5s</button>
             <button class="speed-btn roll-btn" data-roll="3000">3s</button>
         </div>
+        <div class="control-row">
+            <span class="control-label">Validate</span>
+            <label class="theme-toggle"><input type="checkbox" id="recordToggle"> Record</label>
+            <span class="val-badge idle" id="valBadge">idle</span>
+        </div>
     </div>
     <div class="timeline" id="timeline"></div>
     <div class="question-zone" id="qzone"></div>
@@ -294,9 +204,44 @@
         <div style="font-weight:600; margin-bottom:0.5rem;">Projected Outcome</div>
         <div style="color:var(--text-secondary); font-size:0.88rem; line-height:1.6;">Based on your responses, the most likely trajectory involves a gradual transition period with significant economic restructuring over 5–10 years. Key risk factors include alignment challenges and coordination failures between major actors.</div>
     </div>
+
+</div>
+
+<canvas class="val-overlay" id="valOverlay"></canvas>
+<div class="val-drawer" id="valDrawer">
+    <div class="val-drawer-handle" id="valHandle">
+        <div class="grip"></div>
+    </div>
+    <div class="val-drawer-body">
+        <div class="val-col-left">
+            <div class="val-transport">
+                <button class="val-play-btn" id="playBtn" title="Play / Pause">&#9654;</button>
+                <input type="range" id="frameScrubber" min="0" max="0" value="0">
+                <span class="frame-label" id="frameLabel">—</span>
+            </div>
+            <div class="val-transport">
+                <span style="font-size:0.68rem;color:var(--text-secondary);margin-right:0.2rem">Speed</span>
+                <div class="val-speed-btns" id="speedBtns">
+                    <button data-speed="0.25">0.25x</button>
+                    <button data-speed="0.5">0.5x</button>
+                    <button data-speed="1" class="active">1x</button>
+                    <button data-speed="2">2x</button>
+                    <button data-speed="4">4x</button>
+                </div>
+                <label class="theme-toggle" style="margin-left:0.6rem"><input type="checkbox" id="overlayToggle" checked> Overlay</label>
+            </div>
+            <div class="val-frame-data" id="valFrameData"></div>
+        </div>
+        <div class="val-col-right">
+            <ul class="val-rules" id="valRules"></ul>
+            <ul class="val-violations" id="valViolations"></ul>
+        </div>
+    </div>
 </div>
 
 <script src="timeline-animator.js"></script>
+<script src="animation-recorder.js"></script>
+<script src="animation-validator.js"></script>
 <script>
 'use strict';
 
@@ -348,11 +293,11 @@ const descs = [
     'Diagnostic accuracy and treatment personalization improve by orders of magnitude.',
 ];
 
-const stages = [
-    { id: 1, label: 'Singularity Dynamics' },
-    { id: 2, label: 'Control Determination' },
-    { id: 3, label: 'Impact' },
-];
+const stagesMap = {
+    1: { label: 'Singularity Dynamics' },
+    2: { label: 'Control Determination' },
+    3: { label: 'Impact' },
+};
 
 const dims = ['AI Scaling', 'AI Alignment', 'AI Access', 'Development Speed', 'AI Governance', 'AI Integration', 'Public Trust', 'Resources'];
 const params = ['Rapid', 'Cooperative', 'Open', 'Fast', 'Proactive', 'Deep', 'High', 'Abundant'];
@@ -363,45 +308,40 @@ function stageForIndex(idx) {
     return 3;
 }
 
-function stageHeaderHtml(stageId) {
-    const s = stages.find(st => st.id === stageId);
-    if (!s) return '';
-    return `<div class="timeline-stage-header"><span class="timeline-stage-label">${s.label}</span></div>`;
+function makeEvent(i) {
+    return {
+        nodeId: 'test-' + i,
+        nodeLabel: dims[i % dims.length],
+        paramLabel: params[i % params.length],
+        headline: headlines[i % headlines.length],
+        description: descs[i % descs.length],
+        stage: stageForIndex(i),
+    };
 }
 
-function eventHtml(idx) {
-    return `<div class="timeline-event" data-idx="${idx}">
-        <div class="timeline-top-row"><span class="timeline-param-wrap"><span class="timeline-param-dim">${dims[idx % dims.length]}</span><span class="timeline-param">${params[idx % params.length]}</span></span></div>
-        <div class="timeline-headline">${headlines[idx % headlines.length]}</div>
-        <div class="timeline-desc">${descs[idx % descs.length]}</div>
-    </div>`;
-}
-
-function questionInnerHtml() {
-    return `<div class="timeline-top-row"><span class="timeline-param-wrap"><span class="timeline-param-dim">${dims[counter % dims.length]}</span></span></div>
-        <div class="question-text">As AI capability continues to grow, will the next development be positive or negative for humanity?</div>
-        <div class="question-context" style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:0.75rem; line-height:1.6;">Consider the pace of change, the state of governance, and how previous transitions have unfolded. Each path leads to different downstream consequences for society.</div>
-        <div class="answers" style="flex-direction:column;">
-            <button class="answer-btn" data-count="1" style="text-align:left; white-space:normal;"><strong>Positive</strong><br><span style="font-weight:normal;">Institutions adapt quickly, distributing benefits broadly. Open research norms persist, enabling smaller players to participate meaningfully in shaping outcomes.</span></button>
-            <button class="answer-btn" data-count="3" style="text-align:left; white-space:normal;"><strong>Negative</strong><br><span style="font-weight:normal;">Concentration of power accelerates faster than safeguards can keep up. A small number of actors capture disproportionate control over critical infrastructure and decision-making.</span></button>
-        </div>`;
-}
-
-const animator = new TimelineAnimator({
+const animator = window.animator = new TimelineAnimator({
     containerEl: document.getElementById('app'),
     timelineEl: document.getElementById('timeline'),
     questionZoneEl: document.getElementById('qzone'),
     outcomeEl: document.getElementById('outcome-card'),
+    stages: stagesMap,
     morphDuration: 1500,
     stripFromAnimation: '.timeline-param-dim',
     dataProvider: {
         getEventCount: () => headlines.length,
         getCurrentCount: () => counter,
         setCurrentCount: (n) => { counter = n; },
-        eventHtml,
         stageForIndex,
-        stageHeaderHtml,
-        questionInnerHtml,
+        getEvents: () => Array.from({ length: counter }, (_, i) => makeEvent(i)),
+        getQuestion: () => ({
+            nodeLabel: dims[counter % dims.length],
+            questionText: 'As AI capability continues to grow, will the next development be positive or negative for humanity?',
+            questionContext: 'Consider the pace of change, the state of governance, and how previous transitions have unfolded. Each path leads to different downstream consequences for society.',
+            answers: [
+                { label: 'Positive', desc: 'Institutions adapt quickly, distributing benefits broadly. Open research norms persist, enabling smaller players to participate meaningfully in shaping outcomes.', count: 1 },
+                { label: 'Negative', desc: 'Concentration of power accelerates faster than safeguards can keep up. A small number of actors capture disproportionate control over critical infrastructure and decision-making.', count: 3 },
+            ],
+        }),
         hasMoreQuestions: () => counter < headlines.length,
     },
 });
@@ -446,6 +386,264 @@ expandToggle.addEventListener('change', function() {
 document.getElementById('themeToggle').addEventListener('change', function() {
     document.documentElement.setAttribute('data-theme', this.checked ? 'light' : '');
 });
+
+// --- Animation recording & validation ---
+const recorder = new AnimationRecorder({
+    container: document.getElementById('app'),
+});
+const validator = new AnimationValidator();
+
+const recordToggle = document.getElementById('recordToggle');
+const valBadge = document.getElementById('valBadge');
+const valDrawer = document.getElementById('valDrawer');
+const valRules = document.getElementById('valRules');
+const valViolations = document.getElementById('valViolations');
+const valFrameData = document.getElementById('valFrameData');
+const frameScrubber = document.getElementById('frameScrubber');
+const frameLabel = document.getElementById('frameLabel');
+const playBtn = document.getElementById('playBtn');
+const overlayToggle = document.getElementById('overlayToggle');
+const overlayCanvas = document.getElementById('valOverlay');
+const overlayCtx = overlayCanvas.getContext('2d');
+
+window.__recorder = recorder;
+window.__lastTrace = null;
+window.__lastResult = null;
+
+// --- Drawer open/close ---
+document.getElementById('valHandle').addEventListener('click', () => {
+    valDrawer.classList.toggle('open');
+    if (!valDrawer.classList.contains('open')) stopReplay();
+});
+
+// --- Overlay colors per element target ---
+const OVERLAY_COLORS = {
+    questionCard:   { fill: 'rgba(59,130,246,0.12)', stroke: '#3b82f6', label: 'card' },
+    outcomeCard:    { fill: 'rgba(34,197,94,0.10)',  stroke: '#22c55e', label: 'outcome' },
+    timelineEvents: { fill: 'rgba(249,115,22,0.10)', stroke: '#f97316', label: 'event' },
+    rollWrapper:    { fill: 'rgba(168,85,247,0.12)', stroke: '#a855f7', label: 'roll' },
+    questionZone:   { fill: 'rgba(236,72,153,0.08)', stroke: '#ec4899', label: 'zone' },
+};
+
+function resizeOverlay() {
+    const dpr = window.devicePixelRatio || 1;
+    overlayCanvas.width = window.innerWidth * dpr;
+    overlayCanvas.height = window.innerHeight * dpr;
+    overlayCanvas.style.width = window.innerWidth + 'px';
+    overlayCanvas.style.height = window.innerHeight + 'px';
+    overlayCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resizeOverlay);
+resizeOverlay();
+
+function drawOverlay(trace, idx) {
+    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    if (!overlayToggle.checked) return;
+    const frame = trace.frames[idx];
+    if (!frame) return;
+
+    const scrollDelta = frame.scrollY - window.scrollY;
+
+    for (const [name, els] of Object.entries(frame.elements)) {
+        const colors = OVERLAY_COLORS[name] || { fill: 'rgba(150,150,150,0.1)', stroke: '#999', label: name };
+        for (let e = 0; e < els.length; e++) {
+            const el = els[e];
+            const opacity = el.opacity !== undefined ? el.opacity : 1;
+            const y = el.y - scrollDelta;
+            overlayCtx.globalAlpha = Math.max(0.15, opacity);
+            overlayCtx.fillStyle = colors.fill;
+            overlayCtx.fillRect(el.x, y, el.w, el.h);
+            overlayCtx.strokeStyle = colors.stroke;
+            overlayCtx.lineWidth = 1.5;
+            overlayCtx.strokeRect(el.x, y, el.w, el.h);
+            overlayCtx.globalAlpha = 1;
+            if (el.h > 12) {
+                overlayCtx.font = '10px system-ui, sans-serif';
+                overlayCtx.fillStyle = colors.stroke;
+                const lbl = els.length > 1 ? `${colors.label}[${e}]` : colors.label;
+                overlayCtx.fillText(lbl, el.x + 3, y + 11);
+            }
+        }
+    }
+}
+
+// --- Replay state ---
+let replayPlaying = false;
+let replayRafId = null;
+let replaySpeed = 1;
+let replayStartWall = 0;
+let replayStartFrame = 0;
+
+document.querySelectorAll('#speedBtns button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('#speedBtns button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        replaySpeed = parseFloat(btn.dataset.speed);
+        if (replayPlaying) {
+            replayStartWall = performance.now();
+            replayStartFrame = parseInt(frameScrubber.value);
+        }
+    });
+});
+
+playBtn.addEventListener('click', () => {
+    if (replayPlaying) { stopReplay(); return; }
+    const trace = window.__lastTrace;
+    if (!trace || trace.frames.length < 2) return;
+    startReplay(trace);
+});
+
+function startReplay(trace) {
+    replayPlaying = true;
+    playBtn.innerHTML = '&#9646;&#9646;';
+    playBtn.classList.add('playing');
+    replayStartWall = performance.now();
+    replayStartFrame = parseInt(frameScrubber.value);
+    if (replayStartFrame >= trace.frames.length - 1) {
+        replayStartFrame = 0;
+        frameScrubber.value = 0;
+    }
+
+    function tick() {
+        if (!replayPlaying) return;
+        const elapsed = (performance.now() - replayStartWall) * replaySpeed;
+        const startT = trace.frames[replayStartFrame].t;
+        const targetT = startT + elapsed;
+
+        let idx = replayStartFrame;
+        while (idx < trace.frames.length - 1 && trace.frames[idx + 1].t <= targetT) idx++;
+
+        frameScrubber.value = idx;
+        renderFrameData(trace, idx);
+
+        if (idx >= trace.frames.length - 1) { stopReplay(); return; }
+        replayRafId = requestAnimationFrame(tick);
+    }
+    replayRafId = requestAnimationFrame(tick);
+}
+
+function stopReplay() {
+    replayPlaying = false;
+    playBtn.innerHTML = '&#9654;';
+    playBtn.classList.remove('playing');
+    if (replayRafId) { cancelAnimationFrame(replayRafId); replayRafId = null; }
+}
+
+overlayToggle.addEventListener('change', () => {
+    const trace = window.__lastTrace;
+    if (trace) drawOverlay(trace, parseInt(frameScrubber.value));
+    else overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+});
+
+// --- Recording & auto-validation ---
+let _wasAnimating = false;
+
+function pollAnimationState() {
+    const isAnim = animator.isAnimating();
+
+    if (!_wasAnimating && isAnim && recordToggle.checked) {
+        recorder.start();
+        valBadge.textContent = 'recording...';
+        valBadge.className = 'val-badge idle';
+    }
+
+    if (_wasAnimating && !isAnim && recorder.isRecording()) {
+        const trace = recorder.stop();
+        window.__lastTrace = trace;
+        const result = validator.validate(trace, document.getElementById('app'));
+        window.__lastResult = result;
+        showResult(result, trace);
+    }
+
+    _wasAnimating = isAnim;
+    requestAnimationFrame(pollAnimationState);
+}
+requestAnimationFrame(pollAnimationState);
+
+function showResult(result, trace) {
+    const passed = result.results.filter(r => r.pass).length;
+    const total = result.results.length;
+    valBadge.textContent = result.pass ? `PASS (${total}/${total})` : `FAIL (${passed}/${total})`;
+    valBadge.className = 'val-badge ' + (result.pass ? 'pass' : 'fail');
+
+    valDrawer.classList.add('open');
+
+    valRules.innerHTML = result.results.map(r => {
+        const icon = r.pass ? '\u2705' : '\u274c';
+        const count = r.violations ? r.violations.length : 0;
+        const detail = r.pass ? '' : `${count} violation${count !== 1 ? 's' : ''}`;
+        return `<li><span class="rule-icon">${icon}</span><span class="rule-name">${r.rule}</span><span class="rule-detail">${detail}</span></li>`;
+    }).join('');
+
+    const allViolations = [];
+    for (const r of result.results) {
+        if (r.violations) {
+            for (const v of r.violations) allViolations.push({ rule: r.rule, ...v });
+        }
+    }
+    valViolations.innerHTML = allViolations.map(v =>
+        `<li data-frame="${v.frame || 0}">[${v.rule}] ${v.element || ''}${v.index !== undefined ? '[' + v.index + ']' : ''} f${v.frame || '?'}: ${v.detail}</li>`
+    ).join('');
+
+    valViolations.querySelectorAll('li').forEach(li => {
+        li.addEventListener('click', () => {
+            stopReplay();
+            const f = parseInt(li.dataset.frame) || 0;
+            frameScrubber.value = f;
+            renderFrameData(trace, f);
+        });
+    });
+
+    frameScrubber.max = trace.frames.length - 1;
+    frameScrubber.value = 0;
+    renderFrameData(trace, 0);
+}
+
+frameScrubber.addEventListener('input', () => {
+    if (replayPlaying) stopReplay();
+    const trace = window.__lastTrace;
+    if (trace) renderFrameData(trace, parseInt(frameScrubber.value));
+});
+
+function renderFrameData(trace, idx) {
+    const frame = trace.frames[idx];
+    if (!frame) { valFrameData.textContent = '(no frame)'; return; }
+
+    const total = trace.frames.length;
+    const dur = trace.meta.endTime - trace.meta.startTime;
+    frameLabel.textContent = `${idx}/${total - 1}  t=${frame.t.toFixed(1)}ms  (${dur.toFixed(0)}ms total)`;
+
+    drawOverlay(trace, idx);
+
+    const lines = [`scrollY: ${frame.scrollY}`];
+    for (const [name, els] of Object.entries(frame.elements)) {
+        if (els.length === 0) { lines.push(`${name}: (absent)`); continue; }
+        for (let e = 0; e < els.length; e++) {
+            const el = els[e];
+            const label = els.length > 1 ? `${name}[${e}]` : name;
+            const pos = `y:${el.y.toFixed(1)} x:${el.x.toFixed(1)} w:${el.w.toFixed(1)} h:${el.h.toFixed(1)}`;
+            const extra = Object.keys(el)
+                .filter(k => !['x','y','w','h'].includes(k))
+                .map(k => `${k}:${typeof el[k] === 'number' ? el[k].toFixed(3) : el[k]}`)
+                .join(' ');
+            lines.push(`${label}: ${pos}${extra ? '  ' + extra : ''}`);
+
+            if (idx > 0) {
+                const prevEls = trace.frames[idx - 1].elements[name];
+                if (prevEls && prevEls[e]) {
+                    const pe = prevEls[e];
+                    const dy = (el.y - pe.y).toFixed(1);
+                    const dx = (el.x - pe.x).toFixed(1);
+                    const dh = (el.h - pe.h).toFixed(1);
+                    const dop = el.opacity !== undefined && pe.opacity !== undefined
+                        ? (el.opacity - pe.opacity).toFixed(3) : '\u2014';
+                    lines.push(`  \u0394 dy:${dy} dx:${dx} dh:${dh} dop:${dop}`);
+                }
+            }
+        }
+    }
+    valFrameData.textContent = lines.join('\n');
+}
 
 animator.render();
 </script>

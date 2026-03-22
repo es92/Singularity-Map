@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts": {
+    "test:animations": "node validate-animations.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0"
+  }
+}
