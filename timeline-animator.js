@@ -14,7 +14,6 @@ class TimelineAnimator {
         this.morphDuration = options.morphDuration || 600;
         this.rollDuration = options.rollDuration !== undefined ? options.rollDuration : 1500;
         this.morphAnimating = false;
-        this._pendingShift = 0;
 
         this._customRender = options.render || null;
         this._customWireButtons = options.wireAnswerButtons || null;
@@ -23,6 +22,18 @@ class TimelineAnimator {
         this.stages = options.stages || null;
         this._currentAnswerCards = null;
         this._scrollMinHeight = 0;
+        this._oldCardEl = null;
+
+        this._elementVisibility = {
+            oldCard: true,
+            newEvents: true,
+            newCard: true,
+            outcome: true,
+            decorations: true,
+            scroll: true,
+            dot: true,
+            hline: true,
+        };
     }
 
     setMorphDuration(ms) { this.morphDuration = ms; }
@@ -72,7 +83,7 @@ class TimelineAnimator {
     renderStageHeader(stageId) {
         const info = this.stages ? this.stages[stageId] : null;
         if (!info) return '';
-        return `<div class="timeline-stage-header"><span class="timeline-stage-label">${this._esc(info.label)}</span></div>`;
+        return `<div class="timeline-stage-header"><div class="tl-stage-bg"></div><span class="timeline-stage-label">${this._esc(info.label)}</span></div>`;
     }
 
     renderPills(event) {
@@ -113,6 +124,7 @@ class TimelineAnimator {
         const frontierCls = event.isFrontier ? ' frontier-event' : '';
 
         return `<div class="timeline-event${frontierCls}" data-dim="${this._esc(event.nodeId || '')}">
+            <div class="tl-vline-seg"></div><div class="tl-dot"></div><div class="tl-hline"></div>
             <div class="timeline-top-row">${this.renderPills(event)}${yearHtml}</div>
             ${headlineHtml}
             ${descHtml}
@@ -234,7 +246,8 @@ class TimelineAnimator {
                 ${showDesc && a.desc ? `<div class="desc">${this._esc(a.desc)}</div>` : ''}
             </div>`).join('');
 
-        const innerHtml = `<div class="timeline-top-row"><span class="timeline-param-wrap"><span class="timeline-param-dim">${this._esc(nodeLabel)}</span></span></div>
+        const innerHtml = `<div class="tl-vline-seg"></div><div class="tl-dot"></div><div class="tl-hline"></div>
+            <div class="timeline-top-row"><span class="timeline-param-wrap"><span class="timeline-param-dim">${this._esc(nodeLabel)}</span></span></div>
             <div class="question-text">${this._esc(questionText)}</div>
             ${showContext && questionContext ? `<div class="question-context">${this._esc(questionContext)}</div>` : ''}
             ${sourceHtml}
@@ -264,8 +277,10 @@ class TimelineAnimator {
 
     reset() {
         this.morphAnimating = false;
-        this._pendingShift = 0;
-        this._getShiftTargets().forEach(el => { el.style.transform = ''; });
+        if (this._oldCardEl) { this._oldCardEl.remove(); this._oldCardEl = null; }
+        [this.timelineEl, this.questionZoneEl, this.outcomeEl].forEach(el => {
+            if (el) { el.style.transform = ''; el.style.opacity = ''; }
+        });
         if (this.outcomeEl) this.outcomeEl.style.cssText = '';
         this.containerEl.style.minHeight = '';
         this._scrollMinHeight = 0;
@@ -300,627 +315,348 @@ class TimelineAnimator {
             this.questionZoneEl.innerHTML = '<p style="color:var(--text-dim); padding: 1rem 0;">All items added.</p>';
         }
 
+        this._adjustVlines();
+
         if (dp.onRender) dp.onRender();
     }
 
-    // Run the core morph animation. Shared between addItems and animateTransition.
-    _runAnimation(p) {
-        const MORPH_DURATION = this.morphDuration;
-        const ROLL_DURATION = this.rollDuration;
+    _adjustVlines() {
+        const events = this.timelineEl.querySelectorAll('.timeline-event');
+        const dots = [];
+        const segs = [];
+        const parents = [];
 
-        const easing = 'cubic-bezier(0.42, 0, 0.58, 1)';
-        const fadeOutDur = Math.round(MORPH_DURATION * 0.35) + 'ms';
-        const fadeInDur = Math.round(MORPH_DURATION * 0.6) + 'ms';
-        const fadeInDelay = MORPH_DURATION * 0.15;
-        const decorDur = Math.round(MORPH_DURATION * 0.3) + 'ms';
-        const shrinkDurMs = Math.round(MORPH_DURATION * 0.7);
-        const shrinkDur = shrinkDurMs + 'ms';
+        events.forEach(evt => {
+            const dot = evt.querySelector('.tl-dot');
+            const seg = evt.querySelector('.tl-vline-seg');
+            if (dot && seg) { dots.push(dot); segs.push(seg); parents.push(evt); }
+        });
 
-        let card = p.card;
-        const cardRect = p.cardRect;
-        const questionZone = p.questionZone;
-        const outcomeCard = p.outcomeCard;
-        const targetHeight = p.targetHeight;
-        const newContentHtml = p.newContentHtml;
-        const tempItemCount = p.tempItemCount;
-        const count = p.count;
-        const postCardRect = p.postCardRect;
-        const outcomeDelta = p.outcomeDelta;
-        const hasNextQuestion = p.hasNextQuestion;
-
-        const hasNewContent = targetHeight > 0 && newContentHtml;
-
-        // flowTarget: the total space these events will occupy in the timeline.
-        // Use postCardRect delta for accuracy (captures inter-event margins, stage headers, etc.)
-        const flowTarget = postCardRect
-            ? (postCardRect.top - cardRect.top)
-            : targetHeight;
-
-        const effectiveRollDur = ROLL_DURATION !== null ? ROLL_DURATION : MORPH_DURATION;
-        const totalAnimDur = Math.max(MORPH_DURATION, effectiveRollDur);
-
-        const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-        const dotInCard = 0.55 * rootFontSize;
-        const existingDotCenterY = dotInCard + 5;
-        const finalDotTop = postCardRect
-            ? (postCardRect.top + dotInCard - cardRect.top)
-            : targetHeight + dotInCard;
-        const finalDotCenterY = finalDotTop + 5;
-        const finalVlineHeight = finalDotCenterY - existingDotCenterY;
-
-        card.style.position = 'relative';
-        const isLight = this.timelineEl && this.timelineEl.classList.contains('timeline-light');
-        if (isLight) {
-            card.classList.add('hide-decorations');
-            card.style.height = cardRect.height + 'px';
+        for (let i = 0; i < dots.length; i++) {
+            if (i === 0) { segs[i].style.display = 'none'; continue; }
+            const prevRect = dots[i - 1].getBoundingClientRect();
+            const currRect = dots[i].getBoundingClientRect();
+            const evtRect = parents[i].getBoundingClientRect();
+            const prevCenter = prevRect.top + prevRect.height / 2;
+            const currCenter = currRect.top + currRect.height / 2;
+            segs[i].style.display = '';
+            segs[i].style.top = (prevCenter - evtRect.top) + 'px';
+            segs[i].style.height = Math.max(0, currCenter - prevCenter) + 'px';
         }
 
-        if (!hasNewContent) {
-            // Simple fade-out only (no morph to timeline content)
-            card.style.transition = `opacity ${fadeOutDur} ease`;
-            card.offsetHeight;
-            card.style.opacity = '0';
-        } else {
+        const card = this.questionZoneEl ? this.questionZoneEl.querySelector('.' + this.cardClass) : null;
+        if (!card) return;
+        const qzDot = card.querySelector('.tl-dot');
+        const qzSeg = card.querySelector('.tl-vline-seg');
+        if (!qzDot || !qzSeg) return;
 
-        // Step 1: Fade out + slide up old question content
-        const slideUpAmount = cardRect.height - flowTarget;
-        const contentEls = Array.from(card.querySelectorAll(this.contentSelector));
-        const contentSet = new Set(contentEls);
-        const otherCardEls = Array.from(card.children).filter(el => !contentSet.has(el) && el.nodeType === 1);
+        if (dots.length === 0) { qzSeg.style.display = 'none'; return; }
 
-        // In light mode, the param label moves to its final position instead of fading
-        const paramRow = isLight ? card.querySelector('.timeline-top-row') : null;
-        let paramRowStartTop = 0;
-        if (paramRow) {
-            paramRowStartTop = paramRow.getBoundingClientRect().top - card.getBoundingClientRect().top;
-        }
-
-        if (contentEls.length > 0) {
-            const oldWrapper = document.createElement('div');
-            oldWrapper.style.cssText = `overflow:hidden; position:relative; z-index:0; height:${contentEls.reduce((h, el) => h + el.offsetHeight + parseFloat(getComputedStyle(el).marginTop) + parseFloat(getComputedStyle(el).marginBottom), 0)}px;`;
-            contentEls[0].parentNode.insertBefore(oldWrapper, contentEls[0]);
-            contentEls.forEach(el => oldWrapper.appendChild(el));
-
-            const oldInner = document.createElement('div');
-            oldInner.style.cssText = `transition: opacity ${fadeOutDur} ease, transform ${shrinkDur} ${easing};`;
-            while (oldWrapper.firstChild) oldInner.appendChild(oldWrapper.firstChild);
-            oldWrapper.appendChild(oldInner);
-
-            const fadeGradient = document.createElement('div');
-            fadeGradient.style.cssText = `position:absolute; top:0; left:0; right:0; height:50px; background:radial-gradient(ellipse at 25% 50%, var(--bg-glow-1, var(--accent-glow)) 0%, transparent 60%), radial-gradient(ellipse at 75% 20%, var(--bg-glow-2, rgba(124,92,255,0.025)) 0%, transparent 60%), var(--bg); background-attachment:fixed; -webkit-mask-image:linear-gradient(to bottom, black, transparent); mask-image:linear-gradient(to bottom, black, transparent); opacity:0; z-index:2; pointer-events:none;`;
-            oldWrapper.appendChild(fadeGradient);
-
-            oldInner.offsetHeight;
-            oldInner.style.opacity = '0';
-            oldInner.style.transform = `translateY(-${slideUpAmount}px)`;
-            fadeGradient.style.transition = `opacity ${fadeOutDur} ease`;
-            fadeGradient.style.opacity = '1';
-        }
-
-        // In light mode: fade out remaining card children, animate param label to final position
-        if (isLight) {
-            otherCardEls.forEach(el => {
-                if (el === paramRow) return;
-                el.style.transition = `opacity ${fadeOutDur} ease`;
-                el.offsetHeight;
-                el.style.opacity = '0';
-            });
-        }
-
-        if (paramRow) {
-            const spacer = document.createElement('div');
-            spacer.style.height = paramRow.offsetHeight + 'px';
-            paramRow.parentNode.insertBefore(spacer, paramRow);
-            paramRow.style.position = 'absolute';
-            paramRow.style.top = paramRowStartTop + 'px';
-            paramRow.style.left = '0';
-            paramRow.style.right = '0';
-            paramRow.style.zIndex = '4';
-            paramRow.offsetHeight;
-            paramRow.style.transition = `top ${shrinkDur} ${easing}`;
-            paramRow.style.top = '0px';
-        }
-
-        // Step 2: Fade in new timeline event content, centered vertically on the card
-        const centerOffset = Math.max(0, (cardRect.height - targetHeight) / 2);
-        const newLayer = document.createElement('div');
-        if (tempItemCount === 1) {
-            newLayer.style.cssText = `position:absolute; top:${centerOffset}px; left:0; right:0; opacity:0;${isLight ? '' : ' padding-top:1.4rem;'}`;
-        } else {
-            newLayer.style.cssText = `position:absolute; top:${centerOffset}px; left:0; right:0; z-index:1;`;
-        }
-        if (this.timelineEl) {
-            for (const cls of this.timelineEl.classList) {
-                if (cls !== 'timeline') newLayer.classList.add(cls);
-            }
-        }
-        newLayer.innerHTML = newContentHtml;
-        if (this._stripFromAnimation) {
-            const firstMatch = newLayer.querySelector(this._stripFromAnimation);
-            if (firstMatch) firstMatch.style.visibility = 'hidden';
-        }
-        card.appendChild(newLayer);
-
-        if (count === 1 && !isLight) {
-            newLayer.querySelectorAll('.timeline-event').forEach(ev => {
-                ev.classList.add('morph-no-decorations');
-            });
-        }
-
-        if (tempItemCount > 1) {
-            newLayer.querySelectorAll('.timeline-event, .timeline-stage-label, .timeline-stage-header').forEach(el => {
-                el.style.opacity = '0';
-            });
-        }
-
-        setTimeout(() => {
-            if (tempItemCount === 1) {
-                newLayer.style.opacity = '1';
-            } else {
-                newLayer.querySelectorAll('.timeline-event, .timeline-stage-label, .timeline-stage-header').forEach(el => {
-                    el.style.transition = `opacity ${fadeInDur} ease`;
-                    el.style.opacity = '1';
-                });
-            }
-        }, fadeInDelay);
-
-        // Step 3: Animate decorations for the next question card position
-        // In light mode, also create a persistent dot to replace the fading current card ::before
-        if (isLight) {
-            const persistDot = document.createElement('div');
-            persistDot.style.cssText = `position:absolute; left:calc(-2.5rem + 3px); top:${dotInCard}px; width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent-glow); border:2px solid var(--bg); z-index:3;`;
-            card.appendChild(persistDot);
-            persistDot.offsetHeight;
-            const lightDotTarget = 0.67 * rootFontSize;
-            persistDot.style.transition = `top ${shrinkDur} ${easing}`;
-            persistDot.style.top = lightDotTarget + 'px';
-        }
-
-        const newDotTop = cardRect.height;
-        const newDot = document.createElement('div');
-        newDot.style.cssText = `position:absolute; left:calc(-2.5rem + 3px); top:${newDotTop}px; width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent-glow); border:2px solid var(--bg); z-index:3; opacity:0;`;
-        card.appendChild(newDot);
-
-        const newHline = document.createElement('div');
-        newHline.style.cssText = `position:absolute; left:-1.85rem; top:${newDotTop + 4}px; right:0; height:1px; background:var(--border); opacity:0; z-index:0;`;
-        card.appendChild(newHline);
-
-        const newDotCenterY = newDotTop + 5;
-        const vline = document.createElement('div');
-        vline.style.cssText = `position:absolute; left:calc(-2.5rem + 7px); top:${existingDotCenterY}px; width:2px; height:${newDotCenterY - existingDotCenterY}px; background:linear-gradient(to bottom, var(--accent), var(--accent-2)); opacity:0; border-radius:1px; z-index:0;`;
-        card.appendChild(vline);
-
-        // Step 4: Height shrink — card shrinks, decorations fade in + move up
-        card.style.height = cardRect.height + 'px';
-        card.style.clipPath = 'inset(0 -100vw -50px -100vw)';
-        card.offsetHeight;
-
-        card.style.transition = `height ${shrinkDur} ${easing}`;
-        card.style.height = flowTarget + 'px';
-
-        this._ensureScrollRoom(flowTarget * 2);
-
-        // Take outcome card out of flow and animate it directly to final position
-        if (outcomeCard && Math.abs(outcomeDelta) > 0) {
-            const appRect = outcomeCard.offsetParent.getBoundingClientRect();
-            const outcomeRect = outcomeCard.getBoundingClientRect();
-            const absTop = outcomeRect.top - appRect.top;
-            const absLeft = outcomeRect.left - appRect.left;
-            outcomeCard.style.position = 'absolute';
-            outcomeCard.style.top = absTop + 'px';
-            outcomeCard.style.left = absLeft + 'px';
-            outcomeCard.style.width = outcomeRect.width + 'px';
-            outcomeCard.style.margin = '0';
-            outcomeCard.style.zIndex = '0';
-            outcomeCard.offsetHeight;
-            outcomeCard.style.transition = `top ${totalAnimDur}ms ${easing}`;
-            outcomeCard.style.top = (absTop + outcomeDelta) + 'px';
-        }
-
-        // Visually shift the container upward using translateY (not real scroll)
-        // so the timeline appears to flow upward during the card shrink.
-        // At cleanup, the transform is seamlessly swapped for real scroll.
-        if (flowTarget > 1) {
-            this._animateContainerShift(flowTarget, shrinkDurMs);
-        }
-
-        // Move new content from center to top
-        newLayer.style.transition = tempItemCount === 1
-            ? `opacity ${fadeInDur} ease, top ${shrinkDur} ${easing}`
-            : `top ${shrinkDur} ${easing}`;
-        newLayer.style.top = '0px';
-
-        // Fade in + move decorations up to next question card position
-        newDot.style.transition = `opacity ${decorDur} ease, top ${shrinkDur} ${easing}`;
-        newDot.style.opacity = '1';
-        newDot.style.top = finalDotTop + 'px';
-
-        newHline.style.transition = `opacity ${decorDur} ease, top ${shrinkDur} ${easing}`;
-        newHline.style.opacity = '0.6';
-        newHline.style.top = (finalDotTop + 4) + 'px';
-
-        vline.style.transition = `opacity ${decorDur} ease, height ${shrinkDur} ${easing}`;
-        vline.style.opacity = '0.3';
-        vline.style.height = finalVlineHeight + 'px';
-
-        } // end hasNewContent
-
-        // Step 5: Roll down next question card
-        const rollDurMs = ROLL_DURATION !== null ? ROLL_DURATION : Math.round(MORPH_DURATION * 0.4);
-        const rollDelay = ROLL_DURATION !== null
-            ? Math.max(0, MORPH_DURATION - ROLL_DURATION)
-            : Math.round(MORPH_DURATION * 0.5);
-        let rollCard = null;
-        let rollWrapper = null;
-
-        if (hasNextQuestion) {
-            setTimeout(() => {
-                rollCard = document.createElement('div');
-                rollCard.className = this.cardClass + ' hide-decorations';
-                rollCard.innerHTML = p.questionHtml();
-                this._wireAnswerButtons(rollCard);
-
-                rollCard.style.cssText = 'position:absolute; visibility:hidden;';
-                questionZone.appendChild(rollCard);
-                const fullHeight = rollCard.offsetHeight;
-                rollCard.remove();
-                rollCard.style.cssText = 'opacity:0;';
-
-                rollWrapper = document.createElement('div');
-                rollWrapper.style.cssText = 'overflow:hidden; height:0px; margin-top:-1.5rem; margin-bottom:1.5rem; position:relative;';
-                rollWrapper.appendChild(rollCard);
-
-                const rollFade = document.createElement('div');
-                rollFade.style.cssText = `position:absolute; bottom:0; left:0; right:0; height:40px; background:radial-gradient(ellipse at 25% 50%, var(--bg-glow-1, var(--accent-glow)) 0%, transparent 60%), radial-gradient(ellipse at 75% 20%, var(--bg-glow-2, rgba(124,92,255,0.025)) 0%, transparent 60%), var(--bg); background-attachment:fixed; -webkit-mask-image:linear-gradient(to top, black, transparent); mask-image:linear-gradient(to top, black, transparent); pointer-events:none; z-index:2; transition:opacity ${Math.round(rollDurMs * 0.3)}ms ease;`;
-                rollWrapper.appendChild(rollFade);
-
-                questionZone.appendChild(rollWrapper);
-
-                rollWrapper.offsetHeight;
-                rollWrapper.style.transition = `height ${rollDurMs}ms ${easing}`;
-                rollWrapper.style.height = fullHeight + 'px';
-
-                rollCard.style.transition = `opacity ${rollDurMs}ms ${easing}`;
-                rollCard.style.opacity = '1';
-
-                setTimeout(() => {
-                    rollFade.style.opacity = '0';
-                }, Math.round(rollDurMs * 0.6));
-            }, rollDelay);
-        }
-
-        // Cleanup after animation completes
-        setTimeout(() => {
-            p.cleanup({
-                card, rollCard, rollWrapper,
-                rollBefore: rollCard ? rollCard.getBoundingClientRect() : null,
-                cardVisualTop: card ? card.getBoundingClientRect().top : cardRect.top,
-                outcomeCard, outcomeVisualTop: outcomeCard ? outcomeCard.getBoundingClientRect().top : 0,
-                hasNextQuestion, easing, questionZone, totalAnimDur,
-                cardViewportTop: cardRect.top
-            });
-        }, totalAnimDur + 50);
+        const lastRect = dots[dots.length - 1].getBoundingClientRect();
+        const qzDotRect = qzDot.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
+        const prevCenter = lastRect.top + lastRect.height / 2;
+        const currCenter = qzDotRect.top + qzDotRect.height / 2;
+        qzSeg.style.display = '';
+        qzSeg.style.top = (prevCenter - cardRect.top) + 'px';
+        qzSeg.style.height = Math.max(0, currCenter - prevCenter) + 'px';
     }
 
-    // Counter-based animation for the test file. Uses the data provider to build
-    // temp content and manually insert events at cleanup.
+    // ---- Pure FLIP animation ----
+    //
+    // All decorations (dots, lines) are real DOM elements now.
+    // The old card copy includes them naturally. No manual decoration creation needed.
+    //
+    // 1. Apply end state (render the final DOM)
+    // 2. Snapshot end positions, compute FLIP deltas
+    // 3. Create old card copy, displace new elements to start positions
+    // 4. Animate all elements from start → end on a single easing curve
+    // 5. Cleanup: remove old card copy, clear inline styles
+
+    _runAnimation({ startCardRect, startCardContent, startOutcomeTop, applyEndState, onComplete }) {
+        const DURATION = this.morphDuration;
+        const vis = this._elementVisibility;
+
+        const timeline = this.timelineEl;
+        const outcomeCard = this.outcomeEl;
+        const oldEventCount = timeline.querySelectorAll('.timeline-event').length;
+        const oldHeaderCount = timeline.querySelectorAll('.timeline-stage-header').length;
+
+        // --- Phase 1: Apply end state ---
+        this._ensureScrollRoom(5000);
+        applyEndState();
+
+        // --- Phase 2: Snapshot end positions ---
+        const newCard = this._getCard();
+        const newCardRect = newCard ? newCard.getBoundingClientRect() : null;
+        const endOutcomeTop = outcomeCard ? outcomeCard.getBoundingClientRect().top : 0;
+        const newEvents = Array.from(timeline.querySelectorAll('.timeline-event')).slice(oldEventCount);
+        const newHeaders = Array.from(timeline.querySelectorAll('.timeline-stage-header')).slice(oldHeaderCount);
+
+        let totalShift = 0;
+        if (newCardRect) {
+            totalShift = newCardRect.top - startCardRect.top;
+        } else if (newEvents.length > 0) {
+            const lastEvt = newEvents[newEvents.length - 1];
+            totalShift = lastEvt.getBoundingClientRect().bottom - startCardRect.top;
+        }
+
+        // --- Phase 3: Create old card copy (content only, no timeline decorations) ---
+        if (vis.oldCard && startCardContent) {
+            this._oldCardEl = document.createElement('div');
+            this._oldCardEl.className = this.cardClass;
+            this._oldCardEl.innerHTML = startCardContent;
+            this._oldCardEl.style.cssText =
+                `position:fixed;top:${startCardRect.top}px;left:${startCardRect.left}px;` +
+                `width:${startCardRect.width}px;height:${startCardRect.height}px;` +
+                `z-index:1;pointer-events:none;overflow:hidden;`;
+            this._oldCardEl.querySelectorAll('.tl-dot, .tl-hline, .tl-vline-seg').forEach(el => {
+                el.style.display = 'none';
+            });
+            this.containerEl.appendChild(this._oldCardEl);
+        }
+
+        // --- Phase 4: Pre-compute FLIP deltas ---
+
+        // New events: slide from old card position; fade content only (dot/hline/vline-seg stay visible)
+        const eventFlips = [];
+        newEvents.forEach(el => {
+            if (vis.newEvents) {
+                const dy = startCardRect.top - el.getBoundingClientRect().top;
+                const fadeEls = Array.from(el.querySelectorAll('.timeline-top-row, .timeline-headline, .timeline-desc, .timeline-slider'));
+                eventFlips.push({ el, dy, fadeEls });
+                el.style.transform = `translateY(${dy}px)`;
+                fadeEls.forEach(c => { c.style.opacity = '0'; });
+            }
+            if (!vis.decorations) {
+                const dot = el.querySelector('.tl-dot');
+                const hl = el.querySelector('.tl-hline');
+                if (dot) dot.style.opacity = '0';
+                if (hl) hl.style.opacity = '0';
+            }
+        });
+
+        // New headers + new card: slide from old card position + fade in
+        const slideFlips = [];
+        newHeaders.forEach(el => {
+            const dy = startCardRect.top - el.getBoundingClientRect().top;
+            slideFlips.push({ el, dy });
+            el.style.transform = `translateY(${dy}px)`;
+            el.style.opacity = '0';
+        });
+
+        let newCardDy = null;
+        if (newCard && vis.newCard) {
+            newCardDy = (startCardRect.top + startCardRect.height) - newCardRect.top;
+            slideFlips.push({ el: newCard, dy: newCardDy });
+            newCard.style.transform = `translateY(${newCardDy}px)`;
+            newCard.style.opacity = '0';
+        }
+
+        // Debug toggles: hide decorations when toggled off
+        if (newCard && !vis.decorations) {
+            const dot = newCard.querySelector('.tl-dot');
+            const hl = newCard.querySelector('.tl-hline');
+            if (dot) dot.style.opacity = '0';
+            if (hl) hl.style.opacity = '0';
+        }
+        if (newCard && !vis.dot) { const d = newCard.querySelector('.tl-dot'); if (d) d.style.opacity = '0'; }
+        if (newCard && !vis.hline) { const h = newCard.querySelector('.tl-hline'); if (h) h.style.opacity = '0'; }
+
+        // --- Segment adjustments: stretch each new segment to track both dots ---
+        const segFlips = [];
+        newEvents.forEach((el, i) => {
+            const seg = el.querySelector('.tl-vline-seg');
+            if (!seg || seg.style.display === 'none') return;
+            const flip = eventFlips.find(f => f.el === el);
+            const dyCurr = flip ? flip.dy : 0;
+            let dyPrev = 0;
+            if (i > 0) {
+                const prevFlip = eventFlips.find(f => f.el === newEvents[i - 1]);
+                dyPrev = prevFlip ? prevFlip.dy : 0;
+            }
+            const deltaDy = dyCurr - dyPrev;
+            if (Math.abs(deltaDy) < 1) return;
+            segFlips.push({
+                seg,
+                origTop: parseFloat(seg.style.top) || 0,
+                origHeight: parseFloat(seg.style.height) || 0,
+                deltaDy,
+            });
+        });
+
+        if (newCard) {
+            const seg = newCard.querySelector('.tl-vline-seg');
+            if (seg && seg.style.display !== 'none') {
+                const dyCard = newCardDy ?? 0;
+                const lastFlip = eventFlips.length > 0 ? eventFlips[eventFlips.length - 1] : null;
+                const dyPrev = lastFlip ? lastFlip.dy : 0;
+                const deltaDy = dyCard - dyPrev;
+                if (Math.abs(deltaDy) > 1) {
+                    segFlips.push({
+                        seg,
+                        origTop: parseFloat(seg.style.top) || 0,
+                        origHeight: parseFloat(seg.style.height) || 0,
+                        deltaDy,
+                    });
+                }
+            }
+        }
+
+        // Outcome: FLIP to start position
+        const outcomeDy = startOutcomeTop - endOutcomeTop;
+        let outcomeFlip = null;
+        if (outcomeCard && vis.outcome && Math.abs(outcomeDy) > 1) {
+            outcomeFlip = { el: outcomeCard, dy: outcomeDy };
+            outcomeCard.style.transform = `translateY(${outcomeDy}px)`;
+        }
+
+        // --- Scroll setup ---
+        const scrollStart = window.scrollY;
+        if (!vis.scroll && totalShift > 1) {
+            window.scrollBy({ top: totalShift, behavior: 'instant' });
+        }
+
+        // --- Phase 5: Animate ---
+        const startTime = performance.now();
+        const oldCardEl = this._oldCardEl;
+
+        const tick = () => {
+            const elapsed = performance.now() - startTime;
+            const t = Math.min(elapsed / DURATION, 1);
+            const e = this._ease(t);
+
+            // Old card: locked to new card top, fades out, gradient-clipped at top
+            if (oldCardEl) {
+                oldCardEl.style.opacity = String(1 - e);
+                if (newCardDy !== null) {
+                    const scrollAdj = vis.scroll ? totalShift * e : 0;
+                    const newCardVisualTop = newCardRect.top + newCardDy * (1 - e) - scrollAdj;
+                    const dy = newCardVisualTop - startCardRect.height - startCardRect.top;
+                    oldCardEl.style.transform = `translateY(${dy}px)`;
+                    const clipTop = Math.max(0, -dy);
+                    if (clipTop > 0.5) {
+                        const fade = `linear-gradient(to bottom, transparent ${clipTop}px, black ${clipTop + 40}px)`;
+                        oldCardEl.style.webkitMaskImage = fade;
+                        oldCardEl.style.maskImage = fade;
+                    } else {
+                        oldCardEl.style.webkitMaskImage = '';
+                        oldCardEl.style.maskImage = '';
+                    }
+                }
+            }
+
+            // New events: slide to final position, fade in content
+            eventFlips.forEach(({ el, dy, fadeEls }) => {
+                el.style.transform = `translateY(${dy * (1 - e)}px)`;
+                fadeEls.forEach(c => { c.style.opacity = String(e); });
+            });
+
+            // New headers + new card: slide to final position, fade in
+            slideFlips.forEach(({ el, dy }) => {
+                el.style.transform = `translateY(${dy * (1 - e)}px)`;
+                el.style.opacity = String(e);
+            });
+
+            // Vertical line segments: stretch between displaced dots
+            segFlips.forEach(({ seg, origTop, origHeight, deltaDy }) => {
+                const delta = deltaDy * (1 - e);
+                seg.style.top = (origTop - delta) + 'px';
+                seg.style.height = Math.max(0, origHeight + delta) + 'px';
+            });
+
+            // Outcome card: slide to final position
+            if (outcomeFlip) {
+                outcomeFlip.el.style.transform = `translateY(${outcomeFlip.dy * (1 - e)}px)`;
+            }
+
+            // Scroll: animate page scroll in sync
+            if (vis.scroll && totalShift > 1) {
+                window.scrollTo({ top: scrollStart + totalShift * e, behavior: 'instant' });
+            }
+
+            if (t < 1) {
+                requestAnimationFrame(tick);
+            } else {
+                // --- Cleanup: remove old card, clear all inline animation styles ---
+                if (oldCardEl) { oldCardEl.remove(); this._oldCardEl = null; }
+                eventFlips.forEach(({ el, fadeEls }) => {
+                    el.style.transform = '';
+                    fadeEls.forEach(c => { c.style.opacity = ''; });
+                });
+                slideFlips.forEach(({ el }) => { el.style.transform = ''; el.style.opacity = ''; });
+                if (outcomeFlip) outcomeFlip.el.style.transform = '';
+                segFlips.forEach(({ seg, origTop, origHeight }) => {
+                    seg.style.top = origTop + 'px';
+                    seg.style.height = origHeight + 'px';
+                });
+                const clearDecor = (container) => {
+                    if (!container) return;
+                    const dot = container.querySelector('.tl-dot');
+                    const hl = container.querySelector('.tl-hline');
+                    if (dot) dot.style.opacity = '';
+                    if (hl) hl.style.opacity = '';
+                };
+                newEvents.forEach(clearDecor);
+                if (newCard) clearDecor(newCard);
+                this._releaseScrollRoom();
+                this.morphAnimating = false;
+                if (onComplete) onComplete();
+            }
+        };
+
+        requestAnimationFrame(tick);
+    }
+
+    _captureStartState(card) {
+        return {
+            startCardRect: card.getBoundingClientRect(),
+            startCardContent: card.innerHTML,
+            startOutcomeTop: this.outcomeEl ? this.outcomeEl.getBoundingClientRect().top : 0,
+        };
+    }
+
     addItems(count) {
         if (this.morphAnimating) return;
-        let card = this._getCard();
+        const card = this._getCard();
         if (!card) return;
         this.morphAnimating = true;
 
         const dp = this.dp;
-        const questionZone = this.questionZoneEl;
-        const timeline = this.timelineEl;
-
-        const cardRect = card.getBoundingClientRect();
-        const outcomeCard = this.outcomeEl;
-        const outcomeBefore = outcomeCard ? outcomeCard.getBoundingClientRect().top : 0;
-
-        const savedCounter = dp.getCurrentCount();
-
-        // Get event objects for the new items
-        dp.setCurrentCount(savedCounter + count);
-        const expandedEvents = dp.getEvents();
-        dp.setCurrentCount(savedCounter);
-        const newEvents = expandedEvents.slice(savedCounter, savedCounter + count);
-
-        // Measure combined height of new timeline items in a temp container
-        const tempContainer = document.createElement('div');
-        tempContainer.style.cssText = `visibility:hidden; position:absolute; width:${card.offsetWidth}px;`;
-        let lastStageTemp = savedCounter > 0 ? dp.stageForIndex(savedCounter - 1) : dp.stageForIndex(0);
-        const lastTlEl = timeline.lastElementChild;
-        const hasTrailingHeader = lastTlEl && lastTlEl.classList.contains('timeline-stage-header');
-        if (hasTrailingHeader && newEvents[0]) {
-            lastStageTemp = newEvents[0].stage;
-        }
-        for (const event of newEvents) {
-            if (event.stage !== lastStageTemp) {
-                tempContainer.insertAdjacentHTML('beforeend', this.renderStageHeader(event.stage));
-                lastStageTemp = event.stage;
-            }
-            tempContainer.insertAdjacentHTML('beforeend', this.renderEvent(event));
-        }
-        const totalEventCount = dp.getEventCount ? dp.getEventCount() : expandedEvents.length;
-        const nextIdx = savedCounter + count;
-        if (nextIdx < totalEventCount && !hasTrailingHeader) {
-            const nextStage = dp.stageForIndex(nextIdx);
-            if (nextStage !== lastStageTemp) {
-                tempContainer.insertAdjacentHTML('beforeend', this.renderStageHeader(nextStage));
-            }
-        }
-        card.parentNode.appendChild(tempContainer);
-        const targetHeight = tempContainer.offsetHeight;
-        const firstEvent = tempContainer.querySelector('.timeline-event');
-        const tempItemCount = tempContainer.children.length;
-        const newContentHtml = tempItemCount === 1 ? firstEvent.innerHTML : tempContainer.innerHTML;
-        tempContainer.remove();
-
-        // Pre-render final state to measure exact decoration positions
-        dp.setCurrentCount(savedCounter + count);
-        this.render();
-        const postCard = this._getCard();
-        const postCardRect = postCard ? postCard.getBoundingClientRect() : null;
-        const outcomeAfterPrerender = outcomeCard ? outcomeCard.getBoundingClientRect().top : 0;
-        const outcomeDelta = outcomeAfterPrerender - outcomeBefore;
-        const hasNextQuestion = dp.hasMoreQuestions();
-        const nextQData = hasNextQuestion ? dp.getQuestion() : null;
-        const nextQInnerHtml = nextQData ? this.renderQuestionCard(nextQData).innerHtml : '';
-        dp.setCurrentCount(savedCounter);
-        this.render();
-        card = this._getCard();
+        const start = this._captureStartState(card);
 
         this._runAnimation({
-            card, cardRect, questionZone, outcomeCard,
-            targetHeight, newContentHtml, tempItemCount, count,
-            postCardRect, outcomeDelta, hasNextQuestion,
-            questionHtml: () => nextQInnerHtml,
-            cleanup: (state) => {
-                const { rollCard, rollWrapper, rollBefore, cardVisualTop, outcomeVisualTop, easing } = state;
-
-                if (outcomeCard) outcomeCard.style.cssText = 'transition:none;';
-
-                card.remove();
-
-                // Insert new events into timeline
-                const counter = dp.getCurrentCount();
-                let lastStage = counter > 0 ? dp.stageForIndex(counter - 1) : dp.stageForIndex(0);
-                const trailingEl = timeline.lastElementChild;
-                if (trailingEl && trailingEl.classList.contains('timeline-stage-header')) {
-                    lastStage = dp.stageForIndex(counter);
-                }
-                for (const event of newEvents) {
-                    if (event.stage !== lastStage) {
-                        timeline.insertAdjacentHTML('beforeend', this.renderStageHeader(event.stage));
-                        lastStage = event.stage;
-                    }
-                    timeline.insertAdjacentHTML('beforeend', this.renderEvent(event));
-                }
-                dp.setCurrentCount(counter + count);
-
-                if (dp.hasMoreQuestions()) {
-                    const newCounter = dp.getCurrentCount();
-                    const nextStage = dp.stageForIndex(newCounter);
-                    if (nextStage !== lastStage) {
-                        timeline.insertAdjacentHTML('beforeend', this.renderStageHeader(nextStage));
-                    }
-                }
-
+            ...start,
+            applyEndState: () => {
+                dp.setCurrentCount(dp.getCurrentCount() + count);
                 if (dp.onItemsAdded) dp.onItemsAdded(count);
-
-                this._flipCleanup({ rollCard, rollWrapper, rollBefore, cardVisualTop, outcomeCard, outcomeVisualTop, hasNextQuestion: state.hasNextQuestion, easing, questionZone: state.questionZone, anchorViewportTop: state.cardViewportTop });
-            }
+                this.render();
+            },
+            onComplete: null,
         });
     }
 
-    // State-based animation for index.html. Captures new content from the DOM
-    // after applying a state change, then reverts and runs the animation.
     animateTransition({ applyChange, revertChange, count, questionHtml, hasNextQuestion, onComplete }) {
         if (this.morphAnimating) return false;
-        let card = this._getCard();
+        const card = this._getCard();
         if (!card) { applyChange(); this.render(); return false; }
         this.morphAnimating = true;
 
-        count = count || 1;
-        const questionZone = this.questionZoneEl;
-        const timeline = this.timelineEl;
-
-        const cardRect = card.getBoundingClientRect();
-        const outcomeCard = this.outcomeEl;
-        const outcomeBefore = outcomeCard ? outcomeCard.getBoundingClientRect().top : 0;
-
-        const oldChildCount = timeline ? timeline.childElementCount : 0;
-
-        // Apply change + render to get new state in the DOM
-        applyChange();
-        this.render();
-
-        // Capture new timeline items by comparing child counts
-        const allNewChildren = Array.from(timeline.children);
-        const animatedItems = allNewChildren.slice(oldChildCount);
-
-        // Measure from actual rendered DOM (use bounding rects to include margins)
-        let targetHeight = 0;
-        if (animatedItems.length > 0) {
-            const firstRect = animatedItems[0].getBoundingClientRect();
-            const lastItem = animatedItems[animatedItems.length - 1];
-            const lastRect = lastItem.getBoundingClientRect();
-            const lastMargin = parseFloat(getComputedStyle(lastItem).marginBottom) || 0;
-            targetHeight = lastRect.bottom - firstRect.top + lastMargin;
-        }
-        const tempItemCount = animatedItems.length;
-        const firstEvent = animatedItems.find(el => el.classList.contains('timeline-event'));
-        const newContentHtml = tempItemCount <= 1 && firstEvent
-            ? firstEvent.innerHTML
-            : animatedItems.map(el => el.outerHTML).join('');
-
-        // Measure new question card position
-        const postCard = this._getCard();
-        const postCardRect = postCard ? postCard.getBoundingClientRect() : null;
-        const outcomeAfterPrerender = outcomeCard ? outcomeCard.getBoundingClientRect().top : 0;
-        const outcomeDelta = outcomeAfterPrerender - outcomeBefore;
-        const _hasNextQuestion = hasNextQuestion !== undefined ? hasNextQuestion : (postCard !== null);
-
-        // Cache the next question HTML from the rendered DOM if not provided
-        const _questionHtml = questionHtml || (postCard ? postCard.innerHTML : '');
-
-        // Revert to old state
-        revertChange();
-        this.render();
-        card = this._getCard();
-
-        if (!card) { applyChange(); this.render(); this.morphAnimating = false; return false; }
+        const start = this._captureStartState(card);
 
         this._runAnimation({
-            card, cardRect, questionZone, outcomeCard,
-            targetHeight, newContentHtml, tempItemCount, count,
-            postCardRect, outcomeDelta, hasNextQuestion: _hasNextQuestion,
-            questionHtml: () => _questionHtml,
-            cleanup: (state) => {
-                const { rollCard, rollWrapper, rollBefore, outcomeVisualTop, easing } = state;
-
-                if (outcomeCard) outcomeCard.style.cssText = 'transition:none;';
-
-                const contentVisualTop = card.getBoundingClientRect().top;
-
-                // Save rollCard before re-rendering. Use rollBefore (measured
-                // while inside the wrapper with its compensating margin-top:-1.5rem)
-                // as the visual reference — re-measuring after extraction would lose
-                // that offset and introduce a ~1.5rem FLIP delta.
-                let savedRollCard = null;
-                let savedRollBefore = rollBefore;
-                if (rollCard && rollCard.parentNode) {
-                    savedRollCard = rollCard;
-                    if (rollWrapper && rollWrapper.parentNode) {
-                        rollWrapper.parentNode.insertBefore(rollCard, rollWrapper);
-                        rollWrapper.remove();
-                    }
-                    savedRollCard.remove();
-                }
-
-                card.remove();
-
-                // Apply change + render to get the real final state
+            ...start,
+            applyEndState: () => {
                 applyChange();
                 this.render();
-
-                // Scroll to keep the new question at the old question's viewport position.
-                if (state.cardViewportTop != null) {
-                    const freshForScroll = this._getCard();
-                    if (freshForScroll) {
-                        const newTop = freshForScroll.getBoundingClientRect().top;
-                        const scrollDelta = newTop - state.cardViewportTop;
-                        if (Math.abs(scrollDelta) > 1) {
-                            window.scrollBy({ top: scrollDelta, behavior: 'instant' });
-                        }
-                    }
-                }
-
-                // FLIP newly added timeline items from animated position to natural position
-                const newChildren = Array.from(timeline.children).slice(oldChildCount);
-                if (newChildren.length > 0) {
-                    const naturalTop = newChildren[0].getBoundingClientRect().top;
-                    const flipDy = contentVisualTop - naturalTop;
-                    if (Math.abs(flipDy) > 1) {
-                        newChildren.forEach(el => {
-                            el.style.transform = `translateY(${flipDy}px)`;
-                            el.style.transition = 'none';
-                        });
-                        newChildren[0].offsetHeight;
-                        newChildren.forEach(el => {
-                            el.style.transition = `transform 300ms ${easing}`;
-                            el.style.transform = 'translateY(0)';
-                        });
-                        setTimeout(() => {
-                            newChildren.forEach(el => {
-                                el.style.transform = '';
-                                el.style.transition = '';
-                            });
-                        }, 350);
-                    }
-                }
-
-                if (savedRollCard) {
-                    const freshCard = this._getCard();
-                    const lightMode = timeline && timeline.classList.contains('timeline-light');
-
-                    // Measure FLIP delta for rollCard
-                    if (freshCard) {
-                        freshCard.style.display = 'none';
-                        questionZone.insertBefore(savedRollCard, freshCard);
-                    } else {
-                        questionZone.appendChild(savedRollCard);
-                    }
-                    const rollAfter = savedRollCard.getBoundingClientRect();
-                    const dy = savedRollBefore ? savedRollBefore.top - rollAfter.top : 0;
-
-                    // FLIP outcome
-                    if (outcomeCard) {
-                        const outcomeNaturalTop = outcomeCard.getBoundingClientRect().top;
-                        const ody = outcomeVisualTop - outcomeNaturalTop;
-                        if (Math.abs(ody) > 1) {
-                            outcomeCard.style.transform = `translateY(${ody}px)`;
-                            outcomeCard.offsetHeight;
-                            outcomeCard.style.transition = `transform 300ms ${easing}`;
-                            outcomeCard.style.transform = 'translateY(0)';
-                        }
-                    }
-
-                    if (Math.abs(dy) <= 1) {
-                        savedRollCard.remove();
-                        if (freshCard) freshCard.style.display = '';
-                        if (outcomeCard) {
-                            setTimeout(() => { outcomeCard.style.cssText = ''; }, 350);
-                        }
-                        this._releaseScrollRoom();
-                        this.morphAnimating = false;
-                        if (onComplete) onComplete();
-                    } else {
-                        savedRollCard.style.transform = `translateY(${dy}px)`;
-                        savedRollCard.style.transition = 'none';
-                        if (!lightMode) {
-                            savedRollCard.classList.add('no-transition');
-                            savedRollCard.classList.remove('hide-decorations');
-                            savedRollCard.offsetHeight;
-                            savedRollCard.classList.remove('no-transition');
-                        } else {
-                            savedRollCard.offsetHeight;
-                            requestAnimationFrame(() => {
-                                savedRollCard.classList.remove('hide-decorations');
-                            });
-                        }
-                        savedRollCard.style.transition = `transform 300ms ${easing}`;
-                        savedRollCard.style.transform = 'translateY(0)';
-
-                        setTimeout(() => {
-                            savedRollCard.remove();
-                            if (freshCard) freshCard.style.display = '';
-                            if (outcomeCard) outcomeCard.style.cssText = '';
-                            this._releaseScrollRoom();
-                            this.morphAnimating = false;
-                            if (onComplete) onComplete();
-                        }, 350);
-                    }
-                } else if (!_hasNextQuestion) {
-                    if (outcomeCard) outcomeCard.style.cssText = '';
-                    this._releaseScrollRoom();
-                    this.morphAnimating = false;
-                    if (onComplete) onComplete();
-                } else {
-                    this.morphAnimating = false;
-                    if (onComplete) onComplete();
-                }
-            }
+            },
+            onComplete,
         });
 
         return true;
     }
 
-    // JS easing matching CSS cubic-bezier(0.42, 0, 0.58, 1).
-    // Given linear progress t (0-1), returns eased progress.
     _ease(t) {
-        // p1=(0.42,0), p2=(0.58,1); find parameter u where x(u)=t via binary search
         let lo = 0, hi = 1;
         for (let i = 0; i < 15; i++) {
             const mid = (lo + hi) / 2;
@@ -932,7 +668,6 @@ class TimelineAnimator {
         return 3 * u * u - 2 * u * u * u;
     }
 
-    // Smoothly scroll by `delta` pixels over `durationMs`, eased to match CSS transitions.
     _animateScroll(delta, durationMs) {
         if (Math.abs(delta) < 1) return;
         const startScroll = window.scrollY;
@@ -948,86 +683,4 @@ class TimelineAnimator {
         requestAnimationFrame(tick);
     }
 
-    _getShiftTargets() {
-        return [this.timelineEl, this.questionZoneEl, this.outcomeEl].filter(Boolean);
-    }
-
-    // Visually shift content using translateY (no layout change, header stays put).
-    // Stores the pending delta so cleanup can swap it for real scroll.
-    _animateContainerShift(delta, durationMs) {
-        if (Math.abs(delta) < 1) return;
-        this._pendingShift = delta;
-        const targets = this._getShiftTargets();
-        const startTime = performance.now();
-
-        const tick = () => {
-            const elapsed = performance.now() - startTime;
-            const progress = Math.min(elapsed / durationMs, 1);
-            const eased = this._ease(progress);
-            const val = `translateY(${-delta * eased}px)`;
-            targets.forEach(el => { el.style.transform = val; });
-            if (progress < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-    }
-
-    // Seamlessly swap the translateY for real page scroll.
-    // Both change by the same amount in opposite directions, so content
-    // stays at the exact same viewport position throughout.
-    _resolveContainerShift(durationMs) {
-        const delta = this._pendingShift || 0;
-        this._pendingShift = 0;
-        const targets = this._getShiftTargets();
-        if (Math.abs(delta) < 1) {
-            targets.forEach(el => { el.style.transform = ''; });
-            return;
-        }
-        const startScroll = window.scrollY;
-        const startTime = performance.now();
-
-        const tick = () => {
-            const elapsed = performance.now() - startTime;
-            const progress = Math.min(elapsed / durationMs, 1);
-            const eased = this._ease(progress);
-            const val = `translateY(${-delta * (1 - eased)}px)`;
-            targets.forEach(el => { el.style.transform = val; });
-            window.scrollTo({ top: startScroll + delta * eased, behavior: 'instant' });
-            if (progress < 1) requestAnimationFrame(tick);
-            else targets.forEach(el => { el.style.transform = ''; });
-        };
-        requestAnimationFrame(tick);
-    }
-
-    // Shared FLIP cleanup for the counter-based addItems path
-    _flipCleanup({ rollCard, rollWrapper, rollBefore, cardVisualTop, outcomeCard, outcomeVisualTop, hasNextQuestion, easing, questionZone, anchorViewportTop }) {
-        if (rollCard && rollCard.parentNode) {
-            if (rollWrapper && rollWrapper.parentNode) {
-                rollWrapper.parentNode.insertBefore(rollCard, rollWrapper);
-                rollWrapper.remove();
-            }
-
-            // The container has a translateY from the animation-time visual shift.
-            // Event insertion pushed the zone down by ~flowTarget, which exactly
-            // cancels the translateY — so the zone is already at the right visual
-            // position. Now seamlessly swap the transform for real scroll.
-            this._resolveContainerShift(300);
-
-            rollCard.classList.add('no-transition');
-            rollCard.classList.remove('hide-decorations');
-            rollCard.offsetHeight;
-            rollCard.classList.remove('no-transition');
-
-            setTimeout(() => {
-                rollCard.style.opacity = '';
-                if (outcomeCard) outcomeCard.style.cssText = '';
-                this._releaseScrollRoom();
-                this.morphAnimating = false;
-            }, 350);
-        } else if (!hasNextQuestion) {
-            questionZone.innerHTML = '<p style="color:var(--text-dim); padding: 1rem 0;">All items added.</p>';
-            this.morphAnimating = false;
-        } else {
-            this.morphAnimating = false;
-        }
-    }
 }

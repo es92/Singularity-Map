@@ -105,6 +105,18 @@
             <button class="speed-btn" id="snapEndBtn" title="Snap to end">&#9654;|</button>
             <span id="transportStatus" style="font-size:0.72rem;color:var(--text-secondary)"></span>
         </div>
+        <div class="control-row" id="elementsRow">
+            <span class="control-label">Elements</span>
+            <button class="speed-btn" id="elemAllBtn">All</button>
+            <button class="speed-btn elem-btn active" data-elem="oldCard">Old Card</button>
+            <button class="speed-btn elem-btn active" data-elem="newEvents">Events</button>
+            <button class="speed-btn elem-btn active" data-elem="newCard">New Card</button>
+            <button class="speed-btn elem-btn active" data-elem="outcome">Outcome</button>
+            <button class="speed-btn elem-btn active" data-elem="decorations">Decor</button>
+            <button class="speed-btn elem-btn active" data-elem="scroll">Scroll</button>
+            <button class="speed-btn elem-btn active" data-elem="dot">Dot</button>
+            <button class="speed-btn elem-btn active" data-elem="hline">Sep</button>
+        </div>
     </div>
     <div class="timeline" id="timeline"></div>
     <div class="question-zone" id="qzone"></div>
@@ -207,15 +219,53 @@ const animator = window.animator = new TimelineAnimator({
         setCurrentCount: (n) => { counter = n; },
         stageForIndex,
         getEvents: () => Array.from({ length: counter }, (_, i) => makeEvent(i)),
-        getQuestion: () => ({
-            nodeLabel: dims[counter % dims.length],
-            questionText: 'As AI capability continues to grow, will the next development be positive or negative for humanity?',
-            questionContext: 'Consider the pace of change, the state of governance, and how previous transitions have unfolded. Each path leads to different downstream consequences for society.',
-            answers: [
-                { label: 'Positive', desc: 'Institutions adapt quickly, distributing benefits broadly. Open research norms persist, enabling smaller players to participate meaningfully in shaping outcomes.', count: 1 },
-                { label: 'Negative', desc: 'Concentration of power accelerates faster than safeguards can keep up. A small number of actors capture disproportionate control over critical infrastructure and decision-making.', count: 3 },
-            ],
-        }),
+        getQuestion: () => {
+            const questions = [
+                {
+                    questionText: 'As AI capability continues to grow, will the next development be positive or negative for humanity?',
+                    questionContext: 'Consider the pace of change, the state of governance, and how previous transitions have unfolded.',
+                    answers: [
+                        { label: 'Positive', desc: 'Institutions adapt quickly, distributing benefits broadly.', count: 1 },
+                        { label: 'Negative', desc: 'Concentration of power accelerates faster than safeguards can keep up.', count: 3 },
+                    ],
+                },
+                {
+                    questionText: 'How will governments respond to the rapid pace of AI-driven automation?',
+                    questionContext: 'Labor markets are shifting faster than policy can adapt. New frameworks are needed.',
+                    answers: [
+                        { label: 'Proactive', desc: 'Governments invest in retraining and universal programs ahead of displacement.', count: 1 },
+                        { label: 'Reactive', desc: 'Policy lags behind, leading to social unrest and ad-hoc measures.', count: 3 },
+                    ],
+                },
+                {
+                    questionText: 'Will the benefits of superintelligent AI be broadly shared or concentrated?',
+                    questionContext: 'Access to advanced AI systems determines who captures the economic surplus.',
+                    answers: [
+                        { label: 'Broad', desc: 'Open-source norms and regulation ensure wide access to capabilities.', count: 1 },
+                        { label: 'Narrow', desc: 'A handful of companies and nations monopolize the most powerful systems.', count: 3 },
+                    ],
+                },
+                {
+                    questionText: 'Can alignment research keep pace with capability gains?',
+                    questionContext: 'The gap between what AI can do and what we can verify it should do is growing.',
+                    answers: [
+                        { label: 'Yes', desc: 'Interpretability breakthroughs give researchers reliable oversight tools.', count: 1 },
+                        { label: 'No', desc: 'Capability scaling outpaces understanding, increasing existential risk.', count: 3 },
+                    ],
+                },
+                {
+                    questionText: 'What happens to human creativity in a world of superhuman AI?',
+                    questionContext: 'Generative AI already matches human output in many creative domains.',
+                    answers: [
+                        { label: 'Flourishes', desc: 'AI amplifies human creativity, enabling new art forms and deeper expression.', count: 1 },
+                        { label: 'Atrophies', desc: 'Human-made work loses economic value; creative motivation declines.', count: 3 },
+
+                    ],
+                },
+            ];
+            const q = questions[counter % questions.length];
+            return { nodeLabel: dims[counter % dims.length], ...q };
+        },
         hasMoreQuestions: () => counter < headlines.length,
     },
 });
@@ -289,6 +339,7 @@ animator.addItems = function(count) {
         if (!animator.isAnimating()) {
             transportState = 'end';
             updateTransportUI();
+            applyElementVisibility(false);
             return;
         }
         requestAnimationFrame(pollDone);
@@ -297,22 +348,57 @@ animator.addItems = function(count) {
 };
 
 function snapToState(targetCounter) {
-    // Reserve scroll room so the browser doesn't clamp scrollY during re-render
     animator._ensureScrollRoom(5000);
 
     counter = targetCounter;
     animator.morphAnimating = false;
-    animator._pendingShift = 0;
-    animator._getShiftTargets().forEach(el => { el.style.transform = ''; });
+    if (animator._ghost) { animator._ghost.remove(); animator._ghost = null; }
+    [animator.timelineEl, animator.questionZoneEl, animator.outcomeEl].forEach(el => {
+        if (el) { el.style.transform = ''; el.style.opacity = ''; }
+    });
     if (animator.outcomeEl) animator.outcomeEl.style.cssText = '';
     animator.render();
 
-    // Scroll so the card lands at the same viewport position as when clicked
     const card = animator._getCard() || animator.questionZoneEl;
     const scrollTarget = window.scrollY + (card.getBoundingClientRect().top - pendingCardViewportTop);
     window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'instant' });
 
     animator._releaseScrollRoom();
+
+    const isStart = targetCounter === pendingCounterBefore;
+    applyElementVisibility(isStart);
+}
+
+function applyElementVisibility(isStartState) {
+    const vis = animator._elementVisibility;
+
+    const card = animator._getCard();
+    if (card) {
+        const cardOff = isStartState ? !vis.oldCard : !vis.newCard;
+        card.style.opacity = cardOff ? '0' : '';
+    }
+
+    if (!isStartState && !vis.newEvents && pendingCounterBefore != null) {
+        const events = Array.from(animator.timelineEl.querySelectorAll('.timeline-event'));
+        events.slice(pendingCounterBefore).forEach(el => { el.style.opacity = '0'; });
+    }
+
+    if (!vis.outcome && animator.outcomeEl) {
+        animator.outcomeEl.style.opacity = '0';
+    }
+
+    // Hide dots and hlines on all visible elements when toggled off
+    const hideDecor = (container) => {
+        if (!container) return;
+        if (!vis.dot || !vis.decorations) {
+            container.querySelectorAll('.tl-dot').forEach(el => { el.style.opacity = '0'; });
+        }
+        if (!vis.hline || !vis.decorations) {
+            container.querySelectorAll('.tl-hline').forEach(el => { el.style.opacity = '0'; });
+        }
+    };
+    hideDecor(animator.timelineEl);
+    hideDecor(animator.questionZoneEl);
 }
 
 function updateTransportUI() {
@@ -356,6 +442,7 @@ animPlayBtn.addEventListener('click', () => {
         if (!animator.isAnimating()) {
             transportState = 'end';
             updateTransportUI();
+            applyElementVisibility(false);
             return;
         }
         requestAnimationFrame(pollDone);
@@ -370,6 +457,23 @@ function clearTransport() {
     transportState = 'idle';
     updateTransportUI();
 }
+
+// Element visibility toggles
+const elemBtns = document.querySelectorAll('.elem-btn');
+elemBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        animator._elementVisibility[btn.dataset.elem] = btn.classList.contains('active');
+    });
+});
+
+document.getElementById('elemAllBtn').addEventListener('click', () => {
+    const anyOff = Array.from(elemBtns).some(b => !b.classList.contains('active'));
+    elemBtns.forEach(btn => {
+        btn.classList.toggle('active', anyOff);
+        animator._elementVisibility[btn.dataset.elem] = anyOff;
+    });
+});
 
 animator.render();
 </script>

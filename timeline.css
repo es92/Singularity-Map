@@ -92,23 +92,32 @@ body::before {
 
 /* ---- Timeline ---- */
 .timeline { position: relative; padding-left: 2.5rem; display: flow-root; }
-.timeline::before {
-    content: ''; position: absolute;
+.tl-vline {
+    position: absolute;
     left: 7px; top: 8px; bottom: 0.6rem; width: 2px;
     background: linear-gradient(to bottom, var(--accent), var(--accent-2));
     opacity: 0.3; border-radius: 1px;
 }
 .timeline-event { position: relative; padding-top: 1.4rem; }
-.timeline-event::before {
-    content: ''; position: absolute;
+.tl-dot {
+    position: absolute;
     left: calc(-2.5rem + 3px); top: 0.55rem;
     width: 10px; height: 10px; border-radius: 50%;
     background: var(--accent);
     box-shadow: 0 0 8px var(--accent-glow);
     border: 2px solid var(--bg); z-index: 1;
 }
-.timeline-event::after {
-    content: ''; position: absolute;
+.tl-vline-seg {
+    position: absolute;
+    left: calc(-2.5rem + 7px);
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent-2));
+    opacity: 0.3;
+    border-radius: 1px;
+    pointer-events: none;
+}
+.tl-hline {
+    position: absolute;
     left: -1.85rem; top: calc(0.55rem + 4px);
     right: 0; height: 1px;
     background: var(--border); opacity: 0.6;
@@ -172,8 +181,7 @@ body::before {
     z-index: 2;
 }
 .timeline > .timeline-stage-header:first-child { margin-top: 0; }
-.timeline-stage-header::after {
-    content: '';
+.timeline-stage-header .tl-stage-bg {
     position: absolute;
     top: 0; bottom: 0;
     left: calc(4px + 0.6rem + 6px);
@@ -189,12 +197,12 @@ body::before {
 }
 
 /* ---- Timeline light (compact) mode ---- */
-.timeline-light .timeline-event::after { display: none; }
+.timeline-light .tl-hline { display: none; }
 .timeline-light .timeline-headline,
 .timeline-light .timeline-desc,
 .timeline-light .timeline-slider { display: none; }
 .timeline-light .timeline-event { margin-bottom: 0.65rem; padding-top: 0; }
-.timeline-light .timeline-event::before { top: calc(0.67rem); }
+.timeline-light .tl-dot { top: calc(0.67rem); }
 
 /* ---- Timeline sliders ---- */
 .timeline-slider {
@@ -230,8 +238,8 @@ body::before {
     padding-left: 2.5rem;
     position: relative;
 }
-.question-zone::before {
-    content: ''; position: absolute;
+.qz-vline {
+    position: absolute;
     left: 7px; top: -0.6rem;
     height: calc(0.55rem + 7px + 0.6rem);
     width: 2px;
@@ -247,30 +255,11 @@ body::before {
     margin-bottom: 1.5rem;
     position: relative;
 }
-.question-card::before {
-    content: ''; position: absolute;
-    left: calc(-2.5rem + 3px); top: 0.55rem;
-    width: 10px; height: 10px; border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 8px var(--accent-glow);
-    border: 2px solid var(--bg); z-index: 1;
+.question-card > .tl-dot {
     transition: opacity 0.3s ease;
 }
-.question-card::after {
-    content: ''; position: absolute;
-    left: -1.85rem; top: calc(0.55rem + 4px);
-    right: 0; height: 1px;
-    background: var(--border); opacity: 0.6;
-    z-index: -1;
+.question-card > .tl-hline {
     transition: opacity 0.3s ease;
-}
-.question-zone .question-card.hide-decorations::before,
-.question-zone .question-card.hide-decorations::after {
-    opacity: 0 !important;
-}
-.question-card.no-transition::before,
-.question-card.no-transition::after {
-    transition: none !important;
 }
 .question-card .question-text {
     font-size: 1.15rem; font-weight: 600; margin-bottom: 0.75rem; line-height: 1.4;
@@ -317,8 +306,3 @@ body::before {
 }
 .answer-card .label { font-weight: 600; font-size: 1.02rem; margin-bottom: 0.2rem; }
 .answer-card .desc { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; }
-
-/* ---- Animation helpers ---- */
-.morph-inner::before { display: none !important; }
-.timeline-event.morph-no-decorations::before,
-.timeline-event.morph-no-decorations::after { display: none !important; }
