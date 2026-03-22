@@ -14,6 +14,7 @@ class TimelineAnimator {
         this.morphDuration = options.morphDuration || 600;
         this.rollDuration = options.rollDuration !== undefined ? options.rollDuration : 1500;
         this.morphAnimating = false;
+        this._pendingShift = 0;
 
         this._customRender = options.render || null;
         this._customWireButtons = options.wireAnswerButtons || null;
@@ -21,11 +22,39 @@ class TimelineAnimator {
 
         this.stages = options.stages || null;
         this._currentAnswerCards = null;
+        this._scrollMinHeight = 0;
     }
 
     setMorphDuration(ms) { this.morphDuration = ms; }
     setRollDuration(ms) { this.rollDuration = ms; }
     isAnimating() { return this.morphAnimating; }
+
+    _ensureScrollRoom(extraPx) {
+        const needed = window.scrollY + window.innerHeight + extraPx;
+        this._scrollMinHeight = Math.max(this._scrollMinHeight, needed);
+        this.containerEl.style.minHeight = this._scrollMinHeight + 'px';
+    }
+
+    _releaseScrollRoom() {
+        if (this._scrollMinHeight <= 0) return;
+        const scrollBefore = window.scrollY;
+        const viewportBottom = scrollBefore + window.innerHeight;
+
+        this.containerEl.style.minHeight = '0px';
+        const naturalHeight = this.containerEl.scrollHeight;
+
+        if (naturalHeight >= viewportBottom + 2) {
+            this.containerEl.style.minHeight = '';
+            this._scrollMinHeight = 0;
+        } else {
+            this._scrollMinHeight = viewportBottom + 2;
+            this.containerEl.style.minHeight = this._scrollMinHeight + 'px';
+        }
+
+        if (window.scrollY !== scrollBefore) {
+            window.scrollTo({ top: scrollBefore, behavior: 'instant' });
+        }
+    }
 
     _getCard() {
         return this.questionZoneEl.querySelector('.' + this.cardClass);
@@ -235,9 +264,11 @@ class TimelineAnimator {
 
     reset() {
         this.morphAnimating = false;
+        this._pendingShift = 0;
+        this._getShiftTargets().forEach(el => { el.style.transform = ''; });
         if (this.outcomeEl) this.outcomeEl.style.cssText = '';
-        const spacer = document.getElementById('scroll-spacer');
-        if (spacer) spacer.remove();
+        this.containerEl.style.minHeight = '';
+        this._scrollMinHeight = 0;
         this.render();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -464,19 +495,10 @@ class TimelineAnimator {
         card.style.clipPath = 'inset(0 -100vw -50px -100vw)';
         card.offsetHeight;
 
-        if (isLight) {
-            card.style.transition = `height ${shrinkDur} ${easing}`;
-            card.style.height = flowTarget + 'px';
-        } else {
-            card.style.transition = `height ${shrinkDur} ${easing}`;
-            card.style.height = targetHeight + 'px';
-        }
+        card.style.transition = `height ${shrinkDur} ${easing}`;
+        card.style.height = flowTarget + 'px';
 
-        const spacer = document.getElementById('scroll-spacer') || document.createElement('div');
-        spacer.id = 'scroll-spacer';
-        if (!spacer.parentNode) document.body.appendChild(spacer);
-        spacer.style.height = '1000px';
-        spacer.offsetHeight;
+        this._ensureScrollRoom(flowTarget * 2);
 
         // Take outcome card out of flow and animate it directly to final position
         if (outcomeCard && Math.abs(outcomeDelta) > 0) {
@@ -495,10 +517,11 @@ class TimelineAnimator {
             outcomeCard.style.top = (absTop + outcomeDelta) + 'px';
         }
 
-        // Smoothly scroll so the new question ends up at the old question's viewport position.
-        // Uses the same easing and duration as the card shrink so they move in lockstep.
+        // Visually shift the container upward using translateY (not real scroll)
+        // so the timeline appears to flow upward during the card shrink.
+        // At cleanup, the transform is seamlessly swapped for real scroll.
         if (flowTarget > 1) {
-            this._animateScroll(flowTarget, shrinkDurMs);
+            this._animateContainerShift(flowTarget, shrinkDurMs);
         }
 
         // Move new content from center to top
@@ -569,7 +592,9 @@ class TimelineAnimator {
         // Cleanup after animation completes
         setTimeout(() => {
             p.cleanup({
-                card, rollCard, rollWrapper, rollBefore: rollCard ? rollCard.getBoundingClientRect() : null,
+                card, rollCard, rollWrapper,
+                rollBefore: rollCard ? rollCard.getBoundingClientRect() : null,
+                cardVisualTop: card ? card.getBoundingClientRect().top : cardRect.top,
                 outcomeCard, outcomeVisualTop: outcomeCard ? outcomeCard.getBoundingClientRect().top : 0,
                 hasNextQuestion, easing, questionZone, totalAnimDur,
                 cardViewportTop: cardRect.top
@@ -652,9 +677,10 @@ class TimelineAnimator {
             postCardRect, outcomeDelta, hasNextQuestion,
             questionHtml: () => nextQInnerHtml,
             cleanup: (state) => {
-                const { rollCard, rollWrapper, rollBefore, outcomeVisualTop, easing } = state;
+                const { rollCard, rollWrapper, rollBefore, cardVisualTop, outcomeVisualTop, easing } = state;
 
                 if (outcomeCard) outcomeCard.style.cssText = 'transition:none;';
+
                 card.remove();
 
                 // Insert new events into timeline
@@ -683,7 +709,7 @@ class TimelineAnimator {
 
                 if (dp.onItemsAdded) dp.onItemsAdded(count);
 
-                this._flipCleanup({ rollCard, rollWrapper, rollBefore, outcomeCard, outcomeVisualTop, hasNextQuestion: state.hasNextQuestion, easing, questionZone: state.questionZone, anchorViewportTop: state.cardViewportTop });
+                this._flipCleanup({ rollCard, rollWrapper, rollBefore, cardVisualTop, outcomeCard, outcomeVisualTop, hasNextQuestion: state.hasNextQuestion, easing, questionZone: state.questionZone, anchorViewportTop: state.cardViewportTop });
             }
         });
     }
@@ -842,18 +868,15 @@ class TimelineAnimator {
                     }
 
                     if (Math.abs(dy) <= 1) {
-                        // No significant FLIP needed — swap to freshCard immediately.
                         savedRollCard.remove();
                         if (freshCard) freshCard.style.display = '';
                         if (outcomeCard) {
                             setTimeout(() => { outcomeCard.style.cssText = ''; }, 350);
                         }
-                        const spacer = document.getElementById('scroll-spacer');
-                        if (spacer) spacer.remove();
+                        this._releaseScrollRoom();
                         this.morphAnimating = false;
                         if (onComplete) onComplete();
                     } else {
-                        // Significant FLIP — animate savedRollCard, then swap after transition
                         savedRollCard.style.transform = `translateY(${dy}px)`;
                         savedRollCard.style.transition = 'none';
                         if (!lightMode) {
@@ -874,16 +897,14 @@ class TimelineAnimator {
                             savedRollCard.remove();
                             if (freshCard) freshCard.style.display = '';
                             if (outcomeCard) outcomeCard.style.cssText = '';
-                            const spacer = document.getElementById('scroll-spacer');
-                            if (spacer) spacer.remove();
+                            this._releaseScrollRoom();
                             this.morphAnimating = false;
                             if (onComplete) onComplete();
                         }, 350);
                     }
                 } else if (!_hasNextQuestion) {
                     if (outcomeCard) outcomeCard.style.cssText = '';
-                    const spacer = document.getElementById('scroll-spacer');
-                    if (spacer) spacer.remove();
+                    this._releaseScrollRoom();
                     this.morphAnimating = false;
                     if (onComplete) onComplete();
                 } else {
@@ -927,58 +948,79 @@ class TimelineAnimator {
         requestAnimationFrame(tick);
     }
 
+    _getShiftTargets() {
+        return [this.timelineEl, this.questionZoneEl, this.outcomeEl].filter(Boolean);
+    }
+
+    // Visually shift content using translateY (no layout change, header stays put).
+    // Stores the pending delta so cleanup can swap it for real scroll.
+    _animateContainerShift(delta, durationMs) {
+        if (Math.abs(delta) < 1) return;
+        this._pendingShift = delta;
+        const targets = this._getShiftTargets();
+        const startTime = performance.now();
+
+        const tick = () => {
+            const elapsed = performance.now() - startTime;
+            const progress = Math.min(elapsed / durationMs, 1);
+            const eased = this._ease(progress);
+            const val = `translateY(${-delta * eased}px)`;
+            targets.forEach(el => { el.style.transform = val; });
+            if (progress < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+    }
+
+    // Seamlessly swap the translateY for real page scroll.
+    // Both change by the same amount in opposite directions, so content
+    // stays at the exact same viewport position throughout.
+    _resolveContainerShift(durationMs) {
+        const delta = this._pendingShift || 0;
+        this._pendingShift = 0;
+        const targets = this._getShiftTargets();
+        if (Math.abs(delta) < 1) {
+            targets.forEach(el => { el.style.transform = ''; });
+            return;
+        }
+        const startScroll = window.scrollY;
+        const startTime = performance.now();
+
+        const tick = () => {
+            const elapsed = performance.now() - startTime;
+            const progress = Math.min(elapsed / durationMs, 1);
+            const eased = this._ease(progress);
+            const val = `translateY(${-delta * (1 - eased)}px)`;
+            targets.forEach(el => { el.style.transform = val; });
+            window.scrollTo({ top: startScroll + delta * eased, behavior: 'instant' });
+            if (progress < 1) requestAnimationFrame(tick);
+            else targets.forEach(el => { el.style.transform = ''; });
+        };
+        requestAnimationFrame(tick);
+    }
+
     // Shared FLIP cleanup for the counter-based addItems path
-    _flipCleanup({ rollCard, rollWrapper, rollBefore, outcomeCard, outcomeVisualTop, hasNextQuestion, easing, questionZone, anchorViewportTop }) {
+    _flipCleanup({ rollCard, rollWrapper, rollBefore, cardVisualTop, outcomeCard, outcomeVisualTop, hasNextQuestion, easing, questionZone, anchorViewportTop }) {
         if (rollCard && rollCard.parentNode) {
             if (rollWrapper && rollWrapper.parentNode) {
                 rollWrapper.parentNode.insertBefore(rollCard, rollWrapper);
                 rollWrapper.remove();
             }
 
-            // Scroll to keep the new question at the old question's viewport position.
-            // This is instant (same JS frame), so the user never sees the intermediate state.
-            if (anchorViewportTop != null) {
-                const currentTop = rollCard.getBoundingClientRect().top;
-                const scrollDelta = currentTop - anchorViewportTop;
-                if (Math.abs(scrollDelta) > 1) {
-                    window.scrollBy({ top: scrollDelta, behavior: 'instant' });
-                }
-            }
-
-            const rollAfter = rollCard.getBoundingClientRect();
-            const dy = rollBefore ? rollBefore.top - rollAfter.top : 0;
-
-            rollCard.style.transform = Math.abs(dy) > 1 ? `translateY(${dy}px)` : '';
-            rollCard.style.transition = 'none';
+            // The container has a translateY from the animation-time visual shift.
+            // Event insertion pushed the zone down by ~flowTarget, which exactly
+            // cancels the translateY — so the zone is already at the right visual
+            // position. Now seamlessly swap the transform for real scroll.
+            this._resolveContainerShift(300);
 
             rollCard.classList.add('no-transition');
             rollCard.classList.remove('hide-decorations');
             rollCard.offsetHeight;
             rollCard.classList.remove('no-transition');
 
-            if (Math.abs(dy) > 1) {
-                rollCard.style.transition = `transform 300ms ${easing}`;
-                rollCard.style.transform = 'translateY(0)';
-            }
-
-            if (outcomeCard) {
-                const outcomeNaturalTop = outcomeCard.getBoundingClientRect().top;
-                const ody = outcomeVisualTop - outcomeNaturalTop;
-                if (Math.abs(ody) > 1) {
-                    outcomeCard.style.transform = `translateY(${ody}px)`;
-                    outcomeCard.offsetHeight;
-                    outcomeCard.style.transition = `transform 300ms ${easing}`;
-                    outcomeCard.style.transform = 'translateY(0)';
-                }
-            }
-
             setTimeout(() => {
-                rollCard.style.transform = '';
-                rollCard.style.transition = '';
                 rollCard.style.opacity = '';
                 if (outcomeCard) outcomeCard.style.cssText = '';
-                const spacer = document.getElementById('scroll-spacer');
-                if (spacer) spacer.remove();
+                this._releaseScrollRoom();
                 this.morphAnimating = false;
             }, 350);
         } else if (!hasNextQuestion) {
