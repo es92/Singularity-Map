@@ -74,6 +74,7 @@
     .theme-toggle input[type="checkbox"]:checked { background: var(--accent); }
     .theme-toggle input[type="checkbox"]:checked::after { transform: translateX(14px); }
 
+    .anim-dim { opacity: 0.05 !important; }
 </style>
 </head>
 <body>
@@ -108,14 +109,14 @@
         <div class="control-row" id="elementsRow">
             <span class="control-label">Elements</span>
             <button class="speed-btn" id="elemAllBtn">All</button>
-            <button class="speed-btn elem-btn active" data-elem="oldCard">Old Card</button>
-            <button class="speed-btn elem-btn active" data-elem="newEvents">Events</button>
-            <button class="speed-btn elem-btn active" data-elem="newCard">New Card</button>
+            <button class="speed-btn elem-btn active" data-elem="oldCard">Old Question</button>
+            <button class="speed-btn elem-btn active" data-elem="newEvents">Timeline Events</button>
+            <button class="speed-btn elem-btn active" data-elem="newCard">New Question</button>
             <button class="speed-btn elem-btn active" data-elem="outcome">Outcome</button>
-            <button class="speed-btn elem-btn active" data-elem="decorations">Decor</button>
-            <button class="speed-btn elem-btn active" data-elem="scroll">Scroll</button>
-            <button class="speed-btn elem-btn active" data-elem="dot">Dot</button>
-            <button class="speed-btn elem-btn active" data-elem="hline">Sep</button>
+            <button class="speed-btn elem-btn active" data-elem="stageHeaders">Stage Headers</button>
+            <button class="speed-btn elem-btn active" data-elem="dot">Timeline Event Dots</button>
+            <button class="speed-btn elem-btn active" data-elem="hline">Timeline Event Separators</button>
+            <button class="speed-btn elem-btn active" data-elem="vline">Timeline Vertical Line</button>
         </div>
     </div>
     <div class="timeline" id="timeline"></div>
@@ -339,7 +340,7 @@ animator.addItems = function(count) {
         if (!animator.isAnimating()) {
             transportState = 'end';
             updateTransportUI();
-            applyElementVisibility(false);
+            applyElementVisibility();
             return;
         }
         requestAnimationFrame(pollDone);
@@ -365,41 +366,54 @@ function snapToState(targetCounter) {
 
     animator._releaseScrollRoom();
 
-    const isStart = targetCounter === pendingCounterBefore;
-    applyElementVisibility(isStart);
+    applyElementVisibility();
 }
 
-function applyElementVisibility(isStartState) {
+function applyElementVisibility() {
     const vis = animator._elementVisibility;
+    const app = animator.containerEl;
 
     const card = animator._getCard();
     if (card) {
-        const cardOff = isStartState ? !vis.oldCard : !vis.newCard;
-        card.style.opacity = cardOff ? '0' : '';
+        card.querySelectorAll('.question-text, .question-context, .answers').forEach(c => {
+            c.classList.toggle('anim-dim', !vis.newCard);
+        });
     }
 
-    if (!isStartState && !vis.newEvents && pendingCounterBefore != null) {
-        const events = Array.from(animator.timelineEl.querySelectorAll('.timeline-event'));
-        events.slice(pendingCounterBefore).forEach(el => { el.style.opacity = '0'; });
+    const oldCardEl = animator._oldCardEl;
+    if (oldCardEl) {
+        oldCardEl.querySelectorAll('.question-text, .question-context, .answers').forEach(c => {
+            c.classList.toggle('anim-dim', !vis.oldCard);
+        });
     }
 
-    if (!vis.outcome && animator.outcomeEl) {
-        animator.outcomeEl.style.opacity = '0';
+    app.querySelectorAll('.timeline-event').forEach(el => {
+        el.querySelectorAll('.timeline-top-row, .timeline-headline, .timeline-desc, .timeline-slider').forEach(c => {
+            c.classList.toggle('anim-dim', !vis.newEvents);
+        });
+    });
+
+    app.querySelectorAll('.timeline-stage-header').forEach(el => {
+        el.classList.toggle('anim-dim', !vis.stageHeaders);
+    });
+
+    if (animator.outcomeEl) {
+        animator.outcomeEl.classList.toggle('anim-dim', !vis.outcome);
     }
 
-    // Hide dots and hlines on all visible elements when toggled off
-    const hideDecor = (container) => {
-        if (!container) return;
-        if (!vis.dot || !vis.decorations) {
-            container.querySelectorAll('.tl-dot').forEach(el => { el.style.opacity = '0'; });
-        }
-        if (!vis.hline || !vis.decorations) {
-            container.querySelectorAll('.tl-hline').forEach(el => { el.style.opacity = '0'; });
-        }
-    };
-    hideDecor(animator.timelineEl);
-    hideDecor(animator.questionZoneEl);
+    app.querySelectorAll('.tl-dot').forEach(el => {
+        el.classList.toggle('anim-dim', !vis.dot);
+    });
+
+    app.querySelectorAll('.tl-hline').forEach(el => {
+        el.classList.toggle('anim-dim', !vis.hline);
+    });
+
+    app.querySelectorAll('.tl-vline-seg').forEach(el => {
+        el.classList.toggle('anim-dim', !vis.vline);
+    });
 }
+animator._beforeAnimate = applyElementVisibility;
 
 function updateTransportUI() {
     const idle = transportState === 'idle';
@@ -442,7 +456,7 @@ animPlayBtn.addEventListener('click', () => {
         if (!animator.isAnimating()) {
             transportState = 'end';
             updateTransportUI();
-            applyElementVisibility(false);
+            applyElementVisibility();
             return;
         }
         requestAnimationFrame(pollDone);
@@ -464,6 +478,7 @@ elemBtns.forEach(btn => {
     btn.addEventListener('click', () => {
         btn.classList.toggle('active');
         animator._elementVisibility[btn.dataset.elem] = btn.classList.contains('active');
+        applyElementVisibility();
     });
 });
 
@@ -473,9 +488,11 @@ document.getElementById('elemAllBtn').addEventListener('click', () => {
         btn.classList.toggle('active', anyOff);
         animator._elementVisibility[btn.dataset.elem] = anyOff;
     });
+    applyElementVisibility();
 });
 
 animator.render();
+applyElementVisibility();
 </script>
 </body>
 </html>

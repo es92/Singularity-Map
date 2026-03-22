@@ -23,16 +23,18 @@ class TimelineAnimator {
         this._currentAnswerCards = null;
         this._scrollMinHeight = 0;
         this._oldCardEl = null;
+        this._beforeAnimate = options.beforeAnimate || null;
 
         this._elementVisibility = {
             oldCard: true,
             newEvents: true,
             newCard: true,
             outcome: true,
-            decorations: true,
             scroll: true,
+            stageHeaders: true,
             dot: true,
             hline: true,
+            vline: true,
         };
     }
 
@@ -402,7 +404,7 @@ class TimelineAnimator {
         }
 
         // --- Phase 3: Create old card copy (content only, no timeline decorations) ---
-        if (vis.oldCard && startCardContent) {
+        if (startCardContent) {
             this._oldCardEl = document.createElement('div');
             this._oldCardEl.className = this.cardClass;
             this._oldCardEl.innerHTML = startCardContent;
@@ -421,19 +423,11 @@ class TimelineAnimator {
         // New events: slide from old card position; fade content only (dot/hline/vline-seg stay visible)
         const eventFlips = [];
         newEvents.forEach(el => {
-            if (vis.newEvents) {
-                const dy = startCardRect.top - el.getBoundingClientRect().top;
-                const fadeEls = Array.from(el.querySelectorAll('.timeline-top-row, .timeline-headline, .timeline-desc, .timeline-slider'));
-                eventFlips.push({ el, dy, fadeEls });
-                el.style.transform = `translateY(${dy}px)`;
-                fadeEls.forEach(c => { c.style.opacity = '0'; });
-            }
-            if (!vis.decorations) {
-                const dot = el.querySelector('.tl-dot');
-                const hl = el.querySelector('.tl-hline');
-                if (dot) dot.style.opacity = '0';
-                if (hl) hl.style.opacity = '0';
-            }
+            const dy = startCardRect.top - el.getBoundingClientRect().top;
+            const fadeEls = Array.from(el.querySelectorAll('.timeline-top-row, .timeline-headline, .timeline-desc, .timeline-slider'));
+            eventFlips.push({ el, dy, fadeEls });
+            el.style.transform = `translateY(${dy}px)`;
+            fadeEls.forEach(c => { c.style.opacity = '0'; });
         });
 
         // New headers + new card: slide from old card position + fade in
@@ -446,22 +440,12 @@ class TimelineAnimator {
         });
 
         let newCardDy = null;
-        if (newCard && vis.newCard) {
+        if (newCard) {
             newCardDy = (startCardRect.top + startCardRect.height) - newCardRect.top;
             slideFlips.push({ el: newCard, dy: newCardDy });
             newCard.style.transform = `translateY(${newCardDy}px)`;
             newCard.style.opacity = '0';
         }
-
-        // Debug toggles: hide decorations when toggled off
-        if (newCard && !vis.decorations) {
-            const dot = newCard.querySelector('.tl-dot');
-            const hl = newCard.querySelector('.tl-hline');
-            if (dot) dot.style.opacity = '0';
-            if (hl) hl.style.opacity = '0';
-        }
-        if (newCard && !vis.dot) { const d = newCard.querySelector('.tl-dot'); if (d) d.style.opacity = '0'; }
-        if (newCard && !vis.hline) { const h = newCard.querySelector('.tl-hline'); if (h) h.style.opacity = '0'; }
 
         // --- Segment adjustments: stretch each new segment to track both dots ---
         const segFlips = [];
@@ -506,7 +490,7 @@ class TimelineAnimator {
         // Outcome: FLIP to start position
         const outcomeDy = startOutcomeTop - endOutcomeTop;
         let outcomeFlip = null;
-        if (outcomeCard && vis.outcome && Math.abs(outcomeDy) > 1) {
+        if (outcomeCard && Math.abs(outcomeDy) > 1) {
             outcomeFlip = { el: outcomeCard, dy: outcomeDy };
             outcomeCard.style.transform = `translateY(${outcomeDy}px)`;
         }
@@ -590,21 +574,13 @@ class TimelineAnimator {
                     seg.style.top = origTop + 'px';
                     seg.style.height = origHeight + 'px';
                 });
-                const clearDecor = (container) => {
-                    if (!container) return;
-                    const dot = container.querySelector('.tl-dot');
-                    const hl = container.querySelector('.tl-hline');
-                    if (dot) dot.style.opacity = '';
-                    if (hl) hl.style.opacity = '';
-                };
-                newEvents.forEach(clearDecor);
-                if (newCard) clearDecor(newCard);
                 this._releaseScrollRoom();
                 this.morphAnimating = false;
                 if (onComplete) onComplete();
             }
         };
 
+        if (this._beforeAnimate) this._beforeAnimate();
         requestAnimationFrame(tick);
     }
 
