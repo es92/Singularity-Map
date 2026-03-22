@@ -440,7 +440,7 @@ const NODES = [
         { id: 'leaks_rivals', label: 'Leaks to rivals' },
         { id: 'leaks_public', label: 'Leaks publicly' }
       ] },
-    { id: 'enabled_aims', label: 'Intended Aims', stage: 2, hideAfterEscape: true,
+    { id: 'enabled_aims', label: 'Intended Aims', stage: 2,
       activateWhen: [
         {
           capability: ['singularity'],
@@ -456,7 +456,7 @@ const NODES = [
           id: 'arbitrary',
           label: 'Arbitrary / unconstrained',
           requires: [{ proliferation_outcome: ['leaks_public'] }],
-          disabledWhen: [{ decel_outcome: ['solved', 'parity_solved'] }]
+          disabledWhen: [{ decel_outcome: ['solved', 'parity_solved'] }, { alignment: ['robust'] }]
         }
       ] },
     { id: 'containment', label: 'Containment', stage: 2, forwardKey: true,
@@ -519,7 +519,8 @@ const NODES = [
         {
           capability: ['singularity'],
           automation: ['deep'],
-          _raw: { alignment: ['failed'], containment: ['contained'] }
+          _eff: { alignment: ['failed'] },
+          _raw: { containment: ['contained'] }
         },
         { capability: ['singularity'], automation: ['deep'], _raw: { ai_goals: ['marginal'] } }
       ],

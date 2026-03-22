@@ -331,6 +331,14 @@ function forwardKey(sel) {
         if (state[k]) parts.push(`E:${k}=${state[k]}`);
     }
     for (const node of NODES) {
+        if (!node.derivedFrom) continue;
+        const raw = sel[node.id];
+        const eff = state[node.id];
+        if (raw && eff && raw !== eff) {
+            parts.push(`R:${node.id}=${raw}`);
+        }
+    }
+    for (const node of NODES) {
         if (node.terminal || node.derived) continue;
         if (!isNodeVisible(sel, node)) continue;
         if (isNodeLocked(sel, node) !== null) continue;
