@@ -885,6 +885,7 @@
                     }
                 }
 
+                if (mapAnimator) mapAnimator._adjustVlines();
                 syncHash();
             }
 
@@ -953,7 +954,6 @@
                 stages: SCENARIO.stages,
                 contentSelector: '.question-text, .question-context, .question-source, .answers',
                 morphDuration: 1500,
-                rollDuration: 1500,
                 stripFromAnimation: '.timeline-param-dim',
                 render: () => update(),
                 wireAnswerButtons: () => {},

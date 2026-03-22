@@ -91,14 +91,6 @@
             <label class="theme-toggle"><input type="checkbox" id="expandToggle" checked> Expand</label>
             <label class="theme-toggle"><input type="checkbox" id="themeToggle" checked> Light</label>
         </div>
-        <div class="control-row">
-            <span class="control-label">New Q</span>
-            <button class="speed-btn roll-btn" data-roll="match">Match</button>
-            <button class="speed-btn roll-btn" data-roll="300">0.3s</button>
-            <button class="speed-btn roll-btn" data-roll="600">0.6s</button>
-            <button class="speed-btn roll-btn active" data-roll="1500">1.5s</button>
-            <button class="speed-btn roll-btn" data-roll="3000">3s</button>
-        </div>
         <div class="control-row" id="transportRow">
             <span class="control-label">Anim</span>
             <button class="speed-btn" id="snapStartBtn" title="Snap to start">|&#9664;</button>
@@ -277,15 +269,6 @@ document.querySelectorAll('.speed-btn[data-speed]').forEach(btn => {
         document.querySelectorAll('.speed-btn[data-speed]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         animator.setMorphDuration(parseInt(btn.dataset.speed));
-    });
-});
-
-// New question speed controls
-document.querySelectorAll('.roll-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.roll-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        animator.setRollDuration(btn.dataset.roll === 'match' ? null : parseInt(btn.dataset.roll));
     });
 });
 

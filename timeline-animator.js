@@ -12,7 +12,6 @@ class TimelineAnimator {
         this.contentSelector = options.contentSelector || '.question-text, .question-context, .answers';
 
         this.morphDuration = options.morphDuration || 600;
-        this.rollDuration = options.rollDuration !== undefined ? options.rollDuration : 1500;
         this.morphAnimating = false;
 
         this._customRender = options.render || null;
@@ -39,7 +38,6 @@ class TimelineAnimator {
     }
 
     setMorphDuration(ms) { this.morphDuration = ms; }
-    setRollDuration(ms) { this.rollDuration = ms; }
     isAnimating() { return this.morphAnimating; }
 
     _ensureScrollRoom(extraPx) {
@@ -293,6 +291,7 @@ class TimelineAnimator {
     render() {
         if (this._customRender) {
             this._customRender();
+            this._adjustVlines();
             return;
         }
 
