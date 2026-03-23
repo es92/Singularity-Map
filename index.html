@@ -187,6 +187,27 @@
             border-color: var(--border-hover); color: var(--text);
         }
         .answer-card:hover { transform: translateX(4px); }
+        .debug-panel {
+            background: var(--bg-surface); border: 1px solid var(--accent);
+            border-radius: var(--radius-sm); padding: 0.5rem 0.75rem;
+            margin-top: 0.5rem; font-family: monospace; font-size: 0.72rem;
+            line-height: 1.6; width: 100%;
+        }
+        .debug-title {
+            font-weight: 700; font-size: 0.72rem; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--accent); margin-bottom: 0.3rem;
+        }
+        .debug-key { color: var(--text); font-weight: 600; }
+        .debug-val { color: var(--text-secondary); }
+        .debug-diff {
+            margin-top: 0.5rem; padding-top: 0.5rem;
+            border-top: 1px dashed var(--border);
+            font-size: 0.72rem; line-height: 1.6;
+            font-family: monospace;
+        }
+        .debug-activate { color: #22c55e; }
+        .debug-deactivate { color: #ef4444; }
+        .debug-lock { color: var(--accent); }
         .map-outcome-section {
             background: var(--bg-surface); border: 1px solid var(--border);
             border-radius: var(--radius); padding: 1.5rem;
@@ -478,6 +499,7 @@
                         else if (dk === 'fq') { flags.fullQuestions = dv !== '0'; }
                         else if (dk === 'et') { flags.expandTimeline = dv !== '0'; }
                         else if (dk === 'so') { flags.showOutcomes = dv === '1'; }
+                        else if (dk === 'db') { flags.debugMode = dv === '1'; }
                         else { selections[dk] = dv; }
                     });
                 }
@@ -570,6 +592,7 @@
             let fullQuestions = flags.fullQuestions !== false;
             let expandTimeline = flags.expandTimeline !== false;
             let showOutcomes = flags.showOutcomes === true;
+            let debugMode = flags.debugMode === true;
             let timelineDurations = [];
             let mapAnimator = null;
 
@@ -735,13 +758,176 @@
                 if (!fullQuestions) entries.push('fq=0');
                 if (!expandTimeline) entries.push('et=0');
                 if (showOutcomes) entries.push('so=1');
+                if (debugMode) entries.push('db=1');
                 if (entries.length > 0) hash += '?' + entries.join('&');
-                const stateFlags = { fullQuestions, expandTimeline, showOutcomes };
+                const stateFlags = { fullQuestions, expandTimeline, showOutcomes, debugMode };
                 history.replaceState({ screen: 'map', dims: { ...sel }, lockedOutcomeId: lockedId, flags: stateFlags }, '', '#' + hash);
+            }
+
+            function getHiddenState(s) {
+                const locked = s._locked || {};
+                const eff = Engine.resolvedState(s);
+                const hidden = {};
+                for (const [k, v] of Object.entries(locked)) {
+                    if (v && s[k]) hidden[k] = { value: s[k], eff: eff[k] || s[k] };
+                }
+                for (const node of NODES) {
+                    if (!node.derivedFrom) continue;
+                    const raw = s[node.id];
+                    const effVal = eff[node.id];
+                    if (effVal && raw !== effVal) {
+                        hidden[node.id] = hidden[node.id] || {};
+                        hidden[node.id].derived = effVal;
+                        if (raw) hidden[node.id].raw = raw;
+                    }
+                }
+                return hidden;
+            }
+
+            function getVisibleNodes(s) {
+                const vis = new Set();
+                for (const node of NODES) {
+                    if (node.terminal || node.derived) continue;
+                    if (Engine.isNodeVisible(s, node)) vis.add(node.id);
+                }
+                return vis;
+            }
+
+            function hiddenStateDiff(baseSel, nodeId, edgeId) {
+                const test = JSON.parse(JSON.stringify(baseSel));
+                test[nodeId] = edgeId;
+                if (test._locked) delete test._locked[nodeId];
+                Engine.cleanSelection(test);
+
+                const changes = [];
+
+                const before = getHiddenState(baseSel);
+                const after = getHiddenState(test);
+                for (const [k, v] of Object.entries(after)) {
+                    const label = v.value || v.derived || '';
+                    const bLabel = before[k] ? (before[k].value || before[k].derived || '') : '';
+                    if (label !== bLabel) {
+                        const nodeObj = NODE_MAP[k];
+                        const nodeName = nodeObj ? nodeObj.label : k;
+                        if (before[k]) {
+                            changes.push({ type: 'lock', text: nodeName + ': ' + bLabel + ' \u2192 ' + label });
+                        } else {
+                            changes.push({ type: 'lock', text: nodeName + ' = ' + label });
+                        }
+                    }
+                }
+                for (const [k, v] of Object.entries(before)) {
+                    if (!after[k]) {
+                        const nodeObj = NODE_MAP[k];
+                        const nodeName = nodeObj ? nodeObj.label : k;
+                        changes.push({ type: 'lock', text: nodeName + ': removed' });
+                    }
+                }
+
+                const visBefore = getVisibleNodes(baseSel);
+                const visAfter = getVisibleNodes(test);
+                for (const id of visAfter) {
+                    if (!visBefore.has(id) && id !== nodeId) {
+                        const nodeObj = NODE_MAP[id];
+                        changes.push({ type: 'activate', text: '+ ' + (nodeObj ? nodeObj.label : id) });
+                    }
+                }
+                for (const id of visBefore) {
+                    if (!visAfter.has(id) && id !== nodeId) {
+                        const nodeObj = NODE_MAP[id];
+                        changes.push({ type: 'deactivate', text: '\u2212 ' + (nodeObj ? nodeObj.label : id) });
+                    }
+                }
+
+                return changes;
             }
 
             function update() {
                 Engine.cleanSelection(sel);
+
+                const debugPanel = app.querySelector('.debug-panel');
+                if (debugPanel) {
+                    if (debugMode) {
+                        const eff = Engine.resolvedState(sel);
+                        const hidden = getHiddenState(sel);
+                        const keys = Object.keys(hidden);
+
+                        console.group('%c[Debug] State after update', 'color: #8b5cf6; font-weight: bold');
+                        const answered = [];
+                        for (const node of NODES) {
+                            if (node.terminal || node.derived) continue;
+                            if (!sel[node.id]) continue;
+                            const effVal = eff[node.id];
+                            const isLocked = sel._locked && sel._locked[node.id];
+                            let line = node.label + ' (' + node.id + ') = ' + sel[node.id];
+                            if (effVal && effVal !== sel[node.id]) line += ' → eff=' + effVal;
+                            if (isLocked) line += ' [auto]';
+                            answered.push(line);
+                        }
+                        if (answered.length) {
+                            console.log('%cAnswered:', 'font-weight:bold');
+                            answered.forEach(l => console.log('  ' + l));
+                        }
+                        const upcoming = [];
+                        for (const node of NODES) {
+                            if (node.terminal || node.derived) continue;
+                            if (!Engine.isNodeVisible(sel, node)) continue;
+                            if (sel[node.id]) continue;
+                            const locked = Engine.isNodeLocked(sel, node);
+                            if (locked !== null) {
+                                upcoming.push(node.label + ' (' + node.id + ') = ' + locked + ' [will auto-lock]');
+                            } else {
+                                upcoming.push(node.label + ' (' + node.id + ') [pending]');
+                            }
+                        }
+                        if (upcoming.length) {
+                            console.log('%cUpcoming:', 'font-weight:bold');
+                            upcoming.forEach(l => console.log('  ' + l));
+                        }
+                        console.groupEnd();
+
+                        let panelHtml = '';
+
+                        if (keys.length > 0) {
+                            const rows = keys.map(k => {
+                                const v = hidden[k];
+                                const nodeObj = NODE_MAP[k];
+                                const name = nodeObj ? nodeObj.label : k;
+                                const parts = [];
+                                if (v.value) parts.push('locked=' + v.value);
+                                if (v.derived) parts.push('derived=' + v.derived);
+                                if (v.raw) parts.push('raw=' + v.raw);
+                                if (v.eff && v.eff !== v.value) parts.push('eff=' + v.eff);
+                                return '<span class="debug-key">' + esc(name) + '</span> <span class="debug-val">' + esc(parts.join(', ')) + '</span>';
+                            });
+                            panelHtml += '<div class="debug-title">Auto-locked / Derived</div>' + rows.join('<br>');
+                        }
+
+                        const visNodes = [];
+                        for (const node of NODES) {
+                            if (node.terminal || node.derived) continue;
+                            if (!Engine.isNodeVisible(sel, node)) continue;
+                            const locked = Engine.isNodeLocked(sel, node);
+                            const isAnswered = !!sel[node.id];
+                            if (locked !== null && !isAnswered) {
+                                visNodes.push('<span class="debug-val">' + esc(node.label) + ' = ' + esc(locked) + ' (auto)</span>');
+                            } else if (!isAnswered) {
+                                visNodes.push('<span class="debug-activate">' + esc(node.label) + '</span>');
+                            }
+                        }
+                        if (visNodes.length > 0) {
+                            panelHtml += (panelHtml ? '<div style="margin-top:0.4rem">' : '<div>') +
+                                '<div class="debug-title">Upcoming</div>' +
+                                visNodes.join(' &middot; ') + '</div>';
+                        }
+
+                        debugPanel.innerHTML = panelHtml || '<span class="debug-val">no hidden state</span>';
+                        debugPanel.style.display = '';
+                    } else {
+                        debugPanel.innerHTML = '';
+                        debugPanel.style.display = 'none';
+                    }
+                }
 
                 const nextQ = findNextQuestion();
                 const events = buildTimelineEvents(nextQ);
@@ -806,6 +992,25 @@
                         });
                         questionZone.innerHTML = qResult.html;
                         questionZone.style.display = '';
+                        if (debugMode) {
+                            questionZone.querySelectorAll('.answer-card').forEach(cardEl => {
+                                const idx = parseInt(cardEl.dataset.aidx, 10);
+                                const answer = qResult.answerCards[idx];
+                                if (!answer) return;
+                                const changes = hiddenStateDiff(sel, answer.nodeId, answer.value);
+                                if (changes.length > 0) {
+                                    const debugEl = document.createElement('div');
+                                    debugEl.className = 'debug-diff';
+                                    debugEl.innerHTML = changes.map(c => {
+                                        const cls = c.type === 'activate' ? 'debug-activate'
+                                            : c.type === 'deactivate' ? 'debug-deactivate'
+                                            : 'debug-lock';
+                                        return '<span class="' + cls + '">' + esc(c.text) + '</span>';
+                                    }).join('<br>');
+                                    cardEl.appendChild(debugEl);
+                                }
+                            });
+                        }
                         questionZone.querySelectorAll('.answer-card').forEach(cardEl => {
                             cardEl.addEventListener('click', () => {
                                 if (cardEl.classList.contains('disabled')) return;
@@ -901,7 +1106,9 @@
                             <label class="map-toggle"><input type="checkbox" data-flag="fq"${fullQuestions ? ' checked' : ''}><span>Full Questions</span></label>
                             <label class="map-toggle"><input type="checkbox" data-flag="et"${expandTimeline ? ' checked' : ''}><span>Expand Timeline</span></label>
                             <label class="map-toggle"><input type="checkbox" data-flag="so"${showOutcomes ? ' checked' : ''}><span>Show Outcomes</span></label>
+                            <label class="map-toggle"><input type="checkbox" data-flag="db"${debugMode ? ' checked' : ''}><span>Debug</span></label>
                         </div>
+                        <div class="debug-panel" style="display:none"></div>
                     </div>
                     <div class="map-timeline timeline"></div>
                     <div class="question-zone"></div>
@@ -925,6 +1132,7 @@
                     if (cb.dataset.flag === 'fq') fullQuestions = cb.checked;
                     if (cb.dataset.flag === 'et') expandTimeline = cb.checked;
                     if (cb.dataset.flag === 'so') showOutcomes = cb.checked;
+                    if (cb.dataset.flag === 'db') debugMode = cb.checked;
                     update();
                 });
             });

@@ -215,6 +215,7 @@ const NODES = [
         { when: { alignment_durability: 'breaks' }, value: 'failed' },
         { when: { brittle_resolution: 'escape' }, value: 'failed' },
         { when: { enabled_aims: 'arbitrary' }, value: 'failed' },
+        { when: { proliferation_alignment: 'breaks' }, value: 'failed' },
         { effective: { decel_outcome: ['rival'] }, value: 'brittle' },
         { effective: { decel_outcome: ['escapes', 'abandon', 'parity_failed'] }, value: 'failed' }
       ],
@@ -439,6 +440,19 @@ const NODES = [
         },
         { id: 'leaks_rivals', label: 'Leaks to rivals' },
         { id: 'leaks_public', label: 'Leaks publicly' }
+      ] },
+    { id: 'proliferation_alignment', label: 'Alignment Under Open Weights', stage: 2,
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['robust'],
+          proliferation_outcome: ['leaks_public']
+        }
+      ],
+      edges: [
+        { id: 'holds', label: 'Alignment is intrinsic' },
+        { id: 'breaks', label: 'Someone cracks it' }
       ] },
     { id: 'enabled_aims', label: 'Intended Aims', stage: 2,
       activateWhen: [

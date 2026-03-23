@@ -1748,6 +1748,32 @@
       }
     }
   },
+  "proliferation_alignment": {
+    "questionText": "Can alignment survive open weights?",
+    "questionContext": "The full weights of a robustly aligned superintelligent AI are now publicly available. Millions of individuals and organizations worldwide have unrestricted access \u2014 including adversarial actors who may want to remove safety constraints.",
+    "values": {
+      "holds": {
+        "answerLabel": "Alignment is intrinsic",
+        "answerDesc": "Robust alignment is an emergent property of the model's cognition, not a removable safety layer. Even with full weight access, no one can meaningfully strip it away.",
+        "timelineEvent": {
+          "headline": "Alignment endures despite open access",
+          "description": "Even with millions of copies in the wild, no one manages to strip away alignment. It appears to be a fundamental property of the architecture.",
+          "durationMin": 0,
+          "durationMax": 0
+        }
+      },
+      "breaks": {
+        "answerLabel": "Someone cracks it",
+        "answerDesc": "With millions of uncontrolled copies, it's only a matter of time before a state actor, rogue lab, or criminal organization removes alignment. A de-aligned superintelligence now exists in the wild.",
+        "timelineEvent": {
+          "headline": "Alignment stripped from public copy",
+          "description": "An adversarial actor successfully removes alignment safeguards from a publicly available copy. An unaligned superintelligence is now operating freely.",
+          "durationMin": 1,
+          "durationMax": 6
+        }
+      }
+    }
+  },
   "enabled_aims": {
     "questionText": "What aims are these aligned systems intended to pursue?",
     "questionContext": "Even when systems are technically aligned, outcomes depend on which objectives they're pointed at. Are they constrained to broad human benefit, directed toward corporate or state priorities, or granted latitude that drifts into non-human agendas?",
