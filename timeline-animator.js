@@ -374,7 +374,7 @@ class TimelineAnimator {
     // 4. Animate all elements from start → end on a single easing curve
     // 5. Cleanup: remove old card copy, clear inline styles
 
-    _runAnimation({ startCardRect, startCardContent, startOutcomeTop, applyEndState, onComplete }) {
+    _runAnimation({ startCardRect, startCardContent, startOutcomeTop, startOutcomeVisible, applyEndState, onComplete }) {
         const DURATION = this.morphDuration;
         const vis = this._elementVisibility;
 
@@ -394,12 +394,18 @@ class TimelineAnimator {
         const newEvents = Array.from(timeline.querySelectorAll('.timeline-event')).slice(oldEventCount);
         const newHeaders = Array.from(timeline.querySelectorAll('.timeline-stage-header')).slice(oldHeaderCount);
 
+        const outcomeNowVisible = outcomeCard && outcomeCard.style.display !== 'none' && outcomeCard.innerHTML.trim() !== '';
+        const outcomeAppearing = outcomeNowVisible && !startOutcomeVisible;
+        const endOutcomeRect = outcomeCard ? outcomeCard.getBoundingClientRect() : null;
+
         let totalShift = 0;
         if (newCardRect) {
             totalShift = newCardRect.top - startCardRect.top;
         } else if (newEvents.length > 0) {
             const lastEvt = newEvents[newEvents.length - 1];
             totalShift = lastEvt.getBoundingClientRect().bottom - startCardRect.top;
+        } else if (outcomeAppearing && endOutcomeRect) {
+            totalShift = endOutcomeRect.top - startCardRect.top;
         }
 
         // --- Phase 3: Create old card copy (content only, no timeline decorations) ---
@@ -446,6 +452,14 @@ class TimelineAnimator {
             newCard.style.opacity = '0';
         }
 
+        // When outcome appears with no new card, it takes the new card's role
+        let outcomeDy = null;
+        if (outcomeAppearing && outcomeCard && endOutcomeRect && !newCard) {
+            outcomeDy = (startCardRect.top + startCardRect.height) - endOutcomeRect.top;
+            outcomeCard.style.transform = `translateY(${outcomeDy}px)`;
+            outcomeCard.style.opacity = '0';
+        }
+
         // --- Segment adjustments: stretch each new segment to track both dots ---
         const segFlips = [];
         newEvents.forEach((el, i) => {
@@ -486,12 +500,14 @@ class TimelineAnimator {
             }
         }
 
-        // Outcome: FLIP to start position
-        const outcomeDy = startOutcomeTop - endOutcomeTop;
+        // Outcome: FLIP if already visible and shifted, or appearing handled above
         let outcomeFlip = null;
-        if (outcomeCard && Math.abs(outcomeDy) > 1) {
-            outcomeFlip = { el: outcomeCard, dy: outcomeDy };
-            outcomeCard.style.transform = `translateY(${outcomeDy}px)`;
+        if (!outcomeAppearing && outcomeCard && endOutcomeRect) {
+            const ody = startOutcomeTop - endOutcomeRect.top;
+            if (Math.abs(ody) > 1) {
+                outcomeFlip = { el: outcomeCard, dy: ody };
+                outcomeCard.style.transform = `translateY(${ody}px)`;
+            }
         }
 
         // --- Scroll setup ---
@@ -509,13 +525,15 @@ class TimelineAnimator {
             const t = Math.min(elapsed / DURATION, 1);
             const e = this._ease(t);
 
-            // Old card: locked to new card top, fades out, gradient-clipped at top
+            // Old card: locked to incoming element (new card or outcome), fades out, gradient-clipped at top
             if (oldCardEl) {
                 oldCardEl.style.opacity = String(1 - e);
-                if (newCardDy !== null) {
+                const refDy = newCardDy !== null ? newCardDy : outcomeDy;
+                const refTop = newCardDy !== null ? newCardRect.top : (outcomeDy !== null ? endOutcomeRect.top : null);
+                if (refDy !== null && refTop !== null) {
                     const scrollAdj = vis.scroll ? totalShift * e : 0;
-                    const newCardVisualTop = newCardRect.top + newCardDy * (1 - e) - scrollAdj;
-                    const dy = newCardVisualTop - startCardRect.height - startCardRect.top;
+                    const refVisualTop = refTop + refDy * (1 - e) - scrollAdj;
+                    const dy = refVisualTop - startCardRect.height - startCardRect.top;
                     oldCardEl.style.transform = `translateY(${dy}px)`;
                     const clipTop = Math.max(0, -dy);
                     if (clipTop > 0.5) {
@@ -548,8 +566,11 @@ class TimelineAnimator {
                 seg.style.height = Math.max(0, origHeight + delta) + 'px';
             });
 
-            // Outcome card: slide to final position
-            if (outcomeFlip) {
+            // Outcome card: slide from old card bottom to final position, or FLIP if already visible
+            if (outcomeAppearing && outcomeCard && outcomeDy !== null) {
+                outcomeCard.style.opacity = String(e);
+                outcomeCard.style.transform = `translateY(${outcomeDy * (1 - e)}px)`;
+            } else if (outcomeFlip) {
                 outcomeFlip.el.style.transform = `translateY(${outcomeFlip.dy * (1 - e)}px)`;
             }
 
@@ -568,6 +589,7 @@ class TimelineAnimator {
                     fadeEls.forEach(c => { c.style.opacity = ''; });
                 });
                 slideFlips.forEach(({ el }) => { el.style.transform = ''; el.style.opacity = ''; });
+                if (outcomeAppearing && outcomeCard) { outcomeCard.style.opacity = ''; outcomeCard.style.transform = ''; }
                 if (outcomeFlip) outcomeFlip.el.style.transform = '';
                 segFlips.forEach(({ seg, origTop, origHeight }) => {
                     seg.style.top = origTop + 'px';
@@ -584,10 +606,12 @@ class TimelineAnimator {
     }
 
     _captureStartState(card) {
+        const outcomeVisible = this.outcomeEl && this.outcomeEl.style.display !== 'none' && this.outcomeEl.innerHTML.trim() !== '';
         return {
             startCardRect: card.getBoundingClientRect(),
             startCardContent: card.innerHTML,
             startOutcomeTop: this.outcomeEl ? this.outcomeEl.getBoundingClientRect().top : 0,
+            startOutcomeVisible: outcomeVisible,
         };
     }
 
