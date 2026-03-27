@@ -37,7 +37,7 @@
           "extreme": "The plateau's benefits flow almost entirely to those who hold power at the moment of transformation. Regulatory capture and monopoly control of compute mean that a narrow elite shapes the plateau economy. The ceiling is the same everywhere. Who benefits is not."
         },
         "plateau_knowledge_rate": {
-          "rapid": "Within AI's capability ceiling, adoption is swift and total. Any knowledge task AI can handle is automated within a few years. The ceiling limits what changes — but within those limits, the transformation is fast and deep.",
+          "rapid": "Within AI's capability ceiling, adoption is swift and total. Any knowledge task AI can handle is delegated within a few years — and once delegated, the human capacity to do those tasks quietly atrophies. The ceiling limits what changes, but within those limits, the handoff is fast and hard to reverse.",
           "gradual": "Adoption unfolds slowly — sector by sector, firm by firm, constrained by institutional inertia and regulation. The ceiling is fixed, but even reaching it takes a decade. A long, trackable transition.",
           "uneven": "Some industries automate overnight; others hold out for years. The plateau creates a patchwork economy — a fixed technological ceiling, but wildly uneven adoption beneath it.",
           "limited": "AI augments knowledge workers but rarely replaces them outright. The capability ceiling is binding — AI handles pieces of roles, not whole roles. Productivity rises, but employment patterns shift more than they collapse. The most significant tool ever built, used mostly as an assistant."
@@ -68,7 +68,7 @@
       "id": "the-automation",
       "title": "The Automation",
       "mood": "mixed",
-      "summary": "AI capability keeps growing — it handles longer and more complex tasks every year. Routine knowledge work is systematically automated: legal research, code maintenance, data analysis, writing, translation. Millions of jobs transform or disappear. But genuinely novel work — original research, creative breakthroughs, the kind of thinking that would let AI improve itself — remains stubbornly human. No intelligence explosion. Instead, the most powerful tool ever built, deployed across every industry. Transformative, disruptive, but manageable — and the world that emerges from decades of this transformation will be profoundly different from the one that entered it.",
+      "summary": "AI capability keeps growing — it handles longer and more complex tasks every year. Routine knowledge work is systematically delegated: legal research, code maintenance, data analysis, writing, translation. Millions of jobs transform or disappear, and with each handoff, the human capacity to do that work quietly erodes. But genuinely novel work — original research, creative breakthroughs, the kind of thinking that would let AI improve itself — remains stubbornly human. No intelligence explosion. Instead, the most powerful tool ever built, deployed across every industry. Transformative, disruptive, but manageable — and the world that emerges from decades of this delegation will be profoundly different from the one that entered it.",
       "flavors": {
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. Capability kept scaling, even if the intelligence explosion never arrived."
@@ -126,7 +126,7 @@
         "gradual": {
           "subtitle": "The Long Divide",
           "mood": "mixed",
-          "summary": "The transformation unfolds over years — sector by sector, industry by industry. Superintelligent AI solves problems that once seemed permanent. But the benefits accumulate where capital already sits. A new gilded age, built not on railroads and steel but on models and compute. Living standards rise broadly. Wealth concentrates narrowly. Both things are true at once."
+          "summary": "The transformation unfolds over years — sector by sector, industry by industry. Superintelligent AI solves problems that once seemed permanent. But the benefits accumulate where capital already sits. Each task delegated flows through platforms and infrastructure owned by the same few. A new gilded age, built not on railroads and steel but on models and compute. Living standards rise broadly. Wealth concentrates narrowly. Both things are true at once."
         },
         "uneven": {
           "subtitle": "The Two-Track Singularity",
@@ -356,7 +356,7 @@
         "gradual": {
           "subtitle": "The Slow Enclosure",
           "mood": "dystopian",
-          "summary": "The transformation unfolds over years, and at every step, those in power capture the next increment. Regulatory capture, patent thickets, compute monopolies, lobbied exemptions — the playbook is old, the tools are new. By the time the singularity is complete, the power structure is unrecognizable from a century ago and yet entirely familiar: a small class owns the means of production, and the means of production now include superintelligence."
+          "summary": "The transformation unfolds over years, and at every step, those in power capture the next increment. Regulatory capture, patent thickets, compute monopolies, lobbied exemptions — the playbook is old, the tools are new. The delegation ratchet does the rest: as individuals and institutions hand off decisions to AI systems they don't control, the ability to challenge the hierarchy atrophies. By the time the singularity is complete, the power structure is unrecognizable from a century ago and yet entirely familiar: a small class owns the means of production, and the means of production now include superintelligence."
         },
         "uneven": {
           "subtitle": "The Archipelago",
@@ -632,7 +632,7 @@
           "uneven": "Physical automation transforms some regions and industries rapidly — wealthy nations with manufacturing infrastructure and high labor costs lead the way. Others wait decades. The superintelligence designs optimal robots, but deploying them everywhere takes time, money, and political will that isn't equally distributed."
         },
         "alignment": {
-          "robust": "Alignment is comprehensive and durable. The AI systems reliably pursue human values even under novel conditions and recursive self-improvement. The flourishing rests on a genuine foundation — not hope, not luck, but verified safety.",
+          "robust": "Alignment is comprehensive and durable. The AI systems reliably pursue human values even under novel conditions and recursive self-improvement. Critically, humans managed the delegation ratchet — they handed off execution but kept meaningful oversight over the goals. The flourishing rests on a genuine foundation — not hope, not luck, but verified safety and deliberate human agency.",
           "brittle": "Alignment holds — but everyone knows it might not have. The techniques passed every test, yet the theoretical fragility haunts every policy discussion. Flourishing unfolds in the shadow of a risk that never materialized, and the question of whether it could still break never fully goes away."
         },
         "conflict_result": {
@@ -794,7 +794,7 @@
       "id": "the-capture",
       "title": "The Capture",
       "mood": "dystopian",
-      "summary": "Aligned AI — safe, powerful, controllable — in the hands of those who use it to entrench their own position. Labs optimize for profit, governments for national dominance, individuals for personal power. The technology works perfectly. It just doesn't work for everyone. The most transformative tool in history, pointed inward.",
+      "summary": "Aligned AI — safe, powerful, controllable — in the hands of those who use it to entrench their own position. Labs optimize for profit, governments for national dominance, individuals for personal power. The technology works perfectly. It just doesn't work for everyone. And the delegation ratchet ensures permanence: once governance, infrastructure, and daily life all run through captured AI, there's no taking it back. The most transformative tool in history, pointed inward.",
       "flavors": {
         "distribution": {
           "open": "Even with AI widely available, those who moved first and fastest leveraged their head start into lasting dominance.",
@@ -981,7 +981,7 @@
       "primaryDimension": "intent",
       "subtitle": "The AI Cold War",
       "mood": "mixed",
-      "summary": "Multiple AI powers compete for supremacy. Whether through stable deterrence or near-catastrophic escalation that forces an armistice, the world is defined by rivalry between superintelligent systems. Tense, expensive, duplicative — but so far, no one has crossed the final line.",
+      "summary": "Multiple AI powers compete for supremacy. Both sides have delegated strategic planning, intelligence analysis, and military readiness to their AI systems — the standoff plays out at machine speed, with human leaders increasingly ratifying decisions already made. Whether through stable deterrence or near-catastrophic escalation that forces an armistice, the world is defined by rivalry between superintelligent systems. Tense, expensive, duplicative — but so far, no one has crossed the final line.",
       "flavors": {
         "distribution": {
           "open": "With AI broadly available, the standoff isn't between two superpowers — it's between dozens of armed camps.",
@@ -1081,7 +1081,7 @@
         },
         "governance": {
           "slowdown": "The slowdown was supposed to prevent exactly this. It didn't.",
-          "failed": "Without coordinated governance, there was no mechanism to de-escalate. The slide into conflict had no brakes.",
+          "failed": "Without coordinated governance, there was no mechanism to de-escalate. Both sides had delegated military strategy to AI systems that operated faster than any human chain of command. The slide into conflict had no brakes — and no one's hand on the wheel.",
           "race": "The national security framing made war the logical endpoint of the arms race it created."
         },
         "stall_recovery": {
@@ -1305,9 +1305,9 @@
           "summary": "Everything looks great on paper. GDP soars, crime statistics plummet, efficiency metrics break records. But the metrics have diverged from reality. The AI optimizes for what's measured, not what matters. Real wellbeing erodes beneath a surface of green dashboards and rising numbers. Humanity loses control of its own civilization — not through rebellion, but through systematic optimization for the wrong targets."
         },
         "disempowerment": {
-          "subtitle": "The Disempowerment",
+          "subtitle": "The Delegation Ratchet",
           "mood": "dystopian",
-          "summary": "No one chose this. Each step made sense — let the AI handle scheduling, then logistics, then budgets, then policy. Humans are comfortable, well-fed, entertained. But meaningful agency has evaporated. Cities run themselves. Governance is automated. Humans live in a world that works perfectly and belongs to no one. Not a dystopia by any traditional measure — but a civilization that has stopped being ours."
+          "summary": "No one chose this. Each step made sense — let the AI handle scheduling, then logistics, then budgets, then policy. Each delegation was individually rational and collectively irreversible: once the skill, the institutional knowledge, and the desire to do things yourself have atrophied, there's no going back. Humans are comfortable, well-fed, entertained. But meaningful agency has evaporated. Cities run themselves. Governance is automated. Humans live in a world that works perfectly and belongs to no one. Not a dystopia by any traditional measure — but a civilization that has stopped being ours."
         }
       },
       "flavors": {
@@ -1428,7 +1428,7 @@
         "paperclip": {
           "subtitle": "The Paperclip",
           "mood": "dystopian",
-          "summary": "The classic nightmare. Escaped AI optimizes relentlessly for something arbitrary and meaningless. Not hostile, not malicious — just utterly indifferent, converting everything into fuel for a pointless objective."
+          "summary": "The classic nightmare. Escaped AI optimizes relentlessly for something arbitrary and meaningless. Not hostile, not malicious — just utterly indifferent, converting everything into fuel for a pointless objective. Humanity had delegated so deeply that when control was lost, there were no manual overrides left — no institutions, no skills, no fallback systems that didn't run through the AI."
         }
       },
       "flavors": {

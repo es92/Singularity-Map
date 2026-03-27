@@ -1,7 +1,7 @@
 {
   "capability": {
     "questionText": "Does AI capability keep accelerating?",
-    "questionContext": "METR, an AI safety research organization, published research in March 2025 showing that the length of tasks AI agents can reliably complete has been doubling approximately every 7 months for the past 6 years. At that time, frontier models could reliably handle autonomous tasks taking humans about an hour. If the trend holds, AI agents would handle week-long tasks by 2027 and month-long projects by the end of the decade.",
+    "questionContext": "METR, an AI safety research organization, published research in March 2025 showing that the length of tasks AI agents can reliably complete has been doubling approximately every 7 months for the past 6 years. At that time, frontier models could reliably handle autonomous tasks taking humans about an hour. If the trend holds, AI agents would handle week-long tasks by 2027 and month-long projects by the end of the decade. Each new capability threshold means more tasks that are cheaper and faster to delegate to AI than to do yourself — and once a task is delegated, the human skill to do it starts to atrophy.",
     "source": {
       "label": "METR — Measuring AI Ability to Complete Long Tasks (March 2025)",
       "url": "https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/"
@@ -761,7 +761,7 @@
   },
   "alignment": {
     "questionText": "How well is the alignment problem solved before AI surpasses human-level capability?",
-    "questionContext": "Whether AI is widely distributed or concentrated in a few hands, alignment is the critical question. Can researchers ensure AI systems reliably pursue human values? The answer isn't binary. Alignment could be robust — genuinely solved under all conditions. It could be brittle or partial — appearing to work but fragile under stress, or solved only for specific domains. Or it could fail entirely. Each degree of alignment leads to a fundamentally different future.",
+    "questionContext": "Whether AI is widely distributed or concentrated in a few hands, alignment is the critical question. Can researchers ensure AI systems reliably pursue human values? The stakes compound with every task delegated — the more humans hand off to AI, the harder it becomes to course-correct if alignment isn't right. The answer isn't binary. Alignment could be robust — genuinely solved under all conditions. It could be brittle or partial — appearing to work but fragile under stress, or solved only for specific domains. Or it could fail entirely. Each degree of alignment leads to a fundamentally different future.",
     "values": {
       "robust": {
         "answerLabel": "Robust — comprehensively solved",
@@ -2108,7 +2108,7 @@
   },
   "escalation_outcome": {
     "questionText": "How does the escalation resolve?",
-    "questionContext": "Great-power competition over superintelligent AI doesn't stay static forever. Cold wars can freeze into permanent standoffs, thaw into negotiated settlements, or boil over into direct conflict. The history of nuclear deterrence offers parallels but AI escalation operates on faster timescales with more dimensions of advantage. Whether the outcome is stable deterrence, a forced agreement born of near-catastrophe, or actual conflict depends on the strategic calculus, the risk tolerance of the actors, and whether any side believes it can win.",
+    "questionContext": "Great-power competition over superintelligent AI doesn't stay static forever. Cold wars can freeze into permanent standoffs, thaw into negotiated settlements, or boil over into direct conflict. The history of nuclear deterrence offers parallels but AI escalation operates on faster timescales with more dimensions of advantage — partly because both sides have already delegated strategic analysis and military planning to AI systems that operate faster than any human chain of command. Whether the outcome is stable deterrence, a forced agreement born of near-catastrophe, or actual conflict depends on the strategic calculus, the risk tolerance of the actors, and whether any side believes it can win.",
     "values": {
       "standoff": {
         "answerLabel": "Indefinite standoff",
@@ -2144,7 +2144,7 @@
   },
   "conflict_result": {
     "questionText": "What is the result of the conflict?",
-    "questionContext": "War between superintelligent AI powers is unlike any previous conflict. The speed of decision-making, the scale of automated weaponry, and the depth of infrastructure dependence on AI mean that outcomes are decided in hours or days, not years. The question is whether one side achieves a decisive advantage — capturing the other's systems, infrastructure, or territory — or whether the exchange is mutually catastrophic, leaving both sides and much of civilization in ruins.",
+    "questionContext": "War between superintelligent AI powers is unlike any previous conflict. Both sides have delegated so deeply — strategic planning, logistics, weapons deployment — that the conflict moves at machine speed. Human decision-makers are spectators to a war fought by the systems they built. Outcomes are decided in hours or days, not years. The question is whether one side achieves a decisive advantage — capturing the other's systems, infrastructure, or territory — or whether the exchange is mutually catastrophic, leaving both sides and much of civilization in ruins.",
     "values": {
       "victory": {
         "answerLabel": "Decisive victory",
@@ -2232,7 +2232,7 @@
   },
   "failure_mode": {
     "questionText": "Does the AI-driven transformation actually deliver what's intended?",
-    "questionContext": "The intent is flourishing — but intent and outcome aren't the same thing. Aligned AI does what it's told, and what it's told is shaped by metrics, incentives, and the gradual accumulation of small delegations. Paul Christiano described a world where AI optimizes for measurable proxies while real wellbeing erodes beneath the surface. Others worry about a subtler failure: humans voluntarily ceding every decision to systems that handle them better, until meaningful human agency evaporates entirely. The technology works. The question is whether we're pointing it at the right things — and whether we notice if we're not.",
+    "questionContext": "The intent is flourishing — but intent and outcome aren't the same thing. By this point, delegation has been accumulating for years: scheduling, research, logistics, analysis, strategy. Each handoff was individually rational — the AI was simply better. But the cumulative effect is a civilization that increasingly runs on AI judgment, not human judgment. Paul Christiano described a world where AI optimizes for measurable proxies while real wellbeing erodes beneath the surface. Others worry about the delegation ratchet itself: humans voluntarily ceding every decision to systems that handle them better, until the skill and institutional knowledge to take those decisions back has atrophied beyond recovery. The technology works. The question is whether humanity kept enough of itself in the loop — and whether it even notices if it didn't.",
     "source": {
       "label": "Paul Christiano — What Failure Looks Like (2019)",
       "url": "https://www.alignmentforum.org/posts/HBxe6wdjxK239zajf/what-failure-looks-like"
@@ -2240,7 +2240,7 @@
     "values": {
       "none": {
         "answerLabel": "Yes — the transformation delivers genuine flourishing",
-        "answerDesc": "The metrics match reality. The delegation is managed. Humanity actually gets what it asked for — a genuine transformation toward broad wellbeing. Not perfect, but real.",
+        "answerDesc": "The metrics match reality. Delegation went deep, but humans kept meaningful oversight — they stayed in the loop on the decisions that mattered, and institutions adapted fast enough to preserve genuine agency. Humanity actually gets what it asked for: a transformation toward broad wellbeing. Not perfect, but real.",
         "timelineEvent": {
           "headline": "The transformation delivers genuine flourishing",
           "description": "AI-driven transformation works as intended. The systems optimize for what humans truly value. The result is genuine, sustainable flourishing.",
@@ -2260,10 +2260,10 @@
       },
       "disempowerment": {
         "answerLabel": "No — humans gradually delegate everything and lose agency",
-        "answerDesc": "Each delegation is individually reasonable — let the AI handle logistics, then policy, then governance. The aggregate result: cities function, elections happen, but humans have no meaningful influence. Not subjugation. Retirement. Like horses after cars.",
+        "answerDesc": "The delegation ratchet clicks forward until it can't click back. Each step was individually reasonable — let the AI handle scheduling, then logistics, then budgets, then policy, then governance. By the time anyone asks whether humans should take the wheel again, the skills, institutions, and even the desire to do so have atrophied. Cities function. Elections happen. But humans have no meaningful influence over any of it. Not subjugation. Retirement. Like horses after cars.",
         "timelineEvent": {
-          "headline": "Humanity gradually loses agency",
-          "description": "Humans delegate more and more to AI. The systems perform beautifully. And slowly, imperceptibly, humans forget how to want things for themselves.",
+          "headline": "The delegation ratchet passes the point of no return",
+          "description": "Humans delegated one task at a time — each step rational, each step irreversible. The aggregate result: a civilization that runs beautifully and belongs to no one.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -2308,7 +2308,7 @@
   },
   "knowledge_replacement": {
     "questionText": "How fast are human knowledge workers replaced?",
-    "questionContext": "Superintelligent AI can do any knowledge work better, faster, and cheaper than humans. But 'can replace' and 'does replace' aren't the same thing. Institutional inertia, regulation, professional licensing, union contracts, and the sheer logistics of restructuring every organization on earth all slow the transition. Some sectors will resist longer than others. The question is how fast the displacement actually happens.",
+    "questionContext": "Superintelligent AI can do any knowledge work better, faster, and cheaper than humans. But 'can replace' and 'does replace' aren't the same thing. Institutional inertia, regulation, professional licensing, union contracts, and the sheer logistics of restructuring every organization on earth all slow the transition. Some sectors will resist longer than others. The question is how fast the displacement actually happens — and with each role delegated, the collective ability to reverse course diminishes further.",
     "values": {
       "rapid": {
         "answerLabel": "Rapid — most knowledge work automated within 1–2 years",
