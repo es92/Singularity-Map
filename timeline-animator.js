@@ -277,6 +277,7 @@ class TimelineAnimator {
 
     reset() {
         this.morphAnimating = false;
+        this.containerEl.classList.remove('flip-animating');
         if (this._oldCardEl) { this._oldCardEl.remove(); this._oldCardEl = null; }
         [this.timelineEl, this.questionZoneEl, this.outcomeEl].forEach(el => {
             if (el) { el.style.transform = ''; el.style.opacity = ''; }
@@ -384,6 +385,7 @@ class TimelineAnimator {
         const oldHeaderCount = timeline.querySelectorAll('.timeline-stage-header').length;
 
         // --- Phase 1: Apply end state ---
+        this.containerEl.classList.add('flip-animating');
         this._ensureScrollRoom(5000);
         applyEndState();
 
@@ -596,6 +598,7 @@ class TimelineAnimator {
                     seg.style.height = origHeight + 'px';
                 });
                 this._releaseScrollRoom();
+                this.containerEl.classList.remove('flip-animating');
                 this.morphAnimating = false;
                 if (onComplete) onComplete();
             }
