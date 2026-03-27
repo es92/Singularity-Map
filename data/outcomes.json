@@ -114,6 +114,486 @@
       "timeline": []
     },
     {
+      "id": "the-gilded-singularity",
+      "title": "The Gilded Singularity",
+      "primaryDimension": "knowledge_replacement",
+      "variants": {
+        "rapid": {
+          "subtitle": "The Fast Lane",
+          "mood": "mixed",
+          "summary": "The singularity arrives — and it works. Knowledge work is automated in a rush, diseases fall, energy problems dissolve. But the gains flow upward. Those who own the AI systems, the compute, the platforms capture most of the value. Everyone's life improves. Some lives improve immeasurably more. A golden age — for those at the top. A complicated, ambiguous improvement for everyone else."
+        },
+        "gradual": {
+          "subtitle": "The Long Divide",
+          "mood": "mixed",
+          "summary": "The transformation unfolds over years — sector by sector, industry by industry. Superintelligent AI solves problems that once seemed permanent. But the benefits accumulate where capital already sits. A new gilded age, built not on railroads and steel but on models and compute. Living standards rise broadly. Wealth concentrates narrowly. Both things are true at once."
+        },
+        "uneven": {
+          "subtitle": "The Two-Track Singularity",
+          "mood": "mixed",
+          "summary": "The singularity transforms some places first — tech hubs, wealthy nations, well-connected industries. Others wait years. The gains are real but stratified: early adopters pull away, late adopters struggle to catch up. Within and between nations, a new geography of advantage hardens into permanence."
+        }
+      },
+      "flavors": {
+        "distribution": {
+          "open": "With AI capability widely distributed, the concentration of wealth isn't about access — it's about leverage. Everyone has the tools. Those with capital, data, and scale extract the most value from them.",
+          "lagging": "Frontier labs set the pace and captured the rents. Open-source alternatives follow eventually, but the first-mover advantage translates into lasting wealth concentration.",
+          "concentrated": "A handful of organizations sit at the center of the transformation. Their investors, employees, and partners are the primary beneficiaries. Everyone else benefits, but secondhand.",
+          "monopoly": "One entity controls the pipeline. Its shareholders, partners, and favored clients prosper first and most. The benefits trickle outward — eventually, partially, on terms set by the center."
+        },
+        "takeoff": {
+          "fast": "The speed of the intelligence explosion concentrated the gains among whoever was positioned when it mattered. There was no time to redistribute — the new order was set before anyone could negotiate."
+        },
+        "governance": {
+          "slowdown": "The managed slowdown gave governments time to prepare — but preparation mostly meant positioning national champions and domestic industries. The pause helped some; it entrenched others.",
+          "failed": "Without effective governance, the market distributed the gains on its own terms. Markets reward capital, speed, and scale — all of which concentrated at the top.",
+          "race": "The competitive race between nations channeled investment toward strategic industries and national security, not broad prosperity. The geopolitical winners captured the economic gains."
+        },
+        "alignment": {
+          "robust": "The AI is safe and does what it's told. The problem isn't alignment — it's who benefits from a perfectly aligned tool. The technology works exactly as intended. The distribution of its rewards is a human choice, not a technical failure.",
+          "brittle": "Alignment holds, but the uncertainty around it gives those in power additional leverage — they argue that only centralized control can manage the risk, and use that argument to justify concentration."
+        },
+        "physical_automation": {
+          "rapid": "Physical automation follows knowledge work quickly. The gains are enormous — but again, they flow to those who own the robots, the factories, the logistics networks. Blue-collar displacement arrives on top of white-collar displacement, deepening the divide.",
+          "gradual": "Physical automation trails by years. The breathing room helps — displaced knowledge workers at least have the physical economy to fall back on, for a while. But the trend is the same.",
+          "uneven": "Physical automation transforms manufacturing hubs first. Rural areas, developing nations, and heavily regulated sectors lag by years. The unevenness maps onto existing inequalities and amplifies them."
+        },
+        "stall_recovery": {
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed."
+        },
+        "automation_recovery": {
+          "mild": "AI was stuck on routine work for a while — impressive but limited. Then a breakthrough cracked the creative barrier, and the feedback loop finally began."
+        },
+        "conflict_result": {
+          "victory": "The gilded singularity rose from the ashes of war. The victor rebuilt — but rebuilt in a way that entrenched the winners' advantage. Prosperity returned, but ownership of that prosperity was settled by the outcome of the conflict."
+        }
+      },
+      "reachable": [
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "robust"
+          ],
+          "intent": [
+            "international"
+          ],
+          "failure_mode": [
+            "none"
+          ],
+          "benefit_distribution": [
+            "unequal"
+          ],
+          "enabled_aims": [
+            "human_centered",
+            "corporate_profit",
+            "state_security"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "brittle"
+          ],
+          "intent": [
+            "international"
+          ],
+          "failure_mode": [
+            "none"
+          ],
+          "benefit_distribution": [
+            "unequal"
+          ],
+          "enabled_aims": [
+            "human_centered",
+            "corporate_profit",
+            "state_security"
+          ],
+          "brittle_resolution": [
+            "solved",
+            "sufficient"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "brittle"
+          ],
+          "ai_goals": [
+            "marginal"
+          ],
+          "intent": [
+            "international"
+          ],
+          "failure_mode": [
+            "none"
+          ],
+          "benefit_distribution": [
+            "unequal"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "contained"
+          ],
+          "intent": [
+            "international"
+          ],
+          "failure_mode": [
+            "none"
+          ],
+          "benefit_distribution": [
+            "unequal"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "robust"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "human_centered"
+          ],
+          "benefit_distribution": [
+            "unequal"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "brittle"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "human_centered"
+          ],
+          "benefit_distribution": [
+            "unequal"
+          ],
+          "brittle_resolution": [
+            "solved",
+            "sufficient"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "brittle"
+          ],
+          "ai_goals": [
+            "marginal"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "human_centered"
+          ],
+          "benefit_distribution": [
+            "unequal"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "contained"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "human_centered"
+          ],
+          "benefit_distribution": [
+            "unequal"
+          ]
+        }
+      ],
+      "story": [
+        "Outcome story coming soon."
+      ],
+      "timeline": []
+    },
+    {
+      "id": "the-new-hierarchy",
+      "title": "The New Hierarchy",
+      "primaryDimension": "knowledge_replacement",
+      "variants": {
+        "rapid": {
+          "subtitle": "The Instant Caste",
+          "mood": "dystopian",
+          "summary": "The singularity arrives overnight — and whoever holds power at that moment locks in their position permanently. Superintelligent AI solves everything: disease, energy, scarcity. But the solutions flow through a narrow gate. A tiny elite controls the most powerful technology in human history, and they have no reason to share more than is necessary to maintain order. Abundance is real. Access is rationed. A new feudalism, built on compute instead of land."
+        },
+        "gradual": {
+          "subtitle": "The Slow Enclosure",
+          "mood": "dystopian",
+          "summary": "The transformation unfolds over years, and at every step, those in power capture the next increment. Regulatory capture, patent thickets, compute monopolies, lobbied exemptions — the playbook is old, the tools are new. By the time the singularity is complete, the power structure is unrecognizable from a century ago and yet entirely familiar: a small class owns the means of production, and the means of production now include superintelligence."
+        },
+        "uneven": {
+          "subtitle": "The Archipelago",
+          "mood": "dystopian",
+          "summary": "The singularity transforms some places into post-scarcity paradises — for those at the top. Elsewhere, nothing changes, or changes only as much as the powerful allow. Islands of extraordinary abundance in a sea of managed dependency. Not poverty in the old sense — more like permanent irrelevance."
+        }
+      },
+      "flavors": {
+        "distribution": {
+          "open": "Even with widely available AI, power concentrated. Open access to the tools didn't translate to open access to the outcomes — those with capital and institutional power extracted the most from the same technology available to everyone.",
+          "lagging": "Frontier labs held the decisive advantage long enough to entrench. Open-source narrowed the capability gap; it never closed the power gap.",
+          "concentrated": "Concentration was the plan. A few entities built the most powerful AI, set the terms of access, and shaped the world that emerged. The hierarchy was designed, not accidental.",
+          "monopoly": "One entity, one technology, one set of terms. The monopoly didn't need to be oppressive — it just needed to be the only option. And it was."
+        },
+        "takeoff": {
+          "fast": "The intelligence explosion was so fast that the power structure at the moment of takeoff became the permanent power structure. There was no time to redistribute, negotiate, or revolt. The hierarchy was set in days."
+        },
+        "governance": {
+          "slowdown": "The managed slowdown gave those in power time to prepare — time they used to fortify their positions, not to broaden access. Regulation became a moat.",
+          "failed": "Without governance, the powerful faced no constraints. They captured the gains, wrote the rules after the fact, and called it inevitable.",
+          "race": "The geopolitical race channeled all gains toward national champions and strategic allies. Broad prosperity was never the objective — strategic dominance was."
+        },
+        "alignment": {
+          "robust": "The AI does exactly what it's told. The problem is who's telling it. Perfect alignment in the service of a narrow elite is still perfect alignment — it just doesn't serve humanity.",
+          "brittle": "Alignment is uncertain, and that uncertainty is weaponized. Those in power argue that only centralized control can manage the risk — and use safety as the justification for permanent hierarchy."
+        },
+        "physical_automation": {
+          "rapid": "The physical world is automated rapidly — but the automated economy serves its owners. Displaced workers have no leverage; the machines don't need them. Material comfort rises. Agency collapses.",
+          "gradual": "Physical automation unfolds slowly, giving the hierarchy time to manage the transition on its own terms. Displaced workers are accommodated, not empowered. A managed dependency.",
+          "uneven": "Physical automation reaches the powerful first. Everyone else gets it when and if the hierarchy decides they should. The uneven rollout is a feature, not a bug — it maintains the dependency."
+        },
+        "stall_recovery": {
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed."
+        },
+        "automation_recovery": {
+          "mild": "AI was stuck on routine work for a while. Then a breakthrough cracked the creative barrier, and the full power of superintelligence was unleashed — into the hands of those who already held it."
+        },
+        "conflict_result": {
+          "victory": "The new hierarchy emerged from war. The victor rebuilt the world — in their own image, for their own benefit. Post-war reconstruction became post-war entrenchment."
+        }
+      },
+      "reachable": [
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "robust"
+          ],
+          "intent": [
+            "international"
+          ],
+          "failure_mode": [
+            "none"
+          ],
+          "benefit_distribution": [
+            "extreme"
+          ],
+          "enabled_aims": [
+            "human_centered",
+            "corporate_profit",
+            "state_security"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "brittle"
+          ],
+          "intent": [
+            "international"
+          ],
+          "failure_mode": [
+            "none"
+          ],
+          "benefit_distribution": [
+            "extreme"
+          ],
+          "enabled_aims": [
+            "human_centered",
+            "corporate_profit",
+            "state_security"
+          ],
+          "brittle_resolution": [
+            "solved",
+            "sufficient"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "brittle"
+          ],
+          "ai_goals": [
+            "marginal"
+          ],
+          "intent": [
+            "international"
+          ],
+          "failure_mode": [
+            "none"
+          ],
+          "benefit_distribution": [
+            "extreme"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "contained"
+          ],
+          "intent": [
+            "international"
+          ],
+          "failure_mode": [
+            "none"
+          ],
+          "benefit_distribution": [
+            "extreme"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "robust"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "human_centered"
+          ],
+          "benefit_distribution": [
+            "extreme"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "brittle"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "human_centered"
+          ],
+          "benefit_distribution": [
+            "extreme"
+          ],
+          "brittle_resolution": [
+            "solved",
+            "sufficient"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "brittle"
+          ],
+          "ai_goals": [
+            "marginal"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "human_centered"
+          ],
+          "benefit_distribution": [
+            "extreme"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "contained"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "human_centered"
+          ],
+          "benefit_distribution": [
+            "extreme"
+          ]
+        }
+      ],
+      "story": [
+        "Outcome story coming soon."
+      ],
+      "timeline": []
+    },
+    {
       "id": "the-flourishing",
       "title": "The Flourishing",
       "primaryDimension": "knowledge_replacement",
