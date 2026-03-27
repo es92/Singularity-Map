@@ -645,8 +645,8 @@
                     if (Engine.isNodeLocked(sel, node) !== null) continue;
                     if (sel[node.id]) continue;
                     const options = node.edges
-                        .filter(v => !Engine.isEdgeDisabled(sel, node, v))
                         .map(v => {
+                            const disabled = Engine.isEdgeDisabled(sel, node, v);
                             const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, sel) : null;
                             return {
                                 value: v.id,
@@ -654,16 +654,18 @@
                                 answerLabel: (variant && variant.answerLabel) || v.answerLabel || v.label,
                                 answerDesc: (variant && variant.answerDesc) || v.answerDesc || '',
                                 nodeId: node.id,
-                                reachable: wouldReachOutcome(node.id, v.id),
+                                reachable: disabled ? false : wouldReachOutcome(node.id, v.id),
+                                disabled,
                             };
                         });
-                    if (options.length > 0) return { node, options };
+                    if (options.some(o => !o.disabled)) return { node, options };
                 }
                 return null;
             }
 
             function buildTimelineEvents(nextQ) {
                 const events = [];
+                let foundFrontier = false;
 
                 for (const node of Engine.getDisplayOrder(sel)) {
                     const locked = Engine.isNodeLocked(sel, node);
@@ -671,22 +673,26 @@
                     const isLockedNode = locked !== null;
 
                     if (!value) {
-                        if (!fullQuestions && nextQ && nextQ.node.id === node.id) {
+                        if (!foundFrontier && !fullQuestions && nextQ && nextQ.node.id === node.id) {
+                            foundFrontier = true;
                             const siblings = nextQ.options.map(o => ({
                                 value: o.value, label: o.label,
-                                nodeId: o.nodeId, reachable: o.reachable
+                                nodeId: o.nodeId, reachable: o.reachable,
+                                disabled: o.disabled,
                             }));
                             events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: node.stage, year: '', paramLabel: '', nodeLabel: node.label, nodeId: node.id, selectedValue: null, siblings, isFrontier: true });
                         }
-                        break;
+                        continue;
                     }
 
                     const narr = nodeNarrativeFor(node.id, value, sel);
                     const nodeEdge = node.edges.find(v => v.id === value);
                     const paramLabel = nodeEdge ? nodeEdge.label : value;
                     const siblings = node.edges
-                        .filter(v => !Engine.isEdgeDisabled(sel, node, v) || v.id === value)
-                        .map(v => ({ value: v.id, label: v.label, nodeId: node.id, reachable: v.id === value || wouldReachOutcome(node.id, v.id) }));
+                        .map(v => {
+                            const edgeDisabled = Engine.isEdgeDisabled(sel, node, v) && v.id !== value;
+                            return { value: v.id, label: v.label, nodeId: node.id, reachable: edgeDisabled ? false : (v.id === value || wouldReachOutcome(node.id, v.id)), disabled: edgeDisabled };
+                        });
                     events.push({
                         headline: narr.headline || '', description: narr.description || '',
                         durationMin: narr.durationMin != null ? narr.durationMin : null,
@@ -982,6 +988,7 @@
                                 nodeId: o.nodeId,
                                 value: o.value,
                                 reachable: o.reachable,
+                                disabled: o.disabled,
                             })),
                         };
                         const qResult = mapAnimator.renderQuestionCard(questionData, {

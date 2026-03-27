@@ -16,9 +16,8 @@ The questionnaire collects a set of **dimensions** — the key variables that de
 |---|---|---|
 | `capability` | `singularity`, `hours`, `days`, `weeks`, `months` | scaling-continues, where-tops-out |
 | `stall_recovery` | `mild`, `substantial`, `never` | stall-recovery |
-| `automation` | `deep`, `shallow` | automation-depth |
-| `automation_recovery` | `mild`, `substantial`, `never` | automation-recovery |
-| `takeoff` | `gradual`, `fast`, `hard` | feedback-speed |
+| `automation` | `deep` (derived from capability) | — (always `deep` when capability is `singularity`) |
+| `takeoff` | `none`, `slow`, `moderate`, `fast`, `explosive` | rd-acceleration |
 | `open_source` | `near_parity`, `six_months`, `twelve_months`, `twenty_four_months` | open-source-parity |
 | `distribution` | `open`, `lagging`, `concentrated`, `monopoly` | open-source-parity, frontier-concentration (or implicitly set by hard takeoff) |
 | `geo_spread` | `one`, `two`, `several` | geo-spread (or implicitly set by hard takeoff / decel checkpoints) |
@@ -39,8 +38,6 @@ The questionnaire collects a set of **dimensions** — the key variables that de
 | `failure_mode` | `none`, `whimper`, `disempowerment` | implementation-risk |
 | `knowledge_replacement` | `rapid`, `gradual`, `uneven` | knowledge-replacement |
 | `physical_automation` | `rapid`, `gradual`, `uneven` | physical-automation |
-| `auto_knowledge_rate` | `rapid`, `gradual`, `uneven` | auto-knowledge-rate |
-| `auto_physical_rate` | `rapid`, `gradual`, `uneven`, `limited` | auto-physical-rate |
 | `economic_distribution` | `broad`, `concentrated`, `uneven` | plateau-economics |
 | `plateau_knowledge_rate` | `rapid`, `gradual`, `uneven`, `limited` | plateau-knowledge-rate |
 | `plateau_physical_rate` | `gradual`, `uneven`, `limited` | plateau-physical-rate |

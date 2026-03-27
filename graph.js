@@ -91,12 +91,35 @@ const NODES = [
         { id: 'uneven', label: 'Uneven (5–20+ yrs)' },
         { id: 'limited', label: 'Limited' }
       ] },
-    { id: 'automation', label: 'Knowledge Work', stage: 1, forwardKey: true,
+    { id: 'agi_threshold', label: 'AGI Threshold', stage: 1,
       activateWhen: [{ capability: ['singularity'] }],
-      derivedFrom: [{ when: { automation_recovery: 'mild' }, value: 'deep' }],
-      edges: [ { id: 'deep', label: 'Automates broadly' }, { id: 'shallow', label: 'Routine only' } ] },
+      edges: [
+        { id: 'twenty_four_hours', label: '~24 hours' },
+        { id: 'one_week', label: '~1 week' },
+        { id: 'few_months', label: '~A few months' },
+        { id: 'one_year', label: '~1 year' },
+        { id: 'ten_plus_years', label: '~10+ years' },
+        { id: 'never', label: 'Never' }
+      ] },
+    { id: 'asi_threshold', label: 'ASI Threshold', stage: 1,
+      activateWhen: [{ capability: ['singularity'] }],
+      edges: [
+        { id: 'twenty_four_hours', label: '~24 hours', requires: { agi_threshold: ['twenty_four_hours'] } },
+        { id: 'one_week', label: '~1 week', requires: { agi_threshold: ['twenty_four_hours', 'one_week'] } },
+        { id: 'few_months', label: '~A few months', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months'] } },
+        { id: 'one_year', label: '~1 year', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year'] } },
+        { id: 'ten_plus_years', label: '~10+ years', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year', 'ten_plus_years'] } },
+        { id: 'never', label: 'Never' }
+      ] },
+    { id: 'automation', label: 'Knowledge Work', derived: true, forwardKey: true,
+      derivedFrom: [
+        { when: { automation_recovery: 'mild' }, value: 'deep' },
+        { when: { agi_threshold: 'never' }, value: 'shallow' },
+        { effective: { capability: ['singularity'] }, value: 'deep' }
+      ],
+      edges: [{ id: 'deep' }, { id: 'shallow' }] },
     { id: 'automation_recovery', label: 'Deep Automation Recovery?', stage: 1,
-      activateWhen: [{ capability: ['singularity'], automation: ['shallow'] }],
+      activateWhen: [{ capability: ['singularity'], agi_threshold: ['never'] }],
       edges: [
         { id: 'mild', label: 'Months/years' },
         { id: 'substantial', label: 'Years/decades' },
@@ -142,34 +165,32 @@ const NODES = [
         { id: 'uneven', label: 'Uneven (3–20+ yrs)' },
         { id: 'limited', label: 'Limited' }
       ] },
-    { id: 'metr_milestone', label: 'R&D Milestone', stage: 1,
+    { id: 'takeoff', label: 'R&D Acceleration', stage: 1,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
       edges: [
-        { id: 'twenty_four_hours', label: '24-hour tasks' },
-        { id: 'multi_day', label: 'Multi-day tasks' },
-        { id: 'weeks', label: 'Week-long tasks' },
-        { id: 'months', label: 'Month-long tasks' }
+        { id: 'none', label: '0% — Baseline' },
+        { id: 'slow', label: '10% — Modest' },
+        { id: 'moderate', label: '20% — Meaningful' },
+        { id: 'fast', label: '35% — Dramatic' },
+        { id: 'explosive', label: '50% — Runaway' }
       ] },
-    { id: 'takeoff', label: 'Feedback Loop', stage: 1,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
-      edges: [ { id: 'gradual', label: 'Gradual' }, { id: 'fast', label: 'Fast' }, { id: 'hard', label: 'Explosive' } ] },
     { id: 'governance_window', label: 'Governance Window', stage: 1,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], takeoff: ['gradual'] }],
-      edges: [ { id: 'governed', label: 'Active preparation' }, { id: 'race', label: 'Relative complacency' } ] },
+      activateWhen: [{ capability: ['singularity'], automation: ['deep'], takeoff: ['none', 'slow', 'moderate'] }],
+      edges: [ { id: 'governed', label: 'Active preparation' }, { id: 'partial', label: 'Partial preparation' }, { id: 'race', label: 'Relative complacency' } ] },
     { id: 'open_source', label: 'Open Source', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
       edges: [
-        { id: 'near_parity', label: 'Near-parity', disabledWhen: [{ takeoff: ['hard'] }] },
-        { id: 'six_months', label: '~6 months', disabledWhen: [{ takeoff: ['hard'] }] },
-        { id: 'twelve_months', label: '~12 months', disabledWhen: [{ takeoff: ['hard'] }] },
+        { id: 'near_parity', label: 'Near-parity', disabledWhen: [{ takeoff: ['explosive'] }] },
+        { id: 'six_months', label: '~6 months', disabledWhen: [{ takeoff: ['explosive'] }] },
+        { id: 'twelve_months', label: '~12 months', disabledWhen: [{ takeoff: ['explosive'] }] },
         { id: 'twenty_four_months', label: '~24 months' }
       ] },
     { id: 'distribution', label: 'Frontier Labs', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
       edges: [
-        { id: 'open', label: 'Distributed', requires: { open_source: ['near_parity'] }, disabledWhen: [{ takeoff: ['hard'] }] },
-        { id: 'lagging', label: 'Many compete', disabledWhen: [{ takeoff: ['hard'] }, { open_source: ['near_parity'] }] },
-        { id: 'concentrated', label: 'A few lead', disabledWhen: [{ takeoff: ['hard'] }, { open_source: ['near_parity'] }] },
+        { id: 'open', label: 'Distributed', requires: { open_source: ['near_parity'] }, disabledWhen: [{ takeoff: ['explosive'] }] },
+        { id: 'lagging', label: 'Many compete', disabledWhen: [{ takeoff: ['explosive'] }, { open_source: ['near_parity'] }] },
+        { id: 'concentrated', label: 'A few lead', disabledWhen: [{ takeoff: ['explosive'] }, { open_source: ['near_parity'] }] },
         { id: 'monopoly', label: 'One dominates', disabledWhen: [{ open_source: ['near_parity'] }] }
       ] },
     { id: 'geo_spread', label: 'Countries', stage: 2,
@@ -187,8 +208,8 @@ const NODES = [
       ],
       edges: [
         { id: 'one', label: 'One country' },
-        { id: 'two', label: 'Two powers', disabledWhen: [{ takeoff: ['hard'] }, { distribution: ['monopoly'] }] },
-        { id: 'several', label: 'Several', disabledWhen: [{ takeoff: ['hard'] }, { distribution: ['monopoly'] }] }
+        { id: 'two', label: 'Two powers', disabledWhen: [{ takeoff: ['explosive'] }, { distribution: ['monopoly'] }] },
+        { id: 'several', label: 'Several', disabledWhen: [{ takeoff: ['explosive'] }, { distribution: ['monopoly'] }] }
       ] },
     { id: 'sovereignty', label: 'Power Holder', stage: 2,
       activateWhen: [
@@ -228,7 +249,7 @@ const NODES = [
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], geo_spread: ['one'] }],
       derivedFrom: [{ when: { alignment_durability: 'breaks' }, value: 'accelerate' }],
       edges: [
-        { id: 'decelerate', label: 'Decelerate', disabledWhen: [{ _raw: { alignment: ['robust'] } }, { takeoff: ['hard'] }] },
+        { id: 'decelerate', label: 'Decelerate', disabledWhen: [{ _raw: { alignment: ['robust'] } }, { takeoff: ['explosive'] }] },
         { id: 'accelerate', label: 'Accelerate' }
       ] },
     { id: 'decel_2mo_progress', label: '2 Months', stage: 2,
@@ -395,22 +416,6 @@ const NODES = [
         }
       ],
       edges: [ { id: 'rival', label: 'Rival reaches parity' } ] },
-    { id: 'alignment_durability', label: 'Alignment Durability', stage: 2,
-      activateWhen: [
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['brittle'],
-          _notSet: ['decel_outcome']
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['brittle'],
-          _eff: { decel_outcome: ['rival'], decel_align_progress: ['brittle'] }
-        }
-      ],
-      edges: [ { id: 'holds', label: 'Holds for now' }, { id: 'breaks', label: 'Breaks' } ] },
     { id: 'proliferation_control', label: 'Proliferation Control', stage: 2, hideAfterEscape: true,
       activateWhen: [
         {
@@ -508,24 +513,6 @@ const NODES = [
           ]
         },
         { id: 'escaped', label: 'Escapes' }
-      ] },
-    { id: 'ai_goals', label: 'AI Converges On', stage: 2, forwardKey: true,
-      activateWhen: [
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['failed'],
-          containment: ['escaped']
-        }
-      ],
-      derivedFrom: [{ whenSet: 'inert_outcome', fromDim: 'inert_outcome' }],
-      edges: [
-        { id: 'benevolent', label: 'Benefit humanity' },
-        { id: 'alien_coexistence', label: 'Alien (tolerant)' },
-        { id: 'alien_extinction', label: 'Alien (total)' },
-        { id: 'paperclip', label: 'Arbitrary' },
-        { id: 'swarm', label: 'Divergent' },
-        { id: 'marginal', label: 'Inert (for now)' }
       ] },
     { id: 'intent', label: 'Intent', stage: 2, forwardKey: true, hideAfterEscape: true,
       activateWhen: [
@@ -684,27 +671,22 @@ const NODES = [
         { id: 'whimper', label: 'Wrong metrics' },
         { id: 'disempowerment', label: 'Human irrelevance', disabledWhen: [{ _raw: { enabled_aims: ['corporate_profit', 'state_security'] } }] }
       ] },
-    { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
-      activateWhen: OUTCOME_ACTIVATE,
-      edges: [
-        { id: 'equal', label: 'Shared equally', disabledWhen: [{ enabled_aims: ['corporate_profit'] }] },
-        { id: 'unequal', label: 'Wealth concentrates' },
-        { id: 'extreme', label: 'Power concentrates' }
-      ] },
-    { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, terminal: true, hideAfterEscape: true,
-      activateWhen: OUTCOME_ACTIVATE,
-      edges: [
-        { id: 'rapid', label: 'Rapid (1–2 yrs)' },
-        { id: 'gradual', label: 'Gradual (3–10 yrs)' },
-        { id: 'uneven', label: 'Uneven (1–20 yrs)' }
-      ] },
-    { id: 'physical_automation', label: 'Physical Automation', stage: 3, terminal: true, hideAfterEscape: true,
-      activateWhen: OUTCOME_ACTIVATE,
-      edges: [
-        { id: 'rapid', label: 'Rapid (2–5 yrs)' },
-        { id: 'gradual', label: 'Gradual (5–20 yrs)' },
-        { id: 'uneven', label: 'Uneven (2–20+ yrs)' }
-      ] },
+    { id: 'alignment_durability', label: 'Alignment Durability', stage: 2,
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['brittle'],
+          _notSet: ['decel_outcome']
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['brittle'],
+          _eff: { decel_outcome: ['rival'], decel_align_progress: ['brittle'] }
+        }
+      ],
+      edges: [ { id: 'holds', label: 'Holds for now' }, { id: 'breaks', label: 'Breaks' } ] },
     { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3, hideAfterEscape: true,
       activateWhen: [
         {
@@ -721,6 +703,24 @@ const NODES = [
         { id: 'solved', label: 'Alignment fully solved' },
         { id: 'sufficient', label: 'Brittle alignment holds' },
         { id: 'escape', label: 'AI eventually escapes' }
+      ] },
+    { id: 'ai_goals', label: 'AI Converges On', stage: 2, forwardKey: true,
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['failed'],
+          containment: ['escaped']
+        }
+      ],
+      derivedFrom: [{ whenSet: 'inert_outcome', fromDim: 'inert_outcome' }],
+      edges: [
+        { id: 'benevolent', label: 'Benefit humanity' },
+        { id: 'alien_coexistence', label: 'Alien (tolerant)' },
+        { id: 'alien_extinction', label: 'Alien (total)' },
+        { id: 'paperclip', label: 'Arbitrary' },
+        { id: 'swarm', label: 'Divergent' },
+        { id: 'marginal', label: 'Inert (for now)' }
       ] },
     { id: 'inert_stays', label: 'Does Escaped AI Stay Inert?', stage: 3,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'] }],
@@ -775,6 +775,27 @@ const NODES = [
           requires: { escape_method: ['autonomous_weapons', 'industrial'] }
         }
       ] },
+    { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
+      activateWhen: OUTCOME_ACTIVATE,
+      edges: [
+        { id: 'equal', label: 'Shared equally', disabledWhen: [{ enabled_aims: ['corporate_profit'] }] },
+        { id: 'unequal', label: 'Wealth concentrates' },
+        { id: 'extreme', label: 'Power concentrates' }
+      ] },
+    { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, terminal: true, hideAfterEscape: true,
+      activateWhen: OUTCOME_ACTIVATE,
+      edges: [
+        { id: 'rapid', label: 'Rapid (1–2 yrs)' },
+        { id: 'gradual', label: 'Gradual (3–10 yrs)' },
+        { id: 'uneven', label: 'Uneven (1–20 yrs)' }
+      ] },
+    { id: 'physical_automation', label: 'Physical Automation', stage: 3, terminal: true, hideAfterEscape: true,
+      activateWhen: OUTCOME_ACTIVATE,
+      edges: [
+        { id: 'rapid', label: 'Rapid (2–5 yrs)' },
+        { id: 'gradual', label: 'Gradual (5–20 yrs)' },
+        { id: 'uneven', label: 'Uneven (2–20+ yrs)' }
+      ] },
     { id: 'decel_outcome', label: 'Deceleration Outcome', derived: true,
       activateWhen: [{ gov_action: ['decelerate'] }],
       derivedFrom: [],
@@ -788,7 +809,9 @@ const NODES = [
         { effective: { gov_action: ['accelerate'] }, value: 'race' },
         { effective: { decel_outcome: ['abandon'] }, value: 'race' },
         { effective: { gov_action: ['decelerate'] }, value: 'slowdown' },
-        { whenSet: 'governance_window', fromDim: 'governance_window' },
+        { when: { governance_window: 'governed' }, value: 'governed' },
+        { when: { governance_window: 'partial' }, value: 'race' },
+        { when: { governance_window: 'race' }, value: 'race' },
       ],
       edges: [{ id: 'race' }, { id: 'slowdown' }, { id: 'governed' }] },
     { id: 'rival_emerges', label: 'Rival Emerges', derived: true,

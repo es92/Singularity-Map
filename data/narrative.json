@@ -1,14 +1,14 @@
 {
   "capability": {
-    "questionText": "Do you think AI will continue to double in task-completion ability every ~7 months?",
-    "questionContext": "In March 2025, METR published research showing that the length of tasks AI agents can reliably complete has been doubling approximately every 7 months for the past 6 years. At that time, frontier models like Claude 3.7 Sonnet could reliably handle autonomous tasks taking humans about an hour. If the trend holds, AI agents would handle week-long tasks by 2027 and month-long projects by the end of the decade.",
+    "questionText": "Does AI capability keep accelerating?",
+    "questionContext": "METR, an AI safety research organization, published research in March 2025 showing that the length of tasks AI agents can reliably complete has been doubling approximately every 7 months for the past 6 years. At that time, frontier models could reliably handle autonomous tasks taking humans about an hour. If the trend holds, AI agents would handle week-long tasks by 2027 and month-long projects by the end of the decade.",
     "source": {
       "label": "METR — Measuring AI Ability to Complete Long Tasks (March 2025)",
       "url": "https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/"
     },
     "values": {
       "singularity": {
-        "answerLabel": "Yes — the trend continues",
+        "answerLabel": "Yes — it keeps doubling roughly every 7 months",
         "answerDesc": "Scaling laws hold, compute keeps growing, and AI capability maintains its exponential trajectory.",
         "timelineEvent": {
           "headline": "AI scaling trend holds",
@@ -19,7 +19,7 @@
       },
       "stalls": {
         "answerLabel": "No — it slows down or hits a wall",
-        "answerDesc": "Something breaks the trend: diminishing returns on scaling, data limitations, architectural ceilings, or something unexpected.",
+        "answerDesc": "Something breaks the trend — diminishing returns on scaling, data limitations, architectural ceilings, or something unexpected — and AI capability plateaus before reaching superhuman levels.",
         "timelineEvent": {
           "headline": "AI scaling hits a wall",
           "description": "The exponential trend breaks. Whether from data limits, compute costs, or fundamental barriers — AI capability plateaus. The singularity recedes from view.",
@@ -30,7 +30,7 @@
     }
   },
   "stall_duration": {
-    "questionText": "Where do you think autonomous AI capability tops out?",
+    "questionText": "Where does autonomous AI capability top out?",
     "questionContext": "If the exponential trend doesn't hold, AI will hit a ceiling somewhere. The question is where. Think not about what AI can do with constant human guidance, but what it can handle reliably on its own — start to finish, no hand-holding.",
     "values": {
       "hours": {
@@ -76,7 +76,7 @@
     }
   },
   "stall_recovery": {
-    "questionText": "What do you think is required for progress to resume?",
+    "questionText": "What is required for progress to resume?",
     "questionContext": "AI capability has hit a ceiling — but ceilings in technology have been broken before. The history of computing is full of walls that turned out to be architectural limitations, not fundamental ones. New paradigms (transistors replacing vacuum tubes, GPUs replacing CPUs for training, transformers replacing RNNs) have repeatedly restarted progress after apparent dead ends. Researchers like Yann LeCun have argued that current architectures are fundamentally missing key ingredients — world models that let systems simulate consequences, plan ahead, and reason about cause and effect — and that genuinely new approaches (like his proposed JEPA architecture) could eventually break through where scaling alone cannot. The question is whether the current ceiling is architectural or fundamental — and if architectural, how long until someone finds the door.",
     "values": {
       "mild": {
@@ -229,26 +229,192 @@
       }
     }
   },
-  "automation": {
-    "questionText": "As AI capability keeps growing, does it translate into automating knowledge work — including AI research itself?",
-    "questionContext": "Raw capability is one thing; transforming the economy and accelerating progress is another. The METR trend shows AI handling ever-longer tasks — but there's a question of whether this extends to genuinely novel, creative work. Can AI do original research, generate new hypotheses, design better AI architectures? Or does it plateau on routine execution — impressive, transformative for many jobs, but unable to cross the threshold into the kind of work that would accelerate its own development?",
+  "takeoff": {
+    "questionText": "How much does each generation of AI accelerate the next?",
+    "questionContext": "AI is now automating its own research — each new generation helps build the next one. The key question is how strong this feedback loop is. At the baseline METR doubling rate of ~7 months, the journey from current AI (~12-hour tasks) to superintelligence (~year-long tasks) would take over 5 years with no acceleration. But if each doubling of AI capability makes the next doubling come faster, the timeline compresses dramatically — to about 2 years at 20% acceleration per cycle, or 7 months at 50%.",
+    "source": {
+      "label": "AI 2027 — AI R&D Progress Multiplier (AI Futures Project, April 2025)",
+      "url": "https://ai-2027.com"
+    },
     "values": {
-      "deep": {
-        "answerLabel": "Yes — AI automates knowledge work broadly, including AI R&D",
-        "answerDesc": "AI doesn't just handle well-defined tasks — it does original research, generates novel hypotheses, and accelerates its own development. The feedback loop between AI capability and AI research begins.",
+      "none": {
+        "answerLabel": "0% — No acceleration",
+        "answerDesc": "AI automates research but doesn't speed up its own improvement cycle. Each doubling still takes ~7 months. The path to superintelligence stretches over 5 years. Institutions can keep up. Governance frameworks have time to mature. The world adapts gradually.",
         "timelineEvent": {
-          "headline": "AI begins automating its own research",
-          "description": "AI systems cross the threshold from tool to researcher. They generate novel hypotheses, design experiments, and write code that improves their own architecture. The feedback loop between AI capability and AI research kicks in. Knowledge work across every industry starts transforming.",
+          "headline": "AI research progresses at baseline rate",
+          "description": "AI automates much of the research process, but each generation doesn't meaningfully accelerate the next. Progress continues at the baseline ~7-month doubling rate — powerful, but predictable. The path to superintelligence stretches over half a decade.",
+          "durationMin": 66,
+          "durationMax": 66
+        }
+      },
+      "slow": {
+        "answerLabel": "10% — Modest acceleration",
+        "answerDesc": "Each generation of AI makes the next one come slightly faster. The doubling time gradually shrinks from 7 months toward 3. Total time to superintelligence: about 3–4 years. Fast by historical standards, but slow enough for governance to keep pace.",
+        "timelineEvent": {
+          "headline": "AI research gradually accelerates",
+          "description": "Each generation of AI modestly accelerates the next. The doubling time compresses from 7 months toward 3 over several years. Institutions strain but can adapt. The acceleration is visible but not overwhelming.",
+          "durationMin": 40,
+          "durationMax": 40
+        }
+      },
+      "moderate": {
+        "answerLabel": "20% — Meaningful acceleration",
+        "answerDesc": "The feedback loop is real and visible. Each generation makes the next come noticeably faster. The doubling time compresses from 7 months to under 2. Total time to superintelligence: about 2 years. Fast enough to be alarming, slow enough that people see it coming.",
+        "timelineEvent": {
+          "headline": "The acceleration becomes undeniable",
+          "description": "Each AI generation meaningfully speeds up the next. What started as 7-month cycles compresses to months, then weeks. The pace is clearly accelerating — but there's still time to react.",
+          "durationMin": 25,
+          "durationMax": 25
+        }
+      },
+      "fast": {
+        "answerLabel": "35% — Dramatic acceleration",
+        "answerDesc": "The R&D feedback loop is powerful. Each generation comes dramatically faster than the last. The doubling time plummets from 7 months to weeks within a year. Superintelligence arrives in roughly a year — the AI 2027 scenario. Most institutions can't adapt. Governance is reactive at best.",
+        "timelineEvent": {
+          "headline": "The intelligence explosion",
+          "description": "The feedback loop between AI capability and AI research accelerates sharply. Each generation produces the next in a fraction of the time. Within roughly a year, AI leaps from automated research to superintelligence.",
+          "durationMin": 13,
+          "durationMax": 13
+        }
+      },
+      "explosive": {
+        "answerLabel": "50% — Runaway acceleration",
+        "answerDesc": "True recursive self-improvement. Each doubling halves the time to the next one — 7 months, then 3.5, then under 2, then weeks, then days. Total time to superintelligence: about 7 months, with the final leap happening in days. Nobody outside the leading lab fully grasps what happened until it's over.",
+        "timelineEvent": {
+          "headline": "Runaway intelligence explosion",
+          "description": "Each generation of AI produces the next in half the time. The first doublings take months; the last take days. The transition from 'impressive AI' to 'vastly superhuman' compresses into weeks at the end.",
+          "durationMin": 7,
+          "durationMax": 7
+        }
+      }
+    }
+  },
+  "agi_threshold": {
+    "questionText": "At what task length does AI match the best humans?",
+    "questionContext": "METR measures AI capability by the length of tasks models can reliably complete autonomously. But raw task length doesn't automatically translate to human-competitive performance. A system that handles 24-hour tasks might still lack the judgment, creativity, or contextual understanding that makes top human professionals effective. Or it might already be competitive — the threshold could be lower than we think. The question is where on the capability ladder AI becomes genuinely competitive with the best humans across knowledge work.",
+    "values": {
+      "twenty_four_hours": {
+        "answerLabel": "~24 hours — the bar is low",
+        "answerDesc": "Reliably executing day-long autonomous tasks is enough. At that level, AI matches or exceeds most human professionals in structured knowledge work — research, analysis, coding, writing. The bar for human-competitive turns out to be lower than expected.",
+        "timelineEvent": {
+          "headline": "AI matches top humans at day-long tasks",
+          "description": "AI systems that can reliably handle 24-hour autonomous tasks prove competitive with the best human professionals across most knowledge work domains.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
-      "shallow": {
-        "answerLabel": "No — routine tasks are automated, but novel creative work remains out of reach",
-        "answerDesc": "AI becomes the most powerful tool ever built for well-defined work — legal research, code maintenance, data analysis, translation. But genuinely novel thinking, original research, and the kind of creative leaps that drive scientific progress remain stubbornly human. No intelligence explosion. A transformation, but a manageable one.",
+      "one_week": {
+        "answerLabel": "~1 week — sustained competence required",
+        "answerDesc": "Day-long tasks aren't enough — human expertise involves sustained coherence across a week of work: revising, iterating, adapting to feedback. AI becomes truly competitive when it can manage week-long projects end to end without losing the thread.",
         "timelineEvent": {
-          "headline": "AI automates routine work only",
-          "description": "AI handles predictable, structured knowledge work but cannot perform novel research, creative problem-solving, or tasks requiring genuine understanding. The automation is broad but shallow.",
+          "headline": "AI matches top humans at week-long tasks",
+          "description": "AI systems reach human-competitive performance once they can sustain coherent, autonomous work across an entire week — managing complexity, revising, and adapting.",
+          "durationMin": 0,
+          "durationMax": 0
+        }
+      },
+      "few_months": {
+        "answerLabel": "~A few months — deep expertise takes time",
+        "answerDesc": "Real human expertise involves months of sustained strategic thinking — building mental models, navigating ambiguity, adapting to changing circumstances. AI doesn't match this until it can manage multi-month autonomous projects with genuine strategic coherence.",
+        "timelineEvent": {
+          "headline": "AI matches top humans at month-long projects",
+          "description": "AI reaches human-competitive capability only when it can sustain months of autonomous strategic work — navigating ambiguity and adapting to changing circumstances.",
+          "durationMin": 0,
+          "durationMax": 0
+        }
+      },
+      "one_year": {
+        "answerLabel": "~1 year — the bar is high",
+        "answerDesc": "The best human professionals operate on year-long timescales — building relationships, developing institutional knowledge, executing multi-phase strategies. AI isn't truly competitive until it can match this kind of sustained, adaptive, long-horizon performance.",
+        "timelineEvent": {
+          "headline": "AI matches top humans at year-long work",
+          "description": "Only when AI can sustain year-long autonomous projects — with strategic adaptation, relationship-building, and institutional understanding — does it truly match the best humans.",
+          "durationMin": 0,
+          "durationMax": 0
+        }
+      },
+      "ten_plus_years": {
+        "answerLabel": "~10+ years — human mastery runs deep",
+        "answerDesc": "True human expertise is built over decades — intuition honed through thousands of edge cases, judgment shaped by years of failure and success. AI would need to match decade-scale accumulated wisdom to be genuinely competitive with the best humans.",
+        "timelineEvent": {
+          "headline": "AI matches top humans only at decade-scale mastery",
+          "description": "The threshold for human-competitive AI turns out to be extraordinarily high — matching the accumulated wisdom and judgment that top humans build over decades of practice.",
+          "durationMin": 0,
+          "durationMax": 0
+        }
+      },
+      "never": {
+        "answerLabel": "Never — the gap is qualitative, not quantitative",
+        "answerDesc": "No task length closes the gap. What makes the best humans competitive isn't how long they can work autonomously — it's something AI fundamentally lacks: embodied understanding, social intelligence, genuine creativity, or some quality we can't yet name. Task length is the wrong metric entirely.",
+        "timelineEvent": {
+          "headline": "AI never truly matches the best humans",
+          "description": "Despite handling ever-longer tasks, AI never becomes genuinely competitive with top human professionals. The gap turns out to be qualitative — something that scaling task length alone cannot bridge.",
+          "durationMin": 0,
+          "durationMax": 0
+        }
+      }
+    }
+  },
+  "asi_threshold": {
+    "questionText": "At what task length does AI surpass the best humans at knowledge work?",
+    "questionContext": "Matching the best humans is one threshold. Surpassing them is another — and it's the one that reshapes everything. When AI doesn't just compete with top professionals but consistently outperforms them, the dynamics of research, strategy, governance, and economic competition fundamentally change. The question is whether raw task-length capability translates into genuine superhuman performance, and if so, at what level.",
+    "values": {
+      "twenty_four_hours": {
+        "answerLabel": "~24 hours — superhuman emerges early",
+        "answerDesc": "Even at day-long task capability, AI already surpasses humans in ways that matter — perfect recall, tireless execution, and the ability to run thousands of parallel threads. The superhuman advantage is less about depth and more about breadth and speed.",
+        "timelineEvent": {
+          "headline": "AI surpasses top humans at day-long tasks",
+          "description": "AI systems handling 24-hour tasks already outperform the best humans — not through deeper understanding, but through parallelism, speed, and consistency that no human can match.",
+          "durationMin": 0,
+          "durationMax": 0
+        }
+      },
+      "one_week": {
+        "answerLabel": "~1 week — sustained superhuman performance",
+        "answerDesc": "At week-long capability, AI doesn't just match humans — it surpasses them through relentless consistency, the ability to hold vastly more context, and zero fatigue. Human judgment still has edges, but AI's raw throughput and coherence across a full week overwhelms them.",
+        "timelineEvent": {
+          "headline": "AI surpasses top humans at week-long tasks",
+          "description": "AI systems managing week-long projects consistently outperform the best human professionals — through sustained focus, perfect memory, and the ability to explore solution spaces no human could cover.",
+          "durationMin": 0,
+          "durationMax": 0
+        }
+      },
+      "few_months": {
+        "answerLabel": "~A few months — deep strategic superiority",
+        "answerDesc": "Superhuman performance requires multi-month strategic coherence. At that level, AI can hold entire organizational strategies in working memory, run multi-phase plans, and adapt faster than any human team. The advantage is no longer just speed — it's qualitatively better judgment across complex, long-horizon problems.",
+        "timelineEvent": {
+          "headline": "AI surpasses top humans at multi-month projects",
+          "description": "At multi-month capability, AI demonstrates qualitatively superior strategic thinking — managing complexity, adapting to changing conditions, and producing insights no human team could match.",
+          "durationMin": 0,
+          "durationMax": 0
+        }
+      },
+      "one_year": {
+        "answerLabel": "~1 year — the threshold is high",
+        "answerDesc": "Surpassing the best humans requires year-long capability — the ability to execute multi-phase strategies with sustained coherence, adapt to cascading changes, and integrate knowledge across domains at a level that makes human expertise look narrow by comparison.",
+        "timelineEvent": {
+          "headline": "AI surpasses top humans at year-long work",
+          "description": "Only at year-long task capability does AI truly surpass the best humans — demonstrating strategic depth, cross-domain synthesis, and adaptive planning that makes human expertise look narrow.",
+          "durationMin": 0,
+          "durationMax": 0
+        }
+      },
+      "ten_plus_years": {
+        "answerLabel": "~10+ years — matching decades of accumulated wisdom",
+        "answerDesc": "Surpassing humans requires matching and exceeding the kind of deep wisdom built over decades — intuition, judgment under radical uncertainty, and the ability to see patterns that only emerge over very long timescales. The bar for superhuman is extraordinarily high.",
+        "timelineEvent": {
+          "headline": "AI surpasses top humans only at decade-scale depth",
+          "description": "The bar for superhuman performance turns out to be extraordinarily high — requiring AI to match and exceed the accumulated wisdom and judgment that humans build over lifetimes.",
+          "durationMin": 0,
+          "durationMax": 0
+        }
+      },
+      "never": {
+        "answerLabel": "Never — AI never truly surpasses the best humans",
+        "answerDesc": "AI becomes a powerful tool — faster, more consistent, tireless. But it never surpasses the best humans in ways that matter. The qualities that make top human professionals exceptional — creativity, wisdom, social intelligence, moral judgment — remain beyond AI regardless of task length. Superhuman AI turns out to be a category error.",
+        "timelineEvent": {
+          "headline": "AI never surpasses the best humans",
+          "description": "Despite ever-growing task capability, AI never truly exceeds the best human professionals at the work that matters most. The superhuman threshold is never crossed.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -409,96 +575,6 @@
       }
     }
   },
-  "metr_milestone": {
-    "questionText": "At what point does AI begin automating its own research?",
-    "questionContext": "METR's research shows AI task-completion ability doubling every ~7 months. As of early 2025, frontier models reliably handle tasks taking about an hour. If the trend holds, 24-hour tasks arrive by late 2025, week-long tasks by early 2027, and month-long projects by mid-2027. The question is which milestone triggers the feedback loop — when AI can do enough sustained, autonomous research to start accelerating its own development.",
-    "source": {
-      "label": "METR — Measuring AI Ability to Complete Long Tasks (March 2025)",
-      "url": "https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/"
-    },
-    "values": {
-      "twenty_four_hours": {
-        "answerLabel": "24-hour tasks — the R&D loop begins early",
-        "answerDesc": "AI can reliably handle a full day of autonomous work. That's enough to run small experiments, iterate on code overnight, and generate hypotheses faster than human teams. The feedback loop starts crude but real.",
-        "timelineEvent": {
-          "headline": "AI handles day-long research tasks",
-          "description": "Frontier models can now reliably execute 24-hour autonomous research tasks — running experiments, iterating on code, writing up results. The R&D feedback loop begins: crude at first, but enough to accelerate the next generation.",
-          "durationMin": 7,
-          "durationMax": 7
-        }
-      },
-      "multi_day": {
-        "answerLabel": "Multi-day tasks — sustained autonomous research",
-        "answerDesc": "AI handles multi-day projects autonomously: designing and running experiment sequences, debugging complex systems, writing and reviewing papers. Research teams reorganize around AI researchers that work around the clock.",
-        "timelineEvent": {
-          "headline": "AI sustains multi-day research autonomously",
-          "description": "AI systems manage multi-day research projects end-to-end — designing experiments, debugging, iterating. Labs reorganize around AI researchers that never sleep. The feedback loop is unmistakable.",
-          "durationMin": 14,
-          "durationMax": 14
-        }
-      },
-      "weeks": {
-        "answerLabel": "Week-long tasks — full research cycles",
-        "answerDesc": "AI runs week-long research programs: formulating hypotheses, designing experiments, executing them, analyzing results, and proposing next steps. Human researchers supervise but aren't bottlenecks anymore.",
-        "timelineEvent": {
-          "headline": "AI runs week-long research programs",
-          "description": "AI systems now execute full research cycles — from hypothesis to experiment to analysis to next steps — across an entire week. Human researchers shift from doing to supervising. The pace of AI progress enters a new regime.",
-          "durationMin": 21,
-          "durationMax": 21
-        }
-      },
-      "months": {
-        "answerLabel": "Month-long tasks — the threshold is high",
-        "answerDesc": "The feedback loop doesn't meaningfully start until AI can manage month-long research programs with sustained strategic coherence. The bar for genuine self-improvement is higher than shorter milestones suggest.",
-        "timelineEvent": {
-          "headline": "AI manages month-long research programs",
-          "description": "Only when AI can sustain month-long strategic research — managing complexity, maintaining coherence, adapting plans — does the R&D feedback loop truly ignite. The threshold was higher than optimists predicted.",
-          "durationMin": 28,
-          "durationMax": 28
-        }
-      }
-    }
-  },
-  "takeoff": {
-    "questionText": "How quickly does AI research accelerate to superintelligence?",
-    "questionContext": "AI has crossed the research automation threshold. The R&D feedback loop is running — each generation of AI helps build the next one. The question now is how fast this loop accelerates. The AI Futures Project modeled the transition from early AI researchers to superhuman capability taking roughly 12–18 months, with the R&D progress multiplier climbing from 1.5x to 50x. But the actual pace depends on how much each cycle improves the next — and whether physical constraints (compute, energy, data) impose speed limits.",
-    "source": {
-      "label": "AI 2027 — AI R&D Progress Multiplier (AI Futures Project, April 2025)",
-      "url": "https://ai-2027.com"
-    },
-    "values": {
-      "gradual": {
-        "answerLabel": "Gradual — 3 to 10 years",
-        "answerDesc": "The feedback loop exists but runs at a pace humans can track. The R&D multiplier peaks around 3–5x. Each AI generation is meaningfully better, but the cycle time is quarters or years. Governments can observe, debate, and legislate between generations. Open source can attempt to keep pace. The public understands what's happening. Fast by historical standards — but institutional standards can keep up.",
-        "timelineEvent": {
-          "headline": "The climb to superintelligence takes years",
-          "description": "AI capability grows steadily but not explosively. The feedback loop between AI research and AI capability unfolds over 3–10 years, giving humanity time to observe and react.",
-          "durationMin": 36,
-          "durationMax": 120
-        }
-      },
-      "fast": {
-        "answerLabel": "Fast — 6 to 18 months",
-        "answerDesc": "The AI Futures Project scenario. The R&D multiplier climbs from 1.5x to 10–50x over roughly a year. Week-level agents in mid-2026, superhuman researchers by late 2027. Most institutions can't fully adapt, but people see it coming. Governance is possible but rushed and reactive. It feels like watching a slow-motion explosion — everyone can see it, nobody can stop it.",
-        "timelineEvent": {
-          "headline": "The intelligence explosion",
-          "description": "The R&D multiplier climbs from 1.5x to 50x. Each generation of AI designs the next one faster. Week-level agents give way to superhuman researchers in months. Institutions scramble to keep up. Everyone can see it happening — nobody can slow it down.",
-          "durationMin": 6,
-          "durationMax": 18
-        }
-      },
-      "hard": {
-        "answerLabel": "Explosive — days to weeks",
-        "answerDesc": "True recursive self-improvement. Each improvement cycle is faster than the last, converging in days or weeks. The R&D multiplier effectively goes to infinity. Nobody outside the leading lab knows what happened until it's over. Open source becomes irrelevant overnight. Governance is impossible — there's no time. The transition from 'impressive AI agent' to 'vastly superhuman intelligence' happens before the news cycle can cover it.",
-        "timelineEvent": {
-          "headline": "Intelligence explosion in days to weeks",
-          "description": "The feedback loop between AI and AI research goes critical. Capability doubles in hours, then minutes. The world before and after are unrecognizable.",
-          "durationMin": 0.03,
-          "durationMax": 1
-        }
-      }
-    }
-  },
   "governance_window": {
     "questionText": "The gradual pace gives humanity a window. Is it used?",
     "questionContext": "With AI improving over years rather than months, governments, institutions, and the public have time to prepare. International negotiations can happen. Regulatory frameworks can be tested and revised. Public understanding can develop. But 'having time' and 'using time well' aren't the same thing. The history of technology regulation — from social media to climate — is full of slow-motion failures where the window existed but nobody climbed through it.",
@@ -511,6 +587,16 @@
           "description": "The gradual pace gives governments, institutions, and researchers time to build governance frameworks, safety protocols, and international agreements.",
           "durationMin": 12,
           "durationMax": 36
+        }
+      },
+      "partial": {
+        "answerLabel": "Partially — real effort, but short of strong preparedness",
+        "answerDesc": "Governments and institutions try. Some regulations pass, some international frameworks form. But competitive pressures, political gridlock, and the sheer pace of change mean the preparation is real but inadequate. Better than nothing — but not enough to change the trajectory.",
+        "timelineEvent": {
+          "headline": "Partial preparation — real but insufficient",
+          "description": "Governments pass some regulations, international bodies convene, and public awareness grows. But the effort is uneven, politicized, and outpaced by the technology. When the critical phase arrives, the frameworks exist on paper but buckle under pressure.",
+          "durationMin": 6,
+          "durationMax": 18
         }
       },
       "race": {

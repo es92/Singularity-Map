@@ -14,7 +14,8 @@ const { NODES, NODE_MAP } = require('./graph.js');
 const {
     matchCondition, matchesDerivation, applyDerivations, resolvedVal,
     isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled,
-    cleanSelection, applySelection, resolvedState, templateMatches, templatePartialMatch
+    cleanSelection, applySelection, resolvedState, templateMatches, templatePartialMatch,
+    getDisplayOrder
 } = require('./engine.js');
 
 const outcomes = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/outcomes.json'), 'utf8'));
@@ -351,7 +352,8 @@ function forwardKey(sel) {
 
 function runExplorer() {
     const violations = { deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [] };
-    const seen = { clickErased: new Set() };
+    const warnings = { answerGap: [] };
+    const seen = { clickErased: new Set(), answerGap: new Set() };
 
     function checkLeaf(sel) {
         const state = resolvedState(sel);
@@ -394,6 +396,7 @@ function runExplorer() {
                         violations.clickErased.push({ node: node.id, edge: edge.id, url: selToUrl(sel) });
                     }
                 }
+
             }
         }
     }
@@ -442,6 +445,29 @@ function runExplorer() {
 
         runChecks(sel);
 
+        // Check: answered node after unanswered gap in display order (cosmetic — UI handles gracefully)
+        const order = getDisplayOrder(sel);
+        let firstGap = null;
+        for (const dNode of order) {
+            const locked = isNodeLocked(sel, dNode);
+            const hasValue = sel[dNode.id] || locked;
+            const isUserAnswered = sel[dNode.id] && !(sel._locked && sel._locked[dNode.id]);
+            if (!hasValue && !firstGap) {
+                firstGap = dNode.id;
+            } else if (isUserAnswered && firstGap) {
+                const vk = `${firstGap}:${dNode.id}`;
+                if (!seen.answerGap.has(vk)) {
+                    seen.answerGap.add(vk);
+                    warnings.answerGap.push({
+                        node: dNode.id,
+                        gapNode: firstGap,
+                        url: selToUrl(sel),
+                    });
+                }
+                break;
+            }
+        }
+
         const next = getNextNode(sel);
         if (next) {
             for (const edge of getEnabledEdges(sel, next)) {
@@ -457,7 +483,7 @@ function runExplorer() {
     }
 
     const coverage = { userSelected, autoLocked };
-    return { violations, totalStates, totalLeaves, dedupSaved, rawUnique: rawVisited.size, coverage };
+    return { violations, warnings, totalStates, totalLeaves, dedupSaved, rawUnique: rawVisited.size, coverage };
 }
 
 // ════════════════════════════════════════════════════════
@@ -575,6 +601,14 @@ function printPhase2(result) {
 
     if (violationCount === 0) {
         console.log('  ✓ No violations found');
+    }
+
+    const gaps = result.warnings ? result.warnings.answerGap : [];
+    if (gaps.length > 0) {
+        console.log(`  ⚠ Display-order gaps (${gaps.length} — cosmetic, UI handles gracefully):`);
+        for (const g of gaps) {
+            console.log(`    "${g.node}" after unanswered "${g.gapNode}"`);
+        }
     }
 
     return violationCount;

@@ -95,13 +95,13 @@ class TimelineAnimator {
         const pills = event.siblings.map(s => {
             const active = event.isFrontier ? false : s.value === event.selectedValue;
             if (event.isFrontier) {
-                if (!s.reachable) return `<span class="tl-pill disabled">${this._esc(s.label)}</span>`;
+                if (s.disabled || !s.reachable) return `<span class="tl-pill disabled">${this._esc(s.label)}</span>`;
                 return `<span class="tl-pill" data-pathaction="frontier" data-dim="${this._esc(s.nodeId)}" data-val="${this._esc(s.value)}">${this._esc(s.label)}</span>`;
             }
             if (active) {
                 return `<span class="tl-pill active${allLocked ? ' locked' : ''}" data-pathaction="unclick" data-dim="${this._esc(event.nodeId)}">${this._esc(s.label)}</span>`;
             }
-            if (allLocked || !s.reachable) {
+            if (allLocked || s.disabled || !s.reachable) {
                 return `<span class="tl-pill disabled">${this._esc(s.label)}</span>`;
             }
             return `<span class="tl-pill" data-pathaction="change" data-dim="${this._esc(s.nodeId)}" data-val="${this._esc(s.value)}">${this._esc(s.label)}</span>`;
@@ -232,7 +232,7 @@ class TimelineAnimator {
 
         const answerCards = answers.map(a => ({
             ...a,
-            disabled: a.reachable === false,
+            disabled: a.disabled === true || a.reachable === false,
         }));
 
         let sourceHtml = '';
