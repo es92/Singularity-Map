@@ -308,3 +308,21 @@ body::before {
 }
 .answer-card .label { font-weight: 600; font-size: 1.02rem; margin-bottom: 0.2rem; }
 .answer-card .desc { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; }
+.answer-card .disabled-reason {
+    font-size: 0.8rem; line-height: 1.45; color: var(--text-dim);
+    margin-top: 0.35rem; font-style: italic;
+}
+.answer-card.forced-selected {
+    border-color: var(--accent); background: var(--bg-card-hover);
+    box-shadow: 0 0 20px var(--accent-glow);
+    cursor: default;
+}
+.answer-card.forced-selected:hover {
+    border-color: var(--accent); background: var(--bg-card-hover);
+}
+.question-card .answer-card.disabled {
+    opacity: 0.5; pointer-events: none;
+}
+.forced-continue {
+    margin-top: 0.25rem; margin-bottom: 0.5rem;
+}

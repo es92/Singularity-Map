@@ -111,7 +111,7 @@ function matchCondition(sel, cond, node) {
         }
     }
     for (const [k, allowed] of Object.entries(cond)) {
-        if (k.startsWith('_')) continue;
+        if (k.startsWith('_') || k === 'reason') continue;
         const v = resolvedVal(sel, k);
         if (!v || !allowed.includes(v)) return false;
     }
@@ -156,6 +156,18 @@ function isEdgeDisabled(sel, node, edge) {
     if (!edge.requires) return false;
     const condSets = Array.isArray(edge.requires) ? edge.requires : [edge.requires];
     return !condSets.some(cond => matchCondition(sel, cond, {}));
+}
+
+function getEdgeDisabledReason(sel, node, edge) {
+    if (edge.disabledWhen) {
+        for (const cond of edge.disabledWhen) {
+            if (matchCondition(sel, cond, {})) return cond.reason || null;
+        }
+    }
+    if (!edge.requires) return null;
+    const condSets = Array.isArray(edge.requires) ? edge.requires : [edge.requires];
+    if (!condSets.some(cond => matchCondition(sel, cond, {}))) return null;
+    return null;
 }
 
 // ════════════════════════════════════════════════════════
@@ -277,13 +289,13 @@ function removeSelection(sel, nodeId) {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { NODES, NODE_MAP,
-        matchCondition, matchesDerivation, applyDerivations, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled,
+        matchCondition, matchesDerivation, applyDerivations, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         cleanSelection, applySelection, removeSelection, resolvedState,
         templateMatches, templatePartialMatch, getDisplayOrder };
 }
 if (typeof window !== 'undefined') {
     window.Engine = { NODES, NODE_MAP,
-        matchCondition, matchesDerivation, applyDerivations, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled,
+        matchCondition, matchesDerivation, applyDerivations, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         cleanSelection, applySelection, removeSelection, resolvedState,
         templateMatches, templatePartialMatch, getDisplayOrder };
 }

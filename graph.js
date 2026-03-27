@@ -181,18 +181,18 @@ const NODES = [
     { id: 'open_source', label: 'Open Source', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
       edges: [
-        { id: 'near_parity', label: 'Near-parity', disabledWhen: [{ takeoff: ['explosive'] }] },
-        { id: 'six_months', label: '~6 months', disabledWhen: [{ takeoff: ['explosive'] }] },
-        { id: 'twelve_months', label: '~12 months', disabledWhen: [{ takeoff: ['explosive'] }] },
+        { id: 'near_parity', label: 'Near-parity', disabledWhen: [{ takeoff: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }] },
+        { id: 'six_months', label: '~6 months', disabledWhen: [{ takeoff: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }] },
+        { id: 'twelve_months', label: '~12 months', disabledWhen: [{ takeoff: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }] },
         { id: 'twenty_four_months', label: '~24 months' }
       ] },
     { id: 'distribution', label: 'Frontier Labs', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
       edges: [
-        { id: 'open', label: 'Distributed', requires: { open_source: ['near_parity'] }, disabledWhen: [{ takeoff: ['explosive'] }] },
-        { id: 'lagging', label: 'Many compete', disabledWhen: [{ takeoff: ['explosive'] }, { open_source: ['near_parity'] }] },
-        { id: 'concentrated', label: 'A few lead', disabledWhen: [{ takeoff: ['explosive'] }, { open_source: ['near_parity'] }] },
-        { id: 'monopoly', label: 'One dominates', disabledWhen: [{ open_source: ['near_parity'] }] }
+        { id: 'open', label: 'Distributed', requires: { open_source: ['near_parity'] }, disabledWhen: [{ takeoff: ['explosive'], reason: 'At this speed, only whoever gets there first has it' }] },
+        { id: 'lagging', label: 'Many compete', disabledWhen: [{ takeoff: ['explosive'], reason: 'At this speed, only whoever gets there first has it' }, { open_source: ['near_parity'], reason: 'With open-source at parity, no one is lagging behind' }] },
+        { id: 'concentrated', label: 'A few lead', disabledWhen: [{ takeoff: ['explosive'], reason: 'At this speed, only whoever gets there first has it' }, { open_source: ['near_parity'], reason: 'With open-source at parity, no one is lagging behind' }] },
+        { id: 'monopoly', label: 'One dominates', disabledWhen: [{ open_source: ['near_parity'], reason: 'With open-source at parity, no one can monopolize it' }] }
       ] },
     { id: 'geo_spread', label: 'Countries', stage: 2,
       activateWhen: [
@@ -209,8 +209,8 @@ const NODES = [
       ],
       edges: [
         { id: 'one', label: 'One country' },
-        { id: 'two', label: 'Two powers', disabledWhen: [{ takeoff: ['explosive'] }, { distribution: ['monopoly'] }] },
-        { id: 'several', label: 'Several', disabledWhen: [{ takeoff: ['explosive'] }, { distribution: ['monopoly'] }] }
+        { id: 'two', label: 'Two powers', disabledWhen: [{ takeoff: ['explosive'], reason: 'Only the first mover has it at this speed' }, { distribution: ['monopoly'], reason: 'One lab dominates — only one country is in the game' }] },
+        { id: 'several', label: 'Several', disabledWhen: [{ takeoff: ['explosive'], reason: 'Only the first mover has it at this speed' }, { distribution: ['monopoly'], reason: 'One lab dominates — only one country is in the game' }] }
       ] },
     { id: 'sovereignty', label: 'Power Holder', stage: 2,
       activateWhen: [
@@ -250,7 +250,7 @@ const NODES = [
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], geo_spread: ['one'] }],
       derivedFrom: [{ when: { alignment_durability: 'breaks' }, value: 'accelerate' }],
       edges: [
-        { id: 'decelerate', label: 'Decelerate', disabledWhen: [{ _raw: { alignment: ['robust'] } }, { takeoff: ['explosive'] }] },
+        { id: 'decelerate', label: 'Decelerate', disabledWhen: [{ _raw: { alignment: ['robust'] }, reason: 'Alignment is solved — there is no case for slowing down' }, { takeoff: ['explosive'], reason: 'Moving too fast for any government to intervene' }] },
         { id: 'accelerate', label: 'Accelerate' }
       ] },
     { id: 'decel_2mo_progress', label: '2 Months', stage: 2,
@@ -426,8 +426,8 @@ const NODES = [
         }
       ],
       edges: [
-        { id: 'deny_rivals', label: 'Deny rivals', disabledWhen: [{ distribution: ['open'] }] },
-        { id: 'secure_access', label: 'Secure access', disabledWhen: [{ distribution: ['open'] }] },
+        { id: 'deny_rivals', label: 'Deny rivals', disabledWhen: [{ distribution: ['open'], reason: 'The technology is already openly distributed' }] },
+        { id: 'secure_access', label: 'Secure access', disabledWhen: [{ distribution: ['open'], reason: 'The technology is already openly distributed' }] },
         { id: 'none', label: 'Open access' }
       ] },
     { id: 'proliferation_outcome', label: 'Control Outcome', stage: 2, hideAfterEscape: true,
@@ -489,9 +489,9 @@ const NODES = [
           label: 'Contained',
           requires: { distribution: ['lagging', 'concentrated', 'monopoly'] },
           disabledWhen: [
-            { _raw: { brittle_resolution: ['escape'] } },
-            { decel_outcome: ['escapes'] },
-            { proliferation_outcome: ['leaks_public'] }
+            { _raw: { brittle_resolution: ['escape'] }, reason: 'Alignment broke down and the AI is already out' },
+            { decel_outcome: ['escapes'], reason: 'The AI got out during the slowdown period' },
+            { proliferation_outcome: ['leaks_public'], reason: 'The technology leaked publicly — there is nothing left to contain' }
           ]
         },
         { id: 'escaped', label: 'Escapes' }
@@ -786,18 +786,18 @@ const NODES = [
       edges: [
         { id: 'equal', label: 'Shared equally',
           disabledWhen: [
-            { societal_response: ['fragmented'], intent: ['self_interest'] },
-            { societal_response: ['fragmented'], post_war_aims: ['self_interest'] },
-            { capture_confrontation: ['fails'] }
+            { societal_response: ['fragmented'], intent: ['self_interest'], reason: 'Without coordination or shared purpose, equal distribution doesn\'t happen on its own' },
+            { societal_response: ['fragmented'], post_war_aims: ['self_interest'], reason: 'After the conflict, self-interest and fragmentation prevent equal sharing' },
+            { capture_confrontation: ['fails'], reason: 'The pushback against concentration didn\'t work' }
           ] },
         { id: 'unequal', label: 'Wealth concentrates' },
         { id: 'extreme', label: 'Power concentrates',
           disabledWhen: [
-            { societal_response: ['strong'], intent: ['international'] },
-            { societal_response: ['strong'], intent: ['coexistence'] },
-            { societal_response: ['strong'], post_war_aims: ['self_interest'] },
-            { societal_response: ['strong'], ai_goals: ['benevolent'] },
-            { capture_confrontation: ['succeeds'] }
+            { societal_response: ['strong'], intent: ['international'], reason: 'Broad coordination and collective action keep concentration in check' },
+            { societal_response: ['strong'], intent: ['coexistence'], reason: 'A mobilized society pursuing coexistence constrains concentration' },
+            { societal_response: ['strong'], post_war_aims: ['self_interest'], reason: 'Collective action constrains concentration, even when motives are self-interested' },
+            { societal_response: ['strong'], ai_goals: ['benevolent'], reason: 'A mobilized society backed by a benevolent AI doesn\'t let power concentrate this far' },
+            { capture_confrontation: ['succeeds'], reason: 'The pushback against concentration succeeded' }
           ] }
       ] },
     { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, terminal: true, hideAfterEscape: true,

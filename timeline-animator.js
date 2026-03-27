@@ -230,9 +230,14 @@ class TimelineAnimator {
         const source = question.source;
         const answers = question.answers || [];
 
+        const isForced = question.isForced === true;
+        const forcedValue = question.forcedValue || null;
+
         const answerCards = answers.map(a => ({
             ...a,
             disabled: a.disabled === true || a.reachable === false,
+            disabledReason: a.disabledReason || null,
+            isForced: isForced && a.value === forcedValue,
         }));
 
         let sourceHtml = '';
@@ -240,22 +245,31 @@ class TimelineAnimator {
             sourceHtml = `<div class="question-source"><a href="${this._esc(source.url)}" target="_blank" rel="noopener">${this._esc(source.label)} \u2197</a></div>`;
         }
 
-        const answersHtml = answerCards.map((a, i) => `
-            <div class="answer-card${a.disabled ? ' disabled' : ''}" data-aidx="${i}">
+        const answersHtml = answerCards.map((a, i) => {
+            const cls = a.isForced ? ' forced-selected' : (a.disabled ? ' disabled' : '');
+            const reasonHtml = a.disabled && a.disabledReason
+                ? `<div class="disabled-reason">${this._esc(a.disabledReason)}</div>` : '';
+            return `<div class="answer-card${cls}" data-aidx="${i}">
                 <div class="label">${this._esc(a.label)}</div>
                 ${showDesc && a.desc ? `<div class="desc">${this._esc(a.desc)}</div>` : ''}
-            </div>`).join('');
+                ${reasonHtml}
+            </div>`;
+        }).join('');
+
+        const continueHtml = isForced
+            ? `<div class="forced-continue"><button class="btn btn-primary forced-continue-btn">Continue</button></div>` : '';
 
         const innerHtml = `<div class="tl-vline-seg"></div><div class="tl-dot"></div><div class="tl-hline"></div>
             <div class="timeline-top-row"><span class="timeline-param-wrap"><span class="timeline-param-dim">${this._esc(nodeLabel)}</span></span></div>
             <div class="question-text">${this._esc(questionText)}</div>
             ${showContext && questionContext ? `<div class="question-context">${this._esc(questionContext)}</div>` : ''}
             ${sourceHtml}
-            <div class="answers">${answersHtml}</div>`;
+            <div class="answers">${answersHtml}</div>
+            ${continueHtml}`;
 
-        const html = `<div class="${this.cardClass}${compact ? ' compact' : ''}">${innerHtml}</div>`;
+        const html = `<div class="${this.cardClass}${compact ? ' compact' : ''}${isForced ? ' forced-card' : ''}">${innerHtml}</div>`;
 
-        return { html, innerHtml, answerCards };
+        return { html, innerHtml, answerCards, isForced };
     }
 
     // ---- Core methods ----

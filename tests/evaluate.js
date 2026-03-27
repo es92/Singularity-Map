@@ -246,38 +246,49 @@ async function simulatePath(persona, mode) {
     let apiCalls = 0;
     const pathContext = [];
 
+    const loggedNodes = new Set();
+
     for (let pass = 0; pass < 500; pass++) {
+        const prevLocked = sel._locked ? { ...sel._locked } : {};
         Engine.cleanSelection(sel);
         let acted = false;
 
         for (const node of NODES) {
             if (node.derived) continue;
             if (!Engine.isNodeVisible(sel, node)) continue;
-            if (sel[node.id]) continue;
+            if (!sel._locked || !sel._locked[node.id]) continue;
+            if (prevLocked[node.id]) continue;
+            if (loggedNodes.has(node.id)) continue;
 
-            const locked = Engine.isNodeLocked(sel, node);
-            if (locked !== null) {
-                sel[node.id] = locked;
-                if (!sel._locked) sel._locked = {};
-                sel._locked[node.id] = true;
-                log.push({ id: node.id, label: node.label, val: locked, prob: 1.0, source: 'auto' });
-                pathContext.push(`- ${getQuestionText(node.id)}: ${getAnswerLabel(node.id, locked)} [auto-locked]`);
-                acted = true;
-                break;
+            loggedNodes.add(node.id);
+            const val = sel[node.id];
+            const disabledReasons = [];
+            for (const edge of node.edges) {
+                const reason = Engine.getEdgeDisabledReason(sel, node, edge);
+                if (reason) disabledReasons.push({ id: edge.id, label: getAnswerLabel(node.id, edge.id), reason });
             }
+
+            log.push({ id: node.id, label: node.label, val, prob: 1.0, source: 'auto', disabledReasons });
+
+            if (disabledReasons.length > 0) {
+                let ctx = `- ${getQuestionText(node.id)}: ${getAnswerLabel(node.id, val)} [only option — previous choices ruled out the rest]`;
+                for (const d of disabledReasons) {
+                    ctx += `\n    ✗ "${d.label}" unavailable: ${d.reason}`;
+                }
+                pathContext.push(ctx);
+            } else {
+                pathContext.push(`- ${getQuestionText(node.id)}: ${getAnswerLabel(node.id, val)} [auto-locked]`);
+            }
+            acted = true;
+        }
+
+        for (const node of NODES) {
+            if (node.derived) continue;
+            if (!Engine.isNodeVisible(sel, node)) continue;
+            if (sel[node.id]) continue;
 
             const enabledEdges = node.edges.filter(e => !Engine.isEdgeDisabled(sel, node, e));
             if (enabledEdges.length === 0) continue;
-
-            if (enabledEdges.length === 1) {
-                sel[node.id] = enabledEdges[0].id;
-                if (!sel._locked) sel._locked = {};
-                sel._locked[node.id] = true;
-                log.push({ id: node.id, label: node.label, val: enabledEdges[0].id, prob: 1.0, source: 'auto' });
-                pathContext.push(`- ${getQuestionText(node.id)}: ${getAnswerLabel(node.id, enabledEdges[0].id)} [auto-locked]`);
-                acted = true;
-                break;
-            }
 
             const optionsText = enabledEdges.map(e => {
                 const label = getAnswerLabel(node.id, e.id);
@@ -285,9 +296,22 @@ async function simulatePath(persona, mode) {
                 return `- ${e.id}: "${label}"${desc ? ' — ' + desc : ''}`;
             }).join('\n');
 
+            const disabledEdges = node.edges.filter(e => Engine.isEdgeDisabled(sel, node, e));
+            let disabledText = '';
+            if (disabledEdges.length > 0) {
+                const lines = disabledEdges.map(e => {
+                    const label = getAnswerLabel(node.id, e.id);
+                    const reason = Engine.getEdgeDisabledReason(sel, node, e);
+                    return reason
+                        ? `- ✗ "${label}" — unavailable: ${reason}`
+                        : `- ✗ "${label}" — unavailable`;
+                }).join('\n');
+                disabledText = `\n\nUnavailable options (ruled out by earlier choices):\n${lines}`;
+            }
+
             const system = `You are roleplaying as ${persona.name}. ${persona.bio}
 
-You are navigating a scenario about the future of AI. At each step, you will be given a question with available options.
+You are navigating a scenario about the future of AI. At each step, you will be given a question with available options. Some options may be unavailable because of earlier choices — these are shown for context but cannot be selected.
 
 ${MODE_INSTRUCTIONS[mode]}
 
@@ -298,7 +322,7 @@ ${MODE_RESPONSE_FORMATS[mode]}`;
 ${getQuestionContext(node.id)}
 
 Available options:
-${optionsText}`;
+${optionsText}${disabledText}`;
 
             let weights;
             try {
@@ -345,6 +369,13 @@ ${optionsText}`;
 
 async function getPersonaReview(persona, mode, log, resolved) {
     const choicesText = log.map((l, i) => {
+        if (l.source === 'auto' && l.disabledReasons && l.disabledReasons.length > 0) {
+            let text = `${i + 1}. "${getQuestionText(l.id)}" → ${getAnswerLabel(l.id, l.val)} [only option — previous choices ruled out:]`;
+            for (const d of l.disabledReasons) {
+                text += `\n     ✗ "${d.label}": ${d.reason}`;
+            }
+            return text;
+        }
         const probStr = l.source === 'llm' ? ` (your probability: ${l.prob.toFixed(2)})` : ' [auto]';
         return `${i + 1}. "${getQuestionText(l.id)}" → ${getAnswerLabel(l.id, l.val)}${probStr}`;
     }).join('\n');
@@ -413,6 +444,18 @@ function buildEvaluationMd(persona, mode, runNum, result, review) {
         md += `| ${l.label} | ${l.val} | ${l.prob.toFixed(2)} | ${l.source} |\n`;
     }
     md += '\n';
+
+    const forcedSteps = log.filter(l => l.disabledReasons && l.disabledReasons.length > 0);
+    if (forcedSteps.length > 0) {
+        md += `## Forced Choices (from earlier decisions)\n\n`;
+        for (const l of forcedSteps) {
+            md += `**${l.label}** → \`${l.val}\` (only option)\n`;
+            for (const d of l.disabledReasons) {
+                md += `- ✗ "${d.label}": ${d.reason}\n`;
+            }
+            md += '\n';
+        }
+    }
 
     const llmSteps = log.filter(l => l.probs);
     if (llmSteps.length > 0) {

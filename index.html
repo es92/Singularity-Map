@@ -635,6 +635,21 @@
 
             Engine.cleanSelection(sel);
 
+            let forcedAcknowledged = new Set();
+            for (const node of NODES) {
+                if (sel._locked && sel._locked[node.id]) {
+                    forcedAcknowledged.add(node.id);
+                }
+            }
+
+            function clearForcedFrom(nodeId) {
+                const idx = NODES.findIndex(n => n.id === nodeId);
+                if (idx < 0) return;
+                for (let i = idx; i < NODES.length; i++) {
+                    forcedAcknowledged.delete(NODES[i].id);
+                }
+            }
+
             function moodColor(mood) {
                 const map = { utopian:'var(--mood-utopian)', dystopian:'var(--mood-dystopian)',
                     mixed:'var(--mood-mixed)', stagnant:'var(--mood-stagnant)', chaotic:'var(--mood-chaotic)' };
@@ -679,11 +694,37 @@
 
             function findNextQuestion() {
                 for (const node of Engine.getDisplayOrder(sel)) {
-                    if (Engine.isNodeLocked(sel, node) !== null) continue;
+                    const locked = Engine.isNodeLocked(sel, node);
+                    if (locked !== null) {
+                        if (!forcedAcknowledged.has(node.id)) {
+                            const hasReasons = node.edges.some(v =>
+                                Engine.getEdgeDisabledReason(sel, node, v) !== null
+                            );
+                            if (hasReasons) {
+                                const options = node.edges.map(v => {
+                                    const disabled = Engine.isEdgeDisabled(sel, node, v);
+                                    const reason = Engine.getEdgeDisabledReason(sel, node, v);
+                                    const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, sel) : null;
+                                    return {
+                                        value: v.id, label: v.label,
+                                        answerLabel: (variant && variant.answerLabel) || v.answerLabel || v.label,
+                                        answerDesc: (variant && variant.answerDesc) || v.answerDesc || '',
+                                        nodeId: node.id,
+                                        reachable: !disabled,
+                                        disabled,
+                                        disabledReason: reason,
+                                    };
+                                });
+                                return { node, options, isForced: true, forcedValue: locked };
+                            }
+                        }
+                        continue;
+                    }
                     if (sel[node.id]) continue;
                     const options = node.edges
                         .map(v => {
                             const disabled = Engine.isEdgeDisabled(sel, node, v);
+                            const reason = Engine.getEdgeDisabledReason(sel, node, v);
                             const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, sel) : null;
                             return {
                                 value: v.id,
@@ -693,6 +734,7 @@
                                 nodeId: node.id,
                                 reachable: disabled ? false : wouldReachOutcome(node.id, v.id),
                                 disabled,
+                                disabledReason: reason,
                             };
                         });
                     if (options.some(o => !o.disabled)) return { node, options };
@@ -1003,6 +1045,7 @@
                             const nodeId = pill.dataset.dim;
                             const val = pill.dataset.val;
 
+                            clearForcedFrom(nodeId);
                             if (action === 'frontier' || action === 'change') {
                                 Engine.applySelection(sel, nodeId, val);
                             } else if (action === 'unclick') {
@@ -1022,6 +1065,8 @@
                             questionText: nextQ.node.questionText || nextQ.node.label,
                             questionContext: nextQ.node.questionContext || '',
                             source: nextQ.node.source,
+                            isForced: nextQ.isForced || false,
+                            forcedValue: nextQ.forcedValue || null,
                             answers: nextQ.options.map(o => ({
                                 label: o.answerLabel,
                                 desc: o.answerDesc,
@@ -1029,6 +1074,7 @@
                                 value: o.value,
                                 reachable: o.reachable,
                                 disabled: o.disabled,
+                                disabledReason: o.disabledReason || null,
                             })),
                         };
                         const qResult = mapAnimator.renderQuestionCard(questionData, {
@@ -1058,19 +1104,34 @@
                                 }
                             });
                         }
-                        questionZone.querySelectorAll('.answer-card').forEach(cardEl => {
-                            cardEl.addEventListener('click', () => {
-                                if (cardEl.classList.contains('disabled')) return;
-                                if (mapAnimator && mapAnimator.isAnimating()) return;
-                                const idx = parseInt(cardEl.dataset.aidx, 10);
-                                const answer = qResult.answerCards[idx];
-                                if (!answer || answer.disabled) return;
-                                mutateSelection(() => {
-                                    Engine.applySelection(sel, answer.nodeId, answer.value);
-                                    Engine.cleanSelection(sel);
+                        if (qResult.isForced) {
+                            const continueBtn = questionZone.querySelector('.forced-continue-btn');
+                            if (continueBtn) {
+                                continueBtn.addEventListener('click', () => {
+                                    if (mapAnimator && mapAnimator.isAnimating()) return;
+                                    forcedAcknowledged.add(nextQ.node.id);
+                                    mutateSelection(() => {
+                                        Engine.cleanSelection(sel);
+                                    });
+                                });
+                            }
+                        } else {
+                            questionZone.querySelectorAll('.answer-card').forEach(cardEl => {
+                                cardEl.addEventListener('click', () => {
+                                    if (cardEl.classList.contains('disabled')) return;
+                                    if (cardEl.classList.contains('forced-selected')) return;
+                                    if (mapAnimator && mapAnimator.isAnimating()) return;
+                                    const idx = parseInt(cardEl.dataset.aidx, 10);
+                                    const answer = qResult.answerCards[idx];
+                                    if (!answer || answer.disabled) return;
+                                    clearForcedFrom(answer.nodeId);
+                                    mutateSelection(() => {
+                                        Engine.applySelection(sel, answer.nodeId, answer.value);
+                                        Engine.cleanSelection(sel);
+                                    });
                                 });
                             });
-                        });
+                        }
                     } else {
                         questionZone.innerHTML = '';
                         questionZone.style.display = 'none';
@@ -1187,6 +1248,7 @@
 
             function resetSelections() {
                 sel = {};
+                forcedAcknowledged = new Set();
                 update();
             }
 
