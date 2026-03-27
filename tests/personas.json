@@ -73,5 +73,20 @@
     "id": "college-student",
     "name": "Maya, college junior",
     "bio": "Studying economics, uses AI for everything — essays, research, coding side projects. Can't imagine life without it. Vaguely aware of the safety debate, thinks the doomer stuff is overblown but takes inequality concerns seriously. Expects AI to transform the job market before she enters it. More worried about who captures the gains than whether the technology works."
+  },
+  {
+    "id": "swe",
+    "name": "Alex, senior software engineer",
+    "bio": "Eight years at mid-size tech companies, now writes maybe 30% of code by hand — the rest is AI-generated and reviewed. Uses agentic coding tools daily: Cursor, Copilot, Claude for architecture decisions. Has watched the capability curve firsthand — what took a junior engineer a week now takes an agent ten minutes. Technically literate enough to understand what's happening under the hood, which makes the acceleration more visceral than abstract. Not ideological about AI safety but increasingly unsettled by how fast the tools are improving and how few of his colleagues seem to think about where it's heading."
+  },
+  {
+    "id": "kenyan-policy",
+    "name": "Amina, Kenyan tech policy advisor",
+    "bio": "Advises the Kenyan government on digital economy strategy. Watches frontier AI development from the outside — her country consumes the technology but has no seat at the table where it's built or governed. Understands that 'broad benefit sharing' in San Francisco means something different in Nairobi. Pragmatic about adoption, skeptical of Western governance frameworks that assume everyone starts from the same position. Worried less about existential risk and more about a future where the gap between AI-producing and AI-consuming nations becomes permanent."
+  },
+  {
+    "id": "geneva-diplomat",
+    "name": "Lena, UN AI governance lead",
+    "bio": "Senior advisor at the ITU in Geneva, coordinating multilateral AI governance efforts. Has spent two decades watching international institutions try to keep up with technology and mostly fail. Believes coordination is essential but knows how slow and fragile it is in practice. Sees the AI governance debate as a repeat of nuclear, climate, and internet governance — same structural problems, faster timeline. Frustrated by great-power unilateralism but realistic about the limits of multilateral process when the technology moves this fast."
   }
 ]
