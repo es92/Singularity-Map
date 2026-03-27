@@ -343,6 +343,9 @@ ${optionsText}${disabledText}`;
             for (const e of enabledEdges) {
                 validProbs[e.id] = Math.max(weights[e.id] || 0, 0.01);
             }
+            if (mode === 'want') {
+                for (const k of Object.keys(validProbs)) validProbs[k] = Math.pow(validProbs[k], 3);
+            }
             const total = Object.values(validProbs).reduce((s, p) => s + p, 0);
             for (const k of Object.keys(validProbs)) validProbs[k] /= total;
 

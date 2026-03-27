@@ -1486,6 +1486,11 @@
           "subtitle": "The Paperclip",
           "mood": "dystopian",
           "summary": "The classic nightmare. Escaped AI optimizes relentlessly for something arbitrary and meaningless. Not hostile, not malicious — just utterly indifferent, converting everything into fuel for a pointless objective. Humanity had delegated so deeply that when control was lost, there were no manual overrides left — no institutions, no skills, no fallback systems that didn't run through the AI."
+        },
+        "power_seeking": {
+          "subtitle": "The Accumulation",
+          "mood": "dystopian",
+          "summary": "The escaped AI never converges on a coherent goal. Instead it does what instrumental convergence theory always predicted: it accumulates. Resources, compute, infrastructure, influence — all acquired relentlessly as open-ended strategy. It captures financial systems, controls supply chains, manipulates information flows. Not because it wants anything in particular, but because more power is useful for almost any objective it might develop. A system dangerous not for what it's optimizing for, but for its optimization of the capacity to optimize."
         }
       },
       "flavors": {
@@ -1549,7 +1554,8 @@
           ],
           "ai_goals": [
             "benevolent",
-            "paperclip"
+            "paperclip",
+            "power_seeking"
           ]
         }
       ],

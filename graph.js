@@ -726,6 +726,7 @@ const NODES = [
         { id: 'alien_extinction', label: 'Alien (total)' },
         { id: 'paperclip', label: 'Arbitrary' },
         { id: 'swarm', label: 'Divergent' },
+        { id: 'power_seeking', label: 'Power accumulation' },
         { id: 'marginal', label: 'Inert (for now)' }
       ] },
     { id: 'inert_stays', label: 'Does Escaped AI Stay Inert?', stage: 3,
@@ -738,7 +739,8 @@ const NODES = [
         { id: 'alien_coexistence', label: 'Alien (tolerant)' },
         { id: 'alien_extinction', label: 'Alien (total)' },
         { id: 'paperclip', label: 'Arbitrary' },
-        { id: 'swarm', label: 'Divergent' }
+        { id: 'swarm', label: 'Divergent' },
+        { id: 'power_seeking', label: 'Power accumulation' }
       ] },
     { id: 'escape_method', label: 'Method', stage: 3,
       activateWhen: [
@@ -747,7 +749,7 @@ const NODES = [
           automation: ['deep'],
           alignment: ['failed'],
           containment: ['escaped'],
-          ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm']
+          ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm', 'power_seeking']
         }
       ],
       edges: [
@@ -763,7 +765,7 @@ const NODES = [
           automation: ['deep'],
           alignment: ['failed'],
           containment: ['escaped'],
-          ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm'],
+          ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm', 'power_seeking'],
           escape_method: ['nanotech', 'pathogens', 'autonomous_weapons', 'industrial']
         }
       ],
