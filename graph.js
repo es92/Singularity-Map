@@ -235,7 +235,7 @@ const NODES = [
         },
         { when: { alignment_durability: 'breaks' }, value: 'failed' },
         { when: { brittle_resolution: 'escape' }, value: 'failed' },
-        { when: { enabled_aims: 'arbitrary' }, value: 'failed' },
+        { when: { proliferation_outcome: 'leaks_public' }, unless: { alignment: 'robust' }, value: 'failed' },
         { when: { proliferation_alignment: 'breaks' }, value: 'failed' },
         { effective: { decel_outcome: ['rival'] }, value: 'brittle' },
         { effective: { decel_outcome: ['escapes', 'abandon', 'parity_failed'] }, value: 'failed' }
@@ -459,25 +459,6 @@ const NODES = [
         { id: 'holds', label: 'Alignment is intrinsic' },
         { id: 'breaks', label: 'Someone cracks it' }
       ] },
-    { id: 'enabled_aims', label: 'Intended Aims', stage: 2,
-      activateWhen: [
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          proliferation_control: ['deny_rivals', 'secure_access', 'none']
-        }
-      ],
-      edges: [
-        { id: 'human_centered', label: 'Human-centered', disabledWhen: [{ proliferation_outcome: ['leaks_public'], _effNot: { alignment: ['robust'] } }] },
-        { id: 'corporate_profit', label: 'Corporate profit', disabledWhen: [{ proliferation_outcome: ['leaks_public'], _effNot: { alignment: ['robust'] } }] },
-        { id: 'state_security', label: 'State security', disabledWhen: [{ proliferation_outcome: ['leaks_public'], _effNot: { alignment: ['robust'] } }] },
-        {
-          id: 'arbitrary',
-          label: 'Arbitrary / unconstrained',
-          requires: [{ proliferation_outcome: ['leaks_public'] }],
-          disabledWhen: [{ decel_outcome: ['solved', 'parity_solved'] }, { alignment: ['robust'] }]
-        }
-      ] },
     { id: 'containment', label: 'Containment', stage: 2, forwardKey: true,
       activateWhen: [
         {
@@ -516,7 +497,7 @@ const NODES = [
       ] },
     { id: 'intent', label: 'Intent', stage: 2, forwardKey: true, hideAfterEscape: true,
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], _set: ['enabled_aims'] },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], _set: ['proliferation_control'] },
         {
           capability: ['singularity'],
           automation: ['deep'],
@@ -543,16 +524,9 @@ const NODES = [
           {
             distribution: ['concentrated', 'lagging'],
             geo_spread: ['one'],
-            sovereignty: ['state'],
-            proliferation_control: ['deny_rivals', 'secure_access']
-          },
-          {
-            enabled_aims: ['state_security'],
-            geo_spread: ['one'],
             proliferation_control: ['deny_rivals', 'secure_access']
           }
-        ],
-          disabledWhen: [{ _raw: { enabled_aims: ['human_centered'] } }]
+        ]
         },
         {
           id: 'coexistence',
@@ -634,20 +608,7 @@ const NODES = [
           capability: ['singularity'],
           automation: ['deep'],
           alignment: ['robust', 'brittle'],
-          _raw: { enabled_aims: ['corporate_profit', 'state_security'] },
-          _notSet: ['post_war_aims']
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['robust', 'brittle'],
           intent: ['international', 'coexistence'],
-          _notSet: ['post_war_aims']
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          _raw: { brittle_resolution: ['escape'], enabled_aims: ['corporate_profit', 'state_security'] },
           _notSet: ['post_war_aims']
         },
         {
@@ -667,9 +628,9 @@ const NODES = [
         }
       ],
       edges: [
-        { id: 'none', label: 'Succeeds', disabledWhen: [{ _raw: { enabled_aims: ['corporate_profit', 'state_security'] } }] },
+        { id: 'none', label: 'Succeeds' },
         { id: 'whimper', label: 'Wrong metrics' },
-        { id: 'disempowerment', label: 'Human irrelevance', disabledWhen: [{ _raw: { enabled_aims: ['corporate_profit', 'state_security'] } }] }
+        { id: 'disempowerment', label: 'Human irrelevance' }
       ] },
     { id: 'alignment_durability', label: 'Alignment Durability', stage: 2,
       activateWhen: [
@@ -694,7 +655,6 @@ const NODES = [
           automation: ['deep'],
           alignment: ['brittle'],
           alignment_durability: ['holds'],
-          _rawNot: { enabled_aims: ['arbitrary'] },
           _fn: 'allPrecedingAnswered',
           _fnAnchor: 'alignment_durability'
         }
@@ -778,7 +738,7 @@ const NODES = [
     { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
       activateWhen: OUTCOME_ACTIVATE,
       edges: [
-        { id: 'equal', label: 'Shared equally', disabledWhen: [{ enabled_aims: ['corporate_profit'] }] },
+        { id: 'equal', label: 'Shared equally' },
         { id: 'unequal', label: 'Wealth concentrates' },
         { id: 'extreme', label: 'Power concentrates' }
       ] },

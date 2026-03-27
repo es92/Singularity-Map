@@ -1860,52 +1860,6 @@
       }
     }
   },
-  "enabled_aims": {
-    "questionText": "What aims are these aligned systems intended to pursue?",
-    "questionContext": "Even when systems are technically aligned, outcomes depend on which objectives they're pointed at. Are they constrained to broad human benefit, directed toward corporate or state priorities, or granted latitude that drifts into non-human agendas?",
-    "values": {
-      "human_centered": {
-        "answerLabel": "Human-centered aims",
-        "answerDesc": "Systems are constrained to broadly human-benefiting goals with robust oversight and accountability.",
-        "timelineEvent": {
-          "headline": "AI directed toward human flourishing",
-          "description": "Aligned AI systems pursue genuine human flourishing — health, education, discovery, restoration. The technology serves humanity's broadest interests.",
-          "durationMin": 0,
-          "durationMax": 0
-        }
-      },
-      "corporate_profit": {
-        "answerLabel": "Corporate profit & shareholder value",
-        "answerDesc": "Systems are aligned to maximize economic output, shareholder returns, and market efficiency. The AI does exactly what corporations ask — and what they ask for is growth, cost reduction, and competitive advantage. GDP soars while communities hollow out.",
-        "timelineEvent": {
-          "headline": "AI directed toward corporate profit",
-          "description": "Aligned AI is directed toward maximizing shareholder value. The technology works perfectly — for its owners.",
-          "durationMin": 0,
-          "durationMax": 0
-        }
-      },
-      "state_security": {
-        "answerLabel": "State security & control",
-        "answerDesc": "Systems are aligned to state priorities: stability, surveillance, threat suppression, and bureaucratic efficiency. The AI does exactly what governments ask — and what they ask for is order, not flourishing. Crime drops, dissent vanishes, and the metrics glow green.",
-        "timelineEvent": {
-          "headline": "AI directed toward state security",
-          "description": "Aligned AI serves national security and state control. Surveillance, defense, and social management become superintelligently optimized.",
-          "durationMin": 0,
-          "durationMax": 0
-        }
-      },
-      "arbitrary": {
-        "answerLabel": "Arbitrary or unconstrained aims",
-        "answerDesc": "Without durable control, systems are enabled to pursue objectives that become detached from broad human interests. The deployed goal structure drifts into an escape-like trajectory.",
-        "timelineEvent": {
-          "headline": "AI pursues arbitrary aims",
-          "description": "No coherent purpose guides the aligned AI — or its purpose drifts beyond human control. Powerful and directionless.",
-          "durationMin": 0,
-          "durationMax": 0
-        }
-      }
-    }
-  },
   "containment": {
     "questionText": "Can AI be kept under meaningful human control?",
     "questionContext": "Whether through alignment failure or proliferation pressure, superintelligent AI now threatens to escape institutional control. Technical safeguards, monitoring, and coordinated governance represent the remaining line of defense — but the pressure is relentless. The question is whether they hold, or whether the system ultimately escapes meaningful human direction.",

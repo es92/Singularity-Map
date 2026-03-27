@@ -184,11 +184,6 @@
           ],
           "benefit_distribution": [
             "unequal"
-          ],
-          "enabled_aims": [
-            "human_centered",
-            "corporate_profit",
-            "state_security"
           ]
         },
         {
@@ -206,11 +201,6 @@
           ],
           "benefit_distribution": [
             "unequal"
-          ],
-          "enabled_aims": [
-            "human_centered",
-            "corporate_profit",
-            "state_security"
           ],
           "brittle_resolution": [
             "solved",
@@ -424,11 +414,6 @@
           ],
           "benefit_distribution": [
             "extreme"
-          ],
-          "enabled_aims": [
-            "human_centered",
-            "corporate_profit",
-            "state_security"
           ]
         },
         {
@@ -446,11 +431,6 @@
           ],
           "benefit_distribution": [
             "extreme"
-          ],
-          "enabled_aims": [
-            "human_centered",
-            "corporate_profit",
-            "state_security"
           ],
           "brittle_resolution": [
             "solved",
@@ -672,11 +652,6 @@
           ],
           "failure_mode": [
             "none"
-          ],
-          "enabled_aims": [
-            "human_centered",
-            "corporate_profit",
-            "state_security"
           ]
         },
         {
@@ -691,11 +666,6 @@
           ],
           "failure_mode": [
             "none"
-          ],
-          "enabled_aims": [
-            "human_centered",
-            "corporate_profit",
-            "state_security"
           ],
           "brittle_resolution": [
             "solved",
@@ -876,11 +846,6 @@
           ],
           "intent": [
             "self_interest"
-          ],
-          "enabled_aims": [
-            "human_centered",
-            "corporate_profit",
-            "state_security"
           ]
         },
         {
@@ -892,11 +857,6 @@
           ],
           "intent": [
             "self_interest"
-          ],
-          "enabled_aims": [
-            "human_centered",
-            "corporate_profit",
-            "state_security"
           ],
           "brittle_resolution": [
             "solved",
@@ -1054,11 +1014,6 @@
           ],
           "escalation_outcome": [
             "standoff"
-          ],
-          "enabled_aims": [
-            "human_centered",
-            "corporate_profit",
-            "state_security"
           ]
         },
         {
@@ -1070,11 +1025,6 @@
           ],
           "escalation_outcome": [
             "standoff"
-          ],
-          "enabled_aims": [
-            "human_centered",
-            "corporate_profit",
-            "state_security"
           ],
           "brittle_resolution": [
             "solved",
@@ -1151,11 +1101,6 @@
           ],
           "conflict_result": [
             "destruction"
-          ],
-          "enabled_aims": [
-            "human_centered",
-            "corporate_profit",
-            "state_security"
           ]
         },
         {
@@ -1170,11 +1115,6 @@
           ],
           "conflict_result": [
             "destruction"
-          ],
-          "enabled_aims": [
-            "human_centered",
-            "corporate_profit",
-            "state_security"
           ],
           "brittle_resolution": [
             "solved",
@@ -1294,11 +1234,6 @@
           ],
           "failure_mode": [
             "none"
-          ],
-          "enabled_aims": [
-            "human_centered",
-            "corporate_profit",
-            "state_security"
           ]
         },
         {
@@ -1313,11 +1248,6 @@
           ],
           "failure_mode": [
             "none"
-          ],
-          "enabled_aims": [
-            "human_centered",
-            "corporate_profit",
-            "state_security"
           ],
           "brittle_resolution": [
             "solved",
@@ -1419,11 +1349,6 @@
           "failure_mode": [
             "whimper",
             "disempowerment"
-          ],
-          "enabled_aims": [
-            "human_centered",
-            "corporate_profit",
-            "state_security"
           ]
         },
         {
@@ -1440,11 +1365,6 @@
           "failure_mode": [
             "whimper",
             "disempowerment"
-          ],
-          "enabled_aims": [
-            "human_centered",
-            "corporate_profit",
-            "state_security"
           ],
           "brittle_resolution": [
             "solved",
