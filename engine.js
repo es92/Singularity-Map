@@ -144,7 +144,25 @@ function isNodeVisible(sel, node) {
 function isNodeLocked(sel, node) {
     if (!node.edges || node.derived) return null;
     const enabled = node.edges.filter(v => !isEdgeDisabled(sel, node, v));
-    return enabled.length === 1 ? enabled[0].id : null;
+    if (enabled.length !== 1) return null;
+
+    for (const edge of node.edges) {
+        if (!isEdgeDisabled(sel, node, edge)) continue;
+        if (!edge.requires) continue;
+        const condSets = Array.isArray(edge.requires) ? edge.requires : [edge.requires];
+        for (const cond of condSets) {
+            for (const [k, vals] of Object.entries(cond)) {
+                if (k.startsWith('_') || k === 'reason') continue;
+                const v = resolvedVal(sel, k);
+                if (!v) {
+                    const depNode = NODE_MAP[k];
+                    if (depNode && isNodeActivated(sel, depNode)) return null;
+                }
+            }
+        }
+    }
+
+    return enabled[0].id;
 }
 
 function isEdgeDisabled(sel, node, edge) {
