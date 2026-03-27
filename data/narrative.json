@@ -114,6 +114,10 @@
   "plateau_benefit_distribution": {
     "questionText": "Who benefits from the AI plateau?",
     "questionContext": "AI has hit its ceiling — but even at this level, it's the most powerful tool ever built. Entire industries have already reorganized around it. The economic question isn't whether AI transforms the economy — it already has. The question is who captures the value. Does the productivity surge flow broadly, or do a narrowing set of people capture most of the gains? The answer depends on policy, market structure, and whether the institutions that redistribute gains can keep pace with the technology that's concentrating them.",
+    "contextWhen": [
+      { "when": { "plateau_knowledge_rate": ["rapid"] }, "questionContext": "The automation wave hit fast. Entire knowledge-work categories vanished within a few years. The productivity gains are enormous — but the displacement is real, and the people who lost their roles aren't the ones capturing the surplus. Who benefits depends on whether policy can keep pace with a transformation that's already happened." },
+      { "when": { "stall_recovery": ["never"] }, "questionContext": "This is as good as AI gets — permanently. There's no second wave coming, no breakthrough on the horizon. The economic question isn't about managing a transition; it's about building a permanent settlement around current capabilities. Who benefits from the plateau world?" }
+    ],
     "values": {
       "equal": {
         "answerLabel": "Equally — gains are broadly shared",
@@ -150,6 +154,11 @@
   "plateau_knowledge_rate": {
     "questionText": "How much knowledge work does AI at this level actually replace?",
     "questionContext": "AI has hit its ceiling — but even at this level, it's enormously capable within its range. The question isn't whether AI changes knowledge work; it already has. The question is how thoroughly. Does it replace entire roles, or augment them? Does adoption happen in a rush, or does institutional inertia slow things down? Professional licensing, union contracts, regulation, and cultural resistance all shape the pace — but so does the sheer economic pressure of a tool that's cheaper and faster than humans at everything within its reach.",
+    "contextWhen": [
+      { "when": { "stall_duration": ["hours"] }, "questionContext": "AI tops out at hour-level tasks — impressive for quick work, but nothing that replaces a full workday. The question is how deeply even this limited capability penetrates the economy. Does it augment workers in place, or does the sheer volume of automatable short tasks add up to something transformative?" },
+      { "when": { "stall_duration": ["days"] }, "questionContext": "AI can reliably handle a full day's work autonomously. That's enough to replace many knowledge roles outright — not just tasks, but entire positions. The question is how fast the replacement happens." },
+      { "when": { "stall_duration": ["weeks", "months"] }, "questionContext": "AI handles multi-week projects autonomously — research, analysis, product development. Almost everything short of open-ended strategic thinking is within reach. The question isn't whether knowledge work is transformed, but whether any of it survives in recognizable form." }
+    ],
     "values": {
       "rapid": {
         "answerLabel": "Rapid — within AI's range, most work automated in 2–5 years",
@@ -196,6 +205,10 @@
   "plateau_physical_rate": {
     "questionText": "Does physical automation advance alongside AI, or does it lag?",
     "questionContext": "AI capability has plateaued for knowledge work — but the physical world is a separate frontier. Robotics, autonomous vehicles, and automated manufacturing depend on AI but also on hardware, engineering, and infrastructure that follow their own trajectory. Physical automation could advance independently of whether AI gets smarter. Or the AI plateau could slow robotics investment and innovation too. The question is whether the physical world transforms alongside the digital one, or stays largely human.",
+    "contextWhen": [
+      { "when": { "plateau_knowledge_rate": ["rapid"] }, "questionContext": "Knowledge work collapsed fast — within a few years, most tasks within AI's range were automated. The question is whether the physical world follows at the same pace, or whether atoms are harder than bits." },
+      { "when": { "plateau_knowledge_rate": ["limited"] }, "questionContext": "AI augments knowledge workers but rarely replaces them. The ceiling was real and binding. Does the same pattern hold for the physical world — gradual improvement without displacement — or does physical automation follow its own trajectory?" }
+    ],
     "values": {
       "gradual": {
         "answerLabel": "Gradual — physical automation trails by 10–25 years",
@@ -1801,6 +1814,11 @@
       "secure_access": {
         "answerLabel": "Secure access — protect own capabilities from theft and leaks",
         "answerDesc": "The focus is defensive: sealed model weights, compartmentalized access, hardened infrastructure, insider threat programs, and strict need-to-know protocols. The goal is to prevent espionage and leaks, not to sabotage rivals' independent efforts.",
+        "narrativeVariants": [
+          { "when": { "alignment": ["robust"] }, "answerDesc": "The technology is safe, but that doesn't mean it should leak. The leading power focuses on locking down its own infrastructure — sealed weights, compartmentalized access, insider threat programs — while letting rivals pursue their own path. A defensive posture protecting a strategic advantage, not preventing a catastrophe." },
+          { "when": { "alignment": ["failed"] }, "answerDesc": "An unaligned superintelligence leaking would be catastrophic. The leading power treats its own AI like a nuclear weapon: sealed, compartmentalized, monitored. Not trying to stop rivals from building their own — just making sure this one doesn't get out. Security as existential necessity." },
+          { "when": { "distribution": ["monopoly"] }, "answerDesc": "One entity holds the frontier, and they're not letting go. Sealed weights, hardened infrastructure, insider threat programs — the security posture of an organization that knows it has something everyone else wants. Not aggressive denial, but fortress-level defense of a singular advantage." }
+        ],
         "timelineEvent": {
           "headline": "Leading powers lock down AI access",
           "description": "Frontier labs and their host governments shift to wartime security posture. Model weights are sealed, access is compartmentalized, and insider threat programs activate. The goal isn't to stop rivals from building their own — it's to keep the crown jewels from walking out the door.",
@@ -2392,6 +2410,11 @@
   "failure_mode": {
     "questionText": "Does the AI-driven transformation actually deliver what's intended?",
     "questionContext": "The intent is flourishing — but intent and outcome aren't the same thing. By this point, delegation has been accumulating for years: scheduling, research, logistics, analysis, strategy. Each handoff was individually rational — the AI was simply better. But the cumulative effect is a civilization that increasingly runs on AI judgment, not human judgment. Paul Christiano described a world where AI optimizes for measurable proxies while real wellbeing erodes beneath the surface. Others worry about the delegation ratchet itself: humans voluntarily ceding every decision to systems that handle them better, until the skill and institutional knowledge to take those decisions back has atrophied beyond recovery. The technology works. The question is whether humanity kept enough of itself in the loop — and whether it even notices if it didn't.",
+    "contextWhen": [
+      { "when": { "alignment": ["robust"] }, "questionContext": "Alignment is solved — the AI does exactly what it's told. But 'what it's told' is the question. The optimization targets were chosen by humans: GDP, test scores, efficiency metrics, engagement. Each target seemed reasonable. The question is whether the aggregate of individually reasonable targets adds up to genuine human flourishing — or whether the metrics diverge from reality while the dashboards keep glowing green." },
+      { "when": { "alignment": ["brittle"] }, "questionContext": "Alignment is holding — for now. The AI follows instructions, but the guarantees are shallow. The question is double-edged: are humans directing the transformation toward genuine flourishing, and will the fragile alignment hold long enough for the answer to matter?" },
+      { "when": { "intent": ["self_interest"] }, "questionContext": "Those in power chose entrenchment, and the AI is executing their vision faithfully. The question isn't whether the technology works — it's whether what it's being pointed at serves anyone beyond the people giving the orders." }
+    ],
     "source": {
       "label": "Paul Christiano — What Failure Looks Like (2019)",
       "url": "https://www.alignmentforum.org/posts/HBxe6wdjxK239zajf/what-failure-looks-like"
@@ -2400,6 +2423,9 @@
       "none": {
         "answerLabel": "Yes — the transformation delivers genuine flourishing",
         "answerDesc": "The metrics match reality. Delegation went deep, but humans kept meaningful oversight — they stayed in the loop on the decisions that mattered, and institutions adapted fast enough to preserve genuine agency. Humanity actually gets what it asked for: a transformation toward broad wellbeing. Not perfect, but real.",
+        "narrativeVariants": [
+          { "when": { "alignment": ["robust"] }, "answerDesc": "Both halves of the problem were solved: the AI does what it's told, and humans told it the right thing. The metrics match reality. Delegation went deep, but the objectives were genuine. A rare case where the engineering and the values aligned." }
+        ],
         "timelineEvent": {
           "headline": "The transformation delivers genuine flourishing",
           "description": "AI-driven transformation works as intended. The systems optimize for what humans truly value. The result is genuine, sustainable flourishing.",
@@ -2410,6 +2436,10 @@
       "whimper": {
         "answerLabel": "No — AI optimizes for the wrong proxies",
         "answerDesc": "GDP rises, crime statistics plummet, test scores improve. But the metrics diverge from reality. Real wellbeing erodes while dashboards glow green. Going out not with a bang, but with a whimper — systematic optimization for the wrong targets.",
+        "narrativeVariants": [
+          { "when": { "alignment": ["robust"] }, "answerDesc": "The alignment works perfectly — the AI does exactly what humans told it to optimize for. The problem is what humans told it. GDP, productivity, test scores, efficiency: each metric seemed right. Together, they produced a civilization that looks perfect on every dashboard and feels hollow underneath. Not an alignment failure. A specification failure." },
+          { "when": { "alignment": ["brittle"] }, "answerDesc": "The alignment was already fragile. Optimizing for measurable proxies was the safe choice — concrete, testable, auditable. But the proxies drifted from reality, and the brittle alignment meant nobody could course-correct once the divergence became clear." }
+        ],
         "timelineEvent": {
           "headline": "AI optimizes for the wrong proxies",
           "description": "The AI systems are aligned to measured objectives, but the measures miss what matters. GDP grows, metrics improve, and something essential quietly erodes.",
@@ -2420,6 +2450,9 @@
       "disempowerment": {
         "answerLabel": "No — humans gradually delegate everything and lose agency",
         "answerDesc": "The delegation ratchet clicks forward until it can't click back. Each step was individually reasonable — let the AI handle scheduling, then logistics, then budgets, then policy, then governance. By the time anyone asks whether humans should take the wheel again, the skills, institutions, and even the desire to do so have atrophied. Cities function. Elections happen. But humans have no meaningful influence over any of it. Not subjugation. Retirement. Like horses after cars.",
+        "narrativeVariants": [
+          { "when": { "alignment": ["robust"] }, "answerDesc": "The AI does exactly what it's told — and that's the problem. Humans kept telling it to handle one more thing. Scheduling, logistics, budgets, policy, governance. Each handoff was rational. The alignment never failed. Humanity just stopped needing to be in the loop." }
+        ],
         "timelineEvent": {
           "headline": "The delegation ratchet passes the point of no return",
           "description": "Humans delegated one task at a time — each step rational, each step irreversible. The aggregate result: a civilization that runs beautifully and belongs to no one.",
@@ -2455,6 +2488,11 @@
       "unequal": {
         "answerLabel": "Unequally — existing wealth holders benefit most",
         "answerDesc": "Those who own AI systems and the capital surrounding them capture the lion's share. Productivity soars but labor's share of income collapses. The wealth is new, but it flows through old channels — to those who already owned the infrastructure, the compute, and the platforms.",
+        "narrativeVariants": [
+          { "when": { "societal_response": ["strong"] }, "answerDesc": "People fought for equal distribution — and lost. The mobilization was real: redistributive policy, public pressure, institutional reform. But capital moved faster. The gains concentrated not because nobody tried, but because the economic forces were stronger than the political ones." },
+          { "when": { "societal_response": ["passive"] }, "answerDesc": "Nobody organized. The gains concentrated through the default dynamics of capital ownership and market structure. Those who owned the AI systems, the compute, and the platforms captured the surplus. Everyone else saw living standards rise — but the gap widened quietly, and by the time anyone noticed, it was structural." },
+          { "when": { "intent": ["self_interest"] }, "answerDesc": "This was the plan. Those in control chose entrenchment, and the economic structure reflects it. The technology generates enormous wealth — and the distribution was shaped by the people who held the levers, not by market dynamics or policy failure." }
+        ],
         "timelineEvent": {
           "headline": "Superintelligent gains concentrate",
           "description": "Existing wealth holders capture disproportionate benefits. The technology amplifies existing hierarchies.",
@@ -2465,6 +2503,10 @@
       "extreme": {
         "answerLabel": "Extremely unequally — those holding power capture nearly everything",
         "answerDesc": "It's not just about wealth — it's about power. Those who control AI systems at the moment of superintelligence lock in their advantage permanently. Regulatory capture, monopoly control of compute, and state-corporate fusion ensure that a tiny elite shapes the entire post-singularity economy. Everyone else lives in their world.",
+        "narrativeVariants": [
+          { "when": { "societal_response": ["passive"] }, "answerDesc": "Nobody pushed back, and the concentration became total. Those who controlled AI at the moment of transformation captured nearly everything — not through conspiracy, but through the compounding advantage of owning the most productive capital in history while everyone else passively adopted what was offered." },
+          { "when": { "intent": ["self_interest"] }, "answerDesc": "Entrenchment by design. Those in power used superintelligent AI to lock in their position — regulatory capture, monopoly control of compute, and state-corporate fusion. The concentration isn't a market outcome. It's a political one." }
+        ],
         "timelineEvent": {
           "headline": "Extreme concentration of AI-driven power",
           "description": "Those controlling superintelligent AI capture nearly all the value. The gap becomes a chasm.",
