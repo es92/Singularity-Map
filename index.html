@@ -223,9 +223,16 @@
         }
         .map-outcomes-count { font-weight: 400; font-size: 0.82rem; color: var(--text-dim); }
         .map-outcome-section .outcome-header { margin-bottom: 1rem; }
-        .map-outcome-section .outcome-summary { margin-bottom: 1rem; }
-        .map-outcome-section .outcome-story { margin-top: 1rem; }
-        .map-outcome-section .outcome-story p { margin-bottom: 0.6rem; line-height: 1.65; }
+        .map-outcome-section .outcome-summary { margin-bottom: 1.25rem; line-height: 1.65; }
+        .map-outcome-section .outcome-flavors { border-top: 1px solid var(--border); padding-top: 1rem; }
+        .outcome-phase { margin-bottom: 1.25rem; }
+        .outcome-phase:last-child { margin-bottom: 0; }
+        .outcome-phase-heading {
+            font-size: 0.82rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--text-dim);
+            margin-bottom: 0.5rem;
+        }
+        .outcome-phase p { margin-bottom: 0.6rem; line-height: 1.65; }
         .map-actions {
             display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;
         }
@@ -446,15 +453,42 @@
             };
         }
 
+        const FLAVOR_PHASES = {
+            'How it happened': [
+                'distribution', 'takeoff', 'governance', 'sovereignty',
+                'rival_emerges', 'stall_recovery', 'automation_recovery',
+                'conflict_result', 'power_structure'
+            ],
+            'How society responded': [
+                'societal_response', 'capture_confrontation'
+            ],
+            'What the world looks like': [
+                'benefit_distribution', 'alignment',
+                'knowledge_replacement', 'physical_automation',
+                'auto_knowledge_rate', 'auto_physical_rate',
+                'plateau_knowledge_rate', 'plateau_physical_rate',
+                'escape_method', 'escape_timeline'
+            ]
+        };
+        const FLAVOR_KEY_TO_PHASE = {};
+        for (const [phase, keys] of Object.entries(FLAVOR_PHASES)) {
+            for (const k of keys) FLAVOR_KEY_TO_PHASE[k] = phase;
+        }
+
         function resolveFlavors(flavors, state) {
-            if (!flavors) return [];
-            const texts = [];
+            if (!flavors) return { flat: [], grouped: {} };
+            const flat = [];
+            const grouped = {};
             for (const [nodeId, options] of Object.entries(flavors)) {
                 if (state[nodeId] && options[state[nodeId]]) {
-                    texts.push(options[state[nodeId]]);
+                    const text = options[state[nodeId]];
+                    flat.push(text);
+                    const phase = FLAVOR_KEY_TO_PHASE[nodeId] || 'What the world looks like';
+                    if (!grouped[phase]) grouped[phase] = [];
+                    grouped[phase].push(text);
                 }
             }
-            return texts;
+            return { flat, grouped };
         }
 
         // --- Persistence ---
@@ -731,12 +765,16 @@
                 const key = outcomeKey(t.id, resolved.variantKey);
                 markDiscovered(key);
 
-                const storyHtml = (Array.isArray(resolved.story) ? resolved.story : [resolved.story])
-                    .map(p => `<p>${esc(p)}</p>`).join('');
-
+                const { grouped } = resolved.flavors;
                 let flavorsHtml = '';
-                if (resolved.flavors && resolved.flavors.length > 0) {
-                    flavorsHtml = resolved.flavors.map(f => `<p>${esc(f)}</p>`).join('');
+                const phaseOrder = Object.keys(FLAVOR_PHASES);
+                for (const phase of phaseOrder) {
+                    const paragraphs = grouped[phase];
+                    if (!paragraphs || paragraphs.length === 0) continue;
+                    flavorsHtml += `<div class="outcome-phase">`;
+                    flavorsHtml += `<h3 class="outcome-phase-heading">${esc(phase)}</h3>`;
+                    flavorsHtml += paragraphs.map(f => `<p>${esc(f)}</p>`).join('');
+                    flavorsHtml += `</div>`;
                 }
 
                 return `<div class="map-outcome-section">
@@ -747,7 +785,6 @@
                     </div>
                     <div class="outcome-summary">${esc(resolved.summary)}</div>
                     ${flavorsHtml ? `<div class="outcome-flavors">${flavorsHtml}</div>` : ''}
-                    <div class="outcome-story">${storyHtml}</div>
                 </div>`;
             }
 
