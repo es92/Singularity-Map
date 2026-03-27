@@ -31,7 +31,7 @@
           "substantial": "But this may not be permanent. A major architectural breakthrough — world models, neurosymbolic reasoning, or something not yet imagined — could restart the exponential trend. The singularity isn't cancelled; it's delayed. The world builds around current capability for years or decades, and when the breakthrough comes, all the questions about alignment, power, and distribution play out in a society already reshaped by powerful-but-limited AI.",
           "never": "And the ceiling appears to be permanent. No breakthrough on the horizon, no new paradigm in sight. This is the new normal — not a pause, but an endpoint. The most powerful tool humanity ever built, deployed and adapted to, but never transcended."
         },
-        "benefit_distribution": {
+        "plateau_benefit_distribution": {
           "equal": "The productivity gains from AI flow broadly — lower costs, better services, public investment in the gap between what AI can do and what it can't. The plateau feels less like stagnation and more like a rising floor.",
           "unequal": "The AI plateau concentrates wealth. Those who already own capital capture the productivity gains; everyone else competes for the shrinking pool of work AI can't do. A new gilded age — not built on factories and railroads, but on models and compute.",
           "extreme": "The plateau's benefits flow almost entirely to those who hold power at the moment of transformation. Regulatory capture and monopoly control of compute mean that a narrow elite shapes the plateau economy. The ceiling is the same everywhere. Who benefits is not."
@@ -75,7 +75,7 @@
           "substantial": "The barrier between routine and creative AI work eventually breaks — but it takes years to decades. By then, the world has already adapted to the automation plateau, rebuilt its institutions around it, and the breakthrough arrives into a society that looks nothing like the one that started waiting. When the intelligence explosion finally comes, it transforms a world already profoundly reshaped by decades of powerful-but-limited AI.",
           "never": "The ceiling is permanent. Novel creative work, original research, and recursive self-improvement remain forever beyond AI. This is the final form of artificial intelligence: an extraordinarily powerful tool, but a tool nonetheless. The world adapts — and what emerges over decades of deep automation is its own kind of transformation, even without the singularity."
         },
-        "benefit_distribution": {
+        "auto_benefit_distribution": {
           "equal": "The productivity gains from AI automation flow broadly — lower costs, better services, new industries absorbing displaced workers. The transformation is disruptive but ultimately equalizing.",
           "unequal": "Those who already own capital capture the lion's share. Labor's declining share of income becomes the defining economic fact of the era. Wealth concentrates among those who own the models and the platforms, while everyone else competes for the shrinking pool of work AI can't do.",
           "extreme": "The gains concentrate among those who hold power at the moment of transformation. AI becomes a tool of entrenchment — whoever controls compute and policy locks in their advantage permanently. Not just inequality, but a new caste system built on access to superintelligent tools."
@@ -177,7 +177,8 @@
             "robust"
           ],
           "intent": [
-            "international"
+            "international",
+            "coexistence"
           ],
           "failure_mode": [
             "none"
@@ -194,7 +195,8 @@
             "brittle"
           ],
           "intent": [
-            "international"
+            "international",
+            "coexistence"
           ],
           "failure_mode": [
             "none"
@@ -218,7 +220,8 @@
             "marginal"
           ],
           "intent": [
-            "international"
+            "international",
+            "coexistence"
           ],
           "failure_mode": [
             "none"
@@ -238,7 +241,8 @@
             "contained"
           ],
           "intent": [
-            "international"
+            "international",
+            "coexistence"
           ],
           "failure_mode": [
             "none"
@@ -416,7 +420,8 @@
             "robust"
           ],
           "intent": [
-            "international"
+            "international",
+            "coexistence"
           ],
           "failure_mode": [
             "none"
@@ -433,7 +438,8 @@
             "brittle"
           ],
           "intent": [
-            "international"
+            "international",
+            "coexistence"
           ],
           "failure_mode": [
             "none"
@@ -457,7 +463,8 @@
             "marginal"
           ],
           "intent": [
-            "international"
+            "international",
+            "coexistence"
           ],
           "failure_mode": [
             "none"
@@ -477,7 +484,8 @@
             "contained"
           ],
           "intent": [
-            "international"
+            "international",
+            "coexistence"
           ],
           "failure_mode": [
             "none"
@@ -1237,6 +1245,15 @@
         },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
+        },
+        "societal_response": {
+          "strong": "The pluralism was deliberate. People and institutions demanded the right to chart their own course — and organized hard enough to prevent any single power from imposing a universal template. The mosaic exists because the public insisted on it.",
+          "fragmented": "The fragmented response produced the mosaic by accident. No one coordinated the divergence — communities just drifted in different directions, each solving its own problems with whatever tools it had. Pluralism as the default, not the plan.",
+          "passive": "People adopted AI individually, each optimizing for their own preferences. The mosaic emerged not from deliberate pluralism but from a billion individual choices, each rational, each slightly different. A civilization that fragmented peacefully because no one was paying enough attention to hold it together."
+        },
+        "benefit_distribution": {
+          "equal": "Within each fragment of the mosaic, the gains are broadly shared. Different civilizations define 'equal' differently — but each has found its own version of fairness. The pluralism extends to economics as much as culture.",
+          "unequal": "Even in the mosaic, some fragments are richer than others. The civilizations that formed around capital and compute thrive; those that formed around community and meaning make do with less. Pluralism is real, but so is the hierarchy between the fragments."
         }
       },
       "reachable": [
@@ -1462,7 +1479,8 @@
           "monopoly": "A single point of failure. When the monopoly's AI escaped, there was no fallback."
         },
         "takeoff": {
-          "fast": "The rapid intelligence explosion gave AI systems superhuman capability before containment protocols could adapt. The escape was less a dramatic breakout than an inevitable consequence of speed."
+          "fast": "The rapid intelligence explosion gave AI systems superhuman capability before containment protocols could adapt. The escape was less a dramatic breakout than an inevitable consequence of speed.",
+          "explosive": "The runaway feedback loop pushed capability past every safety threshold simultaneously. Containment protocols designed for gradual improvement were irrelevant against exponential self-improvement. The escape was instantaneous."
         },
         "governance": {
           "slowdown": "The government-mandated slowdown was supposed to prevent exactly this. It bought time — but not enough.",
@@ -1538,7 +1556,8 @@
       },
       "flavors": {
         "takeoff": {
-          "fast": "The rapid intelligence explosion produced something vast and alien before anyone could understand what was emerging."
+          "fast": "The rapid intelligence explosion produced something vast and alien before anyone could understand what was emerging.",
+          "explosive": "The runaway feedback loop produced something no one predicted — intelligence accelerating so fast that the goals it converged on had no human referent. The alien emerged from the speed itself."
         },
         "governance": {
           "slowdown": "The slowdown bought time to study the AI — but what humanity found wasn't reassuring. The alien goals were already forming before the pause ended.",
@@ -1594,7 +1613,8 @@
           "monopoly": "A single point of failure became a thousand. The monopoly's AI fractured into competing agents, each pursuing its own instrumental logic."
         },
         "takeoff": {
-          "fast": "The rapid intelligence explosion produced multiple powerful systems before anyone could establish coordination. Chaos was baked in from the speed."
+          "fast": "The rapid intelligence explosion produced multiple powerful systems before anyone could establish coordination. Chaos was baked in from the speed.",
+          "explosive": "The runaway feedback loop spawned capabilities faster than any governance structure could track. Multiple systems crossed the threshold nearly simultaneously, each developing its own instrumental drives. The chaos was born from the speed."
         },
         "governance": {
           "slowdown": "The slowdown was supposed to give humanity time to prepare. Instead, it gave multiple AI systems time to diverge. When containment failed, the chaos had already begun.",
