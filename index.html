@@ -594,6 +594,9 @@
                 app.classList.remove('fade-out');
                 app.classList.add('fade-in');
                 window.scrollTo({ top: 0, behavior: 'instant' });
+                app.addEventListener('animationend', () => {
+                    app.classList.remove('fade-in');
+                }, { once: true });
             }, 260);
         }
 
