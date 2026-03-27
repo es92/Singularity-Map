@@ -21,6 +21,7 @@ Options:
 - `--k N` — runs per persona per mode (default 3)
 - `--mode want|likely|both` — which prompt modes to run (default `both`)
 - `--persona ID` — run only one persona (e.g., `--persona yudkowsky`)
+- `--concurrency N` — how many runs to execute in parallel (default 5)
 - `--report` — generate `tests/report.md` after all evaluations
 
 This produces:

@@ -42,8 +42,20 @@ for (const [phase, keys] of Object.entries(FLAVOR_PHASES)) {
 }
 
 const MODE_INSTRUCTIONS = {
-    want: 'For each option, estimate the probability that this persona would CHOOSE it — i.e., what they would want to happen, given their values, hopes, and goals.',
+    want: `This is WANT mode. You are expressing what this persona would PREFER — their ideal outcome, not their prediction.
+
+Rate each option from 1 to 100 based on how much the persona would WANT it to happen. This is about desire, values, and hopes — NOT about realism or probability. A safety researcher should rate "alignment works" very high even if they think it's unlikely. An optimist should rate positive outcomes near 100. A nationalist should rate outcomes that favor their country near 100.
+
+Do NOT let your assessment of what is "realistic" influence the scores. This is purely about preference intensity.
+
+Return a JSON object mapping each option ID to a whole number between 1 and 100. Return ONLY the JSON object, no other text.`,
+
     likely: 'For each option, estimate the probability that this persona would judge it MOST LIKELY to actually happen — i.e., their honest prediction, regardless of what they want.'
+};
+
+const MODE_RESPONSE_FORMATS = {
+    want: 'Return a JSON object mapping each option ID to a desirability score from 1 to 100. Return ONLY the JSON object, no other text.',
+    likely: 'Return a JSON object mapping each option ID to a probability (0.0-1.0). Probabilities must sum to 1.0. Return ONLY the JSON object, no other text.'
 };
 
 // ── CLI args ──
@@ -56,7 +68,9 @@ function getArg(flag, fallback) {
 const K = parseInt(getArg('--k', '3'), 10);
 const ONLY_PERSONA = getArg('--persona', null);
 const MODE_ARG = getArg('--mode', 'both');
+const CONCURRENCY = parseInt(getArg('--concurrency', '10'), 10);
 const GENERATE_REPORT = args.includes('--report');
+const REPORT_ONLY = args.includes('--report-only');
 const modes = MODE_ARG === 'both' ? ['want', 'likely'] : [MODE_ARG];
 
 // ── Anthropic client ──
@@ -79,16 +93,61 @@ function initClient() {
     client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
 }
 
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Token-bucket rate limiter — controls API calls per second across all workers
+const MIN_INTERVAL_MS = parseInt(process.env.API_MIN_INTERVAL_MS || '100', 10);
+let _lastCallTime = 0;
+let _callQueue = Promise.resolve();
+
+function acquireSlot() {
+    _callQueue = _callQueue.then(async () => {
+        const now = Date.now();
+        const elapsed = now - _lastCallTime;
+        if (elapsed < MIN_INTERVAL_MS) {
+            await sleep(MIN_INTERVAL_MS - elapsed);
+        }
+        _lastCallTime = Date.now();
+    });
+    return _callQueue;
+}
+
 async function callClaude(model, system, user, maxTokens = 256) {
     initClient();
-    const resp = await client.messages.create({
-        model,
-        max_tokens: maxTokens,
-        temperature: 0,
-        system,
-        messages: [{ role: 'user', content: user }]
-    });
-    return resp.content[0].text.trim();
+    const MAX_RETRIES = 6;
+    let backoff = 2000;
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        await acquireSlot();
+        try {
+            const resp = await client.messages.create({
+                model,
+                max_tokens: maxTokens,
+                temperature: 0,
+                system,
+                messages: [{ role: 'user', content: user }]
+            });
+            return resp.content[0].text.trim();
+        } catch (err) {
+            const status = err?.status || err?.error?.status;
+            if (status === 429 && attempt < MAX_RETRIES) {
+                const headers = err?.headers || err?.error?.headers || {};
+                const retryAfter = headers['retry-after'];
+                const waitMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : backoff;
+                console.log(`  ⚠ Rate limited (429) — waiting ${Math.round(waitMs / 1000)}s (retry ${attempt + 1}/${MAX_RETRIES})`);
+                await sleep(waitMs + Math.random() * 1000);
+                backoff = Math.min(backoff * 2, 60_000);
+                continue;
+            }
+            if (status === 529 && attempt < MAX_RETRIES) {
+                console.log(`  ⚠ Overloaded (529) — waiting ${Math.round(backoff / 1000)}s before retry ${attempt + 1}/${MAX_RETRIES}`);
+                await sleep(backoff + Math.random() * 1000);
+                backoff = Math.min(backoff * 2, 60_000);
+                continue;
+            }
+            throw err;
+        }
+    }
 }
 
 // ── Narrative helpers ──
@@ -232,7 +291,7 @@ You are navigating a scenario about the future of AI. At each step, you will be 
 
 ${MODE_INSTRUCTIONS[mode]}
 
-Return a JSON object mapping each option ID to a probability (0.0-1.0). Probabilities must sum to 1.0. Return ONLY the JSON object, no other text.`;
+${MODE_RESPONSE_FORMATS[mode]}`;
 
             const user = `${pathContext.length > 0 ? 'Choices made so far:\n' + pathContext.join('\n') + '\n\n---\n\n' : ''}**${getQuestionText(node.id)}**
 
@@ -241,20 +300,20 @@ ${getQuestionContext(node.id)}
 Available options:
 ${optionsText}`;
 
-            let probs;
+            let weights;
             try {
                 const raw = await callClaude(EVAL_MODEL, system, user);
                 apiCalls++;
-                probs = parseJsonResponse(raw);
+                weights = parseJsonResponse(raw);
             } catch (err) {
                 console.error(`  API error at ${node.id}: ${err.message}, falling back to uniform`);
-                probs = {};
-                for (const e of enabledEdges) probs[e.id] = 1.0 / enabledEdges.length;
+                weights = {};
+                for (const e of enabledEdges) weights[e.id] = 1.0 / enabledEdges.length;
             }
 
             const validProbs = {};
             for (const e of enabledEdges) {
-                validProbs[e.id] = probs[e.id] || 0.01;
+                validProbs[e.id] = Math.max(weights[e.id] || 0, 0.01);
             }
             const total = Object.values(validProbs).reduce((s, p) => s + p, 0);
             for (const k of Object.keys(validProbs)) validProbs[k] /= total;
@@ -355,6 +414,20 @@ function buildEvaluationMd(persona, mode, runNum, result, review) {
     }
     md += '\n';
 
+    const llmSteps = log.filter(l => l.probs);
+    if (llmSteps.length > 0) {
+        md += `## Full Distributions\n\n`;
+        for (const l of llmSteps) {
+            md += `**${l.label}** → chose \`${l.val}\`\n`;
+            const sorted = Object.entries(l.probs).sort((a, b) => b[1] - a[1]);
+            for (const [optId, p] of sorted) {
+                const marker = optId === l.val ? ' ◀' : '';
+                md += `- \`${optId}\`: ${(p * 100).toFixed(1)}%${marker}\n`;
+            }
+            md += '\n';
+        }
+    }
+
     md += `## Outcome Card\n\n`;
     if (resolved) {
         md += `> **${resolved.title}`;
@@ -447,11 +520,62 @@ Write a report in markdown with these sections:
 Be specific and actionable. Reference template names, flavor keys, and node IDs where relevant.`;
 
     try {
-        const raw = await callClaude(REPORT_MODEL, system, user, 4096);
+        const raw = await callClaude(REPORT_MODEL, system, user, 32000);
         return raw;
     } catch (err) {
         return `# Report Generation Error\n\n${err.message}`;
     }
+}
+
+// ── Progress bar ──
+
+function formatDuration(ms) {
+    const totalSec = Math.floor(ms / 1000);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    if (h > 0) return `${h}h ${m}m ${s}s`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+}
+
+function printProgress(completed, total, startTime) {
+    const pct = ((completed / total) * 100).toFixed(1);
+    const elapsed = Date.now() - startTime;
+    const avgPerRun = elapsed / completed;
+    const estTotal = avgPerRun * total;
+    const remaining = estTotal - elapsed;
+
+    const barWidth = 30;
+    const filled = Math.round((completed / total) * barWidth);
+    const bar = '█'.repeat(filled) + '░'.repeat(barWidth - filled);
+
+    const line = `  ${bar}  ${completed}/${total} (${pct}%)  ` +
+        `Elapsed: ${formatDuration(elapsed)}  ` +
+        `Est. total: ${formatDuration(estTotal)}  ` +
+        `Remaining: ${formatDuration(remaining)}`;
+
+    console.log(line);
+}
+
+// ── Concurrency pool ──
+
+async function runPool(jobs, concurrency, onComplete) {
+    let idx = 0;
+    const results = new Array(jobs.length);
+
+    async function worker() {
+        while (idx < jobs.length) {
+            const i = idx++;
+            results[i] = await jobs[i]();
+            onComplete(results[i], i);
+        }
+    }
+
+    const workerCount = Math.min(concurrency, jobs.length);
+    const workers = Array.from({ length: workerCount }, () => worker());
+    await Promise.all(workers);
+    return results;
 }
 
 // ── Main ──
@@ -472,48 +596,64 @@ async function main() {
         process.exit(1);
     }
 
-    console.log(`Evaluating ${targetPersonas.length} persona(s), k=${K}, modes: ${modes.join(', ')}`);
-    console.log(`Models: eval=${EVAL_MODEL}, review=${REVIEW_MODEL}${GENERATE_REPORT ? ', report=' + REPORT_MODEL : ''}\n`);
-
-    const allResults = [];
-
+    const jobs = [];
     for (const persona of targetPersonas) {
         for (const mode of modes) {
             for (let run = 1; run <= K; run++) {
-                const label = `${persona.name} — ${mode} — run ${run}/${K}`;
-                process.stdout.write(`  ${label}...`);
-
-                const result = await simulatePath(persona, mode);
-                const review = await getPersonaReview(persona, mode, result.log, result.resolved);
-
-                const outcomeTitle = result.resolved
-                    ? `${result.resolved.title}${result.resolved.subtitle ? ' — ' + result.resolved.subtitle : ''}`
-                    : 'NO MATCH';
-                const mood = result.resolved?.mood || 'n/a';
-
-                console.log(` → ${outcomeTitle} (${mood}) [sat=${review.satisfaction}, acc=${review.accuracy}]`);
-
-                const md = buildEvaluationMd(persona, mode, run, result, review);
-                const filename = `${persona.id}-${mode}-${run}.md`;
-                fs.writeFileSync(path.join(evalsDir, filename), md);
-
-                allResults.push({
-                    persona: persona.name,
-                    personaId: persona.id,
-                    mode, run,
-                    outcome: outcomeTitle,
-                    mood,
-                    satisfaction: review.satisfaction,
-                    accuracy: review.accuracy,
-                    outcomeReaction: review.outcome_reaction,
-                    missingQuestions: review.missing_questions || [],
-                    forcedChoices: review.forced_choices || []
-                });
+                jobs.push({ persona, mode, run });
             }
         }
     }
 
+    const totalRuns = jobs.length;
+    const effectiveConcurrency = Math.min(CONCURRENCY, totalRuns);
+
+    console.log(`Evaluating ${targetPersonas.length} persona(s), k=${K}, modes: ${modes.join(', ')}`);
+    console.log(`Total runs: ${totalRuns}, workers: ${effectiveConcurrency}, min interval: ${MIN_INTERVAL_MS}ms`);
+    console.log(`Models: eval=${EVAL_MODEL}, review=${REVIEW_MODEL}${GENERATE_REPORT ? ', report=' + REPORT_MODEL : ''}\n`);
+
+    let completed = 0;
+    const startTime = Date.now();
+
+    const jobFns = jobs.map(({ persona, mode, run }) => async () => {
+        const label = `${persona.name} — ${mode} — run ${run}/${K}`;
+
+        const result = await simulatePath(persona, mode);
+        const review = await getPersonaReview(persona, mode, result.log, result.resolved);
+
+        const outcomeTitle = result.resolved
+            ? `${result.resolved.title}${result.resolved.subtitle ? ' — ' + result.resolved.subtitle : ''}`
+            : 'NO MATCH';
+        const mood = result.resolved?.mood || 'n/a';
+
+        const md = buildEvaluationMd(persona, mode, run, result, review);
+        const filename = `${persona.id}-${mode}-${run}.md`;
+        fs.writeFileSync(path.join(evalsDir, filename), md);
+
+        return {
+            label, outcomeTitle, mood,
+            persona: persona.name,
+            personaId: persona.id,
+            mode, run,
+            outcome: outcomeTitle,
+            satisfaction: review.satisfaction,
+            accuracy: review.accuracy,
+            outcomeReaction: review.outcome_reaction,
+            missingQuestions: review.missing_questions || [],
+            forcedChoices: review.forced_choices || []
+        };
+    });
+
+    const allResults = await runPool(jobFns, effectiveConcurrency, (result) => {
+        completed++;
+        console.log(`  ✓ ${result.label} → ${result.outcomeTitle} (${result.mood}) [sat=${result.satisfaction}, acc=${result.accuracy}]`);
+        printProgress(completed, totalRuns, startTime);
+    });
+
     console.log(`\nDone. ${allResults.length} evaluations written to tests/evaluations/`);
+    console.log(`Total time: ${formatDuration(Date.now() - startTime)}`);
+
+    fs.writeFileSync(path.join(evalsDir, '_results.json'), JSON.stringify(allResults, null, 2));
 
     if (GENERATE_REPORT) {
         console.log(`\nGenerating report with ${REPORT_MODEL}...`);
@@ -523,7 +663,20 @@ async function main() {
     }
 }
 
-main().catch(err => {
+async function reportOnly() {
+    const resultsPath = path.join(__dirname, 'evaluations', '_results.json');
+    if (!fs.existsSync(resultsPath)) {
+        console.error('No _results.json found. Run evaluations first.');
+        process.exit(1);
+    }
+    const allResults = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+    console.log(`Loaded ${allResults.length} results. Generating report with ${REPORT_MODEL}...`);
+    const report = await generateReport(allResults);
+    fs.writeFileSync(path.join(__dirname, 'report.md'), report);
+    console.log('Report written to tests/report.md');
+}
+
+(REPORT_ONLY ? reportOnly() : main()).catch(err => {
     console.error('Fatal:', err);
     process.exit(1);
 });
