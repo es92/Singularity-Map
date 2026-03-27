@@ -161,20 +161,51 @@ function getQuestionText(nodeId) {
     return n?.questionText || NODE_MAP[nodeId]?.label || nodeId;
 }
 
-function getQuestionContext(nodeId) {
-    return narrative[nodeId]?.questionContext || '';
+function getQuestionContext(nodeId, sel) {
+    const narr = narrative[nodeId];
+    if (!narr) return '';
+    if (sel && narr.contextWhen) return Engine.resolveContextWhen(sel, narr);
+    return narr.questionContext || '';
 }
 
-function getAnswerLabel(nodeId, edgeId) {
+function resolveNarrativeVariant(variants, sel) {
+    if (!variants || !sel) return null;
+    for (const v of variants) {
+        if (!v.when) return v;
+        const match = Object.entries(v.when).every(([nodeId, vals]) =>
+            sel[nodeId] && vals.includes(sel[nodeId])
+        );
+        if (match) return v;
+    }
+    return null;
+}
+
+function getAnswerLabel(nodeId, edgeId, sel) {
     const n = narrative[nodeId];
-    if (n?.values?.[edgeId]?.answerLabel) return n.values[edgeId].answerLabel;
+    if (n?.values?.[edgeId]) {
+        const val = n.values[edgeId];
+        if (sel && val.narrativeVariants) {
+            const variant = resolveNarrativeVariant(val.narrativeVariants, sel);
+            if (variant?.answerLabel) return variant.answerLabel;
+        }
+        if (val.answerLabel) return val.answerLabel;
+    }
     const node = NODE_MAP[nodeId];
     const edge = node?.edges?.find(e => e.id === edgeId);
     return edge?.label || edgeId;
 }
 
-function getAnswerDesc(nodeId, edgeId) {
-    return narrative[nodeId]?.values?.[edgeId]?.answerDesc || '';
+function getAnswerDesc(nodeId, edgeId, sel) {
+    const n = narrative[nodeId];
+    if (n?.values?.[edgeId]) {
+        const val = n.values[edgeId];
+        if (sel && val.narrativeVariants) {
+            const variant = resolveNarrativeVariant(val.narrativeVariants, sel);
+            if (variant?.answerDesc) return variant.answerDesc;
+        }
+        return val.answerDesc || '';
+    }
+    return '';
 }
 
 // ── JSON parsing (robust) ──
@@ -269,19 +300,19 @@ async function simulatePath(persona, mode) {
             const disabledReasons = [];
             for (const edge of node.edges) {
                 const reason = Engine.getEdgeDisabledReason(sel, node, edge);
-                if (reason) disabledReasons.push({ id: edge.id, label: getAnswerLabel(node.id, edge.id), reason });
+                if (reason) disabledReasons.push({ id: edge.id, label: getAnswerLabel(node.id, edge.id, sel), reason });
             }
 
             log.push({ id: node.id, label: node.label, val, prob: 1.0, source: 'auto', disabledReasons });
 
             if (disabledReasons.length > 0) {
-                let ctx = `- ${getQuestionText(node.id)}: ${getAnswerLabel(node.id, val)} [only option — previous choices ruled out the rest]`;
+                let ctx = `- ${getQuestionText(node.id)}: ${getAnswerLabel(node.id, val, sel)} [only option — previous choices ruled out the rest]`;
                 for (const d of disabledReasons) {
                     ctx += `\n    ✗ "${d.label}" unavailable: ${d.reason}`;
                 }
                 pathContext.push(ctx);
             } else {
-                pathContext.push(`- ${getQuestionText(node.id)}: ${getAnswerLabel(node.id, val)} [auto-locked]`);
+                pathContext.push(`- ${getQuestionText(node.id)}: ${getAnswerLabel(node.id, val, sel)} [auto-locked]`);
             }
             acted = true;
         }
@@ -295,8 +326,8 @@ async function simulatePath(persona, mode) {
             if (enabledEdges.length === 0) continue;
 
             const optionsText = enabledEdges.map(e => {
-                const label = getAnswerLabel(node.id, e.id);
-                const desc = getAnswerDesc(node.id, e.id);
+                const label = getAnswerLabel(node.id, e.id, sel);
+                const desc = getAnswerDesc(node.id, e.id, sel);
                 return `- ${e.id}: "${label}"${desc ? ' — ' + desc : ''}`;
             }).join('\n');
 
@@ -304,7 +335,7 @@ async function simulatePath(persona, mode) {
             let disabledText = '';
             if (disabledEdges.length > 0) {
                 const lines = disabledEdges.map(e => {
-                    const label = getAnswerLabel(node.id, e.id);
+                    const label = getAnswerLabel(node.id, e.id, sel);
                     const reason = Engine.getEdgeDisabledReason(sel, node, e);
                     return reason
                         ? `- ✗ "${label}" — unavailable: ${reason}`
@@ -323,7 +354,7 @@ ${MODE_RESPONSE_FORMATS[mode]}`;
 
             const user = `${pathContext.length > 0 ? 'Choices made so far:\n' + pathContext.join('\n') + '\n\n---\n\n' : ''}**${getQuestionText(node.id)}**
 
-${getQuestionContext(node.id)}
+${getQuestionContext(node.id, sel)}
 
 Available options:
 ${optionsText}${disabledText}`;
@@ -355,7 +386,7 @@ ${optionsText}${disabledText}`;
                 id: node.id, label: node.label, val: chosen,
                 prob: validProbs[chosen], probs: validProbs, source: 'llm'
             });
-            pathContext.push(`- ${getQuestionText(node.id)}: ${getAnswerLabel(node.id, chosen)}`);
+            pathContext.push(`- ${getQuestionText(node.id)}: ${getAnswerLabel(node.id, chosen, sel)}`);
             acted = true;
             break;
         }

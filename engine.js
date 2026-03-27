@@ -302,6 +302,19 @@ function removeSelection(sel, nodeId) {
 }
 
 // ════════════════════════════════════════════════════════
+// Narrative resolution
+// ════════════════════════════════════════════════════════
+
+function resolveContextWhen(sel, narr) {
+    if (narr && narr.contextWhen) {
+        for (const entry of narr.contextWhen) {
+            if (matchCondition(sel, entry.when, {})) return entry.questionContext;
+        }
+    }
+    return (narr && narr.questionContext) || '';
+}
+
+// ════════════════════════════════════════════════════════
 // Exports
 // ════════════════════════════════════════════════════════
 
@@ -309,13 +322,13 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = { NODES, NODE_MAP,
         matchCondition, matchesDerivation, applyDerivations, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         cleanSelection, applySelection, removeSelection, resolvedState,
-        templateMatches, templatePartialMatch, getDisplayOrder };
+        templateMatches, templatePartialMatch, getDisplayOrder, resolveContextWhen };
 }
 if (typeof window !== 'undefined') {
     window.Engine = { NODES, NODE_MAP,
         matchCondition, matchesDerivation, applyDerivations, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         cleanSelection, applySelection, removeSelection, resolvedState,
-        templateMatches, templatePartialMatch, getDisplayOrder };
+        templateMatches, templatePartialMatch, getDisplayOrder, resolveContextWhen };
 }
 
 })();

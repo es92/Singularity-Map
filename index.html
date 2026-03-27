@@ -348,6 +348,7 @@
                 if (!node) continue;
                 if (narr.questionText) node.questionText = narr.questionText;
                 if (narr.questionContext) node.questionContext = narr.questionContext;
+                if (narr.contextWhen) node.contextWhen = narr.contextWhen;
                 if (narr.source) node.source = narr.source;
                 if (narr.values) {
                     for (const [edgeId, vn] of Object.entries(narr.values)) {
@@ -1063,7 +1064,7 @@
                         const questionData = {
                             nodeLabel: nextQ.node.label,
                             questionText: nextQ.node.questionText || nextQ.node.label,
-                            questionContext: nextQ.node.questionContext || '',
+                            questionContext: Engine.resolveContextWhen(sel, nextQ.node),
                             source: nextQ.node.source,
                             isForced: nextQ.isForced || false,
                             forcedValue: nextQ.forcedValue || null,

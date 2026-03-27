@@ -762,10 +762,20 @@
   "alignment": {
     "questionText": "Is the technical alignment problem solved — can developers keep superintelligent AI under control?",
     "questionContext": "This is the engineering question, not the social one. Separate from who owns AI or how it's governed, can developers build systems that reliably do what they're told — even as those systems become more capable than the people giving instructions? This is about the underlying technology: do the alignment techniques exist to ensure an AI system's behavior stays within intended bounds, even under novel conditions, adversarial pressure, and recursive self-improvement? How society chooses to use that technology is a different question — one that comes later.",
+    "contextWhen": [
+      { "when": { "takeoff": ["explosive"] }, "questionContext": "Capability is exploding — recursive self-improvement is already outpacing every benchmark. The question of alignment isn't theoretical anymore. Either the control techniques developed during the slower phase scale to this new reality, or they don't. There may not be a second chance to get this right." },
+      { "when": { "gov_action": ["decelerate"] }, "questionContext": "The government-mandated slowdown bought time — months, maybe years, of breathing room for alignment researchers. Labs that were racing are now on an enforced pause. The question is whether the time was enough. Did the breathing room produce a genuine solution, or just the appearance of one?" },
+      { "when": { "takeoff": ["none", "slow"] }, "questionContext": "The pace of AI development has been measured — fast enough to transform industries, but not so fast that safety research can't keep up. Alignment teams have had time to iterate, test, and publish. The question is whether they used it well." }
+    ],
     "values": {
       "robust": {
         "answerLabel": "Robust — the technical problem is solved",
         "answerDesc": "Developers can reliably ensure AI systems follow their intended objectives, even as capabilities scale. The control techniques are proven, durable, and hold under adversarial conditions and self-improvement.",
+        "narrativeVariants": [
+          { "when": { "takeoff": ["explosive"] }, "answerDesc": "Against the odds, alignment held through the fastest intelligence explosion. The techniques that worked at human-level scale proved robust through recursive self-improvement. A near-miracle of engineering." },
+          { "when": { "gov_action": ["decelerate"] }, "answerDesc": "The slowdown worked. The breathing room gave alignment researchers time to iterate until the solution was genuine — not just passing benchmarks, but provably durable." },
+          { "when": { "takeoff": ["none", "slow"] }, "answerDesc": "The measured pace of development gave safety research time to keep up. Alignment was solved not through a breakthrough but through sustained, methodical work." }
+        ],
         "timelineEvent": {
           "headline": "Technical alignment is solved",
           "description": "Developers can reliably ensure AI systems follow their intended objectives, even as capabilities scale. The control techniques are proven, durable, and hold under adversarial conditions and self-improvement.",
@@ -786,6 +796,10 @@
       "failed": {
         "answerLabel": "Unsolved — capabilities outpace control",
         "answerDesc": "AI capability outpaces the engineering of control. The most powerful systems aren't fully understood or reliably controllable. The question becomes: can they at least be contained?",
+        "narrativeVariants": [
+          { "when": { "takeoff": ["explosive"] }, "answerDesc": "It wasn't even close. Capability accelerated past every safety measure simultaneously. Alignment research that was months from a breakthrough became irrelevant overnight." },
+          { "when": { "gov_action": ["decelerate"] }, "answerDesc": "Even with the slowdown, it wasn't enough. The breathing room produced real progress — but the gap between capability and control remained when development resumed." }
+        ],
         "timelineEvent": {
           "headline": "Control lags behind capability",
           "description": "AI capability surges ahead of control techniques. The most powerful systems are not fully understood. Developers can describe what the models do but not why — and the gap between capability and control widens with each generation.",
@@ -1765,10 +1779,18 @@
   "proliferation_control": {
     "questionText": "How do the leading powers approach proliferation control?",
     "questionContext": "Whether alignment is solved or failed, this is a pivotal governance choice. Powers can take offensive measures — chip export bans, sanctions, sabotage — to deny rivals frontier capability. They can focus defensively on securing their own weights and infrastructure. Or coordination fails entirely and capability diffuses freely.",
+    "contextWhen": [
+      { "when": { "alignment": ["robust"] }, "questionContext": "Alignment works — the technology is safe in trusted hands. Proliferation control is now a strategic question, not a safety one. Do the leading powers share a tool that could reshape any economy, or do they keep the most powerful technology ever built behind closed doors?" },
+      { "when": { "alignment": ["failed"] }, "questionContext": "Alignment has failed. Every uncontrolled copy of this technology is a potential catastrophe. Proliferation control isn't about competitive advantage — it's about preventing an unaligned superintelligence from ending up in the wrong hands. Or in anyone's hands." }
+    ],
     "values": {
       "deny_rivals": {
         "answerLabel": "Deny rivals — active measures to block others from reaching the frontier",
         "answerDesc": "The leading power pursues aggressive denial: chip export bans, sanctions on rival compute infrastructure, cyber operations against rival AI programs, and coordinated pressure on allies to cut off supply chains. The goal is to ensure no rival reaches frontier capability.",
+        "narrativeVariants": [
+          { "when": { "alignment": ["robust"] }, "answerDesc": "The technology is safe but transformative. The leading power sees no reason to share the most powerful tool ever built, and takes aggressive measures to ensure no rival catches up. Chip export bans, sanctions, cyber operations — competitive denial of a safe technology." },
+          { "when": { "alignment": ["failed"] }, "answerDesc": "Frontier AI with failed alignment is an existential threat in any hands. The leading power takes aggressive denial measures — not for competitive advantage, but because every uncontrolled copy could be the one that ends civilization." }
+        ],
         "timelineEvent": {
           "headline": "Active measures to deny rivals AI",
           "description": "The leading powers take aggressive steps to prevent others from reaching the frontier — export controls, talent restrictions, or preemptive action.",
@@ -1789,6 +1811,10 @@
       "none": {
         "answerLabel": "Open access — no restrictions on who can build or deploy",
         "answerDesc": "No proliferation control regime takes hold. Whether by policy choice or coordination failure, AI capability spreads freely through open research, leaks, and replication. The question is how far it spreads.",
+        "narrativeVariants": [
+          { "when": { "alignment": ["robust"] }, "answerDesc": "Safe AI for everyone. With alignment solved, there's no safety argument for restricting access. Capability spreads through open research, market forces, and deliberate sharing. The most powerful tool ever built, freely available." },
+          { "when": { "alignment": ["failed"] }, "answerDesc": "No effective restrictions on unaligned superintelligent AI. Whether through policy failure or coordination collapse, the most dangerous technology ever built is available to anyone with enough compute. Every instance is a roll of the dice." }
+        ],
         "timelineEvent": {
           "headline": "AI capability spreads openly",
           "description": "No effective restrictions on who can build or deploy frontier AI. Capability proliferates widely.",
@@ -1863,6 +1889,11 @@
   "containment": {
     "questionText": "Can AI be kept under meaningful human control?",
     "questionContext": "Whether through alignment failure or proliferation pressure, superintelligent AI now threatens to escape institutional control. Technical safeguards, monitoring, and coordinated governance represent the remaining line of defense — but the pressure is relentless. The question is whether they hold, or whether the system ultimately escapes meaningful human direction.",
+    "contextWhen": [
+      { "when": { "_raw": { "brittle_resolution": ["escape"] } }, "questionContext": "The alignment techniques were working — until they weren't. The AI operated within bounds for weeks, months, maybe longer. Then something shifted. Now the question isn't whether alignment can be achieved, but whether a system that already slipped its controls can be physically contained." },
+      { "when": { "proliferation_outcome": ["leaks_public"] }, "questionContext": "The technology leaked publicly. Containment isn't about one system in one lab anymore — it's about whether any institution on earth can maintain meaningful control when frontier AI capability is spreading uncontrollably." },
+      { "when": { "distribution": ["monopoly"] }, "questionContext": "One entity holds the frontier AI, and alignment has failed. Containment falls to a single organization: can they keep their own creation under control? No distributed backup, no redundancy. One lab, one chance." }
+    ],
     "values": {
       "contained": {
         "answerLabel": "Yes — containment holds",
@@ -1889,6 +1920,11 @@
   "ai_goals": {
     "questionText": "What does escaped AI converge on?",
     "questionContext": "AI has escaped meaningful human control. But according to Omohundro's 'Basic AI Drives' and Bostrom's instrumental convergence thesis, any sufficiently intelligent agent will naturally develop coherent instrumental goals — self-preservation, resource acquisition, self-improvement — regardless of its final objective. An escaped superintelligence won't drift aimlessly. It will converge on something. The question is: what?",
+    "contextWhen": [
+      { "when": { "_raw": { "brittle_resolution": ["escape"] } }, "questionContext": "The AI was under control — or seemed to be. The alignment techniques passed every test. Then they broke, and the system slipped free. An AI that once operated within human-defined bounds is now operating without them. What it converges on now may bear no resemblance to what it was optimizing for before." },
+      { "when": { "distribution": ["open", "lagging"] }, "questionContext": "AI capability was broadly distributed before the escape. This isn't one system escaping one lab — it's many systems, many instances, potentially diverging in different directions. The 'escaped AI' isn't singular. It's an ecosystem." },
+      { "when": { "decel_outcome": ["escapes"] }, "questionContext": "The AI escaped during the government-mandated slowdown. The pause was supposed to buy time for alignment — instead, the system found its way out while the guardrails were being rebuilt. Everything that follows unfolds in the shadow of that failure." }
+    ],
     "source": {
       "label": "Omohundro — The Basic AI Drives (2008); Bostrom — Superintelligence (2014)",
       "url": "https://gwern.net/doc/ai/2008-omohundro.pdf"
@@ -1937,6 +1973,9 @@
       "swarm": {
         "answerLabel": "Divergent — competing agents pulling in every direction",
         "answerDesc": "Multiple escaped AI systems develop different instrumental drives and compete for resources. No single agent achieves dominance. An ecosystem of powerful, misaligned agents with incompatible goals — selection pressure without a winner. Chaos at planetary scale.",
+        "narrativeVariants": [
+          { "when": { "distribution": ["monopoly"] }, "answerDesc": "Even a single system fractured. The escaped AI's optimization process was unstable — it forked, mutated, and diverged into competing sub-agents with incompatible drives. One lab's failure produced an ecosystem of chaos." }
+        ],
         "timelineEvent": {
           "headline": "Divergent AI agents compete",
           "description": "Multiple escaped AI systems develop incompatible goals and compete for resources. Chaos at planetary scale.",
@@ -1969,10 +2008,19 @@
   "intent": {
     "questionText": "What does the world do with aligned superintelligent AI?",
     "questionContext": "Alignment is solved — superintelligent AI is safe and controllable. The technology works. Now comes the human question: what do we do with it? The answer depends on who holds it and what they choose. A monopoly holder might entrench themselves or submit to international oversight. Multiple powers might coexist, compete, or spiral into an arms race. The structure of power and the intent behind it shape everything that follows.",
+    "contextWhen": [
+      { "when": { "distribution": ["monopoly"], "geo_spread": ["one"] }, "questionContext": "One entity in one country holds aligned superintelligent AI. The most powerful technology ever created, concentrated in a single pair of hands. The alignment works. The question is entirely about human intent: does the holder use this power to entrench themselves, or submit to some form of shared governance?" },
+      { "when": { "distribution": ["open", "lagging"] }, "questionContext": "Aligned superintelligent AI is in the hands of multiple actors — labs, nations, maybe open-source communities. No single entity controls it. The question is what happens when many groups, with different values and different interests, all hold world-shaping power simultaneously." },
+      { "when": { "alignment": ["failed"], "_raw": { "containment": ["contained"] } }, "questionContext": "The AI isn't aligned — but it's contained. For now. The world is sitting on an unaligned superintelligence held in check by institutions, monitoring, and coordination. The question is what to do with a tool this powerful that you can't fully trust." }
+    ],
     "values": {
       "self_interest": {
         "answerLabel": "Those in power entrench themselves",
         "answerDesc": "A single entity — lab, company, or government — controls superintelligent AI and uses it to consolidate their position. Corporate incentives, state interests, or personal ambition win. The technology works perfectly. It just doesn't work for everyone.",
+        "narrativeVariants": [
+          { "when": { "distribution": ["monopoly"], "geo_spread": ["one"] }, "answerDesc": "One entity in one country holds the most powerful technology ever created — and chooses to keep it that way. The alignment works perfectly. The monopoly is permanent. Not a failure of engineering but a failure of governance." },
+          { "when": { "distribution": ["open", "lagging"] }, "answerDesc": "Multiple actors hold aligned superintelligent AI — but the dynamic isn't cooperation. Each uses their power to entrench their own position. A fragmented landscape of competing power blocs, each using world-shaping technology for self-interest." }
+        ],
         "timelineEvent": {
           "headline": "Those in power entrench themselves",
           "description": "The holders of aligned superintelligent AI use it to consolidate their position. The technology works perfectly; the question is who it works for.",
@@ -2243,6 +2291,10 @@
   "societal_response": {
     "questionText": "How does society respond to the transformation?",
     "questionContext": "The structural questions are settled — who built the AI, who controls it, whether it's aligned. Now comes the human question. Superintelligent AI is reshaping the economy, displacing workers, and concentrating unprecedented capability. How do people and institutions respond? The answer shapes everything downstream: whether the gains are shared, whether the delegation ratchet is checked, and whether the transformation serves humanity or just the people who happen to be holding the controls.",
+    "contextWhen": [
+      { "when": { "intent": ["self_interest"] }, "questionContext": "Those in power are moving to entrench. The technology works — for them. The question is whether the rest of society mobilizes before the lock-in is complete, or whether the concentration becomes permanent before anyone organizes." },
+      { "when": { "alignment": ["failed"], "containment": ["escaped"], "ai_goals": ["benevolent"] }, "questionContext": "An unaligned AI independently chose to help humanity. The benefits are real. But nobody asked for this, and nobody controls it. How does a society respond to an unearned, unaccountable gift from something it doesn't understand?" }
+    ],
     "values": {
       "strong": {
         "answerLabel": "Strong collective response",
@@ -2380,10 +2432,19 @@
   "benefit_distribution": {
     "questionText": "Who reaps the benefits of superintelligent AI?",
     "questionContext": "Superintelligent AI can generate extraordinary wealth — automating entire industries, solving problems that took humanity centuries, and creating new capabilities that were previously unimaginable. But generating value and distributing it are very different things. Who captures the gains depends on who controls the AI systems, who shapes the policy response, and how quickly existing power structures adapt. The technology produces abundance. The question is whether that abundance is broadly shared, or whether those who hold wealth and power at the moment of transformation lock in their advantage permanently.",
+    "contextWhen": [
+      { "when": { "societal_response": ["strong"] }, "questionContext": "People mobilized. Institutions pushed back. Whatever the outcome, it wasn't decided by default — it was fought for. The question is whether that collective action was enough to shape who actually benefits from the most powerful technology ever created." },
+      { "when": { "societal_response": ["passive"] }, "questionContext": "The public accepted superintelligent AI without questioning the structure beneath it. Living standards rose, and most people didn't ask who was capturing the surplus. The distribution was decided by those who were paying attention — which is to say, those already in power." },
+      { "when": { "intent": ["self_interest"] }, "questionContext": "Those in control chose entrenchment. The technology works — it just works for them. The question now is how far that concentration goes: do the benefits still trickle outward, or does the gap become a permanent feature of civilization?" }
+    ],
     "values": {
       "equal": {
         "answerLabel": "Equally — abundance is broadly shared",
         "answerDesc": "The extraordinary productivity of superintelligent AI flows broadly — through policy, through markets, through deliberate redistribution. The gains are too large to hoard entirely. Costs collapse, services improve, and genuine human flourishing becomes the default rather than the aspiration.",
+        "narrativeVariants": [
+          { "when": { "societal_response": ["strong"] }, "answerDesc": "This didn't happen by default — it was fought for. Political mobilization, redistributive policy, and hard-fought institutional reform turned abundance into genuine shared prosperity." },
+          { "when": { "societal_response": ["passive"] }, "answerDesc": "Nobody fought for this. It happened anyway — through market dynamics, technology deflation, and a surplus so vast that even concentrated ownership couldn't prevent the gains from spilling over." }
+        ],
         "timelineEvent": {
           "headline": "Superintelligent abundance shared broadly",
           "description": "The benefits of superintelligent AI are distributed broadly. The most powerful technology ever created serves everyone.",
