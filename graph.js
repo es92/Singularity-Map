@@ -32,10 +32,11 @@ const OUTCOME_ACTIVATE = [
     { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], failure_mode: ['none', 'whimper', 'disempowerment'] },
     { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
     { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'] }, _raw: { containment: ['contained'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
-    { capability: ['singularity'], automation: ['deep'], post_war_aims: ['human_centered'] },
-    { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['benevolent'] },
-    { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'] },
-    { capability: ['singularity'], automation: ['deep'], post_war_aims: ['self_interest'] }
+    { capability: ['singularity'], automation: ['deep'], post_war_aims: ['human_centered'], _set: ['societal_response'] },
+    { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['benevolent'], _set: ['societal_response'] },
+    { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'], societal_response: ['fragmented', 'passive'] },
+    { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'], _set: ['capture_confrontation'] },
+    { capability: ['singularity'], automation: ['deep'], post_war_aims: ['self_interest'], _set: ['societal_response'] }
 ];
 
 
@@ -509,6 +510,7 @@ const NODES = [
       derivedFrom: [
         { when: { escalation_outcome: 'agreement' }, value: 'coexistence' },
         { when: { post_war_aims: 'human_centered' }, value: 'coexistence' },
+        { when: { capture_confrontation: 'succeeds' }, value: 'international' },
         { whenSet: 'rival_dynamics', fromDim: 'rival_dynamics' }
       ],
       edges: [
@@ -602,7 +604,7 @@ const NODES = [
     { id: 'post_war_aims', label: 'Victor\'s Aims', stage: 3,
       activateWhen: [{ conflict_result: ['victory'] }],
       edges: [ { id: 'human_centered', label: 'Rebuild for humanity' }, { id: 'self_interest', label: 'Consolidate power' } ] },
-    { id: 'failure_mode', label: 'Implementation', stage: 3, forwardKey: true, hideAfterEscape: true,
+    { id: 'societal_response', label: 'Societal Response', stage: 3, hideAfterEscape: true,
       activateWhen: [
         {
           capability: ['singularity'],
@@ -625,6 +627,50 @@ const NODES = [
           _raw: { containment: ['contained'] },
           intent: ['international', 'coexistence'],
           _notSet: ['post_war_aims']
+        },
+        { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'] },
+        { capability: ['singularity'], automation: ['deep'], _set: ['post_war_aims'] },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['benevolent'] }
+      ],
+      edges: [
+        { id: 'strong', label: 'Strong collective response' },
+        { id: 'fragmented', label: 'Fragmented response' },
+        { id: 'passive', label: 'Passive adoption' }
+      ] },
+    { id: 'capture_confrontation', label: 'Confrontation', stage: 3,
+      activateWhen: [
+        { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'], societal_response: ['strong'] }
+      ],
+      edges: [
+        { id: 'succeeds', label: 'Resistance succeeds' },
+        { id: 'fails', label: 'Power prevails' }
+      ] },
+    { id: 'failure_mode', label: 'Implementation', stage: 3, forwardKey: true, hideAfterEscape: true,
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['robust', 'brittle'],
+          intent: ['international', 'coexistence'],
+          _notSet: ['post_war_aims'],
+          _set: ['societal_response']
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _raw: { brittle_resolution: ['escape'] },
+          intent: ['international', 'coexistence'],
+          _notSet: ['post_war_aims'],
+          _set: ['societal_response']
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _eff: { alignment: ['failed'] },
+          _raw: { containment: ['contained'] },
+          intent: ['international', 'coexistence'],
+          _notSet: ['post_war_aims'],
+          _set: ['societal_response']
         }
       ],
       edges: [
@@ -738,9 +784,22 @@ const NODES = [
     { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
       activateWhen: OUTCOME_ACTIVATE,
       edges: [
-        { id: 'equal', label: 'Shared equally' },
+        { id: 'equal', label: 'Shared equally',
+          disabledWhen: [
+            { societal_response: ['passive'] },
+            { societal_response: ['fragmented'], intent: ['self_interest'] },
+            { societal_response: ['fragmented'], post_war_aims: ['self_interest'] },
+            { capture_confrontation: ['fails'] }
+          ] },
         { id: 'unequal', label: 'Wealth concentrates' },
-        { id: 'extreme', label: 'Power concentrates' }
+        { id: 'extreme', label: 'Power concentrates',
+          disabledWhen: [
+            { societal_response: ['strong'], intent: ['international'] },
+            { societal_response: ['strong'], intent: ['coexistence'] },
+            { societal_response: ['strong'], post_war_aims: ['self_interest'] },
+            { societal_response: ['strong'], ai_goals: ['benevolent'] },
+            { capture_confrontation: ['succeeds'] }
+          ] }
       ] },
     { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, terminal: true, hideAfterEscape: true,
       activateWhen: OUTCOME_ACTIVATE,

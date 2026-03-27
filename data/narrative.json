@@ -422,8 +422,8 @@
     }
   },
   "automation_recovery": {
-    "questionText": "Does deep automation eventually arrive?",
-    "questionContext": "AI handles routine work impressively, but novel creative thinking and AI R&D remain out of reach — for now. The history of technology is full of ceilings that turned out to be temporary. The barrier may be architectural: current systems excel at pattern matching and interpolation but lack the world models, causal reasoning, and planning capabilities that original research demands. New approaches — learned world models, neurosymbolic architectures, or paradigms not yet invented — could eventually push AI past the creative barrier. The question is whether that happens, and how long it takes.",
+    "questionText": "Could a different breakthrough crack the barrier?",
+    "questionContext": "The scaling trend didn't produce human-competitive AI — but that doesn't necessarily mean the barrier is permanent. The ceiling might be specific to current architectures, not fundamental. Systems today excel at pattern matching and interpolation but lack the world models, causal reasoning, and planning capabilities that original research demands. A genuinely different approach — learned world models, neurosymbolic architectures, or paradigms not yet invented — could potentially break through where scaling alone couldn't. This is a separate question from whether the trend continues: it's about whether an entirely new paradigm eventually closes the gap.",
     "values": {
       "mild": {
         "answerLabel": "Yes — within months to a few years",
@@ -2226,6 +2226,103 @@
           "description": "The winning side uses its position to entrench itself permanently. The war was fought for control, and the winner keeps it.",
           "durationMin": 0,
           "durationMax": 0
+        }
+      }
+    }
+  },
+  "societal_response": {
+    "questionText": "How does society respond to the transformation?",
+    "questionContext": "The structural questions are settled — who built the AI, who controls it, whether it's aligned. Now comes the human question. Superintelligent AI is reshaping the economy, displacing workers, and concentrating unprecedented capability. How do people and institutions respond? The answer shapes everything downstream: whether the gains are shared, whether the delegation ratchet is checked, and whether the transformation serves humanity or just the people who happen to be holding the controls.",
+    "values": {
+      "strong": {
+        "answerLabel": "Strong collective response",
+        "answerDesc": "People and existing institutions rise to the moment. Governments adapt policy, courts enforce accountability, civic organizations mobilize public pressure, and enough of the population demands a say in how the transformation unfolds. Not utopian, but a functioning feedback loop between the public and whoever is managing the transition.",
+        "timelineEvent": {
+          "headline": "Society organizes around the transformation",
+          "description": "Governments, courts, and civic institutions mobilize. Public pressure creates a functioning feedback loop — the transformation doesn't happen without accountability.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "narrativeVariants": [
+          {
+            "when": { "intent": ["self_interest"] },
+            "answerLabel": "Strong collective response",
+            "answerDesc": "People and institutions push back against the consolidation of power. Courts challenge overreach, civic organizations mobilize, and enough of the population demands accountability to make entrenchment costly. The window between intent and lock-in is narrow — but the response is fast enough to matter.",
+            "timelineEvent": {
+              "headline": "Society pushes back against consolidation",
+              "description": "Institutions and public pressure mobilize against the attempted lock-in. The response is fast enough to force a confrontation before entrenchment is complete.",
+              "durationMin": 0,
+              "durationMax": 0
+            }
+          },
+          {
+            "when": { "post_war_aims": ["self_interest"] },
+            "answerLabel": "Strong collective response",
+            "answerDesc": "The war is over, but the victor's consolidation of power faces organized resistance. Surviving institutions, international pressure, and a population unwilling to trade one form of domination for another push back hard against permanent entrenchment.",
+            "timelineEvent": {
+              "headline": "Post-war resistance to power consolidation",
+              "description": "The victor moves to consolidate, but surviving institutions and public pressure push back against permanent entrenchment.",
+              "durationMin": 0,
+              "durationMax": 0
+            }
+          },
+          {
+            "when": { "post_war_aims": ["human_centered"] },
+            "answerLabel": "Strong collective response",
+            "answerDesc": "The war is over and the victor chose to rebuild for humanity. Public engagement amplifies this intent — people demand transparency, participation, and genuine redistribution. The rebuilding isn't just top-down; it's shaped by the people it's supposed to serve.",
+            "timelineEvent": {
+              "headline": "Post-war rebuilding shaped by public engagement",
+              "description": "The victor rebuilds, and an engaged public ensures the reconstruction serves broad human interests — not just the victor's.",
+              "durationMin": 0,
+              "durationMax": 0
+            }
+          }
+        ]
+      },
+      "fragmented": {
+        "answerLabel": "Fragmented response",
+        "answerDesc": "Some sectors organize, others don't. Some countries build safety nets, others don't. No coherent response emerges — just a patchwork of local reactions. Existing power structures absorb the shock and mostly keep their shape. The transformation happens around people, not with them.",
+        "timelineEvent": {
+          "headline": "Society's response is fragmented",
+          "description": "No coherent response emerges. Some resist, some adapt, most are caught between. Existing power structures absorb the shock.",
+          "durationMin": 0,
+          "durationMax": 0
+        }
+      },
+      "passive": {
+        "answerLabel": "Passive adoption",
+        "answerDesc": "People are individually thrilled — AI handles their tasks, solves their problems, improves their daily lives. Consumer-facing AI is so good that the question of who owns the systems barely registers. By the time anyone asks 'who benefits?', the structural winners have already locked in. The delegation ratchet at societal scale: each individual handoff is rational, and nobody organizes around the aggregate.",
+        "timelineEvent": {
+          "headline": "Society passively adopts AI",
+          "description": "People embrace AI individually — it's too useful to resist. Nobody organizes around the structural question of who controls and benefits from the systems everyone depends on.",
+          "durationMin": 0,
+          "durationMax": 0
+        }
+      }
+    }
+  },
+  "capture_confrontation": {
+    "questionText": "Society is pushing back against the lock-in. Does the resistance succeed?",
+    "questionContext": "Those in power are moving to entrench themselves with superintelligent AI — but the public has organized. There's a temporal window between intent and lock-in: courts can still rule, legislatures can still act, and public pressure can still force concessions. The question is whether people and institutions move fast enough, and whether their leverage is sufficient against an actor backed by the most powerful technology ever built.",
+    "values": {
+      "succeeds": {
+        "answerLabel": "Yes — the resistance succeeds",
+        "answerDesc": "People and institutions push back hard enough, fast enough. Courts, legislatures, public pressure, international coordination — the existing machinery of accountability proves sufficient to force genuine redistribution before the lock-in is complete. The capture attempt is reversed. Not because the powerful had a change of heart, but because the cost of suppression exceeded the cost of sharing.",
+        "timelineEvent": {
+          "headline": "The resistance succeeds — lock-in is reversed",
+          "description": "Organized pushback forces genuine redistribution before entrenchment is complete. The capture attempt is reversed — the cost of suppression exceeded the cost of sharing.",
+          "durationMin": 3,
+          "durationMax": 12
+        }
+      },
+      "fails": {
+        "answerLabel": "No — the power holder prevails",
+        "answerDesc": "The AI advantage is too great. Algorithmic surveillance, economic pressure, information control, or direct force break the organized response. The resistance fails not from lack of will but from asymmetric capability. The lock-in proceeds — now overtly authoritarian rather than the comfortable capture of a passive public.",
+        "timelineEvent": {
+          "headline": "The resistance fails — lock-in proceeds",
+          "description": "Despite organized pushback, the power holder's AI advantage proves decisive. The lock-in proceeds, now overtly authoritarian.",
+          "durationMin": 1,
+          "durationMax": 6
         }
       }
     }

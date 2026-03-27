@@ -166,6 +166,10 @@
         },
         "conflict_result": {
           "victory": "The gilded singularity rose from the ashes of war. The victor rebuilt — but rebuilt in a way that entrenched the winners' advantage. Prosperity returned, but ownership of that prosperity was settled by the outcome of the conflict."
+        },
+        "societal_response": {
+          "fragmented": "The response was too disorganized to force redistribution. Some communities negotiated better terms; most didn't. Concentration happened in the vacuum left by fragmented opposition.",
+          "passive": "People were too busy enjoying what AI could do for them to notice what it was doing to the structure beneath them. By the time the concentration was visible, it was permanent."
         }
       },
       "reachable": [
@@ -383,6 +387,10 @@
           "robust": "The AI does exactly what it's told. The problem is who's telling it. Perfect alignment in the service of a narrow elite is still perfect alignment — it just doesn't serve humanity.",
           "brittle": "Alignment is uncertain, and that uncertainty is weaponized. Those in power argue that only centralized control can manage the risk — and use safety as the justification for permanent hierarchy."
         },
+        "sovereignty": {
+          "lab": "The hierarchy is corporate. A handful of tech founders and their inner circles sit atop the new order — their values, their vision, their metrics of success. The state is a client, not a sovereign. A new aristocracy built on weights and compute rather than land and title.",
+          "state": "The hierarchy is political. A party apparatus, military-intelligence complex, or authoritarian government wields superintelligent AI as the ultimate instrument of state power. The labs built it; the state owns it. A surveillance-and-control apparatus that would make any 20th-century dictator weep with envy."
+        },
         "physical_automation": {
           "rapid": "The physical world is automated rapidly — but the automated economy serves its owners. Displaced workers have no leverage; the machines don't need them. Material comfort rises. Agency collapses.",
           "gradual": "Physical automation unfolds slowly, giving the hierarchy time to manage the transition on its own terms. Displaced workers are accommodated, not empowered. A managed dependency.",
@@ -396,6 +404,13 @@
         },
         "conflict_result": {
           "victory": "The new hierarchy emerged from war. The victor rebuilt the world — in their own image, for their own benefit. Post-war reconstruction became post-war entrenchment."
+        },
+        "societal_response": {
+          "fragmented": "Opposition existed but never unified. Different groups resisted different aspects of the hierarchy, and the powerful played them against each other. Divide and rule, optimized by superintelligence.",
+          "passive": "The hierarchy offered comfort in exchange for submission, and most people took the deal. Consumer AI was too good, the services too smooth, the convenience too real. Why fight a system that gives you everything except power?"
+        },
+        "capture_confrontation": {
+          "fails": "They tried to stop it. People organized, institutions pushed back, the machinery of accountability groaned into motion. It wasn't enough. The hierarchy absorbed the resistance and hardened — now justified by the threat it had survived."
         }
       },
       "reachable": [
@@ -637,6 +652,14 @@
         },
         "conflict_result": {
           "victory": "Flourishing emerged from the ashes of war. A decisive AI-powered conflict left one power standing — and that power chose to rebuild rather than to rule. The scars run deep: devastated regions, displaced populations, a generation shaped by the knowledge that superintelligent weapons were turned against cities. But the victor's commitment to human-centered aims held, and the reconstruction was guided by the same AI that won the war. History will record it as humanity's darkest chapter before its brightest — a flourishing born not from wisdom, but from surviving the alternative."
+        },
+        "societal_response": {
+          "strong": "Flourishing didn't happen by accident — it was fought for. People and institutions demanded accountability, transparency, and genuine redistribution. The transformation served humanity because humanity insisted on it.",
+          "fragmented": "The response was disorganized, but the outcome was good anyway — a combination of decent institutions, market forces, and luck produced a flourishing that no one quite planned. It could easily have gone differently.",
+          "passive": "People embraced AI without questioning the structure beneath it. Flourishing arrived despite passive adoption — the alignment was strong enough and the governance sound enough to produce good outcomes even without public pressure. A gift, not a victory."
+        },
+        "capture_confrontation": {
+          "succeeds": "This flourishing was hard-won. Those in power tried to lock in their advantage, and the public fought back — through courts, legislatures, and sheer organized pressure. The capture attempt was reversed. What followed wasn't given; it was taken back."
         }
       },
       "reachable": [
@@ -834,6 +857,13 @@
           "rapid": "Factories, logistics, agriculture — all transformed within a few years under the controlling power's direction. The physical economy was rebuilt to serve the interests of those who held the AI. Efficiency was the justification; control was the result.",
           "gradual": "Physical automation followed knowledge work but more slowly. Atoms are harder than bits. The transformation took a decade or two — visible, steady, and always shaped by the priorities of those in power.",
           "uneven": "Advanced manufacturing was automated quickly; other sectors lagged. The controlling power automated what served its interests first. What didn't matter to them waited — sometimes indefinitely."
+        },
+        "societal_response": {
+          "fragmented": "Some pushed back, but the resistance was fragmented — different groups with different grievances, never coalescing into a unified movement. The power holder absorbed the pressure piecemeal.",
+          "passive": "The capture was comfortable. Consumer-facing AI was so good that most people never questioned who controlled it. A Brave New World — not 1984. The chains were made of convenience."
+        },
+        "capture_confrontation": {
+          "fails": "The resistance tried and lost. People organized, institutions pushed back, and for a moment it looked like the lock-in might fail. But the AI advantage was too great. The capture proceeded — now overtly authoritarian, hardened by the confrontation that almost stopped it."
         }
       },
       "reachable": [
@@ -996,6 +1026,10 @@
           "slowdown": "Government-mandated slowdowns gave multiple powers time to reach the threshold, ensuring the standoff had more than two sides.",
           "failed": "Failed regulation meant no coordinated response. Each power developed independently, and the standoff emerged from mutual suspicion rather than managed competition.",
           "race": "The national security framing guaranteed the standoff. Governments didn't just allow the arms race — they drove it."
+        },
+        "sovereignty": {
+          "lab": "The standoff is between corporations as much as nations. The labs that built the competing systems hold the real leverage — governments are dependent on them for strategic capability, and the labs know it. A cold war where the arms manufacturers are the real powers.",
+          "state": "The standoff is between nations in the traditional sense — governments control the AI programs, militaries integrate them, intelligence agencies deploy them. The labs are instruments of state power. A cold war with superintelligent weapons, run by the same institutions that ran the last one."
         },
         "rival_emerges": {
           "yes": "The rival didn't exist until the leading country hesitated. The deceleration — whether successful or not — gave another nation time to close the gap. The standoff was born from that pause."
@@ -1330,8 +1364,17 @@
           "failed": "With no effective governance, no one was watching the right indicators. The failure crept in unnoticed.",
           "race": "The competitive pressure optimized for speed and measurable outputs — exactly the proxies that diverged from reality."
         },
+        "sovereignty": {
+          "lab": "The delegation flowed through corporate platforms — the lab's apps, the lab's APIs, the lab's optimization targets. The failure has a return address: it's the metrics that maximized engagement, revenue, and efficiency. The wrong proxies were corporate proxies.",
+          "state": "The delegation flowed through government bureaucracy — automated agencies, algorithmic policy, AI-managed public services. The failure has a return address: it's the metrics that maximized GDP, compliance, and order. The wrong proxies were the state's proxies."
+        },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
+        },
+        "societal_response": {
+          "strong": "People organized. They demanded accountability. But the metrics they could measure showed things were going well — and the real failure was invisible until it was irreversible. Strong institutions pressing for the wrong indicators.",
+          "fragmented": "The response was too fragmented to force a course correction. By the time anyone agreed on what was going wrong, the wrong metrics had been running the show for years.",
+          "passive": "Passive adoption at societal scale — the same delegation ratchet that operated at the individual level. Nobody organized around the question because the answers the AI was providing seemed so good. The failure happened in the gap between what was measured and what mattered."
         }
       },
       "reachable": [
