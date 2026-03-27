@@ -428,7 +428,7 @@ const NODES = [
       edges: [
         { id: 'deny_rivals', label: 'Deny rivals', disabledWhen: [{ distribution: ['open'] }] },
         { id: 'secure_access', label: 'Secure access', disabledWhen: [{ distribution: ['open'] }] },
-        { id: 'none', label: 'No secure controls' }
+        { id: 'none', label: 'Open access' }
       ] },
     { id: 'proliferation_outcome', label: 'Control Outcome', stage: 2, hideAfterEscape: true,
       activateWhen: [
@@ -786,7 +786,6 @@ const NODES = [
       edges: [
         { id: 'equal', label: 'Shared equally',
           disabledWhen: [
-            { societal_response: ['passive'] },
             { societal_response: ['fragmented'], intent: ['self_interest'] },
             { societal_response: ['fragmented'], post_war_aims: ['self_interest'] },
             { capture_confrontation: ['fails'] }
@@ -829,10 +828,10 @@ const NODES = [
         { effective: { decel_outcome: ['abandon'] }, value: 'race' },
         { effective: { gov_action: ['decelerate'] }, value: 'slowdown' },
         { when: { governance_window: 'governed' }, value: 'governed' },
-        { when: { governance_window: 'partial' }, value: 'race' },
+        { when: { governance_window: 'partial' }, value: 'partial' },
         { when: { governance_window: 'race' }, value: 'race' },
       ],
-      edges: [{ id: 'race' }, { id: 'slowdown' }, { id: 'governed' }] },
+      edges: [{ id: 'race' }, { id: 'slowdown' }, { id: 'governed' }, { id: 'partial' }] },
     { id: 'rival_emerges', label: 'Rival Emerges', derived: true,
       derivedFrom: [
         { effective: { decel_outcome: ['parity_solved', 'parity_failed', 'rival'] }, value: 'yes' },

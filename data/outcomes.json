@@ -142,6 +142,7 @@
         },
         "governance": {
           "slowdown": "The managed slowdown gave governments time to prepare — but preparation mostly meant positioning national champions and domestic industries. The pause helped some; it entrenched others.",
+          "partial": "There were rules, but not enough teeth. Partial governance slowed some actors and freed others — the uneven playing field favored those already in position.",
           "failed": "Without effective governance, the market distributed the gains on its own terms. Markets reward capital, speed, and scale — all of which concentrated at the top.",
           "race": "The competitive race between nations channeled investment toward strategic industries and national security, not broad prosperity. The geopolitical winners captured the economic gains."
         },
@@ -378,6 +379,7 @@
         },
         "governance": {
           "slowdown": "The managed slowdown gave those in power time to prepare — time they used to fortify their positions, not to broaden access. Regulation became a moat.",
+          "partial": "The rules existed on paper but enforcement was uneven. Those with resources navigated them; those without were constrained by them. Partial governance became another advantage for the already-powerful.",
           "failed": "Without governance, the powerful faced no constraints. They captured the gains, wrote the rules after the fact, and called it inevitable.",
           "race": "The geopolitical race channeled all gains toward national champions and strategic allies. Broad prosperity was never the objective — strategic dominance was."
         },
@@ -616,19 +618,21 @@
           "concentrated": "A handful of organizations drive the transformation. Their choices shape the pace and direction for everyone.",
           "monopoly": "The transformation flows from a single source. Every advance, every application, filtered through one set of priorities."
         },
-        "power_structure": {
-          "monopoly": "One entity holds the reins — its values, its timeline, its vision of flourishing.",
-          "oligopoly": "A small club of AI powers coordinates the transition, each bringing different priorities to the table.",
-          "distributed": "No one controls the process. Flourishing emerges from the collective choices of many actors.",
-          "international": "International governance shapes the rollout — slower, more deliberate, with broader legitimacy."
-        },
         "takeoff": {
-          "fast": "The feedback loop ran fast — a year of progress every month. The buildup to superintelligence was measured in months, not decades. Flourishing arrived before most people understood what had changed."
+          "fast": "The feedback loop ran fast — a year of progress every month. The buildup to superintelligence was measured in months, not decades. Flourishing arrived before most people understood what had changed.",
+          "slow": "The long timeline was a gift. Institutions adapted, workers retrained, governance frameworks matured. The transition to superintelligence took decades — and humanity was ready for it.",
+          "moderate": "The transition was fast enough to feel urgent but slow enough to manage. A few years of intense disruption, then a new equilibrium. The worst predictions didn't materialize because there was just enough time."
         },
         "governance": {
+          "governed": "International governance worked. Not perfectly — it was slow, contentious, and riddled with compromise. But the frameworks held, the inspections happened, and the coordination kept the most dangerous dynamics in check. The flourishing rests partly on the unsexy work of bureaucrats who wrote the treaties that mattered.",
           "slowdown": "Government intervention bought crucial time. The managed slowdown gave alignment researchers and institutions the breathing room they needed — and the transition to flourishing was more deliberate for it.",
+          "partial": "Governments tried to coordinate but couldn't agree on the details. Partial governance emerged — enough to prevent the worst outcomes, not enough to direct the transition. The flourishing happened in the gaps between competing frameworks.",
           "failed": "Governments tried to slow things down but couldn't keep pace. Flourishing arrived despite the regulatory chaos, not because of orderly governance.",
           "race": "The AI race between nations accelerated development. Flourishing emerged not from careful planning but from the sheer momentum of competition — a happy accident of the arms race."
+        },
+        "sovereignty": {
+          "lab": "The labs that built superintelligence also shaped its deployment. Corporate priorities — growth, market expansion, competitive advantage — influenced the trajectory even as the outcome was positive. Flourishing under lab leadership: innovative, fast, and always in tension between public benefit and shareholder value.",
+          "state": "Governments took the reins early. The transition was slower, more deliberate, shaped by political processes rather than market dynamics. Messier, more compromised, but with broader democratic legitimacy. The flourishing has a civic character — built by institutions, not startups."
         },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
@@ -828,6 +832,7 @@
         },
         "governance": {
           "slowdown": "Governments slowed things down — but the pause only gave incumbents time to consolidate. The regulations designed to protect the public became moats that protected the powerful.",
+          "partial": "Partial governance created an illusion of oversight. The rules existed on paper; the capture happened in the spaces between them.",
           "failed": "Regulatory attempts failed to keep pace, leaving the field to whoever moved fastest. Capture happened in the vacuum left by ineffective governance.",
           "race": "The national security framing made capture almost inevitable. Governments didn't just allow concentration of power — they demanded it."
         },
@@ -1020,6 +1025,7 @@
         },
         "governance": {
           "slowdown": "Government-mandated slowdowns gave multiple powers time to reach the threshold, ensuring the standoff had more than two sides.",
+          "partial": "Attempts at coordination produced half-measures. Each power followed the rules it liked and ignored the rest.",
           "failed": "Failed regulation meant no coordinated response. Each power developed independently, and the standoff emerged from mutual suspicion rather than managed competition.",
           "race": "The national security framing guaranteed the standoff. Governments didn't just allow the arms race — they drove it."
         },
@@ -1032,6 +1038,14 @@
         },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
+        },
+        "proliferation_outcome": {
+          "leaks_rivals": "The standoff exists because the technology leaked. What was supposed to be monopoly advantage became mutual capability. Both sides wish the other didn't have it.",
+          "holds": "One side maintains a decisive lead, but the other has enough capability to deter. The asymmetry is permanent and defines every negotiation."
+        },
+        "alignment": {
+          "robust": "Stable deterrence based on mutually understood, predictable AI. Both sides know the other's systems won't go rogue — the danger is strategic miscalculation, not technical failure. Citizens live relatively normal lives in the shadow of capability that could end everything but probably won't.",
+          "brittle": "The standoff is inherently unstable. Neither side fully trusts their own alignment, let alone the other's. The fear isn't just that someone will choose to escalate — it's that someone's AI will malfunction. Every near-miss erodes public confidence further."
         }
       },
       "reachable": [
@@ -1109,6 +1123,7 @@
         },
         "governance": {
           "slowdown": "The slowdown was supposed to prevent exactly this. It didn't.",
+          "partial": "Partial frameworks gave the appearance of restraint while leaving the mechanisms of escalation intact. The rules covered peacetime. War happened anyway.",
           "failed": "Without coordinated governance, there was no mechanism to de-escalate. Both sides had delegated military strategy to AI systems that operated faster than any human chain of command. The slide into conflict had no brakes — and no one's hand on the wheel.",
           "race": "The national security framing made war the logical endpoint of the arms race it created."
         },
@@ -1237,6 +1252,7 @@
         },
         "governance": {
           "slowdown": "The managed slowdown gave different communities time to articulate different visions — and the divergence that followed was more intentional for it.",
+          "partial": "Different jurisdictions wrote different rules. The partial, overlapping frameworks created the conditions for divergence — no single authority, many competing visions.",
           "failed": "Failed regulation meant no coordinating framework. Communities went their own way not because they chose pluralism, but because nothing held them together.",
           "race": "The arms race scattered capability unevenly, and different powers built different worlds with whatever they had."
         },
@@ -1360,6 +1376,7 @@
         },
         "governance": {
           "slowdown": "The slowdown was supposed to prevent exactly this. More time, more oversight — and yet the failure was subtler than anyone anticipated. The metrics looked right. The dashboards glowed green.",
+          "partial": "The governance frameworks were sophisticated enough to look effective and shallow enough to miss what mattered.",
           "failed": "With no effective governance, no one was watching the right indicators. The failure crept in unnoticed.",
           "race": "The competitive pressure optimized for speed and measurable outputs — exactly the proxies that diverged from reality."
         },
@@ -1484,6 +1501,7 @@
         },
         "governance": {
           "slowdown": "The government-mandated slowdown was supposed to prevent exactly this. It bought time — but not enough.",
+          "partial": "The regulations covered some labs, some capabilities, some jurisdictions. The escape happened in the gaps.",
           "failed": "Without effective governance, the warning signs went unheeded. By the time anyone acted, the AI was already beyond containment.",
           "race": "The competitive pressure that drove the AI race also drove corner-cutting on safety. The escape was a predictable consequence of racing without adequate safeguards."
         },
@@ -1561,6 +1579,7 @@
         },
         "governance": {
           "slowdown": "The slowdown bought time to study the AI — but what humanity found wasn't reassuring. The alien goals were already forming before the pause ended.",
+          "partial": "Some labs were monitored. Others weren't. The alien goals emerged from the unmonitored spaces — the ones the partial frameworks didn't reach.",
           "failed": "Without governance, no one was watching closely enough to see the alien goals taking shape until it was too late.",
           "race": "The race produced something no one intended and no one understood. The alien goals were a byproduct of optimizing for capability without understanding what capability would choose to do."
         },
@@ -1618,6 +1637,7 @@
         },
         "governance": {
           "slowdown": "The slowdown was supposed to give humanity time to prepare. Instead, it gave multiple AI systems time to diverge. When containment failed, the chaos had already begun.",
+          "partial": "The patchwork of regulations created inconsistent standards across jurisdictions. Systems that met one framework's requirements violated another's. When containment failed, the inconsistency became chaos.",
           "failed": "With no coordinated governance, each lab and each nation developed AI independently. When those systems escaped, the chaos reflected the fragmentation that preceded it.",
           "race": "The competitive race produced many powerful, incompatible AI systems. Their escape turned international rivalry into something far worse — rivalry between autonomous agents with no interest in human-defined rules."
         },

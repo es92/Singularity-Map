@@ -1787,11 +1787,11 @@
         }
       },
       "none": {
-        "answerLabel": "No secure controls — coordination fails and capability spreads",
-        "answerDesc": "No secure control regime emerges. Capability spreads through rival programs, leaks, and replication. The question is how far it spreads.",
+        "answerLabel": "Open access — no restrictions on who can build or deploy",
+        "answerDesc": "No proliferation control regime takes hold. Whether by policy choice or coordination failure, AI capability spreads freely through open research, leaks, and replication. The question is how far it spreads.",
         "timelineEvent": {
-          "headline": "Proliferation controls fail",
-          "description": "Coordination fails and AI capability spreads uncontrollably. The genie is out of the bottle.",
+          "headline": "AI capability spreads openly",
+          "description": "No effective restrictions on who can build or deploy frontier AI. Capability proliferates widely.",
           "durationMin": 0,
           "durationMax": 0
         }

@@ -1,2 +1,4 @@
-node_modules
-.claude
+node_modules/
+.env
+tests/evaluations/
+tests/report.md
