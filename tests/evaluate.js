@@ -112,10 +112,13 @@ function acquireSlot() {
     return _callQueue;
 }
 
-async function callClaude(model, system, user, maxTokens = 256) {
+async function callClaude(model, system, user, maxTokens = 256, { prefill } = {}) {
     initClient();
     const MAX_RETRIES = 6;
     let backoff = 2000;
+
+    const messages = [{ role: 'user', content: user }];
+    if (prefill) messages.push({ role: 'assistant', content: prefill });
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         await acquireSlot();
@@ -125,9 +128,10 @@ async function callClaude(model, system, user, maxTokens = 256) {
                 max_tokens: maxTokens,
                 temperature: 0,
                 system,
-                messages: [{ role: 'user', content: user }]
+                messages,
             });
-            return resp.content[0].text.trim();
+            const text = resp.content[0].text.trim();
+            return prefill ? prefill + text : text;
         } catch (err) {
             const status = err?.status || err?.error?.status;
             if (status === 429 && attempt < MAX_RETRIES) {
@@ -326,7 +330,7 @@ ${optionsText}${disabledText}`;
 
             let weights;
             try {
-                const raw = await callClaude(EVAL_MODEL, system, user);
+                const raw = await callClaude(EVAL_MODEL, system, user, 256, { prefill: '{' });
                 apiCalls++;
                 weights = parseJsonResponse(raw);
             } catch (err) {
@@ -420,7 +424,7 @@ Respond in JSON with these fields:
 Return ONLY the JSON object.`;
 
     try {
-        const raw = await callClaude(REVIEW_MODEL, system, user, 1024);
+        const raw = await callClaude(REVIEW_MODEL, system, user, 1024, { prefill: '{' });
         return parseJsonResponse(raw);
     } catch (err) {
         console.error(`  Review API error: ${err.message}`);
