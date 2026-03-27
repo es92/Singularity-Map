@@ -90,7 +90,7 @@ function initClient() {
         console.error('Missing ANTHROPIC_API_KEY in .env');
         process.exit(1);
     }
-    client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
+    client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: 20 * 60 * 1000 });
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -424,7 +424,7 @@ Respond in JSON with these fields:
 Return ONLY the JSON object.`;
 
     try {
-        const raw = await callClaude(REVIEW_MODEL, system, user, 1024, { prefill: '{' });
+        const raw = await callClaude(REVIEW_MODEL, system, user, 1024);
         return parseJsonResponse(raw);
     } catch (err) {
         console.error(`  Review API error: ${err.message}`);
@@ -542,32 +542,33 @@ async function generateReport(allResults) {
         reviewsText += '\n';
     }
 
-    const system = `You are an expert evaluator of an interactive AI futures scenario simulator. You will be given the results of ${allResults.length} evaluation runs across multiple personas and two prompt modes (want = what persona would choose, likely = what persona predicts). Write a thorough analytical report.`;
+    const system = `You are an expert evaluator of an interactive AI futures scenario simulator. Write a concise, actionable report. Avoid restating raw data — focus on patterns and issues.`;
 
-    const user = `## Evaluation Results
+    const user = `## Evaluation Results (${allResults.length} runs, ${new Set(allResults.map(r => r.persona)).size} personas, modes: want & likely)
 
-| Persona | Mode | Run | Outcome | Mood | Satisfaction | Accuracy |
+| Persona | Mode | Run | Outcome | Mood | Sat | Acc |
 |---|---|---|---|---|---|---|
 ${summaryRows.join('\n')}
 
-## Detailed Reviews
+## Reviews
 
 ${reviewsText}
 
 ---
 
-Write a report in markdown with these sections:
+Write a report in markdown. Keep it under 2000 words. Sections:
 
-1. **Summary Table** — reproduce the table above
-2. **Want vs. Likely Comparison** — for each persona, do the two modes produce different outcomes? Where do they diverge? Are both narratively coherent?
-3. **Aggregated Persona Feedback** — what missing questions come up repeatedly? What forced-choice complaints recur? Which evaluations had satisfaction below 3?
-4. **Issues Found** — specific narrative problems, template gaps, or inconsistencies. For each: description, severity (critical/moderate/minor), affected file (outcomes.json, graph.js, or narrative.json), proposed fix.
-5. **Conclusion** — overall health of the simulator, top priorities for improvement.
+1. **Summary Table** — reproduce the table above, no commentary.
+2. **Key Patterns** — 3-5 bullet points on the most important patterns across want vs. likely, persona clusters, and outcome diversity. Note any persona whose want and likely modes consistently diverge.
+3. **Low Scores** — list any runs with satisfaction or accuracy below 3. One line each with persona, mode, score, and their complaint.
+4. **Recurring Feedback** — aggregate missing_questions and forced_choices. Only list items mentioned by 2+ personas.
+5. **Issues** — up to 8 concrete problems. Each: one-line description, severity (critical/moderate/minor), affected file, proposed fix.
+6. **Top 3 Priorities** — the most impactful changes to make next.
 
-Be specific and actionable. Reference template names, flavor keys, and node IDs where relevant.`;
+Be specific. Reference node IDs and template names where relevant. Do NOT pad with filler.`;
 
     try {
-        const raw = await callClaude(REPORT_MODEL, system, user, 32000);
+        const raw = await callClaude(REPORT_MODEL, system, user, 12000);
         return raw;
     } catch (err) {
         return `# Report Generation Error\n\n${err.message}`;

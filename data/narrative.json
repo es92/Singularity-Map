@@ -760,35 +760,35 @@
     }
   },
   "alignment": {
-    "questionText": "How well is the alignment problem solved before AI surpasses human-level capability?",
-    "questionContext": "Whether AI is widely distributed or concentrated in a few hands, alignment is the critical question. Can researchers ensure AI systems reliably pursue human values? The stakes compound with every task delegated — the more humans hand off to AI, the harder it becomes to course-correct if alignment isn't right. The answer isn't binary. Alignment could be robust — genuinely solved under all conditions. It could be brittle or partial — appearing to work but fragile under stress, or solved only for specific domains. Or it could fail entirely. Each degree of alignment leads to a fundamentally different future.",
+    "questionText": "Is the technical alignment problem solved — can developers keep superintelligent AI under control?",
+    "questionContext": "This is the engineering question, not the social one. Separate from who owns AI or how it's governed, can developers build systems that reliably do what they're told — even as those systems become more capable than the people giving instructions? This is about the underlying technology: do the alignment techniques exist to ensure an AI system's behavior stays within intended bounds, even under novel conditions, adversarial pressure, and recursive self-improvement? How society chooses to use that technology is a different question — one that comes later.",
     "values": {
       "robust": {
-        "answerLabel": "Robust — comprehensively solved",
-        "answerDesc": "Researchers achieve genuine, durable alignment. AI systems reliably pursue human values even under novel conditions, adversarial pressure, and recursive self-improvement. The technology is controllable in the deepest sense.",
+        "answerLabel": "Robust — the technical problem is solved",
+        "answerDesc": "Developers can reliably ensure AI systems follow their intended objectives, even as capabilities scale. The control techniques are proven, durable, and hold under adversarial conditions and self-improvement.",
         "timelineEvent": {
-          "headline": "Alignment is robustly solved",
-          "description": "Researchers achieve genuine, durable alignment. AI systems reliably pursue human values even under novel conditions, adversarial pressure, and recursive self-improvement.",
+          "headline": "Technical alignment is solved",
+          "description": "Developers can reliably ensure AI systems follow their intended objectives, even as capabilities scale. The control techniques are proven, durable, and hold under adversarial conditions and self-improvement.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "brittle": {
-        "answerLabel": "Brittle — appears solved, but fragile under stress",
-        "answerDesc": "Alignment techniques pass every test and benchmark. The systems appear safe. But the alignment is shallow — it holds under normal conditions and breaks under adversarial pressure, distribution shift, or recursive self-improvement. It looks solved until it isn't.",
+        "answerLabel": "Brittle — it works, but no one's sure it will hold",
+        "answerDesc": "The control techniques pass every test. Systems behave as intended under normal conditions. But the solution is shallow — it hasn't been proven under extreme stress, distribution shift, or recursive self-improvement. It works until it doesn't.",
         "timelineEvent": {
-          "headline": "Alignment appears solved — but it's brittle",
-          "description": "Alignment techniques pass every test and benchmark. The systems look safe. But the solution is shallow — it holds under lab conditions and normal deployment. Whether it survives adversarial pressure, distribution shift, or recursive self-improvement is another question entirely.",
+          "headline": "Control techniques work — but they're fragile",
+          "description": "Control techniques pass every test and benchmark. Systems behave as intended under normal conditions. But the solution is shallow — it holds in the lab and in standard deployment. Whether it survives adversarial pressure, distribution shift, or recursive self-improvement is another question.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "failed": {
-        "answerLabel": "Failed — alignment lags behind capabilities",
-        "answerDesc": "AI capability outpaces alignment research. Powerful systems exist that aren't fully understood or controllable. The question becomes: can they at least be contained?",
+        "answerLabel": "Unsolved — capabilities outpace control",
+        "answerDesc": "AI capability outpaces the engineering of control. The most powerful systems aren't fully understood or reliably controllable. The question becomes: can they at least be contained?",
         "timelineEvent": {
-          "headline": "Alignment fails to keep pace",
-          "description": "AI capability surges ahead of alignment research. The most powerful systems are not fully understood. Researchers can describe what the models do but not why — and the gap between capability and control widens with each generation.",
+          "headline": "Control lags behind capability",
+          "description": "AI capability surges ahead of control techniques. The most powerful systems are not fully understood. Developers can describe what the models do but not why — and the gap between capability and control widens with each generation.",
           "durationMin": 0,
           "durationMax": 0
         }
