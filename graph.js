@@ -103,7 +103,7 @@ const NODES = [
         { id: 'never', label: 'Never' }
       ] },
     { id: 'asi_threshold', label: 'ASI Threshold', stage: 1,
-      activateWhen: [{ capability: ['singularity'] }],
+      activateWhen: [{ capability: ['singularity'], _set: ['agi_threshold'] }],
       edges: [
         { id: 'twenty_four_hours', label: '~24 hours', requires: { agi_threshold: ['twenty_four_hours'] } },
         { id: 'one_week', label: '~1 week', requires: { agi_threshold: ['twenty_four_hours', 'one_week'] } },
