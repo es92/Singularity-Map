@@ -292,13 +292,15 @@ function templatePartialMatch(t, state) {
 // ════════════════════════════════════════════════════════
 
 function getDisplayOrder(sel) {
-    const visible = [];
+    const answered = [];
+    const unanswered = [];
     for (const node of NODES) {
         if (node.derived) continue;
         if (!isNodeVisible(sel, node)) continue;
-        visible.push(node);
+        const hasValue = sel[node.id] || isNodeLocked(sel, node) !== null;
+        (hasValue ? answered : unanswered).push(node);
     }
-    return visible;
+    return answered.concat(unanswered);
 }
 
 function removeSelection(sel, nodeId) {
