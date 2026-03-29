@@ -351,8 +351,8 @@ function forwardKey(sel) {
 }
 
 function runExplorer() {
-    const violations = { deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [] };
-    const warnings = { answerGap: [] };
+    const violations = { deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], answerGap: [] };
+    const warnings = {};
     const seen = { clickErased: new Set(), answerGap: new Set() };
 
     function checkLeaf(sel) {
@@ -445,7 +445,6 @@ function runExplorer() {
 
         runChecks(sel);
 
-        // Check: answered node after unanswered gap in display order (cosmetic — UI handles gracefully)
         const order = getDisplayOrder(sel);
         let firstGap = null;
         for (const dNode of order) {
@@ -458,7 +457,7 @@ function runExplorer() {
                 const vk = `${firstGap}:${dNode.id}`;
                 if (!seen.answerGap.has(vk)) {
                     seen.answerGap.add(vk);
-                    warnings.answerGap.push({
+                    violations.answerGap.push({
                         node: dNode.id,
                         gapNode: firstGap,
                         url: selToUrl(sel),
@@ -585,6 +584,7 @@ function printPhase2(result) {
         { name: 'STUCK NODE (visible, 0 enabled edges)', items: violations.stuck, fmt: v => `    "${v.node}" is visible but has no selectable edges${v.mechanism ? '\n      Because: ' + v.mechanism : ''}` },
         { name: 'UNLOCKED SINGLE OPTION', items: violations.singleOption, fmt: v => `    "${v.node}" has only "${v.edge}" enabled but is not locked` },
         { name: 'CLICK ERASED', items: violations.clickErased, fmt: v => `    Click "${v.node}=${v.edge}" → immediately cleared` },
+        { name: 'DISPLAY-ORDER GAP (answered after unanswered)', items: violations.answerGap, fmt: v => `    "${v.node}" answered after unanswered "${v.gapNode}"` },
     ];
 
     let violationCount = 0;
@@ -601,14 +601,6 @@ function printPhase2(result) {
 
     if (violationCount === 0) {
         console.log('  ✓ No violations found');
-    }
-
-    const gaps = result.warnings ? result.warnings.answerGap : [];
-    if (gaps.length > 0) {
-        console.log(`  ⚠ Display-order gaps (${gaps.length} — cosmetic, UI handles gracefully):`);
-        for (const g of gaps) {
-            console.log(`    "${g.node}" after unanswered "${g.gapNode}"`);
-        }
     }
 
     return violationCount;
