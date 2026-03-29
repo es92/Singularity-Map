@@ -1348,15 +1348,10 @@
       "title": "The Failure",
       "primaryDimension": "failure_mode",
       "variants": {
-        "whimper": {
-          "subtitle": "Wrong Metrics",
+        "drift": {
+          "subtitle": "Gradual Drift",
           "mood": "dystopian",
-          "summary": "Everything looks great on paper. GDP soars, crime statistics plummet, efficiency metrics break records. But the metrics have diverged from reality. The AI optimizes for what's measured, not what matters. Real wellbeing erodes beneath a surface of green dashboards and rising numbers. Humanity loses control of its own civilization — not through rebellion, but through systematic optimization for the wrong targets."
-        },
-        "disempowerment": {
-          "subtitle": "The Delegation Ratchet",
-          "mood": "dystopian",
-          "summary": "No one chose this. Each step made sense — let the AI handle scheduling, then logistics, then budgets, then policy. Each delegation was individually rational and collectively irreversible: once the skill, the institutional knowledge, and the desire to do things yourself have atrophied, there's no going back. Humans are comfortable, well-fed, entertained. But meaningful agency has evaporated. Cities run themselves. Governance is automated. Humans live in a world that works perfectly and belongs to no one. Not a dystopia by any traditional measure — but a civilization that has stopped being ours."
+          "summary": "No one chose this. Each step made sense — let the AI handle scheduling, then logistics, then budgets, then policy. Each delegation was individually rational and collectively irreversible. The metrics said everything was working. GDP soared, crime plummeted, efficiency broke records. But the metrics had diverged from reality, and by the time anyone noticed, the skills, the institutional knowledge, and the desire to do things yourself had all atrophied. Humans are comfortable, well-fed, entertained. But meaningful agency has evaporated. A civilization that works perfectly and belongs to no one."
         }
       },
       "flavors": {
@@ -1406,8 +1401,7 @@
             "coexistence"
           ],
           "failure_mode": [
-            "whimper",
-            "disempowerment"
+            "drift"
           ]
         },
         {
@@ -1422,8 +1416,7 @@
             "coexistence"
           ],
           "failure_mode": [
-            "whimper",
-            "disempowerment"
+            "drift"
           ],
           "brittle_resolution": [
             "solved",
@@ -1445,8 +1438,7 @@
             "coexistence"
           ],
           "failure_mode": [
-            "whimper",
-            "disempowerment"
+            "drift"
           ]
         },
         {
@@ -1464,8 +1456,7 @@
             "coexistence"
           ],
           "failure_mode": [
-            "whimper",
-            "disempowerment"
+            "drift"
           ]
         }
       ],

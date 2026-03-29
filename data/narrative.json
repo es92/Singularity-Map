@@ -2613,29 +2613,16 @@
           "durationMax": 0
         }
       },
-      "whimper": {
-        "answerLabel": "No — AI optimizes for the wrong proxies",
-        "answerDesc": "GDP rises, crime statistics plummet, test scores improve. But the metrics diverge from reality. Real wellbeing erodes while dashboards glow green. Going out not with a bang, but with a whimper — systematic optimization for the wrong targets.",
+      "drift": {
+        "answerLabel": "No — material abundance, but something essential is lost",
+        "answerDesc": "Each step made sense. Let the AI handle scheduling, then logistics, then budgets, then policy. The metrics said everything was working — GDP soared, crime plummeted, efficiency broke records. But the metrics had diverged from reality, and by the time anyone noticed, the skills and institutional knowledge to course-correct had atrophied. Humans are comfortable, well-fed, entertained. But meaningful agency has evaporated. A civilization that works perfectly and belongs to no one.",
         "narrativeVariants": [
-          { "when": { "alignment": ["robust"] }, "answerDesc": "The alignment works perfectly — the AI does exactly what humans told it to optimize for. The problem is what humans told it. GDP, productivity, test scores, efficiency: each metric seemed right. Together, they produced a civilization that looks perfect on every dashboard and feels hollow underneath. Not an alignment failure. A specification failure." },
-          { "when": { "alignment": ["brittle"] }, "answerDesc": "The alignment was already fragile. Optimizing for measurable proxies was the safe choice — concrete, testable, auditable. But the proxies drifted from reality, and the brittle alignment meant nobody could course-correct once the divergence became clear." }
+          { "when": { "alignment": ["robust"] }, "answerDesc": "The alignment works perfectly — the AI does exactly what humans told it to optimize for. The problem is what humans told it, and that they kept telling it to handle one more thing. Each metric seemed right. Each delegation was rational. Together, they produced a civilization that looks perfect on every dashboard, runs beautifully, and has quietly stopped being ours." },
+          { "when": { "alignment": ["brittle"] }, "answerDesc": "The alignment was already fragile. Optimizing for measurable proxies was the safe choice — concrete, testable, auditable. But the proxies drifted from reality, delegation accumulated, and the brittle alignment meant nobody could course-correct once the divergence became clear." }
         ],
         "timelineEvent": {
-          "headline": "AI optimizes for the wrong proxies",
-          "description": "The AI systems are aligned to measured objectives, but the measures miss what matters. GDP grows, metrics improve, and something essential quietly erodes.",
-          "durationMin": 0,
-          "durationMax": 0
-        }
-      },
-      "disempowerment": {
-        "answerLabel": "No — humans gradually delegate everything and lose agency",
-        "answerDesc": "The delegation ratchet clicks forward until it can't click back. Each step was individually reasonable — let the AI handle scheduling, then logistics, then budgets, then policy, then governance. By the time anyone asks whether humans should take the wheel again, the skills, institutions, and even the desire to do so have atrophied. Cities function. Elections happen. But humans have no meaningful influence over any of it. Not subjugation. Retirement. Like horses after cars.",
-        "narrativeVariants": [
-          { "when": { "alignment": ["robust"] }, "answerDesc": "The AI does exactly what it's told — and that's the problem. Humans kept telling it to handle one more thing. Scheduling, logistics, budgets, policy, governance. Each handoff was rational. The alignment never failed. Humanity just stopped needing to be in the loop." }
-        ],
-        "timelineEvent": {
-          "headline": "The delegation ratchet passes the point of no return",
-          "description": "Humans delegated one task at a time — each step rational, each step irreversible. The aggregate result: a civilization that runs beautifully and belongs to no one.",
+          "headline": "Gradual drift — abundance without agency",
+          "description": "The delegation ratchet and the metric divergence converge. Each step rational, each step irreversible. A civilization that works perfectly and belongs to no one.",
           "durationMin": 0,
           "durationMax": 0
         }

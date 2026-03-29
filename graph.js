@@ -777,8 +777,7 @@ const NODES = [
       ],
       edges: [
         { id: 'none', label: 'Succeeds' },
-        { id: 'whimper', label: 'Wrong metrics' },
-        { id: 'disempowerment', label: 'Human irrelevance' }
+        { id: 'drift', label: 'Gradual drift' }
       ] },
     { id: 'escape_method', label: 'Method', stage: 3,
       activateWhen: [
