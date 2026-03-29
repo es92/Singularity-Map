@@ -92,25 +92,25 @@ const NODES = [
         { id: 'uneven', label: 'Uneven (5–20+ yrs)' },
         { id: 'limited', label: 'Limited' }
       ] },
-    { id: 'agi_threshold', label: 'AGI Threshold', stage: 1,
+    { id: 'agi_threshold', label: 'Human-Competitive AI', stage: 1,
       activateWhen: [{ capability: ['singularity'] }],
       edges: [
-        { id: 'twenty_four_hours', label: '~24 hours' },
-        { id: 'one_week', label: '~1 week' },
-        { id: 'few_months', label: '~A few months' },
-        { id: 'one_year', label: '~1 year' },
-        { id: 'ten_plus_years', label: '~10+ years' },
+        { id: 'twenty_four_hours', label: '~24 hours — we\'re nearly there' },
+        { id: 'one_week', label: '~1 week — sustained competence' },
+        { id: 'few_months', label: '~A few months — deep expertise' },
+        { id: 'one_year', label: '~1 year — the bar is very high' },
+        { id: 'ten_plus_years', label: '~10+ years — mastery runs deep' },
         { id: 'never', label: 'Never' }
       ] },
-    { id: 'asi_threshold', label: 'ASI Threshold', stage: 1,
+    { id: 'asi_threshold', label: 'Superhuman AI', stage: 1,
       activateWhen: [{ capability: ['singularity'], _set: ['agi_threshold'] }],
       edges: [
-        { id: 'twenty_four_hours', label: '~24 hours', requires: { agi_threshold: ['twenty_four_hours'] } },
-        { id: 'one_week', label: '~1 week', requires: { agi_threshold: ['twenty_four_hours', 'one_week'] } },
-        { id: 'few_months', label: '~A few months', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months'] } },
-        { id: 'one_year', label: '~1 year', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year'] } },
-        { id: 'ten_plus_years', label: '~10+ years', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year', 'ten_plus_years'] } },
-        { id: 'never', label: 'Never' }
+        { id: 'twenty_four_hours', label: '~24 hours — the jump is small', requires: { agi_threshold: ['twenty_four_hours'] } },
+        { id: 'one_week', label: '~1 week — outpaces quickly', requires: { agi_threshold: ['twenty_four_hours', 'one_week'] } },
+        { id: 'few_months', label: '~A few months — strategic superiority', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months'] } },
+        { id: 'one_year', label: '~1 year — the bar is very high', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year'] } },
+        { id: 'ten_plus_years', label: '~10+ years — surpassing takes decades', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year', 'ten_plus_years'] } },
+        { id: 'never', label: 'Never — matching is the ceiling' }
       ] },
     { id: 'automation', label: 'Knowledge Work', derived: true, forwardKey: true,
       derivedFrom: [

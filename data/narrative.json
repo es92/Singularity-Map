@@ -1,7 +1,7 @@
 {
   "capability": {
     "questionText": "Does AI capability keep accelerating?",
-    "questionContext": "METR, an AI safety research organization, published research in March 2025 showing that the length of tasks AI agents can reliably complete has been doubling approximately every 7 months for the past 6 years. At that time, frontier models could reliably handle autonomous tasks taking humans about an hour. If the trend holds, AI agents would handle week-long tasks by 2027 and month-long projects by the end of the decade. Each new capability threshold means more tasks that are cheaper and faster to delegate to AI than to do yourself — and once a task is delegated, the human skill to do it starts to atrophy.",
+    "questionContext": "AI has been getting dramatically more capable, year after year. Each generation of models handles longer, more complex tasks — things that recently required a skilled human. Research from METR (an AI safety organization) showed in March 2025 that the length of tasks AI can reliably complete autonomously has been doubling roughly every 7 months. At that rate, AI agents would handle week-long tasks by 2027 and month-long projects by the end of the decade. Each new threshold means more work that's cheaper to delegate to AI — and once a task is delegated, the human skill to do it starts to atrophy. The question is whether this trend continues, or whether something breaks it.",
     "source": {
       "label": "METR — Measuring AI Ability to Complete Long Tasks (March 2025)",
       "url": "https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/"
@@ -303,12 +303,12 @@
     }
   },
   "agi_threshold": {
-    "questionText": "At what task length does AI match the best humans?",
-    "questionContext": "METR measures AI capability by the length of tasks models can reliably complete autonomously. But raw task length doesn't automatically translate to human-competitive performance. A system that handles 24-hour tasks might still lack the judgment, creativity, or contextual understanding that makes top human professionals effective. Or it might already be competitive — the threshold could be lower than we think. The question is where on the capability ladder AI becomes genuinely competitive with the best humans across knowledge work.",
+    "questionText": "How capable does AI need to get before it matches the best humans?",
+    "questionContext": "At some point, AI stops being a tool and starts being a competitor — genuinely matching the best human professionals at knowledge work. But where is that threshold? One concrete way to think about it: how long can AI work autonomously on a complex task — researching, planning, adapting, executing — before it needs human help? The longer it can go, the more it can replace. If you think the bar is low, AI is nearly competitive already. If you think real expertise requires deep, sustained judgment, the threshold is much further out.",
     "values": {
       "twenty_four_hours": {
-        "answerLabel": "~24 hours — the bar is low",
-        "answerDesc": "Reliably executing day-long autonomous tasks is enough. At that level, AI matches or exceeds most human professionals in structured knowledge work — research, analysis, coding, writing. The bar for human-competitive turns out to be lower than expected.",
+        "answerLabel": "~24 hours — we're nearly there",
+        "answerDesc": "The bar is lower than people think. An AI that can reliably handle a full day's work autonomously — research, analysis, coding, writing — is already competitive with most professionals. The gap between AI and top humans turns out to be about speed and consistency, not depth.",
         "timelineEvent": {
           "headline": "AI matches top humans at day-long tasks",
           "description": "AI systems that can reliably handle 24-hour autonomous tasks prove competitive with the best human professionals across most knowledge work domains.",
@@ -317,18 +317,18 @@
         }
       },
       "one_week": {
-        "answerLabel": "~1 week — sustained competence required",
-        "answerDesc": "Day-long tasks aren't enough — human expertise involves sustained coherence across a week of work: revising, iterating, adapting to feedback. AI becomes truly competitive when it can manage week-long projects end to end without losing the thread.",
+        "answerLabel": "~1 week — sustained competence",
+        "answerDesc": "Day-long tasks aren't enough. Real professional work involves sustained coherence across a full project cycle — revising, iterating, adapting to feedback. AI becomes truly competitive when it can manage week-long projects end to end without losing the thread.",
         "timelineEvent": {
           "headline": "AI matches top humans at week-long tasks",
-          "description": "AI systems reach human-competitive performance once they can sustain coherent, autonomous work across an entire week — managing complexity, revising, and adapting.",
+          "description": "AI reaches human-competitive performance once it can sustain coherent, autonomous work across an entire week — managing complexity, revising, and adapting.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "few_months": {
-        "answerLabel": "~A few months — deep expertise takes time",
-        "answerDesc": "Real human expertise involves months of sustained strategic thinking — building mental models, navigating ambiguity, adapting to changing circumstances. AI doesn't match this until it can manage multi-month autonomous projects with genuine strategic coherence.",
+        "answerLabel": "~A few months — deep expertise",
+        "answerDesc": "What makes the best professionals valuable isn't completing tasks — it's months of sustained strategic thinking, navigating ambiguity, and adapting to changing circumstances. AI doesn't match this until it can manage multi-month autonomous projects with genuine strategic coherence.",
         "timelineEvent": {
           "headline": "AI matches top humans at month-long projects",
           "description": "AI reaches human-competitive capability only when it can sustain months of autonomous strategic work — navigating ambiguity and adapting to changing circumstances.",
@@ -337,8 +337,8 @@
         }
       },
       "one_year": {
-        "answerLabel": "~1 year — the bar is high",
-        "answerDesc": "The best human professionals operate on year-long timescales — building relationships, developing institutional knowledge, executing multi-phase strategies. AI isn't truly competitive until it can match this kind of sustained, adaptive, long-horizon performance.",
+        "answerLabel": "~1 year — the bar is very high",
+        "answerDesc": "The best human professionals operate on year-long timescales — building relationships, developing institutional knowledge, executing multi-phase strategies. Matching them requires the same kind of sustained, adaptive, long-horizon performance. The bar for 'human-competitive' is much higher than most people assume.",
         "timelineEvent": {
           "headline": "AI matches top humans at year-long work",
           "description": "Only when AI can sustain year-long autonomous projects — with strategic adaptation, relationship-building, and institutional understanding — does it truly match the best humans.",
@@ -347,8 +347,8 @@
         }
       },
       "ten_plus_years": {
-        "answerLabel": "~10+ years — human mastery runs deep",
-        "answerDesc": "True human expertise is built over decades — intuition honed through thousands of edge cases, judgment shaped by years of failure and success. AI would need to match decade-scale accumulated wisdom to be genuinely competitive with the best humans.",
+        "answerLabel": "~10+ years — mastery runs deep",
+        "answerDesc": "True expertise is built over decades — intuition honed through thousands of edge cases, judgment shaped by years of failure and success. Matching the best humans means matching this accumulated wisdom. The bar is extraordinarily high.",
         "timelineEvent": {
           "headline": "AI matches top humans only at decade-scale mastery",
           "description": "The threshold for human-competitive AI turns out to be extraordinarily high — matching the accumulated wisdom and judgment that top humans build over decades of practice.",
@@ -357,11 +357,11 @@
         }
       },
       "never": {
-        "answerLabel": "Never — the gap is qualitative, not quantitative",
-        "answerDesc": "No task length closes the gap. What makes the best humans competitive isn't how long they can work autonomously — it's something AI fundamentally lacks: embodied understanding, social intelligence, genuine creativity, or some quality we can't yet name. Task length is the wrong metric entirely.",
+        "answerLabel": "Never — the gap isn't about capability",
+        "answerDesc": "No amount of autonomous task completion closes the gap. What makes the best humans exceptional isn't how long they can work — it's something AI fundamentally lacks: embodied understanding, social intelligence, genuine creativity, or some quality we can't yet name. The question of 'how capable' is the wrong framing entirely.",
         "timelineEvent": {
           "headline": "AI never truly matches the best humans",
-          "description": "Despite handling ever-longer tasks, AI never becomes genuinely competitive with top human professionals. The gap turns out to be qualitative — something that scaling task length alone cannot bridge.",
+          "description": "Despite handling ever-longer tasks, AI never becomes genuinely competitive with top human professionals. The gap turns out to be qualitative — something that scaling capability alone cannot bridge.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -369,12 +369,12 @@
     }
   },
   "asi_threshold": {
-    "questionText": "At what task length does AI surpass the best humans at knowledge work?",
-    "questionContext": "Matching the best humans is one threshold. Surpassing them is another — and it's the one that reshapes everything. When AI doesn't just compete with top professionals but consistently outperforms them, the dynamics of research, strategy, governance, and economic competition fundamentally change. The question is whether raw task-length capability translates into genuine superhuman performance, and if so, at what level.",
+    "questionText": "How capable does AI need to get before it surpasses the best humans?",
+    "questionContext": "Matching the best humans is one threshold. Surpassing them is another — and it's the one that reshapes everything. When AI doesn't just compete with top professionals but consistently outperforms them, the dynamics of research, strategy, and economic competition fundamentally change. The same measurement applies: how long can AI sustain autonomous work at a level that exceeds what any human could do? The answer reflects how far beyond matching you think AI can go — and how quickly.",
     "values": {
       "twenty_four_hours": {
-        "answerLabel": "~24 hours — superhuman emerges early",
-        "answerDesc": "Even at day-long task capability, AI already surpasses humans in ways that matter — perfect recall, tireless execution, and the ability to run thousands of parallel threads. The superhuman advantage is less about depth and more about breadth and speed.",
+        "answerLabel": "~24 hours — the jump is small",
+        "answerDesc": "Once AI matches humans, surpassing them happens almost immediately. Perfect recall, tireless execution, and the ability to run thousands of parallel threads give it advantages no human can match — even at day-long tasks. The gap between competitive and superhuman turns out to be tiny.",
         "timelineEvent": {
           "headline": "AI surpasses top humans at day-long tasks",
           "description": "AI systems handling 24-hour tasks already outperform the best humans — not through deeper understanding, but through parallelism, speed, and consistency that no human can match.",
@@ -383,8 +383,8 @@
         }
       },
       "one_week": {
-        "answerLabel": "~1 week — sustained superhuman performance",
-        "answerDesc": "At week-long capability, AI doesn't just match humans — it surpasses them through relentless consistency, the ability to hold vastly more context, and zero fatigue. Human judgment still has edges, but AI's raw throughput and coherence across a full week overwhelms them.",
+        "answerLabel": "~1 week — outpaces quickly",
+        "answerDesc": "At week-long capability, AI doesn't just match humans — it surpasses them through relentless consistency, the ability to hold vastly more context, and zero fatigue. Human judgment still has edges, but AI's throughput and coherence across a full week overwhelms them.",
         "timelineEvent": {
           "headline": "AI surpasses top humans at week-long tasks",
           "description": "AI systems managing week-long projects consistently outperform the best human professionals — through sustained focus, perfect memory, and the ability to explore solution spaces no human could cover.",
@@ -393,8 +393,8 @@
         }
       },
       "few_months": {
-        "answerLabel": "~A few months — deep strategic superiority",
-        "answerDesc": "Superhuman performance requires multi-month strategic coherence. At that level, AI can hold entire organizational strategies in working memory, run multi-phase plans, and adapt faster than any human team. The advantage is no longer just speed — it's qualitatively better judgment across complex, long-horizon problems.",
+        "answerLabel": "~A few months — strategic superiority",
+        "answerDesc": "Surpassing humans requires more than speed — it requires qualitatively better judgment across complex, long-horizon problems. At multi-month capability, AI can hold entire organizational strategies in working memory, run multi-phase plans, and adapt faster than any human team.",
         "timelineEvent": {
           "headline": "AI surpasses top humans at multi-month projects",
           "description": "At multi-month capability, AI demonstrates qualitatively superior strategic thinking — managing complexity, adapting to changing conditions, and producing insights no human team could match.",
@@ -403,8 +403,8 @@
         }
       },
       "one_year": {
-        "answerLabel": "~1 year — the threshold is high",
-        "answerDesc": "Surpassing the best humans requires year-long capability — the ability to execute multi-phase strategies with sustained coherence, adapt to cascading changes, and integrate knowledge across domains at a level that makes human expertise look narrow by comparison.",
+        "answerLabel": "~1 year — the bar is very high",
+        "answerDesc": "Surpassing the best humans requires year-long capability — executing multi-phase strategies with sustained coherence, adapting to cascading changes, and integrating knowledge across domains at a level that makes human expertise look narrow. The threshold for superhuman is much higher than most assume.",
         "timelineEvent": {
           "headline": "AI surpasses top humans at year-long work",
           "description": "Only at year-long task capability does AI truly surpass the best humans — demonstrating strategic depth, cross-domain synthesis, and adaptive planning that makes human expertise look narrow.",
@@ -413,8 +413,8 @@
         }
       },
       "ten_plus_years": {
-        "answerLabel": "~10+ years — matching decades of accumulated wisdom",
-        "answerDesc": "Surpassing humans requires matching and exceeding the kind of deep wisdom built over decades — intuition, judgment under radical uncertainty, and the ability to see patterns that only emerge over very long timescales. The bar for superhuman is extraordinarily high.",
+        "answerLabel": "~10+ years — surpassing takes decades",
+        "answerDesc": "Surpassing humans requires exceeding the kind of deep wisdom built over decades — intuition honed through thousands of edge cases, judgment under radical uncertainty, and the ability to see patterns that only emerge over very long timescales. The bar for superhuman is extraordinarily high.",
         "timelineEvent": {
           "headline": "AI surpasses top humans only at decade-scale depth",
           "description": "The bar for superhuman performance turns out to be extraordinarily high — requiring AI to match and exceed the accumulated wisdom and judgment that humans build over lifetimes.",
@@ -423,11 +423,11 @@
         }
       },
       "never": {
-        "answerLabel": "Never — AI never truly surpasses the best humans",
-        "answerDesc": "AI becomes a powerful tool — faster, more consistent, tireless. But it never surpasses the best humans in ways that matter. The qualities that make top human professionals exceptional — creativity, wisdom, social intelligence, moral judgment — remain beyond AI regardless of task length. Superhuman AI turns out to be a category error.",
+        "answerLabel": "Never — matching is the ceiling",
+        "answerDesc": "AI becomes a powerful tool — faster, more consistent, tireless. But it never surpasses the best humans in ways that matter. Creativity, wisdom, social intelligence, moral judgment — the qualities that define top human performance remain beyond AI. Superhuman AI turns out to be a category error.",
         "timelineEvent": {
           "headline": "AI never surpasses the best humans",
-          "description": "Despite ever-growing task capability, AI never truly exceeds the best human professionals at the work that matters most. The superhuman threshold is never crossed.",
+          "description": "Despite ever-growing capability, AI never truly exceeds the best human professionals at the work that matters most. The superhuman threshold is never crossed.",
           "durationMin": 0,
           "durationMax": 0
         }
