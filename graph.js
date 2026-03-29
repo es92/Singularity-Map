@@ -246,6 +246,58 @@ const NODES = [
         { id: 'brittle', label: 'Brittle / Partial' },
         { id: 'failed', label: 'Unsolved' }
       ] },
+    { id: 'alignment_durability', label: 'Alignment Durability', stage: 2,
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['brittle'],
+          _notSet: ['decel_outcome']
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['brittle'],
+          _eff: { decel_outcome: ['rival'], decel_align_progress: ['brittle'] }
+        }
+      ],
+      edges: [ { id: 'holds', label: 'Holds for now' }, { id: 'breaks', label: 'Breaks' } ] },
+    { id: 'containment', label: 'Containment', stage: 2, forwardKey: true,
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _raw: { alignment: ['brittle'], alignment_durability: ['holds'], brittle_resolution: ['escape'] }
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['failed'],
+          _effNot: { decel_outcome: ['solved', 'parity_solved'] }
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _raw: { ai_goals: ['marginal'] },
+          _effNot: { decel_outcome: ['solved', 'parity_solved'] }
+        }
+      ],
+      derivedFrom: [
+        { when: { inert_stays: 'no' }, whenSet: 'inert_outcome', value: 'escaped' }
+      ],
+      edges: [
+        {
+          id: 'contained',
+          label: 'Contained',
+          requires: { distribution: ['lagging', 'concentrated', 'monopoly'] },
+          disabledWhen: [
+            { _raw: { brittle_resolution: ['escape'] }, reason: 'Alignment broke down and the AI is already out' },
+            { decel_outcome: ['escapes'], reason: 'The AI got out during the slowdown period' },
+            { proliferation_outcome: ['leaks_public'], reason: 'The technology leaked publicly — there is nothing left to contain' }
+          ]
+        },
+        { id: 'escaped', label: 'Escapes' }
+      ] },
     { id: 'gov_action', label: 'Deceleration', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], geo_spread: ['one'] }],
       derivedFrom: [{ when: { alignment_durability: 'breaks' }, value: 'accelerate' }],
@@ -460,42 +512,6 @@ const NODES = [
         { id: 'holds', label: 'Alignment is intrinsic' },
         { id: 'breaks', label: 'Someone cracks it' }
       ] },
-    { id: 'containment', label: 'Containment', stage: 2, forwardKey: true,
-      activateWhen: [
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          _raw: { alignment: ['brittle'], alignment_durability: ['holds'], brittle_resolution: ['escape'] }
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['failed'],
-          _effNot: { decel_outcome: ['solved', 'parity_solved'] }
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          _raw: { ai_goals: ['marginal'] },
-          _effNot: { decel_outcome: ['solved', 'parity_solved'] }
-        }
-      ],
-      derivedFrom: [
-        { when: { inert_stays: 'no' }, whenSet: 'inert_outcome', value: 'escaped' }
-      ],
-      edges: [
-        {
-          id: 'contained',
-          label: 'Contained',
-          requires: { distribution: ['lagging', 'concentrated', 'monopoly'] },
-          disabledWhen: [
-            { _raw: { brittle_resolution: ['escape'] }, reason: 'Alignment broke down and the AI is already out' },
-            { decel_outcome: ['escapes'], reason: 'The AI got out during the slowdown period' },
-            { proliferation_outcome: ['leaks_public'], reason: 'The technology leaked publicly — there is nothing left to contain' }
-          ]
-        },
-        { id: 'escaped', label: 'Escapes' }
-      ] },
     { id: 'intent', label: 'Intent', stage: 2, forwardKey: true, hideAfterEscape: true,
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], _set: ['proliferation_control'] },
@@ -678,22 +694,6 @@ const NODES = [
         { id: 'gradual', label: 'Gradual (5–20 yrs)' },
         { id: 'uneven', label: 'Uneven (2–20+ yrs)' }
       ] },
-    { id: 'alignment_durability', label: 'Alignment Durability', stage: 2,
-      activateWhen: [
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['brittle'],
-          _notSet: ['decel_outcome']
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['brittle'],
-          _eff: { decel_outcome: ['rival'], decel_align_progress: ['brittle'] }
-        }
-      ],
-      edges: [ { id: 'holds', label: 'Holds for now' }, { id: 'breaks', label: 'Breaks' } ] },
     { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3, hideAfterEscape: true,
       activateWhen: [
         {
