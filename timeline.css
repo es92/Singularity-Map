@@ -5,8 +5,8 @@
 :root {
     --bg: #08080f;
     --bg-surface: #0e0e18;
-    --bg-card: #141422;
-    --bg-card-hover: #1c1c32;
+    --bg-card: #1a1a2c;
+    --bg-card-hover: #22223a;
     --text: #e4e4f0;
     --text-secondary: #9898b0;
     --text-dim: #5c5c74;
@@ -70,6 +70,8 @@ body {
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
 }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
 
 body::before {
     content: '';
