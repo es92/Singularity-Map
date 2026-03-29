@@ -29,9 +29,9 @@ const DECEL_PAIRS = [
 
 
 const OUTCOME_ACTIVATE = [
-    { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], failure_mode: ['none', 'whimper', 'disempowerment'] },
-    { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
-    { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'] }, _raw: { containment: ['contained'] }, intent: ['international', 'coexistence'], _set: ['failure_mode'] },
+    { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _set: ['societal_response'] },
+    { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'], _set: ['societal_response'] },
+    { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'] }, _raw: { containment: ['contained'] }, intent: ['international', 'coexistence'], _set: ['societal_response'] },
     { capability: ['singularity'], automation: ['deep'], post_war_aims: ['human_centered'], _set: ['societal_response'] },
     { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['benevolent'], _set: ['societal_response'] },
     { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'], societal_response: ['fragmented', 'passive'] },
@@ -645,38 +645,38 @@ const NODES = [
         { id: 'succeeds', label: 'Resistance succeeds' },
         { id: 'fails', label: 'Power prevails' }
       ] },
-    { id: 'failure_mode', label: 'Implementation', stage: 3, forwardKey: true, hideAfterEscape: true,
-      activateWhen: [
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['robust', 'brittle'],
-          intent: ['international', 'coexistence'],
-          _notSet: ['post_war_aims'],
-          _set: ['societal_response']
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          _raw: { brittle_resolution: ['escape'] },
-          intent: ['international', 'coexistence'],
-          _notSet: ['post_war_aims'],
-          _set: ['societal_response']
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          _eff: { alignment: ['failed'] },
-          _raw: { containment: ['contained'] },
-          intent: ['international', 'coexistence'],
-          _notSet: ['post_war_aims'],
-          _set: ['societal_response']
-        }
-      ],
+    { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
+      activateWhen: OUTCOME_ACTIVATE,
       edges: [
-        { id: 'none', label: 'Succeeds' },
-        { id: 'whimper', label: 'Wrong metrics' },
-        { id: 'disempowerment', label: 'Human irrelevance' }
+        { id: 'equal', label: 'Shared equally',
+          disabledWhen: [
+            { societal_response: ['fragmented'], intent: ['self_interest'], reason: 'Without coordination or shared purpose, equal distribution doesn\'t happen on its own' },
+            { societal_response: ['fragmented'], post_war_aims: ['self_interest'], reason: 'After the conflict, self-interest and fragmentation prevent equal sharing' },
+            { capture_confrontation: ['fails'], reason: 'The pushback against concentration didn\'t work' }
+          ] },
+        { id: 'unequal', label: 'Wealth concentrates' },
+        { id: 'extreme', label: 'Power concentrates',
+          disabledWhen: [
+            { societal_response: ['strong'], intent: ['international'], reason: 'Broad coordination and collective action keep concentration in check' },
+            { societal_response: ['strong'], intent: ['coexistence'], reason: 'A mobilized society pursuing coexistence constrains concentration' },
+            { societal_response: ['strong'], post_war_aims: ['self_interest'], reason: 'Collective action constrains concentration, even when motives are self-interested' },
+            { societal_response: ['strong'], ai_goals: ['benevolent'], reason: 'A mobilized society backed by a benevolent AI doesn\'t let power concentrate this far' },
+            { capture_confrontation: ['succeeds'], reason: 'The pushback against concentration succeeded' }
+          ] }
+      ] },
+    { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, terminal: true, hideAfterEscape: true,
+      activateWhen: OUTCOME_ACTIVATE,
+      edges: [
+        { id: 'rapid', label: 'Rapid (1–2 yrs)' },
+        { id: 'gradual', label: 'Gradual (3–10 yrs)' },
+        { id: 'uneven', label: 'Uneven (1–20 yrs)' }
+      ] },
+    { id: 'physical_automation', label: 'Physical Automation', stage: 3, terminal: true, hideAfterEscape: true,
+      activateWhen: OUTCOME_ACTIVATE,
+      edges: [
+        { id: 'rapid', label: 'Rapid (2–5 yrs)' },
+        { id: 'gradual', label: 'Gradual (5–20 yrs)' },
+        { id: 'uneven', label: 'Uneven (2–20+ yrs)' }
       ] },
     { id: 'alignment_durability', label: 'Alignment Durability', stage: 2,
       activateWhen: [
@@ -709,6 +709,39 @@ const NODES = [
         { id: 'solved', label: 'Alignment fully solved' },
         { id: 'sufficient', label: 'Brittle alignment holds' },
         { id: 'escape', label: 'AI eventually escapes' }
+      ] },
+    { id: 'failure_mode', label: 'Implementation', stage: 3, forwardKey: true, hideAfterEscape: true,
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['robust', 'brittle'],
+          intent: ['international', 'coexistence'],
+          _notSet: ['post_war_aims'],
+          _set: ['societal_response']
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _raw: { brittle_resolution: ['escape'] },
+          intent: ['international', 'coexistence'],
+          _notSet: ['post_war_aims'],
+          _set: ['societal_response']
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _eff: { alignment: ['failed'] },
+          _raw: { containment: ['contained'] },
+          intent: ['international', 'coexistence'],
+          _notSet: ['post_war_aims'],
+          _set: ['societal_response']
+        }
+      ],
+      edges: [
+        { id: 'none', label: 'Succeeds' },
+        { id: 'whimper', label: 'Wrong metrics' },
+        { id: 'disempowerment', label: 'Human irrelevance' }
       ] },
     { id: 'ai_goals', label: 'AI Converges On', stage: 2, forwardKey: true,
       activateWhen: [
@@ -782,39 +815,6 @@ const NODES = [
           label: 'A decade+',
           requires: { escape_method: ['autonomous_weapons', 'industrial'] }
         }
-      ] },
-    { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
-      activateWhen: OUTCOME_ACTIVATE,
-      edges: [
-        { id: 'equal', label: 'Shared equally',
-          disabledWhen: [
-            { societal_response: ['fragmented'], intent: ['self_interest'], reason: 'Without coordination or shared purpose, equal distribution doesn\'t happen on its own' },
-            { societal_response: ['fragmented'], post_war_aims: ['self_interest'], reason: 'After the conflict, self-interest and fragmentation prevent equal sharing' },
-            { capture_confrontation: ['fails'], reason: 'The pushback against concentration didn\'t work' }
-          ] },
-        { id: 'unequal', label: 'Wealth concentrates' },
-        { id: 'extreme', label: 'Power concentrates',
-          disabledWhen: [
-            { societal_response: ['strong'], intent: ['international'], reason: 'Broad coordination and collective action keep concentration in check' },
-            { societal_response: ['strong'], intent: ['coexistence'], reason: 'A mobilized society pursuing coexistence constrains concentration' },
-            { societal_response: ['strong'], post_war_aims: ['self_interest'], reason: 'Collective action constrains concentration, even when motives are self-interested' },
-            { societal_response: ['strong'], ai_goals: ['benevolent'], reason: 'A mobilized society backed by a benevolent AI doesn\'t let power concentrate this far' },
-            { capture_confrontation: ['succeeds'], reason: 'The pushback against concentration succeeded' }
-          ] }
-      ] },
-    { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, terminal: true, hideAfterEscape: true,
-      activateWhen: OUTCOME_ACTIVATE,
-      edges: [
-        { id: 'rapid', label: 'Rapid (1–2 yrs)' },
-        { id: 'gradual', label: 'Gradual (3–10 yrs)' },
-        { id: 'uneven', label: 'Uneven (1–20 yrs)' }
-      ] },
-    { id: 'physical_automation', label: 'Physical Automation', stage: 3, terminal: true, hideAfterEscape: true,
-      activateWhen: OUTCOME_ACTIVATE,
-      edges: [
-        { id: 'rapid', label: 'Rapid (2–5 yrs)' },
-        { id: 'gradual', label: 'Gradual (5–20 yrs)' },
-        { id: 'uneven', label: 'Uneven (2–20+ yrs)' }
       ] },
     { id: 'decel_outcome', label: 'Deceleration Outcome', derived: true,
       activateWhen: [{ gov_action: ['decelerate'] }],
