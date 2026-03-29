@@ -1231,7 +1231,7 @@
             app.innerHTML = `
                 <div class="map-screen">
                     <div class="map-toolbar">
-                        <span class="map-title">AI Singularity Map</span>
+                        <span class="map-title" data-action="home" style="cursor:pointer">AI Singularity Map</span>
                         <div class="map-settings-wrap">
                             <button class="map-settings-cog" aria-label="Settings">⚙</button>
                             <div class="map-settings-dropdown" style="display:none">
@@ -1247,7 +1247,7 @@
                     <div class="map-outcome-zone" style="display:none"></div>
                     <div class="map-outcomes-zone" style="display:none"></div>
                     <div class="map-actions">
-                        <button class="btn btn-ghost" data-action="home">\u2190 Back to Start</button>
+                        <button class="btn btn-ghost" data-action="home">Back to Start</button>
                         <button class="btn btn-ghost" data-action="reset">Reset</button>
                         <button class="btn btn-ghost" data-action="share">Copy Link</button>
                     </div>
@@ -1281,6 +1281,13 @@
             function resetSelections() {
                 sel = {};
                 forcedAcknowledged = new Set();
+                started = true;
+                update();
+            }
+
+            function backToStart() {
+                sel = {};
+                forcedAcknowledged = new Set();
                 started = false;
                 history.replaceState({ screen: 'map' }, '', location.pathname);
                 update();
@@ -1290,8 +1297,10 @@
                 const btn = e.target.closest('[data-action="reset-sel"]');
                 if (btn) resetSelections();
             });
-            listen('[data-action="home"]', 'click', resetSelections);
-            listen('[data-action="reset"]', 'click', resetSelections);
+            app.addEventListener('click', e => {
+                if (e.target.closest('[data-action="home"]')) backToStart();
+                if (e.target.closest('[data-action="reset"]')) resetSelections();
+            });
 
             window.toggleDebug = () => { debugMode = !debugMode; update(); return debugMode ? 'Debug ON' : 'Debug OFF'; };
             listen('[data-action="share"]', 'click', () => {
