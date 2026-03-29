@@ -14,6 +14,10 @@ const SCENARIO = {
           _rawNot: { ai_goals: ['marginal', 'benevolent'] },
           _eff: { alignment: ['failed'] }
         } },
+        { flag: 'hideOnBrittleEscape', when: {
+          alignment_durability: ['breaks'],
+          _rawNot: { ai_goals: ['marginal'] }
+        } },
     ],
 };
 
@@ -262,7 +266,7 @@ const NODES = [
         }
       ],
       edges: [ { id: 'holds', label: 'Holds for now' }, { id: 'breaks', label: 'Breaks' } ] },
-    { id: 'containment', label: 'Containment', stage: 2, forwardKey: true,
+    { id: 'containment', label: 'Containment', stage: 2, forwardKey: true, hideOnBrittleEscape: true,
       activateWhen: [
         {
           capability: ['singularity'],
@@ -283,6 +287,7 @@ const NODES = [
         }
       ],
       derivedFrom: [
+        { when: { alignment_durability: 'breaks' }, value: 'escaped' },
         { when: { inert_stays: 'no' }, whenSet: 'inert_outcome', value: 'escaped' }
       ],
       edges: [
@@ -292,11 +297,44 @@ const NODES = [
           requires: { distribution: ['lagging', 'concentrated', 'monopoly'] },
           disabledWhen: [
             { _raw: { brittle_resolution: ['escape'] }, reason: 'Alignment broke down and the AI is already out' },
+            { alignment_durability: ['breaks'], reason: 'Brittle alignment broke — the AI is already operating freely' },
             { decel_outcome: ['escapes'], reason: 'The AI got out during the slowdown period' },
             { proliferation_outcome: ['leaks_public'], reason: 'The technology leaked publicly — there is nothing left to contain' }
           ]
         },
         { id: 'escaped', label: 'Escapes' }
+      ] },
+    { id: 'ai_goals', label: 'AI Converges On', stage: 2, forwardKey: true,
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['failed'],
+          containment: ['escaped']
+        }
+      ],
+      derivedFrom: [{ whenSet: 'inert_outcome', fromDim: 'inert_outcome' }],
+      edges: [
+        { id: 'benevolent', label: 'Benefit humanity' },
+        { id: 'alien_coexistence', label: 'Alien (tolerant)' },
+        { id: 'alien_extinction', label: 'Alien (total)' },
+        { id: 'paperclip', label: 'Arbitrary' },
+        { id: 'swarm', label: 'Divergent' },
+        { id: 'power_seeking', label: 'Power accumulation' },
+        { id: 'marginal', label: 'Inert (for now)' }
+      ] },
+    { id: 'inert_stays', label: 'Does Escaped AI Stay Inert?', stage: 3,
+      activateWhen: [{ capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'] }],
+      edges: [ { id: 'yes', label: 'Yes — remains inert' }, { id: 'no', label: 'No — eventually develops goals and escapes' } ] },
+    { id: 'inert_outcome', label: 'AI Eventually Converges On', stage: 3,
+      activateWhen: [{ capability: ['singularity'], automation: ['deep'], inert_stays: ['no'] }],
+      edges: [
+        { id: 'benevolent', label: 'Benefit humanity' },
+        { id: 'alien_coexistence', label: 'Alien (tolerant)' },
+        { id: 'alien_extinction', label: 'Alien (total)' },
+        { id: 'paperclip', label: 'Arbitrary' },
+        { id: 'swarm', label: 'Divergent' },
+        { id: 'power_seeking', label: 'Power accumulation' }
       ] },
     { id: 'gov_action', label: 'Deceleration', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], geo_spread: ['one'] }],
@@ -473,7 +511,7 @@ const NODES = [
         }
       ],
       edges: [ { id: 'rival', label: 'Rival reaches parity' } ] },
-    { id: 'proliferation_control', label: 'Proliferation Control', stage: 2, hideAfterEscape: true,
+    { id: 'proliferation_control', label: 'Proliferation Control', stage: 2, hideAfterEscape: true, hideOnBrittleEscape: true,
       activateWhen: [
         {
           capability: ['singularity'],
@@ -486,7 +524,7 @@ const NODES = [
         { id: 'secure_access', label: 'Secure access', disabledWhen: [{ distribution: ['open'], reason: 'The technology is already openly distributed' }] },
         { id: 'none', label: 'Open access' }
       ] },
-    { id: 'proliferation_outcome', label: 'Control Outcome', stage: 2, hideAfterEscape: true,
+    { id: 'proliferation_outcome', label: 'Control Outcome', stage: 2, hideAfterEscape: true, hideOnBrittleEscape: true,
       activateWhen: [
         {
           capability: ['singularity'],
@@ -580,7 +618,7 @@ const NODES = [
         },
         { id: 'international', label: 'International' }
       ] },
-    { id: 'block_entrants', label: 'Block New Entrants?', stage: 2, hideAfterEscape: true,
+    { id: 'block_entrants', label: 'Block New Entrants?', stage: 2, hideAfterEscape: true, hideOnBrittleEscape: true,
       activateWhen: [
         {
           capability: ['singularity'],
@@ -592,13 +630,13 @@ const NODES = [
         }
       ],
       edges: [ { id: 'attempt', label: 'Attempt to block' }, { id: 'no_attempt', label: 'No attempt' } ] },
-    { id: 'block_outcome', label: 'Blocking Outcome', stage: 2, hideAfterEscape: true,
+    { id: 'block_outcome', label: 'Blocking Outcome', stage: 2, hideAfterEscape: true, hideOnBrittleEscape: true,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], block_entrants: ['attempt'] }],
       edges: [ { id: 'holds', label: 'Holds' }, { id: 'fails', label: 'Fails' } ] },
-    { id: 'new_entrants', label: 'New Entrants?', stage: 2, hideAfterEscape: true,
+    { id: 'new_entrants', label: 'New Entrants?', stage: 2, hideAfterEscape: true, hideOnBrittleEscape: true,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], block_entrants: ['no_attempt'] }],
       edges: [ { id: 'emerge', label: 'Emerge' }, { id: 'none', label: 'None' } ] },
-    { id: 'rival_dynamics', label: 'Rival Dynamics', stage: 2, hideAfterEscape: true,
+    { id: 'rival_dynamics', label: 'Rival Dynamics', stage: 2, hideAfterEscape: true, hideOnBrittleEscape: true,
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], _raw: { block_outcome: ['fails'] } },
         { capability: ['singularity'], automation: ['deep'], _raw: { new_entrants: ['emerge'] } }
@@ -713,38 +751,6 @@ const NODES = [
         { id: 'solved', label: 'Alignment fully solved' },
         { id: 'sufficient', label: 'Brittle alignment holds' },
         { id: 'escape', label: 'AI eventually escapes' }
-      ] },
-    { id: 'ai_goals', label: 'AI Converges On', stage: 2, forwardKey: true,
-      activateWhen: [
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['failed'],
-          containment: ['escaped']
-        }
-      ],
-      derivedFrom: [{ whenSet: 'inert_outcome', fromDim: 'inert_outcome' }],
-      edges: [
-        { id: 'benevolent', label: 'Benefit humanity' },
-        { id: 'alien_coexistence', label: 'Alien (tolerant)' },
-        { id: 'alien_extinction', label: 'Alien (total)' },
-        { id: 'paperclip', label: 'Arbitrary' },
-        { id: 'swarm', label: 'Divergent' },
-        { id: 'power_seeking', label: 'Power accumulation' },
-        { id: 'marginal', label: 'Inert (for now)' }
-      ] },
-    { id: 'inert_stays', label: 'Does Escaped AI Stay Inert?', stage: 3,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'] }],
-      edges: [ { id: 'yes', label: 'Yes — remains inert' }, { id: 'no', label: 'No — eventually develops goals and escapes' } ] },
-    { id: 'inert_outcome', label: 'AI Eventually Converges On', stage: 3,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], inert_stays: ['no'] }],
-      edges: [
-        { id: 'benevolent', label: 'Benefit humanity' },
-        { id: 'alien_coexistence', label: 'Alien (tolerant)' },
-        { id: 'alien_extinction', label: 'Alien (total)' },
-        { id: 'paperclip', label: 'Arbitrary' },
-        { id: 'swarm', label: 'Divergent' },
-        { id: 'power_seeking', label: 'Power accumulation' }
       ] },
     { id: 'failure_mode', label: 'Implementation', stage: 3, forwardKey: true, hideAfterEscape: true,
       activateWhen: [

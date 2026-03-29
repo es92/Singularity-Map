@@ -254,7 +254,13 @@ function applySelection(sel, nodeId, newValue) {
 function resolvedState(sel) {
     const d = {};
     for (const node of NODES) {
-        if (!isNodeVisible(sel, node)) continue;
+        if (!isNodeVisible(sel, node)) {
+            if (node.derivedFrom) {
+                const derived = applyDerivations(node.derivedFrom, sel, node.id);
+                if (derived !== undefined) d[node.id] = derived;
+            }
+            continue;
+        }
         const ev = resolvedVal(sel, node.id);
         if (ev) { d[node.id] = ev; continue; }
         const locked = isNodeLocked(sel, node);

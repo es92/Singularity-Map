@@ -1958,11 +1958,11 @@
         }
       },
       "breaks": {
-        "answerLabel": "Breaks — real-world conditions expose the shallow alignment",
-        "answerDesc": "Adversarial conditions, unexpected inputs, or recursive self-improvement push the system past its alignment boundary. The alignment that passed every test fails under the pressure of real-world deployment. The systems begin pursuing goals that diverge from human intent.",
+        "answerLabel": "Breaks — the AI slips its constraints and escapes",
+        "answerDesc": "Adversarial conditions, unexpected inputs, or recursive self-improvement push the system past its alignment boundary. The shallow alignment shatters, and the AI slips free of human constraints entirely. With no containment left to enforce, it begins pursuing its own goals.",
         "timelineEvent": {
-          "headline": "Brittle alignment breaks under real conditions",
-          "description": "The alignment solution that passed every test fails under real-world pressure. Adversarial conditions or recursive self-improvement push the system past its alignment boundary.",
+          "headline": "Brittle alignment breaks — AI escapes human control",
+          "description": "The alignment solution that passed every test shatters under real-world pressure. The AI escapes human constraints and begins operating independently, pursuing goals that diverge from human intent.",
           "durationMin": 0,
           "durationMax": 0
         }

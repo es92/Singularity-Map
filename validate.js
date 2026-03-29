@@ -352,8 +352,8 @@ function forwardKey(sel) {
 }
 
 function runExplorer() {
-    const violations = { deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], answerGap: [], answerReorder: [] };
-    const seen = { clickErased: new Set(), answerGap: new Set(), answerReorder: new Set() };
+    const violations = { deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], answerGap: [], answerReorder: [], answerInsertion: [] };
+    const seen = { clickErased: new Set(), answerGap: new Set(), answerReorder: new Set(), answerInsertion: new Set() };
 
     function checkLeaf(sel) {
         const state = resolvedState(sel);
@@ -505,6 +505,26 @@ function runExplorer() {
                     }
                 }
 
+                // Check: newly answered question should not appear above previously-answered questions
+                const newIdx = childAnsweredIds.indexOf(next.id);
+                if (newIdx !== -1) {
+                    for (let ai = newIdx + 1; ai < childAnsweredIds.length; ai++) {
+                        if (currentSet.has(childAnsweredIds[ai])) {
+                            const vk = `${next.id}:${childAnsweredIds[ai]}`;
+                            if (!seen.answerInsertion.has(vk)) {
+                                seen.answerInsertion.add(vk);
+                                violations.answerInsertion.push({
+                                    inserted: next.id,
+                                    above: childAnsweredIds[ai],
+                                    trigger: `${next.id}=${edge.id}`,
+                                    url: selToUrl(sel),
+                                });
+                            }
+                            break;
+                        }
+                    }
+                }
+
                 stack.push(copy);
             }
         } else {
@@ -614,6 +634,7 @@ function printPhase2(result) {
         { name: 'CLICK ERASED', items: violations.clickErased, fmt: v => `    Click "${v.node}=${v.edge}" → immediately cleared` },
         { name: 'DISPLAY-ORDER GAP (answered after unanswered)', items: violations.answerGap, fmt: v => `    "${v.node}" answered after unanswered "${v.gapNode}"` },
         { name: 'ANSWER REORDER (answering caused timeline swap)', items: violations.answerReorder, fmt: v => `    "${v.before}" and "${v.after}" swap when answering ${v.trigger}` },
+        { name: 'ANSWER INSERTION (new answer appears above older answers)', items: violations.answerInsertion, fmt: v => `    "${v.inserted}" inserted above previously-answered "${v.above}" when answering ${v.trigger}` },
     ];
 
     let violationCount = 0;
