@@ -23,6 +23,7 @@ class TimelineAnimator {
         this._scrollMinHeight = 0;
         this._oldCardEl = null;
         this._beforeAnimate = options.beforeAnimate || null;
+        this._headerEl = options.headerEl || null;
 
         this._elementVisibility = {
             oldCard: true,
@@ -422,6 +423,20 @@ class TimelineAnimator {
             totalShift = lastEvt.getBoundingClientRect().bottom - startCardRect.top;
         } else if (outcomeAppearing && endOutcomeRect) {
             totalShift = endOutcomeRect.top - startCardRect.top;
+        }
+
+        if (this._headerEl && totalShift > 0) {
+            const headerBottom = this._headerEl.getBoundingClientRect().bottom;
+            const targetTop = newCardRect ? newCardRect.top
+                            : (outcomeAppearing && endOutcomeRect) ? endOutcomeRect.top
+                            : (newEvents.length > 0) ? newEvents[0].getBoundingClientRect().top
+                            : null;
+            if (targetTop !== null) {
+                const maxShift = targetTop - headerBottom - 50;
+                if (maxShift < totalShift) {
+                    totalShift = Math.max(0, maxShift);
+                }
+            }
         }
 
         // --- Phase 3: Create old card copy (content only, no timeline decorations) ---
