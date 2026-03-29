@@ -39,7 +39,7 @@
             background: transparent; color: var(--text-secondary);
             padding: 0.5rem 0.75rem; font-size: 0.9rem;
         }
-        .btn-ghost:hover { color: var(--text); }
+        .btn-ghost:hover { color: var(--text); text-decoration: underline; }
 
         /* ---- Intro ---- */
         .intro {
@@ -66,8 +66,14 @@
             padding: 1rem 1.15rem; cursor: pointer; transition: all 0.2s var(--ease);
         }
         .explorer-card:hover { background: var(--bg-card-hover); border-color: var(--border-hover); }
+        .explorer-card.locked:hover { background: rgba(0, 200, 255, 0.14); }
         .explorer-card.matched { border-color: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
-        .explorer-card.dimmed { opacity: 0.35; }
+        .explorer-card.dimmed { opacity: 0.35; cursor: not-allowed; }
+        .explorer-card.locked {
+            border-color: var(--accent); box-shadow: 0 0 16px var(--accent-glow);
+            background: rgba(0, 200, 255, 0.08); opacity: 1;
+        }
+        .explorer-card.not-locked:not(.dimmed) { opacity: 0.55; }
         .explorer-card .ec-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.2rem; }
         .ec-subtitle { font-weight: 400; font-style: italic; opacity: 0.7; }
         .explorer-card .ec-summary {
@@ -127,30 +133,35 @@
         .map-toolbar {
             position: sticky; top: 0; z-index: 100;
             display: flex; justify-content: space-between; align-items: center;
-            padding: 0.75rem 1.5rem; gap: 1rem; flex-wrap: wrap;
+            padding: 0.5rem 1.5rem;
             margin-left: -1.5rem; margin-right: -1.5rem;
             background: var(--bg);
             border-bottom: 1px solid var(--border);
+            pointer-events: none;
         }
-        .map-locker-wrap {
-            display: flex; align-items: center; gap: 0.5rem;
+        .map-title {
+            font-weight: 600; font-size: 0.95rem; color: var(--text);
+            pointer-events: auto;
         }
-        .map-locker-label {
-            font-size: 0.78rem; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 0.06em; color: var(--text-secondary);
+        .map-settings-wrap {
+            position: relative; pointer-events: auto;
         }
-        .map-outcome-locker {
-            background: var(--bg-card); color: var(--text);
-            border: 1px solid var(--border); border-radius: var(--radius-sm);
-            padding: 0.35rem 0.7rem; font-size: 0.82rem;
-            cursor: pointer; outline: none;
-            transition: border-color 0.15s var(--ease);
+        .map-settings-cog {
+            background: none; border: none;
+            color: var(--text-secondary); font-size: 2.0rem;
+            cursor: pointer; transition: color 0.2s var(--ease);
+            padding: 0.25rem;
         }
-        .map-outcome-locker:hover, .map-outcome-locker:focus {
-            border-color: var(--accent);
+        .map-settings-cog:hover {
+            color: var(--text);
         }
-        .map-toggles {
-            display: flex; flex-direction: column; gap: 0.45rem;
+        .map-settings-dropdown {
+            position: absolute; top: 100%; right: 0;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 0.6rem 0.8rem;
+            display: flex; flex-direction: column; gap: 0.5rem;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            min-width: max-content;
         }
         .map-toggle {
             display: flex; align-items: center; gap: 0.55rem;
@@ -179,14 +190,7 @@
         .map-toggle input[type="checkbox"]:checked::after {
             transform: translateX(14px);
         }
-        .map-reset-btn {
-            background: none; border: 1px solid var(--border); border-radius: var(--radius-sm);
-            color: var(--text-secondary); font-size: 0.75rem; padding: 0.3rem 0.6rem;
-            cursor: pointer; transition: all 0.15s var(--ease);
-        }
-        .map-reset-btn:hover {
-            border-color: var(--border-hover); color: var(--text);
-        }
+        
         .answer-card:hover { transform: translateX(4px); }
         .debug-panel {
             background: var(--bg-surface); border: 1px solid var(--accent);
@@ -851,10 +855,7 @@
                 </div>`;
             }
 
-            const lockerOptions = [`<option value="">Open (no lock)</option>`]
-                .concat(templatesList.map(t => {
-                    return `<option value="${esc(t.id)}"${t.id === lockedId ? ' selected' : ''}>${esc(t.title)}</option>`;
-                })).join('');
+            
 
             function syncHash() {
                 let hash = '/map';
@@ -1176,7 +1177,11 @@
                             const summary = resolved ? resolved.summary : t.summary || '';
                             const isMatch = matched.includes(t);
                             const isPartial = partial.includes(t);
-                            const cls = isMatch ? ' matched' : (!isMatch && !isPartial ? ' dimmed' : '');
+                            const isLocked = lockedId && t.id === lockedId;
+                            const isUnlocked = lockedId && t.id !== lockedId;
+                            let cls = isMatch ? ' matched' : (!isMatch && !isPartial ? ' dimmed' : '');
+                            if (isLocked) cls += ' locked';
+                            else if (isUnlocked) cls += ' not-locked';
                             return `<div class="explorer-card${cls}" data-tid="${esc(t.id)}">
                                 <div class="ec-title"><span class="ec-dot" style="background:${moodColor(mood)}"></span>${esc(title)}${subtitle ? ` <span class="ec-subtitle">\u2014 ${esc(subtitle)}</span>` : ''}</div>
                                 <div class="ec-summary">${esc(summary)}</div></div>`;
@@ -1192,11 +1197,10 @@
 
                         outcomesGrid.querySelectorAll('.explorer-card').forEach(card => {
                             card.addEventListener('click', () => {
+                                if (card.classList.contains('dimmed')) return;
                                 const tid = card.dataset.tid;
                                 if (tid) {
-                                    lockedId = tid;
-                                    const lockerEl = app.querySelector('.map-outcome-locker');
-                                    if (lockerEl) lockerEl.value = tid;
+                                    lockedId = (tid === lockedId) ? '' : tid;
                                     update();
                                 }
                             });
@@ -1226,16 +1230,14 @@
             app.innerHTML = `
                 <div class="map-screen">
                     <div class="map-toolbar">
-                        <div class="map-locker-wrap">
-                            <label class="map-locker-label">Outcome</label>
-                            <select class="map-outcome-locker">${lockerOptions}</select>
-                            <button class="map-reset-btn" data-action="reset-sel">Reset</button>
-                        </div>
-                        <div class="map-toggles">
-                            <label class="map-toggle"><input type="checkbox" data-flag="fq"${fullQuestions ? ' checked' : ''}><span>Full Questions</span></label>
-                            <label class="map-toggle"><input type="checkbox" data-flag="et"${expandTimeline ? ' checked' : ''}><span>Expand Timeline</span></label>
-                            <label class="map-toggle"><input type="checkbox" data-flag="so"${showOutcomes ? ' checked' : ''}><span>Show Outcomes</span></label>
-                            <label class="map-toggle"><input type="checkbox" data-flag="db"${debugMode ? ' checked' : ''}><span>Debug</span></label>
+                        <span class="map-title">Singularity Map</span>
+                        <div class="map-settings-wrap">
+                            <button class="map-settings-cog" aria-label="Settings">⚙</button>
+                            <div class="map-settings-dropdown" style="display:none">
+                                <label class="map-toggle"><input type="checkbox" data-flag="fq"${fullQuestions ? ' checked' : ''}><span>Full Questions</span></label>
+                                <label class="map-toggle"><input type="checkbox" data-flag="et"${expandTimeline ? ' checked' : ''}><span>Expand Timeline</span></label>
+                                <label class="map-toggle"><input type="checkbox" data-flag="so"${showOutcomes ? ' checked' : ''}><span>Show Outcomes</span></label>
+                            </div>
                         </div>
                         <div class="debug-panel" style="display:none"></div>
                     </div>
@@ -1250,10 +1252,19 @@
                     </div>
                 </div>`;
 
-            const lockerEl = app.querySelector('.map-outcome-locker');
-            lockerEl.addEventListener('change', () => {
-                lockedId = lockerEl.value;
-                update();
+            
+
+            const settingsCog = app.querySelector('.map-settings-cog');
+            const settingsDropdown = app.querySelector('.map-settings-dropdown');
+            settingsCog.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const open = settingsDropdown.style.display !== 'none';
+                settingsDropdown.style.display = open ? 'none' : '';
+            });
+            document.addEventListener('click', (e) => {
+                if (!settingsDropdown.contains(e.target) && e.target !== settingsCog) {
+                    settingsDropdown.style.display = 'none';
+                }
             });
 
             app.querySelectorAll('.map-toggle input[type="checkbox"]').forEach(cb => {
@@ -1261,7 +1272,7 @@
                     if (cb.dataset.flag === 'fq') fullQuestions = cb.checked;
                     if (cb.dataset.flag === 'et') expandTimeline = cb.checked;
                     if (cb.dataset.flag === 'so') showOutcomes = cb.checked;
-                    if (cb.dataset.flag === 'db') debugMode = cb.checked;
+                    
                     update();
                 });
             });
@@ -1272,9 +1283,14 @@
                 update();
             }
 
-            listen('[data-action="reset-sel"]', 'click', resetSelections);
+            app.addEventListener('click', e => {
+                const btn = e.target.closest('[data-action="reset-sel"]');
+                if (btn) resetSelections();
+            });
             listen('[data-action="home"]', 'click', () => navigate({ screen: 'intro' }));
             listen('[data-action="reset"]', 'click', resetSelections);
+
+            window.toggleDebug = () => { debugMode = !debugMode; update(); return debugMode ? 'Debug ON' : 'Debug OFF'; };
             listen('[data-action="share"]', 'click', () => {
                 const url = location.origin + location.pathname + location.hash;
                 if (navigator.clipboard) {
