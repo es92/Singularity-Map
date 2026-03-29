@@ -30,8 +30,9 @@ for (const t of templatesList) oMap[t.id] = t;
 // ════════════════════════════════════════════════════════
 
 function runStaticAnalysis() {
+    // NOTE: All issues should be errors, not warnings. Warnings tend to get ignored and
+    // can mask legitimate problems. If something is worth detecting, it's worth failing on.
     const errors = [];
-    const warnings = [];
 
     const metaNodes = new Set(NODES.map(d => d.id));
 
@@ -56,7 +57,7 @@ function runStaticAnalysis() {
     // Helper: validate keys/edges in a matchCondition-style condition object
     function validateCondition(cond, nodeId, label) {
         for (const [k, vals] of Object.entries(cond)) {
-            if (k.startsWith('_')) continue;
+            if (k.startsWith('_') || k === 'reason') continue;
             if (!metaNodes.has(k)) {
                 errors.push(`[${label}] Node "${nodeId}" references unknown node "${k}"`);
             } else {
@@ -102,7 +103,7 @@ function runStaticAnalysis() {
                     const validIds = new Set(NODE_MAP[k].edges.map(v => v.id));
                     const vals = Array.isArray(val) ? val : [val];
                     for (const v of vals) {
-                        if (!validIds.has(v)) warnings.push(`[derivations] Node "${nodeId}" references unreachable edge "${k}=${v}" in ${rk} (dead rule)`);
+                        if (!validIds.has(v)) errors.push(`[derivations] Node "${nodeId}" references unreachable edge "${k}=${v}" in ${rk} (dead rule)`);
                     }
                 }
             }
@@ -205,7 +206,7 @@ function runStaticAnalysis() {
                 if (!blocked) { allBlocked = false; break; }
             }
             if (allBlocked) {
-                warnings.push(`[dead-edge] Node "${node.id}" edge "${edge.id}": every requires clause is contradicted by disabledWhen`);
+                errors.push(`[dead-edge] Node "${node.id}" edge "${edge.id}": every requires clause is contradicted by disabledWhen`);
             }
         }
     }
@@ -230,7 +231,7 @@ function runStaticAnalysis() {
             if (!cond._notSet) continue;
             for (const k of cond._notSet) {
                 if (derivableNodes.has(k)) {
-                    warnings.push(`[raw-eff] Node "${node.id}" ${source} uses _notSet on "${k}" which has derivedFrom (checks effective, not raw)`);
+                    errors.push(`[raw-eff] Node "${node.id}" ${source} uses _notSet on "${k}" which has derivedFrom (checks effective, not raw)`);
                 }
             }
         }
@@ -292,7 +293,7 @@ function runStaticAnalysis() {
         }
     }
 
-    return { errors, warnings, derivationDeps };
+    return { errors, derivationDeps };
 }
 
 // ════════════════════════════════════════════════════════
@@ -352,7 +353,6 @@ function forwardKey(sel) {
 
 function runExplorer() {
     const violations = { deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], answerGap: [] };
-    const warnings = {};
     const seen = { clickErased: new Set(), answerGap: new Set() };
 
     function checkLeaf(sel) {
@@ -383,7 +383,7 @@ function runExplorer() {
                 }
                 violations.stuck.push({ node: node.id, url: selToUrl(sel), mechanism: reasons.join('; ') });
             }
-            if (ena.length === 1) violations.singleOption.push({ node: node.id, edge: ena[0].id, url: selToUrl(sel) });
+            if (ena.length === 1 && node === getNextNode(sel)) violations.singleOption.push({ node: node.id, edge: ena[0].id, url: selToUrl(sel) });
 
             for (const edge of ena) {
                 if (sel[node.id] === edge.id) continue;
@@ -482,7 +482,7 @@ function runExplorer() {
     }
 
     const coverage = { userSelected, autoLocked };
-    return { violations, warnings, totalStates, totalLeaves, dedupSaved, rawUnique: rawVisited.size, coverage };
+    return { violations, totalStates, totalLeaves, dedupSaved, rawUnique: rawVisited.size, coverage };
 }
 
 // ════════════════════════════════════════════════════════
@@ -562,16 +562,12 @@ function samplePaths(n) {
 // ════════════════════════════════════════════════════════
 
 function printPhase1(result) {
-    const { errors, warnings } = result;
+    const { errors } = result;
     if (errors.length) {
         console.log(`  ERRORS (${errors.length}):`);
         for (const e of errors) console.log('    ✗ ' + e);
     } else {
         console.log('  ✓ All static checks passed');
-    }
-    if (warnings.length) {
-        console.log(`  WARNINGS (${warnings.length}):`);
-        for (const w of warnings) console.log('    ⚠ ' + w);
     }
 }
 
