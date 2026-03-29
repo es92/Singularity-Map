@@ -901,6 +901,12 @@
       "brittle": {
         "answerLabel": "Solved — brittle / partial",
         "answerDesc": "Alignment researchers have found a partial solution — it works, but it's fragile.",
+        "narrativeVariants": [
+          {
+            "when": { "alignment": ["brittle"] },
+            "answerLabel": "Still just partial / brittle"
+          }
+        ],
         "timelineEvent": {
           "headline": "2 months in — alignment partially solved",
           "description": "Two months yields a partial solution. It works, but it's fragile — untested under adversarial conditions.",
@@ -977,6 +983,51 @@
           }
         ]
       },
+      "rival": {
+        "answerLabel": "Rival reaches parity",
+        "answerDesc": "A rival nation or lab reaches frontier AI capability during the slowdown.",
+        "timelineEvent": {
+          "headline": "Rival reaches parity at 2 months",
+          "description": "A rival catches up during the slowdown. The deceleration gave others time to close the gap.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "narrativeVariants": [
+          {
+            "when": { "decel_2mo_progress": ["robust"] },
+            "answerLabel": "Rival reaches parity — alignment robust",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier is shared but safe.",
+            "timelineEvent": {
+              "headline": "Rival reaches parity at 2 months — robust",
+              "description": "A rival catches up during the slowdown, but alignment is robustly solved.",
+              "durationMin": 0,
+              "durationMax": 0
+            }
+          },
+          {
+            "when": { "decel_2mo_progress": ["brittle"] },
+            "answerLabel": "Rival reaches parity — alignment partial",
+            "answerDesc": "A rival catches up, and alignment is only partially solved. Two AI powers on fragile safety.",
+            "timelineEvent": {
+              "headline": "Rival reaches parity at 2 months — brittle",
+              "description": "A rival catches up during the slowdown. Alignment is only partial.",
+              "durationMin": 0,
+              "durationMax": 0
+            }
+          },
+          {
+            "when": { "decel_2mo_progress": ["unsolved"] },
+            "answerLabel": "Rival reaches parity — alignment unsolved",
+            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar AI race with no safety.",
+            "timelineEvent": {
+              "headline": "Rival reaches parity at 2 months — unsolved",
+              "description": "A rival catches up during the slowdown with alignment unsolved.",
+              "durationMin": 0,
+              "durationMax": 0
+            }
+          }
+        ]
+      },
       "continue": {
         "answerLabel": "Continue the slowdown",
         "answerDesc": "The slowdown holds. Alignment work continues under pressure.",
@@ -1006,6 +1057,12 @@
       "brittle": {
         "answerLabel": "Solved — brittle / partial",
         "answerDesc": "A partial solution emerges — alignment works under certain conditions, but it's fragile.",
+        "narrativeVariants": [
+          {
+            "when": { "alignment": ["brittle"] },
+            "answerLabel": "Still just partial / brittle"
+          }
+        ],
         "timelineEvent": {
           "headline": "4 months in — alignment partially solved",
           "description": "Four months yields a partial solution. Better than nothing, but still fragile.",
@@ -1082,6 +1139,51 @@
           }
         ]
       },
+      "rival": {
+        "answerLabel": "Rival reaches parity",
+        "answerDesc": "A rival nation or lab reaches frontier AI capability during the slowdown.",
+        "timelineEvent": {
+          "headline": "Rival reaches parity at 4 months",
+          "description": "A rival catches up during the slowdown. The deceleration gave others time to close the gap.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "narrativeVariants": [
+          {
+            "when": { "decel_4mo_progress": ["robust"] },
+            "answerLabel": "Rival reaches parity — alignment robust",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier is shared but safe.",
+            "timelineEvent": {
+              "headline": "Rival reaches parity at 4 months — robust",
+              "description": "A rival catches up during the slowdown, but alignment is robustly solved.",
+              "durationMin": 0,
+              "durationMax": 0
+            }
+          },
+          {
+            "when": { "decel_4mo_progress": ["brittle"] },
+            "answerLabel": "Rival reaches parity — alignment partial",
+            "answerDesc": "A rival catches up, and alignment is only partially solved. Two AI powers on fragile safety.",
+            "timelineEvent": {
+              "headline": "Rival reaches parity at 4 months — brittle",
+              "description": "A rival catches up during the slowdown. Alignment is only partial.",
+              "durationMin": 0,
+              "durationMax": 0
+            }
+          },
+          {
+            "when": { "decel_4mo_progress": ["unsolved"] },
+            "answerLabel": "Rival reaches parity — alignment unsolved",
+            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar AI race with no safety.",
+            "timelineEvent": {
+              "headline": "Rival reaches parity at 4 months — unsolved",
+              "description": "A rival catches up during the slowdown with alignment unsolved.",
+              "durationMin": 0,
+              "durationMax": 0
+            }
+          }
+        ]
+      },
       "continue": {
         "answerLabel": "Continue the slowdown",
         "answerDesc": "Still holding. The state maintains the pause.",
@@ -1111,6 +1213,12 @@
       "brittle": {
         "answerLabel": "Solved — brittle / partial",
         "answerDesc": "A partial alignment solution exists — fragile but functional.",
+        "narrativeVariants": [
+          {
+            "when": { "alignment": ["brittle"] },
+            "answerLabel": "Still just partial / brittle"
+          }
+        ],
         "timelineEvent": {
           "headline": "6 months in — alignment partially solved",
           "description": "Six months produces a partial alignment solution.",
@@ -1145,65 +1253,44 @@
         }
       },
       "rival": {
-        "answerLabel": "Rival reaches parity — alignment robust",
-        "answerDesc": "Open source has caught up, but alignment is robustly solved. The frontier is no longer exclusive, but the technology is safe.",
+        "answerLabel": "Rival reaches parity",
+        "answerDesc": "A rival nation or lab reaches frontier AI capability during the slowdown.",
         "timelineEvent": {
-          "headline": "Rival reaches parity — alignment robust",
-          "description": "A rival nation reaches frontier AI capability, but alignment is robustly solved.",
+          "headline": "Rival reaches parity at 6 months",
+          "description": "Six months into the slowdown, a rival catches up.",
           "durationMin": 0,
           "durationMax": 0
         },
         "narrativeVariants": [
           {
-            "when": {
-              "open_source": [
-                "six_months"
-              ],
-              "decel_6mo_progress": [
-                "robust"
-              ]
-            },
+            "when": { "decel_6mo_progress": ["robust"] },
             "answerLabel": "Rival reaches parity — alignment robust",
-            "answerDesc": "Open source has caught up, but alignment is robustly solved. The frontier is no longer exclusive, but the technology is safe.",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier is shared but safe.",
             "timelineEvent": {
-              "headline": "Rival reaches parity — alignment robust",
-              "description": "A rival nation reaches frontier AI capability, but alignment is robustly solved.",
+              "headline": "Rival reaches parity at 6 months — robust",
+              "description": "A rival reaches frontier AI capability, but alignment is robustly solved.",
               "durationMin": 0,
               "durationMax": 0
             }
           },
           {
-            "when": {
-              "open_source": [
-                "six_months"
-              ],
-              "decel_6mo_progress": [
-                "brittle"
-              ]
-            },
+            "when": { "decel_6mo_progress": ["brittle"] },
             "answerLabel": "Rival reaches parity — alignment partial",
-            "answerDesc": "Open source has caught up, and alignment is only partially solved. The frontier is now shared, with fragile safety constraints.",
+            "answerDesc": "A rival catches up, and alignment is only partially solved. Two AI powers on fragile safety.",
             "timelineEvent": {
-              "headline": "Rival reaches parity — alignment brittle",
-              "description": "A rival reaches frontier capability. Alignment is only partial. Two AI superpowers on fragile safety.",
+              "headline": "Rival reaches parity at 6 months — brittle",
+              "description": "A rival reaches frontier capability. Alignment is only partial.",
               "durationMin": 0,
               "durationMax": 0
             }
           },
           {
-            "when": {
-              "open_source": [
-                "six_months"
-              ],
-              "decel_6mo_progress": [
-                "unsolved"
-              ]
-            },
+            "when": { "decel_6mo_progress": ["unsolved"] },
             "answerLabel": "Rival reaches parity — alignment unsolved",
-            "answerDesc": "Open source has caught up, and alignment is still unsolved. A rival now has frontier AI too.",
+            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar AI race with no safety.",
             "timelineEvent": {
-              "headline": "Rival reaches parity — alignment unsolved",
-              "description": "A rival reaches frontier capability with alignment unsolved. A multipolar AI race with no safety.",
+              "headline": "Rival reaches parity at 6 months — unsolved",
+              "description": "A rival reaches frontier capability with alignment unsolved.",
               "durationMin": 0,
               "durationMax": 0
             }
@@ -1290,6 +1377,12 @@
       "brittle": {
         "answerLabel": "Solved — brittle / partial",
         "answerDesc": "A partial solution — it works, but the guarantees are limited.",
+        "narrativeVariants": [
+          {
+            "when": { "alignment": ["brittle"] },
+            "answerLabel": "Still just partial / brittle"
+          }
+        ],
         "timelineEvent": {
           "headline": "9 months in — alignment partially solved",
           "description": "Nine months yields partial alignment. Closer, but still fragile.",
@@ -1366,6 +1459,51 @@
           }
         ]
       },
+      "rival": {
+        "answerLabel": "Rival reaches parity",
+        "answerDesc": "A rival nation or lab reaches frontier AI capability during the slowdown.",
+        "timelineEvent": {
+          "headline": "Rival reaches parity at 9 months",
+          "description": "Nine months into the slowdown, a rival catches up.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "narrativeVariants": [
+          {
+            "when": { "decel_9mo_progress": ["robust"] },
+            "answerLabel": "Rival reaches parity — alignment robust",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier is shared but safe.",
+            "timelineEvent": {
+              "headline": "Rival reaches parity at 9 months — robust",
+              "description": "A rival catches up during the slowdown, but alignment is robustly solved.",
+              "durationMin": 0,
+              "durationMax": 0
+            }
+          },
+          {
+            "when": { "decel_9mo_progress": ["brittle"] },
+            "answerLabel": "Rival reaches parity — alignment partial",
+            "answerDesc": "A rival catches up, and alignment is only partially solved. Two AI powers on fragile safety.",
+            "timelineEvent": {
+              "headline": "Rival reaches parity at 9 months — brittle",
+              "description": "A rival catches up during the slowdown. Alignment is only partial.",
+              "durationMin": 0,
+              "durationMax": 0
+            }
+          },
+          {
+            "when": { "decel_9mo_progress": ["unsolved"] },
+            "answerLabel": "Rival reaches parity — alignment unsolved",
+            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar AI race with no safety.",
+            "timelineEvent": {
+              "headline": "Rival reaches parity at 9 months — unsolved",
+              "description": "A rival catches up during the slowdown with alignment unsolved.",
+              "durationMin": 0,
+              "durationMax": 0
+            }
+          }
+        ]
+      },
       "continue": {
         "answerLabel": "Continue the slowdown",
         "answerDesc": "The state holds the line. The pressure is immense but the lead holds.",
@@ -1395,6 +1533,12 @@
       "brittle": {
         "answerLabel": "Solved — brittle / partial",
         "answerDesc": "A partial solution after a year — functional but fragile.",
+        "narrativeVariants": [
+          {
+            "when": { "alignment": ["brittle"] },
+            "answerLabel": "Still just partial / brittle"
+          }
+        ],
         "timelineEvent": {
           "headline": "12 months in — alignment partially solved",
           "description": "A year of work yields partial alignment. Better, but still not fully reliable.",
@@ -1429,26 +1573,19 @@
         }
       },
       "rival": {
-        "answerLabel": "Rival reaches parity — alignment robust",
-        "answerDesc": "Open source has caught up, but alignment is robustly solved. The frontier is shared but safe.",
+        "answerLabel": "Rival reaches parity",
+        "answerDesc": "A rival nation or lab reaches frontier AI capability during the slowdown.",
         "timelineEvent": {
-          "headline": "Rival reaches parity at 12 months — robust",
-          "description": "One year in, a rival catches up. But alignment is robustly solved.",
+          "headline": "Rival reaches parity at 12 months",
+          "description": "One year into the slowdown, a rival catches up.",
           "durationMin": 0,
           "durationMax": 0
         },
         "narrativeVariants": [
           {
-            "when": {
-              "open_source": [
-                "twelve_months"
-              ],
-              "decel_12mo_progress": [
-                "robust"
-              ]
-            },
+            "when": { "decel_12mo_progress": ["robust"] },
             "answerLabel": "Rival reaches parity — alignment robust",
-            "answerDesc": "Open source has caught up, but alignment is robustly solved. The frontier is shared but safe.",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier is shared but safe.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 12 months — robust",
               "description": "One year in, a rival catches up. But alignment is robustly solved.",
@@ -1457,16 +1594,9 @@
             }
           },
           {
-            "when": {
-              "open_source": [
-                "twelve_months"
-              ],
-              "decel_12mo_progress": [
-                "brittle"
-              ]
-            },
+            "when": { "decel_12mo_progress": ["brittle"] },
             "answerLabel": "Rival reaches parity — alignment partial",
-            "answerDesc": "Open source has caught up, and alignment is only partially solved.",
+            "answerDesc": "A rival catches up, and alignment is only partially solved. Two AI powers on fragile safety.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 12 months — brittle",
               "description": "A rival catches up after a year. Alignment is only partial.",
@@ -1475,16 +1605,9 @@
             }
           },
           {
-            "when": {
-              "open_source": [
-                "twelve_months"
-              ],
-              "decel_12mo_progress": [
-                "unsolved"
-              ]
-            },
+            "when": { "decel_12mo_progress": ["unsolved"] },
             "answerLabel": "Rival reaches parity — alignment unsolved",
-            "answerDesc": "Open source has caught up, and alignment is still unsolved. A rival now has frontier AI too.",
+            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar AI race with no safety.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 12 months — unsolved",
               "description": "After a year, a rival reaches frontier capability with alignment unsolved.",
@@ -1572,6 +1695,12 @@
       "brittle": {
         "answerLabel": "Solved — brittle / partial",
         "answerDesc": "A partial solution after eighteen months — functional but uncertain.",
+        "narrativeVariants": [
+          {
+            "when": { "alignment": ["brittle"] },
+            "answerLabel": "Still just partial / brittle"
+          }
+        ],
         "timelineEvent": {
           "headline": "18 months in — alignment partially solved",
           "description": "Eighteen months yields a partial solution. Closer than ever, but the full problem resists.",
@@ -1648,6 +1777,51 @@
           }
         ]
       },
+      "rival": {
+        "answerLabel": "Rival reaches parity",
+        "answerDesc": "A rival nation or lab reaches frontier AI capability during the slowdown.",
+        "timelineEvent": {
+          "headline": "Rival reaches parity at 18 months",
+          "description": "Eighteen months into the slowdown, a rival catches up.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "narrativeVariants": [
+          {
+            "when": { "decel_18mo_progress": ["robust"] },
+            "answerLabel": "Rival reaches parity — alignment robust",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier is shared but safe.",
+            "timelineEvent": {
+              "headline": "Rival reaches parity at 18 months — robust",
+              "description": "A rival catches up during the slowdown, but alignment is robustly solved.",
+              "durationMin": 0,
+              "durationMax": 0
+            }
+          },
+          {
+            "when": { "decel_18mo_progress": ["brittle"] },
+            "answerLabel": "Rival reaches parity — alignment partial",
+            "answerDesc": "A rival catches up, and alignment is only partially solved. Two AI powers on fragile safety.",
+            "timelineEvent": {
+              "headline": "Rival reaches parity at 18 months — brittle",
+              "description": "A rival catches up during the slowdown. Alignment is only partial.",
+              "durationMin": 0,
+              "durationMax": 0
+            }
+          },
+          {
+            "when": { "decel_18mo_progress": ["unsolved"] },
+            "answerLabel": "Rival reaches parity — alignment unsolved",
+            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar AI race with no safety.",
+            "timelineEvent": {
+              "headline": "Rival reaches parity at 18 months — unsolved",
+              "description": "A rival catches up during the slowdown with alignment unsolved.",
+              "durationMin": 0,
+              "durationMax": 0
+            }
+          }
+        ]
+      },
       "continue": {
         "answerLabel": "Continue the slowdown",
         "answerDesc": "The state holds the line for the final stretch. Six more months until open source reaches parity.",
@@ -1677,6 +1851,12 @@
       "brittle": {
         "answerLabel": "Solved — brittle / partial",
         "answerDesc": "Two years produced a partial solution — fragile but functional, as open source catches up.",
+        "narrativeVariants": [
+          {
+            "when": { "alignment": ["brittle"] },
+            "answerLabel": "Still just partial / brittle"
+          }
+        ],
         "timelineEvent": {
           "headline": "24 months in — alignment partially solved",
           "description": "Two years yields partial alignment. Open source has reached parity, making the question moot.",
@@ -1768,8 +1948,8 @@
     },
     "values": {
       "holds": {
-        "answerLabel": "Holds — the brittleness never manifests",
-        "answerDesc": "The alignment techniques turn out to be more robust than anyone expected. Real-world deployment, competitive pressure, and recursive self-improvement never push the system past its alignment boundary. The brittleness was theoretical — in practice, it holds.",
+        "answerLabel": "Holds — the brittleness doesn't manifest",
+        "answerDesc": "The alignment techniques turn out to be more robust than anyone expected. Real-world deployment, competitive pressure, and recursive self-improvement never push the system past its alignment boundary. The brittleness was theoretical — in practice, it holds — for now.",
         "timelineEvent": {
           "headline": "Brittle alignment holds under pressure",
           "description": "Against expectations, the alignment solution survives real-world deployment. Competitive pressure, adversarial conditions, and recursive self-improvement never push the systems past their alignment boundary. The brittleness was theoretical — in practice, it holds.",

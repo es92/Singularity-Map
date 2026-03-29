@@ -352,8 +352,8 @@ function forwardKey(sel) {
 }
 
 function runExplorer() {
-    const violations = { deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], answerGap: [] };
-    const seen = { clickErased: new Set(), answerGap: new Set() };
+    const violations = { deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], answerGap: [], answerReorder: [] };
+    const seen = { clickErased: new Set(), answerGap: new Set(), answerReorder: new Set() };
 
     function checkLeaf(sel) {
         const state = resolvedState(sel);
@@ -446,11 +446,13 @@ function runExplorer() {
         runChecks(sel);
 
         const order = getDisplayOrder(sel);
+        const currentAnsweredIds = [];
         let firstGap = null;
         for (const dNode of order) {
             const locked = isNodeLocked(sel, dNode);
             const hasValue = sel[dNode.id] || locked;
             const isUserAnswered = sel[dNode.id] && !(sel._locked && sel._locked[dNode.id]);
+            if (hasValue) currentAnsweredIds.push(dNode.id);
             if (!hasValue && !firstGap) {
                 firstGap = dNode.id;
             } else if (isUserAnswered && firstGap) {
@@ -473,6 +475,36 @@ function runExplorer() {
                 const copy = { ...sel, _locked: { ...(sel._locked || {}) } };
                 applySelection(copy, next.id, edge.id);
                 cleanSelection(copy);
+
+                // Check: answering this question must not reorder previously-answered items
+                const childOrder = getDisplayOrder(copy);
+                const childAnsweredIds = [];
+                for (const cn of childOrder) {
+                    const cLocked = isNodeLocked(copy, cn);
+                    if (copy[cn.id] || cLocked) childAnsweredIds.push(cn.id);
+                }
+                const childSet = new Set(childAnsweredIds);
+                const currentSet = new Set(currentAnsweredIds);
+                const orderBefore = currentAnsweredIds.filter(id => childSet.has(id));
+                const orderAfter = childAnsweredIds.filter(id => currentSet.has(id));
+                if (orderBefore.length === orderAfter.length) {
+                    for (let ri = 0; ri < orderBefore.length; ri++) {
+                        if (orderBefore[ri] !== orderAfter[ri]) {
+                            const vk = `${orderBefore[ri]}:${orderAfter[ri]}`;
+                            if (!seen.answerReorder.has(vk)) {
+                                seen.answerReorder.add(vk);
+                                violations.answerReorder.push({
+                                    before: orderBefore[ri],
+                                    after: orderAfter[ri],
+                                    trigger: `${next.id}=${edge.id}`,
+                                    url: selToUrl(sel),
+                                });
+                            }
+                            break;
+                        }
+                    }
+                }
+
                 stack.push(copy);
             }
         } else {
@@ -581,6 +613,7 @@ function printPhase2(result) {
         { name: 'UNLOCKED SINGLE OPTION', items: violations.singleOption, fmt: v => `    "${v.node}" has only "${v.edge}" enabled but is not locked` },
         { name: 'CLICK ERASED', items: violations.clickErased, fmt: v => `    Click "${v.node}=${v.edge}" → immediately cleared` },
         { name: 'DISPLAY-ORDER GAP (answered after unanswered)', items: violations.answerGap, fmt: v => `    "${v.node}" answered after unanswered "${v.gapNode}"` },
+        { name: 'ANSWER REORDER (answering caused timeline swap)', items: violations.answerReorder, fmt: v => `    "${v.before}" and "${v.after}" swap when answering ${v.trigger}` },
     ];
 
     let violationCount = 0;

@@ -310,7 +310,7 @@ const NODES = [
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial' },
-        { id: 'unsolved', label: 'Not solved yet' }
+        { id: 'unsolved', label: 'Not solved yet', disabledWhen: [{ alignment: ['brittle'], reason: 'Alignment is already partially solved' }] }
       ] },
     { id: 'decel_2mo_action', label: '2mo Decision', stage: 2,
       activateWhen: [
@@ -322,6 +322,7 @@ const NODES = [
       ],
       edges: [
         { id: 'escapes', label: 'AI Escapes', requires: { decel_2mo_progress: ['brittle', 'unsolved'] } },
+        { id: 'rival', label: 'Rival reaches parity' },
         { id: 'accelerate', label: 'Accelerate' },
         { id: 'continue', label: 'Continue', requires: { decel_2mo_progress: ['brittle', 'unsolved'] } }
       ] },
@@ -330,7 +331,7 @@ const NODES = [
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial' },
-        { id: 'unsolved', label: 'Not solved yet' }
+        { id: 'unsolved', label: 'Not solved yet', disabledWhen: [{ alignment: ['brittle'], reason: 'Alignment is already partially solved' }] }
       ] },
     { id: 'decel_4mo_action', label: '4mo Decision', stage: 2,
       activateWhen: [
@@ -342,6 +343,7 @@ const NODES = [
       ],
       edges: [
         { id: 'escapes', label: 'AI Escapes', requires: { decel_4mo_progress: ['brittle', 'unsolved'] } },
+        { id: 'rival', label: 'Rival reaches parity' },
         { id: 'accelerate', label: 'Accelerate' },
         { id: 'continue', label: 'Continue', requires: { decel_4mo_progress: ['brittle', 'unsolved'] } }
       ] },
@@ -350,7 +352,7 @@ const NODES = [
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial' },
-        { id: 'unsolved', label: 'Not solved yet' }
+        { id: 'unsolved', label: 'Not solved yet', disabledWhen: [{ alignment: ['brittle'], reason: 'Alignment is already partially solved' }] }
       ] },
     { id: 'decel_6mo_action', label: '6mo Decision', stage: 2,
       activateWhen: [
@@ -369,7 +371,7 @@ const NODES = [
           open_source: ['twelve_months', 'twenty_four_months']
         }
         },
-        { id: 'rival', label: 'Rival reaches parity', requires: { open_source: ['six_months'] } },
+        { id: 'rival', label: 'Rival reaches parity' },
         {
           id: 'accelerate',
           label: 'Accelerate',
@@ -389,7 +391,7 @@ const NODES = [
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial' },
-        { id: 'unsolved', label: 'Not solved yet' }
+        { id: 'unsolved', label: 'Not solved yet', disabledWhen: [{ alignment: ['brittle'], reason: 'Alignment is already partially solved' }] }
       ] },
     { id: 'decel_9mo_action', label: '9mo Decision', stage: 2,
       activateWhen: [
@@ -401,6 +403,7 @@ const NODES = [
       ],
       edges: [
         { id: 'escapes', label: 'AI Escapes', requires: { decel_9mo_progress: ['brittle', 'unsolved'] } },
+        { id: 'rival', label: 'Rival reaches parity' },
         { id: 'accelerate', label: 'Accelerate' },
         { id: 'continue', label: 'Continue', requires: { decel_9mo_progress: ['brittle', 'unsolved'] } }
       ] },
@@ -409,7 +412,7 @@ const NODES = [
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial' },
-        { id: 'unsolved', label: 'Not solved yet' }
+        { id: 'unsolved', label: 'Not solved yet', disabledWhen: [{ alignment: ['brittle'], reason: 'Alignment is already partially solved' }] }
       ] },
     { id: 'decel_12mo_action', label: '12mo Decision', stage: 2,
       activateWhen: [
@@ -425,7 +428,7 @@ const NODES = [
           label: 'AI Escapes',
           requires: { decel_12mo_progress: ['brittle', 'unsolved'], open_source: ['twenty_four_months'] }
         },
-        { id: 'rival', label: 'Rival reaches parity', requires: { open_source: ['twelve_months'] } },
+        { id: 'rival', label: 'Rival reaches parity' },
         { id: 'accelerate', label: 'Accelerate', requires: { open_source: ['twenty_four_months'] } },
         {
           id: 'continue',
@@ -438,7 +441,7 @@ const NODES = [
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial' },
-        { id: 'unsolved', label: 'Not solved yet' }
+        { id: 'unsolved', label: 'Not solved yet', disabledWhen: [{ alignment: ['brittle'], reason: 'Alignment is already partially solved' }] }
       ] },
     { id: 'decel_18mo_action', label: '18mo Decision', stage: 2,
       activateWhen: [
@@ -450,6 +453,7 @@ const NODES = [
       ],
       edges: [
         { id: 'escapes', label: 'AI Escapes', requires: { decel_18mo_progress: ['brittle', 'unsolved'] } },
+        { id: 'rival', label: 'Rival reaches parity' },
         { id: 'accelerate', label: 'Accelerate' },
         { id: 'continue', label: 'Continue', requires: { decel_18mo_progress: ['brittle', 'unsolved'] } }
       ] },
@@ -458,7 +462,7 @@ const NODES = [
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial' },
-        { id: 'unsolved', label: 'Not solved yet' }
+        { id: 'unsolved', label: 'Not solved yet', disabledWhen: [{ alignment: ['brittle'], reason: 'Alignment is already partially solved' }] }
       ] },
     { id: 'decel_24mo_action', label: '24mo Decision', stage: 2,
       activateWhen: [
@@ -710,39 +714,6 @@ const NODES = [
         { id: 'sufficient', label: 'Brittle alignment holds' },
         { id: 'escape', label: 'AI eventually escapes' }
       ] },
-    { id: 'failure_mode', label: 'Implementation', stage: 3, forwardKey: true, hideAfterEscape: true,
-      activateWhen: [
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['robust', 'brittle'],
-          intent: ['international', 'coexistence'],
-          _notSet: ['post_war_aims'],
-          _set: ['societal_response']
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          _raw: { brittle_resolution: ['escape'] },
-          intent: ['international', 'coexistence'],
-          _notSet: ['post_war_aims'],
-          _set: ['societal_response']
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          _eff: { alignment: ['failed'] },
-          _raw: { containment: ['contained'] },
-          intent: ['international', 'coexistence'],
-          _notSet: ['post_war_aims'],
-          _set: ['societal_response']
-        }
-      ],
-      edges: [
-        { id: 'none', label: 'Succeeds' },
-        { id: 'whimper', label: 'Wrong metrics' },
-        { id: 'disempowerment', label: 'Human irrelevance' }
-      ] },
     { id: 'ai_goals', label: 'AI Converges On', stage: 2, forwardKey: true,
       activateWhen: [
         {
@@ -764,7 +735,7 @@ const NODES = [
       ] },
     { id: 'inert_stays', label: 'Does Escaped AI Stay Inert?', stage: 3,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'] }],
-      edges: [ { id: 'yes', label: 'Yes — remains inert' }, { id: 'no', label: 'No — eventually develops goals' } ] },
+      edges: [ { id: 'yes', label: 'Yes — remains inert' }, { id: 'no', label: 'No — eventually develops goals and escapes' } ] },
     { id: 'inert_outcome', label: 'AI Eventually Converges On', stage: 3,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], inert_stays: ['no'] }],
       edges: [
@@ -774,6 +745,40 @@ const NODES = [
         { id: 'paperclip', label: 'Arbitrary' },
         { id: 'swarm', label: 'Divergent' },
         { id: 'power_seeking', label: 'Power accumulation' }
+      ] },
+    { id: 'failure_mode', label: 'Implementation', stage: 3, forwardKey: true, hideAfterEscape: true,
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['robust', 'brittle'],
+          intent: ['international', 'coexistence'],
+          _notSet: ['post_war_aims'],
+          _set: ['societal_response']
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _raw: { brittle_resolution: ['escape'] },
+          ai_goals: ['benevolent', 'marginal'],
+          intent: ['international', 'coexistence'],
+          _notSet: ['post_war_aims'],
+          _set: ['societal_response']
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          _eff: { alignment: ['failed'] },
+          _raw: { containment: ['contained'] },
+          intent: ['international', 'coexistence'],
+          _notSet: ['post_war_aims'],
+          _set: ['societal_response']
+        }
+      ],
+      edges: [
+        { id: 'none', label: 'Succeeds' },
+        { id: 'whimper', label: 'Wrong metrics' },
+        { id: 'disempowerment', label: 'Human irrelevance' }
       ] },
     { id: 'escape_method', label: 'Method', stage: 3,
       activateWhen: [
