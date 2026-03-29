@@ -390,7 +390,7 @@ class TimelineAnimator {
     // 4. Animate all elements from start → end on a single easing curve
     // 5. Cleanup: remove old card copy, clear inline styles
 
-    _runAnimation({ startCardRect, startCardContent, startOutcomeTop, startOutcomeVisible, applyEndState, onComplete }) {
+    _runAnimation({ startCardRect, startCardContent, startCardClassName, startOutcomeTop, startOutcomeVisible, applyEndState, onComplete }) {
         const DURATION = this.morphDuration;
         const vis = this._elementVisibility;
 
@@ -444,7 +444,7 @@ class TimelineAnimator {
         // --- Phase 3: Create old card copy (content only, no timeline decorations) ---
         if (startCardContent) {
             this._oldCardEl = document.createElement('div');
-            this._oldCardEl.className = this.cardClass;
+            this._oldCardEl.className = startCardClassName || this.cardClass;
             this._oldCardEl.innerHTML = startCardContent;
             this._oldCardEl.style.cssText =
                 `position:fixed;top:${startCardRect.top}px;left:${startCardRect.left}px;` +
@@ -645,6 +645,7 @@ class TimelineAnimator {
         return {
             startCardRect: card.getBoundingClientRect(),
             startCardContent: card.innerHTML,
+            startCardClassName: card.className,
             startOutcomeTop: this.outcomeEl ? this.outcomeEl.getBoundingClientRect().top : 0,
             startOutcomeVisible: outcomeVisible,
         };

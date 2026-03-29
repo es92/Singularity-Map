@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Singularity Map</title>
-    <meta name="description" content="Navigate the branching futures of artificial intelligence. Your beliefs shape the path.">
-    <meta property="og:title" content="Singularity Map">
+    <title>AI Singularity Map</title>
+    <meta name="description" content="What do you think happens with AI? Walk through the key questions and see the future your beliefs imply. 13 possible outcomes.">
+    <meta property="og:title" content="AI Singularity Map">
     <meta property="og:description" content="Choose your own adventure through the future of AI.">
     <link rel="stylesheet" href="timeline.css">
     <style>
@@ -41,24 +41,22 @@
         }
         .btn-ghost:hover { color: var(--text); text-decoration: underline; }
 
-        /* ---- Intro ---- */
-        .intro {
+        /* ---- Intro Card ---- */
+        .intro-card {
+            padding: 1.5rem;
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
-            min-height: 82vh; text-align: center;
+            flex: 1;
         }
-        .intro h1 {
-            font-size: clamp(2.2rem, 6vw, 3.2rem);
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-            -webkit-background-clip: text; background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
+        .intro-card .intro-body {
+            max-width: 420px;
+            text-align: center;
         }
-        .intro .subtitle {
-            color: var(--text-secondary); font-size: 1.15rem;
-            margin-bottom: 3rem; max-width: 480px; line-height: 1.7;
+        .intro-card .subtitle {
+            color: var(--text-secondary); font-size: 1.05rem;
+            margin-bottom: 0.75rem; line-height: 1.75;
         }
-        .intro .actions { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+        .intro-card .actions { display: flex; gap: 1rem; justify-content: center; }
 
         .explorer-grid { display: grid; gap: 0.75rem; grid-template-columns: 1fr; }
         .explorer-card {
@@ -129,7 +127,10 @@
         #toast.visible { transform: translateX(-50%) translateY(0); }
 
         /* ---- Map View ---- */
-        .map-screen { margin-top: -2rem; }
+        .map-screen {
+            margin-top: -2rem;
+            display: flex; flex-direction: column; min-height: 100vh;
+        }
         .map-toolbar {
             position: sticky; top: 0; z-index: 100;
             display: flex; justify-content: space-between; align-items: center;
@@ -140,7 +141,11 @@
             pointer-events: none;
         }
         .map-title {
-            font-weight: 600; font-size: 0.95rem; color: var(--text);
+            font-weight: 700; font-size: 1.15rem;
+            letter-spacing: 0.02em;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
             pointer-events: auto;
         }
         .map-settings-wrap {
@@ -254,12 +259,13 @@
         }
         .outcome-phase p { margin-bottom: 0.6rem; line-height: 1.65; }
         .map-actions {
-            display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;
+            display: flex; gap: 0.5rem; flex-wrap: wrap;
+            margin-top: auto; padding-top: 1rem;
         }
 
         @media (max-width: 600px) {
             h1 { font-size: 2rem; }
-            .intro h1 { font-size: 2.2rem; }
+            
             #app { padding: 1.25rem 1rem 3rem; }
             .map-screen { margin-top: -1.25rem; }
             .map-toolbar { margin-left: -1rem; margin-right: -1rem; padding-left: 1rem; padding-right: 1rem; }
@@ -563,36 +569,14 @@
                 }
                 return { screen: 'map', dims: selections, lockedOutcomeId, flags };
             }
-            return { screen: 'intro' };
+            return { screen: 'map' };
         }
 
-        function navigate(state, animated) {
-            let hash = '';
-            if (state.screen === 'map') {
-                hash = '/map';
-                const params = [];
-                if (state.dims) {
-                    for (const [k, v] of Object.entries(state.dims)) {
-                        if (v != null) params.push(encodeURIComponent(k) + '=' + encodeURIComponent(v));
-                    }
-                }
-                if (state.lockedOutcomeId) params.push('locked=' + encodeURIComponent(state.lockedOutcomeId));
-                const f = state.flags || {};
-                if (f.fullQuestions === false) params.push('fq=0');
-                if (f.expandTimeline === false) params.push('et=0');
-                if (params.length > 0) hash += '?' + params.join('&');
-            }
-            history.pushState(state, '', hash ? '#' + hash : location.pathname);
-            renderState(state, animated !== false);
-        }
+        
 
         function renderState(state, animated) {
             const render = () => {
-                if (state.screen === 'map') {
-                    renderMap(state.dims, state.lockedOutcomeId, state.flags);
-                } else {
-                    renderIntro();
-                }
+                renderMap(state.dims, state.lockedOutcomeId, state.flags);
             };
             if (animated) { transition(render); } else { render(); }
         }
@@ -632,18 +616,7 @@
             setTimeout(() => toastEl.classList.remove('visible'), 2200);
         }
 
-        // --- Render: Intro ---
-        function renderIntro() {
-            app.innerHTML = `
-                <div class="intro">
-                    <h1>Singularity Map</h1>
-                    <p class="subtitle">Navigate the branching futures of artificial intelligence. Your beliefs shape the path. Where do you end up?</p>
-                    <div class="actions">
-                        <button class="btn btn-primary" data-action="begin">Begin</button>
-                    </div>
-                </div>`;
-            listen('[data-action="begin"]', 'click', () => navigate({ screen: 'map' }));
-        }
+        
 
         // --- Render: Map (unified view) ---
         function renderMap(initialDims, lockedOutcomeId, initialFlags) {
@@ -656,6 +629,8 @@
             let debugMode = flags.debugMode === true;
             let timelineDurations = [];
             let mapAnimator = null;
+            const hasSelections = Object.keys(sel).some(k => k !== '_locked');
+            let started = hasSelections;
 
             Engine.cleanSelection(sel);
 
@@ -858,6 +833,10 @@
             
 
             function syncHash() {
+                if (!started) {
+                    history.replaceState({ screen: 'map' }, '', location.pathname);
+                    return;
+                }
                 let hash = '/map';
                 const entries = [];
                 for (const node of NODES) {
@@ -1038,10 +1017,13 @@
                     }
                 }
 
-                const nextQ = findNextQuestion();
-                const events = buildTimelineEvents(nextQ);
+                const nextQ = started ? findNextQuestion() : null;
+                const events = started ? buildTimelineEvents(nextQ) : [];
                 const timelineEl = app.querySelector('.map-timeline');
-                if (timelineEl) {
+                if (timelineEl && !started) {
+                    timelineEl.innerHTML = '';
+                }
+                if (timelineEl && started) {
                     timelineEl.classList.toggle('timeline-light', !expandTimeline);
                     const tlResult = mapAnimator.renderTimeline(events, {
                         expanded: expandTimeline,
@@ -1080,7 +1062,25 @@
 
                 const questionZone = app.querySelector('.question-zone');
                 if (questionZone) {
-                    if (fullQuestions && nextQ) {
+                    if (!started) {
+                        questionZone.innerHTML = `
+                            <div class="question-card intro-card">
+                                <div class="intro-body">
+                                    <p class="subtitle">What do you think happens with AI? Walk through the key questions — from how fast it advances to whether we can control it — and see the future your beliefs imply.</p>
+                                    <p class="subtitle" style="color:var(--text-dim); font-size:0.9rem; margin-bottom:1.5rem;">~5 minutes · 13 possible outcomes</p>
+                                    <div class="actions">
+                                        <button class="btn btn-primary" data-action="begin">Start</button>
+                                    </div>
+                                </div>
+                            </div>`;
+                        questionZone.style.display = 'flex';
+                        questionZone.style.flex = '1';
+                        questionZone.querySelector('[data-action="begin"]').addEventListener('click', () => {
+                            started = true;
+                            mutateSelection(() => {});
+                        });
+                    } else if (fullQuestions && nextQ) {
+                        questionZone.style.flex = '';
                         const questionData = {
                             nodeLabel: nextQ.node.label,
                             questionText: nextQ.node.questionText || nextQ.node.label,
@@ -1156,6 +1156,7 @@
                     } else {
                         questionZone.innerHTML = '';
                         questionZone.style.display = 'none';
+                        questionZone.style.flex = '';
                     }
                 }
 
@@ -1230,7 +1231,7 @@
             app.innerHTML = `
                 <div class="map-screen">
                     <div class="map-toolbar">
-                        <span class="map-title">Singularity Map</span>
+                        <span class="map-title">AI Singularity Map</span>
                         <div class="map-settings-wrap">
                             <button class="map-settings-cog" aria-label="Settings">⚙</button>
                             <div class="map-settings-dropdown" style="display:none">
@@ -1280,6 +1281,8 @@
             function resetSelections() {
                 sel = {};
                 forcedAcknowledged = new Set();
+                started = false;
+                history.replaceState({ screen: 'map' }, '', location.pathname);
                 update();
             }
 
@@ -1287,7 +1290,7 @@
                 const btn = e.target.closest('[data-action="reset-sel"]');
                 if (btn) resetSelections();
             });
-            listen('[data-action="home"]', 'click', () => navigate({ screen: 'intro' }));
+            listen('[data-action="home"]', 'click', resetSelections);
             listen('[data-action="reset"]', 'click', resetSelections);
 
             window.toggleDebug = () => { debugMode = !debugMode; update(); return debugMode ? 'Debug ON' : 'Debug OFF'; };
@@ -1334,7 +1337,7 @@
             app.innerHTML = `
                 <div class="error-screen">
                     <h2>Failed to Load</h2>
-                    <p>Singularity Map needs to be served over HTTP to load its data files. If you opened this file directly, try running a local server:</p>
+                    <p>AI Singularity Map needs to be served over HTTP to load its data files. If you opened this file directly, try running a local server:</p>
                     <code>python3 -m http.server 8000</code>
                     <p style="margin-top:1rem;font-size:0.85rem;">Then visit <strong>http://localhost:8000</strong></p>
                 </div>`;
