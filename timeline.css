@@ -276,14 +276,13 @@ body::before {
 .question-card .answer-card {
     flex: 1 1 auto; min-width: 140px;
 }
-.question-card .answer-card.disabled {
-    opacity: 0.35; pointer-events: none;
-}
 .question-card.compact { padding: 1rem 0; }
 .question-card.compact .question-text { font-size: 1rem; margin-bottom: 0.5rem; }
 .question-card.compact .answers { gap: 0.4rem; }
 .question-card.compact .answer-card { padding: 0.55rem 0.85rem; min-width: 100px; }
-
+.question-card.compact .answer-card .disabled-badge {
+    margin: 0.35rem -0.85rem -0.55rem; padding: 0.3rem 0.85rem 0.3rem 0.6rem;
+}
 /* ---- Question text (standalone, outside card) ---- */
 .question-text {
     font-size: 1.45rem; font-weight: 600;
@@ -308,9 +307,13 @@ body::before {
 }
 .answer-card .label { font-weight: 600; font-size: 1.02rem; margin-bottom: 0.2rem; }
 .answer-card .desc { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; }
-.answer-card .disabled-reason {
-    font-size: 0.8rem; line-height: 1.45; color: var(--text-dim);
-    margin-top: 0.35rem; font-style: italic;
+.answer-card .disabled-badge {
+    font-size: 0.8rem; line-height: 1.4; color: var(--text-secondary);
+    margin: 0.5rem -1.4rem -1.15rem;
+    padding: 0.45rem 1.4rem;
+    background: rgba(0, 200, 255, 0.06);
+    border: 1px solid var(--border); border-top: none;
+    border-radius: 0 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px);
 }
 .answer-card.forced-selected {
     border-color: var(--accent); background: var(--bg-card-hover);
@@ -321,7 +324,11 @@ body::before {
     border-color: var(--accent); background: var(--bg-card-hover);
 }
 .question-card .answer-card.disabled {
-    opacity: 0.5; pointer-events: none;
+    pointer-events: none;
+}
+.question-card .answer-card.disabled > .label,
+.question-card .answer-card.disabled > .desc {
+    opacity: 0.5;
 }
 .forced-continue {
     margin-top: 0.25rem; margin-bottom: 0.5rem;

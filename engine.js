@@ -184,7 +184,18 @@ function getEdgeDisabledReason(sel, node, edge) {
     }
     if (!edge.requires) return null;
     const condSets = Array.isArray(edge.requires) ? edge.requires : [edge.requires];
-    if (!condSets.some(cond => matchCondition(sel, cond, {}))) return null;
+    if (condSets.some(cond => matchCondition(sel, cond, {}))) return null;
+    for (const cond of condSets) {
+        for (const key of Object.keys(cond)) {
+            if (key.startsWith('_')) continue;
+            const reqNode = NODE_MAP[key];
+            if (!reqNode || !sel[key]) continue;
+            if (cond[key].includes(sel[key])) continue;
+            const selEdge = reqNode.edges && reqNode.edges.find(e => e.id === sel[key]);
+            const selLabel = selEdge ? selEdge.label : sel[key];
+            return `Not available when ${reqNode.label} is ${selLabel}`;
+        }
+    }
     return null;
 }
 
@@ -209,9 +220,9 @@ function cleanSelection(sel) {
             if (locked !== null) {
                 if (sel[node.id] !== locked) {
                     sel[node.id] = locked;
-                    sel._locked[node.id] = true;
                     changed = true;
                 }
+                sel._locked[node.id] = true;
                 continue;
             }
             if (sel._locked[node.id]) {

@@ -248,12 +248,12 @@ class TimelineAnimator {
 
         const answersHtml = answerCards.map((a, i) => {
             const cls = a.isForced ? ' forced-selected' : (a.disabled ? ' disabled' : '');
-            const reasonHtml = a.disabled && a.disabledReason
-                ? `<div class="disabled-reason">${this._esc(a.disabledReason)}</div>` : '';
+            const badgeHtml = a.disabled && a.disabledReason
+                ? `<div class="disabled-badge">${this._esc(a.disabledReason)}</div>` : '';
             return `<div class="answer-card${cls}" data-aidx="${i}">
                 <div class="label">${this._esc(a.label)}</div>
                 ${showDesc && a.desc ? `<div class="desc">${this._esc(a.desc)}</div>` : ''}
-                ${reasonHtml}
+                ${badgeHtml}
             </div>`;
         }).join('');
 
@@ -425,6 +425,7 @@ class TimelineAnimator {
             totalShift = endOutcomeRect.top - startCardRect.top;
         }
 
+        let shiftWasCapped = false;
         if (this._headerEl && totalShift > 0) {
             const headerBottom = this._headerEl.getBoundingClientRect().bottom;
             const targetTop = newCardRect ? newCardRect.top
@@ -435,6 +436,7 @@ class TimelineAnimator {
                 const maxShift = targetTop - headerBottom - 50;
                 if (maxShift < totalShift) {
                     totalShift = Math.max(0, maxShift);
+                    shiftWasCapped = true;
                 }
             }
         }
@@ -629,6 +631,7 @@ class TimelineAnimator {
                 this._releaseScrollRoom();
                 this.containerEl.classList.remove('flip-animating');
                 this.morphAnimating = false;
+                if (!shiftWasCapped) this._scrollCardBelowHeader();
                 if (onComplete) onComplete();
             }
         };
@@ -697,6 +700,18 @@ class TimelineAnimator {
         }
         const u = (lo + hi) / 2;
         return 3 * u * u - 2 * u * u * u;
+    }
+
+    _scrollCardBelowHeader() {
+        if (!this._headerEl) return;
+        const card = this._getCard();
+        if (!card) return;
+        const headerBottom = this._headerEl.getBoundingClientRect().bottom;
+        const cardTop = card.getBoundingClientRect().top;
+        const gap = 50;
+        if (cardTop < headerBottom + gap) {
+            this._animateScroll(cardTop - headerBottom - gap, 400);
+        }
     }
 
     _animateScroll(delta, durationMs) {
