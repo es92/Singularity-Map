@@ -322,6 +322,8 @@
         loadDiscovered();
         loadData().then(() => {
             handleInitialRoute();
+            console.log('%cAI Singularity Map', 'font-weight:bold; font-size:1.1em');
+            console.log('Type %ctoggleDebug()%c in the console to toggle debug mode.', 'font-weight:bold; color:#00c8ff', '');
         }).catch(err => {
             renderError(err);
         });
