@@ -554,7 +554,7 @@
         function routeFromHash() {
             const hash = location.hash.slice(1);
             if (hash.startsWith('/map')) {
-                const selections = {};
+                const pairs = [];
                 let lockedOutcomeId = '';
                 const flags = { fullQuestions: true, expandTimeline: true };
                 const qIdx = hash.indexOf('?');
@@ -569,10 +569,10 @@
                         else if (dk === 'et') { flags.expandTimeline = dv !== '0'; }
                         else if (dk === 'so') { flags.showOutcomes = dv === '1'; }
                         else if (dk === 'db') { flags.debugMode = dv === '1'; }
-                        else { selections[dk] = dv; }
+                        else { pairs.push({ nodeId: dk, edgeId: dv }); }
                     });
                 }
-                return { screen: 'map', started: true, dims: selections, lockedOutcomeId, flags };
+                return { screen: 'map', started: true, pairs, lockedOutcomeId, flags };
             }
             return { screen: 'map' };
         }
@@ -581,7 +581,7 @@
 
         function renderState(state, animated) {
             const render = () => {
-                renderMap(state.dims, state.lockedOutcomeId, state.flags, state.started);
+                renderMap(state.pairs, state.lockedOutcomeId, state.flags, state.started);
             };
             if (animated) { transition(render); } else { render(); }
         }
@@ -624,8 +624,13 @@
         
 
         // --- Render: Map (unified view) ---
-        function renderMap(initialDims, lockedOutcomeId, initialFlags, initialStarted) {
-            let sel = initialDims ? { ...initialDims } : {};
+        function renderMap(initialPairs, lockedOutcomeId, initialFlags, initialStarted) {
+            let stack = Engine.createStack();
+            if (initialPairs && initialPairs.length > 0) {
+                for (const { nodeId, edgeId } of initialPairs) {
+                    stack = Engine.push(stack, nodeId, edgeId);
+                }
+            }
             let lockedId = (lockedOutcomeId && templatesMap[lockedOutcomeId]) ? lockedOutcomeId : '';
             const flags = initialFlags || {};
             let fullQuestions = flags.fullQuestions !== false;
@@ -634,25 +639,8 @@
             let debugMode = flags.debugMode === true;
             let timelineDurations = [];
             let mapAnimator = null;
-            const hasSelections = Object.keys(sel).some(k => k !== '_locked');
+            const hasSelections = stack.length > 1;
             let started = hasSelections || initialStarted === true;
-
-            Engine.cleanSelection(sel);
-
-            let forcedAcknowledged = new Set();
-            for (const node of NODES) {
-                if (sel._locked && sel._locked[node.id]) {
-                    forcedAcknowledged.add(node.id);
-                }
-            }
-
-            function clearForcedFrom(nodeId) {
-                const idx = NODES.findIndex(n => n.id === nodeId);
-                if (idx < 0) return;
-                for (let i = idx; i < NODES.length; i++) {
-                    forcedAcknowledged.delete(NODES[i].id);
-                }
-            }
 
             function moodColor(mood) {
                 const map = { utopian:'var(--mood-utopian)', dystopian:'var(--mood-dystopian)',
@@ -667,40 +655,32 @@
             function wouldReachOutcome(nodeId, edgeId) {
                 const t = getLockedTemplate();
                 if (!t) return true;
-                const test = { ...sel, _locked: { ...(sel._locked || {}) } };
-                test[nodeId] = edgeId;
-                Engine.cleanSelection(test);
-                const eff = Engine.resolvedState(test);
+                const testStack = Engine.push(stack, nodeId, edgeId);
+                const eff = Engine.resolvedState(Engine.currentState(testStack));
                 return Engine.templatePartialMatch(t, eff);
             }
 
-            function mutateSelection(changeFn) {
-                const savedSel = JSON.parse(JSON.stringify(sel));
+            function mutateStack(action) {
+                const oldStack = stack;
                 if (mapAnimator) {
                     mapAnimator.animateTransition({
-                        applyChange: () => {
-                            Object.keys(sel).forEach(k => delete sel[k]);
-                            Object.assign(sel, JSON.parse(JSON.stringify(savedSel)));
-                            changeFn();
-                        },
-                        revertChange: () => {
-                            Object.keys(sel).forEach(k => delete sel[k]);
-                            Object.assign(sel, savedSel);
-                        },
+                        applyChange: () => { stack = action(oldStack); },
+                        revertChange: () => { stack = oldStack; },
                         count: 1,
                         onComplete: () => syncHash(),
                     });
                 } else {
-                    changeFn();
+                    stack = action(stack);
                     update();
                 }
             }
 
             function findNextQuestion() {
-                for (const node of Engine.getDisplayOrder(sel)) {
+                const sel = Engine.currentState(stack);
+                for (const node of Engine.displayOrder(stack)) {
                     const locked = Engine.isNodeLocked(sel, node);
                     if (locked !== null) {
-                        if (!forcedAcknowledged.has(node.id)) {
+                        if (!Engine.stackHas(stack, node.id)) {
                             const hasReasons = node.edges.some(v =>
                                 Engine.getEdgeDisabledReason(sel, node, v) !== null
                             );
@@ -724,6 +704,7 @@
                         }
                         continue;
                     }
+                    if (Engine.stackHas(stack, node.id)) continue;
                     if (sel[node.id]) continue;
                     const options = node.edges
                         .map(v => {
@@ -747,10 +728,11 @@
             }
 
             function buildTimelineEvents(nextQ) {
+                const sel = Engine.currentState(stack);
                 const events = [];
                 let foundFrontier = false;
 
-                for (const node of Engine.getDisplayOrder(sel)) {
+                for (const node of Engine.displayOrder(stack)) {
                     const locked = Engine.isNodeLocked(sel, node);
                     const value = sel[node.id] || locked;
                     const isLockedNode = locked !== null;
@@ -801,7 +783,7 @@
             }
 
             function buildOutcomeSectionHtml() {
-                const eff = Engine.resolvedState(sel);
+                const eff = Engine.resolvedState(Engine.currentState(stack));
                 const matched = templatesList.filter(t => Engine.templateMatches(t, eff));
                 if (matched.length === 0) return '';
 
@@ -844,8 +826,11 @@
                 }
                 let hash = '/map';
                 const entries = [];
-                for (const node of NODES) {
-                    if (sel[node.id]) entries.push(encodeURIComponent(node.id) + '=' + encodeURIComponent(sel[node.id]));
+                for (const entry of stack) {
+                    if (!entry.nodeId) continue;
+                    if (entry.state[entry.nodeId]) {
+                        entries.push(encodeURIComponent(entry.nodeId) + '=' + encodeURIComponent(entry.edgeId));
+                    }
                 }
                 if (lockedId) entries.push('locked=' + encodeURIComponent(lockedId));
                 if (!fullQuestions) entries.push('fq=0');
@@ -854,11 +839,12 @@
                 if (debugMode) entries.push('db=1');
                 if (entries.length > 0) hash += '?' + entries.join('&');
                 const stateFlags = { fullQuestions, expandTimeline, showOutcomes, debugMode };
-                history.replaceState({ screen: 'map', dims: { ...sel }, lockedOutcomeId: lockedId, flags: stateFlags }, '', '#' + hash);
+                const pairs = stack.filter(e => e.nodeId).map(e => ({ nodeId: e.nodeId, edgeId: e.edgeId }));
+                history.replaceState({ screen: 'map', pairs, lockedOutcomeId: lockedId, flags: stateFlags, started }, '', '#' + hash);
             }
 
             function getHiddenState(s) {
-                const locked = s._locked || {};
+                const locked = (s && s._locked) || {};
                 const eff = Engine.resolvedState(s);
                 const hidden = {};
                 for (const [k, v] of Object.entries(locked)) {
@@ -886,11 +872,10 @@
                 return vis;
             }
 
-            function hiddenStateDiff(baseSel, nodeId, edgeId) {
-                const test = JSON.parse(JSON.stringify(baseSel));
-                test[nodeId] = edgeId;
-                if (test._locked) delete test._locked[nodeId];
-                Engine.cleanSelection(test);
+            function hiddenStateDiff(baseStack, nodeId, edgeId) {
+                const baseSel = Engine.currentState(baseStack);
+                const testStack = Engine.push(baseStack, nodeId, edgeId);
+                const test = Engine.currentState(testStack);
 
                 const changes = [];
 
@@ -936,7 +921,7 @@
             }
 
             function update() {
-                Engine.cleanSelection(sel);
+                const sel = Engine.currentState(stack);
 
                 const debugPanel = app.querySelector('.debug-panel');
                 if (debugPanel) {
@@ -1053,14 +1038,11 @@
                             const nodeId = pill.dataset.dim;
                             const val = pill.dataset.val;
 
-                            clearForcedFrom(nodeId);
                             if (action === 'frontier' || action === 'change') {
-                                Engine.applySelection(sel, nodeId, val);
+                                mutateStack(s => Engine.push(Engine.popTo(s, nodeId), nodeId, val));
                             } else if (action === 'unclick') {
-                                Engine.removeSelection(sel, nodeId);
+                                mutateStack(s => Engine.popTo(s, nodeId));
                             }
-                            Engine.cleanSelection(sel);
-                            update();
                         });
                     });
                 }
@@ -1082,14 +1064,14 @@
                         questionZone.style.flex = '1';
                         questionZone.querySelector('[data-action="begin"]').addEventListener('click', () => {
                             started = true;
-                            mutateSelection(() => {});
+                            mutateStack(s => s);
                         });
                     } else if (fullQuestions && nextQ) {
                         questionZone.style.flex = '';
                         const questionData = {
                             nodeLabel: nextQ.node.label,
                             questionText: nextQ.node.questionText || nextQ.node.label,
-                            questionContext: Engine.resolveContextWhen(sel, nextQ.node),
+                            questionContext: Engine.resolveContextWhen(Engine.currentState(stack), nextQ.node),
                             source: nextQ.node.source,
                             isForced: nextQ.isForced || false,
                             forcedValue: nextQ.forcedValue || null,
@@ -1116,7 +1098,7 @@
                                 const idx = parseInt(cardEl.dataset.aidx, 10);
                                 const answer = qResult.answerCards[idx];
                                 if (!answer) return;
-                                const changes = hiddenStateDiff(sel, answer.nodeId, answer.value);
+                                const changes = hiddenStateDiff(stack, answer.nodeId, answer.value);
                                 if (changes.length > 0) {
                                     const debugEl = document.createElement('div');
                                     debugEl.className = 'debug-diff';
@@ -1135,10 +1117,8 @@
                             if (continueBtn) {
                                 continueBtn.addEventListener('click', () => {
                                     if (mapAnimator && mapAnimator.isAnimating()) return;
-                                    forcedAcknowledged.add(nextQ.node.id);
-                                    mutateSelection(() => {
-                                        Engine.cleanSelection(sel);
-                                    });
+                                    const lockedValue = nextQ.forcedValue;
+                                    mutateStack(s => Engine.push(s, nextQ.node.id, lockedValue));
                                 });
                             }
                         } else {
@@ -1150,11 +1130,7 @@
                                     const idx = parseInt(cardEl.dataset.aidx, 10);
                                     const answer = qResult.answerCards[idx];
                                     if (!answer || answer.disabled) return;
-                                    clearForcedFrom(answer.nodeId);
-                                    mutateSelection(() => {
-                                        Engine.applySelection(sel, answer.nodeId, answer.value);
-                                        Engine.cleanSelection(sel);
-                                    });
+                                    mutateStack(s => Engine.push(s, answer.nodeId, answer.value));
                                 });
                             });
                         }
@@ -1168,7 +1144,7 @@
                 const outcomesGrid = app.querySelector('.map-outcomes-zone');
                 if (outcomesGrid) {
                     if (showOutcomes) {
-                        const eff = Engine.resolvedState(sel);
+                        const eff = Engine.resolvedState(Engine.currentState(stack));
                         const matched = [], partial = [];
                         for (const t of templatesList) {
                             if (Engine.templateMatches(t, eff)) matched.push(t);
@@ -1284,15 +1260,13 @@
             });
 
             function resetSelections() {
-                sel = {};
-                forcedAcknowledged = new Set();
+                stack = Engine.createStack();
                 started = true;
                 update();
             }
 
             function backToStart() {
-                sel = {};
-                forcedAcknowledged = new Set();
+                stack = Engine.createStack();
                 started = false;
                 history.replaceState({ screen: 'map' }, '', location.pathname);
                 update();

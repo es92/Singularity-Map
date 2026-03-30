@@ -241,15 +241,6 @@ function cleanSelection(sel) {
     return sel;
 }
 
-function applySelection(sel, nodeId, newValue) {
-    if (sel[nodeId] === newValue) {
-        delete sel[nodeId];
-    } else {
-        sel[nodeId] = newValue;
-    }
-    if (sel._locked) delete sel._locked[nodeId];
-    cleanSelection(sel);
-}
 
 function resolvedState(sel) {
     const d = {};
@@ -294,31 +285,69 @@ function templatePartialMatch(t, state) {
 }
 
 // ════════════════════════════════════════════════════════
-// Display order
+// Immutable answer stack
 // ════════════════════════════════════════════════════════
 
-function getDisplayOrder(sel) {
+function createStack() {
+    const state = {};
+    cleanSelection(state);
+    return [{ nodeId: null, edgeId: null, state }];
+}
+
+function push(stack, nodeId, edgeId) {
+    const existingIdx = stack.findIndex(e => e.nodeId === nodeId);
+    const base = existingIdx > 0 ? stack.slice(0, existingIdx) : stack;
+
+    const prev = base[base.length - 1].state;
+    const next = { ...prev, _locked: { ...(prev._locked || {}) } };
+    next[nodeId] = edgeId;
+    delete next._locked[nodeId];
+    cleanSelection(next);
+    return [...base, { nodeId, edgeId, state: next }];
+}
+
+function pop(stack) {
+    if (stack.length <= 1) return stack;
+    return stack.slice(0, -1);
+}
+
+function popTo(stack, nodeId) {
+    const idx = stack.findIndex(e => e.nodeId === nodeId);
+    if (idx <= 0) return stack.slice(0, 1);
+    return stack.slice(0, idx);
+}
+
+function currentState(stack) {
+    return stack[stack.length - 1].state;
+}
+
+function stackHas(stack, nodeId) {
+    return stack.some(e => e.nodeId === nodeId);
+}
+
+function displayOrder(stack) {
+    const state = currentState(stack);
     const answered = [];
+    const answeredSet = new Set();
+
+    for (const entry of stack) {
+        if (!entry.nodeId) continue;
+        const node = NODE_MAP[entry.nodeId];
+        if (!node || node.derived || !isNodeVisible(state, node)) continue;
+        answered.push(node);
+        answeredSet.add(entry.nodeId);
+    }
+
     const unanswered = [];
     for (const node of NODES) {
-        if (node.derived) continue;
-        if (!isNodeVisible(sel, node)) continue;
-        const hasValue = sel[node.id] || isNodeLocked(sel, node) !== null;
-        (hasValue ? answered : unanswered).push(node);
+        if (node.derived || !isNodeVisible(state, node) || answeredSet.has(node.id)) continue;
+        unanswered.push(node);
     }
+
     return answered.concat(unanswered);
 }
 
-function removeSelection(sel, nodeId) {
-    if (sel[nodeId] === undefined) return;
-    const idx = NODES.findIndex(n => n.id === nodeId);
-    if (idx < 0) return;
-    for (let i = idx; i < NODES.length; i++) {
-        delete sel[NODES[i].id];
-        if (sel._locked) delete sel._locked[NODES[i].id];
-    }
-    cleanSelection(sel);
-}
+// Legacy wrappers kept for validator internals
 
 // ════════════════════════════════════════════════════════
 // Narrative resolution
@@ -339,15 +368,17 @@ function resolveContextWhen(sel, narr) {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { NODES, NODE_MAP,
-        matchCondition, matchesDerivation, applyDerivations, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
-        cleanSelection, applySelection, removeSelection, resolvedState,
-        templateMatches, templatePartialMatch, getDisplayOrder, resolveContextWhen };
+        matchCondition, resolvedVal, isNodeVisible, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
+        resolvedState,
+        templateMatches, templatePartialMatch, resolveContextWhen,
+        createStack, push, pop, popTo, currentState, stackHas, displayOrder };
 }
 if (typeof window !== 'undefined') {
     window.Engine = { NODES, NODE_MAP,
-        matchCondition, matchesDerivation, applyDerivations, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
-        cleanSelection, applySelection, removeSelection, resolvedState,
-        templateMatches, templatePartialMatch, getDisplayOrder, resolveContextWhen };
+        resolvedVal, isNodeVisible, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
+        resolvedState,
+        templateMatches, templatePartialMatch, resolveContextWhen,
+        createStack, push, pop, popTo, currentState, stackHas, displayOrder };
 }
 
 })();

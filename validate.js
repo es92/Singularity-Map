@@ -12,10 +12,10 @@ const fs = require('fs');
 const path = require('path');
 const { NODES, NODE_MAP } = require('./graph.js');
 const {
-    matchCondition, matchesDerivation, applyDerivations, resolvedVal,
-    isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled,
-    cleanSelection, applySelection, resolvedState, templateMatches, templatePartialMatch,
-    getDisplayOrder
+    matchCondition, resolvedVal,
+    isNodeVisible, isNodeLocked, isEdgeDisabled,
+    resolvedState, templateMatches,
+    createStack, push, currentState, stackHas, displayOrder
 } = require('./engine.js');
 
 const outcomes = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/outcomes.json'), 'utf8'));
@@ -352,8 +352,8 @@ function forwardKey(sel) {
 }
 
 function runExplorer() {
-    const violations = { deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], answerGap: [], answerReorder: [], answerInsertion: [] };
-    const seen = { clickErased: new Set(), answerGap: new Set(), answerReorder: new Set(), answerInsertion: new Set() };
+    const violations = { deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], stackIntegrity: [] };
+    const seen = { clickErased: new Set(), stackIntegrity: new Set() };
 
     function checkLeaf(sel) {
         const state = resolvedState(sel);
@@ -362,7 +362,8 @@ function runExplorer() {
         else if (matched.length > 1) violations.ambiguous.push({ outcomes: matched.map(t => t.id), url: selToUrl(sel) });
     }
 
-    function runChecks(sel) {
+    function runChecks(stk) {
+        const sel = currentState(stk);
         const N = NODES.length;
         for (let i = 0; i < N; i++) {
             const node = NODES[i];
@@ -387,16 +388,14 @@ function runExplorer() {
 
             for (const edge of ena) {
                 if (sel[node.id] === edge.id) continue;
-                const next = { ...sel, _locked: { ...(sel._locked || {}) } };
-                applySelection(next, node.id, edge.id);
-                if (!next[node.id]) {
+                const testState = currentState(push(stk, node.id, edge.id));
+                if (!testState[node.id]) {
                     const vk = `${node.id}:${edge.id}`;
                     if (!seen.clickErased.has(vk)) {
                         seen.clickErased.add(vk);
                         violations.clickErased.push({ node: node.id, edge: edge.id, url: selToUrl(sel) });
                     }
                 }
-
             }
         }
     }
@@ -406,14 +405,14 @@ function runExplorer() {
     let totalLeaves = 0;
     const visited = new Set();
     const rawVisited = new Set();
-    const stack = [{}];
+    const worklist = [createStack()];
     let dedupSaved = 0;
     const userSelected = new Set();
     const autoLocked = new Set();
 
-    while (stack.length > 0) {
-        const sel = stack.pop();
-        cleanSelection(sel);
+    while (worklist.length > 0) {
+        const stk = worklist.pop();
+        const sel = currentState(stk);
 
         const raw = selKey(sel);
         const isNewRaw = !rawVisited.has(raw);
@@ -443,89 +442,42 @@ function runExplorer() {
             }
         }
 
-        runChecks(sel);
+        runChecks(stk);
 
-        const order = getDisplayOrder(sel);
-        const currentAnsweredIds = [];
-        let firstGap = null;
-        for (const dNode of order) {
-            const locked = isNodeLocked(sel, dNode);
-            const hasValue = sel[dNode.id] || locked;
-            const isUserAnswered = sel[dNode.id] && !(sel._locked && sel._locked[dNode.id]);
-            if (hasValue) currentAnsweredIds.push(dNode.id);
-            if (!hasValue && !firstGap) {
-                firstGap = dNode.id;
-            } else if (isUserAnswered && firstGap) {
-                const vk = `${firstGap}:${dNode.id}`;
-                if (!seen.answerGap.has(vk)) {
-                    seen.answerGap.add(vk);
-                    violations.answerGap.push({
-                        node: dNode.id,
-                        gapNode: firstGap,
-                        url: selToUrl(sel),
-                    });
+        // Stack integrity: displayOrder's answered section must match
+        // the visible stack entries in stack order, with no gaps.
+        // Subsumes the old gap, reorder, and insertion checks.
+        const order = displayOrder(stk);
+        const expectedIds = stk
+            .filter(e => e.nodeId && NODE_MAP[e.nodeId] && !NODE_MAP[e.nodeId].derived && isNodeVisible(sel, NODE_MAP[e.nodeId]))
+            .map(e => e.nodeId);
+        let seenUnanswered = false;
+        let ansIdx = 0;
+        for (const node of order) {
+            const onStack = stackHas(stk, node.id);
+            if (onStack) {
+                if (seenUnanswered || expectedIds[ansIdx] !== node.id) {
+                    const vk = selKey(sel);
+                    if (!seen.stackIntegrity.has(vk)) {
+                        seen.stackIntegrity.add(vk);
+                        violations.stackIntegrity.push({
+                            expected: expectedIds,
+                            actual: order.filter(n => stackHas(stk, n.id)).map(n => n.id),
+                            url: selToUrl(sel),
+                        });
+                    }
+                    break;
                 }
-                break;
+                ansIdx++;
+            } else {
+                seenUnanswered = true;
             }
         }
 
         const next = getNextNode(sel);
         if (next) {
             for (const edge of getEnabledEdges(sel, next)) {
-                const copy = { ...sel, _locked: { ...(sel._locked || {}) } };
-                applySelection(copy, next.id, edge.id);
-                cleanSelection(copy);
-
-                // Check: answering this question must not reorder previously-answered items
-                const childOrder = getDisplayOrder(copy);
-                const childAnsweredIds = [];
-                for (const cn of childOrder) {
-                    const cLocked = isNodeLocked(copy, cn);
-                    if (copy[cn.id] || cLocked) childAnsweredIds.push(cn.id);
-                }
-                const childSet = new Set(childAnsweredIds);
-                const currentSet = new Set(currentAnsweredIds);
-                const orderBefore = currentAnsweredIds.filter(id => childSet.has(id));
-                const orderAfter = childAnsweredIds.filter(id => currentSet.has(id));
-                if (orderBefore.length === orderAfter.length) {
-                    for (let ri = 0; ri < orderBefore.length; ri++) {
-                        if (orderBefore[ri] !== orderAfter[ri]) {
-                            const vk = `${orderBefore[ri]}:${orderAfter[ri]}`;
-                            if (!seen.answerReorder.has(vk)) {
-                                seen.answerReorder.add(vk);
-                                violations.answerReorder.push({
-                                    before: orderBefore[ri],
-                                    after: orderAfter[ri],
-                                    trigger: `${next.id}=${edge.id}`,
-                                    url: selToUrl(sel),
-                                });
-                            }
-                            break;
-                        }
-                    }
-                }
-
-                // Check: newly answered question should not appear above previously-answered questions
-                const newIdx = childAnsweredIds.indexOf(next.id);
-                if (newIdx !== -1) {
-                    for (let ai = newIdx + 1; ai < childAnsweredIds.length; ai++) {
-                        if (currentSet.has(childAnsweredIds[ai])) {
-                            const vk = `${next.id}:${childAnsweredIds[ai]}`;
-                            if (!seen.answerInsertion.has(vk)) {
-                                seen.answerInsertion.add(vk);
-                                violations.answerInsertion.push({
-                                    inserted: next.id,
-                                    above: childAnsweredIds[ai],
-                                    trigger: `${next.id}=${edge.id}`,
-                                    url: selToUrl(sel),
-                                });
-                            }
-                            break;
-                        }
-                    }
-                }
-
-                stack.push(copy);
+                worklist.push(push(stk, next.id, edge.id));
             }
         } else {
             totalLeaves++;
@@ -544,11 +496,11 @@ function runExplorer() {
 function samplePaths(n) {
     const leaves = [];
     const visited = new Set();
-    const stack = [{}];
+    const worklist = [createStack()];
 
-    while (stack.length > 0) {
-        const sel = stack.pop();
-        cleanSelection(sel);
+    while (worklist.length > 0) {
+        const stk = worklist.pop();
+        const sel = currentState(stk);
         const fk = forwardKey(sel);
         if (visited.has(fk)) continue;
         visited.add(fk);
@@ -556,10 +508,7 @@ function samplePaths(n) {
         const next = getNextNode(sel);
         if (next) {
             for (const edge of getEnabledEdges(sel, next)) {
-                const copy = { ...sel, _locked: { ...(sel._locked || {}) } };
-                applySelection(copy, next.id, edge.id);
-                cleanSelection(copy);
-                stack.push(copy);
+                worklist.push(push(stk, next.id, edge.id));
             }
         } else {
             leaves.push(sel);
@@ -632,9 +581,7 @@ function printPhase2(result) {
         { name: 'STUCK NODE (visible, 0 enabled edges)', items: violations.stuck, fmt: v => `    "${v.node}" is visible but has no selectable edges${v.mechanism ? '\n      Because: ' + v.mechanism : ''}` },
         { name: 'UNLOCKED SINGLE OPTION', items: violations.singleOption, fmt: v => `    "${v.node}" has only "${v.edge}" enabled but is not locked` },
         { name: 'CLICK ERASED', items: violations.clickErased, fmt: v => `    Click "${v.node}=${v.edge}" → immediately cleared` },
-        { name: 'DISPLAY-ORDER GAP (answered after unanswered)', items: violations.answerGap, fmt: v => `    "${v.node}" answered after unanswered "${v.gapNode}"` },
-        { name: 'ANSWER REORDER (answering caused timeline swap)', items: violations.answerReorder, fmt: v => `    "${v.before}" and "${v.after}" swap when answering ${v.trigger}` },
-        { name: 'ANSWER INSERTION (new answer appears above older answers)', items: violations.answerInsertion, fmt: v => `    "${v.inserted}" inserted above previously-answered "${v.above}" when answering ${v.trigger}` },
+        { name: 'STACK INTEGRITY (displayOrder ≠ stack order)', items: violations.stackIntegrity, fmt: v => `    Expected: [${v.expected.join(', ')}]\n    Actual:   [${v.actual.join(', ')}]` },
     ];
 
     let violationCount = 0;
