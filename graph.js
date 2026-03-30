@@ -336,7 +336,7 @@ const NODES = [
         { id: 'swarm', label: 'Divergent' },
         { id: 'power_seeking', label: 'Power accumulation' }
       ] },
-    { id: 'gov_action', label: 'Deceleration', stage: 2,
+    { id: 'gov_action', label: 'Deceleration', stage: 2, hideAfterEscape: true,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], geo_spread: ['one'] }],
       derivedFrom: [{ when: { alignment_durability: 'breaks' }, value: 'accelerate' }],
       edges: [
