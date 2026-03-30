@@ -626,7 +626,7 @@
   },
   "open_source": {
     "questionText": "How close does open-source AI stay to the frontier during the critical buildup?",
-    "questionContext": "Open-source models have historically stayed within striking distance of frontier systems — but the cost of cutting-edge training runs keeps climbing, and the stakes are rising. With AI accelerating its own research, the gap between open-source and frontier becomes a question of power distribution. If open source keeps pace, no one controls the most powerful AI. If it falls behind, the question becomes how concentrated frontier capability is among the remaining players.",
+    "questionContext": "As of early 2026, open-source models trail frontier systems by roughly 3–6 months — close enough to matter, but the cost of cutting-edge training runs keeps climbing and the stakes are rising. With AI accelerating its own research, the gap between open-source and frontier becomes a question of power distribution. If open source keeps pace, no one controls the most powerful AI. If it falls behind, the question becomes how concentrated frontier capability is among the remaining players.",
     "values": {
       "near_parity": {
         "answerLabel": "Near-parity — open source keeps pace",
@@ -639,7 +639,7 @@
         }
       },
       "six_months": {
-        "answerLabel": "~6 months behind",
+        "answerLabel": "~6 months behind (roughly today)",
         "answerDesc": "Frontier labs maintain a meaningful lead — about one doubling ahead. Open source is capable and improving, but always a generation back. The frontier matters, and whoever holds it has a real window of advantage.",
         "timelineEvent": {
           "headline": "Open source trails by ~6 months",
