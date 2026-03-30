@@ -740,6 +740,8 @@
                     const value = sel[node.id] || locked;
                     const isLockedNode = locked !== null;
 
+                    if (nextQ && nextQ.isForced && node.id === nextQ.node.id) continue;
+
                     if (!value) {
                         if (!foundFrontier && !fullQuestions && nextQ && nextQ.node.id === node.id) {
                             foundFrontier = true;
