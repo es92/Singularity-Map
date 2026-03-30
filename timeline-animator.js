@@ -388,7 +388,7 @@ class TimelineAnimator {
     // 4. Animate all elements from start → end on a single easing curve
     // 5. Cleanup: remove old card copy, clear inline styles
 
-    _runAnimation({ startCardRect, startCardContent, startCardClassName, startOutcomeTop, startOutcomeVisible, applyEndState, onComplete }) {
+    _runAnimation({ startCardRect, startCardContent, startCardClassName, startOutcomeTop, startOutcomeVisible, applyEndState, onComplete, fadeFooterIn }) {
         const DURATION = this.morphDuration;
         const vis = this._elementVisibility;
 
@@ -405,7 +405,8 @@ class TimelineAnimator {
         applyEndState();
         let footerDrift = 0;
         if (footer && footerTopBefore !== null) {
-            footerDrift = footer.getBoundingClientRect().top - footerTopBefore;
+            const footerTopNow = footer.getBoundingClientRect().top;
+            footerDrift = footerTopNow - footerTopBefore;
             if (Math.abs(footerDrift) > 1) {
                 footer.style.transform = `translateY(${-footerDrift}px)`;
             }
@@ -664,8 +665,19 @@ class TimelineAnimator {
                     seg.style.top = origTop + 'px';
                     seg.style.height = origHeight + 'px';
                 });
+                if (footer && fadeFooterIn) footer.style.opacity = '0';
                 if (footer) footer.style.transform = '';
                 this._releaseScrollRoom();
+                if (footer && fadeFooterIn) {
+                    footer.style.transition = 'opacity 0.35s ease';
+                    requestAnimationFrame(() => {
+                        footer.style.opacity = '1';
+                        footer.addEventListener('transitionend', () => {
+                            footer.style.transition = '';
+                            footer.style.opacity = '';
+                        }, { once: true });
+                    });
+                }
                 this.containerEl.classList.remove('flip-animating');
                 this.morphAnimating = false;
                 if (!shiftWasCapped) {
@@ -717,7 +729,7 @@ class TimelineAnimator {
         });
     }
 
-    animateTransition({ applyChange, revertChange, count, questionHtml, hasNextQuestion, onComplete }) {
+    animateTransition({ applyChange, revertChange, count, questionHtml, hasNextQuestion, onComplete, fadeFooterIn }) {
         if (this.morphAnimating) return false;
         const card = this._getCard();
         if (!card) { applyChange(); this.render(); return false; }
@@ -732,6 +744,7 @@ class TimelineAnimator {
                 this.render();
             },
             onComplete,
+            fadeFooterIn,
         });
 
         return true;

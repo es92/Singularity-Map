@@ -660,7 +660,7 @@
                 return Engine.templatePartialMatch(t, eff);
             }
 
-            function mutateStack(action) {
+            function mutateStack(action, opts) {
                 const oldStack = stack;
                 if (mapAnimator) {
                     mapAnimator.animateTransition({
@@ -668,6 +668,7 @@
                         revertChange: () => { stack = oldStack; },
                         count: 1,
                         onComplete: () => syncHash(),
+                        fadeFooterIn: opts && opts.fadeFooterIn,
                     });
                 } else {
                     stack = action(stack);
@@ -1064,7 +1065,7 @@
                         questionZone.style.flex = '1';
                         questionZone.querySelector('[data-action="begin"]').addEventListener('click', () => {
                             started = true;
-                            mutateStack(s => s);
+                            mutateStack(s => s, { fadeFooterIn: true });
                         });
                     } else if (fullQuestions && nextQ) {
                         questionZone.style.flex = '';
