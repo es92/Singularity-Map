@@ -639,6 +639,7 @@
             let debugMode = flags.debugMode === true;
             let timelineDurations = [];
             let mapAnimator = null;
+            let _pushNextSync = false;
             const hasSelections = stack.length > 1;
             let started = hasSelections || initialStarted === true;
 
@@ -661,6 +662,7 @@
             }
 
             function mutateStack(action, opts) {
+                _pushNextSync = true;
                 const oldStack = stack;
                 if (mapAnimator) {
                     mapAnimator.animateTransition({
@@ -821,6 +823,8 @@
             
 
             function syncHash() {
+                const shouldPush = _pushNextSync;
+                _pushNextSync = false;
                 if (!started) {
                     history.replaceState({ screen: 'map' }, '', location.pathname);
                     return;
@@ -841,7 +845,12 @@
                 if (entries.length > 0) hash += '?' + entries.join('&');
                 const stateFlags = { fullQuestions, expandTimeline, showOutcomes, debugMode };
                 const pairs = stack.filter(e => e.nodeId).map(e => ({ nodeId: e.nodeId, edgeId: e.edgeId }));
-                history.replaceState({ screen: 'map', pairs, lockedOutcomeId: lockedId, flags: stateFlags, started }, '', '#' + hash);
+                const state = { screen: 'map', pairs, lockedOutcomeId: lockedId, flags: stateFlags, started };
+                if (shouldPush) {
+                    history.pushState(state, '', '#' + hash);
+                } else {
+                    history.replaceState(state, '', '#' + hash);
+                }
             }
 
             function getHiddenState(s) {
