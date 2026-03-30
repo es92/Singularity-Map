@@ -41,30 +41,28 @@ class TimelineAnimator {
     setMorphDuration(ms) { this.morphDuration = ms; }
     isAnimating() { return this.morphAnimating; }
 
+    _getScrollRoomEl() {
+        return this.containerEl.querySelector('.map-screen') || this.containerEl;
+    }
+
     _ensureScrollRoom(extraPx) {
+        const el = this._getScrollRoomEl();
         const needed = window.scrollY + window.innerHeight + extraPx;
         this._scrollMinHeight = Math.max(this._scrollMinHeight, needed);
-        this.containerEl.style.minHeight = this._scrollMinHeight + 'px';
+        el.style.minHeight = this._scrollMinHeight + 'px';
     }
 
     _releaseScrollRoom() {
         if (this._scrollMinHeight <= 0) return;
-        const scrollBefore = window.scrollY;
-        const viewportBottom = scrollBefore + window.innerHeight;
+        const el = this._getScrollRoomEl();
 
-        this.containerEl.style.minHeight = '0px';
+        el.style.minHeight = '';
+        this._scrollMinHeight = 0;
+
         const naturalHeight = this.containerEl.scrollHeight;
-
-        if (naturalHeight >= viewportBottom + 2) {
-            this.containerEl.style.minHeight = '';
-            this._scrollMinHeight = 0;
-        } else {
-            this._scrollMinHeight = viewportBottom + 2;
-            this.containerEl.style.minHeight = this._scrollMinHeight + 'px';
-        }
-
-        if (window.scrollY !== scrollBefore) {
-            window.scrollTo({ top: scrollBefore, behavior: 'instant' });
+        const maxScroll = Math.max(0, naturalHeight - window.innerHeight);
+        if (window.scrollY > maxScroll + 5) {
+            console.warn('[anim] scroll past content after animation:', { scrollY: Math.round(window.scrollY), maxScroll: Math.round(maxScroll), naturalHeight, diff: Math.round(window.scrollY - maxScroll) });
         }
     }
 
@@ -401,8 +399,17 @@ class TimelineAnimator {
 
         // --- Phase 1: Apply end state ---
         this.containerEl.classList.add('flip-animating');
+        const footer = this.containerEl.querySelector('.map-actions');
+        const footerTopBefore = footer ? footer.getBoundingClientRect().top : null;
         this._ensureScrollRoom(5000);
         applyEndState();
+        let footerDrift = 0;
+        if (footer && footerTopBefore !== null) {
+            footerDrift = footer.getBoundingClientRect().top - footerTopBefore;
+            if (Math.abs(footerDrift) > 1) {
+                footer.style.transform = `translateY(${-footerDrift}px)`;
+            }
+        }
 
         // --- Phase 2: Snapshot end positions ---
         const newCard = this._getCard();
@@ -544,15 +551,33 @@ class TimelineAnimator {
         }
 
         // --- Scroll setup ---
+        // scrollDelta: how much to scroll during animation.
+        // Positive = scroll down (content grew), negative = scroll up (card above viewport).
+        let scrollDelta = totalShift;
+        if (newCardRect && this._headerEl) {
+            const headerBottom = this._headerEl.getBoundingClientRect().bottom;
+            const desiredTop = headerBottom + 50;
+            if (newCardRect.top < desiredTop) {
+                scrollDelta = Math.min(scrollDelta, newCardRect.top - desiredTop);
+            }
+        }
         const scrollStart = window.scrollY;
-        if (!vis.scroll && totalShift > 1) {
-            window.scrollBy({ top: totalShift, behavior: 'instant' });
+        if (!vis.scroll && Math.abs(scrollDelta) > 1) {
+            window.scrollBy({ top: scrollDelta, behavior: 'instant' });
         }
 
         // --- Phase 5: Animate ---
+        // Capture scroll room for gradual release during animation.
+        // All visual transitions must happen within this single animation loop —
+        // pre/post animations are considered bugs.
+        const scrollRoomEl = this._getScrollRoomEl();
+        const inflatedMinH = this._scrollMinHeight;
+        scrollRoomEl.style.minHeight = '';
+        const naturalMinH = document.documentElement.scrollHeight;
+        scrollRoomEl.style.minHeight = inflatedMinH + 'px';
+
         const startTime = performance.now();
         const oldCardEl = this._oldCardEl;
-
         const tick = () => {
             const elapsed = performance.now() - startTime;
             const t = Math.min(elapsed / DURATION, 1);
@@ -564,7 +589,7 @@ class TimelineAnimator {
                 const refDy = newCardDy !== null ? newCardDy : outcomeDy;
                 const refTop = newCardDy !== null ? newCardRect.top : (outcomeDy !== null ? endOutcomeRect.top : null);
                 if (refDy !== null && refTop !== null) {
-                    const scrollAdj = vis.scroll ? totalShift * e : 0;
+                    const scrollAdj = vis.scroll ? scrollDelta * e : 0;
                     const refVisualTop = refTop + refDy * (1 - e) - scrollAdj;
                     const dy = refVisualTop - startCardRect.height - startCardRect.top;
                     oldCardEl.style.transform = `translateY(${dy}px)`;
@@ -608,8 +633,19 @@ class TimelineAnimator {
             }
 
             // Scroll: animate page scroll in sync
-            if (vis.scroll && totalShift > 1) {
-                window.scrollTo({ top: scrollStart + totalShift * e, behavior: 'instant' });
+            if (vis.scroll && Math.abs(scrollDelta) > 1) {
+                window.scrollTo({ top: scrollStart + scrollDelta * e, behavior: 'instant' });
+            }
+
+            // Gradually release scroll room so scrollbar doesn't snap at cleanup
+            if (inflatedMinH > naturalMinH) {
+                const currentMinH = inflatedMinH + (naturalMinH - inflatedMinH) * e;
+                scrollRoomEl.style.minHeight = currentMinH + 'px';
+            }
+
+            // Footer: FLIP from start position to natural end position
+            if (footer && Math.abs(footerDrift) > 1) {
+                footer.style.transform = `translateY(${-footerDrift * (1 - e)}px)`;
             }
 
             if (t < 1) {
@@ -628,10 +664,20 @@ class TimelineAnimator {
                     seg.style.top = origTop + 'px';
                     seg.style.height = origHeight + 'px';
                 });
+                if (footer) footer.style.transform = '';
                 this._releaseScrollRoom();
                 this.containerEl.classList.remove('flip-animating');
                 this.morphAnimating = false;
-                if (!shiftWasCapped) this._scrollCardBelowHeader();
+                if (!shiftWasCapped) {
+                    const card = this._getCard();
+                    if (card && this._headerEl) {
+                        const headerBottom = this._headerEl.getBoundingClientRect().bottom;
+                        const cardTop = card.getBoundingClientRect().top;
+                        if (cardTop < headerBottom + 10) {
+                            console.warn('[anim] card under header after animation:', { cardTop: Math.round(cardTop), headerBottom: Math.round(headerBottom), gap: Math.round(cardTop - headerBottom) });
+                        }
+                    }
+                }
                 if (onComplete) onComplete();
             }
         };
