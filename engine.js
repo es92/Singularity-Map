@@ -268,7 +268,13 @@ function templateMatches(t, state) {
     if (!t.reachable) return true;
     return t.reachable.some(cond => {
         for (const [k, allowed] of Object.entries(cond)) {
+            if (k === '_not') continue;
             if (!state[k] || !allowed.includes(state[k])) return false;
+        }
+        if (cond._not) {
+            for (const [k, excluded] of Object.entries(cond._not)) {
+                if (state[k] && excluded.includes(state[k])) return false;
+            }
         }
         return true;
     });
@@ -278,7 +284,13 @@ function templatePartialMatch(t, state) {
     if (!t.reachable) return true;
     return t.reachable.some(cond => {
         for (const [k, allowed] of Object.entries(cond)) {
+            if (k === '_not') continue;
             if (state[k] && !allowed.includes(state[k])) return false;
+        }
+        if (cond._not) {
+            for (const [k, excluded] of Object.entries(cond._not)) {
+                if (state[k] && excluded.includes(state[k])) return false;
+            }
         }
         return true;
     });

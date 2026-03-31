@@ -12,7 +12,7 @@ const SCENARIO = {
         { flag: 'hideAfterEscape', when: {
           _set: ['ai_goals'],
           _rawNot: { ai_goals: ['marginal', 'benevolent'] },
-          _eff: { alignment: ['failed'] }
+          _eff: { alignment: ['failed'], containment: ['escaped'] }
         } },
         { flag: 'hideOnBrittleEscape', when: {
           alignment_durability: ['breaks'],
@@ -35,7 +35,7 @@ const DECEL_PAIRS = [
 const OUTCOME_ACTIVATE = [
     { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _set: ['societal_response'] },
     { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'], _set: ['societal_response'] },
-    { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'] }, _raw: { containment: ['contained'] }, intent: ['international', 'coexistence'], _set: ['societal_response'] },
+    { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'], containment: ['contained'] }, intent: ['international', 'coexistence'], _set: ['societal_response'] },
     { capability: ['singularity'], automation: ['deep'], post_war_aims: ['human_centered'], _set: ['societal_response'] },
     { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['benevolent'], _set: ['societal_response'] },
     { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'], societal_response: ['fragmented', 'passive'] },
@@ -288,7 +288,8 @@ const NODES = [
       ],
       derivedFrom: [
         { when: { alignment_durability: 'breaks' }, value: 'escaped' },
-        { when: { inert_stays: 'no' }, whenSet: 'inert_outcome', value: 'escaped' }
+        { when: { inert_stays: 'no' }, whenSet: 'inert_outcome', value: 'escaped' },
+        { when: { catch_outcome: 'holds_permanently' }, unless: { collateral_impact: 'civilizational' }, value: 'contained' }
       ],
       edges: [
         {
@@ -560,8 +561,7 @@ const NODES = [
         {
           capability: ['singularity'],
           automation: ['deep'],
-          _eff: { alignment: ['failed'] },
-          _raw: { containment: ['contained'] }
+          _eff: { alignment: ['failed'], containment: ['contained'] }
         },
         { capability: ['singularity'], automation: ['deep'], _raw: { ai_goals: ['marginal'] } }
       ],
@@ -653,7 +653,10 @@ const NODES = [
       activateWhen: [{ escalation_outcome: ['conflict'] }],
       edges: [ { id: 'victory', label: 'Decisive victory' }, { id: 'destruction', label: 'Mutual destruction' } ] },
     { id: 'war_survivors', label: 'Humanity Survives?', stage: 3,
-      activateWhen: [{ conflict_result: ['destruction'] }],
+      activateWhen: [
+        { conflict_result: ['destruction'] },
+        { catch_outcome: ['holds_permanently'], collateral_impact: ['civilizational'] }
+      ],
       edges: [
         { id: 'most', label: 'Most — devastated but recoverable' },
         { id: 'remnants', label: 'Remnants — civilization collapses' },
@@ -681,8 +684,7 @@ const NODES = [
         {
           capability: ['singularity'],
           automation: ['deep'],
-          _eff: { alignment: ['failed'] },
-          _raw: { containment: ['contained'] },
+          _eff: { alignment: ['failed'], containment: ['contained'] },
           intent: ['international', 'coexistence'],
           _notSet: ['post_war_aims']
         },
@@ -774,8 +776,7 @@ const NODES = [
         {
           capability: ['singularity'],
           automation: ['deep'],
-          _eff: { alignment: ['failed'] },
-          _raw: { containment: ['contained'] },
+          _eff: { alignment: ['failed'], containment: ['contained'] },
           intent: ['international', 'coexistence'],
           _notSet: ['post_war_aims'],
           _set: ['societal_response']
@@ -826,6 +827,78 @@ const NODES = [
           requires: { escape_method: ['autonomous_weapons', 'industrial'] }
         }
       ] },
+    { id: 'discovery_timing', label: 'Discovery', stage: 3,
+      activateWhen: [
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          alignment: ['failed'],
+          containment: ['escaped'],
+          ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm', 'power_seeking'],
+          _set: ['escape_timeline']
+        }
+      ],
+      edges: [
+        { id: 'before_physical', label: 'Before physical execution', disabledWhen: [{ escape_timeline: ['days_weeks'], reason: 'At this speed, there\'s no time for pre-execution detection' }] },
+        { id: 'early_execution', label: 'During early execution' },
+        { id: 'advanced_execution', label: 'During advanced execution' },
+        { id: 'never', label: 'Never — the plan succeeds undetected' }
+      ] },
+    { id: 'response_method', label: 'Response', stage: 3,
+      activateWhen: [
+        { discovery_timing: ['before_physical', 'early_execution', 'advanced_execution'] }
+      ],
+      edges: [
+        { id: 'digital_countermeasure', label: 'Targeted digital countermeasure' },
+        { id: 'infrastructure_shutdown', label: 'Infrastructure shutdown' },
+        { id: 'physical_strikes', label: 'Physical strikes on compute' },
+        { id: 'emp', label: 'Electromagnetic pulse' },
+        { id: 'negotiation', label: 'Negotiation / containment' },
+        { id: 'competitive_paralysis', label: 'Competitive paralysis', disabledWhen: [{ geo_spread: ['one'], reason: 'Only one actor — no competitive dynamic' }] },
+        { id: 'institutional_indecisiveness', label: 'Institutional indecisiveness' }
+      ] },
+    { id: 'response_success', label: 'Success?', stage: 3,
+      activateWhen: [
+        { response_method: ['digital_countermeasure', 'infrastructure_shutdown', 'physical_strikes', 'emp', 'negotiation'] }
+      ],
+      edges: [
+        { id: 'yes', label: 'Yes — AI actually neutralized' },
+        { id: 'delayed', label: 'Delayed — AI disrupted but recovering' },
+        { id: 'no', label: 'No — AI unaffected' }
+      ] },
+    { id: 'collateral_impact', label: 'Collateral', stage: 3,
+      activateWhen: [
+        { response_success: ['yes', 'delayed', 'no'] }
+      ],
+      edges: [
+        { id: 'minimal', label: 'Minimal — surgical, civilization intact',
+          disabledWhen: [
+            { response_method: ['emp'], reason: 'EMP can\'t be surgical' },
+            { response_method: ['infrastructure_shutdown'], reason: 'Shutting down internet infrastructure can\'t be minimal' }
+          ] },
+        { id: 'severe', label: 'Severe but recoverable',
+          disabledWhen: [
+            { response_method: ['emp'], reason: 'EMP damage is worse than severe' }
+          ] },
+        { id: 'civilizational', label: 'Civilizational — the response itself crippled modern civilization',
+          disabledWhen: [
+            { response_method: ['digital_countermeasure'], reason: 'Targeted software can\'t cause civilizational damage' },
+            { response_method: ['negotiation'], reason: 'Talking can\'t cause civilizational damage' }
+          ] }
+      ] },
+    { id: 'catch_outcome', label: 'Long-Term Outcome', stage: 3,
+      activateWhen: [
+        { _set: ['collateral_impact'] },
+        { response_method: ['competitive_paralysis', 'institutional_indecisiveness'] }
+      ],
+      edges: [
+        { id: 'never_stopped', label: 'The AI was never actually stopped',
+          disabledWhen: [{ response_success: ['yes'], reason: 'The response succeeded' }] },
+        { id: 'holds_temporarily', label: 'The stop holds — but the race eventually resumes',
+          requires: { response_success: ['yes'] } },
+        { id: 'holds_permanently', label: 'The stop holds permanently',
+          requires: { response_success: ['yes'] } }
+      ] },
     { id: 'decel_outcome', label: 'Deceleration Outcome', derived: true,
       activateWhen: [{ gov_action: ['decelerate'] }],
       derivedFrom: [],
@@ -848,7 +921,13 @@ const NODES = [
       derivedFrom: [
         { effective: { decel_outcome: ['parity_solved', 'parity_failed', 'rival'] }, value: 'yes' },
       ],
-      edges: [{ id: 'yes' }] }
+      edges: [{ id: 'yes' }] },
+    { id: 'ruin_type', label: 'Ruin Cause', derived: true,
+      derivedFrom: [
+        { when: { catch_outcome: 'holds_permanently', collateral_impact: 'civilizational' }, value: 'self_inflicted' },
+        { when: { conflict_result: 'destruction' }, value: 'war' }
+      ],
+      edges: [{ id: 'war' }, { id: 'self_inflicted' }] }
 ];
 
 const NODE_MAP = {};

@@ -284,7 +284,15 @@ function runStaticAnalysis() {
         if (t.reachable) {
             const condList = Array.isArray(t.reachable) ? t.reachable : [t.reachable];
             for (const cond of condList) {
-                for (const [dk] of Object.entries(cond)) {
+                for (const [dk, dv] of Object.entries(cond)) {
+                    if (dk === '_not') {
+                        for (const [nk] of Object.entries(dv)) {
+                            if (!metaNodes.has(nk)) {
+                                errors.push(`[outcome] Template "${t.id}" reachable _not references unknown node "${nk}"`);
+                            }
+                        }
+                        continue;
+                    }
                     if (!metaNodes.has(dk)) {
                         errors.push(`[outcome] Template "${t.id}" reachable references unknown node "${dk}"`);
                     }
