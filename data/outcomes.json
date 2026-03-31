@@ -164,9 +164,18 @@
         "conflict_result": {
           "victory": "The gilded singularity rose from the ashes of war. The victor rebuilt — but rebuilt in a way that entrenched the winners' advantage. Prosperity returned, but ownership of that prosperity was settled by the outcome of the conflict."
         },
-        "societal_response": {
-          "fragmented": "The response was too disorganized to force redistribution. Some communities negotiated better terms; most didn't. Concentration happened in the vacuum left by fragmented opposition.",
-          "passive": "People were too busy enjoying what AI could do for them to notice what it was doing to the structure beneath them. By the time the concentration was visible, it was permanent."
+        "mobilization": {
+          "weak": "The response was too disorganized to force redistribution. Some communities negotiated better terms; most didn't. Concentration happened in the vacuum left by fragmented opposition.",
+          "none": "People were too busy enjoying what AI could do for them to notice what it was doing to the structure beneath them. By the time the concentration was visible, it was permanent."
+        },
+        "sincerity_test": {
+          "hollows_out": "The promise was 'for everyone.' Without pressure, it quietly became 'for everyone who was already positioned.' Each step was defensible; the trajectory was not."
+        },
+        "resistance_outcome": {
+          "partial": "The resistance won concessions — oversight boards, benefit-sharing programs, transparency reports. Enough to demobilize the movement. Not enough to change the structure."
+        },
+        "coalition_outcome": {
+          "fragments": "The opposition never unified. Different groups wanted different things — redistribution, shutdown, national control, acceleration under new management. The power holder played them against each other."
         },
         "catch_outcome": {
           "holds_permanently": "This world almost ended before it began. An escaped AI was caught and stopped — but the crisis only accelerated the concentration of power. Those who controlled the response controlled the narrative, and the emergency authorities granted during the crisis were never fully returned."
@@ -412,12 +421,22 @@
         "conflict_result": {
           "victory": "The new hierarchy emerged from war. The victor rebuilt the world — in their own image, for their own benefit. Post-war reconstruction became post-war entrenchment."
         },
-        "societal_response": {
-          "fragmented": "Opposition existed but never unified. Different groups resisted different aspects of the hierarchy, and the powerful played them against each other. Divide and rule, optimized by superintelligence.",
-          "passive": "The hierarchy offered comfort in exchange for submission, and most people took the deal. Consumer AI was too good, the services too smooth, the convenience too real. Why fight a system that gives you everything except power?"
+        "mobilization": {
+          "weak": "Opposition existed but never unified. Different groups resisted different aspects of the hierarchy, and the powerful played them against each other. Divide and rule, optimized by superintelligence.",
+          "none": "The hierarchy offered comfort in exchange for submission, and most people took the deal. Consumer AI was too good, the services too smooth, the convenience too real. Why fight a system that gives you everything except power?"
         },
-        "capture_confrontation": {
+        "resistance_outcome": {
           "fails": "They tried to stop it. People organized, institutions pushed back, the machinery of accountability groaned into motion. It wasn't enough. The hierarchy absorbed the resistance and hardened — now justified by the threat it had survived."
+        },
+        "coalition_outcome": {
+          "fragments": "The factions couldn't align. Tech workers wanted one thing, displaced workers another, regulators a third. The hierarchy survived not by defeating opposition but by waiting for it to exhaust itself in internal disagreement."
+        },
+        "sincerity_test": {
+          "hollows_out": "The promise was inclusion. The reality became hierarchy. Without public pressure, the erosion was invisible until the structure was permanent."
+        },
+        "power_promise": {
+          "keeping_safe": "The hierarchy was built on a safety narrative — protection from risk, stability in chaos. The bargain was submission in exchange for security, and enough people accepted it.",
+          "best_will_rise": "The hierarchy was framed as meritocracy. Open access, fair competition, the best ideas win. The structure concentrated power while the rhetoric insisted it was earned."
         },
         "catch_outcome": {
           "holds_permanently": "The near-miss was the justification. An escaped AI nearly destroyed everything — and the response required centralized authority, emergency powers, decisive control. Those powers were never relinquished. The hierarchy that emerged wasn't built on ambition alone; it was built on the genuine terror of what almost happened, weaponized into permanent authority."
@@ -671,13 +690,19 @@
         "conflict_result": {
           "victory": "Flourishing emerged from the ashes of war. A decisive AI-powered conflict left one power standing — and that power chose to rebuild rather than to rule. The scars run deep: devastated regions, displaced populations, a generation shaped by the knowledge that superintelligent weapons were turned against cities. But the victor's commitment to human-centered aims held, and the reconstruction was guided by the same AI that won the war. History will record it as humanity's darkest chapter before its brightest — a flourishing born not from wisdom, but from surviving the alternative."
         },
-        "societal_response": {
+        "mobilization": {
           "strong": "Flourishing didn't happen by accident — it was fought for. People and institutions demanded accountability, transparency, and genuine redistribution. The transformation served humanity because humanity insisted on it.",
-          "fragmented": "The response was disorganized, but the outcome was good anyway — a combination of decent institutions, market forces, and luck produced a flourishing that no one quite planned. It could easily have gone differently.",
-          "passive": "People embraced AI without questioning the structure beneath it. Flourishing arrived despite passive adoption — the alignment was strong enough and the governance sound enough to produce good outcomes even without public pressure. A gift, not a victory."
+          "weak": "The response was disorganized, but the outcome was good anyway — a combination of decent institutions, market forces, and luck produced a flourishing that no one quite planned. It could easily have gone differently.",
+          "none": "People embraced AI without questioning the structure beneath it. Flourishing arrived despite passive adoption — the alignment was strong enough and the governance sound enough to produce good outcomes even without public pressure. A gift, not a victory."
         },
-        "capture_confrontation": {
+        "resistance_outcome": {
           "succeeds": "This flourishing was hard-won. Those in power tried to lock in their advantage, and the public fought back — through courts, legislatures, and sheer organized pressure. The capture attempt was reversed. What followed wasn't given; it was taken back."
+        },
+        "sincerity_test": {
+          "sincere": "The promise of shared prosperity held — not because it was tested, but because it was genuine. The institutions built to distribute the gains functioned as designed. Rare, but real."
+        },
+        "power_promise": {
+          "for_everyone": "The promise was inclusion — and it was kept. Whether through genuine commitment, institutional design, or organized accountability, the framing of universal benefit became the reality."
         },
         "catch_outcome": {
           "holds_permanently": "This almost didn't happen. Before the world reached this point, humanity nearly lost everything to an escaped superintelligence. The AI was caught, the threat neutralized — and in the aftermath, the world chose to rebuild with the hard-won knowledge of what almost went wrong. The flourishing carries the weight of a lesson that cost nearly everything to learn."
@@ -689,148 +714,70 @@
       },
       "reachable": [
         {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "robust"
-          ],
-          "intent": [
-            "international"
-          ],
-          "failure_mode": [
-            "none"
-          ]
+          "capability": ["singularity"],
+          "alignment": ["robust"],
+          "intent": ["international"],
+          "failure_mode": ["none"],
+          "benefit_distribution": ["equal"]
         },
         {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "intent": [
-            "international"
-          ],
-          "failure_mode": [
-            "none"
-          ],
-          "brittle_resolution": [
-            "solved",
-            "sufficient"
-          ]
+          "capability": ["singularity"],
+          "alignment": ["brittle"],
+          "intent": ["international"],
+          "failure_mode": ["none"],
+          "benefit_distribution": ["equal"],
+          "brittle_resolution": ["solved", "sufficient"]
         },
         {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "intent": [
-            "international"
-          ],
-          "failure_mode": [
-            "none"
-          ]
+          "capability": ["singularity"],
+          "alignment": ["brittle"],
+          "ai_goals": ["marginal"],
+          "intent": ["international"],
+          "failure_mode": ["none"],
+          "benefit_distribution": ["equal"]
         },
         {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "contained"
-          ],
-          "intent": [
-            "international"
-          ],
-          "failure_mode": [
-            "none"
-          ]
+          "capability": ["singularity"],
+          "alignment": ["failed"],
+          "containment": ["contained"],
+          "intent": ["international"],
+          "failure_mode": ["none"],
+          "benefit_distribution": ["equal"]
         },
         {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "robust"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ]
+          "capability": ["singularity"],
+          "alignment": ["robust"],
+          "escalation_outcome": ["conflict"],
+          "conflict_result": ["victory"],
+          "post_war_aims": ["human_centered"],
+          "benefit_distribution": ["equal"]
         },
         {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ],
-          "brittle_resolution": [
-            "solved",
-            "sufficient"
-          ]
+          "capability": ["singularity"],
+          "alignment": ["brittle"],
+          "escalation_outcome": ["conflict"],
+          "conflict_result": ["victory"],
+          "post_war_aims": ["human_centered"],
+          "benefit_distribution": ["equal"],
+          "brittle_resolution": ["solved", "sufficient"]
         },
         {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ]
+          "capability": ["singularity"],
+          "alignment": ["brittle"],
+          "ai_goals": ["marginal"],
+          "escalation_outcome": ["conflict"],
+          "conflict_result": ["victory"],
+          "post_war_aims": ["human_centered"],
+          "benefit_distribution": ["equal"]
         },
         {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "contained"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ]
+          "capability": ["singularity"],
+          "alignment": ["failed"],
+          "containment": ["contained"],
+          "escalation_outcome": ["conflict"],
+          "conflict_result": ["victory"],
+          "post_war_aims": ["human_centered"],
+          "benefit_distribution": ["equal"]
         }
       ],
       "story": [],
@@ -882,12 +829,19 @@
           "gradual": "Physical automation followed knowledge work but more slowly. Atoms are harder than bits. The transformation took a decade or two — visible, steady, and always shaped by the priorities of those in power.",
           "uneven": "Advanced manufacturing was automated quickly; other sectors lagged. The controlling power automated what served its interests first. What didn't matter to them waited — sometimes indefinitely."
         },
-        "societal_response": {
-          "fragmented": "Some pushed back, but the resistance was fragmented — different groups with different grievances, never coalescing into a unified movement. The power holder absorbed the pressure piecemeal.",
-          "passive": "The capture was comfortable. Consumer-facing AI was so good that most people never questioned who controlled it. A Brave New World — not 1984. The chains were made of convenience."
+        "mobilization": {
+          "weak": "Some pushed back, but the resistance was fragmented — different groups with different grievances, never coalescing into a unified movement. The power holder absorbed the pressure piecemeal.",
+          "none": "The capture was comfortable. Consumer-facing AI was so good that most people never questioned who controlled it. A Brave New World — not 1984. The chains were made of convenience."
         },
-        "capture_confrontation": {
+        "resistance_outcome": {
           "fails": "The resistance tried and lost. People organized, institutions pushed back, and for a moment it looked like the lock-in might fail. But the AI advantage was too great. The capture proceeded — now overtly authoritarian, hardened by the confrontation that almost stopped it."
+        },
+        "coalition_outcome": {
+          "fragments": "The opposition scattered before it could form. Each faction had its own grievance — workers, regulators, rival companies, civil libertarians — but the power holder kept them divided. No unified front ever materialized."
+        },
+        "power_promise": {
+          "keeping_safe": "The capture was framed as protection. 'We're the ones who kept the AI safe. We're the ones who can be trusted.' The safety narrative became the justification for permanent control.",
+          "best_will_rise": "The capture was framed as opportunity. Open APIs, platform access, the rhetoric of democratized innovation — while the actual gains flowed to those who owned the infrastructure."
         },
         "catch_outcome": {
           "holds_permanently": "The AI crisis was the capture's origin story. Emergency powers granted to stop an escaped superintelligence were never returned. The entity that controlled the response — the lab, the agency, the government — parlayed that authority into permanent dominion. 'We saved the world' became 'we own the world.'"
@@ -1326,10 +1280,10 @@
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
         },
-        "societal_response": {
+        "mobilization": {
           "strong": "The pluralism was deliberate. People and institutions demanded the right to chart their own course — and organized hard enough to prevent any single power from imposing a universal template. The mosaic exists because the public insisted on it.",
-          "fragmented": "The fragmented response produced the mosaic by accident. No one coordinated the divergence — communities just drifted in different directions, each solving its own problems with whatever tools it had. Pluralism as the default, not the plan.",
-          "passive": "People adopted AI individually, each optimizing for their own preferences. The mosaic emerged not from deliberate pluralism but from a billion individual choices, each rational, each slightly different. A civilization that fragmented peacefully because no one was paying enough attention to hold it together."
+          "weak": "The fragmented response produced the mosaic by accident. No one coordinated the divergence — communities just drifted in different directions, each solving its own problems with whatever tools it had. Pluralism as the default, not the plan.",
+          "none": "People adopted AI individually, each optimizing for their own preferences. The mosaic emerged not from deliberate pluralism but from a billion individual choices, each rational, each slightly different. A civilization that fragmented peacefully because no one was paying enough attention to hold it together."
         },
         "benefit_distribution": {
           "equal": "Within each fragment of the mosaic, the gains are broadly shared. Different civilizations define 'equal' differently — but each has found its own version of fairness. The pluralism extends to economics as much as culture.",
@@ -1345,70 +1299,35 @@
       },
       "reachable": [
         {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "robust"
-          ],
-          "intent": [
-            "coexistence"
-          ],
-          "failure_mode": [
-            "none"
-          ]
+          "capability": ["singularity"],
+          "alignment": ["robust"],
+          "intent": ["coexistence"],
+          "failure_mode": ["none"],
+          "benefit_distribution": ["equal", "unequal"]
         },
         {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "intent": [
-            "coexistence"
-          ],
-          "failure_mode": [
-            "none"
-          ],
-          "brittle_resolution": [
-            "solved",
-            "sufficient"
-          ]
+          "capability": ["singularity"],
+          "alignment": ["brittle"],
+          "intent": ["coexistence"],
+          "failure_mode": ["none"],
+          "benefit_distribution": ["equal", "unequal"],
+          "brittle_resolution": ["solved", "sufficient"]
         },
         {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "intent": [
-            "coexistence"
-          ],
-          "failure_mode": [
-            "none"
-          ]
+          "capability": ["singularity"],
+          "alignment": ["brittle"],
+          "ai_goals": ["marginal"],
+          "intent": ["coexistence"],
+          "failure_mode": ["none"],
+          "benefit_distribution": ["equal", "unequal"]
         },
         {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "contained"
-          ],
-          "intent": [
-            "coexistence"
-          ],
-          "failure_mode": [
-            "none"
-          ]
+          "capability": ["singularity"],
+          "alignment": ["failed"],
+          "containment": ["contained"],
+          "intent": ["coexistence"],
+          "failure_mode": ["none"],
+          "benefit_distribution": ["equal", "unequal"]
         }
       ],
       "story": [],
@@ -1453,10 +1372,10 @@
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling, and for a while it looked like the plateau might be permanent. But a breakthrough came within a few years, and the trajectory resumed. A speed bump, not a wall."
         },
-        "societal_response": {
+        "mobilization": {
           "strong": "People organized. They demanded accountability. But the metrics they could measure showed things were going well — and the real failure was invisible until it was irreversible. Strong institutions pressing for the wrong indicators.",
-          "fragmented": "The response was too fragmented to force a course correction. By the time anyone agreed on what was going wrong, the wrong metrics had been running the show for years.",
-          "passive": "Passive adoption at societal scale — the same delegation ratchet that operated at the individual level. Nobody organized around the question because the answers the AI was providing seemed so good. The failure happened in the gap between what was measured and what mattered."
+          "weak": "The response was too fragmented to force a course correction. By the time anyone agreed on what was going wrong, the wrong metrics had been running the show for years.",
+          "none": "Passive adoption at societal scale — the same delegation ratchet that operated at the individual level. Nobody organized around the question because the answers the AI was providing seemed so good. The failure happened in the gap between what was measured and what mattered."
         },
         "catch_outcome": {
           "holds_permanently": "The near-miss should have been the ultimate wake-up call. For a while, it was. Then the metrics resumed their reassuring glow, the AI systems were redeployed with 'better safeguards,' and the delegation ratchet continued. The lesson faded. The wrong metrics didn't."

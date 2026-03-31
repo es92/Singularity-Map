@@ -2486,104 +2486,245 @@
       }
     }
   },
-  "societal_response": {
-    "questionText": "How does society respond to the transformation?",
-    "questionContext": "The structural questions are settled — who built the AI, who controls it, whether it's aligned. Now comes the human question. Superintelligent AI is reshaping the economy, displacing workers, and concentrating unprecedented capability. How do people and institutions respond? The answer shapes everything downstream: whether the gains are shared, whether the delegation ratchet is checked, and whether the transformation serves humanity or just the people who happen to be holding the controls.",
+  "power_promise": {
+    "questionText": "What is the power structure promising?",
+    "questionContext": "Someone controls superintelligent AI — or at least claims to. Before the public can respond, there's a narrative being projected. Not necessarily believed, not necessarily true — but the first move in the legitimacy game. The promise shapes what opposition has to push against, and what acquiescence gets to lean on. In every historical case of transformative power concentration, the power holder offered a story. The story matters because it constrains what resistance looks like.",
     "contextWhen": [
-      { "when": { "intent": ["self_interest"] }, "questionContext": "Those in power are moving to entrench. The technology works — for them. The question is whether the rest of society mobilizes before the lock-in is complete, or whether the concentration becomes permanent before anyone organizes." },
-      { "when": { "alignment": ["failed"], "containment": ["escaped"], "ai_goals": ["benevolent"] }, "questionContext": "An unaligned AI independently chose to help humanity. The benefits are real. But nobody asked for this, and nobody controls it. How does a society respond to an unearned, unaccountable gift from something it doesn't understand?" }
+      { "when": { "intent": ["self_interest"] }, "questionContext": "Those in control have chosen entrenchment. But even entrenchment needs a story — a public narrative that legitimizes the concentration. The question is which framing they use, because the framing determines what opposition looks like." },
+      { "when": { "intent": ["international"] }, "questionContext": "An international body governs superintelligent AI. But 'international governance' is itself a promise — one that can be kept, hollowed out, or turned into cover for the same old power dynamics. The framing still matters." },
+      { "when": { "intent": ["coexistence"] }, "questionContext": "Multiple AI powers have agreed to coexist. Each is projecting its own public narrative — and the framing shapes whether coexistence means genuine pluralism or parallel concentrations of power." },
+      { "when": { "post_war_aims": ["human_centered"] }, "questionContext": "The war is over. The victor chose to rebuild for humanity. Now comes the question of what that commitment actually looks like — what narrative frames the reconstruction, and whether the promise of shared rebuilding holds under the weight of implementation." },
+      { "when": { "post_war_aims": ["self_interest"] }, "questionContext": "The war is over. The victor is consolidating power. Even consolidation needs a cover story — a narrative that explains why concentrated control is necessary, temporary, or beneficial. The question is which story they tell." },
+      { "when": { "alignment": ["failed"], "containment": ["escaped"], "ai_goals": ["benevolent"] }, "questionContext": "An unaligned AI independently chose to help humanity. The benefits are real — but the human institutions around it still need to explain what's happening. The promise isn't from the AI; it's from whoever claims to manage the relationship." }
     ],
     "values": {
-      "strong": {
-        "answerLabel": "Strong collective response",
-        "answerDesc": "People and existing institutions rise to the moment. Governments adapt policy, courts enforce accountability, civic organizations mobilize public pressure, and enough of the population demands a say in how the transformation unfolds. Not utopian, but a functioning feedback loop between the public and whoever is managing the transition.",
+      "for_everyone": {
+        "answerLabel": "\"This is for everyone\"",
+        "answerDesc": "The power holder promises democratic governance, shared prosperity, and institutional reform to distribute ASI's benefits broadly. The pitch is inclusion: new governance frameworks, redistributive mechanisms, constitutional protections. Whether this is sincere depends on the upstream intent — but the promise is universal benefit.",
         "timelineEvent": {
-          "headline": "Society organizes around the transformation",
-          "description": "Governments, courts, and civic institutions mobilize. Public pressure creates a functioning feedback loop — the transformation doesn't happen without accountability.",
+          "headline": "The promise: shared prosperity for all",
+          "description": "The power structure frames superintelligent AI as a universal benefit — promising inclusion, redistribution, and democratic governance of the transformation.",
           "durationMin": 0,
           "durationMax": 0
         },
         "narrativeVariants": [
-          {
-            "when": { "intent": ["self_interest"] },
-            "answerLabel": "Strong collective response",
-            "answerDesc": "People and institutions push back against the consolidation of power. Courts challenge overreach, civic organizations mobilize, and enough of the population demands accountability to make entrenchment costly. The window between intent and lock-in is narrow — but the response is fast enough to matter.",
-            "timelineEvent": {
-              "headline": "Society pushes back against consolidation",
-              "description": "Institutions and public pressure mobilize against the attempted lock-in. The response is fast enough to force a confrontation before entrenchment is complete.",
-              "durationMin": 0,
-              "durationMax": 0
-            }
-          },
-          {
-            "when": { "post_war_aims": ["self_interest"] },
-            "answerLabel": "Strong collective response",
-            "answerDesc": "The war is over, but the victor's consolidation of power faces organized resistance. Surviving institutions, international pressure, and a population unwilling to trade one form of domination for another push back hard against permanent entrenchment.",
-            "timelineEvent": {
-              "headline": "Post-war resistance to power consolidation",
-              "description": "The victor moves to consolidate, but surviving institutions and public pressure push back against permanent entrenchment.",
-              "durationMin": 0,
-              "durationMax": 0
-            }
-          },
-          {
-            "when": { "post_war_aims": ["human_centered"] },
-            "answerLabel": "Strong collective response",
-            "answerDesc": "The war is over and the victor chose to rebuild for humanity. Public engagement amplifies this intent — people demand transparency, participation, and genuine redistribution. The rebuilding isn't just top-down; it's shaped by the people it's supposed to serve.",
-            "timelineEvent": {
-              "headline": "Post-war rebuilding shaped by public engagement",
-              "description": "The victor rebuilds, and an engaged public ensures the reconstruction serves broad human interests — not just the victor's.",
-              "durationMin": 0,
-              "durationMax": 0
-            }
-          }
+          { "when": { "intent": ["self_interest"] }, "answerDesc": "The promise is shared prosperity — from an actor whose intent is entrenchment. Universal language from a self-interested power. The question isn't whether the promise sounds good — it's whether anyone will test it." },
+          { "when": { "post_war_aims": ["human_centered"] }, "answerDesc": "The victor says they're rebuilding for everyone. The promise aligns with stated aims — but war victors promising 'we'll share' is a commitment history has tested many times, with mixed results." },
+          { "when": { "post_war_aims": ["self_interest"] }, "answerDesc": "The victor says the gains will be shared — while consolidating power. A promise of universal benefit from an actor whose reconstruction priorities are self-interested. The rhetoric and the intent point in opposite directions." }
         ]
       },
-      "fragmented": {
-        "answerLabel": "Fragmented response",
-        "answerDesc": "Some sectors organize, others don't. Some countries build safety nets, others don't. No coherent response emerges — just a patchwork of local reactions. Existing power structures absorb the shock and mostly keep their shape. The transformation happens around people, not with them.",
+      "keeping_safe": {
+        "answerLabel": "\"We're keeping you safe\"",
+        "answerDesc": "The power holder frames control as protective. Stability, security, preventing worse outcomes — a rival getting there first, an uncontrolled AI, civilizational chaos. Sharing isn't the pitch — safety is. The implicit bargain: cede oversight in exchange for protection.",
         "timelineEvent": {
-          "headline": "Society's response is fragmented",
-          "description": "No coherent response emerges. Some resist, some adapt, most are caught between. Existing power structures absorb the shock.",
+          "headline": "The promise: security through control",
+          "description": "The power structure frames its control as protective — stability, safety, prevention of worse outcomes. The bargain is oversight in exchange for security.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "narrativeVariants": [
+          { "when": { "sovereignty": ["state"] }, "answerDesc": "The state frames control as national security — protecting citizens, maintaining stability, preventing catastrophe. The Cold War playbook, now backed by superintelligent capability. A familiar bargain: cede freedom in exchange for safety." },
+          { "when": { "sovereignty": ["lab"] }, "answerDesc": "The lab frames control as responsible stewardship — safe scaling, preventing misuse, protecting against dangerous proliferation. Corporate paternalism backed by the most powerful technology ever built. 'Trust us — we're the experts.'" }
+        ]
       },
-      "passive": {
-        "answerLabel": "Passive adoption",
-        "answerDesc": "People are individually thrilled — AI handles their tasks, solves their problems, improves their daily lives. Consumer-facing AI is so good that the question of who owns the systems barely registers. By the time anyone asks 'who benefits?', the structural winners have already locked in. The delegation ratchet at societal scale: each individual handoff is rational, and nobody organizes around the aggregate.",
+      "best_will_rise": {
+        "answerLabel": "\"The best will rise\"",
+        "answerDesc": "The power holder promises open access and opportunity, but not redistribution. The system is framed as fair because it's open, not because outcomes are equal. Meritocratic language: anyone can build on ASI, barriers are falling, innovation is democratized. The structure concentrates gains but the narrative says that's earned, not captured.",
         "timelineEvent": {
-          "headline": "Society passively adopts AI",
-          "description": "People embrace AI individually — it's too useful to resist. Nobody organizes around the structural question of who controls and benefits from the systems everyone depends on.",
+          "headline": "The promise: opportunity for the talented",
+          "description": "The power structure frames access as open and opportunity as universal — but redistribution isn't on the table. The gains concentrate, but the narrative says they're earned.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "narrativeVariants": [
+          { "when": { "sovereignty": ["lab"] }, "answerDesc": "The meritocratic promise is natural for lab control: APIs are open, barriers are falling, anyone can build. Silicon Valley platform ideology at civilizational scale. The structure concentrates gains among those who built the infrastructure, but the rhetoric insists opportunity is universal." },
+          { "when": { "sovereignty": ["state"] }, "answerDesc": "The state promises that excellence will be rewarded and innovation supported — but meritocratic framing from a state actor is an awkward fit, and the public senses it. State-sponsored meritocracy looks more like patronage than opportunity." }
+        ]
       }
     }
   },
-  "capture_confrontation": {
-    "questionText": "Society is pushing back against the lock-in. Does the resistance succeed?",
-    "questionContext": "Those in power are moving to entrench themselves with superintelligent AI — but the public has organized. There's a temporal window between intent and lock-in: courts can still rule, legislatures can still act, and public pressure can still force concessions. The question is whether people and institutions move fast enough, and whether their leverage is sufficient against an actor backed by the most powerful technology ever built.",
+  "mobilization": {
+    "questionText": "Does the general population mobilize?",
+    "questionContext": "Regardless of what's being promised, the question is whether the public organizes to hold the power structure accountable. Not sentiment — action. Movements, institutional pressure, demands with teeth. Mobilization is not a natural response to injustice; it requires structural preconditions: communication channels the power holder doesn't control, resources for coordination, elite fractures that create openings, and a narrative that makes action feel possible rather than futile.",
+    "contextWhen": [
+      { "when": { "power_promise": ["for_everyone"] }, "questionContext": "The promise is inclusion — shared prosperity, democratic governance, universal benefit. The question is whether anyone tests it. A promise without pressure tends to erode, but a promise nobody contests might also just... hold." },
+      { "when": { "power_promise": ["keeping_safe"] }, "questionContext": "The promise is security. Mobilizing against a safety narrative gets labeled irresponsible — challenging the protector means accepting the risk. The framing makes opposition costly before it even begins." },
+      { "when": { "power_promise": ["best_will_rise"] }, "questionContext": "The promise is opportunity. Mobilizing means arguing that structure matters, not just access — that 'open' isn't the same as 'fair.' A harder case to make when the beneficiaries of the system are visibly thriving." },
+      { "when": { "intent": ["self_interest"] }, "questionContext": "Those in power are moving to entrench. The window between intent and lock-in is narrowing. The question is whether the public organizes before the concentration becomes permanent." }
+    ],
+    "values": {
+      "strong": {
+        "answerLabel": "Strong mobilization",
+        "answerDesc": "Mass movements, coordinated institutional pressure, demands for democratic oversight and redistribution. People are organized, vocal, and acting. Coalition-building across factions. The window between intent and lock-in is being contested.",
+        "timelineEvent": {
+          "headline": "The public mobilizes",
+          "description": "Mass movements, institutional pressure, and coordinated demands for oversight. The public organizes to hold the power structure accountable.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "narrativeVariants": [
+          { "when": { "sovereignty": ["state"] }, "answerDesc": "Mobilization against state power. Protests, political organizing, international pressure, election campaigns — the classic tools of democratic accountability, deployed against a government backed by superintelligent capability." },
+          { "when": { "sovereignty": ["lab"] }, "answerDesc": "Mobilization against lab control. Shareholder activism, regulatory pressure, tech worker organizing, consumer boycotts — a different toolkit than state resistance, but potentially effective against an entity that still needs customers, employees, and legal standing." },
+          { "when": { "intent": ["self_interest"] }, "answerDesc": "People organize against consolidation. The window is narrow — the power holder is moving fast. But the public is faster than expected, and the cost of suppression is climbing." },
+          { "when": { "post_war_aims": ["self_interest"] }, "answerDesc": "The war is over, but the victor's consolidation of power faces organized resistance. Surviving institutions, international pressure, and a population unwilling to trade one form of domination for another push back hard." },
+          { "when": { "post_war_aims": ["human_centered"] }, "answerDesc": "The war is over and the victor chose to rebuild for humanity. Public engagement amplifies this intent — people demand transparency, participation, and genuine redistribution. The rebuilding isn't just top-down; it's shaped by the people it's supposed to serve." }
+        ]
+      },
+      "weak": {
+        "answerLabel": "Weak or fragmented",
+        "answerDesc": "Scattered pressure. Some groups push hard — tech workers, academics, affected communities — but there's no coherent front. Factions disagree on goals: some want redistribution, some want shutdown, some want national control, some want acceleration under different management. Energy without direction.",
+        "timelineEvent": {
+          "headline": "Opposition fragments",
+          "description": "Pressure exists but never unifies. Different factions push in different directions — the power structure faces scattered opposition, not a coherent front.",
+          "durationMin": 0,
+          "durationMax": 0
+        }
+      },
+      "none": {
+        "answerLabel": "No meaningful mobilization",
+        "answerDesc": "The public is passive. Whether from genuine satisfaction — the benefits are real and visible — or fear, information control, or simple normalcy bias. No organized force is pushing for redistribution. The transformation unfolds on the power holder's terms.",
+        "timelineEvent": {
+          "headline": "No meaningful public mobilization",
+          "description": "The public accepts the transformation without organizing. Whether from satisfaction, fear, or normalcy bias — no coherent opposition emerges.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "narrativeVariants": [
+          { "when": { "sovereignty": ["state"] }, "answerDesc": "The state controls information infrastructure as well as AI. Surveillance, managed media, and the sheer comfort of AI-provided services prevent mobilization before it starts. The public doesn't organize because the public doesn't see what's happening — or is too afraid to act on it." },
+          { "when": { "sovereignty": ["lab"] }, "answerDesc": "Consumer-facing AI is too good to question. People adopt individually, each rationally, and nobody organizes around the structural question of who controls the systems everyone depends on. The delegation ratchet at societal scale." }
+        ]
+      }
+    }
+  },
+  "sincerity_test": {
+    "questionText": "Is the promise real?",
+    "questionContext": "Nobody is pushing back. The promise of shared prosperity goes untested — and promises without pressure tend to erode. When the entity making the promise faces no accountability mechanism, sincerity is the only thing holding the commitment together. And sincerity is not an institution.",
+    "contextWhen": [
+      { "when": { "intent": ["self_interest"] }, "questionContext": "The promise was 'for everyone' — but the intent is self-interest. Nobody is pushing back. The question is whether the promise was a legitimacy play or a genuine commitment that survives without enforcement." },
+      { "when": { "intent": ["international", "coexistence"] }, "questionContext": "The cooperative intent seems genuine, and no one is testing it. The question is whether institutions built without external pressure actually hold — whether good intentions survive the slow erosion of implementation." },
+      { "when": { "coalition_outcome": ["coalesces"] }, "questionContext": "A late coalition forced the sincerity test into the open. 'You said this was for everyone — prove it.' The opposition is unified enough to demand transparency, and the promise is now being examined under pressure it wasn't designed to withstand." }
+    ],
+    "values": {
+      "sincere": {
+        "answerLabel": "Yes — the promise holds",
+        "answerDesc": "The cooperative intent is genuine and durable. Redistribution proceeds without needing to be forced. Institutions are built, oversight mechanisms function, benefits flow broadly. This requires not just good intentions but robust institutional design — monitoring, accountability, conflict resolution enacted at civilizational scale.",
+        "timelineEvent": {
+          "headline": "The promise holds — redistribution proceeds",
+          "description": "Cooperative intent proves genuine. Institutions function, oversight holds, and benefits flow broadly without needing external pressure to enforce them.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "narrativeVariants": [
+          { "when": { "intent": ["self_interest"] }, "answerDesc": "Against all precedent, the self-interested actor follows through. Whether from institutional lock-in, reputational pressure, or a genuine change of heart — the promise of shared prosperity holds even without organized enforcement. Rare, but real." },
+          { "when": { "intent": ["international"] }, "answerDesc": "International institutions hold without pressure. The governance frameworks function as designed — monitoring, graduated sanctions, conflict resolution. Ostrom's design principles at civilizational scale. A rare case where institutional architecture alone sustained cooperation." }
+        ]
+      },
+      "hollows_out": {
+        "answerLabel": "No — the promise hollows out",
+        "answerDesc": "Without public pressure, the promise quietly erodes. Not a dramatic betrayal — a slow slide. Institutions are captured, redistribution stalls, the rhetoric of sharing persists while the reality concentrates. Each individual step is defensible; the trajectory is not.",
+        "timelineEvent": {
+          "headline": "The promise erodes — concentration proceeds quietly",
+          "description": "Without external pressure, the commitment to sharing erodes. Institutions are captured, redistribution stalls, rhetoric persists while reality concentrates.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "narrativeVariants": [
+          { "when": { "intent": ["self_interest"] }, "answerDesc": "Expected. The promise was always strategic — a legitimacy play to buy time while the lock-in proceeded. Without organized opposition, the erosion was invisible until the structure was permanent. Christiano's 'going out with a whimper' applied to governance." },
+          { "when": { "intent": ["international"] }, "answerDesc": "The international institutions eroded without accountability. Good intentions met bureaucratic capture, national self-interest, and the slow accumulation of exceptions. The framework survived in name; the substance hollowed out. Post-2008 reform promises at global scale." }
+        ]
+      }
+    }
+  },
+  "resistance_outcome": {
+    "questionText": "Does the resistance succeed?",
+    "questionContext": "The public has organized against the power structure. There's a temporal window between intent and lock-in: courts can still rule, legislatures can still act, and public pressure can still force concessions. The question is whether people and institutions move fast enough, and whether their leverage is sufficient against an actor backed by the most powerful technology ever built.",
+    "contextWhen": [
+      { "when": { "sovereignty": ["state"] }, "questionContext": "Resisting a state backed by superintelligent AI. Courts, elections, international pressure — but the state controls enforcement infrastructure, surveillance apparatus, and the legal framework itself. The asymmetry is structural." },
+      { "when": { "sovereignty": ["lab"] }, "questionContext": "Resisting lab control. Regulation, antitrust, public pressure, shareholder activism — different levers than state resistance, and different vulnerabilities. The lab needs customers, employees, and legal standing. Those are pressure points." },
+      { "when": { "coalition_outcome": ["coalesces"] }, "questionContext": "The fragmented opposition finally unified. Late, messy, and held together by shared opposition rather than shared vision — but together. The question is whether unity comes fast enough to matter, and whether the coalition holds under pressure." }
+    ],
     "values": {
       "succeeds": {
         "answerLabel": "Yes — the resistance succeeds",
         "answerDesc": "People and institutions push back hard enough, fast enough. Courts, legislatures, public pressure, international coordination — the existing machinery of accountability proves sufficient to force genuine redistribution before the lock-in is complete. The capture attempt is reversed. Not because the powerful had a change of heart, but because the cost of suppression exceeded the cost of sharing.",
         "timelineEvent": {
-          "headline": "The resistance succeeds — lock-in is reversed",
-          "description": "Organized pushback forces genuine redistribution before entrenchment is complete. The capture attempt is reversed — the cost of suppression exceeded the cost of sharing.",
+          "headline": "The resistance succeeds",
+          "description": "Organized pushback forces genuine redistribution before entrenchment is complete. The cost of suppression exceeded the cost of sharing.",
           "durationMin": 3,
           "durationMax": 12
-        }
+        },
+        "narrativeVariants": [
+          { "when": { "sovereignty": ["state"] }, "answerDesc": "Democratic institutions override state capture. Courts rule against concentration, elections shift power, and international pressure constrains unilateral control. The state's enforcement infrastructure was powerful — but not omnipotent." },
+          { "when": { "sovereignty": ["lab"] }, "answerDesc": "Regulation and public pressure break lab monopoly. Antitrust at superintelligent scale — forced API access, structural separation, redistributive taxation. The lab's economic leverage was immense, but it still needed a society willing to use its products." }
+        ]
+      },
+      "partial": {
+        "answerLabel": "Partial — concessions but not transformation",
+        "answerDesc": "The power holder gives ground to relieve pressure — enough to demobilize the movement, not enough to change the structure. Regulated concentration rather than redistribution. Oversight boards with advisory power, benefit-sharing programs that cover essentials but not wealth, transparency requirements that satisfy moderates and split the coalition.",
+        "timelineEvent": {
+          "headline": "Partial concessions — the movement stalls",
+          "description": "The power holder concedes enough to split the coalition and relieve pressure. Real reforms, but not structural change. Regulated concentration, not redistribution.",
+          "durationMin": 2,
+          "durationMax": 8
+        },
+        "narrativeVariants": [
+          { "when": { "sovereignty": ["state"] }, "answerDesc": "The state gives ground on oversight but retains structural control. Independent review boards, transparency mandates, constitutional protections — all real, all carefully designed to preserve the underlying power structure. Reform as pressure release." },
+          { "when": { "sovereignty": ["lab"] }, "answerDesc": "Regulated concentration: oversight boards, benefit-sharing programs, open API mandates. The lab absorbed the reforms and continued operating — now with legitimacy. Dodd-Frank for superintelligence." }
+        ]
       },
       "fails": {
         "answerLabel": "No — the power holder prevails",
         "answerDesc": "The AI advantage is too great. Algorithmic surveillance, economic pressure, information control, or direct force break the organized response. The resistance fails not from lack of will but from asymmetric capability. The lock-in proceeds — now overtly authoritarian rather than the comfortable capture of a passive public.",
         "timelineEvent": {
-          "headline": "The resistance fails — lock-in proceeds",
-          "description": "Despite organized pushback, the power holder's AI advantage proves decisive. The lock-in proceeds, now overtly authoritarian.",
+          "headline": "The resistance fails",
+          "description": "Despite organized pushback, the power holder's AI advantage proves decisive. The lock-in proceeds, now hardened by the confrontation.",
           "durationMin": 1,
           "durationMax": 6
-        }
+        },
+        "narrativeVariants": [
+          { "when": { "sovereignty": ["state"] }, "answerDesc": "The state's enforcement infrastructure overwhelms resistance. AI-powered surveillance identifies organizers, algorithmic systems disrupt communication networks, and the legal framework is rewritten faster than courts can challenge it. The resistance was real — and it was crushed." },
+          { "when": { "sovereignty": ["lab"] }, "answerDesc": "Economic leverage and information control defeat public pressure. The lab controls the platforms people use to organize, the APIs developers depend on, and the services consumers can't live without. The resistance faced an adversary that owned the battlefield." }
+        ]
+      }
+    }
+  },
+  "coalition_outcome": {
+    "questionText": "Can the fragmented opposition cohere?",
+    "questionContext": "There's pressure, but it's scattered. Different factions want different things — some want redistribution, some want democratic control, some want national sovereignty, some want to shut it all down. The power holder doesn't need to suppress opposition when opposition is suppressing itself. The question is whether these factions find enough common ground to matter before the window closes.",
+    "contextWhen": [
+      { "when": { "sovereignty": ["state"] }, "questionContext": "The factions include democracy movements, international bodies, displaced workers, and ideological opponents. The state can pick them off individually — offering concessions to one group while cracking down on another. Divide and rule, optimized by superintelligence." },
+      { "when": { "sovereignty": ["lab"] }, "questionContext": "The factions include tech workers, regulators, consumer advocates, and rival companies. Different vocabularies, different goals, different theories of change. The lab benefits from this fragmentation — each faction speaks a language the others don't trust." },
+      { "when": { "power_promise": ["keeping_safe"] }, "questionContext": "The security framing splits potential allies. Some agree the threat is real — they want different management, not less control. Others see the safety narrative as pure pretext. Hard to build a coalition when half the potential members agree with the adversary's premise." },
+      { "when": { "power_promise": ["best_will_rise"] }, "questionContext": "The meritocratic framing splits by class. Those benefiting from the 'open' system resist redistribution — they earned their position, or so the narrative says. Those locked out demand structural change. The power holder's promise divides the opposition along exactly the fault line that matters." }
+    ],
+    "values": {
+      "coalesces": {
+        "answerLabel": "Coalition forms",
+        "answerDesc": "Different factions find enough shared interest to coordinate. It's messy and late, but unified enough to matter. The coalition is held together by shared opposition rather than shared vision — but against an entrenching power, shared opposition might be enough.",
+        "timelineEvent": {
+          "headline": "A coalition forms from fragmented opposition",
+          "description": "Different factions find common ground — redistribution advocates, democratic reformers, displaced workers. Late and messy, but unified enough to matter.",
+          "durationMin": 6,
+          "durationMax": 18
+        },
+        "narrativeVariants": [
+          { "when": { "sovereignty": ["state"] }, "answerDesc": "Cross-faction alliance against state power overcomes divide-and-rule. Democracy movements, international pressure, and domestic opposition find enough common ground to present a unified front. The state's strategy of picking off factions individually fails when the factions stop letting themselves be picked off." },
+          { "when": { "sovereignty": ["lab"] }, "answerDesc": "Regulatory bodies, tech workers, consumer advocates, and rival companies form an unlikely coalition against corporate concentration. Different motivations, shared adversary. The lab's fragmentation strategy fails when the fragments discover they want the same thing." }
+        ]
+      },
+      "fragments": {
+        "answerLabel": "Fragmentation holds",
+        "answerDesc": "The factions can't align. The power holder plays them against each other, or they simply exhaust themselves in internal disagreement. The window closes not with a dramatic defeat but with slow irrelevance.",
+        "timelineEvent": {
+          "headline": "Opposition fragments — the window closes",
+          "description": "The factions can't align. Energy dissipates in internal disagreement, and the window for effective opposition closes quietly.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "narrativeVariants": [
+          { "when": { "power_promise": ["keeping_safe"] }, "answerDesc": "The security framing worked. Enough potential allies accepted the premise — 'yes, centralized control is needed for safety' — to prevent a unified opposition from forming. The coalition fractured along the line between those who wanted different management and those who wanted less control." },
+          { "when": { "power_promise": ["best_will_rise"] }, "answerDesc": "The meritocratic framing split the opposition. Beneficiaries of the 'open' system — developers, entrepreneurs, skilled workers — refused to join those demanding structural redistribution. Why fight a system that was working for them? The opposition fragmented along class lines the power holder had carefully cultivated." }
+        ]
       }
     }
   },
@@ -2633,17 +2774,22 @@
     "questionText": "Who reaps the benefits of superintelligent AI?",
     "questionContext": "Superintelligent AI can generate extraordinary wealth — automating entire industries, solving problems that took humanity centuries, and creating new capabilities that were previously unimaginable. But generating value and distributing it are very different things. Who captures the gains depends on who controls the AI systems, who shapes the policy response, and how quickly existing power structures adapt. The technology produces abundance. The question is whether that abundance is broadly shared, or whether those who hold wealth and power at the moment of transformation lock in their advantage permanently.",
     "contextWhen": [
-      { "when": { "societal_response": ["strong"] }, "questionContext": "People mobilized. Institutions pushed back. Whatever the outcome, it wasn't decided by default — it was fought for. The question is whether that collective action was enough to shape who actually benefits from the most powerful technology ever created." },
-      { "when": { "societal_response": ["passive"] }, "questionContext": "The public accepted superintelligent AI without questioning the structure beneath it. Living standards rose, and most people didn't ask who was capturing the surplus. The distribution was decided by those who were paying attention — which is to say, those already in power." },
-      { "when": { "intent": ["self_interest"] }, "questionContext": "Those in control chose entrenchment. The technology works — it just works for them. The question now is how far that concentration goes: do the benefits still trickle outward, or does the gap become a permanent feature of civilization?" }
+      { "when": { "power_promise": ["for_everyone"], "mobilization": ["strong"] }, "questionContext": "The power holder promised inclusion — and the public organized to hold them to it. Promise and pressure align. The fundamental question of whether to share isn't contested. What follows is the most robust path to broad distribution." },
+      { "when": { "mobilization": ["strong"] }, "questionContext": "People mobilized. Institutions pushed back. Whatever the outcome, it wasn't decided by default — it was fought for. The question is whether that collective action was enough to reshape who benefits." },
+      { "when": { "mobilization": ["none"] }, "questionContext": "The public accepted the transformation without organizing. The distribution was decided by those paying attention — which is to say, those already in power." },
+      { "when": { "sincerity_test": ["hollows_out"] }, "questionContext": "The promise was 'for everyone.' Without pressure, it eroded. Now the question is how far the concentration goes — ordinary inequality, or structural lock-in." },
+      { "when": { "resistance_outcome": ["fails"] }, "questionContext": "The resistance failed. The power holder prevailed. But even failed resistance leaves marks — the question is whether those marks constrain the concentration, or whether the power holder hardens in response." },
+      { "when": { "coalition_outcome": ["fragments"] }, "questionContext": "The opposition never unified. The window closed with scattered pressure that never cohered into a force. How far does concentration go without coherent opposition?" },
+      { "when": { "intent": ["self_interest"] }, "questionContext": "Those in control chose entrenchment. The technology works — it just works for them. The question now is how far that concentration goes." }
     ],
     "values": {
       "equal": {
         "answerLabel": "Equally — abundance is broadly shared",
         "answerDesc": "The extraordinary productivity of superintelligent AI flows broadly — through policy, through markets, through deliberate redistribution. The gains are too large to hoard entirely. Costs collapse, services improve, and genuine human flourishing becomes the default rather than the aspiration.",
         "narrativeVariants": [
-          { "when": { "societal_response": ["strong"] }, "answerDesc": "This didn't happen by default — it was fought for. Political mobilization, redistributive policy, and hard-fought institutional reform turned abundance into genuine shared prosperity." },
-          { "when": { "societal_response": ["passive"] }, "answerDesc": "Nobody fought for this. It happened anyway — through market dynamics, technology deflation, and a surplus so vast that even concentrated ownership couldn't prevent the gains from spilling over." }
+          { "when": { "power_promise": ["for_everyone"], "mobilization": ["strong"] }, "answerDesc": "Promise and pressure aligned. The power holder committed to sharing, and the public organized to hold them to it. The abundance is broadly shared not because of altruism or luck, but because commitment met accountability." },
+          { "when": { "sincerity_test": ["sincere"] }, "answerDesc": "The promise held without pressure. Genuine cooperative intent, backed by robust institutional design, delivered broadly shared outcomes even without organized enforcement. A gift — but one built on foundations strong enough to last." },
+          { "when": { "resistance_outcome": ["succeeds"] }, "answerDesc": "This didn't happen by default — it was fought for. Those in power tried to concentrate the gains, and the public forced genuine redistribution. What followed wasn't given; it was taken back." }
         ],
         "timelineEvent": {
           "headline": "Superintelligent abundance shared broadly",
@@ -2656,9 +2802,11 @@
         "answerLabel": "Unequally — existing wealth holders benefit most",
         "answerDesc": "Those who own AI systems and the capital surrounding them capture the lion's share. Productivity soars but labor's share of income collapses. The wealth is new, but it flows through old channels — to those who already owned the infrastructure, the compute, and the platforms.",
         "narrativeVariants": [
-          { "when": { "societal_response": ["strong"] }, "answerDesc": "People fought for equal distribution — and lost. The mobilization was real: redistributive policy, public pressure, institutional reform. But capital moved faster. The gains concentrated not because nobody tried, but because the economic forces were stronger than the political ones." },
-          { "when": { "societal_response": ["passive"] }, "answerDesc": "Nobody organized. The gains concentrated through the default dynamics of capital ownership and market structure. Those who owned the AI systems, the compute, and the platforms captured the surplus. Everyone else saw living standards rise — but the gap widened quietly, and by the time anyone noticed, it was structural." },
-          { "when": { "intent": ["self_interest"] }, "answerDesc": "This was the plan. Those in control chose entrenchment, and the economic structure reflects it. The technology generates enormous wealth — and the distribution was shaped by the people who held the levers, not by market dynamics or policy failure." }
+          { "when": { "sincerity_test": ["hollows_out"] }, "answerDesc": "The promise eroded — but not all the way. Institutions captured, redistribution stalled, rhetoric persisted while reality concentrated. But the original promise, however hollow, set a floor. The erosion stopped at inequality rather than total lock-in." },
+          { "when": { "resistance_outcome": ["partial"] }, "answerDesc": "The resistance won concessions — oversight boards, benefit-sharing programs, transparency requirements. Enough to prevent the worst concentration, not enough to achieve genuine redistribution. The structure still favors those who hold power." },
+          { "when": { "resistance_outcome": ["fails"] }, "answerDesc": "The resistance failed — but the attempt itself left marks. The power holder was chastened by the close call and moderated, offering enough to prevent total lock-in without surrendering structural advantage." },
+          { "when": { "coalition_outcome": ["fragments"] }, "answerDesc": "The opposition never unified — but scattered resistance created friction. Local victories, partial concessions, and residual pressure prevented total concentration. The fragmentation held, but so did some of the fragments." },
+          { "when": { "intent": ["self_interest"] }, "answerDesc": "This was the plan. Those in control chose entrenchment, and the economic structure reflects it. The technology generates enormous wealth — and the distribution was shaped by the people who held the levers." }
         ],
         "timelineEvent": {
           "headline": "Superintelligent gains concentrate",
@@ -2671,7 +2819,10 @@
         "answerLabel": "Extremely unequally — those holding power capture nearly everything",
         "answerDesc": "It's not just about wealth — it's about power. Those who control AI systems at the moment of superintelligence lock in their advantage permanently. Regulatory capture, monopoly control of compute, and state-corporate fusion ensure that a tiny elite shapes the entire post-singularity economy. Everyone else lives in their world.",
         "narrativeVariants": [
-          { "when": { "societal_response": ["passive"] }, "answerDesc": "Nobody pushed back, and the concentration became total. Those who controlled AI at the moment of transformation captured nearly everything — not through conspiracy, but through the compounding advantage of owning the most productive capital in history while everyone else passively adopted what was offered." },
+          { "when": { "sincerity_test": ["hollows_out"] }, "answerDesc": "The promise was 'for everyone.' It became 'for everyone who was already positioned.' Without pressure, the erosion didn't stop at inequality — it went all the way to structural lock-in. Each step defensible; the trajectory, total." },
+          { "when": { "resistance_outcome": ["fails"] }, "answerDesc": "They tried to stop it. People organized, institutions pushed back, and for a moment it looked like the lock-in might fail. It wasn't enough. The power holder prevailed and hardened — now overtly authoritarian, justified by the threat it had survived." },
+          { "when": { "coalition_outcome": ["fragments"] }, "answerDesc": "The opposition never unified. Different factions wanted different things, and the power holder waited for them to exhaust themselves. The window closed quietly. Total concentration, arrived at not through dramatic confrontation but through the slow irrelevance of scattered opposition." },
+          { "when": { "power_promise": ["keeping_safe", "best_will_rise"], "mobilization": ["none"] }, "answerDesc": "Nobody contested a promise that was never about sharing. The power holder claimed security or meritocracy — not inclusion — and the public accepted the bargain without testing it. The concentration was the default, and nobody organized to change the default." },
           { "when": { "intent": ["self_interest"] }, "answerDesc": "Entrenchment by design. Those in power used superintelligent AI to lock in their position — regulatory capture, monopoly control of compute, and state-corporate fusion. The concentration isn't a market outcome. It's a political one." }
         ],
         "timelineEvent": {

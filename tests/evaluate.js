@@ -25,7 +25,8 @@ const FLAVOR_PHASES = {
         'conflict_result', 'proliferation_outcome'
     ],
     'How society responded': [
-        'societal_response', 'capture_confrontation'
+        'power_promise', 'mobilization', 'sincerity_test',
+        'resistance_outcome', 'coalition_outcome'
     ],
     'What the world looks like': [
         'benefit_distribution', 'plateau_benefit_distribution',

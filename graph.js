@@ -33,14 +33,11 @@ const DECEL_PAIRS = [
 
 
 const OUTCOME_ACTIVATE = [
-    { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _set: ['societal_response'] },
-    { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, intent: ['international', 'coexistence'], _set: ['societal_response'] },
-    { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'], containment: ['contained'] }, intent: ['international', 'coexistence'], _set: ['societal_response'] },
-    { capability: ['singularity'], automation: ['deep'], post_war_aims: ['human_centered'], _set: ['societal_response'] },
-    { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['benevolent'], _set: ['societal_response'] },
-    { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'], societal_response: ['fragmented', 'passive'] },
-    { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'], _set: ['capture_confrontation'] },
-    { capability: ['singularity'], automation: ['deep'], post_war_aims: ['self_interest'], _set: ['societal_response'] }
+    { capability: ['singularity'], automation: ['deep'], power_promise: ['for_everyone'], mobilization: ['strong'] },
+    { capability: ['singularity'], automation: ['deep'], _set: ['sincerity_test'] },
+    { capability: ['singularity'], automation: ['deep'], _set: ['resistance_outcome'] },
+    { capability: ['singularity'], automation: ['deep'], coalition_outcome: ['fragments'] },
+    { capability: ['singularity'], automation: ['deep'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] }
 ];
 
 
@@ -568,7 +565,7 @@ const NODES = [
       derivedFrom: [
         { when: { escalation_outcome: 'agreement' }, value: 'coexistence' },
         { when: { post_war_aims: 'human_centered' }, value: 'coexistence' },
-        { when: { capture_confrontation: 'succeeds' }, value: 'international' },
+        { when: { resistance_outcome: 'succeeds' }, value: 'international' },
         { whenSet: 'rival_dynamics', fromDim: 'rival_dynamics' }
       ],
       edges: [
@@ -665,7 +662,7 @@ const NODES = [
     { id: 'post_war_aims', label: 'Victor\'s Aims', stage: 3,
       activateWhen: [{ conflict_result: ['victory'] }],
       edges: [ { id: 'human_centered', label: 'Rebuild for humanity' }, { id: 'self_interest', label: 'Consolidate power' } ] },
-    { id: 'societal_response', label: 'Societal Response', stage: 3, hideAfterEscape: true,
+    { id: 'power_promise', label: 'The Promise', stage: 3, hideAfterEscape: true,
       activateWhen: [
         {
           capability: ['singularity'],
@@ -693,35 +690,66 @@ const NODES = [
         { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['benevolent'] }
       ],
       edges: [
-        { id: 'strong', label: 'Strong collective response' },
-        { id: 'fragmented', label: 'Fragmented response' },
-        { id: 'passive', label: 'Passive adoption' }
+        { id: 'for_everyone', label: 'This is for everyone' },
+        { id: 'keeping_safe', label: 'We\'re keeping you safe' },
+        { id: 'best_will_rise', label: 'The best will rise' }
       ] },
-    { id: 'capture_confrontation', label: 'Confrontation', stage: 3,
+    { id: 'mobilization', label: 'Mobilization', stage: 3, hideAfterEscape: true,
+      activateWhen: [{ _set: ['power_promise'] }],
+      edges: [
+        { id: 'strong', label: 'Strong mobilization' },
+        { id: 'weak', label: 'Weak or fragmented' },
+        { id: 'none', label: 'No meaningful mobilization' }
+      ] },
+    { id: 'sincerity_test', label: 'Sincerity Test', stage: 3, hideAfterEscape: true,
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'], societal_response: ['strong'] }
+        { power_promise: ['for_everyone'], mobilization: ['none'] },
+        { power_promise: ['for_everyone'], coalition_outcome: ['coalesces'] }
+      ],
+      edges: [
+        { id: 'sincere', label: 'Yes — the promise holds' },
+        { id: 'hollows_out', label: 'No — the promise hollows out' }
+      ] },
+    { id: 'resistance_outcome', label: 'The Resistance', stage: 3, hideAfterEscape: true,
+      activateWhen: [
+        { mobilization: ['strong'], power_promise: ['keeping_safe', 'best_will_rise'] },
+        { coalition_outcome: ['coalesces'], power_promise: ['keeping_safe', 'best_will_rise'] }
       ],
       edges: [
         { id: 'succeeds', label: 'Resistance succeeds' },
+        { id: 'partial', label: 'Partial concessions' },
         { id: 'fails', label: 'Power prevails' }
+      ] },
+    { id: 'coalition_outcome', label: 'Coalition Problem', stage: 3, hideAfterEscape: true,
+      activateWhen: [{ mobilization: ['weak'] }],
+      edges: [
+        { id: 'coalesces', label: 'Coalition forms' },
+        { id: 'fragments', label: 'Fragmentation holds' }
       ] },
     { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
       activateWhen: OUTCOME_ACTIVATE,
       edges: [
         { id: 'equal', label: 'Shared equally',
           disabledWhen: [
-            { societal_response: ['fragmented'], intent: ['self_interest'], reason: 'Without coordination or shared purpose, equal distribution doesn\'t happen on its own' },
-            { societal_response: ['fragmented'], post_war_aims: ['self_interest'], reason: 'After the conflict, self-interest and fragmentation prevent equal sharing' },
-            { capture_confrontation: ['fails'], reason: 'The pushback against concentration didn\'t work' }
+            { sincerity_test: ['hollows_out'], reason: 'The promise of shared prosperity hollowed out without pressure to enforce it' },
+            { resistance_outcome: ['partial'], reason: 'The resistance won concessions but not transformation — the structure still favors those who hold power' },
+            { resistance_outcome: ['fails'], reason: 'The resistance failed — the power holder prevailed and concentration proceeds' },
+            { coalition_outcome: ['fragments'], reason: 'The opposition never unified, leaving the default power structure intact' },
+            { power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'], reason: 'No one contested a promise that was never about sharing' }
           ] },
-        { id: 'unequal', label: 'Wealth concentrates' },
+        { id: 'unequal', label: 'Wealth concentrates',
+          disabledWhen: [
+            { power_promise: ['for_everyone'], mobilization: ['strong'], reason: 'Promise and pressure aligned — broadly shared outcomes, not partial inequality' },
+            { sincerity_test: ['sincere'], reason: 'Genuine cooperative intent produced broadly shared outcomes' },
+            { resistance_outcome: ['succeeds'], reason: 'Successful resistance forced genuine redistribution' },
+            { power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'], reason: 'Without any contest, power concentrates to the maximum extent' }
+          ] },
         { id: 'extreme', label: 'Power concentrates',
           disabledWhen: [
-            { societal_response: ['strong'], intent: ['international'], reason: 'Broad coordination and collective action keep concentration in check' },
-            { societal_response: ['strong'], intent: ['coexistence'], reason: 'A mobilized society pursuing coexistence constrains concentration' },
-            { societal_response: ['strong'], post_war_aims: ['self_interest'], reason: 'Collective action constrains concentration, even when motives are self-interested' },
-            { societal_response: ['strong'], ai_goals: ['benevolent'], reason: 'A mobilized society backed by a benevolent AI doesn\'t let power concentrate this far' },
-            { capture_confrontation: ['succeeds'], reason: 'The pushback against concentration succeeded' }
+            { power_promise: ['for_everyone'], mobilization: ['strong'], reason: 'Promise and accountability together prevent extreme concentration' },
+            { sincerity_test: ['sincere'], reason: 'The cooperative intent proved genuine — power didn\'t concentrate this far' },
+            { resistance_outcome: ['succeeds'], reason: 'The resistance forced genuine redistribution' },
+            { resistance_outcome: ['partial'], reason: 'Real concessions were made — not equality, but enough to prevent lock-in' }
           ] }
       ] },
     { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, terminal: true, hideAfterEscape: true,
@@ -756,31 +784,21 @@ const NODES = [
       ] },
     { id: 'failure_mode', label: 'Implementation', stage: 3, forwardKey: true, hideAfterEscape: true,
       activateWhen: [
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['robust', 'brittle'],
-          intent: ['international', 'coexistence'],
-          _notSet: ['post_war_aims'],
-          _set: ['societal_response']
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          _raw: { brittle_resolution: ['escape'] },
-          ai_goals: ['benevolent', 'marginal'],
-          intent: ['international', 'coexistence'],
-          _notSet: ['post_war_aims'],
-          _set: ['societal_response']
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          _eff: { alignment: ['failed'], containment: ['contained'] },
-          intent: ['international', 'coexistence'],
-          _notSet: ['post_war_aims'],
-          _set: ['societal_response']
-        }
+        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['for_everyone'], mobilization: ['strong'] },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['sincerity_test'] },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['resistance_outcome'] },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], coalition_outcome: ['fragments'] },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
+        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['for_everyone'], mobilization: ['strong'] },
+        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['sincerity_test'] },
+        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['resistance_outcome'] },
+        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], coalition_outcome: ['fragments'] },
+        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
+        { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'], containment: ['contained'] }, intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['for_everyone'], mobilization: ['strong'] },
+        { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'], containment: ['contained'] }, intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['sincerity_test'] },
+        { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'], containment: ['contained'] }, intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['resistance_outcome'] },
+        { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'], containment: ['contained'] }, intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], coalition_outcome: ['fragments'] },
+        { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'], containment: ['contained'] }, intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] }
       ],
       edges: [
         { id: 'none', label: 'Succeeds' },
