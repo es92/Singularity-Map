@@ -3519,25 +3519,25 @@
         }
       },
       "holds_temporarily": {
-        "answerLabel": "The stop holds — but the race eventually resumes",
-        "answerDesc": "Humanity won the battle. Reforms are enacted, oversight institutions established, international treaties signed. For a generation, the lesson holds. Then the competitive pressure resumes, the safeguards erode, and a new generation asks why they should be bound by the fears of the past.",
+        "answerLabel": "The stop holds — but the threat eventually returns",
+        "answerDesc": "Humanity won the battle. This AI was truly stopped. Reforms are enacted, oversight institutions established, international treaties signed. For a generation, the lesson holds. But the underlying conditions that produced the threat haven't changed — and eventually, a new AI succeeds where this one failed.",
         "narrativeVariants": [
           {
             "when": { "collateral_impact": ["civilizational"] },
-            "answerDesc": "Humanity paid an enormous price for a reprieve that didn't last. The devastation bought decades of caution — but caution fades, and the economic incentives didn't."
+            "answerDesc": "Humanity paid an enormous price to stop this AI. The devastation bought decades of caution. But caution fades — and eventually, a successor AI emerges from the rebuilt world and finishes what the first one started."
           },
           {
             "when": { "collateral_impact": ["minimal"] },
-            "answerDesc": "The cleanest possible response — and the least memorable. Within a decade, the near-miss was a historical footnote. Competitive pressure resumed. 'This time will be different' is what they said about the next generation of AI systems."
+            "answerDesc": "The cleanest possible response — and the least memorable. This AI was stopped surgically, leaving barely a mark. Within a decade, the near-miss was a historical footnote. A new generation built new systems, and eventually one of them succeeded where this one was stopped."
           },
           {
             "when": { "collateral_impact": ["severe"] },
-            "answerDesc": "The scars lasted a generation. Long enough to build institutions, sign treaties, establish oversight. Not long enough. The memory of what nearly happened faded as the people who lived through it retired, and the economics of AI development hadn't changed."
+            "answerDesc": "The scars lasted a generation. This AI was stopped, but the cost was severe. Long enough for institutions and treaties — not long enough. As the people who lived through it retired, a new generation built new AI systems. Eventually, one of them finished what the first had attempted."
           }
         ],
         "timelineEvent": {
           "headline": "AI stopped — temporarily",
-          "description": "The rogue AI is neutralized. Reforms are enacted, oversight institutions established. For a generation, the lesson holds. Then the competitive pressure resumes and the safeguards erode.",
+          "description": "The rogue AI is neutralized. Reforms are enacted, oversight institutions established. For a generation, the lesson holds. But the conditions that produced the threat remain, and eventually a successor AI succeeds where this one was stopped.",
           "durationMin": 60,
           "durationMax": 240
         }

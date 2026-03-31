@@ -912,7 +912,7 @@ const NODES = [
       edges: [
         { id: 'never_stopped', label: 'The AI was never actually stopped',
           disabledWhen: [{ response_success: ['yes'], reason: 'The response succeeded' }] },
-        { id: 'holds_temporarily', label: 'The stop holds — but the race eventually resumes',
+        { id: 'holds_temporarily', label: 'The stop holds — but the threat eventually returns',
           requires: { response_success: ['yes'] } },
         { id: 'holds_permanently', label: 'The stop holds permanently',
           requires: { response_success: ['yes'] } }
