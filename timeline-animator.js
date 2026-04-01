@@ -552,8 +552,18 @@ class TimelineAnimator {
         }
 
         // --- Scroll setup ---
-        // scrollDelta: how much to scroll during animation.
-        // Positive = scroll down (content grew), negative = scroll up (card above viewport).
+        // Measure the natural content height (without inflated scroll room) so we
+        // can cap scrollDelta — the animation must land at a scroll position the
+        // real content can support, otherwise _releaseScrollRoom triggers a second
+        // browser-driven scroll via CSS scroll-behavior:smooth.
+        const scrollRoomEl = this._getScrollRoomEl();
+        const inflatedMinH = this._scrollMinHeight;
+        scrollRoomEl.style.minHeight = '';
+        const naturalMinH = document.documentElement.scrollHeight;
+        scrollRoomEl.style.minHeight = inflatedMinH + 'px';
+        const naturalMaxScroll = Math.max(0, naturalMinH - window.innerHeight);
+
+        const scrollStart = window.scrollY;
         let scrollDelta = totalShift;
         if (newCardRect && this._headerEl) {
             const headerBottom = this._headerEl.getBoundingClientRect().bottom;
@@ -562,20 +572,16 @@ class TimelineAnimator {
                 scrollDelta = Math.min(scrollDelta, newCardRect.top - desiredTop);
             }
         }
-        const scrollStart = window.scrollY;
+        if (scrollStart + scrollDelta > naturalMaxScroll + 5) {
+            scrollDelta = Math.max(0, naturalMaxScroll - scrollStart);
+        }
         if (!vis.scroll && Math.abs(scrollDelta) > 1) {
             window.scrollBy({ top: scrollDelta, behavior: 'instant' });
         }
 
         // --- Phase 5: Animate ---
-        // Capture scroll room for gradual release during animation.
         // All visual transitions must happen within this single animation loop —
         // pre/post animations are considered bugs.
-        const scrollRoomEl = this._getScrollRoomEl();
-        const inflatedMinH = this._scrollMinHeight;
-        scrollRoomEl.style.minHeight = '';
-        const naturalMinH = document.documentElement.scrollHeight;
-        scrollRoomEl.style.minHeight = inflatedMinH + 'px';
 
         const startTime = performance.now();
         const oldCardEl = this._oldCardEl;
