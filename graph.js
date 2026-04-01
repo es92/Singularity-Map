@@ -192,7 +192,7 @@ const NODES = [
       edges: [
         { id: 'open', label: 'Distributed', requires: { open_source: ['near_parity'] }, disabledWhen: [{ takeoff: ['explosive'], reason: 'At this speed, only whoever gets there first has it' }] },
         { id: 'lagging', label: 'Many compete', disabledWhen: [{ takeoff: ['explosive'], reason: 'At this speed, only whoever gets there first has it' }, { open_source: ['near_parity'], reason: 'With open-source at parity, no one is lagging behind' }] },
-        { id: 'concentrated', label: 'A few lead', disabledWhen: [{ takeoff: ['explosive'], reason: 'At this speed, only whoever gets there first has it' }, { open_source: ['near_parity'], reason: 'With open-source at parity, no one is lagging behind' }] },
+        { id: 'concentrated', label: 'A few lead', disabledWhen: [{ open_source: ['near_parity'], reason: 'With open-source at parity, no one is lagging behind' }] },
         { id: 'monopoly', label: 'One dominates', disabledWhen: [{ open_source: ['near_parity'], reason: 'With open-source at parity, no one can monopolize it' }] }
       ] },
     { id: 'geo_spread', label: 'Countries', stage: 2,

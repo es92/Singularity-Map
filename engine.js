@@ -381,7 +381,7 @@ function resolveContextWhen(sel, narr) {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { NODES, NODE_MAP,
         matchCondition, resolvedVal, isNodeVisible, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
-        resolvedState,
+        cleanSelection, resolvedState,
         templateMatches, templatePartialMatch, resolveContextWhen,
         createStack, push, pop, popTo, currentState, stackHas, displayOrder };
 }

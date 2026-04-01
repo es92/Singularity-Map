@@ -49,6 +49,11 @@ function resolveHeading(nodeId, val, flavorHeadings) {
 const MODE_INSTRUCTIONS = {
     want: `This is WANT mode. You are expressing what this persona would PREFER — their ideal outcome, not their prediction.
 
+Think step by step: What does this persona dream about? What outcome would they celebrate? Score THAT highest.
+
+- If the question is about a factual outcome (alignment, capability, speed of progress), rate the option this persona would MOST HOPE is true — not what they think is likely.
+- If the question is about a policy choice (governance, open source, distribution), rate the option this persona would ADVOCATE for.
+
 Rate each option from 1 to 100 based on how much the persona would WANT it to happen. This is about desire, values, and hopes — NOT about realism or probability. A safety researcher should rate "alignment works" very high even if they think it's unlikely. An optimist should rate positive outcomes near 100. A nationalist should rate outcomes that favor their country near 100.
 
 Do NOT let your assessment of what is "realistic" influence the scores. This is purely about preference intensity.
@@ -284,7 +289,7 @@ function resolveTemplate(templateId, state) {
 
 // ── DAG walking ──
 
-async function simulatePath(persona, mode) {
+async function simulatePath(persona, mode, { deterministic = false } = {}) {
     const sel = { _locked: {} };
     const log = [];
     let apiCalls = 0;
@@ -361,7 +366,10 @@ ${MODE_INSTRUCTIONS[mode]}
 
 ${MODE_RESPONSE_FORMATS[mode]}`;
 
-            const user = `${pathContext.length > 0 ? 'Choices made so far:\n' + pathContext.join('\n') + '\n\n---\n\n' : ''}**${getQuestionText(node.id)}**
+            const wantFraming = mode === 'want'
+                ? 'Imagine your ideal scenario — the best realistic version of events from this persona\'s perspective.\n\n'
+                : '';
+            const user = `${pathContext.length > 0 ? 'Choices made so far:\n' + pathContext.join('\n') + '\n\n---\n\n' : ''}${wantFraming}**${getQuestionText(node.id)}**
 
 ${getQuestionContext(node.id, sel)}
 
@@ -389,7 +397,9 @@ ${optionsText}${disabledText}`;
             const total = Object.values(validProbs).reduce((s, p) => s + p, 0);
             for (const k of Object.keys(validProbs)) validProbs[k] /= total;
 
-            const chosen = sampleFromDistribution(validProbs);
+            const chosen = deterministic
+                ? Object.entries(validProbs).reduce((a, b) => b[1] > a[1] ? b : a)[0]
+                : sampleFromDistribution(validProbs);
             sel[node.id] = chosen;
             log.push({
                 id: node.id, label: node.label, val: chosen,
@@ -913,9 +923,13 @@ async function main() {
     const startTime = Date.now();
 
     const jobFns = jobs.map(({ persona, mode, run }) => async () => {
-        const label = `${persona.name} — ${mode} — run ${run}/${K}`;
+        const isDeterministic = mode === 'want' && run === 1;
+        const modeLabel = mode === 'want'
+            ? (isDeterministic ? 'want' : 'want (with noise)')
+            : mode;
+        const label = `${persona.name} — ${modeLabel} — run ${run}/${K}`;
 
-        const result = await simulatePath(persona, mode);
+        const result = await simulatePath(persona, mode, { deterministic: isDeterministic });
         const review = await getPersonaReview(persona, mode, result.log, result.resolved);
 
         const outcomeTitle = result.resolved

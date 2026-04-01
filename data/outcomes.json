@@ -28,7 +28,7 @@
       },
       "flavorHeadings": {
         "stall_recovery": {
-          "substantial": "The Breakthrough",
+          "substantial": "The Long Wait",
           "never": "The Ceiling"
         },
         "plateau_benefit_distribution": "The Economy",
@@ -37,7 +37,7 @@
       },
       "flavors": {
         "stall_recovery": {
-          "substantial": "The plateau wasn't permanent. A major architectural breakthrough — world models, neurosymbolic reasoning, or something no one predicted — restarted the exponential trend. The singularity was delayed, not cancelled.",
+          "substantial": "The plateau eventually broke — but not for years, perhaps decades. A major architectural breakthrough restarted the exponential trend, but by then the world had rebuilt itself around the ceiling. The story wasn't about the breakthrough. It was about everything that happened while waiting for one.",
           "never": "The ceiling was permanent. No breakthrough came, no new paradigm emerged. The most powerful tool humanity ever built, deployed and adapted to, but never transcended."
         },
         "plateau_benefit_distribution": {
@@ -79,7 +79,7 @@
       "flavorHeadings": {
         "stall_recovery": "The Recovery",
         "automation_recovery": {
-          "substantial": "The Breakthrough",
+          "substantial": "The Long Wait",
           "never": "The Ceiling"
         },
         "auto_benefit_distribution": "The Economy",
