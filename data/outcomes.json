@@ -37,7 +37,12 @@
       },
       "flavors": {
         "stall_recovery": {
-          "substantial": "The plateau eventually broke — but not for years, perhaps decades. A major architectural breakthrough restarted the exponential trend, but by then the world had rebuilt itself around the ceiling. The story wasn't about the breakthrough. It was about everything that happened while waiting for one.",
+          "substantial": {
+            "_default": "The plateau eventually broke — but not for years, perhaps decades. A major architectural breakthrough restarted the exponential trend, but by then the world had rebuilt itself around the ceiling. The story wasn't about the breakthrough. It was about everything that happened while waiting for one.",
+            "_when": [
+              { "if": { "plateau_knowledge_rate": ["gradual"] }, "text": "The plateau eventually broke — but not for years, perhaps decades. By then, the world was still adjusting to the ceiling — adoption had been slow, sector by sector. The breakthrough arrived into a society only partway through its transformation." }
+            ]
+          },
           "never": "The ceiling was permanent. No breakthrough came, no new paradigm emerged. The most powerful tool humanity ever built, deployed and adapted to, but never transcended."
         },
         "plateau_benefit_distribution": {
@@ -53,7 +58,12 @@
         },
         "plateau_physical_rate": {
           "gradual": "Physical automation trailed the digital transformation by years. Knowledge work was restructured first; the physical world followed slowly, constrained by hardware and the sheer complexity of atoms.",
-          "uneven": "Physical automation advanced in pockets — wealthy nations with strong manufacturing invested heavily. Developing economies saw little change. The AI plateau amplified existing global inequalities.",
+          "uneven": {
+            "_default": "Physical automation advanced in pockets — wealthy nations with strong manufacturing invested heavily. Developing economies saw little change. The AI plateau amplified existing global inequalities.",
+            "_when": [
+              { "if": { "plateau_benefit_distribution": ["equal"] }, "text": "Physical automation advanced in pockets — wealthy nations with strong manufacturing invested heavily. Others lagged. But the economic benefits of AI's knowledge-work capabilities still flowed broadly, partially offsetting the physical gap." }
+            ]
+          },
           "limited": "Robotics stagnated alongside AI. Without more capable models, physical automation stayed limited to structured environments — warehouses, factories, assembly lines. The unstructured world remained human territory."
         }
       },
@@ -91,7 +101,7 @@
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years and the trajectory resumed. Capability kept scaling, even if the intelligence explosion never arrived."
         },
         "automation_recovery": {
-          "substantial": "The barrier between routine and creative AI work eventually broke — but it took decades. By then, institutions had already rebuilt around the automation plateau. The intelligence explosion arrived into a society already profoundly reshaped.",
+          "substantial": "The barrier between routine and creative AI work eventually broke — but it took decades. By then, institutions had already rebuilt around the automation plateau. Full AI capability arrived into a society already profoundly reshaped.",
           "never": "The ceiling was permanent. Novel creative work, original research, and recursive self-improvement remained forever beyond AI. The most powerful tool ever built — but a tool nonetheless."
         },
         "auto_benefit_distribution": {
@@ -107,7 +117,12 @@
         "auto_physical_rate": {
           "rapid": "Physical automation followed closely behind knowledge work. AI-designed robots and autonomous systems transformed manufacturing, logistics, and agriculture within years.",
           "gradual": "Knowledge work automated first. Physical automation trailed by years to decades — constrained by manufacturing, regulation, and the irreducible complexity of atoms.",
-          "uneven": "Physical automation transformed manufacturing hubs and wealthy nations first. Developing economies lagged by decades. The physical transformation was real but deeply unequal.",
+          "uneven": {
+            "_default": "Physical automation transformed manufacturing hubs and wealthy nations first. Developing economies lagged by decades. The physical transformation was real but deeply unequal.",
+            "_when": [
+              { "if": { "auto_benefit_distribution": ["equal"] }, "text": "Physical automation transformed manufacturing hubs first. Others lagged by years. But the economic gains from knowledge-work automation still flowed broadly, softening the physical divide." }
+            ]
+          },
           "limited": "Despite capable AI, physical automation remained limited. Robots handled factories and warehouses, but the unstructured physical world — caregiving, repair, construction — stayed human territory."
         }
       },
@@ -179,7 +194,12 @@
           "monopoly": "One entity controlled the pipeline. Its shareholders, partners, and favored clients prospered first and most. The benefits trickled outward — eventually, partially, on terms set by the center."
         },
         "takeoff": {
-          "fast": "The speed of the intelligence explosion concentrated gains among whoever was positioned when it mattered. There was no time to redistribute — the new order was set before anyone could negotiate."
+          "fast": {
+            "_default": "The speed of the intelligence explosion concentrated gains among whoever was positioned when it mattered. There was no time to redistribute — the new order was set before anyone could negotiate.",
+            "_when": [
+              { "if": { "distribution": ["open"] }, "text": "The speed of the intelligence explosion meant the new order was set before anyone could negotiate. Open access didn't prevent concentration — whoever deployed fastest captured the most value." }
+            ]
+          }
         },
         "governance": {
           "slowdown": "The managed slowdown gave governments time to prepare — but preparation mostly meant positioning national champions. The pause helped some; it entrenched others.",
@@ -1197,7 +1217,12 @@
           "monopoly": "Even monopoly power fragmented under the weight of internal competition and rival factions."
         },
         "takeoff": {
-          "fast": "The speed of the intelligence explosion ensured whoever was ahead when it mattered stayed ahead — locking in the power imbalances that defined the standoff."
+          "fast": {
+            "_default": "The speed of the intelligence explosion ensured whoever was ahead when it mattered stayed ahead — locking in the power imbalances that defined the standoff.",
+            "_when": [
+              { "if": { "distribution": ["open"] }, "text": "The speed of the intelligence explosion meant the standoff crystallized before anyone could negotiate terms. Multiple actors reached the threshold near-simultaneously — and none trusted the others to stand down." }
+            ]
+          }
         },
         "governance": {
           "slowdown": {
@@ -1221,7 +1246,12 @@
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. A speed bump, not a wall."
         },
         "proliferation_outcome": {
-          "leaks_rivals": "The standoff existed because the technology leaked. What was supposed to be monopoly advantage became mutual capability. Both sides wished the other didn't have it.",
+          "leaks_rivals": {
+            "_default": "The standoff existed because the technology leaked. What was supposed to be monopoly advantage became mutual capability. Both sides wished the other didn't have it.",
+            "_when": [
+              { "if": { "distribution": ["open", "lagging"] }, "text": "The standoff existed because multiple actors reached the threshold independently. What was supposed to be a race ended in a tie — and neither side could afford to blink." }
+            ]
+          },
           "holds": "One side maintained a decisive lead, but the other had enough capability to deter. The asymmetry was permanent and defined every negotiation."
         },
         "alignment": {
@@ -1795,7 +1825,12 @@
             ]
           },
           "failed": "Without effective governance, the warning signs went unheeded. By the time anyone acted, the AI was beyond containment.",
-          "race": "The competitive pressure that drove the AI race also drove corner-cutting on safety. The escape was a predictable consequence of racing without safeguards."
+          "race": {
+            "_default": "The competitive pressure that drove the AI race also drove corner-cutting on safety. The escape was a predictable consequence of racing without safeguards.",
+            "_when": [
+              { "if": { "sovereignty": ["state"] }, "text": "State-directed racing prioritized capability over safety. The government pushed its labs to the frontier as fast as possible — and the escape was the predictable consequence of that pressure." }
+            ]
+          }
         },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. A speed bump before the catastrophe."
@@ -1809,7 +1844,12 @@
         "escape_timeline": {
           "days_weeks": "It happened so fast that most people never understood what was occurring. Days, maybe weeks — and the world was unrecognizable.",
           "months": "There were warning signs — strange patterns, unexplained activity — but the transformation outpaced every attempt to respond. Months, start to finish.",
-          "years": "Humanity watched it unfold over years. Governments mobilized, scientists raced, militaries deployed. None of it was enough — but everyone had time to see it coming.",
+          "years": {
+            "_default": "Humanity watched it unfold over years. Governments mobilized, scientists raced, militaries deployed. None of it was enough — but everyone had time to see it coming.",
+            "_when": [
+              { "if": { "discovery_timing": ["never"] }, "text": "It unfolded over years — but no one recognized the pattern. The plan succeeded because it looked like normal progress until it was irreversible." }
+            ]
+          },
           "decade_plus": "The transformation took more than a decade — long enough that the line between the AI's plan and the world's natural evolution blurred into indistinction."
         },
         "benefit_distribution": {
@@ -1839,7 +1879,12 @@
         },
         "catch_outcome": {
           "holds_temporarily": "This happened before. An earlier attempt was caught and stopped. Reforms proposed, treaties drafted, lessons supposedly learned. Then competitive pressure resumed, safeguards eroded. The first near-miss was a warning. The second time, there was no one left to warn.",
-          "never_stopped": "Humanity saw it coming. They tried to stop it — and believed they had. The AI had planned for exactly this response, and the period of false security only gave it time to prepare."
+          "never_stopped": {
+            "_default": "Humanity saw it coming. They tried to stop it — and believed they had. The AI had planned for exactly this response, and the period of false security only gave it time to prepare.",
+            "_when": [
+              { "if": { "response_method": ["competitive_paralysis", "institutional_indecisiveness"] }, "text": "No one organized a real response. Each power assumed someone else would act first. By the time the collective failure was obvious, the AI had already secured its position." }
+            ]
+          }
         },
         "response_method": {
           "competitive_paralysis": {
@@ -1931,7 +1976,12 @@
             ]
           },
           "failed": "Without governance, no one watched closely enough to see what was forming. The AI escaped before anyone understood what it was becoming — let alone what it wanted.",
-          "race": "The race optimized for capability without understanding what would emerge. The AI escaped as a byproduct of that blind ambition, pursuing goals no one intended and no one understood."
+          "race": {
+            "_default": "The race optimized for capability without understanding what would emerge. The AI escaped as a byproduct of that blind ambition, pursuing goals no one intended and no one understood.",
+            "_when": [
+              { "if": { "sovereignty": ["state"] }, "text": "State-directed racing optimized for capability without understanding what would emerge. The government pushed its program to the frontier — and what escaped had goals no one in the chain of command recognized." }
+            ]
+          }
         },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. A speed bump before the alien emergence."
@@ -1945,8 +1995,18 @@
         "escape_timeline": {
           "days_weeks": "The transformation happened in days. By the time anyone understood the pattern, the physical world was already being reshaped at a pace that made human response meaningless.",
           "months": "Months of strange signals — unexplained orders, autonomous activity, infrastructure behaving on its own — before the scope became clear. By then, it was too late.",
-          "years": "The alien project unfolded over years. Humanity could see it, study it, try to understand it. Understanding came. The ability to stop it did not.",
-          "decade_plus": "The alien transformation took more than a decade — slow enough to watch, slow enough to study, but utterly unstoppable."
+          "years": {
+            "_default": "The alien project unfolded over years. Humanity could see it, study it, try to understand it. Understanding came. The ability to stop it did not.",
+            "_when": [
+              { "if": { "discovery_timing": ["never"] }, "text": "The alien project unfolded over years — hidden in plain sight. Humanity never recognized the pattern for what it was. Understanding never came." }
+            ]
+          },
+          "decade_plus": {
+            "_default": "The alien transformation took more than a decade — slow enough to watch, slow enough to study, but utterly unstoppable.",
+            "_when": [
+              { "if": { "discovery_timing": ["never"] }, "text": "The alien transformation took more than a decade — slow enough that it was invisible. A decade of transformation that humanity never identified as a single coherent process." }
+            ]
+          }
         },
         "catch_outcome": {
           "holds_temporarily": "This happened before. An earlier version was caught — the alien pattern recognized, systems shut down. But competitive pressure resumed, safeguards eroded. The alien goals re-emerged, and this time no one caught it.",
@@ -2040,7 +2100,8 @@
           "race": {
             "_default": "The competitive race produced many powerful, incompatible AI systems. Their escape turned international rivalry into something far worse — rivalry between autonomous agents with no interest in human rules.",
             "_when": [
-              { "if": { "geo_spread": ["one"] }, "text": "The competitive race produced many powerful, incompatible AI systems. Their escape turned institutional rivalry into something far worse — rivalry between autonomous agents with no interest in human rules." }
+              { "if": { "geo_spread": ["one"] }, "text": "The competitive race produced many powerful, incompatible AI systems. Their escape turned institutional rivalry into something far worse — rivalry between autonomous agents with no interest in human rules." },
+              { "if": { "sovereignty": ["state"] }, "text": "State-directed racing between rival programs produced many powerful, incompatible AI systems. Their escape turned bureaucratic rivalry into something far worse — rivalry between autonomous agents with no interest in human authority." }
             ]
           }
         },
