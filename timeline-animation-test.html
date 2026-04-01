@@ -3,31 +3,171 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Timeline Animation Test</title>
+<title>Timeline Animation Test – AI Singularity Map</title>
 <link rel="stylesheet" href="timeline.css">
 <style>
-    h1 {
-        font-size: 1.1rem; margin: 0;
-        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    #app.fade-out { animation: fadeOut 0.28s var(--ease) forwards; }
+    #app.fade-in  { animation: fadeIn  0.28s var(--ease) forwards; }
+
+    @keyframes fadeOut { to { opacity: 0; transform: translateY(8px); } }
+    @keyframes fadeIn  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; }
+    h2 { font-size: 1.6rem; font-weight: 600; letter-spacing: -0.015em; line-height: 1.3; }
+    h3 { font-size: 1.15rem; font-weight: 600; line-height: 1.4; }
+
+    .btn {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        padding: 0.8rem 1.6rem;
+        border-radius: var(--radius);
+        font-size: 0.95rem; font-weight: 500;
+        cursor: pointer; border: none;
+        transition: all 0.2s var(--ease);
+        text-decoration: none; font-family: inherit;
+    }
+    .btn-primary { background: var(--accent); color: var(--pill-active-text); }
+    .btn-primary:hover {
+        filter: brightness(1.15);
+        box-shadow: 0 0 24px var(--accent-glow);
+    }
+    .btn-ghost {
+        background: transparent; color: var(--text-secondary);
+        padding: 0.5rem 0.75rem; font-size: 0.9rem;
+    }
+    .btn-ghost:hover { color: var(--text); text-decoration: underline; }
+
+    /* ---- Theme Toggle ---- */
+    .theme-toggle-btn {
+        position: fixed; top: 1rem; right: 1rem;
+        width: 36px; height: 36px; border-radius: 50%;
+        background: var(--bg-card); border: 1px solid var(--border);
+        color: var(--text-secondary); cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.05rem; z-index: 50;
+        transition: all 0.2s var(--ease);
+    }
+    .theme-toggle-btn:hover {
+        border-color: var(--border-hover); color: var(--text);
+        background: var(--bg-card-hover);
+    }
+
+    /* ---- Toast ---- */
+    #toast {
+        position: fixed; bottom: 1.5rem; left: 50%;
+        transform: translateX(-50%) translateY(80px);
+        background: var(--bg-card); border: 1px solid var(--accent);
+        color: var(--text); padding: 0.65rem 1.25rem;
+        border-radius: var(--radius); font-size: 0.88rem;
+        transition: transform 0.3s var(--ease);
+        z-index: 100; pointer-events: none;
+    }
+    #toast.visible { transform: translateX(-50%) translateY(0); }
+
+    /* ---- Map View ---- */
+    .map-screen {
+        margin-top: -2rem; margin-bottom: -4rem;
+        display: flex; flex-direction: column; min-height: 100vh;
+    }
+    .map-toolbar {
+        position: sticky; top: 0; z-index: 100;
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 0.75rem 1.5rem;
+        margin-left: -1.5rem; margin-right: -1.5rem;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        pointer-events: none;
+    }
+    .map-title {
+        font-weight: 700; font-size: 1.15rem;
+        letter-spacing: 0.02em;
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
         -webkit-background-clip: text; background-clip: text;
         -webkit-text-fill-color: transparent;
+        pointer-events: auto;
     }
-
-    /* Outcome card */
-    .outcome-card {
-        margin-left: 2.5rem;
-        margin-top: 1rem;
-        padding: 1.2rem 1.4rem;
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
+    .map-settings-wrap {
+        position: relative; pointer-events: auto;
     }
+    .map-view-btn {
+        background: none; border: none;
+        color: var(--text-secondary);
+        cursor: pointer; transition: color 0.2s var(--ease);
+        padding: 0.3rem;
+        display: flex; align-items: center;
+    }
+    .map-view-btn:hover { color: var(--text); }
+    .map-settings-dropdown {
+        position: absolute; top: 100%; right: 0;
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); padding: 0.6rem 0.8rem;
+        display: flex; flex-direction: column; gap: 0.5rem;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        min-width: max-content;
+    }
+    .map-toggle {
+        display: flex; align-items: center; gap: 0.55rem;
+        cursor: pointer; user-select: none;
+        font-size: 0.8rem; color: var(--text-secondary);
+    }
+    .map-toggle:hover { color: var(--text); }
+    .map-toggle input[type="checkbox"] {
+        appearance: none; -webkit-appearance: none;
+        width: 34px; height: 20px; border-radius: 10px;
+        background: var(--border); cursor: pointer;
+        position: relative; flex-shrink: 0;
+        transition: background 0.2s var(--ease);
+        border: none; outline: none;
+    }
+    .map-toggle input[type="checkbox"]::after {
+        content: ''; position: absolute;
+        top: 2px; left: 2px;
+        width: 16px; height: 16px; border-radius: 50%;
+        background: var(--bg-card); box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        transition: transform 0.2s var(--ease);
+    }
+    .map-toggle input[type="checkbox"]:checked { background: var(--accent); }
+    .map-toggle input[type="checkbox"]:checked::after { transform: translateX(14px); }
 
-    /* Speed controls */
-    .controls {
-        position: sticky; top: 0; z-index: 100;
+    .map-outcome-section {
+        background: var(--bg-surface); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .map-outcomes-zone { margin-top: 1.5rem; margin-bottom: 1.5rem; padding-left: 2.5rem; }
+    .map-outcome-zone { margin-top: 1.5rem; }
+    .mood-badge {
+        display: inline-block;
+        padding: 0.22rem 0.7rem; border-radius: 20px;
+        font-size: 0.75rem; font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .mood-chaotic  { background: rgba(170,68,255,0.12); color: var(--mood-chaotic);  border: 1px solid rgba(170,68,255,0.25); }
+    .mood-utopian  { background: rgba(0,224,136,0.12);  color: var(--mood-utopian);  border: 1px solid rgba(0,224,136,0.25); }
+    .mood-dystopian{ background: rgba(255,51,102,0.12); color: var(--mood-dystopian); border: 1px solid rgba(255,51,102,0.25); }
+    .mood-mixed    { background: rgba(255,170,34,0.12); color: var(--mood-mixed);    border: 1px solid rgba(255,170,34,0.25); }
+    .mood-stagnant { background: rgba(120,136,170,0.12);color: var(--mood-stagnant); border: 1px solid rgba(120,136,170,0.25); }
+
+    .map-actions {
         display: flex; gap: 0.5rem; flex-wrap: wrap;
-        margin: -2rem -1.5rem 0.75rem;
+        margin-top: auto; padding-top: 1rem; padding-bottom: 1rem;
+    }
+
+    @media (max-width: 820px) {
+        .map-settings-wrap { margin-right: 2.75rem; }
+        .theme-toggle-btn { top: 0.5rem; }
+    }
+    @media (max-width: 600px) {
+        h1 { font-size: 2rem; }
+        #app { padding: 1.25rem 1rem 3rem; }
+        .map-screen { margin-top: -1.25rem; }
+        .map-toolbar { margin-left: -1rem; margin-right: -1rem; padding-left: 1rem; padding-right: 1rem; }
+    }
+
+    /* ---- Test Controls ---- */
+    .controls {
+        z-index: 99;
+        display: flex; gap: 0.5rem; flex-wrap: wrap;
+        margin: 0 -1.5rem 0.75rem;
         padding: 0.75rem 1.5rem;
         background: var(--bg);
         border-bottom: 1px solid var(--border);
@@ -51,431 +191,476 @@
         font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;
     }
 
-    .theme-toggle {
-        display: flex; align-items: center; gap: 0.4rem;
-        margin-left: auto; font-size: 0.78rem; color: var(--text-secondary);
-        cursor: pointer; user-select: none;
-    }
-    .theme-toggle input[type="checkbox"] {
-        appearance: none; -webkit-appearance: none;
-        width: 34px; height: 20px; border-radius: 10px;
-        background: var(--border); cursor: pointer;
-        position: relative; flex-shrink: 0;
-        transition: background 0.2s var(--ease);
-        border: none; outline: none;
-    }
-    .theme-toggle input[type="checkbox"]::after {
-        content: ''; position: absolute;
-        top: 2px; left: 2px;
-        width: 16px; height: 16px; border-radius: 50%;
-        background: var(--bg-card); box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-        transition: transform 0.2s var(--ease);
-    }
-    .theme-toggle input[type="checkbox"]:checked { background: var(--accent); }
-    .theme-toggle input[type="checkbox"]:checked::after { transform: translateX(14px); }
-
     .anim-dim { opacity: 0.05 !important; }
 </style>
 </head>
 <body>
-<div id="app">
-    <div class="controls">
-        <h1>Timeline Animation Test</h1>
-        <div class="control-row">
-            <span class="control-label">Main</span>
-            <button class="speed-btn" data-speed="300">0.3s</button>
-            <button class="speed-btn" data-speed="600">0.6s</button>
-            <button class="speed-btn active" data-speed="1500">1.5s</button>
-            <button class="speed-btn" data-speed="3000">3s</button>
-            <button class="speed-btn" id="resetBtn">Reset</button>
-            <label class="theme-toggle"><input type="checkbox" id="expandToggle" checked> Expand</label>
-            <label class="theme-toggle"><input type="checkbox" id="themeToggle" checked> Light</label>
-        </div>
-        <div class="control-row" id="transportRow">
-            <span class="control-label">Anim</span>
-            <button class="speed-btn" id="snapStartBtn" title="Snap to start">|&#9664;</button>
-            <button class="speed-btn" id="animPlayBtn" title="Play animation">&#9654; Play</button>
-            <button class="speed-btn" id="snapEndBtn" title="Snap to end">&#9654;|</button>
-            <span id="transportStatus" style="font-size:0.72rem;color:var(--text-secondary)"></span>
-        </div>
-        <div class="control-row" id="elementsRow">
-            <span class="control-label">Elements</span>
-            <button class="speed-btn" id="elemAllBtn">All</button>
-            <button class="speed-btn elem-btn active" data-elem="oldCard">Old Question</button>
-            <button class="speed-btn elem-btn active" data-elem="newEvents">Timeline Events</button>
-            <button class="speed-btn elem-btn active" data-elem="newCard">New Question</button>
-            <button class="speed-btn elem-btn active" data-elem="outcome">Outcome</button>
-            <button class="speed-btn elem-btn active" data-elem="stageHeaders">Stage Headers</button>
-            <button class="speed-btn elem-btn active" data-elem="dot">Timeline Event Dots</button>
-            <button class="speed-btn elem-btn active" data-elem="hline">Timeline Event Separators</button>
-            <button class="speed-btn elem-btn active" data-elem="vline">Timeline Vertical Line</button>
+    <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle light/dark mode">&#9728;</button>
+    <div id="app">
+        <div class="map-screen">
+            <div class="map-toolbar">
+                <span class="map-title">AI Singularity Map</span>
+                <div class="map-settings-wrap">
+                    <button class="map-view-btn" aria-label="View options"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="4" x2="14" y2="4"/><line x1="10" y1="4" x2="3" y2="4"/><line x1="21" y1="12" x2="12" y2="12"/><line x1="8" y1="12" x2="3" y2="12"/><line x1="21" y1="20" x2="16" y2="20"/><line x1="12" y1="20" x2="3" y2="20"/><circle cx="12" cy="4" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="14" cy="20" r="2"/></svg></button>
+                    <div class="map-settings-dropdown" style="display:none">
+                        <label class="map-toggle"><input type="checkbox" id="expandToggle" checked><span>Expand Timeline</span></label>
+                    </div>
+                </div>
+            </div>
+            <div class="controls">
+                <div class="control-row">
+                    <span class="control-label">Speed</span>
+                    <button class="speed-btn" data-speed="300">0.3s</button>
+                    <button class="speed-btn" data-speed="600">0.6s</button>
+                    <button class="speed-btn active" data-speed="1500">1.5s</button>
+                    <button class="speed-btn" data-speed="3000">3s</button>
+                </div>
+                <div class="control-row" id="transportRow">
+                    <span class="control-label">Transport</span>
+                    <button class="speed-btn" id="snapStartBtn" title="Snap to start">|&#9664;</button>
+                    <button class="speed-btn" id="animPlayBtn" title="Play animation">&#9654; Play</button>
+                    <button class="speed-btn" id="snapEndBtn" title="Snap to end">&#9654;|</button>
+                    <span id="transportStatus" style="font-size:0.72rem;color:var(--text-secondary)"></span>
+                </div>
+                <div class="control-row" id="elementsRow">
+                    <span class="control-label">Elements</span>
+                    <button class="speed-btn" id="elemAllBtn">All</button>
+                    <button class="speed-btn elem-btn active" data-elem="oldCard">Old Question</button>
+                    <button class="speed-btn elem-btn active" data-elem="newEvents">Timeline Events</button>
+                    <button class="speed-btn elem-btn active" data-elem="newCard">New Question</button>
+                    <button class="speed-btn elem-btn active" data-elem="outcome">Outcome</button>
+                    <button class="speed-btn elem-btn active" data-elem="stageHeaders">Stage Headers</button>
+                    <button class="speed-btn elem-btn active" data-elem="dot">Timeline Event Dots</button>
+                    <button class="speed-btn elem-btn active" data-elem="hline">Timeline Event Separators</button>
+                    <button class="speed-btn elem-btn active" data-elem="vline">Timeline Vertical Line</button>
+                </div>
+            </div>
+            <div class="map-timeline timeline" id="timeline"></div>
+            <div class="question-zone" id="qzone"></div>
+            <div class="map-outcome-zone" id="outcome-zone">
+                <div class="map-outcome-section" id="outcome-card">
+                    <div class="outcome-header" style="margin-bottom:1rem;">
+                        <h2 style="margin-bottom:0.25rem;">Projected Outcome</h2>
+                        <span class="mood-badge mood-mixed">mixed</span>
+                    </div>
+                    <div class="outcome-summary" style="line-height:1.65;">Based on your responses, the most likely trajectory involves a gradual transition period with significant economic restructuring over 5–10 years. Key risk factors include alignment challenges and coordination failures between major actors.</div>
+                </div>
+            </div>
+            <div class="map-actions">
+                <button class="btn btn-ghost" id="resetBtn">Reset</button>
+                <button class="btn btn-ghost" data-action="share">Copy Link</button>
+            </div>
         </div>
     </div>
-    <div class="timeline" id="timeline"></div>
-    <div class="question-zone" id="qzone"></div>
-    <div class="outcome-card" id="outcome-card">
-        <div style="font-weight:600; margin-bottom:0.5rem;">Projected Outcome</div>
-        <div style="color:var(--text-secondary); font-size:0.88rem; line-height:1.6;">Based on your responses, the most likely trajectory involves a gradual transition period with significant economic restructuring over 5–10 years. Key risk factors include alignment challenges and coordination failures between major actors.</div>
-    </div>
-
-</div>
+    <div id="toast"></div>
 
 <script src="timeline-animator.js"></script>
 <script>
 'use strict';
 
-let counter = 0;
+(function() {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', 'light');
+    const btn = document.getElementById('theme-toggle');
+    function updateIcon() {
+        btn.innerHTML = document.documentElement.getAttribute('data-theme') === 'light' ? '&#9728;' : '&#9790;';
+    }
+    updateIcon();
+    btn.addEventListener('click', function() {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        if (isLight) {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+            localStorage.setItem('theme', 'light');
+        }
+        updateIcon();
+    });
+})();
 
-function getUrlParams() {
-    const p = new URLSearchParams(window.location.search);
-    return { expand: p.get('et') !== '0' };
-}
+(function() {
+    'use strict';
 
-function setUrlParam(key, value) {
-    const p = new URLSearchParams(window.location.search);
-    if (value === null || value === undefined) p.delete(key);
-    else p.set(key, value);
-    const qs = p.toString();
-    history.replaceState(null, '', qs ? '?' + qs : window.location.pathname);
-}
+    const toastEl = document.getElementById('toast');
+    function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add('visible');
+        setTimeout(() => toastEl.classList.remove('visible'), 2200);
+    }
 
-const urlState = getUrlParams();
+    let counter = 0;
 
-const headlines = [
-    'AI capability reaches human level',
-    'Recursive self-improvement begins',
-    'Economic transformation accelerates',
-    'Global governance adapts',
-    'Energy infrastructure scales',
-    'Public trust shifts dramatically',
-    'New institutions emerge',
-    'Resource allocation transforms',
-    'Education systems reimagined',
-    'Healthcare revolutionized',
-    'Scientific discovery accelerates',
-    'Creative industries transformed',
-    'Military balance shifts',
-    'Space exploration expands',
-    'Biological integration advances',
-];
+    function getUrlParams() {
+        const p = new URLSearchParams(window.location.search);
+        return { expand: p.get('et') !== '0' };
+    }
 
-const descs = [
-    'Systems demonstrate broad competence across domains previously thought to require human intuition.',
-    'Each generation of AI contributes to designing the next, compressing timelines dramatically.',
-    'Entire sectors restructure within months as automation reaches critical mass.',
-    'International frameworks struggle to keep pace with the rate of change.',
-    'Demand for compute drives unprecedented investment in power generation.',
-    'Society grapples with fundamental questions about the role of human labor.',
-    'Novel organizational structures arise to manage the transition period.',
-    'Markets develop new mechanisms to handle the abundance-scarcity paradox.',
-    'Traditional credentialing gives way to demonstrated capability.',
-    'Diagnostic accuracy and treatment personalization improve by orders of magnitude.',
-];
+    function setUrlParam(key, value) {
+        const p = new URLSearchParams(window.location.search);
+        if (value === null || value === undefined) p.delete(key);
+        else p.set(key, value);
+        const qs = p.toString();
+        history.replaceState(null, '', qs ? '?' + qs : window.location.pathname);
+    }
 
-const stagesMap = {
-    1: { label: 'Singularity Dynamics' },
-    2: { label: 'Control Determination' },
-    3: { label: 'Impact' },
-};
+    const urlState = getUrlParams();
 
-const dims = ['AI Scaling', 'AI Alignment', 'AI Access', 'Development Speed', 'AI Governance', 'AI Integration', 'Public Trust', 'Resources'];
-const params = ['Rapid', 'Cooperative', 'Open', 'Fast', 'Proactive', 'Deep', 'High', 'Abundant'];
+    const headlines = [
+        'AI capability reaches human level',
+        'Recursive self-improvement begins',
+        'Economic transformation accelerates',
+        'Global governance adapts',
+        'Energy infrastructure scales',
+        'Public trust shifts dramatically',
+        'New institutions emerge',
+        'Resource allocation transforms',
+        'Education systems reimagined',
+        'Healthcare revolutionized',
+        'Scientific discovery accelerates',
+        'Creative industries transformed',
+        'Military balance shifts',
+        'Space exploration expands',
+        'Biological integration advances',
+    ];
 
-function stageForIndex(idx) {
-    if (idx < 5) return 1;
-    if (idx < 10) return 2;
-    return 3;
-}
+    const descs = [
+        'Systems demonstrate broad competence across domains previously thought to require human intuition.',
+        'Each generation of AI contributes to designing the next, compressing timelines dramatically.',
+        'Entire sectors restructure within months as automation reaches critical mass.',
+        'International frameworks struggle to keep pace with the rate of change.',
+        'Demand for compute drives unprecedented investment in power generation.',
+        'Society grapples with fundamental questions about the role of human labor.',
+        'Novel organizational structures arise to manage the transition period.',
+        'Markets develop new mechanisms to handle the abundance-scarcity paradox.',
+        'Traditional credentialing gives way to demonstrated capability.',
+        'Diagnostic accuracy and treatment personalization improve by orders of magnitude.',
+    ];
 
-function makeEvent(i) {
-    return {
-        nodeId: 'test-' + i,
-        nodeLabel: dims[i % dims.length],
-        paramLabel: params[i % params.length],
-        headline: headlines[i % headlines.length],
-        description: descs[i % descs.length],
-        stage: stageForIndex(i),
+    const stagesMap = {
+        1: { label: 'Singularity Dynamics' },
+        2: { label: 'Control Determination' },
+        3: { label: 'Impact' },
     };
-}
 
-const animator = window.animator = new TimelineAnimator({
-    containerEl: document.getElementById('app'),
-    timelineEl: document.getElementById('timeline'),
-    questionZoneEl: document.getElementById('qzone'),
-    outcomeEl: document.getElementById('outcome-card'),
-    stages: stagesMap,
-    morphDuration: 1500,
-    stripFromAnimation: '.timeline-param-dim',
-    dataProvider: {
-        getEventCount: () => headlines.length,
-        getCurrentCount: () => counter,
-        setCurrentCount: (n) => { counter = n; },
-        stageForIndex,
-        getEvents: () => Array.from({ length: counter }, (_, i) => makeEvent(i)),
-        getQuestion: () => {
-            const questions = [
-                {
-                    questionText: 'As AI capability continues to grow, will the next development be positive or negative for humanity?',
-                    questionContext: 'Consider the pace of change, the state of governance, and how previous transitions have unfolded.',
-                    answers: [
-                        { label: 'Positive', desc: 'Institutions adapt quickly, distributing benefits broadly.', count: 1 },
-                        { label: 'Negative', desc: 'Concentration of power accelerates faster than safeguards can keep up.', count: 3 },
-                    ],
-                },
-                {
-                    questionText: 'How will governments respond to the rapid pace of AI-driven automation?',
-                    questionContext: 'Labor markets are shifting faster than policy can adapt. New frameworks are needed.',
-                    answers: [
-                        { label: 'Proactive', desc: 'Governments invest in retraining and universal programs ahead of displacement.', count: 1 },
-                        { label: 'Reactive', desc: 'Policy lags behind, leading to social unrest and ad-hoc measures.', count: 3 },
-                    ],
-                },
-                {
-                    questionText: 'Will the benefits of superintelligent AI be broadly shared or concentrated?',
-                    questionContext: 'Access to advanced AI systems determines who captures the economic surplus.',
-                    answers: [
-                        { label: 'Broad', desc: 'Open-source norms and regulation ensure wide access to capabilities.', count: 1 },
-                        { label: 'Narrow', desc: 'A handful of companies and nations monopolize the most powerful systems.', count: 3 },
-                    ],
-                },
-                {
-                    questionText: 'Can alignment research keep pace with capability gains?',
-                    questionContext: 'The gap between what AI can do and what we can verify it should do is growing.',
-                    answers: [
-                        { label: 'Yes', desc: 'Interpretability breakthroughs give researchers reliable oversight tools.', count: 1 },
-                        { label: 'No', desc: 'Capability scaling outpaces understanding, increasing existential risk.', count: 3 },
-                    ],
-                },
-                {
-                    questionText: 'What happens to human creativity in a world of superhuman AI?',
-                    questionContext: 'Generative AI already matches human output in many creative domains.',
-                    answers: [
-                        { label: 'Flourishes', desc: 'AI amplifies human creativity, enabling new art forms and deeper expression.', count: 1 },
-                        { label: 'Atrophies', desc: 'Human-made work loses economic value; creative motivation declines.', count: 3 },
+    const dims = ['AI Scaling', 'AI Alignment', 'AI Access', 'Development Speed', 'AI Governance', 'AI Integration', 'Public Trust', 'Resources'];
+    const params = ['Rapid', 'Cooperative', 'Open', 'Fast', 'Proactive', 'Deep', 'High', 'Abundant'];
 
-                    ],
-                },
-            ];
-            const q = questions[counter % questions.length];
-            return { nodeLabel: dims[counter % dims.length], ...q };
+    function stageForIndex(idx) {
+        if (idx < 5) return 1;
+        if (idx < 10) return 2;
+        return 3;
+    }
+
+    function makeEvent(i) {
+        return {
+            nodeId: 'test-' + i,
+            nodeLabel: dims[i % dims.length],
+            paramLabel: params[i % params.length],
+            headline: headlines[i % headlines.length],
+            description: descs[i % descs.length],
+            stage: stageForIndex(i),
+        };
+    }
+
+    const appEl = document.getElementById('app');
+    const animator = window.animator = new TimelineAnimator({
+        containerEl: appEl,
+        timelineEl: document.getElementById('timeline'),
+        questionZoneEl: document.getElementById('qzone'),
+        outcomeEl: document.getElementById('outcome-zone'),
+        headerEl: appEl.querySelector('.map-toolbar'),
+        stages: stagesMap,
+        morphDuration: 1500,
+        stripFromAnimation: '.timeline-param-dim',
+        dataProvider: {
+            getEventCount: () => headlines.length,
+            getCurrentCount: () => counter,
+            setCurrentCount: (n) => { counter = n; },
+            stageForIndex,
+            getEvents: () => Array.from({ length: counter }, (_, i) => makeEvent(i)),
+            getQuestion: () => {
+                const questions = [
+                    {
+                        questionText: 'As AI capability continues to grow, will the next development be positive or negative for humanity?',
+                        questionContext: 'Consider the pace of change, the state of governance, and how previous transitions have unfolded.',
+                        answers: [
+                            { label: 'Positive', desc: 'Institutions adapt quickly, distributing benefits broadly.', count: 1 },
+                            { label: 'Negative', desc: 'Concentration of power accelerates faster than safeguards can keep up.', count: 3 },
+                        ],
+                    },
+                    {
+                        questionText: 'How will governments respond to the rapid pace of AI-driven automation?',
+                        questionContext: 'Labor markets are shifting faster than policy can adapt. New frameworks are needed.',
+                        answers: [
+                            { label: 'Proactive', desc: 'Governments invest in retraining and universal programs ahead of displacement.', count: 1 },
+                            { label: 'Reactive', desc: 'Policy lags behind, leading to social unrest and ad-hoc measures.', count: 3 },
+                        ],
+                    },
+                    {
+                        questionText: 'Will the benefits of superintelligent AI be broadly shared or concentrated?',
+                        questionContext: 'Access to advanced AI systems determines who captures the economic surplus.',
+                        answers: [
+                            { label: 'Broad', desc: 'Open-source norms and regulation ensure wide access to capabilities.', count: 1 },
+                            { label: 'Narrow', desc: 'A handful of companies and nations monopolize the most powerful systems.', count: 3 },
+                        ],
+                    },
+                    {
+                        questionText: 'Can alignment research keep pace with capability gains?',
+                        questionContext: 'The gap between what AI can do and what we can verify it should do is growing.',
+                        answers: [
+                            { label: 'Yes', desc: 'Interpretability breakthroughs give researchers reliable oversight tools.', count: 1 },
+                            { label: 'No', desc: 'Capability scaling outpaces understanding, increasing existential risk.', count: 3 },
+                        ],
+                    },
+                    {
+                        questionText: 'What happens to human creativity in a world of superhuman AI?',
+                        questionContext: 'Generative AI already matches human output in many creative domains.',
+                        answers: [
+                            { label: 'Flourishes', desc: 'AI amplifies human creativity, enabling new art forms and deeper expression.', count: 1 },
+                            { label: 'Atrophies', desc: 'Human-made work loses economic value; creative motivation declines.', count: 3 },
+                        ],
+                    },
+                ];
+                const q = questions[counter % questions.length];
+                return { nodeLabel: dims[counter % dims.length], ...q };
+            },
+            hasMoreQuestions: () => counter < headlines.length,
         },
-        hasMoreQuestions: () => counter < headlines.length,
-    },
-});
-
-// Main speed controls
-document.querySelectorAll('.speed-btn[data-speed]').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.speed-btn[data-speed]').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        animator.setMorphDuration(parseInt(btn.dataset.speed));
     });
-});
 
-// Reset
-document.getElementById('resetBtn').addEventListener('click', () => {
-    counter = 0;
-    animator.reset();
-    clearTransport();
-});
+    // Settings dropdown
+    const viewBtn = appEl.querySelector('.map-view-btn');
+    const viewDropdown = appEl.querySelector('.map-settings-dropdown');
+    viewBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = viewDropdown.style.display !== 'none';
+        viewDropdown.style.display = open ? 'none' : '';
+    });
+    document.addEventListener('click', (e) => {
+        if (!viewDropdown.contains(e.target) && e.target !== viewBtn) {
+            viewDropdown.style.display = 'none';
+        }
+    });
 
-// Expand timeline toggle
-const expandToggle = document.getElementById('expandToggle');
-expandToggle.checked = urlState.expand;
-function applyExpand(on) {
-    document.getElementById('timeline').classList.toggle('timeline-light', !on);
-    setUrlParam('et', on ? null : '0');
-}
-applyExpand(urlState.expand);
-expandToggle.addEventListener('change', function() {
-    applyExpand(this.checked);
-});
+    // Expand timeline toggle
+    const expandToggle = document.getElementById('expandToggle');
+    expandToggle.checked = urlState.expand;
+    function applyExpand(on) {
+        document.getElementById('timeline').classList.toggle('timeline-light', !on);
+        setUrlParam('et', on ? null : '0');
+    }
+    applyExpand(urlState.expand);
+    expandToggle.addEventListener('change', function() {
+        applyExpand(this.checked);
+    });
 
-// Theme toggle
-document.getElementById('themeToggle').addEventListener('change', function() {
-    document.documentElement.setAttribute('data-theme', this.checked ? 'light' : '');
-});
+    // Main speed controls
+    document.querySelectorAll('.speed-btn[data-speed]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.speed-btn[data-speed]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            animator.setMorphDuration(parseInt(btn.dataset.speed));
+        });
+    });
 
-// --- Animation transport controls ---
-const transportRow = document.getElementById('transportRow');
-const snapStartBtn = document.getElementById('snapStartBtn');
-const animPlayBtn = document.getElementById('animPlayBtn');
-const snapEndBtn = document.getElementById('snapEndBtn');
-const transportStatus = document.getElementById('transportStatus');
+    // Reset
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        counter = 0;
+        animator.reset();
+        clearTransport();
+    });
 
-const originalAddItems = animator.addItems.bind(animator);
-let pendingCount = null;
-let pendingCounterBefore = null;
-let pendingCardViewportTop = null;
-let transportState = 'idle';
+    // Share / Copy Link
+    appEl.querySelector('[data-action="share"]').addEventListener('click', () => {
+        const url = location.origin + location.pathname + location.search + location.hash;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
+        } else {
+            showToast(url);
+        }
+    });
 
-animator.addItems = function(count) {
-    const card = animator._getCard() || animator.questionZoneEl;
-    pendingCardViewportTop = card.getBoundingClientRect().top;
-    pendingCount = count;
-    pendingCounterBefore = counter;
-    transportState = 'playing';
-    updateTransportUI();
+    // --- Animation transport controls ---
+    const snapStartBtn = document.getElementById('snapStartBtn');
+    const animPlayBtn = document.getElementById('animPlayBtn');
+    const snapEndBtn = document.getElementById('snapEndBtn');
+    const transportStatus = document.getElementById('transportStatus');
 
-    originalAddItems(count);
+    const originalAddItems = animator.addItems.bind(animator);
+    let pendingCount = null;
+    let pendingCounterBefore = null;
+    let pendingCardViewportTop = null;
+    let transportState = 'idle';
 
-    function pollDone() {
-        if (!animator.isAnimating()) {
-            transportState = 'end';
-            updateTransportUI();
-            applyElementVisibility();
-            return;
+    animator.addItems = function(count) {
+        const card = animator._getCard() || animator.questionZoneEl;
+        pendingCardViewportTop = card.getBoundingClientRect().top;
+        pendingCount = count;
+        pendingCounterBefore = counter;
+        transportState = 'playing';
+        updateTransportUI();
+
+        originalAddItems(count);
+
+        function pollDone() {
+            if (!animator.isAnimating()) {
+                transportState = 'end';
+                updateTransportUI();
+                applyElementVisibility();
+                return;
+            }
+            requestAnimationFrame(pollDone);
         }
         requestAnimationFrame(pollDone);
+    };
+
+    function snapToState(targetCounter) {
+        animator._ensureScrollRoom(5000);
+
+        counter = targetCounter;
+        animator.morphAnimating = false;
+        if (animator._ghost) { animator._ghost.remove(); animator._ghost = null; }
+        [animator.timelineEl, animator.questionZoneEl, animator.outcomeEl].forEach(el => {
+            if (el) { el.style.transform = ''; el.style.opacity = ''; }
+        });
+        if (animator.outcomeEl) animator.outcomeEl.style.cssText = '';
+        animator.render();
+
+        const card = animator._getCard() || animator.questionZoneEl;
+        const scrollTarget = window.scrollY + (card.getBoundingClientRect().top - pendingCardViewportTop);
+        window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'instant' });
+
+        animator._releaseScrollRoom();
+
+        applyElementVisibility();
     }
-    requestAnimationFrame(pollDone);
-};
 
-function snapToState(targetCounter) {
-    animator._ensureScrollRoom(5000);
+    function applyElementVisibility() {
+        const vis = animator._elementVisibility;
 
-    counter = targetCounter;
-    animator.morphAnimating = false;
-    if (animator._ghost) { animator._ghost.remove(); animator._ghost = null; }
-    [animator.timelineEl, animator.questionZoneEl, animator.outcomeEl].forEach(el => {
-        if (el) { el.style.transform = ''; el.style.opacity = ''; }
-    });
-    if (animator.outcomeEl) animator.outcomeEl.style.cssText = '';
-    animator.render();
+        const card = animator._getCard();
+        if (card) {
+            card.querySelectorAll('.question-text, .question-context, .answers').forEach(c => {
+                c.classList.toggle('anim-dim', !vis.newCard);
+            });
+        }
 
-    const card = animator._getCard() || animator.questionZoneEl;
-    const scrollTarget = window.scrollY + (card.getBoundingClientRect().top - pendingCardViewportTop);
-    window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'instant' });
+        const oldCardEl = animator._oldCardEl;
+        if (oldCardEl) {
+            oldCardEl.querySelectorAll('.question-text, .question-context, .answers').forEach(c => {
+                c.classList.toggle('anim-dim', !vis.oldCard);
+            });
+        }
 
-    animator._releaseScrollRoom();
+        appEl.querySelectorAll('.timeline-event').forEach(el => {
+            el.querySelectorAll('.timeline-top-row, .timeline-headline, .timeline-desc, .timeline-slider').forEach(c => {
+                c.classList.toggle('anim-dim', !vis.newEvents);
+            });
+        });
 
-    applyElementVisibility();
-}
+        appEl.querySelectorAll('.timeline-stage-header').forEach(el => {
+            el.classList.toggle('anim-dim', !vis.stageHeaders);
+        });
 
-function applyElementVisibility() {
-    const vis = animator._elementVisibility;
-    const app = animator.containerEl;
+        if (animator.outcomeEl) {
+            animator.outcomeEl.classList.toggle('anim-dim', !vis.outcome);
+        }
 
-    const card = animator._getCard();
-    if (card) {
-        card.querySelectorAll('.question-text, .question-context, .answers').forEach(c => {
-            c.classList.toggle('anim-dim', !vis.newCard);
+        appEl.querySelectorAll('.tl-dot').forEach(el => {
+            el.classList.toggle('anim-dim', !vis.dot);
+        });
+
+        appEl.querySelectorAll('.tl-hline').forEach(el => {
+            el.classList.toggle('anim-dim', !vis.hline);
+        });
+
+        appEl.querySelectorAll('.tl-vline-seg').forEach(el => {
+            el.classList.toggle('anim-dim', !vis.vline);
         });
     }
+    animator._beforeAnimate = applyElementVisibility;
 
-    const oldCardEl = animator._oldCardEl;
-    if (oldCardEl) {
-        oldCardEl.querySelectorAll('.question-text, .question-context, .answers').forEach(c => {
-            c.classList.toggle('anim-dim', !vis.oldCard);
-        });
+    function updateTransportUI() {
+        const idle = transportState === 'idle';
+        snapStartBtn.disabled = idle || transportState === 'start' || transportState === 'playing';
+        animPlayBtn.disabled = idle || transportState === 'playing';
+        snapEndBtn.disabled = idle || transportState === 'end' || transportState === 'playing';
+
+        const labels = { start: 'Ready', playing: 'Playing\u2026', end: 'Complete', idle: '' };
+        transportStatus.textContent = labels[transportState] || '';
+
+        animPlayBtn.classList.toggle('active', transportState === 'playing');
     }
-
-    app.querySelectorAll('.timeline-event').forEach(el => {
-        el.querySelectorAll('.timeline-top-row, .timeline-headline, .timeline-desc, .timeline-slider').forEach(c => {
-            c.classList.toggle('anim-dim', !vis.newEvents);
-        });
-    });
-
-    app.querySelectorAll('.timeline-stage-header').forEach(el => {
-        el.classList.toggle('anim-dim', !vis.stageHeaders);
-    });
-
-    if (animator.outcomeEl) {
-        animator.outcomeEl.classList.toggle('anim-dim', !vis.outcome);
-    }
-
-    app.querySelectorAll('.tl-dot').forEach(el => {
-        el.classList.toggle('anim-dim', !vis.dot);
-    });
-
-    app.querySelectorAll('.tl-hline').forEach(el => {
-        el.classList.toggle('anim-dim', !vis.hline);
-    });
-
-    app.querySelectorAll('.tl-vline-seg').forEach(el => {
-        el.classList.toggle('anim-dim', !vis.vline);
-    });
-}
-animator._beforeAnimate = applyElementVisibility;
-
-function updateTransportUI() {
-    const idle = transportState === 'idle';
-    snapStartBtn.disabled = idle || transportState === 'start' || transportState === 'playing';
-    animPlayBtn.disabled = idle || transportState === 'playing';
-    snapEndBtn.disabled = idle || transportState === 'end' || transportState === 'playing';
-
-    const labels = { start: 'Ready', playing: 'Playing\u2026', end: 'Complete', idle: '' };
-    transportStatus.textContent = labels[transportState] || '';
-
-    animPlayBtn.classList.toggle('active', transportState === 'playing');
-}
-updateTransportUI();
-
-snapStartBtn.addEventListener('click', () => {
-    if (pendingCounterBefore == null) return;
-    snapToState(pendingCounterBefore);
-    transportState = 'start';
     updateTransportUI();
-});
 
-snapEndBtn.addEventListener('click', () => {
-    if (pendingCounterBefore == null || pendingCount == null) return;
-    snapToState(pendingCounterBefore + pendingCount);
-    transportState = 'end';
-    updateTransportUI();
-});
-
-animPlayBtn.addEventListener('click', () => {
-    if (pendingCount == null || pendingCounterBefore == null) return;
-    if (transportState !== 'start') {
+    snapStartBtn.addEventListener('click', () => {
+        if (pendingCounterBefore == null) return;
         snapToState(pendingCounterBefore);
-    }
-    transportState = 'playing';
-    updateTransportUI();
+        transportState = 'start';
+        updateTransportUI();
+    });
 
-    originalAddItems(pendingCount);
+    snapEndBtn.addEventListener('click', () => {
+        if (pendingCounterBefore == null || pendingCount == null) return;
+        snapToState(pendingCounterBefore + pendingCount);
+        transportState = 'end';
+        updateTransportUI();
+    });
 
-    function pollDone() {
-        if (!animator.isAnimating()) {
-            transportState = 'end';
-            updateTransportUI();
-            applyElementVisibility();
-            return;
+    animPlayBtn.addEventListener('click', () => {
+        if (pendingCount == null || pendingCounterBefore == null) return;
+        if (transportState !== 'start') {
+            snapToState(pendingCounterBefore);
+        }
+        transportState = 'playing';
+        updateTransportUI();
+
+        originalAddItems(pendingCount);
+
+        function pollDone() {
+            if (!animator.isAnimating()) {
+                transportState = 'end';
+                updateTransportUI();
+                applyElementVisibility();
+                return;
+            }
+            requestAnimationFrame(pollDone);
         }
         requestAnimationFrame(pollDone);
+    });
+
+    function clearTransport() {
+        pendingCount = null;
+        pendingCounterBefore = null;
+        pendingCardViewportTop = null;
+        transportState = 'idle';
+        updateTransportUI();
     }
-    requestAnimationFrame(pollDone);
-});
 
-function clearTransport() {
-    pendingCount = null;
-    pendingCounterBefore = null;
-    pendingCardViewportTop = null;
-    transportState = 'idle';
-    updateTransportUI();
-}
+    // Element visibility toggles
+    const elemBtns = document.querySelectorAll('.elem-btn');
+    elemBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.classList.toggle('active');
+            animator._elementVisibility[btn.dataset.elem] = btn.classList.contains('active');
+            applyElementVisibility();
+        });
+    });
 
-// Element visibility toggles
-const elemBtns = document.querySelectorAll('.elem-btn');
-elemBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        btn.classList.toggle('active');
-        animator._elementVisibility[btn.dataset.elem] = btn.classList.contains('active');
+    document.getElementById('elemAllBtn').addEventListener('click', () => {
+        const anyOff = Array.from(elemBtns).some(b => !b.classList.contains('active'));
+        elemBtns.forEach(btn => {
+            btn.classList.toggle('active', anyOff);
+            animator._elementVisibility[btn.dataset.elem] = anyOff;
+        });
         applyElementVisibility();
     });
-});
 
-document.getElementById('elemAllBtn').addEventListener('click', () => {
-    const anyOff = Array.from(elemBtns).some(b => !b.classList.contains('active'));
-    elemBtns.forEach(btn => {
-        btn.classList.toggle('active', anyOff);
-        animator._elementVisibility[btn.dataset.elem] = anyOff;
-    });
+    animator.render();
     applyElementVisibility();
-});
-
-animator.render();
-applyElementVisibility();
+})();
 </script>
 </body>
 </html>
