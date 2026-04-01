@@ -335,11 +335,6 @@
 
         /* ---- Narrative ---- */
         .outcome-narrative { max-width: 640px; margin: 0 auto 2rem; }
-        .outcome-pullquote {
-            font-size: 1.25rem; font-weight: 500; line-height: 1.6;
-            color: var(--text); border-left: 3px solid var(--accent);
-            padding-left: 1.25rem; margin: 0 0 2rem 0; font-style: italic;
-        }
         .outcome-vignettes { display: flex; flex-direction: column; gap: 1.25rem; }
         .outcome-vignette {
             display: flex; gap: 1.5rem; align-items: baseline;
@@ -384,7 +379,6 @@
             .map-toolbar { margin-left: -1rem; margin-right: -1rem; padding-left: 1rem; padding-right: 1rem; }
             .outcome-hero { padding: 2rem 1.25rem; }
             .outcome-hero .outcome-title { font-size: 2rem; }
-            .outcome-pullquote { font-size: 1.1rem; }
             .outcome-vignette { flex-direction: column; gap: 0.25rem; }
             .vignette-title { text-align: left; flex: none; }
         }
@@ -894,14 +888,6 @@
                 });
             }
 
-            function extractPullQuote(text) {
-                const match = text.match(/^([^.!?]+[.!?])/);
-                if (!match) return null;
-                const sentence = match[1].trim();
-                if (sentence.length >= text.trim().length - 1) return null;
-                if (sentence.length > 150) return null;
-                return sentence;
-            }
 
             function countTotalOutcomes() {
                 let count = 0;
@@ -1003,11 +989,6 @@
 
                 const vignettes = resolved.flavors;
 
-                const pullQuote = extractPullQuote(resolved.summary);
-                let pullQuoteHtml = pullQuote
-                    ? `<blockquote class="outcome-pullquote scroll-reveal">${esc(pullQuote)}</blockquote>`
-                    : '';
-
                 let vignettesHtml = '';
                 if (vignettes.length > 0) {
                     vignettesHtml = '<div class="outcome-vignettes">';
@@ -1021,8 +1002,8 @@
                 }
 
                 let narrativeHtml = '';
-                if (pullQuoteHtml || vignettesHtml) {
-                    narrativeHtml = `<div class="outcome-narrative">${pullQuoteHtml}${vignettesHtml}</div>`;
+                if (vignettesHtml) {
+                    narrativeHtml = `<div class="outcome-narrative">${vignettesHtml}</div>`;
                 }
 
                 const totalOutcomes = countTotalOutcomes();
