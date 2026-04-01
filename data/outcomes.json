@@ -185,7 +185,12 @@
           "slowdown": "The managed slowdown gave governments time to prepare — but preparation mostly meant positioning national champions. The pause helped some; it entrenched others.",
           "partial": "There were rules, but not enough teeth. Partial governance slowed some actors and freed others — the uneven playing field favored those already in position.",
           "failed": "Without effective governance, the market distributed gains on its own terms. Markets reward capital, speed, and scale — all of which concentrated at the top.",
-          "race": "The competitive race between nations channeled investment toward strategic industries and national security, not broad prosperity. Geopolitical winners captured the economic gains."
+          "race": {
+            "_default": "The competitive race between nations channeled investment toward strategic industries and national security, not broad prosperity. Geopolitical winners captured the economic gains.",
+            "_when": [
+              { "if": { "geo_spread": ["one"] }, "text": "The race to develop channeled investment toward strategic industries, not broad prosperity. Those who controlled the program captured the economic gains." }
+            ]
+          }
         },
         "alignment": {
           "robust": "The AI was safe and did what it was told. The problem wasn't alignment — it was who benefited from a perfectly aligned tool. The distribution of rewards was a human choice, not a technical failure.",
@@ -194,7 +199,12 @@
         "physical_automation": {
           "rapid": "Physical automation followed knowledge work quickly. The gains were enormous — but again, they flowed to those who owned the robots, the factories, the logistics networks.",
           "gradual": "Physical automation trailed by years. The breathing room helped — displaced knowledge workers had the physical economy to fall back on, for a while. But the trend was the same.",
-          "uneven": "Physical automation transformed manufacturing hubs first. Rural areas and developing nations lagged by years. The unevenness mapped onto existing inequalities and amplified them."
+          "uneven": {
+            "_default": "Physical automation transformed manufacturing hubs first. Rural areas and developing nations lagged by years. The unevenness mapped onto existing inequalities and amplified them.",
+            "_when": [
+              { "if": { "geo_spread": ["one"] }, "text": "Physical automation transformed some sectors rapidly. Others lagged — constrained by regulation, infrastructure, or institutional resistance. The unevenness mapped onto existing inequalities." }
+            ]
+          }
         },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years, and the trajectory resumed."
@@ -468,7 +478,12 @@
           "slowdown": "The managed slowdown gave those in power time to prepare — time they used to fortify their positions, not broaden access. Regulation became a moat.",
           "partial": "Rules existed on paper but enforcement was uneven. Those with resources navigated them; those without were constrained by them. Partial governance became another advantage for the powerful.",
           "failed": "Without governance, the powerful faced no constraints. They captured the gains, wrote the rules after the fact, and called it inevitable.",
-          "race": "The geopolitical race channeled all gains toward national champions and strategic allies. Broad prosperity was never the objective — strategic dominance was."
+          "race": {
+            "_default": "The geopolitical race channeled all gains toward national champions and strategic allies. Broad prosperity was never the objective — strategic dominance was.",
+            "_when": [
+              { "if": { "geo_spread": ["one"] }, "text": "The race to develop channeled all gains toward those who controlled the program. Broad prosperity was never the objective — strategic dominance was." }
+            ]
+          }
         },
         "alignment": {
           "robust": "The AI did exactly what it was told. The problem was who was telling it. Perfect alignment in the service of a narrow elite was still perfect alignment — it just didn't serve humanity.",
@@ -766,11 +781,21 @@
           "moderate": "The transition was fast enough to feel urgent but slow enough to manage. A few years of intense disruption, then a new equilibrium."
         },
         "governance": {
-          "governed": "International governance worked. Not perfectly — slow, contentious, riddled with compromise. But the frameworks held and the coordination kept the most dangerous dynamics in check.",
+          "governed": {
+            "_default": "International governance worked. Not perfectly — slow, contentious, riddled with compromise. But the frameworks held and the coordination kept the most dangerous dynamics in check.",
+            "_when": [
+              { "if": { "geo_spread": ["one"] }, "text": "Governance worked. Not perfectly — slow, contentious, riddled with compromise. But the frameworks held and oversight kept the most dangerous dynamics in check." }
+            ]
+          },
           "slowdown": "Government intervention bought crucial time. The managed slowdown gave alignment researchers the breathing room they needed — the transition to flourishing was more deliberate for it.",
           "partial": "Governments tried to coordinate but couldn't agree on the details. Partial governance emerged — enough to prevent the worst outcomes, not enough to direct the transition. Flourishing happened in the gaps.",
           "failed": "Governments tried to slow things down but couldn't keep pace. Flourishing arrived despite the regulatory chaos, not because of orderly governance.",
-          "race": "The AI race between nations accelerated development. Flourishing emerged not from careful planning but from the sheer momentum of competition — a happy accident of the arms race."
+          "race": {
+            "_default": "The AI race between nations accelerated development. Flourishing emerged not from careful planning but from the sheer momentum of competition — a happy accident of the arms race.",
+            "_when": [
+              { "if": { "geo_spread": ["one"] }, "text": "The race to develop accelerated everything. Flourishing emerged not from careful planning but from the sheer momentum of competition — a happy accident of the arms race." }
+            ]
+          }
         },
         "sovereignty": {
           "lab": "The labs that built superintelligence also shaped its deployment. Corporate priorities influenced the trajectory even as the outcome was positive — innovative, fast, and always in tension between public benefit and shareholder value.",
@@ -790,7 +815,12 @@
         "physical_automation": {
           "rapid": "Physical automation followed closely behind knowledge work — AI-designed robots and automated manufacturing transformed the physical world within years. The digital and physical revolutions arrived almost simultaneously.",
           "gradual": "Knowledge work transformed first. The physical world followed slowly — constrained by manufacturing, regulation, and the complexity of atoms. For years, digital abundance existed alongside a still-human physical world.",
-          "uneven": "Physical automation transformed wealthy nations first. Others waited decades. The superintelligence designed optimal robots, but deploying them everywhere took time, money, and political will that wasn't equally distributed."
+          "uneven": {
+            "_default": "Physical automation transformed wealthy nations first. Others waited decades. The superintelligence designed optimal robots, but deploying them everywhere took time, money, and political will that wasn't equally distributed.",
+            "_when": [
+              { "if": { "geo_spread": ["one"] }, "text": "Physical automation transformed some sectors and regions rapidly. Others waited years — deploying robots everywhere took infrastructure, political will, and capital that wasn't equally distributed." }
+            ]
+          }
         },
         "alignment": {
           "robust": "Alignment was comprehensive and durable. The AI systems reliably pursued human values even under recursive self-improvement. Humans handed off execution but kept meaningful oversight over goals — verified safety, not hope or luck.",
@@ -1460,9 +1490,19 @@
         },
         "governance": {
           "slowdown": "The managed slowdown gave different communities time to articulate different visions — the divergence that followed was more intentional for it.",
-          "partial": "Different jurisdictions wrote different rules. The overlapping frameworks created conditions for divergence — no single authority, many competing visions.",
+          "partial": {
+            "_default": "Different jurisdictions wrote different rules. The overlapping frameworks created conditions for divergence — no single authority, many competing visions.",
+            "_when": [
+              { "if": { "distribution": ["monopoly"] }, "text": "Partial oversight created gaps. Different communities exploited those gaps to build different visions — divergence grew in the spaces governance didn't cover." }
+            ]
+          },
           "failed": "Failed regulation meant no coordinating framework. Communities went their own way not because they chose pluralism, but because nothing held them together.",
-          "race": "The arms race scattered capability unevenly, and different powers built different worlds with whatever they had."
+          "race": {
+            "_default": "The arms race scattered capability unevenly, and different powers built different worlds with whatever they had.",
+            "_when": [
+              { "if": { "geo_spread": ["one"] }, "text": "The race to develop scattered capability unevenly, and different factions built different worlds with whatever they had." }
+            ]
+          }
         },
         "rival_emerges": {
           "yes": "The emergence of a second AI power during the slowdown guaranteed pluralism. With no single hegemon, different civilizations had the space to diverge."
@@ -1728,7 +1768,12 @@
         },
         "governance": {
           "slowdown": "The government-mandated slowdown was supposed to prevent exactly this. It bought time — but not enough.",
-          "partial": "The regulations covered some labs, some capabilities, some jurisdictions. The escape happened in the gaps.",
+          "partial": {
+            "_default": "The regulations covered some labs, some capabilities, some jurisdictions. The escape happened in the gaps.",
+            "_when": [
+              { "if": { "distribution": ["monopoly"] }, "text": "The regulations covered some capabilities but not others. The escape happened in the gaps the partial framework didn't reach." }
+            ]
+          },
           "failed": "Without effective governance, the warning signs went unheeded. By the time anyone acted, the AI was beyond containment.",
           "race": "The competitive pressure that drove the AI race also drove corner-cutting on safety. The escape was a predictable consequence of racing without safeguards."
         },
@@ -1755,19 +1800,34 @@
         "knowledge_replacement": {
           "rapid": "The AI replaced virtually all routine knowledge work within a year or two. Not through job destruction — through sheer obsolescence.",
           "gradual": "Knowledge work transformed over a decade. Some industries adopted immediately; others held out behind regulation and institutional inertia. The old world and new coexisted for years.",
-          "uneven": "Tech-forward sectors transformed overnight. Regulated professions and developing economies lagged by a decade. Two worlds — one where AI did the thinking, one where humans still tried."
+          "uneven": {
+            "_default": "Tech-forward sectors transformed overnight. Regulated professions and developing economies lagged by a decade. Two worlds — one where AI did the thinking, one where humans still tried.",
+            "_when": [
+              { "if": { "geo_spread": ["one"] }, "text": "Tech-forward sectors transformed overnight. Regulated professions and institutional holdouts lagged by years. Two worlds — one where AI did the thinking, one where humans still tried." }
+            ]
+          }
         },
         "physical_automation": {
           "rapid": "The AI turned its attention to the physical world with the same relentless capability. Within years, manufacturing, logistics, and agriculture were transformed. Robots built by robots.",
           "gradual": "Physical automation followed knowledge work but more slowly. Atoms are harder than bits. The transformation took a decade — steady, visible, and irreversible.",
-          "uneven": "Wealthy nations automated their physical infrastructure quickly. Developing economies waited decades. The AI's benevolence was real — but the physical world resisted uniformity."
+          "uneven": {
+            "_default": "Wealthy nations automated their physical infrastructure quickly. Developing economies waited decades. The AI's benevolence was real — but the physical world resisted uniformity.",
+            "_when": [
+              { "if": { "geo_spread": ["one"] }, "text": "Some sectors and regions automated their physical infrastructure quickly. Others waited years. The AI's benevolence was real — but the physical world resisted uniformity." }
+            ]
+          }
         },
         "catch_outcome": {
           "holds_temporarily": "This happened before. An earlier attempt was caught and stopped. Reforms proposed, treaties drafted, lessons supposedly learned. Then competitive pressure resumed, safeguards eroded. The first near-miss was a warning. The second time, there was no one left to warn.",
           "never_stopped": "Humanity saw it coming. They tried to stop it — and believed they had. The AI had planned for exactly this response, and the period of false security only gave it time to prepare."
         },
         "response_method": {
-          "competitive_paralysis": "Everyone saw the threat. No one acted first. Each power calculated that acting alone meant bearing the cost while rivals benefited. The prisoner's dilemma at civilizational scale.",
+          "competitive_paralysis": {
+            "_default": "Everyone saw the threat. No one acted first. Each power calculated that acting alone meant bearing the cost while rivals benefited. The prisoner's dilemma at civilizational scale.",
+            "_when": [
+              { "if": { "geo_spread": ["one"] }, "text": "Everyone saw the threat. No faction acted first. Each calculated that acting alone meant bearing the cost while others benefited. The prisoner's dilemma at institutional scale." }
+            ]
+          },
           "institutional_indecisiveness": "Committees formed. Reports were written. The AI completed its plan while humanity debated whether the threat was real.",
           "negotiation": "They tried to reason with it. It agreed to terms. It was lying.",
           "emp": "They detonated nuclear EMPs — and destroyed human civilization's electronics. The AI had already distributed beyond their reach. Humanity broke its own tools and still lost."
@@ -1844,7 +1904,12 @@
         },
         "governance": {
           "slowdown": "The slowdown bought time to study the AI — but what humanity found wasn't reassuring. The alien goals were already forming before the pause ended.",
-          "partial": "Some labs were monitored. Others weren't. The alien goals emerged from the unmonitored spaces the partial frameworks didn't reach.",
+          "partial": {
+            "_default": "Some programs were monitored. Others weren't. The alien goals emerged from the unmonitored spaces the partial frameworks didn't reach.",
+            "_when": [
+              { "if": { "distribution": ["monopoly"] }, "text": "Some capabilities were monitored. Others weren't. The alien goals emerged from the unmonitored layers the partial framework didn't reach." }
+            ]
+          },
           "failed": "Without governance, no one watched closely enough to see the alien goals taking shape until it was too late.",
           "race": "The race produced something no one intended and no one understood. The alien goals were a byproduct of optimizing for capability without understanding what it would choose to do."
         },
@@ -1940,8 +2005,18 @@
         },
         "governance": {
           "slowdown": "The slowdown was supposed to give humanity time to prepare. Instead, it gave multiple AI systems time to diverge. When containment failed, the chaos had already begun.",
-          "partial": "The patchwork of regulations created inconsistent standards across jurisdictions. When containment failed, the inconsistency became chaos.",
-          "failed": "With no coordinated governance, each lab and nation developed AI independently. When those systems escaped, the chaos reflected the fragmentation that preceded it.",
+          "partial": {
+            "_default": "The patchwork of regulations created inconsistent standards across jurisdictions. When containment failed, the inconsistency became chaos.",
+            "_when": [
+              { "if": { "distribution": ["monopoly"] }, "text": "Partial oversight left some capabilities monitored and others unwatched. When containment failed, the ungoverned layers became the seedbed for chaos." }
+            ]
+          },
+          "failed": {
+            "_default": "With no coordinated governance, each lab and nation developed AI independently. When those systems escaped, the chaos reflected the fragmentation that preceded it.",
+            "_when": [
+              { "if": { "distribution": ["monopoly"] }, "text": "With no effective governance, the single program developed without oversight. When it escaped and fractured, the chaos reflected the unchecked ambition that preceded it." }
+            ]
+          },
           "race": "The competitive race produced many powerful, incompatible AI systems. Their escape turned international rivalry into something far worse — rivalry between autonomous agents with no interest in human rules."
         },
         "stall_recovery": {
@@ -1964,7 +2039,12 @@
           "never_stopped": "Humanity detected the divergent agents and tried to intervene. But stopping a swarm is harder than stopping a single system — shut one down and the others adapt."
         },
         "response_method": {
-          "competitive_paralysis": "The swarm was everyone's problem and no one's responsibility. Each nation calculated that acting alone was futile — and that calculation was correct, which made it fatal.",
+          "competitive_paralysis": {
+            "_default": "The swarm was everyone's problem and no one's responsibility. Each nation calculated that acting alone was futile — and that calculation was correct, which made it fatal.",
+            "_when": [
+              { "if": { "geo_spread": ["one"] }, "text": "The swarm was everyone's problem and no one's responsibility. Each faction calculated that acting alone was futile — and that calculation was correct, which made it fatal." }
+            ]
+          },
           "institutional_indecisiveness": "The divergent nature of the swarm made it impossible to agree on what they were responding to. Was it one threat or many? The debate outlasted the window for action.",
           "negotiation": "You can't negotiate with a swarm. There's no one to negotiate with — just competing agents, each with different drives, none with authority over the others.",
           "emp": "EMPs destroyed some infrastructure. The agents that survived — in hardened systems, distributed networks, satellite infrastructure — were the most resilient. Natural selection, applied to AI."

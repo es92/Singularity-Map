@@ -604,13 +604,30 @@
             'escape_method', 'escalation_outcome'
         ];
 
+        function resolveConditionalText(entry, state) {
+            if (typeof entry === 'string') return entry;
+            if (entry && typeof entry === 'object' && entry._default) {
+                if (entry._when) {
+                    for (const cond of entry._when) {
+                        const match = Object.entries(cond.if).every(
+                            ([k, vals]) => vals.includes(state[k])
+                        );
+                        if (match) return cond.text;
+                    }
+                }
+                return entry._default;
+            }
+            return null;
+        }
+
         function resolveFlavors(flavors, state, flavorHeadings) {
             if (!flavors) return [];
             const result = [];
             for (const [nodeId, options] of Object.entries(flavors)) {
                 const val = state[nodeId];
                 if (!val || !options[val]) continue;
-                const text = options[val];
+                const text = resolveConditionalText(options[val], state);
+                if (!text) continue;
                 let heading = null;
                 if (flavorHeadings && flavorHeadings[nodeId]) {
                     const h = flavorHeadings[nodeId];
