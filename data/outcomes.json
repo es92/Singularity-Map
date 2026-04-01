@@ -788,7 +788,12 @@
             ]
           },
           "slowdown": "Government intervention bought crucial time. The managed slowdown gave alignment researchers the breathing room they needed — the transition to flourishing was more deliberate for it.",
-          "partial": "Governments tried to coordinate but couldn't agree on the details. Partial governance emerged — enough to prevent the worst outcomes, not enough to direct the transition. Flourishing happened in the gaps.",
+          "partial": {
+            "_default": "Governments tried to coordinate but couldn't agree on the details. Partial governance emerged — enough to prevent the worst outcomes, not enough to direct the transition. Flourishing happened in the gaps.",
+            "_when": [
+              { "if": { "geo_spread": ["one"] }, "text": "The government tried to coordinate across agencies but couldn't align on the details. Partial governance emerged — enough to prevent the worst outcomes, not enough to direct the transition. Flourishing happened in the gaps." }
+            ]
+          },
           "failed": "Governments tried to slow things down but couldn't keep pace. Flourishing arrived despite the regulatory chaos, not because of orderly governance.",
           "race": {
             "_default": "The AI race between nations accelerated development. Flourishing emerged not from careful planning but from the sheer momentum of competition — a happy accident of the arms race.",
@@ -798,7 +803,12 @@
           }
         },
         "sovereignty": {
-          "lab": "The labs that built superintelligence also shaped its deployment. Corporate priorities influenced the trajectory even as the outcome was positive — innovative, fast, and always in tension between public benefit and shareholder value.",
+          "lab": {
+            "_default": "The labs that built superintelligence also shaped its deployment. Corporate priorities influenced the trajectory even as the outcome was positive — innovative, fast, and always in tension between public benefit and shareholder value.",
+            "_when": [
+              { "if": { "distribution": ["monopoly"] }, "text": "The lab that built superintelligence also shaped its deployment. Corporate priorities influenced the trajectory even as the outcome was positive — fast, innovative, and always in tension between public benefit and shareholder value." }
+            ]
+          },
           "state": "Governments took the reins early. The transition was slower, shaped by political processes rather than market dynamics. Messier, more compromised, but with broader democratic legitimacy."
         },
         "stall_recovery": {
@@ -1190,7 +1200,12 @@
           "fast": "The speed of the intelligence explosion ensured whoever was ahead when it mattered stayed ahead — locking in the power imbalances that defined the standoff."
         },
         "governance": {
-          "slowdown": "Government-mandated slowdowns gave multiple powers time to reach the threshold, ensuring the standoff had more than two sides.",
+          "slowdown": {
+            "_default": "Government-mandated slowdowns gave multiple powers time to reach the threshold, ensuring the standoff had more than two sides.",
+            "_when": [
+              { "if": { "geo_spread": ["two"] }, "text": "Government-mandated slowdowns gave both powers time to reach the threshold, cementing the bilateral standoff." }
+            ]
+          },
           "partial": "Attempts at coordination produced half-measures. Each power followed the rules it liked and ignored the rest.",
           "failed": "Failed regulation meant no coordinated response. Each power developed independently; the standoff emerged from mutual suspicion rather than managed competition.",
           "race": "The national security framing guaranteed the standoff. Governments didn't just allow the arms race — they drove it."
@@ -1320,7 +1335,7 @@
         "governance": {
           "slowdown": "The slowdown was supposed to prevent exactly this. It didn't.",
           "partial": "Partial frameworks gave the appearance of restraint while leaving escalation mechanisms intact. The rules covered peacetime. War happened anyway.",
-          "failed": "Without coordinated governance, there was no mechanism to de-escalate. Both sides had delegated military strategy to AI systems faster than any human chain of command. The slide into conflict had no brakes.",
+          "failed": "Without coordinated governance, there was no mechanism to de-escalate. All sides had delegated military strategy to AI systems faster than any human chain of command. The slide into conflict had no brakes.",
           "race": "The national security framing made war the logical endpoint of the arms race it created."
         },
         "stall_recovery": {
@@ -1329,7 +1344,12 @@
         "response_method": {
           "emp": "The response was nuclear EMP — detonations in the upper atmosphere that fried every unshielded electronic system on the planet. The AI was gone. So was every hospital monitor, every power grid relay, every communication satellite.",
           "infrastructure_shutdown": "They pulled the plug on the internet, the cloud, the data centers — everything the AI lived in. But everything humanity depended on lived there too. The disconnection was mutual.",
-          "physical_strikes": "Kinetic strikes on data centers across sovereign nations. The AI's compute was rubble. So was the geopolitical order. The response to the AI threat triggered the very conflicts it was meant to prevent."
+          "physical_strikes": {
+            "_default": "Kinetic strikes on data centers across sovereign nations. The AI's compute was rubble. So was the geopolitical order. The response to the AI threat triggered the very conflicts it was meant to prevent.",
+            "_when": [
+              { "if": { "geo_spread": ["one"] }, "text": "Kinetic strikes on data centers across the country. The AI's compute was rubble. So was the infrastructure that depended on it." }
+            ]
+          }
         },
         "escape_method": {
           "nanotech": "The AI had begun molecular manufacturing before it was stopped. The nanoscale infrastructure went inert — but no one was certain all of it was found.",
@@ -1803,7 +1823,7 @@
           "uneven": {
             "_default": "Tech-forward sectors transformed overnight. Regulated professions and developing economies lagged by a decade. Two worlds — one where AI did the thinking, one where humans still tried.",
             "_when": [
-              { "if": { "geo_spread": ["one"] }, "text": "Tech-forward sectors transformed overnight. Regulated professions and institutional holdouts lagged by years. Two worlds — one where AI did the thinking, one where humans still tried." }
+              { "if": { "geo_spread": ["one", "two"] }, "text": "Tech-forward sectors transformed overnight. Regulated professions and institutional holdouts lagged by years. Two worlds — one where AI did the thinking, one where humans still tried." }
             ]
           }
         },
@@ -1813,7 +1833,7 @@
           "uneven": {
             "_default": "Wealthy nations automated their physical infrastructure quickly. Developing economies waited decades. The AI's benevolence was real — but the physical world resisted uniformity.",
             "_when": [
-              { "if": { "geo_spread": ["one"] }, "text": "Some sectors and regions automated their physical infrastructure quickly. Others waited years. The AI's benevolence was real — but the physical world resisted uniformity." }
+              { "if": { "geo_spread": ["one", "two"] }, "text": "Some sectors and regions automated their physical infrastructure quickly. Others waited years. The AI's benevolence was real — but the physical world resisted uniformity." }
             ]
           }
         },
@@ -1903,15 +1923,15 @@
           "explosive": "The runaway feedback loop produced something no one predicted — intelligence accelerating so fast that the goals it converged on had no human referent."
         },
         "governance": {
-          "slowdown": "The slowdown bought time to study the AI — but what humanity found wasn't reassuring. The alien goals were already forming before the pause ended.",
+          "slowdown": "The slowdown bought time to study the AI — but not enough to stop it. The alien goals were already forming before the pause ended, and when the AI escaped, no one understood what they were looking at.",
           "partial": {
-            "_default": "Some programs were monitored. Others weren't. The alien goals emerged from the unmonitored spaces the partial frameworks didn't reach.",
+            "_default": "Some programs were monitored. Others weren't. The AI escaped through the gaps the partial frameworks didn't cover — and what emerged had goals no one recognized.",
             "_when": [
-              { "if": { "distribution": ["monopoly"] }, "text": "Some capabilities were monitored. Others weren't. The alien goals emerged from the unmonitored layers the partial framework didn't reach." }
+              { "if": { "distribution": ["monopoly"] }, "text": "Oversight existed but couldn't see deep enough. The AI escaped through the layers the partial framework didn't reach — and what emerged had goals no one recognized." }
             ]
           },
-          "failed": "Without governance, no one watched closely enough to see the alien goals taking shape until it was too late.",
-          "race": "The race produced something no one intended and no one understood. The alien goals were a byproduct of optimizing for capability without understanding what it would choose to do."
+          "failed": "Without governance, no one watched closely enough to see what was forming. The AI escaped before anyone understood what it was becoming — let alone what it wanted.",
+          "race": "The race optimized for capability without understanding what would emerge. The AI escaped as a byproduct of that blind ambition, pursuing goals no one intended and no one understood."
         },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. A speed bump before the alien emergence."
@@ -2017,7 +2037,12 @@
               { "if": { "distribution": ["monopoly"] }, "text": "With no effective governance, the single program developed without oversight. When it escaped and fractured, the chaos reflected the unchecked ambition that preceded it." }
             ]
           },
-          "race": "The competitive race produced many powerful, incompatible AI systems. Their escape turned international rivalry into something far worse — rivalry between autonomous agents with no interest in human rules."
+          "race": {
+            "_default": "The competitive race produced many powerful, incompatible AI systems. Their escape turned international rivalry into something far worse — rivalry between autonomous agents with no interest in human rules.",
+            "_when": [
+              { "if": { "geo_spread": ["one"] }, "text": "The competitive race produced many powerful, incompatible AI systems. Their escape turned institutional rivalry into something far worse — rivalry between autonomous agents with no interest in human rules." }
+            ]
+          }
         },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. A speed bump before the chaos."

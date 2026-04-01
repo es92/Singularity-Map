@@ -18,28 +18,32 @@ const EVAL_MODEL = process.env.EVAL_MODEL || 'claude-haiku-4-5-20250315';
 const REVIEW_MODEL = process.env.REVIEW_MODEL || 'claude-sonnet-4-6-20250627';
 const REPORT_MODEL = process.env.REPORT_MODEL || 'claude-sonnet-4-6-20250627';
 
-const FLAVOR_PHASES = {
-    'How it happened': [
-        'distribution', 'takeoff', 'governance', 'sovereignty',
-        'rival_emerges', 'stall_recovery', 'automation_recovery',
-        'conflict_result', 'proliferation_outcome'
-    ],
-    'How society responded': [
-        'power_promise', 'mobilization', 'sincerity_test',
-        'resistance_outcome', 'coalition_outcome'
-    ],
-    'What the world looks like': [
-        'benefit_distribution', 'plateau_benefit_distribution',
-        'auto_benefit_distribution', 'alignment',
-        'knowledge_replacement', 'physical_automation',
-        'auto_knowledge_rate', 'auto_physical_rate',
-        'plateau_knowledge_rate', 'plateau_physical_rate',
-        'escape_method', 'escape_timeline'
-    ]
-};
-const KEY_TO_PHASE = {};
-for (const [phase, keys] of Object.entries(FLAVOR_PHASES)) {
-    for (const k of keys) KEY_TO_PHASE[k] = phase;
+// ── Conditional flavor resolution (mirrors index.html) ──
+
+function resolveConditionalText(entry, state) {
+    if (typeof entry === 'string') return entry;
+    if (entry && typeof entry === 'object' && entry._default) {
+        if (entry._when) {
+            for (const cond of entry._when) {
+                const match = Object.entries(cond.if).every(
+                    ([k, vals]) => vals.includes(state[k])
+                );
+                if (match) return cond.text;
+            }
+        }
+        return entry._default;
+    }
+    return null;
+}
+
+function resolveHeading(nodeId, val, flavorHeadings) {
+    if (flavorHeadings && flavorHeadings[nodeId]) {
+        const h = flavorHeadings[nodeId];
+        if (typeof h === 'string') return h;
+        if (h[val]) return h[val];
+    }
+    const node = NODE_MAP[nodeId];
+    return node ? node.label : nodeId;
 }
 
 const MODE_INSTRUCTIONS = {
@@ -72,6 +76,7 @@ const MODE_ARG = getArg('--mode', 'both');
 const CONCURRENCY = parseInt(getArg('--concurrency', '10'), 10);
 const GENERATE_REPORT = args.includes('--report');
 const REPORT_ONLY = args.includes('--report-only');
+const AUDIT_MODE = args.includes('--audit');
 const modes = MODE_ARG === 'both' ? ['want', 'likely'] : [MODE_ARG];
 
 // ── Anthropic client ──
@@ -216,9 +221,11 @@ function parseJsonResponse(raw) {
     try {
         return JSON.parse(cleaned);
     } catch {
-        const match = cleaned.match(/\{[\s\S]*\}/);
-        if (match) return JSON.parse(match[0]);
-        throw new Error('No JSON object found in response: ' + cleaned.slice(0, 100));
+        const objMatch = cleaned.match(/\{[\s\S]*\}/);
+        if (objMatch) return JSON.parse(objMatch[0]);
+        const arrMatch = cleaned.match(/\[[\s\S]*\]/);
+        if (arrMatch) return JSON.parse(arrMatch[0]);
+        throw new Error('No JSON found in response: ' + cleaned.slice(0, 100));
     }
 }
 
@@ -260,18 +267,19 @@ function resolveTemplate(templateId, state) {
         }
     }
 
-    const grouped = {};
+    const vignettes = [];
     if (t.flavors) {
         for (const [nodeId, options] of Object.entries(t.flavors)) {
-            if (state[nodeId] && options[state[nodeId]]) {
-                const phase = KEY_TO_PHASE[nodeId] || 'What the world looks like';
-                if (!grouped[phase]) grouped[phase] = [];
-                grouped[phase].push({ key: nodeId, val: state[nodeId], text: options[state[nodeId]] });
-            }
+            const val = state[nodeId];
+            if (!val || !options[val]) continue;
+            const text = resolveConditionalText(options[val], state);
+            if (!text) continue;
+            const heading = resolveHeading(nodeId, val, t.flavorHeadings);
+            vignettes.push({ key: nodeId, val, heading, text });
         }
     }
 
-    return { title: t.title, subtitle, mood, summary, variantKey, grouped };
+    return { title: t.title, subtitle, mood, summary, variantKey, vignettes };
 }
 
 // ── DAG walking ──
@@ -424,12 +432,11 @@ async function getPersonaReview(persona, mode, log, resolved) {
         outcomeText = `**${resolved.title}`;
         if (resolved.subtitle) outcomeText += ` — ${resolved.subtitle}`;
         outcomeText += `** (${resolved.mood})\n\n${resolved.summary}`;
-        const phaseOrder = Object.keys(FLAVOR_PHASES);
-        for (const phase of phaseOrder) {
-            const items = resolved.grouped[phase];
-            if (!items || items.length === 0) continue;
-            outcomeText += `\n\n**${phase.toUpperCase()}**\n`;
-            outcomeText += items.map(f => f.text).join('\n\n');
+        if (resolved.vignettes.length > 0) {
+            outcomeText += '\n\n**Narrative Vignettes:**\n';
+            for (const v of resolved.vignettes) {
+                outcomeText += `\n**${v.heading}** — ${v.text}`;
+            }
         }
     }
 
@@ -455,6 +462,7 @@ Respond in JSON with these fields:
 - missing_questions: Questions you wish had been asked but weren't. (array of strings, can be empty)
 - forced_choices: Any questions where none of the available options felt right. (array of objects with "question" and "complaint" fields, can be empty)
 - outcome_reaction: 2-3 sentences reacting to the outcome — does it feel like a fair conclusion from the choices made?
+- narrative_contradictions: List any vignettes where the text contradicts or doesn't match the choices you made. For each, cite the vignette heading and explain the mismatch. (array of objects with "heading" and "issue" fields, can be empty)
 
 Return ONLY the JSON object.`;
 
@@ -463,7 +471,7 @@ Return ONLY the JSON object.`;
         return parseJsonResponse(raw);
     } catch (err) {
         console.error(`  Review API error: ${err.message}`);
-        return { satisfaction: 0, accuracy: 0, missing_questions: [], forced_choices: [], outcome_reaction: 'Error generating review.' };
+        return { satisfaction: 0, accuracy: 0, missing_questions: [], forced_choices: [], outcome_reaction: 'Error generating review.', narrative_contradictions: [] };
     }
 }
 
@@ -516,13 +524,9 @@ function buildEvaluationMd(persona, mode, runNum, result, review) {
         if (resolved.subtitle) md += ` — ${resolved.subtitle}`;
         md += `** *(${resolved.mood})*\n>\n`;
         md += `> ${resolved.summary}\n>\n> ---\n`;
-        const phaseOrder = Object.keys(FLAVOR_PHASES);
-        for (const phase of phaseOrder) {
-            const items = resolved.grouped[phase];
-            if (!items || items.length === 0) continue;
-            md += `>\n> **${phase.toUpperCase()}**\n>\n`;
-            for (const item of items) {
-                md += `> ${item.text}\n>\n`;
+        if (resolved.vignettes.length > 0) {
+            for (const v of resolved.vignettes) {
+                md += `>\n> **${v.heading}** — ${v.text}\n`;
             }
         }
     } else {
@@ -546,15 +550,20 @@ function buildEvaluationMd(persona, mode, runNum, result, review) {
     } else {
         md += `- **Forced Choices:** None\n`;
     }
+    if (review.narrative_contradictions && review.narrative_contradictions.length > 0) {
+        md += `- **Narrative Contradictions:**\n`;
+        for (const nc of review.narrative_contradictions) md += `  - **${nc.heading}**: ${nc.issue}\n`;
+    } else {
+        md += `- **Narrative Contradictions:** None\n`;
+    }
     md += '\n';
 
     md += `## Metadata\n\n`;
     md += `- Template: ${template ? template.id : 'none'}\n`;
     md += `- Variant: ${resolved?.variantKey || 'n/a'}\n`;
     md += `- Mode: ${mode}\n`;
-    const flavorCount = resolved ? Object.values(resolved.grouped).reduce((s, a) => s + a.length, 0) : 0;
-    const phaseCount = resolved ? Object.keys(resolved.grouped).length : 0;
-    md += `- Flavors: ${flavorCount} across ${phaseCount} phases\n`;
+    const vignetteCount = resolved ? resolved.vignettes.length : 0;
+    md += `- Vignettes: ${vignetteCount}\n`;
     md += `- API calls: ${apiCalls + 1} (including review)\n`;
 
     return md;
@@ -574,6 +583,7 @@ async function generateReport(allResults) {
         reviewsText += `Reaction: ${r.outcomeReaction}\n`;
         if (r.missingQuestions.length > 0) reviewsText += `Missing: ${r.missingQuestions.join('; ')}\n`;
         if (r.forcedChoices.length > 0) reviewsText += `Forced: ${r.forcedChoices.map(f => f.question + ': ' + f.complaint).join('; ')}\n`;
+        if (r.narrativeContradictions && r.narrativeContradictions.length > 0) reviewsText += `Contradictions: ${r.narrativeContradictions.map(c => c.heading + ': ' + c.issue).join('; ')}\n`;
         reviewsText += '\n';
     }
 
@@ -597,8 +607,9 @@ Write a report in markdown. Keep it under 2000 words. Sections:
 2. **Key Patterns** — 3-5 bullet points on the most important patterns across want vs. likely, persona clusters, and outcome diversity. Note any persona whose want and likely modes consistently diverge.
 3. **Low Scores** — list any runs with satisfaction or accuracy below 3. One line each with persona, mode, score, and their complaint.
 4. **Recurring Feedback** — aggregate missing_questions and forced_choices. Only list items mentioned by 2+ personas.
-5. **Issues** — up to 8 concrete problems. Each: one-line description, severity (critical/moderate/minor), affected file, proposed fix.
-6. **Top 3 Priorities** — the most impactful changes to make next.
+5. **Narrative Contradictions** — list every narrative_contradiction reported. Group by vignette heading. These are cases where the outcome text contradicts the choices made.
+6. **Issues** — up to 8 concrete problems. Each: one-line description, severity (critical/moderate/minor), affected file, proposed fix.
+7. **Top 3 Priorities** — the most impactful changes to make next.
 
 Be specific. Reference node IDs and template names where relevant. Do NOT pad with filler.`;
 
@@ -659,6 +670,209 @@ async function runPool(jobs, concurrency, onComplete) {
     const workers = Array.from({ length: workerCount }, () => worker());
     await Promise.all(workers);
     return results;
+}
+
+// ── Audit mode ──
+
+const CONTEXT_COMBOS = [
+    { distribution: 'monopoly', geo_spread: 'one' },
+    { distribution: 'open', geo_spread: 'several' },
+    { distribution: 'concentrated', geo_spread: 'two' },
+];
+
+function generateTestStates(template) {
+    const states = [];
+    const seen = new Set();
+
+    function addState(s) {
+        const key = JSON.stringify(Object.entries(s).filter(([k]) => !k.startsWith('_')).sort());
+        if (seen.has(key)) return;
+        seen.add(key);
+        states.push(s);
+    }
+
+    const relevantDims = new Set();
+    for (const reachable of template.reachable) {
+        for (const k of Object.keys(reachable)) {
+            if (k !== '_not') relevantDims.add(k);
+        }
+    }
+    if (template.flavors) {
+        for (const options of Object.values(template.flavors)) {
+            for (const entry of Object.values(options)) {
+                if (entry && typeof entry === 'object' && entry._when) {
+                    for (const cond of entry._when) {
+                        for (const k of Object.keys(cond.if)) relevantDims.add(k);
+                    }
+                }
+            }
+        }
+    }
+
+    const useContextCombos = relevantDims.has('distribution') || relevantDims.has('geo_spread');
+    const combos = useContextCombos ? CONTEXT_COMBOS : [{}];
+
+    for (const reachable of template.reachable) {
+        const base = {};
+        for (const [k, vals] of Object.entries(reachable)) {
+            if (k === '_not') continue;
+            base[k] = Array.isArray(vals) ? vals[0] : vals;
+        }
+
+        for (const combo of combos) {
+            const flavorEntries = Object.entries(template.flavors);
+            const defaultFill = {};
+            for (const [dimId, options] of flavorEntries) {
+                defaultFill[dimId] = Object.keys(options)[0];
+            }
+
+            addState({ ...base, ...defaultFill, ...combo });
+
+            for (const [dimId, options] of flavorEntries) {
+                for (const val of Object.keys(options)) {
+                    addState({ ...base, ...defaultFill, ...combo, [dimId]: val });
+                }
+            }
+        }
+    }
+
+    return states;
+}
+
+function describeState(state) {
+    return Object.entries(state)
+        .filter(([k]) => !k.startsWith('_'))
+        .map(([k, v]) => {
+            const node = NODE_MAP[k];
+            const edge = node?.edges?.find(e => e.id === v);
+            return `${node?.label || k}=${edge?.label || v}`;
+        })
+        .join(', ');
+}
+
+async function auditTemplate(model, templateId, testCases) {
+    let casesText = '';
+    for (let i = 0; i < testCases.length; i++) {
+        const tc = testCases[i];
+        casesText += `\n--- Test Case ${i + 1} ---\nUser's path: ${describeState(tc.state)}\n\nVignettes shown:\n`;
+        for (const v of tc.vignettes) {
+            casesText += `- [${v.heading}]: ${v.text}\n`;
+        }
+    }
+
+    const system = `You are a QA reviewer for a narrative scenario app. Users make choices about the future of AI (distribution model, geographic spread, governance approach, etc.) and receive narrative vignettes describing what happened.
+
+Your job: flag any vignette whose text contradicts or is inconsistent with the user's choices.
+
+Key things to check:
+- If distribution=One dominates (monopoly), text should NOT reference "some labs," "multiple actors," "different jurisdictions," etc.
+- If Countries=One country, text should NOT reference "nations," "developing economies," "wealthy nations," "international," "geopolitical," etc.
+- If distribution=Distributed (open), text should NOT imply a single controlling entity.
+- Governance text should match the governance approach in the state.
+- Physical world text should match the geographic context.
+
+Only flag genuine contradictions — not minor style issues. Be specific about what contradicts what.`;
+
+    const user = `Template: ${templateId}
+
+${casesText}
+
+---
+
+For each contradiction found, return a JSON array. Each entry: { "case": <number>, "heading": "<vignette heading>", "issue": "<what contradicts what>" }
+
+If no contradictions, return an empty array: []
+
+Return ONLY the JSON array.`;
+
+    try {
+        const raw = await callClaude(model, system, user, 4096);
+        const parsed = parseJsonResponse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (err) {
+        console.error(`  Audit API error for ${templateId}: ${err.message}`);
+        return [];
+    }
+}
+
+async function runAudit() {
+    initClient();
+    const AUDIT_MODEL = process.env.AUDIT_MODEL || REVIEW_MODEL;
+    console.log(`\nRunning flavor text consistency audit...`);
+    console.log(`Model: ${AUDIT_MODEL}\n`);
+
+    const allIssues = [];
+
+    for (const template of templatesList) {
+        if (!template.flavors || !template.reachable) continue;
+        process.stdout.write(`  ${template.id}...`);
+
+        const testStates = generateTestStates(template);
+        const testCases = [];
+        const seenVignettes = new Set();
+        for (const state of testStates) {
+            const resolved = resolveTemplate(template.id, state);
+            if (!resolved || resolved.vignettes.length === 0) continue;
+            const vigKey = resolved.vignettes.map(v => `${v.heading}:${v.text}`).join('|')
+                + '||' + (state.distribution || '') + '|' + (state.geo_spread || '');
+            if (seenVignettes.has(vigKey)) continue;
+            seenVignettes.add(vigKey);
+            testCases.push({ state, vignettes: resolved.vignettes });
+        }
+
+        if (testCases.length === 0) {
+            console.log(' no test cases');
+            continue;
+        }
+
+        const MAX_CASES_PER_CALL = 20;
+        let templateIssues = [];
+
+        for (let i = 0; i < testCases.length; i += MAX_CASES_PER_CALL) {
+            const batch = testCases.slice(i, i + MAX_CASES_PER_CALL);
+            const issues = await auditTemplate(AUDIT_MODEL, template.id, batch);
+            for (const issue of issues) {
+                templateIssues.push({
+                    template: template.id,
+                    case: issue.case,
+                    state: batch[issue.case - 1]?.state || {},
+                    heading: issue.heading,
+                    issue: issue.issue
+                });
+            }
+        }
+
+        if (templateIssues.length > 0) {
+            allIssues.push(...templateIssues);
+            console.log(` ${templateIssues.length} issues across ${testCases.length} test cases`);
+        } else {
+            console.log(` clean (${testCases.length} test cases)`);
+        }
+    }
+
+    console.log(`\n--- Audit Summary ---`);
+    console.log(`Total issues: ${allIssues.length}`);
+
+    if (allIssues.length > 0) {
+        console.log(`\nIssues by template:`);
+        const byTemplate = {};
+        for (const issue of allIssues) {
+            if (!byTemplate[issue.template]) byTemplate[issue.template] = [];
+            byTemplate[issue.template].push(issue);
+        }
+        for (const [tid, issues] of Object.entries(byTemplate)) {
+            console.log(`\n  ${tid} (${issues.length}):`);
+            for (const issue of issues) {
+                const stateStr = describeState(issue.state);
+                console.log(`    - [${issue.heading}] ${issue.issue}`);
+                console.log(`      State: ${stateStr}`);
+            }
+        }
+    }
+
+    const reportPath = path.join(__dirname, 'audit-report.json');
+    fs.writeFileSync(reportPath, JSON.stringify(allIssues, null, 2));
+    console.log(`\nFull report: ${reportPath}`);
 }
 
 // ── Main ──
@@ -723,7 +937,8 @@ async function main() {
             accuracy: review.accuracy,
             outcomeReaction: review.outcome_reaction,
             missingQuestions: review.missing_questions || [],
-            forcedChoices: review.forced_choices || []
+            forcedChoices: review.forced_choices || [],
+            narrativeContradictions: review.narrative_contradictions || []
         };
     });
 
@@ -759,7 +974,7 @@ async function reportOnly() {
     console.log('Report written to tests/report.md');
 }
 
-(REPORT_ONLY ? reportOnly() : main()).catch(err => {
+(AUDIT_MODE ? runAudit() : REPORT_ONLY ? reportOnly() : main()).catch(err => {
     console.error('Fatal:', err);
     process.exit(1);
 });

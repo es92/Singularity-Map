@@ -23,6 +23,8 @@ Options:
 - `--persona ID` — run only one persona (e.g., `--persona yudkowsky`)
 - `--concurrency N` — how many runs to execute in parallel (default 5)
 - `--report` — generate `tests/report.md` after all evaluations
+- `--audit` — run flavor text consistency audit instead of persona evaluations (see below)
+l 
 
 This produces:
 - One markdown file per persona-mode-run in `tests/evaluations/` (e.g., `yudkowsky-want-1.md`)
@@ -36,7 +38,7 @@ Read `tests/report.md`. Focus on:
 - **Recurring missing questions** — multiple personas independently flagged the same gap
 - **Forced-choice complaints** — questions where none of the options felt right to the persona
 - **Want-vs-likely divergences** — where a persona's hopes and predictions produce different outcomes; are both narratives coherent?
-- **Empty phases** — outcome cards missing "How it happened", "How society responded", or "What the world looks like" content
+- **Narrative contradictions** — vignette text that contradicts the choices the persona made
 
 ## Step 3 — (Optional) Propose and implement fixes
 
@@ -46,6 +48,20 @@ If the report identifies issues, propose specific edits to:
 - `data/narrative.json` — question text, answer labels, answer descriptions
 
 After making changes, re-run the evaluations to verify the fixes.
+
+## Flavor Text Audit
+
+```bash
+node tests/evaluate.js --audit
+```
+
+This mode checks all narrative vignettes for cross-dimensional contradictions without running persona simulations. It generates test states for each template by combining reachable conditions with extreme context values (e.g., monopoly + single country, distributed + many countries), resolves the vignettes, and sends them to an LLM to flag any text that contradicts the user's state.
+
+Output:
+- Console summary of issues by template
+- `tests/audit-report.json` with full details
+
+Set `AUDIT_MODEL` in `.env` to control which model performs the checks (defaults to `REVIEW_MODEL`).
 
 ## How it works
 
@@ -60,8 +76,8 @@ For each persona (defined in `tests/personas.json`), the script:
    - A mode-specific instruction ("what would you choose" vs "what do you think will happen")
 3. **Claude returns a probability distribution** over the options (e.g., `{"robust": 0.05, "failed": 0.85, "brittle": 0.10}`)
 4. **The script samples** from the distribution to make the choice
-5. **After the path completes**, the script resolves the outcome template and renders the flavor-grouped outcome card
-6. **A review call** asks Claude (still in persona) to rate satisfaction, accuracy, and provide feedback
+5. **After the path completes**, the script resolves the outcome template and renders narrative vignettes (with conditional flavor text resolution)
+6. **A review call** asks Claude (still in persona) to rate satisfaction, accuracy, flag narrative contradictions, and provide feedback
 7. **If `--report` is passed**, a final call synthesizes all results into an analytical report
 
 The `k` runs per persona produce variation because the script samples from probability distributions rather than always picking the most likely option. This surfaces edge cases where low-probability choices produce surprising (or incoherent) outcomes.
