@@ -219,25 +219,108 @@
         .debug-activate { color: #22c55e; }
         .debug-deactivate { color: #ef4444; }
         .debug-lock { color: var(--accent); }
-        .map-outcome-section {
-            background: var(--bg-surface); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: 1.5rem;
-            margin-bottom: 1.5rem;
+        /* ---- Outcome Hero ---- */
+        .outcome-hero {
+            position: relative;
+            border-radius: var(--radius);
+            padding: 3rem 2rem 2.5rem;
+            text-align: center;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        .outcome-hero-inner {
+            position: relative; z-index: 1;
+            max-width: 640px; margin: 0 auto;
+        }
+        .outcome-hero .outcome-title {
+            font-size: 2.8rem; font-weight: 700;
+            letter-spacing: -0.03em; line-height: 1.1;
+            margin-bottom: 0.5rem;
+        }
+        .outcome-hero .outcome-subtitle {
+            font-size: 1.2rem; font-weight: 400;
+            font-style: italic; margin-bottom: 0.75rem; opacity: 0.8;
+        }
+        .outcome-hero .mood-badge { margin-bottom: 1.25rem; }
+        .outcome-hero .outcome-summary {
+            font-size: 1.05rem; line-height: 1.75;
+            color: var(--text-secondary);
+            max-width: 560px; margin: 0 auto;
         }
 
-        
+        /* Mood background gradients */
+        .mood-bg-utopian {
+            background: radial-gradient(ellipse at 50% 0%, rgba(0,224,136,0.15) 0%, rgba(0,224,136,0.03) 60%, transparent 100%);
+            border: 1px solid rgba(0,224,136,0.15);
+        }
+        .mood-bg-dystopian {
+            background: radial-gradient(ellipse at 50% 0%, rgba(255,51,102,0.15) 0%, rgba(255,51,102,0.03) 60%, transparent 100%);
+            border: 1px solid rgba(255,51,102,0.15);
+        }
+        .mood-bg-mixed {
+            background: radial-gradient(ellipse at 30% 0%, rgba(255,170,34,0.12) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 0%, rgba(0,200,255,0.08) 0%, transparent 50%);
+            border: 1px solid rgba(255,170,34,0.12);
+        }
+        .mood-bg-stagnant {
+            background: radial-gradient(ellipse at 50% 0%, rgba(120,136,170,0.12) 0%, rgba(120,136,170,0.03) 60%, transparent 100%);
+            border: 1px solid rgba(120,136,170,0.12);
+        }
+        .mood-bg-chaotic {
+            background: radial-gradient(ellipse at 40% 0%, rgba(170,68,255,0.15) 0%, transparent 50%),
+                        radial-gradient(ellipse at 60% 100%, rgba(255,51,102,0.08) 0%, transparent 50%);
+            border: 1px solid rgba(170,68,255,0.12);
+        }
+
+        /* Hero reveal stagger */
+        @keyframes heroReveal {
+            from { opacity: 0; transform: translateY(16px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .reveal-item {
+            opacity: 0;
+            animation: heroReveal 0.6s var(--ease) forwards;
+            animation-delay: var(--delay, 0s);
+        }
+
+        /* Scroll-triggered reveal */
+        .scroll-reveal {
+            opacity: 0; transform: translateY(20px);
+            transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+        }
+        .scroll-reveal.revealed { opacity: 1; transform: translateY(0); }
+
+        /* ---- Your Path ---- */
+        .outcome-path { max-width: 520px; margin: 0 auto 2rem; }
+        .outcome-section-heading {
+            font-size: 0.82rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.08em;
+            color: var(--text-dim); margin-bottom: 1rem; text-align: center;
+        }
+        .path-steps { display: flex; flex-direction: column; gap: 0.5rem; }
+        .path-step {
+            display: flex; align-items: baseline;
+            gap: 0.5rem; font-size: 0.9rem; line-height: 1.5;
+        }
+        .path-label { color: var(--text-dim); flex-shrink: 0; white-space: nowrap; }
+        .path-dots {
+            flex: 1; border-bottom: 1px dotted var(--border);
+            min-width: 2rem; margin-bottom: 0.3em;
+        }
+        .path-value {
+            color: var(--text); font-weight: 500;
+            flex-shrink: 0; white-space: nowrap; text-align: right;
+        }
+
+        /* Explorer grid */
         .map-outcomes-zone { margin-top: 1.5rem; margin-bottom: 1.5rem; padding-left: 2.5rem; }
         .map-outcome-zone { margin-top: 1.5rem; }
         .map-outcomes-label {
             font-weight: 600; font-size: 0.92rem; margin-bottom: 0.75rem; color: var(--text-secondary);
         }
         .map-outcomes-count { font-weight: 400; font-size: 0.82rem; color: var(--text-dim); }
-        .map-outcome-section .outcome-header { margin-bottom: 1rem; }
-        .map-outcome-section .outcome-header h1 { margin-bottom: 0.25rem; }
-        .outcome-subtitle {
-            color: var(--text-secondary); font-size: 1.15rem; font-weight: 400;
-            font-style: italic; margin-bottom: 0.75rem;
-        }
+
+        /* Mood badge */
         .mood-badge {
             display: inline-block;
             padding: 0.22rem 0.7rem; border-radius: 20px;
@@ -249,16 +332,41 @@
         .mood-dystopian{ background: rgba(255,51,102,0.12); color: var(--mood-dystopian); border: 1px solid rgba(255,51,102,0.25); }
         .mood-mixed    { background: rgba(255,170,34,0.12); color: var(--mood-mixed);    border: 1px solid rgba(255,170,34,0.25); }
         .mood-stagnant { background: rgba(120,136,170,0.12);color: var(--mood-stagnant); border: 1px solid rgba(120,136,170,0.25); }
-        .map-outcome-section .outcome-summary { margin-bottom: 1.25rem; line-height: 1.65; }
-        .map-outcome-section .outcome-flavors { border-top: 1px solid var(--border); padding-top: 1rem; }
-        .outcome-phase { margin-bottom: 1.25rem; }
-        .outcome-phase:last-child { margin-bottom: 0; }
-        .outcome-phase-heading {
-            font-size: 0.82rem; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 0.06em; color: var(--text-dim);
-            margin-bottom: 0.5rem;
+
+        /* ---- Narrative ---- */
+        .outcome-narrative { max-width: 640px; margin: 0 auto 2rem; }
+        .outcome-pullquote {
+            font-size: 1.25rem; font-weight: 500; line-height: 1.6;
+            color: var(--text); border-left: 3px solid var(--accent);
+            padding-left: 1.25rem; margin: 0 0 2rem 0; font-style: italic;
         }
-        .outcome-phase p { margin-bottom: 0.6rem; line-height: 1.65; }
+        .outcome-vignettes { display: flex; flex-direction: column; gap: 1.25rem; }
+        .outcome-vignette {
+            display: flex; gap: 1.5rem; align-items: baseline;
+        }
+        .vignette-title {
+            flex: 0 0 140px; font-size: 0.85rem; font-weight: 600;
+            color: var(--text-dim); text-align: right; line-height: 1.75;
+        }
+        .vignette-text {
+            flex: 1; font-size: 0.95rem; line-height: 1.75;
+            color: var(--text-secondary);
+        }
+
+        /* ---- Engagement Footer ---- */
+        .outcome-footer {
+            max-width: 520px; margin: 0 auto;
+            padding: 2rem 0; text-align: center;
+            border-top: 1px solid var(--border);
+        }
+        .discovery-counter {
+            font-size: 0.88rem; color: var(--text-dim); margin-bottom: 1.5rem;
+        }
+        .discovery-counter strong { color: var(--text); font-weight: 600; }
+        .outcome-cta {
+            display: flex; gap: 0.75rem;
+            justify-content: center; flex-wrap: wrap;
+        }
         .map-actions {
             display: flex; gap: 0.5rem; flex-wrap: wrap;
             margin-top: auto; padding-top: 1rem; padding-bottom: 1rem;
@@ -274,6 +382,11 @@
             #app { padding: 1.25rem 1rem 3rem; }
             .map-screen { margin-top: -1.25rem; }
             .map-toolbar { margin-left: -1rem; margin-right: -1rem; padding-left: 1rem; padding-right: 1rem; }
+            .outcome-hero { padding: 2rem 1.25rem; }
+            .outcome-hero .outcome-title { font-size: 2rem; }
+            .outcome-pullquote { font-size: 1.1rem; }
+            .outcome-vignette { flex-direction: column; gap: 0.25rem; }
+            .vignette-title { text-align: left; flex: none; }
         }
     </style>
 </head>
@@ -483,48 +596,39 @@
                 summary,
                 story: t.story,
                 timeline: resolveTimeline(t.timeline, state),
-                flavors: resolveFlavors(t.flavors, state)
+                flavors: resolveFlavors(t.flavors, state, t.flavorHeadings)
             };
         }
 
-        const FLAVOR_PHASES = {
-            'How it happened': [
-                'distribution', 'takeoff', 'governance', 'sovereignty',
-                'rival_emerges', 'stall_recovery', 'automation_recovery',
-                'conflict_result', 'proliferation_outcome'
-            ],
-            'How society responded': [
-                'power_promise', 'mobilization', 'sincerity_test',
-                'resistance_outcome', 'coalition_outcome'
-            ],
-            'What the world looks like': [
-                'benefit_distribution', 'plateau_benefit_distribution',
-                'auto_benefit_distribution', 'alignment',
-                'knowledge_replacement', 'physical_automation',
-                'auto_knowledge_rate', 'auto_physical_rate',
-                'plateau_knowledge_rate', 'plateau_physical_rate',
-                'escape_method', 'escape_timeline'
-            ]
-        };
-        const FLAVOR_KEY_TO_PHASE = {};
-        for (const [phase, keys] of Object.entries(FLAVOR_PHASES)) {
-            for (const k of keys) FLAVOR_KEY_TO_PHASE[k] = phase;
-        }
+        const PATH_RECAP_PRIORITY = [
+            'capability', 'alignment', 'takeoff', 'distribution',
+            'governance_window', 'containment', 'ai_goals',
+            'power_promise', 'benefit_distribution', 'stall_duration',
+            'stall_recovery', 'automation_recovery', 'gov_action',
+            'knowledge_replacement', 'physical_automation',
+            'mobilization', 'rival_dynamics', 'sovereignty',
+            'escape_method', 'escalation_outcome'
+        ];
 
-        function resolveFlavors(flavors, state) {
-            if (!flavors) return { flat: [], grouped: {} };
-            const flat = [];
-            const grouped = {};
+        function resolveFlavors(flavors, state, flavorHeadings) {
+            if (!flavors) return [];
+            const result = [];
             for (const [nodeId, options] of Object.entries(flavors)) {
-                if (state[nodeId] && options[state[nodeId]]) {
-                    const text = options[state[nodeId]];
-                    flat.push(text);
-                    const phase = FLAVOR_KEY_TO_PHASE[nodeId] || 'What the world looks like';
-                    if (!grouped[phase]) grouped[phase] = [];
-                    grouped[phase].push(text);
+                const val = state[nodeId];
+                if (!val || !options[val]) continue;
+                const text = options[val];
+                let heading = null;
+                if (flavorHeadings && flavorHeadings[nodeId]) {
+                    const h = flavorHeadings[nodeId];
+                    heading = typeof h === 'string' ? h : (h[val] || null);
                 }
+                if (!heading) {
+                    const node = NODE_MAP[nodeId];
+                    heading = node ? node.label : nodeId;
+                }
+                result.push({ heading, text });
             }
-            return { flat, grouped };
+            return result;
         }
 
         // --- Persistence ---
@@ -790,6 +894,87 @@
                 });
             }
 
+            function extractPullQuote(text) {
+                const match = text.match(/^([^.!?]+[.!?])/);
+                if (!match) return null;
+                const sentence = match[1].trim();
+                if (sentence.length >= text.trim().length - 1) return null;
+                if (sentence.length > 150) return null;
+                return sentence;
+            }
+
+            function countTotalOutcomes() {
+                let count = 0;
+                for (const t of templatesList) {
+                    if (t.variants && t.primaryDimension) {
+                        count += Object.keys(t.variants).length;
+                    } else {
+                        count++;
+                    }
+                }
+                return count;
+            }
+
+            function buildPathRecapHtml() {
+                const sel = Engine.currentState(stack);
+                const answered = [];
+                for (const entry of stack) {
+                    if (!entry.nodeId) continue;
+                    const node = NODE_MAP[entry.nodeId];
+                    if (!node) continue;
+                    answered.push(entry);
+                }
+
+                let shown;
+                if (answered.length <= 6) {
+                    shown = answered;
+                } else {
+                    shown = [];
+                    for (const dim of PATH_RECAP_PRIORITY) {
+                        if (shown.length >= 6) break;
+                        const entry = answered.find(e => e.nodeId === dim);
+                        if (entry) shown.push(entry);
+                    }
+                    for (const entry of answered) {
+                        if (shown.length >= 6) break;
+                        if (!shown.includes(entry)) shown.push(entry);
+                    }
+                }
+
+                if (shown.length === 0) return '';
+
+                const rows = shown.map(entry => {
+                    const node = NODE_MAP[entry.nodeId];
+                    const edge = node.edges && node.edges.find(e => e.id === entry.edgeId);
+                    if (!edge) return '';
+                    const label = node.label || entry.nodeId;
+                    const variant = edge.narrativeVariants ? resolveNarrativeVariant(edge.narrativeVariants, sel) : null;
+                    const value = (variant && variant.answerLabel) || edge.answerLabel || edge.label;
+                    return `<div class="path-step">
+                        <span class="path-label">${esc(label)}</span>
+                        <span class="path-dots"></span>
+                        <span class="path-value">${esc(value)}</span>
+                    </div>`;
+                }).filter(Boolean).join('');
+
+                return `<div class="outcome-path scroll-reveal">
+                    <h2 class="outcome-section-heading">Your Path</h2>
+                    <div class="path-steps">${rows}</div>
+                </div>`;
+            }
+
+            function setupOutcomeReveals(container) {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('revealed');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+                container.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+            }
+
             function buildOutcomeSectionHtml() {
                 const eff = Engine.resolvedState(Engine.currentState(stack));
                 const matched = templatesList.filter(t => Engine.templateMatches(t, eff));
@@ -802,27 +987,54 @@
                 const key = outcomeKey(t.id, resolved.variantKey);
                 markDiscovered(key);
 
-                const { grouped } = resolved.flavors;
-                let flavorsHtml = '';
-                const phaseOrder = Object.keys(FLAVOR_PHASES);
-                for (const phase of phaseOrder) {
-                    const paragraphs = grouped[phase];
-                    if (!paragraphs || paragraphs.length === 0) continue;
-                    flavorsHtml += `<div class="outcome-phase">`;
-                    flavorsHtml += `<h3 class="outcome-phase-heading">${esc(phase)}</h3>`;
-                    flavorsHtml += paragraphs.map(f => `<p>${esc(f)}</p>`).join('');
-                    flavorsHtml += `</div>`;
+                const badgeDelay = resolved.subtitle ? '0.3' : '0.15';
+                const summaryDelay = resolved.subtitle ? '0.45' : '0.3';
+
+                let heroHtml = `<div class="outcome-hero mood-bg-${resolved.mood}">
+                    <div class="outcome-hero-inner">
+                        <h1 class="outcome-title reveal-item">${esc(resolved.title)}</h1>
+                        ${resolved.subtitle ? `<div class="outcome-subtitle reveal-item" style="--delay:0.15s">${esc(resolved.subtitle)}</div>` : ''}
+                        <span class="mood-badge mood-${resolved.mood} reveal-item" style="--delay:${badgeDelay}s">${esc(resolved.mood)}</span>
+                        <div class="outcome-summary reveal-item" style="--delay:${summaryDelay}s">${esc(resolved.summary)}</div>
+                    </div>
+                </div>`;
+
+                const pathHtml = buildPathRecapHtml();
+
+                const vignettes = resolved.flavors;
+
+                const pullQuote = extractPullQuote(resolved.summary);
+                let pullQuoteHtml = pullQuote
+                    ? `<blockquote class="outcome-pullquote scroll-reveal">${esc(pullQuote)}</blockquote>`
+                    : '';
+
+                let vignettesHtml = '';
+                if (vignettes.length > 0) {
+                    vignettesHtml = '<div class="outcome-vignettes">';
+                    for (const v of vignettes) {
+                        vignettesHtml += `<div class="outcome-vignette scroll-reveal">
+                            <div class="vignette-title">${esc(v.heading)}</div>
+                            <div class="vignette-text">${esc(v.text)}</div>
+                        </div>`;
+                    }
+                    vignettesHtml += '</div>';
                 }
 
-                return `<div class="map-outcome-section">
-                    <div class="outcome-header">
-                        <h1>${esc(resolved.title)}</h1>
-                        ${resolved.subtitle ? `<div class="outcome-subtitle">${esc(resolved.subtitle)}</div>` : ''}
-                        <span class="mood-badge mood-${resolved.mood}">${esc(resolved.mood)}</span>
+                let narrativeHtml = '';
+                if (pullQuoteHtml || vignettesHtml) {
+                    narrativeHtml = `<div class="outcome-narrative">${pullQuoteHtml}${vignettesHtml}</div>`;
+                }
+
+                const totalOutcomes = countTotalOutcomes();
+                const footerHtml = `<div class="outcome-footer scroll-reveal">
+                    <div class="discovery-counter">You've discovered <strong>${discovered.size}</strong> of <strong>${totalOutcomes}</strong> possible futures</div>
+                    <div class="outcome-cta">
+                        <button class="btn btn-primary" data-action="outcome-share">Share This Future</button>
+                        <button class="btn btn-ghost" data-action="outcome-explore">Explore Another Path</button>
                     </div>
-                    <div class="outcome-summary">${esc(resolved.summary)}</div>
-                    ${flavorsHtml ? `<div class="outcome-flavors">${flavorsHtml}</div>` : ''}
                 </div>`;
+
+                return heroHtml + pathHtml + narrativeHtml + footerHtml;
             }
 
             
@@ -1214,6 +1426,22 @@
                     if (!nextQ) {
                         outcomeZone.innerHTML = buildOutcomeSectionHtml();
                         outcomeZone.style.display = '';
+                        setupOutcomeReveals(outcomeZone);
+                        const shareBtn = outcomeZone.querySelector('[data-action="outcome-share"]');
+                        if (shareBtn) {
+                            shareBtn.addEventListener('click', () => {
+                                const url = location.origin + location.pathname + location.hash;
+                                if (navigator.clipboard) {
+                                    navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
+                                } else {
+                                    showToast(url);
+                                }
+                            });
+                        }
+                        const exploreBtn = outcomeZone.querySelector('[data-action="outcome-explore"]');
+                        if (exploreBtn) {
+                            exploreBtn.addEventListener('click', () => resetSelections());
+                        }
                     } else {
                         outcomeZone.innerHTML = '';
                         outcomeZone.style.display = 'none';
