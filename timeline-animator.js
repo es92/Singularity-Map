@@ -552,16 +552,17 @@ class TimelineAnimator {
         }
 
         // --- Scroll setup ---
-        // Measure the natural content height (without inflated scroll room) so we
-        // can cap scrollDelta — the animation must land at a scroll position the
-        // real content can support, otherwise _releaseScrollRoom triggers a second
-        // browser-driven scroll via CSS scroll-behavior:smooth.
+        // Measure the scroll room element's natural height (without inflated min-height)
+        // to cap scrollDelta. We use the element's own height rather than
+        // document.documentElement.scrollHeight because the element sits inside #app
+        // with padding/margins — using the document height would overshoot and cause
+        // a scroll snap when _releaseScrollRoom clears the min-height.
         const scrollRoomEl = this._getScrollRoomEl();
         const inflatedMinH = this._scrollMinHeight;
         scrollRoomEl.style.minHeight = '';
-        const naturalMinH = document.documentElement.scrollHeight;
+        const naturalElH = scrollRoomEl.getBoundingClientRect().height;
         scrollRoomEl.style.minHeight = inflatedMinH + 'px';
-        const naturalMaxScroll = Math.max(0, naturalMinH - window.innerHeight);
+        const naturalMaxScroll = Math.max(0, naturalElH - window.innerHeight);
 
         const scrollStart = window.scrollY;
         let scrollDelta = totalShift;
@@ -645,8 +646,8 @@ class TimelineAnimator {
             }
 
             // Gradually release scroll room so scrollbar doesn't snap at cleanup
-            if (inflatedMinH > naturalMinH) {
-                const currentMinH = inflatedMinH + (naturalMinH - inflatedMinH) * e;
+            if (inflatedMinH > naturalElH) {
+                const currentMinH = inflatedMinH + (naturalElH - inflatedMinH) * e;
                 scrollRoomEl.style.minHeight = currentMinH + 'px';
             }
 
