@@ -517,11 +517,10 @@
     };
 
     function snapToState(targetCounter) {
-        animator._ensureScrollRoom(5000);
-
         counter = targetCounter;
         animator.morphAnimating = false;
-        if (animator._ghost) { animator._ghost.remove(); animator._ghost = null; }
+        if (animator._oldCardEl) { animator._oldCardEl.remove(); animator._oldCardEl = null; }
+        if (animator._currentFlip) { animator._currentFlip.cancel(); animator._currentFlip = null; }
         [animator.timelineEl, animator.questionZoneEl, animator.outcomeEl].forEach(el => {
             if (el) { el.style.transform = ''; el.style.opacity = ''; }
         });
@@ -531,56 +530,11 @@
         const card = animator._getCard() || animator.questionZoneEl;
         const scrollTarget = window.scrollY + (card.getBoundingClientRect().top - pendingCardViewportTop);
         window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'instant' });
-
-        animator._releaseScrollRoom();
-
-        applyElementVisibility();
     }
 
     function applyElementVisibility() {
-        const vis = animator._elementVisibility;
-
-        const card = animator._getCard();
-        if (card) {
-            card.querySelectorAll('.question-text, .question-context, .answers').forEach(c => {
-                c.classList.toggle('anim-dim', !vis.newCard);
-            });
-        }
-
-        const oldCardEl = animator._oldCardEl;
-        if (oldCardEl) {
-            oldCardEl.querySelectorAll('.question-text, .question-context, .answers').forEach(c => {
-                c.classList.toggle('anim-dim', !vis.oldCard);
-            });
-        }
-
-        appEl.querySelectorAll('.timeline-event').forEach(el => {
-            el.querySelectorAll('.timeline-top-row, .timeline-headline, .timeline-desc, .timeline-slider').forEach(c => {
-                c.classList.toggle('anim-dim', !vis.newEvents);
-            });
-        });
-
-        appEl.querySelectorAll('.timeline-stage-header').forEach(el => {
-            el.classList.toggle('anim-dim', !vis.stageHeaders);
-        });
-
-        if (animator.outcomeEl) {
-            animator.outcomeEl.classList.toggle('anim-dim', !vis.outcome);
-        }
-
-        appEl.querySelectorAll('.tl-dot').forEach(el => {
-            el.classList.toggle('anim-dim', !vis.dot);
-        });
-
-        appEl.querySelectorAll('.tl-hline').forEach(el => {
-            el.classList.toggle('anim-dim', !vis.hline);
-        });
-
-        appEl.querySelectorAll('.tl-vline-seg').forEach(el => {
-            el.classList.toggle('anim-dim', !vis.vline);
-        });
+        // Element visibility toggles removed in refactor; this is a no-op stub.
     }
-    animator._beforeAnimate = applyElementVisibility;
 
     function updateTransportUI() {
         const idle = transportState === 'idle';
@@ -639,23 +593,15 @@
         updateTransportUI();
     }
 
-    // Element visibility toggles
+    // Element visibility toggles (removed in refactor — buttons are inert)
     const elemBtns = document.querySelectorAll('.elem-btn');
     elemBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            btn.classList.toggle('active');
-            animator._elementVisibility[btn.dataset.elem] = btn.classList.contains('active');
-            applyElementVisibility();
-        });
+        btn.addEventListener('click', () => { btn.classList.toggle('active'); });
     });
-
-    document.getElementById('elemAllBtn').addEventListener('click', () => {
+    const elemAllBtn = document.getElementById('elemAllBtn');
+    if (elemAllBtn) elemAllBtn.addEventListener('click', () => {
         const anyOff = Array.from(elemBtns).some(b => !b.classList.contains('active'));
-        elemBtns.forEach(btn => {
-            btn.classList.toggle('active', anyOff);
-            animator._elementVisibility[btn.dataset.elem] = anyOff;
-        });
-        applyElementVisibility();
+        elemBtns.forEach(btn => { btn.classList.toggle('active', anyOff); });
     });
 
     animator.render();

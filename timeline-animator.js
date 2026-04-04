@@ -1,6 +1,10 @@
 'use strict';
 
-class TimelineAnimator {
+// ---------------------------------------------------------------------------
+// Phase 5: Rendering logic separated from animation
+// ---------------------------------------------------------------------------
+
+class TimelineRenderer {
     constructor(options) {
         this.containerEl = options.containerEl;
         this.timelineEl = options.timelineEl;
@@ -11,59 +15,11 @@ class TimelineAnimator {
         this.cardClass = options.cardClass || 'question-card';
         this.contentSelector = options.contentSelector || '.question-text, .question-context, .answers';
 
-        this.morphDuration = options.morphDuration || 600;
-        this.morphAnimating = false;
-
+        this.stages = options.stages || null;
+        this._currentAnswerCards = null;
         this._customRender = options.render || null;
         this._customWireButtons = options.wireAnswerButtons || null;
         this._stripFromAnimation = options.stripFromAnimation || null;
-
-        this.stages = options.stages || null;
-        this._currentAnswerCards = null;
-        this._scrollMinHeight = 0;
-        this._oldCardEl = null;
-        this._beforeAnimate = options.beforeAnimate || null;
-        this._headerEl = options.headerEl || null;
-
-        this._elementVisibility = {
-            oldCard: true,
-            newEvents: true,
-            newCard: true,
-            outcome: true,
-            scroll: true,
-            stageHeaders: true,
-            dot: true,
-            hline: true,
-            vline: true,
-        };
-    }
-
-    setMorphDuration(ms) { this.morphDuration = ms; }
-    isAnimating() { return this.morphAnimating; }
-
-    _getScrollRoomEl() {
-        return this.containerEl.querySelector('.map-screen') || this.containerEl;
-    }
-
-    _ensureScrollRoom(extraPx) {
-        const el = this._getScrollRoomEl();
-        const needed = window.scrollY + window.innerHeight + extraPx;
-        this._scrollMinHeight = Math.max(this._scrollMinHeight, needed);
-        el.style.minHeight = this._scrollMinHeight + 'px';
-    }
-
-    _releaseScrollRoom() {
-        if (this._scrollMinHeight <= 0) return;
-        const el = this._getScrollRoomEl();
-
-        el.style.minHeight = '';
-        this._scrollMinHeight = 0;
-
-        const naturalHeight = this.containerEl.scrollHeight;
-        const maxScroll = Math.max(0, naturalHeight - window.innerHeight);
-        if (window.scrollY > maxScroll + 5) {
-            console.warn('[anim] scroll past content after animation:', { scrollY: Math.round(window.scrollY), maxScroll: Math.round(maxScroll), naturalHeight, diff: Math.round(window.scrollY - maxScroll) });
-        }
     }
 
     _getCard() {
@@ -76,8 +32,6 @@ class TimelineAnimator {
         d.textContent = String(str);
         return d.innerHTML;
     }
-
-    // ---- Rendering methods ----
 
     renderStageHeader(stageId) {
         const info = this.stages ? this.stages[stageId] : null;
@@ -271,8 +225,6 @@ class TimelineAnimator {
         return { html, innerHtml, answerCards, isForced };
     }
 
-    // ---- Core methods ----
-
     _wireAnswerButtons(container) {
         if (this._customWireButtons) {
             this._customWireButtons(container, (count) => this.addItems(count));
@@ -286,20 +238,6 @@ class TimelineAnimator {
                 cardEl.addEventListener('click', () => this.addItems(data.count));
             }
         });
-    }
-
-    reset() {
-        this.morphAnimating = false;
-        this.containerEl.classList.remove('flip-animating');
-        if (this._oldCardEl) { this._oldCardEl.remove(); this._oldCardEl = null; }
-        [this.timelineEl, this.questionZoneEl, this.outcomeEl].forEach(el => {
-            if (el) { el.style.transform = ''; el.style.opacity = ''; }
-        });
-        if (this.outcomeEl) this.outcomeEl.style.cssText = '';
-        this.containerEl.style.minHeight = '';
-        this._scrollMinHeight = 0;
-        this.render();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     render() {
@@ -376,333 +314,96 @@ class TimelineAnimator {
         qzSeg.style.top = (prevCenter - cardRect.top) + 'px';
         qzSeg.style.height = Math.max(0, currCenter - prevCenter) + 'px';
     }
+}
 
-    // ---- Pure FLIP animation ----
-    //
-    // All decorations (dots, lines) are real DOM elements now.
-    // The old card copy includes them naturally. No manual decoration creation needed.
-    //
-    // 1. Apply end state (render the final DOM)
-    // 2. Snapshot end positions, compute FLIP deltas
-    // 3. Create old card copy, displace new elements to start positions
-    // 4. Animate all elements from start → end on a single easing curve
-    // 5. Cleanup: remove old card copy, clear inline styles
+// ---------------------------------------------------------------------------
+// Phase 3: FLIP animation helper — manages Web Animations API instances
+// ---------------------------------------------------------------------------
 
-    _runAnimation({ startCardRect, startCardContent, startCardClassName, startOutcomeTop, startOutcomeVisible, applyEndState, onComplete, fadeFooterIn }) {
-        const DURATION = this.morphDuration;
-        const vis = this._elementVisibility;
+class FlipGroup {
+    constructor(duration, easing) {
+        this._opts = { duration, easing: easing || 'ease-in-out', fill: 'none' };
+        this._animations = [];
+    }
 
-        const timeline = this.timelineEl;
-        const outcomeCard = this.outcomeEl;
-        const oldEventCount = timeline.querySelectorAll('.timeline-event').length;
-        const oldHeaderCount = timeline.querySelectorAll('.timeline-stage-header').length;
+    slide(el, fromY, options) {
+        const opts = options || {};
+        const dy = fromY - el.getBoundingClientRect().top;
+        const animOpts = this._opts;
 
-        // --- Phase 1: Apply end state ---
-        this.containerEl.classList.add('flip-animating');
-        const footer = this.containerEl.querySelector('.map-actions');
-        const footerTopBefore = footer ? footer.getBoundingClientRect().top : null;
-        this._ensureScrollRoom(5000);
-        applyEndState();
-        let footerDrift = 0;
-        if (footer && footerTopBefore !== null) {
-            const footerTopNow = footer.getBoundingClientRect().top;
-            footerDrift = footerTopNow - footerTopBefore;
-            if (Math.abs(footerDrift) > 1) {
-                footer.style.transform = `translateY(${-footerDrift}px)`;
+        this._animations.push(el.animate(
+            [{ transform: `translateY(${dy}px)` }, { transform: 'translateY(0)' }],
+            animOpts
+        ));
+
+        if (opts.fade) {
+            this._animations.push(el.animate(
+                [{ opacity: '0' }, { opacity: '1' }],
+                animOpts
+            ));
+        }
+
+        if (opts.fadeChildren) {
+            for (const c of opts.fadeChildren) {
+                this._animations.push(c.animate(
+                    [{ opacity: '0' }, { opacity: '1' }],
+                    animOpts
+                ));
             }
         }
 
-        // --- Phase 2: Snapshot end positions ---
-        const newCard = this._getCard();
-        const newCardRect = newCard ? newCard.getBoundingClientRect() : null;
-        const endOutcomeTop = outcomeCard ? outcomeCard.getBoundingClientRect().top : 0;
-        const newEvents = Array.from(timeline.querySelectorAll('.timeline-event')).slice(oldEventCount);
-        const newHeaders = Array.from(timeline.querySelectorAll('.timeline-stage-header')).slice(oldHeaderCount);
+        return dy;
+    }
 
-        const outcomeNowVisible = outcomeCard && outcomeCard.style.display !== 'none' && outcomeCard.innerHTML.trim() !== '';
-        const outcomeAppearing = outcomeNowVisible && !startOutcomeVisible;
-        const endOutcomeRect = outcomeCard ? outcomeCard.getBoundingClientRect() : null;
+    segment(seg, origTop, origHeight, deltaDy) {
+        this._animations.push(seg.animate([
+            { top: `${origTop - deltaDy}px`, height: `${Math.max(0, origHeight + deltaDy)}px` },
+            { top: `${origTop}px`, height: `${origHeight}px` }
+        ], this._opts));
+    }
 
-        let totalShift = 0;
-        if (newCardRect) {
-            totalShift = newCardRect.top - startCardRect.top;
-        } else if (newEvents.length > 0) {
-            const lastEvt = newEvents[newEvents.length - 1];
-            totalShift = lastEvt.getBoundingClientRect().bottom - startCardRect.top;
-        } else if (outcomeAppearing && endOutcomeRect) {
-            totalShift = endOutcomeRect.top - startCardRect.top;
-        }
+    get finished() {
+        if (this._animations.length === 0) return Promise.resolve();
+        return Promise.all(this._animations.map(a => a.finished));
+    }
 
-        let shiftWasCapped = false;
-        if (this._headerEl && totalShift > 0) {
-            const headerBottom = this._headerEl.getBoundingClientRect().bottom;
-            const targetTop = newCardRect ? newCardRect.top
-                            : (outcomeAppearing && endOutcomeRect) ? endOutcomeRect.top
-                            : (newEvents.length > 0) ? newEvents[0].getBoundingClientRect().top
-                            : null;
-            if (targetTop !== null) {
-                const maxShift = targetTop - headerBottom - 50;
-                if (maxShift < totalShift) {
-                    totalShift = Math.max(0, maxShift);
-                    shiftWasCapped = true;
-                }
-            }
-        }
+    cancel() {
+        this._animations.forEach(a => { try { a.cancel(); } catch (_) {} });
+    }
+}
 
-        // --- Phase 3: Create old card copy (content only, no timeline decorations) ---
-        if (startCardContent) {
-            this._oldCardEl = document.createElement('div');
-            this._oldCardEl.className = startCardClassName || this.cardClass;
-            this._oldCardEl.innerHTML = startCardContent;
-            this._oldCardEl.style.cssText =
-                `position:fixed;top:${startCardRect.top}px;left:${startCardRect.left}px;` +
-                `width:${startCardRect.width}px;height:${startCardRect.height}px;` +
-                `z-index:1;pointer-events:none;overflow:hidden;`;
-            this._oldCardEl.querySelectorAll('.tl-dot, .tl-hline, .tl-vline-seg').forEach(el => {
-                el.style.display = 'none';
-            });
-            this.containerEl.appendChild(this._oldCardEl);
-        }
+// ---------------------------------------------------------------------------
+// Phases 1, 2, 4: Animation core — no scroll room, direct scroll targets,
+// Web Animations API for elements, rAF only for scroll + old card
+// ---------------------------------------------------------------------------
 
-        // --- Phase 4: Pre-compute FLIP deltas ---
+class TimelineAnimator extends TimelineRenderer {
+    constructor(options) {
+        super(options);
 
-        // New events: slide from old card position; fade content only (dot/hline/vline-seg stay visible)
-        const eventFlips = [];
-        newEvents.forEach(el => {
-            const dy = startCardRect.top - el.getBoundingClientRect().top;
-            const fadeEls = Array.from(el.querySelectorAll('.timeline-top-row, .timeline-headline, .timeline-desc, .timeline-slider'));
-            eventFlips.push({ el, dy, fadeEls });
-            el.style.transform = `translateY(${dy}px)`;
-            fadeEls.forEach(c => { c.style.opacity = '0'; });
-        });
+        this.morphDuration = options.morphDuration || 600;
+        this.morphAnimating = false;
 
-        // New headers + new card: slide from old card position + fade in
-        const slideFlips = [];
-        newHeaders.forEach(el => {
-            const dy = startCardRect.top - el.getBoundingClientRect().top;
-            slideFlips.push({ el, dy });
-            el.style.transform = `translateY(${dy}px)`;
-            el.style.opacity = '0';
-        });
+        this._oldCardEl = null;
+        this._headerEl = options.headerEl || null;
+        this._beforeAnimate = options.beforeAnimate || null;
 
-        let newCardDy = null;
-        if (newCard) {
-            newCardDy = (startCardRect.top + startCardRect.height) - newCardRect.top;
-            slideFlips.push({ el: newCard, dy: newCardDy });
-            newCard.style.transform = `translateY(${newCardDy}px)`;
-            newCard.style.opacity = '0';
-        }
+        this._currentFlip = null;
+        this._scrollRafId = null;
+    }
 
-        // When outcome appears with no new card, it takes the new card's role
-        let outcomeDy = null;
-        if (outcomeAppearing && outcomeCard && endOutcomeRect && !newCard) {
-            outcomeDy = (startCardRect.top + startCardRect.height) - endOutcomeRect.top;
-            outcomeCard.style.transform = `translateY(${outcomeDy}px)`;
-            outcomeCard.style.opacity = '0';
-        }
+    setMorphDuration(ms) { this.morphDuration = ms; }
+    isAnimating() { return this.morphAnimating; }
 
-        // --- Segment adjustments: stretch each new segment to track both dots ---
-        const segFlips = [];
-        newEvents.forEach((el, i) => {
-            const seg = el.querySelector('.tl-vline-seg');
-            if (!seg || seg.style.display === 'none') return;
-            const flip = eventFlips.find(f => f.el === el);
-            const dyCurr = flip ? flip.dy : 0;
-            let dyPrev = 0;
-            if (i > 0) {
-                const prevFlip = eventFlips.find(f => f.el === newEvents[i - 1]);
-                dyPrev = prevFlip ? prevFlip.dy : 0;
-            }
-            const deltaDy = dyCurr - dyPrev;
-            if (Math.abs(deltaDy) < 1) return;
-            segFlips.push({
-                seg,
-                origTop: parseFloat(seg.style.top) || 0,
-                origHeight: parseFloat(seg.style.height) || 0,
-                deltaDy,
-            });
-        });
-
-        if (newCard) {
-            const seg = newCard.querySelector('.tl-vline-seg');
-            if (seg && seg.style.display !== 'none') {
-                const dyCard = newCardDy ?? 0;
-                const lastFlip = eventFlips.length > 0 ? eventFlips[eventFlips.length - 1] : null;
-                const dyPrev = lastFlip ? lastFlip.dy : 0;
-                const deltaDy = dyCard - dyPrev;
-                if (Math.abs(deltaDy) > 1) {
-                    segFlips.push({
-                        seg,
-                        origTop: parseFloat(seg.style.top) || 0,
-                        origHeight: parseFloat(seg.style.height) || 0,
-                        deltaDy,
-                    });
-                }
-            }
-        }
-
-        // Outcome: FLIP if already visible and shifted, or appearing handled above
-        let outcomeFlip = null;
-        if (!outcomeAppearing && outcomeCard && endOutcomeRect) {
-            const ody = startOutcomeTop - endOutcomeRect.top;
-            if (Math.abs(ody) > 1) {
-                outcomeFlip = { el: outcomeCard, dy: ody };
-                outcomeCard.style.transform = `translateY(${ody}px)`;
-            }
-        }
-
-        // --- Scroll setup ---
-        // Measure the scroll room element's natural height (without inflated min-height)
-        // to cap scrollDelta. We use the element's own height rather than
-        // document.documentElement.scrollHeight because the element sits inside #app
-        // with padding/margins — using the document height would overshoot and cause
-        // a scroll snap when _releaseScrollRoom clears the min-height.
-        const scrollRoomEl = this._getScrollRoomEl();
-        const inflatedMinH = this._scrollMinHeight;
-        scrollRoomEl.style.minHeight = '';
-        const naturalElH = scrollRoomEl.getBoundingClientRect().height;
-        scrollRoomEl.style.minHeight = inflatedMinH + 'px';
-        const naturalMaxScroll = Math.max(0, naturalElH - window.innerHeight);
-
-        const scrollStart = window.scrollY;
-        let scrollDelta = totalShift;
-        if (newCardRect && this._headerEl) {
-            const headerBottom = this._headerEl.getBoundingClientRect().bottom;
-            const desiredTop = headerBottom + 50;
-            if (newCardRect.top < desiredTop) {
-                scrollDelta = Math.min(scrollDelta, newCardRect.top - desiredTop);
-            }
-        }
-        if (scrollStart + scrollDelta > naturalMaxScroll + 5) {
-            scrollDelta = Math.max(0, naturalMaxScroll - scrollStart);
-        }
-        if (!vis.scroll && Math.abs(scrollDelta) > 1) {
-            window.scrollBy({ top: scrollDelta, behavior: 'instant' });
-        }
-
-        // --- Phase 5: Animate ---
-        // All visual transitions must happen within this single animation loop —
-        // pre/post animations are considered bugs.
-
-        const startTime = performance.now();
-        const oldCardEl = this._oldCardEl;
-        const tick = () => {
-            const elapsed = performance.now() - startTime;
-            const t = Math.min(elapsed / DURATION, 1);
-            const e = this._ease(t);
-
-            // Old card: locked to incoming element (new card or outcome), fades out, gradient-clipped at top
-            if (oldCardEl) {
-                oldCardEl.style.opacity = String(1 - e);
-                const refDy = newCardDy !== null ? newCardDy : outcomeDy;
-                const refTop = newCardDy !== null ? newCardRect.top : (outcomeDy !== null ? endOutcomeRect.top : null);
-                if (refDy !== null && refTop !== null) {
-                    const scrollAdj = vis.scroll ? scrollDelta * e : 0;
-                    const refVisualTop = refTop + refDy * (1 - e) - scrollAdj;
-                    const dy = refVisualTop - startCardRect.height - startCardRect.top;
-                    oldCardEl.style.transform = `translateY(${dy}px)`;
-                    const clipTop = Math.max(0, -dy);
-                    if (clipTop > 0.5) {
-                        const fade = `linear-gradient(to bottom, transparent ${clipTop}px, black ${clipTop + 40}px)`;
-                        oldCardEl.style.webkitMaskImage = fade;
-                        oldCardEl.style.maskImage = fade;
-                    } else {
-                        oldCardEl.style.webkitMaskImage = '';
-                        oldCardEl.style.maskImage = '';
-                    }
-                }
-            }
-
-            // New events: slide to final position, fade in content
-            eventFlips.forEach(({ el, dy, fadeEls }) => {
-                el.style.transform = `translateY(${dy * (1 - e)}px)`;
-                fadeEls.forEach(c => { c.style.opacity = String(e); });
-            });
-
-            // New headers + new card: slide to final position, fade in
-            slideFlips.forEach(({ el, dy }) => {
-                el.style.transform = `translateY(${dy * (1 - e)}px)`;
-                el.style.opacity = String(e);
-            });
-
-            // Vertical line segments: stretch between displaced dots
-            segFlips.forEach(({ seg, origTop, origHeight, deltaDy }) => {
-                const delta = deltaDy * (1 - e);
-                seg.style.top = (origTop - delta) + 'px';
-                seg.style.height = Math.max(0, origHeight + delta) + 'px';
-            });
-
-            // Outcome card: slide from old card bottom to final position, or FLIP if already visible
-            if (outcomeAppearing && outcomeCard && outcomeDy !== null) {
-                outcomeCard.style.opacity = String(e);
-                outcomeCard.style.transform = `translateY(${outcomeDy * (1 - e)}px)`;
-            } else if (outcomeFlip) {
-                outcomeFlip.el.style.transform = `translateY(${outcomeFlip.dy * (1 - e)}px)`;
-            }
-
-            // Scroll: animate page scroll in sync
-            if (vis.scroll && Math.abs(scrollDelta) > 1) {
-                window.scrollTo({ top: scrollStart + scrollDelta * e, behavior: 'instant' });
-            }
-
-            // Gradually release scroll room so scrollbar doesn't snap at cleanup
-            if (inflatedMinH > naturalElH) {
-                const currentMinH = inflatedMinH + (naturalElH - inflatedMinH) * e;
-                scrollRoomEl.style.minHeight = currentMinH + 'px';
-            }
-
-            // Footer: FLIP from start position to natural end position
-            if (footer && Math.abs(footerDrift) > 1) {
-                footer.style.transform = `translateY(${-footerDrift * (1 - e)}px)`;
-            }
-
-            if (t < 1) {
-                requestAnimationFrame(tick);
-            } else {
-                // --- Cleanup: remove old card, clear all inline animation styles ---
-                if (oldCardEl) { oldCardEl.remove(); this._oldCardEl = null; }
-                eventFlips.forEach(({ el, fadeEls }) => {
-                    el.style.transform = '';
-                    fadeEls.forEach(c => { c.style.opacity = ''; });
-                });
-                slideFlips.forEach(({ el }) => { el.style.transform = ''; el.style.opacity = ''; });
-                if (outcomeAppearing && outcomeCard) { outcomeCard.style.opacity = ''; outcomeCard.style.transform = ''; }
-                if (outcomeFlip) outcomeFlip.el.style.transform = '';
-                segFlips.forEach(({ seg, origTop, origHeight }) => {
-                    seg.style.top = origTop + 'px';
-                    seg.style.height = origHeight + 'px';
-                });
-                if (footer && fadeFooterIn) footer.style.opacity = '0';
-                if (footer) footer.style.transform = '';
-                this._releaseScrollRoom();
-                if (footer && fadeFooterIn) {
-                    footer.style.transition = 'opacity 0.35s ease';
-                    requestAnimationFrame(() => {
-                        footer.style.opacity = '1';
-                        footer.addEventListener('transitionend', () => {
-                            footer.style.transition = '';
-                            footer.style.opacity = '';
-                        }, { once: true });
-                    });
-                }
-                this.containerEl.classList.remove('flip-animating');
-                this.morphAnimating = false;
-                if (!shiftWasCapped) {
-                    const card = this._getCard();
-                    if (card && this._headerEl) {
-                        const headerBottom = this._headerEl.getBoundingClientRect().bottom;
-                        const cardTop = card.getBoundingClientRect().top;
-                        if (cardTop < headerBottom + 10) {
-                            console.warn('[anim] card under header after animation:', { cardTop: Math.round(cardTop), headerBottom: Math.round(headerBottom), gap: Math.round(cardTop - headerBottom) });
-                        }
-                    }
-                }
-                if (onComplete) onComplete();
-            }
-        };
-
-        if (this._beforeAnimate) this._beforeAnimate();
-        requestAnimationFrame(tick);
+    reset() {
+        if (this._currentFlip) { this._currentFlip.cancel(); this._currentFlip = null; }
+        if (this._scrollRafId) { cancelAnimationFrame(this._scrollRafId); this._scrollRafId = null; }
+        this.morphAnimating = false;
+        this.containerEl.classList.remove('flip-animating');
+        if (this._oldCardEl) { this._oldCardEl.remove(); this._oldCardEl = null; }
+        if (this.outcomeEl) this.outcomeEl.style.cssText = '';
+        this.render();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     _captureStartState(card) {
@@ -757,6 +458,214 @@ class TimelineAnimator {
         return true;
     }
 
+    // ------------------------------------------------------------------
+    // Core animation — FLIP with Web Animations API + rAF scroll
+    //
+    // 1. Apply end state directly (no scroll room inflation)
+    // 2. Snapshot end positions, compute FLIP deltas
+    // 3. Compute scroll target directly from end-state layout
+    // 4. Animate elements via FlipGroup (Web Animations API, auto-cleanup)
+    // 5. Animate scroll + old card via rAF
+    // 6. Cleanup: remove old card, done
+    // ------------------------------------------------------------------
+
+    _runAnimation({ startCardRect, startCardContent, startCardClassName, startOutcomeTop, startOutcomeVisible, applyEndState, onComplete, fadeFooterIn }) {
+        const DURATION = this.morphDuration;
+        const EASING = 'ease-in-out';
+
+        const timeline = this.timelineEl;
+        const outcomeCard = this.outcomeEl;
+        const oldEventCount = timeline.querySelectorAll('.timeline-event').length;
+        const oldHeaderCount = timeline.querySelectorAll('.timeline-stage-header').length;
+
+        // --- 1. Apply end state (no inflation, natural layout) ---
+        this.containerEl.classList.add('flip-animating');
+        applyEndState();
+
+        // --- 2. Snapshot end positions ---
+        const newCard = this._getCard();
+        const newCardRect = newCard ? newCard.getBoundingClientRect() : null;
+        const newEvents = Array.from(timeline.querySelectorAll('.timeline-event')).slice(oldEventCount);
+        const newHeaders = Array.from(timeline.querySelectorAll('.timeline-stage-header')).slice(oldHeaderCount);
+
+        const outcomeNowVisible = outcomeCard && outcomeCard.style.display !== 'none' && outcomeCard.innerHTML.trim() !== '';
+        const outcomeAppearing = outcomeNowVisible && !startOutcomeVisible;
+        const endOutcomeRect = outcomeCard ? outcomeCard.getBoundingClientRect() : null;
+
+        // --- 3. Compute scroll delta from content shift ---
+        const scrollStart = window.scrollY;
+        let scrollDelta = 0;
+
+        if (newCardRect) {
+            scrollDelta = newCardRect.top - startCardRect.top;
+        } else if (newEvents.length > 0) {
+            scrollDelta = newEvents[newEvents.length - 1].getBoundingClientRect().bottom - startCardRect.top;
+        } else if (outcomeAppearing && endOutcomeRect) {
+            scrollDelta = endOutcomeRect.top - startCardRect.top;
+        }
+
+        if (this._headerEl) {
+            const headerBottom = this._headerEl.getBoundingClientRect().bottom;
+            const targetTop = newCardRect ? newCardRect.top
+                            : (outcomeAppearing && endOutcomeRect) ? endOutcomeRect.top
+                            : (newEvents.length > 0) ? newEvents[0].getBoundingClientRect().top
+                            : null;
+            if (targetTop !== null) {
+                const desiredTop = headerBottom + 50;
+                if (scrollDelta > 0) {
+                    const maxShift = targetTop - desiredTop;
+                    if (maxShift < scrollDelta) {
+                        scrollDelta = Math.max(0, maxShift);
+                    }
+                }
+                if (targetTop < desiredTop) {
+                    scrollDelta = Math.min(scrollDelta, targetTop - desiredTop);
+                }
+            }
+        }
+
+        const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+        if (scrollStart + scrollDelta > maxScroll) {
+            scrollDelta = Math.max(0, maxScroll - scrollStart);
+        }
+
+        // --- 4. FLIP animations via FlipGroup (Web Animations API) ---
+        const flip = new FlipGroup(DURATION, EASING);
+        this._currentFlip = flip;
+
+        const eventDys = [];
+        newEvents.forEach(el => {
+            const fadeChildren = Array.from(el.querySelectorAll(
+                '.timeline-top-row, .timeline-headline, .timeline-desc, .timeline-slider'
+            ));
+            const dy = flip.slide(el, startCardRect.top, { fadeChildren });
+            eventDys.push(dy);
+        });
+
+        newHeaders.forEach(el => {
+            flip.slide(el, startCardRect.top, { fade: true });
+        });
+
+        let newCardDy = null;
+        if (newCard) {
+            newCardDy = flip.slide(newCard, startCardRect.top + startCardRect.height, { fade: true });
+        }
+
+        let outcomeDy = null;
+        if (outcomeAppearing && outcomeCard && endOutcomeRect && !newCard) {
+            outcomeDy = flip.slide(outcomeCard, startCardRect.top + startCardRect.height, { fade: true });
+        } else if (!outcomeAppearing && outcomeCard && endOutcomeRect) {
+            const ody = startOutcomeTop - endOutcomeRect.top;
+            if (Math.abs(ody) > 1) {
+                flip.slide(outcomeCard, startOutcomeTop);
+            }
+        }
+
+        // Vline segments: stretch between displaced dots
+        newEvents.forEach((el, i) => {
+            const seg = el.querySelector('.tl-vline-seg');
+            if (!seg || seg.style.display === 'none') return;
+            const dyCurr = eventDys[i] || 0;
+            const dyPrev = i > 0 ? (eventDys[i - 1] || 0) : 0;
+            const deltaDy = dyCurr - dyPrev;
+            if (Math.abs(deltaDy) < 1) return;
+            flip.segment(seg, parseFloat(seg.style.top) || 0, parseFloat(seg.style.height) || 0, deltaDy);
+        });
+
+        if (newCard) {
+            const seg = newCard.querySelector('.tl-vline-seg');
+            if (seg && seg.style.display !== 'none') {
+                const dyCard = newCardDy ?? 0;
+                const dyPrev = eventDys.length > 0 ? eventDys[eventDys.length - 1] : 0;
+                const deltaDy = dyCard - dyPrev;
+                if (Math.abs(deltaDy) > 1) {
+                    flip.segment(seg, parseFloat(seg.style.top) || 0, parseFloat(seg.style.height) || 0, deltaDy);
+                }
+            }
+        }
+
+        // --- Old card clone (managed by rAF, not FlipGroup) ---
+        let oldCardEl = null;
+        if (startCardContent) {
+            oldCardEl = document.createElement('div');
+            oldCardEl.className = startCardClassName || this.cardClass;
+            oldCardEl.innerHTML = startCardContent;
+            oldCardEl.style.cssText =
+                `position:fixed;top:${startCardRect.top}px;left:${startCardRect.left}px;` +
+                `width:${startCardRect.width}px;height:${startCardRect.height}px;` +
+                `z-index:1;pointer-events:none;overflow:hidden;`;
+            oldCardEl.querySelectorAll('.tl-dot, .tl-hline, .tl-vline-seg').forEach(el => {
+                el.style.display = 'none';
+            });
+            this.containerEl.appendChild(oldCardEl);
+            this._oldCardEl = oldCardEl;
+        }
+
+        // --- 5. rAF loop: scroll + old card only ---
+        const refDy = newCardDy !== null ? newCardDy : outcomeDy;
+        const refTop = newCardDy !== null ? newCardRect.top
+                     : (outcomeDy !== null ? endOutcomeRect.top : null);
+
+        const startTime = performance.now();
+        const tick = () => {
+            const elapsed = performance.now() - startTime;
+            const t = Math.min(elapsed / DURATION, 1);
+            const e = this._ease(t);
+
+            if (Math.abs(scrollDelta) > 1) {
+                window.scrollTo({ top: scrollStart + scrollDelta * e, behavior: 'instant' });
+            }
+
+            if (oldCardEl) {
+                oldCardEl.style.opacity = String(1 - e);
+                if (refDy !== null && refTop !== null) {
+                    const scrollAdj = scrollDelta * e;
+                    const refVisualTop = refTop + refDy * (1 - e) - scrollAdj;
+                    const dy = refVisualTop - startCardRect.height - startCardRect.top;
+                    oldCardEl.style.transform = `translateY(${dy}px)`;
+                    const clipTop = Math.max(0, -dy);
+                    if (clipTop > 0.5) {
+                        const fade = `linear-gradient(to bottom, transparent ${clipTop}px, black ${clipTop + 40}px)`;
+                        oldCardEl.style.webkitMaskImage = fade;
+                        oldCardEl.style.maskImage = fade;
+                    } else {
+                        oldCardEl.style.webkitMaskImage = '';
+                        oldCardEl.style.maskImage = '';
+                    }
+                }
+            }
+
+            if (t < 1) {
+                this._scrollRafId = requestAnimationFrame(tick);
+            } else {
+                // --- 6. Cleanup ---
+                this._scrollRafId = null;
+                if (oldCardEl) { oldCardEl.remove(); this._oldCardEl = null; }
+                this._currentFlip = null;
+
+                const footer = this.containerEl.querySelector('.map-actions');
+                if (footer && fadeFooterIn) {
+                    footer.style.opacity = '0';
+                    footer.style.transition = 'opacity 0.35s ease';
+                    requestAnimationFrame(() => {
+                        footer.style.opacity = '1';
+                        footer.addEventListener('transitionend', () => {
+                            footer.style.transition = '';
+                            footer.style.opacity = '';
+                        }, { once: true });
+                    });
+                }
+
+                this.containerEl.classList.remove('flip-animating');
+                this.morphAnimating = false;
+                if (onComplete) onComplete();
+            }
+        };
+
+        if (this._beforeAnimate) this._beforeAnimate();
+        this._scrollRafId = requestAnimationFrame(tick);
+    }
+
     _ease(t) {
         let lo = 0, hi = 1;
         for (let i = 0; i < 15; i++) {
@@ -768,32 +677,4 @@ class TimelineAnimator {
         const u = (lo + hi) / 2;
         return 3 * u * u - 2 * u * u * u;
     }
-
-    _scrollCardBelowHeader() {
-        if (!this._headerEl) return;
-        const card = this._getCard();
-        if (!card) return;
-        const headerBottom = this._headerEl.getBoundingClientRect().bottom;
-        const cardTop = card.getBoundingClientRect().top;
-        const gap = 50;
-        if (cardTop < headerBottom + gap) {
-            this._animateScroll(cardTop - headerBottom - gap, 400);
-        }
-    }
-
-    _animateScroll(delta, durationMs) {
-        if (Math.abs(delta) < 1) return;
-        const startScroll = window.scrollY;
-        const startTime = performance.now();
-
-        const tick = () => {
-            const elapsed = performance.now() - startTime;
-            const progress = Math.min(elapsed / durationMs, 1);
-            const eased = this._ease(progress);
-            window.scrollTo({ top: startScroll + delta * eased, behavior: 'instant' });
-            if (progress < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-    }
-
 }

@@ -59,7 +59,7 @@
     --bg-glow-2: rgba(124, 92, 255, 0.0125);
 }
 
-html { scroll-behavior: smooth; scrollbar-gutter: stable; }
+html { scrollbar-gutter: stable; }
 
 body {
     background: var(--bg);
