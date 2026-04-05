@@ -598,8 +598,8 @@
         "timelineEvent": {
           "headline": "Humanity uses the window to prepare",
           "description": "The gradual pace gives governments, institutions, and researchers time to build governance frameworks, safety protocols, and international agreements.",
-          "durationMin": 12,
-          "durationMax": 36
+          "durationMin": 0,
+          "durationMax": 0
         }
       },
       "partial": {
@@ -608,8 +608,8 @@
         "timelineEvent": {
           "headline": "Partial preparation — real but insufficient",
           "description": "Governments pass some regulations, international bodies convene, and public awareness grows. But the effort is uneven, politicized, and outpaced by the technology. When the critical phase arrives, the frameworks exist on paper but buckle under pressure.",
-          "durationMin": 6,
-          "durationMax": 18
+          "durationMin": 0,
+          "durationMax": 0
         }
       },
       "race": {
@@ -2704,8 +2704,8 @@
         "timelineEvent": {
           "headline": "A coalition forms from fragmented opposition",
           "description": "Different factions find common ground — redistribution advocates, democratic reformers, displaced workers. Late and messy, but unified enough to matter.",
-          "durationMin": 6,
-          "durationMax": 18
+          "durationMin": 0,
+          "durationMax": 0
         },
         "narrativeVariants": [
           { "when": { "sovereignty": ["state"] }, "answerDesc": "Cross-faction alliance against state power overcomes divide-and-rule. Democracy movements, international pressure, and domestic opposition find enough common ground to present a unified front. The state's strategy of picking off factions individually fails when the factions stop letting themselves be picked off." },

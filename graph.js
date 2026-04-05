@@ -240,7 +240,7 @@ const NODES = [
         { when: { proliferation_outcome: 'leaks_public' }, unless: { alignment: 'robust' }, value: 'failed' },
         { when: { proliferation_alignment: 'breaks' }, value: 'failed' },
         { effective: { decel_outcome: ['rival'] }, value: 'brittle' },
-        { effective: { decel_outcome: ['escapes', 'abandon', 'parity_failed'] }, value: 'failed' }
+        { effective: { decel_outcome: ['escapes'] }, value: 'failed' }
       ],
       edges: [
         { id: 'robust', label: 'Robust' },
