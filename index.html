@@ -785,8 +785,6 @@
                 if (mapAnimator) {
                     mapAnimator.animateTransition({
                         applyChange: () => { stack = action(oldStack); },
-                        revertChange: () => { stack = oldStack; },
-                        count: 1,
                         onComplete: () => syncHash(),
                         fadeFooterIn: opts && opts.fadeFooterIn,
                     });

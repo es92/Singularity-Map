@@ -519,8 +519,10 @@
     function snapToState(targetCounter) {
         counter = targetCounter;
         animator.morphAnimating = false;
+        if (animator._scrollRafId) { cancelAnimationFrame(animator._scrollRafId); animator._scrollRafId = null; }
         if (animator._oldCardEl) { animator._oldCardEl.remove(); animator._oldCardEl = null; }
         if (animator._currentFlip) { animator._currentFlip.cancel(); animator._currentFlip = null; }
+        animator.containerEl.classList.remove('flip-animating');
         [animator.timelineEl, animator.questionZoneEl, animator.outcomeEl].forEach(el => {
             if (el) { el.style.transform = ''; el.style.opacity = ''; }
         });

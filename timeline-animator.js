@@ -439,7 +439,7 @@ class TimelineAnimator extends TimelineRenderer {
         });
     }
 
-    animateTransition({ applyChange, revertChange, count, questionHtml, hasNextQuestion, onComplete, fadeFooterIn }) {
+    animateTransition({ applyChange, onComplete, fadeFooterIn }) {
         if (this.morphAnimating) return false;
         const card = this._getCard();
         if (!card) { applyChange(); this.render(); return false; }
@@ -530,6 +530,9 @@ class TimelineAnimator extends TimelineRenderer {
         if (scrollStart + scrollDelta > maxScroll) {
             scrollDelta = Math.max(0, maxScroll - scrollStart);
         }
+        if (scrollStart + scrollDelta < 0) {
+            scrollDelta = -scrollStart;
+        }
 
         // --- 4. FLIP animations via FlipGroup (Web Animations API) ---
         const flip = new FlipGroup(DURATION, EASING);
@@ -614,9 +617,10 @@ class TimelineAnimator extends TimelineRenderer {
         const refTop = newCardDy !== null ? newCardRect.top
                      : (outcomeDy !== null ? endOutcomeRect.top : null);
 
-        const startTime = performance.now();
-        const tick = () => {
-            const elapsed = performance.now() - startTime;
+        let startTime = 0;
+        const tick = (now) => {
+            if (!startTime) startTime = now;
+            const elapsed = now - startTime;
             const t = Math.min(elapsed / DURATION, 1);
             const e = this._ease(t);
 
