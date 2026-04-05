@@ -294,7 +294,7 @@ const NODES = [
           label: 'Contained',
           requires: { distribution: ['lagging', 'concentrated', 'monopoly'] },
           disabledWhen: [
-            { _raw: { brittle_resolution: ['escape'] }, reason: 'Alignment broke down and the AI is already out' },
+            { brittle_resolution: ['escape'], reason: 'Alignment broke down and the AI is already out' },
             { alignment_durability: ['breaks'], reason: 'Brittle alignment broke — the AI is already operating freely' },
             { decel_outcome: ['escapes'], reason: 'The AI got out during the slowdown period' },
             { proliferation_outcome: ['leaks_public'], reason: 'The technology leaked publicly — there is nothing left to contain' }
@@ -338,7 +338,7 @@ const NODES = [
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], geo_spread: ['one'] }],
       derivedFrom: [{ when: { alignment_durability: 'breaks' }, value: 'accelerate' }],
       edges: [
-        { id: 'decelerate', label: 'Decelerate', disabledWhen: [{ _raw: { alignment: ['robust'] }, reason: 'Alignment is solved — there is no case for slowing down' }, { takeoff: ['explosive'], reason: 'Moving too fast for any government to intervene' }] },
+        { id: 'decelerate', label: 'Decelerate', disabledWhen: [{ alignment: ['robust'], reason: 'Alignment is solved — there is no case for slowing down' }, { takeoff: ['explosive'], reason: 'Moving too fast for any government to intervene' }] },
         { id: 'accelerate', label: 'Accelerate' }
       ] },
     { id: 'decel_2mo_progress', label: '2 Months', stage: 2,
@@ -635,8 +635,8 @@ const NODES = [
       edges: [ { id: 'emerge', label: 'Emerge' }, { id: 'none', label: 'None' } ] },
     { id: 'rival_dynamics', label: 'Rival Dynamics', stage: 2, hideAfterEscape: true, hideOnBrittleEscape: true,
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], _raw: { block_outcome: ['fails'] } },
-        { capability: ['singularity'], automation: ['deep'], _raw: { new_entrants: ['emerge'] } }
+        { capability: ['singularity'], automation: ['deep'], block_outcome: ['fails'] },
+        { capability: ['singularity'], automation: ['deep'], new_entrants: ['emerge'] }
       ],
       edges: [ { id: 'coexistence', label: 'Coexistence' }, { id: 'escalation', label: 'Escalation' } ] },
     { id: 'escalation_outcome', label: 'Escalation Resolves', stage: 3,
@@ -674,7 +674,7 @@ const NODES = [
         {
           capability: ['singularity'],
           automation: ['deep'],
-          _raw: { brittle_resolution: ['escape'] },
+          brittle_resolution: ['escape'],
           intent: ['international', 'coexistence'],
           _notSet: ['post_war_aims']
         },
@@ -789,11 +789,11 @@ const NODES = [
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['resistance_outcome'] },
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], coalition_outcome: ['fragments'] },
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
-        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['for_everyone'], mobilization: ['strong'] },
-        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['sincerity_test'] },
-        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['resistance_outcome'] },
-        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], coalition_outcome: ['fragments'] },
-        { capability: ['singularity'], automation: ['deep'], _raw: { brittle_resolution: ['escape'] }, ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
+        { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['for_everyone'], mobilization: ['strong'] },
+        { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['sincerity_test'] },
+        { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['resistance_outcome'] },
+        { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], coalition_outcome: ['fragments'] },
+        { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
         { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'], containment: ['contained'] }, intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['for_everyone'], mobilization: ['strong'] },
         { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'], containment: ['contained'] }, intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['sincerity_test'] },
         { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'], containment: ['contained'] }, intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['resistance_outcome'] },
