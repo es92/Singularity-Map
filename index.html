@@ -242,6 +242,11 @@
             font-style: italic; margin-bottom: 0.75rem; opacity: 0.8;
         }
         .outcome-hero .mood-badge { margin-bottom: 1.25rem; }
+        .outcome-hero .outcome-circa {
+            font-size: 1.1rem; font-weight: 500;
+            letter-spacing: 0.06em; text-transform: lowercase;
+            color: var(--text-dim); margin-bottom: 1rem;
+        }
         .outcome-hero .outcome-summary {
             font-size: 1.05rem; line-height: 1.75;
             color: var(--text-secondary);
@@ -342,6 +347,10 @@
         .vignette-title {
             flex: 0 0 140px; font-size: 0.85rem; font-weight: 600;
             color: var(--text-dim); text-align: right; line-height: 1.75;
+        }
+        .vignette-year {
+            display: block; font-size: 0.78rem; font-weight: 400;
+            opacity: 0.7; letter-spacing: 0.03em;
         }
         .vignette-text {
             flex: 1; font-size: 0.95rem; line-height: 1.75;
@@ -637,7 +646,7 @@
                     const node = NODE_MAP[nodeId];
                     heading = node ? node.label : nodeId;
                 }
-                result.push({ heading, text });
+                result.push({ nodeId, heading, text });
             }
             return result;
         }
@@ -756,6 +765,7 @@
             let showOutcomes = flags.showOutcomes === true;
             let debugMode = flags.debugMode === true;
             let timelineDurations = [];
+            let timelineNodeIds = [];
             let mapAnimator = null;
             let _pushNextSync = false;
             const hasSelections = stack.length > 1;
@@ -903,6 +913,20 @@
                 });
             }
 
+            function buildTimelineDateMap() {
+                const map = {};
+                let cumulative = 0;
+                for (let i = 0; i < timelineDurations.length; i++) {
+                    const d = timelineDurations[i];
+                    const nodeId = timelineNodeIds[i];
+                    if (nodeId && !map[nodeId]) {
+                        map[nodeId] = formatMonths(cumulative + d.current).year;
+                    }
+                    cumulative += d.current;
+                }
+                map._totalYear = formatMonths(cumulative).year;
+                return map;
+            }
 
             function countTotalOutcomes() {
                 let count = 0;
@@ -988,14 +1012,19 @@
                 const key = outcomeKey(t.id, resolved.variantKey);
                 markDiscovered(key);
 
+                const dateMap = buildTimelineDateMap();
+                const circaYear = dateMap._totalYear;
+
                 const badgeDelay = resolved.subtitle ? '0.3' : '0.15';
-                const summaryDelay = resolved.subtitle ? '0.45' : '0.3';
+                const circaDelay = resolved.subtitle ? '0.45' : '0.3';
+                const summaryDelay = resolved.subtitle ? '0.6' : '0.45';
 
                 let heroHtml = `<div class="outcome-hero mood-bg-${resolved.mood}">
                     <div class="outcome-hero-inner">
                         <h1 class="outcome-title reveal-item">${esc(resolved.title)}</h1>
                         ${resolved.subtitle ? `<div class="outcome-subtitle reveal-item" style="--delay:0.15s">${esc(resolved.subtitle)}</div>` : ''}
                         <span class="mood-badge mood-${resolved.mood} reveal-item" style="--delay:${badgeDelay}s">${esc(resolved.mood)}</span>
+                        <div class="outcome-circa reveal-item" style="--delay:${circaDelay}s">circa ${esc(String(circaYear))}</div>
                         <div class="outcome-summary reveal-item" style="--delay:${summaryDelay}s">${esc(resolved.summary)}</div>
                     </div>
                 </div>`;
@@ -1008,8 +1037,10 @@
                 if (vignettes.length > 0) {
                     vignettesHtml = '<div class="outcome-vignettes">';
                     for (const v of vignettes) {
+                        const year = dateMap[v.nodeId];
+                        const yearHtml = year ? `<span class="vignette-year">${esc(String(year))}</span>` : '';
                         vignettesHtml += `<div class="outcome-vignette scroll-reveal">
-                            <div class="vignette-title">${esc(v.heading)}</div>
+                            <div class="vignette-title">${esc(v.heading)}${yearHtml}</div>
                             <div class="vignette-text">${esc(v.text)}</div>
                         </div>`;
                     }
@@ -1246,6 +1277,7 @@
                         fullQuestions,
                     });
                     timelineDurations = tlResult.durations;
+                    timelineNodeIds = events.map(e => e.nodeId);
                     timelineEl.innerHTML = tlResult.html;
                     timelineEl.querySelectorAll('.timeline-slider input[type="range"]').forEach(slider => {
                         slider.addEventListener('input', () => {
