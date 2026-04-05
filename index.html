@@ -7,6 +7,14 @@
     <meta name="description" content="What do you think happens with AI? Walk through the key questions and see the future your beliefs imply. 28 possible outcomes.">
     <meta property="og:title" content="AI Singularity Map">
     <meta property="og:description" content="Choose your own adventure through the future of AI.">
+    <!-- Google Analytics 4 — replace G-N8T4PES8VX with your Measurement ID -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N8T4PES8VX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-N8T4PES8VX');
+    </script>
     <link rel="stylesheet" href="timeline.css">
     <style>
         #app { }
@@ -671,6 +679,11 @@
             return variantKey ? templateId + '/' + variantKey : templateId;
         }
 
+        // --- Analytics ---
+        function track(event, params) {
+            if (typeof gtag === 'function') gtag('event', event, params);
+        }
+
         // --- Routing ---
         function handleInitialRoute() {
             const state = routeFromHash();
@@ -1010,6 +1023,7 @@
                 if (!resolved) return '';
 
                 const key = outcomeKey(t.id, resolved.variantKey);
+                track('outcome_reached', { outcome_id: t.id, variant_id: resolved.variantKey || null });
                 markDiscovered(key);
 
                 const dateMap = buildTimelineDateMap();
@@ -1318,6 +1332,7 @@
                         questionZone.style.display = 'flex';
                         questionZone.style.flex = '1';
                         questionZone.querySelector('[data-action="begin"]').addEventListener('click', () => {
+                            track('journey_start');
                             started = true;
                             mutateStack(s => s, { fadeFooterIn: true });
                         });
@@ -1373,6 +1388,7 @@
                                 continueBtn.addEventListener('click', () => {
                                     if (mapAnimator && mapAnimator.isAnimating()) return;
                                     const lockedValue = nextQ.forcedValue;
+                                    track('question_answered', { question_id: nextQ.node.id, answer: lockedValue, forced: true });
                                     mutateStack(s => Engine.push(s, nextQ.node.id, lockedValue));
                                 });
                             }
@@ -1385,6 +1401,7 @@
                                     const idx = parseInt(cardEl.dataset.aidx, 10);
                                     const answer = qResult.answerCards[idx];
                                     if (!answer || answer.disabled) return;
+                                    track('question_answered', { question_id: answer.nodeId, answer: answer.value });
                                     mutateStack(s => Engine.push(s, answer.nodeId, answer.value));
                                 });
                             });
@@ -1457,6 +1474,7 @@
                         const shareBtn = outcomeZone.querySelector('[data-action="outcome-share"]');
                         if (shareBtn) {
                             shareBtn.addEventListener('click', () => {
+                                track('outcome_shared');
                                 const url = location.origin + location.pathname + location.hash;
                                 if (navigator.clipboard) {
                                     navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
@@ -1467,7 +1485,10 @@
                         }
                         const exploreBtn = outcomeZone.querySelector('[data-action="outcome-explore"]');
                         if (exploreBtn) {
-                            exploreBtn.addEventListener('click', () => resetSelections());
+                            exploreBtn.addEventListener('click', () => {
+                                track('explore_another');
+                                resetSelections();
+                            });
                         }
                     } else {
                         outcomeZone.innerHTML = '';
@@ -1537,6 +1558,7 @@
             }
 
             function backToStart() {
+                track('back_to_start');
                 stack = Engine.createStack();
                 started = false;
                 history.replaceState({ screen: 'map' }, '', location.pathname);
