@@ -408,10 +408,12 @@ class TimelineAnimator extends TimelineRenderer {
 
     _captureStartState(card) {
         const outcomeVisible = this.outcomeEl && this.outcomeEl.style.display !== 'none' && this.outcomeEl.innerHTML.trim() !== '';
+        const topRow = card.querySelector('.timeline-top-row');
         return {
             startCardRect: card.getBoundingClientRect(),
             startCardContent: card.innerHTML,
             startCardClassName: card.className,
+            startTopRowHeight: topRow ? topRow.offsetHeight : 0,
             startOutcomeTop: this.outcomeEl ? this.outcomeEl.getBoundingClientRect().top : 0,
             startOutcomeVisible: outcomeVisible,
         };
@@ -469,7 +471,7 @@ class TimelineAnimator extends TimelineRenderer {
     // 6. Cleanup: remove old card, done
     // ------------------------------------------------------------------
 
-    _runAnimation({ startCardRect, startCardContent, startCardClassName, startOutcomeTop, startOutcomeVisible, applyEndState, onComplete, fadeFooterIn }) {
+    _runAnimation({ startCardRect, startCardContent, startCardClassName, startTopRowHeight, startOutcomeTop, startOutcomeVisible, applyEndState, onComplete, fadeFooterIn }) {
         const DURATION = this.morphDuration;
         const EASING = 'ease-in-out';
 
@@ -534,10 +536,11 @@ class TimelineAnimator extends TimelineRenderer {
         this._currentFlip = flip;
 
         const eventDys = [];
+        const stripSel = this._stripFromAnimation;
         newEvents.forEach(el => {
             const fadeChildren = Array.from(el.querySelectorAll(
-                '.timeline-top-row, .timeline-headline, .timeline-desc, .timeline-slider'
-            ));
+                '.tl-pills, .timeline-year, .timeline-headline, .timeline-desc, .timeline-slider'
+            )).filter(c => !stripSel || !c.matches(stripSel));
             const dy = flip.slide(el, startCardRect.top, { fadeChildren });
             eventDys.push(dy);
         });
@@ -597,6 +600,11 @@ class TimelineAnimator extends TimelineRenderer {
             oldCardEl.querySelectorAll('.tl-dot, .tl-hline, .tl-vline-seg').forEach(el => {
                 el.style.display = 'none';
             });
+            if (this._stripFromAnimation) {
+                oldCardEl.querySelectorAll(this._stripFromAnimation).forEach(el => {
+                    el.style.visibility = 'hidden';
+                });
+            }
             this.containerEl.appendChild(oldCardEl);
             this._oldCardEl = oldCardEl;
         }
@@ -623,7 +631,7 @@ class TimelineAnimator extends TimelineRenderer {
                     const refVisualTop = refTop + refDy * (1 - e) - scrollAdj;
                     const dy = refVisualTop - startCardRect.height - startCardRect.top;
                     oldCardEl.style.transform = `translateY(${dy}px)`;
-                    const clipTop = Math.max(0, -dy);
+                    const clipTop = Math.max(0, -dy) + (startTopRowHeight || 0);
                     if (clipTop > 0.5) {
                         const fade = `linear-gradient(to bottom, transparent ${clipTop}px, black ${clipTop + 40}px)`;
                         oldCardEl.style.webkitMaskImage = fade;
