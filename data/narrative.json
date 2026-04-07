@@ -1,7 +1,7 @@
 {
   "capability": {
     "questionText": "Does AI capability keep accelerating?",
-    "questionContext": "AI has been getting dramatically more capable, year after year. Each generation of models handles longer, more complex tasks — things that recently required a skilled human. Research from METR (an AI safety organization) showed in March 2025 that the length of tasks AI can reliably complete autonomously has been **doubling roughly every 7 months**. At that rate, AI agents would handle week-long tasks by 2027 and month-long projects by the end of the decade.\n\nEach new threshold means more work that's cheaper to delegate to AI — and once a task is delegated, **the human skill to do it starts to atrophy**.",
+    "questionContext": "AI has been getting dramatically more capable, year after year. Each generation of models handles longer, more complex tasks — things that recently required a skilled human. Research from METR (an AI safety organization) showed in March 2025 that the length of tasks AI can reliably complete autonomously has been **doubling roughly every 7 months**. At that rate, AI agents would handle week-long tasks by 2027 and month-long projects by the end of the decade.",
     "source": {
       "label": "METR — Measuring AI Ability to Complete Long Tasks (March 2025)",
       "url": "https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/"
@@ -748,7 +748,7 @@
   },
   "sovereignty": {
     "questionText": "Does real power lie with the AI labs or with the state?",
-    "questionContext": "Frontier (most advanced) AI is concentrated in one country. But who actually calls the shots — the labs that built it, or the government with sovereign authority? The labs control the weights (the learned parameters that define the AI's behavior), the talent, and the deployment infrastructure. They may have more practical leverage than any regulator. But the state can regulate, nationalize, or co-opt.\n\nIn practice, the balance depends on how fast things moved, how dependent the government already is, and whether the labs cooperated or resisted oversight. This shapes everything downstream — especially what *self-interest* means when alignment is solved.",
+    "questionContext": "Frontier (most advanced) AI is concentrated in one country. But who actually calls the shots — the labs that built it, or the government with sovereign authority? The labs control the weights (the learned parameters that define the AI's behavior), the talent, and the deployment infrastructure. They may have more practical leverage than any regulator. But the state can regulate, nationalize, or co-opt.\n\nIn practice, the balance depends on how fast things moved, how dependent the government already is, and whether the labs cooperated or resisted oversight. This shapes everything downstream.",
     "values": {
       "lab": {
         "answerLabel": "The labs hold the real power",
