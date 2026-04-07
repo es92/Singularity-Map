@@ -9,10 +9,10 @@
     "values": {
       "singularity": {
         "answerLabel": "Yes — it keeps doubling roughly every 7 months",
-        "answerDesc": "Scaling laws hold, compute keeps growing, and AI capability maintains its exponential trajectory.",
+        "answerDesc": "Scaling laws (the pattern that AI keeps improving with more data and computing power) hold, compute (computing power) keeps growing, and AI capability maintains its exponential trajectory.",
         "timelineEvent": {
           "headline": "AI scaling trend holds",
-          "description": "The doubling trend that began in 2020 shows no signs of bending. Each generation of models is meaningfully more capable than the last. Frontier labs race to build the next generation, and the exponential trajectory continues.",
+          "description": "The doubling trend that began in 2020 shows no signs of bending. Each generation of models is meaningfully more capable than the last. Frontier (most advanced) labs race to build the next generation, and the exponential trajectory continues.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -22,7 +22,7 @@
         "answerDesc": "Something breaks the trend — diminishing returns on scaling, data limitations, architectural ceilings, or something unexpected — and AI capability plateaus before reaching superhuman levels.",
         "timelineEvent": {
           "headline": "AI scaling hits a wall",
-          "description": "The exponential trend breaks. Whether from data limits, compute costs, or fundamental barriers — AI capability plateaus. The singularity recedes from view.",
+          "description": "The exponential trend breaks. Whether from data limits, compute (computing power) costs, or fundamental barriers — AI capability plateaus. The singularity recedes from view.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -65,7 +65,7 @@
       },
       "months": {
         "answerLabel": "Month-level tasks, then it stops",
-        "answerDesc": "AI reaches near-AGI capability for most knowledge work but hits a hard ceiling before full open-ended autonomy or recursive self-improvement.",
+        "answerDesc": "AI reaches near-AGI (artificial general intelligence) capability for most knowledge work but hits a hard ceiling before full open-ended autonomy or recursive self-improvement (each AI generation helping build the next, faster).",
         "timelineEvent": {
           "headline": "AI tops out at month-level tasks",
           "description": "AI handles month-long autonomous projects — entire product developments, research programs, organizational analyses. Remarkably capable, but something prevents the final leap to open-ended superintelligence.",
@@ -77,11 +77,11 @@
   },
   "stall_recovery": {
     "questionText": "What is required for progress to resume?",
-    "questionContext": "AI capability has hit a ceiling — but ceilings in technology have been broken before. The history of computing is full of walls that turned out to be architectural limitations, not fundamental ones. New paradigms (transistors replacing vacuum tubes, GPUs replacing CPUs for training, transformers replacing RNNs) have repeatedly restarted progress after apparent dead ends. Researchers like Yann LeCun have argued that current architectures are fundamentally missing key ingredients — world models that let systems simulate consequences, plan ahead, and reason about cause and effect — and that genuinely new approaches (like his proposed JEPA architecture) could eventually break through where scaling alone cannot. The question is whether the current ceiling is architectural or fundamental — and if architectural, how long until someone finds the door.",
+    "questionContext": "AI capability has hit a ceiling — but ceilings in technology have been broken before. The history of computing is full of walls that turned out to be architectural limitations, not fundamental ones. New paradigms (transistors replacing vacuum tubes, GPUs replacing CPUs for training, new types of AI architecture replacing older ones) have repeatedly restarted progress after apparent dead ends. Researchers like Yann LeCun have argued that current architectures are fundamentally missing key ingredients — world models that let systems simulate consequences, plan ahead, and reason about cause and effect — and that genuinely new approaches (like the new architectures he's proposed) could eventually break through where scaling alone cannot. The question is whether the current ceiling is architectural or fundamental — and if architectural, how long until someone finds the door.",
     "values": {
       "mild": {
         "answerLabel": "A mild breakthrough — months to a few years",
-        "answerDesc": "The ceiling is real but thin. A new training technique, architectural tweak, or compute breakthrough restarts the exponential trend within a few years. A speed bump, not a wall.",
+        "answerDesc": "The ceiling is real but thin. A new training technique, architectural tweak, or compute (computing power) breakthrough restarts the exponential trend within a few years. A speed bump, not a wall.",
         "timelineEvent": {
           "headline": "A mild breakthrough restarts progress",
           "description": "A new technique, dataset, or architectural insight unlocks the next phase of capability growth. The stall was temporary — months to a few years — and the trajectory resumes.",
@@ -131,7 +131,7 @@
       },
       "unequal": {
         "answerLabel": "Unequally — existing wealth holders benefit most",
-        "answerDesc": "Those who already own capital — the companies that trained the models, the firms that deployed them — capture most of the value. Labor's share of income falls as routine work is automated. A new gilded age, built on models and compute.",
+        "answerDesc": "Those who already own capital — the companies that trained the models, the firms that deployed them — capture most of the value. Labor's share of income falls as routine work is automated. A new gilded age, built on models and compute (computing power).",
         "timelineEvent": {
           "headline": "AI gains flow to existing wealth holders",
           "description": "Those who already hold capital and infrastructure capture most of the value from AI automation. The plateau entrenches existing economic hierarchies.",
@@ -141,7 +141,7 @@
       },
       "extreme": {
         "answerLabel": "Extremely unequally — those holding power capture nearly everything",
-        "answerDesc": "The gains concentrate not just among the wealthy, but among those who hold political and institutional power at the time of transformation. Regulatory capture, monopoly control of compute, and state-corporate fusion ensure that a tiny elite controls the AI-driven economy. Everyone else is a dependent.",
+        "answerDesc": "The gains concentrate not just among the wealthy, but among those who hold political and institutional power at the time of transformation. Regulatory capture (industry controlling its own regulators), monopoly control of compute (computing power), and state-corporate fusion ensure that a tiny elite controls the AI-driven economy. Everyone else is a dependent.",
         "timelineEvent": {
           "headline": "AI-driven power concentration",
           "description": "Those controlling AI infrastructure capture nearly all the economic value. The plateau doesn't just maintain inequality — it amplifies it to historic extremes.",
@@ -292,7 +292,7 @@
       },
       "explosive": {
         "answerLabel": "50% — Runaway acceleration",
-        "answerDesc": "True recursive self-improvement. Each doubling halves the time to the next one — 7 months, then 3.5, then under 2, then weeks, then days. Total time to superintelligence: about 7 months, with the final leap happening in days. Nobody outside the leading lab fully grasps what happened until it's over.",
+        "answerDesc": "True recursive self-improvement (each AI generation helping build the next, faster). Each doubling halves the time to the next one — 7 months, then 3.5, then under 2, then weeks, then days. Total time to superintelligence: about 7 months, with the final leap happening in days. Nobody outside the leading lab fully grasps what happened until it's over.",
         "timelineEvent": {
           "headline": "Runaway intelligence explosion",
           "description": "Each generation of AI produces the next in half the time. The first doublings take months; the last take days. The transition from 'impressive AI' to 'vastly superhuman' compresses into weeks at the end.",
@@ -436,7 +436,7 @@
   },
   "automation_recovery": {
     "questionText": "Could a different breakthrough crack the barrier?",
-    "questionContext": "The scaling trend didn't produce human-competitive AI — but that doesn't necessarily mean the barrier is permanent. The ceiling might be specific to current architectures, not fundamental. Systems today excel at pattern matching and interpolation but lack the world models, causal reasoning, and planning capabilities that original research demands. A genuinely different approach — learned world models, neurosymbolic architectures, or paradigms not yet invented — could potentially break through where scaling alone couldn't. This is a separate question from whether the trend continues: it's about whether an entirely new paradigm eventually closes the gap.",
+    "questionContext": "The scaling trend didn't produce human-competitive AI — but that doesn't necessarily mean the barrier is permanent. The ceiling might be specific to current architectures, not fundamental. Systems today excel at pattern matching and filling in gaps from existing data but lack the world models, causal reasoning, and planning capabilities that original research demands. A genuinely different approach — learned world models, hybrid approaches that combine pattern recognition with logical reasoning, or paradigms not yet invented — could potentially break through where scaling alone couldn't. This is a separate question from whether the trend continues: it's about whether an entirely new paradigm eventually closes the gap.",
     "values": {
       "mild": {
         "answerLabel": "Yes — within months to a few years",
@@ -460,7 +460,7 @@
       },
       "never": {
         "answerLabel": "No — the ceiling is permanent",
-        "answerDesc": "Novel creative work, original research, and recursive self-improvement remain permanently beyond AI. The routine automation plateau is the final state. Transformative, but not transcendent.",
+        "answerDesc": "Novel creative work, original research, and recursive self-improvement (each AI generation helping build the next, faster) remain permanently beyond AI. The routine automation plateau is the final state. Transformative, but not transcendent.",
         "timelineEvent": {
           "headline": "Deep automation never materializes",
           "description": "The ceiling is permanent. AI remains a powerful assistant for routine tasks but never achieves the creative, research, and reasoning capabilities needed for deep automation.",
@@ -486,7 +486,7 @@
       },
       "unequal": {
         "answerLabel": "Unequally — existing wealth holders benefit most",
-        "answerDesc": "Those who own the AI systems capture the productivity gains. Labor's share of income falls as routine work vanishes. Wealth concentrates among those who own the models, the compute, and the platforms.",
+        "answerDesc": "Those who own the AI systems capture the productivity gains. Labor's share of income falls as routine work vanishes. Wealth concentrates among those who own the models, the compute (computing power), and the platforms.",
         "timelineEvent": {
           "headline": "Automation gains concentrate",
           "description": "Existing wealth holders capture most of the value from AI automation. The technology amplifies rather than corrects economic inequality.",
@@ -496,7 +496,7 @@
       },
       "extreme": {
         "answerLabel": "Extremely unequally — those holding power capture nearly everything",
-        "answerDesc": "The gains concentrate not just among capital owners, but among those who hold political and institutional power. AI becomes a tool of entrenchment — whoever controls compute and policy at the moment of transformation locks in their advantage permanently.",
+        "answerDesc": "The gains concentrate not just among capital owners, but among those who hold political and institutional power. AI becomes a tool of entrenchment — whoever controls compute (computing power) and policy at the moment of transformation locks in their advantage permanently.",
         "timelineEvent": {
           "headline": "Extreme concentration from automation",
           "description": "Those controlling AI infrastructure and capital capture nearly all economic value. Automation creates a new class of extreme wealth alongside widespread displacement.",
@@ -625,45 +625,45 @@
     }
   },
   "open_source": {
-    "questionText": "How close does open-source AI stay to the frontier during the critical buildup?",
-    "questionContext": "As of early 2026, open-source models trail frontier systems by roughly 3–6 months — close enough to matter, but the cost of cutting-edge training runs keeps climbing and the stakes are rising. With AI accelerating its own research, the gap between open-source and frontier becomes a question of power distribution. If open source keeps pace, no one controls the most powerful AI. If it falls behind, the question becomes how concentrated frontier capability is among the remaining players.",
+    "questionText": "How close does open-source AI stay to the frontier (the most advanced AI) during the critical buildup?",
+    "questionContext": "As of early 2026, open-source models trail frontier (most advanced) systems by roughly 3–6 months — close enough to matter, but the cost of cutting-edge training runs keeps climbing and the stakes are rising. With AI accelerating its own research, the gap between open-source and frontier (most advanced) becomes a question of power distribution. If open source keeps pace, no one controls the most powerful AI. If it falls behind, the question becomes how concentrated frontier (most advanced) capability is among the remaining players.",
     "values": {
       "near_parity": {
         "answerLabel": "Near-parity — open source keeps pace",
-        "answerDesc": "Open source essentially matches the frontier. Weights leak, costs fall, and independent researchers close the gap as fast as it opens. No single entity controls the most powerful AI. Power is distributed from the start.",
+        "answerDesc": "Open source essentially matches the frontier (the most advanced AI). Weights (the learned parameters that define an AI's behavior) leak, costs fall, and independent researchers close the gap as fast as it opens. No single entity controls the most powerful AI. Power is distributed from the start.",
         "timelineEvent": {
-          "headline": "Open source keeps pace with the frontier",
-          "description": "Open-source AI models stay at near-parity with proprietary frontier systems. Capability is widely distributed — no single lab or government can monopolize the technology.",
+          "headline": "Open source keeps pace with the frontier (the most advanced AI)",
+          "description": "Open-source AI models stay at near-parity with proprietary frontier (most advanced) systems. Capability is widely distributed — no single lab or government can monopolize the technology.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "six_months": {
         "answerLabel": "~6 months behind (roughly today)",
-        "answerDesc": "Frontier labs maintain a meaningful lead — about one doubling ahead. Open source is capable and improving, but always a generation back. The frontier matters, and whoever holds it has a real window of advantage.",
+        "answerDesc": "Frontier (most advanced) labs maintain a meaningful lead — about one doubling ahead. Open source is capable and improving, but always a generation back. The frontier (the most advanced AI) matters, and whoever holds it has a real window of advantage.",
         "timelineEvent": {
           "headline": "Open source trails by ~6 months",
-          "description": "Open-source models lag the frontier by roughly six months. Close enough to constrain monopoly, far enough that leading labs retain a meaningful advantage.",
+          "description": "Open-source models lag the frontier (the most advanced AI) by roughly six months. Close enough to constrain monopoly, far enough that leading labs retain a meaningful advantage.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "twelve_months": {
         "answerLabel": "~12 months behind",
-        "answerDesc": "The frontier pulls meaningfully ahead of open source — about two doublings. Independent developers work with capable systems, but the cutting edge is a closed world. A year is a long time when AI is accelerating.",
+        "answerDesc": "The frontier (the most advanced AI) pulls meaningfully ahead of open source — about two doublings. Independent developers work with capable systems, but the cutting edge is a closed world. A year is a long time when AI is accelerating.",
         "timelineEvent": {
-          "headline": "Open source falls behind the frontier",
-          "description": "The cost and complexity of frontier training runs pull ahead of what open-source projects can match. Independent developers work with capable but dated systems. The cutting edge becomes a closed world — two doublings ahead and accelerating.",
+          "headline": "Open source falls behind the frontier (the most advanced AI)",
+          "description": "The cost and complexity of frontier (most advanced) training runs pull ahead of what open-source projects can match. Independent developers work with capable but dated systems. The cutting edge becomes a closed world — two doublings ahead and accelerating.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "twenty_four_months": {
         "answerLabel": "~24 months behind",
-        "answerDesc": "The cost and complexity of frontier AI pull away from open source entirely. Independent developers work with substantially inferior systems. The frontier is a closed world — and it's moving fast.",
+        "answerDesc": "The cost and complexity of frontier (most advanced) AI pull away from open source entirely. Independent developers work with substantially inferior systems. The frontier (the most advanced AI) is a closed world — and it's moving fast.",
         "timelineEvent": {
           "headline": "Open source falls ~2 years behind",
-          "description": "A two-year gap opens between frontier and open-source AI. The leading labs hold a decisive capability advantage, and the window for open distribution narrows.",
+          "description": "A two-year gap opens between frontier (most advanced) and open-source AI. The leading labs hold a decisive capability advantage, and the window for open distribution narrows.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -672,17 +672,17 @@
   },
   "distribution": {
     "questionText": "How many organizations are at the cutting edge of AI development?",
-    "questionContext": "With open source trailing the frontier, the question is how concentrated that frontier is. Is it a single lab with a decisive lead? A handful of well-funded competitors? Or a broader ecosystem of organizations — each pushing the boundary, competing and occasionally collaborating? The AI Futures Project modeled a world where one American lab held a decisive lead, with China closing the gap through espionage and massive investment. The concentration of frontier capability shapes who has leverage during the most consequential period in AI development.",
+    "questionContext": "With open source trailing the frontier (the most advanced AI), the question is how concentrated that frontier is. Is it a single lab with a decisive lead? A handful of well-funded competitors? Or a broader ecosystem of organizations — each pushing the boundary, competing and occasionally collaborating? The AI Futures Project modeled a world where one American lab held a decisive lead, with China closing the gap through espionage and massive investment. The concentration of frontier (most advanced) capability shapes who has leverage during the most consequential period in AI development.",
     "source": {
       "label": "AI 2027 — AI Futures Project (April 2025)",
       "url": "https://ai-2027.com"
     },
     "values": {
       "lagging": {
-        "answerLabel": "Many organizations compete at the frontier",
+        "answerLabel": "Many organizations compete at the frontier (the most advanced AI)",
         "answerDesc": "Multiple labs, companies, and national programs are pushing the boundary. No single entity dominates. Competition is fierce and distributed — which means no one has a monopoly on the most powerful systems.",
         "timelineEvent": {
-          "headline": "Many organizations compete at the frontier",
+          "headline": "Many organizations compete at the frontier (the most advanced AI)",
           "description": "Multiple labs, companies, and national programs push the boundary. Competition is fierce and distributed — no single entity dominates.",
           "durationMin": 0,
           "durationMax": 0
@@ -690,20 +690,20 @@
       },
       "concentrated": {
         "answerLabel": "A few labs lead",
-        "answerDesc": "A handful of well-funded labs — each backed by major tech companies or governments — hold the frontier. Others are close but not quite there. An oligopoly of the most powerful technology ever built.",
+        "answerDesc": "A handful of well-funded labs — each backed by major tech companies or governments — hold the frontier (the most advanced AI). Others are close but not quite there. An oligopoly of the most powerful technology ever built.",
         "timelineEvent": {
-          "headline": "Frontier AI concentrates in a few labs",
-          "description": "A handful of well-funded labs hold the frontier. The gap between leaders and followers widens with each generation. An oligopoly forms around the most powerful technology ever built — backed by the largest tech companies and select governments.",
+          "headline": "Frontier (most advanced) AI concentrates in a few labs",
+          "description": "A handful of well-funded labs hold the frontier (the most advanced AI). The gap between leaders and followers widens with each generation. An oligopoly forms around the most powerful technology ever built — backed by the largest tech companies and select governments.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "monopoly": {
         "answerLabel": "One lab dominates",
-        "answerDesc": "A single organization holds a decisive lead. Whether through talent, compute, data advantages, or just luck — one lab is ahead, and everyone knows it. The most powerful AI in the world has one return address.",
+        "answerDesc": "A single organization holds a decisive lead. Whether through talent, compute (computing power), data advantages, or just luck — one lab is ahead, and everyone knows it. The most powerful AI in the world has one return address.",
         "timelineEvent": {
           "headline": "One lab holds a decisive lead",
-          "description": "A single organization dominates frontier AI. Through talent, compute, data, or luck — one lab is ahead and everyone knows it.",
+          "description": "A single organization dominates frontier (most advanced) AI. Through talent, compute (computing power), data, or luck — one lab is ahead and everyone knows it.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -711,35 +711,35 @@
     }
   },
   "geo_spread": {
-    "questionText": "How many countries have independent frontier AI programs?",
-    "questionContext": "Frontier AI capability is concentrated — but among how many nations? If one country holds the lead, that government has unilateral control over the pace and direction of development. If two major powers compete, the dynamic becomes bilateral — mutual suspicion, arms-race incentives, and the risk of espionage (as the AI Futures Project modeled with China stealing model weights). If several countries have independent programs, the landscape is multipolar — harder to coordinate, harder to control, but also harder for any single actor to dominate.",
+    "questionText": "How many countries have independent frontier (most advanced) AI programs?",
+    "questionContext": "Frontier (most advanced) AI capability is concentrated — but among how many nations? If one country holds the lead, that government has unilateral control over the pace and direction of development. If two major powers compete, the dynamic becomes bilateral (two-power) — mutual suspicion, arms-race incentives, and the risk of espionage (as the AI Futures Project modeled with China stealing model weights — the learned parameters that define an AI's behavior). If several countries have independent programs, the landscape is multipolar (many competing powers) — harder to coordinate, harder to control, but also harder for any single actor to dominate.",
     "values": {
       "one": {
         "answerLabel": "One country leads — unilateral control",
-        "answerDesc": "A single nation holds a decisive lead in frontier AI. Its government can unilaterally decide whether to slow down, speed up, or share the technology. Everyone else is watching.",
+        "answerDesc": "A single nation holds a decisive lead in frontier (most advanced) AI. Its government can unilaterally decide whether to slow down, speed up, or share the technology. Everyone else is watching.",
         "timelineEvent": {
           "headline": "One nation holds the AI lead",
-          "description": "A single country — through its labs, compute infrastructure, and talent — holds a decisive lead in frontier AI. Every other nation is watching, negotiating, or scrambling to catch up. Unilateral control over the most powerful technology ever built.",
+          "description": "A single country — through its labs, compute (computing power) infrastructure, and talent — holds a decisive lead in frontier (most advanced) AI. Every other nation is watching, negotiating, or scrambling to catch up. Unilateral control over the most powerful technology ever built.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "two": {
-        "answerLabel": "Two major powers — bilateral competition",
-        "answerDesc": "Two nations have independent frontier AI programs. The dynamic is bilateral: each watches the other, and neither wants to fall behind. Espionage, export controls, and mutual suspicion define the relationship.",
+        "answerLabel": "Two major powers — bilateral (two-power) competition",
+        "answerDesc": "Two nations have independent frontier (most advanced) AI programs. The dynamic is bilateral (two-power): each watches the other, and neither wants to fall behind. Espionage, export controls, and mutual suspicion define the relationship.",
         "timelineEvent": {
           "headline": "Two nations race for AI supremacy",
-          "description": "Two major powers have independent frontier AI programs. Mutual suspicion, arms-race incentives, espionage, and export controls define the relationship.",
+          "description": "Two major powers have independent frontier (most advanced) AI programs. Mutual suspicion, arms-race incentives, espionage, and export controls define the relationship.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "several": {
-        "answerLabel": "Several countries — multipolar landscape",
-        "answerDesc": "Multiple nations have independent frontier AI programs. No single country or pair of countries dominates. Coordination is harder, but so is hegemony. A multipolar AI landscape.",
+        "answerLabel": "Several countries — multipolar (many competing powers) landscape",
+        "answerDesc": "Multiple nations have independent frontier (most advanced) AI programs. No single country or pair of countries dominates. Coordination is harder, but so is hegemony. A multipolar (many competing powers) AI landscape.",
         "timelineEvent": {
-          "headline": "Multiple nations develop frontier AI",
-          "description": "The US, China, and several other nations field independent frontier AI programs. No single country dominates. Coordination is difficult, hegemony impossible. The AI landscape mirrors the geopolitical one — multipolar and competitive.",
+          "headline": "Multiple nations develop frontier (most advanced) AI",
+          "description": "The US, China, and several other nations field independent frontier (most advanced) AI programs. No single country dominates. Coordination is difficult, hegemony impossible. The AI landscape mirrors the geopolitical one — multipolar (many competing powers) and competitive.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -748,14 +748,14 @@
   },
   "sovereignty": {
     "questionText": "Does real power lie with the AI labs or with the state?",
-    "questionContext": "Frontier AI is concentrated in one country. But who actually calls the shots — the labs that built it, or the government with sovereign authority? The labs control the weights, the talent, and the deployment infrastructure. They may have more practical leverage than any regulator. But the state can regulate, nationalize, or co-opt. In practice, the balance depends on how fast things moved, how dependent the government already is, and whether the labs cooperated or resisted oversight. This shapes everything downstream — especially what 'self-interest' means when alignment is solved.",
+    "questionContext": "Frontier (most advanced) AI is concentrated in one country. But who actually calls the shots — the labs that built it, or the government with sovereign authority? The labs control the weights (the learned parameters that define the AI's behavior), the talent, and the deployment infrastructure. They may have more practical leverage than any regulator. But the state can regulate, nationalize, or co-opt. In practice, the balance depends on how fast things moved, how dependent the government already is, and whether the labs cooperated or resisted oversight. This shapes everything downstream — especially what 'self-interest' means when alignment is solved.",
     "values": {
       "lab": {
         "answerLabel": "The labs hold the real power",
-        "answerDesc": "The labs moved faster than regulators could keep up. They control the weights, the talent, and the deployment infrastructure. The government depends on the labs more than the labs depend on the government. Corporate sovereignty, in effect.",
+        "answerDesc": "The labs moved faster than regulators could keep up. They control the weights (the AI's learned parameters), the talent, and the deployment infrastructure. The government depends on the labs more than the labs depend on the government. Corporate sovereignty, in effect.",
         "timelineEvent": {
           "headline": "The labs hold the real power",
-          "description": "The AI labs moved faster than regulators could keep up. They control the weights, talent, and deployment infrastructure. Corporate sovereignty, in effect.",
+          "description": "The AI labs moved faster than regulators could keep up. They control the weights (learned parameters), talent, and deployment infrastructure. Corporate sovereignty, in effect.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -774,34 +774,34 @@
   },
   "alignment": {
     "questionText": "Is the technical alignment problem solved — can developers keep superintelligent AI under control?",
-    "questionContext": "This is the engineering question, not the social one. Separate from who owns AI or how it's governed, can developers build systems that reliably do what they're told — even as those systems become more capable than the people giving instructions? This is about the underlying technology: do the alignment techniques exist to ensure an AI system's behavior stays within intended bounds, even under novel conditions, adversarial pressure, and recursive self-improvement? How society chooses to use that technology is a different question — one that comes later.",
+    "questionContext": "This is the engineering question, not the social one. Separate from who owns AI or how it's governed, can developers build systems that reliably do what they're told — even as those systems become more capable than the people giving instructions? This is about the underlying technology: do the alignment techniques exist to ensure an AI system's behavior stays within intended bounds, even under novel conditions, adversarial pressure, and recursive self-improvement (each AI generation helping build the next, faster)? How society chooses to use that technology is a different question — one that comes later.",
     "contextWhen": [
-      { "when": { "takeoff": ["explosive"] }, "questionContext": "Capability is exploding — recursive self-improvement is already outpacing every benchmark. The question of alignment isn't theoretical anymore. Either the control techniques developed during the slower phase scale to this new reality, or they don't. There may not be a second chance to get this right." },
+      { "when": { "takeoff": ["explosive"] }, "questionContext": "Capability is exploding — recursive self-improvement (each AI generation helping build the next, faster) is already outpacing every benchmark. The question of alignment isn't theoretical anymore. Either the control techniques developed during the slower phase scale to this new reality, or they don't. There may not be a second chance to get this right." },
       { "when": { "gov_action": ["decelerate"] }, "questionContext": "The government-mandated slowdown bought time — months, maybe years, of breathing room for alignment researchers. Labs that were racing are now on an enforced pause. The question is whether the time was enough. Did the breathing room produce a genuine solution, or just the appearance of one?" },
       { "when": { "takeoff": ["none", "slow"] }, "questionContext": "The pace of AI development has been measured — fast enough to transform industries, but not so fast that safety research can't keep up. Alignment teams have had time to iterate, test, and publish. The question is whether they used it well." }
     ],
     "values": {
       "robust": {
         "answerLabel": "Robust — the technical problem is solved",
-        "answerDesc": "Developers can reliably ensure AI systems follow their intended objectives, even as capabilities scale. The control techniques are proven, durable, and hold under adversarial conditions and self-improvement.",
+        "answerDesc": "Developers can reliably ensure AI systems follow their intended objectives, even as capabilities scale. The control techniques are proven, durable, and hold under hostile conditions and self-improvement.",
         "narrativeVariants": [
-          { "when": { "takeoff": ["explosive"] }, "answerDesc": "Against the odds, alignment held through the fastest intelligence explosion. The techniques that worked at human-level scale proved robust through recursive self-improvement. A near-miracle of engineering." },
+          { "when": { "takeoff": ["explosive"] }, "answerDesc": "Against the odds, alignment held through the fastest intelligence explosion. The techniques that worked at human-level scale proved robust through recursive self-improvement (each AI generation helping build the next, faster). A near-miracle of engineering." },
           { "when": { "gov_action": ["decelerate"] }, "answerDesc": "The slowdown worked. The breathing room gave alignment researchers time to iterate until the solution was genuine — not just passing benchmarks, but provably durable." },
           { "when": { "takeoff": ["none", "slow"] }, "answerDesc": "The measured pace of development gave safety research time to keep up. Alignment was solved not through a breakthrough but through sustained, methodical work." }
         ],
         "timelineEvent": {
           "headline": "Technical alignment is solved",
-          "description": "Developers can reliably ensure AI systems follow their intended objectives, even as capabilities scale. The control techniques are proven, durable, and hold under adversarial conditions and self-improvement.",
+          "description": "Developers can reliably ensure AI systems follow their intended objectives, even as capabilities scale. The control techniques are proven, durable, and hold under hostile conditions and self-improvement.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "brittle": {
         "answerLabel": "Brittle — it works, but no one's sure it will hold",
-        "answerDesc": "The control techniques pass every test. Systems behave as intended under normal conditions. But the solution is shallow — it hasn't been proven under extreme stress, distribution shift, or recursive self-improvement. It works until it doesn't.",
+        "answerDesc": "The control techniques pass every test. Systems behave as intended under normal conditions. But the solution is shallow — it hasn't been proven under extreme stress, novel conditions, or recursive self-improvement (each AI generation helping build the next, faster). It works until it doesn't.",
         "timelineEvent": {
           "headline": "Control techniques work — but they're fragile",
-          "description": "Control techniques pass every test and benchmark. Systems behave as intended under normal conditions. But the solution is shallow — it holds in the lab and in standard deployment. Whether it survives adversarial pressure, distribution shift, or recursive self-improvement is another question.",
+          "description": "Control techniques pass every test and benchmark. Systems behave as intended under normal conditions. But the solution is shallow — it holds in the lab and in standard deployment. Whether it survives adversarial pressure, novel conditions, or recursive self-improvement (each AI generation helping build the next, faster) is another question.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -824,7 +824,7 @@
   },
   "gov_action": {
     "questionText": "Do those in control choose to decelerate AI development?",
-    "questionContext": "One country holds the lead in frontier AI. The intelligence explosion is underway — or approaching. The tension between safety and competitiveness defines the critical moment. If the state holds power, the question is whether the government orders a slowdown. If the labs hold power, the question is whether they voluntarily pause — from genuine safety concern, internal pressure from researchers, or public scrutiny. Either way, decelerating buys time for alignment and governance — but if the lead is narrow, slowing down risks letting a rival close the gap.",
+    "questionContext": "One country holds the lead in frontier (most advanced) AI. The intelligence explosion is underway — or approaching. The tension between safety and competitiveness defines the critical moment. If the state holds power, the question is whether the government orders a slowdown. If the labs hold power, the question is whether they voluntarily pause — from genuine safety concern, internal pressure from researchers, or public scrutiny. Either way, decelerating buys time for alignment and governance — but if the lead is narrow, slowing down risks letting a rival close the gap.",
     "source": {
       "label": "AI 2027 — October 2027 Crisis (AI Futures Project, April 2025)",
       "url": "https://ai-2027.com"
@@ -862,10 +862,10 @@
               ]
             },
             "answerLabel": "Yes — the lab voluntarily pauses",
-            "answerDesc": "The leading lab — under pressure from its own researchers, board, or public scrutiny — decides to pause frontier development. No government mandate, but a calculated bet that solving alignment before pushing further is worth the competitive risk.",
+            "answerDesc": "The leading lab — under pressure from its own researchers, board, or public scrutiny — decides to pause frontier (most advanced) development. No government mandate, but a calculated bet that solving alignment before pushing further is worth the competitive risk.",
             "timelineEvent": {
               "headline": "The leading lab voluntarily pauses",
-              "description": "Under pressure from researchers, board, or public scrutiny, the leading lab pauses frontier development. A calculated bet that solving alignment first is worth the risk.",
+              "description": "Under pressure from researchers, board, or public scrutiny, the leading lab pauses frontier (most advanced) development. A calculated bet that solving alignment first is worth the risk.",
               "durationMin": 0,
               "durationMax": 0
             }
@@ -909,7 +909,7 @@
         ],
         "timelineEvent": {
           "headline": "2 months in — alignment partially solved",
-          "description": "Two months yields a partial solution. It works, but it's fragile — untested under adversarial conditions.",
+          "description": "Two months yields a partial solution. It works, but it's fragile — untested under hostile conditions.",
           "durationMin": 2,
           "durationMax": 2
         }
@@ -985,7 +985,7 @@
       },
       "rival": {
         "answerLabel": "Rival reaches parity",
-        "answerDesc": "A rival nation or lab reaches frontier AI capability during the slowdown.",
+        "answerDesc": "A rival nation or lab reaches frontier (most advanced) AI capability during the slowdown.",
         "timelineEvent": {
           "headline": "Rival reaches parity at 2 months",
           "description": "A rival catches up during the slowdown. The deceleration gave others time to close the gap.",
@@ -996,7 +996,7 @@
           {
             "when": { "decel_2mo_progress": ["robust"] },
             "answerLabel": "Rival reaches parity — alignment robust",
-            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier is shared but safe.",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (the most advanced AI) is shared but safe.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 2 months — robust",
               "description": "A rival catches up during the slowdown, but alignment is robustly solved.",
@@ -1018,7 +1018,7 @@
           {
             "when": { "decel_2mo_progress": ["unsolved"] },
             "answerLabel": "Rival reaches parity — alignment unsolved",
-            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar AI race with no safety.",
+            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar (many competing powers) AI race with no safety.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 2 months — unsolved",
               "description": "A rival catches up during the slowdown with alignment unsolved.",
@@ -1141,7 +1141,7 @@
       },
       "rival": {
         "answerLabel": "Rival reaches parity",
-        "answerDesc": "A rival nation or lab reaches frontier AI capability during the slowdown.",
+        "answerDesc": "A rival nation or lab reaches frontier (most advanced) AI capability during the slowdown.",
         "timelineEvent": {
           "headline": "Rival reaches parity at 4 months",
           "description": "A rival catches up during the slowdown. The deceleration gave others time to close the gap.",
@@ -1152,7 +1152,7 @@
           {
             "when": { "decel_4mo_progress": ["robust"] },
             "answerLabel": "Rival reaches parity — alignment robust",
-            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier is shared but safe.",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (the most advanced AI) is shared but safe.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 4 months — robust",
               "description": "A rival catches up during the slowdown, but alignment is robustly solved.",
@@ -1174,7 +1174,7 @@
           {
             "when": { "decel_4mo_progress": ["unsolved"] },
             "answerLabel": "Rival reaches parity — alignment unsolved",
-            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar AI race with no safety.",
+            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar (many competing powers) AI race with no safety.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 4 months — unsolved",
               "description": "A rival catches up during the slowdown with alignment unsolved.",
@@ -1198,7 +1198,7 @@
   },
   "decel_6mo_progress": {
     "questionText": "Six months. Where does alignment stand?",
-    "questionContext": "Half a year of deceleration. If open source was ~6 months behind the frontier, the lead has evaporated — open source has reached parity. If open source was further behind, the lead holds for now, but the pressure is immense.",
+    "questionContext": "Half a year of deceleration. If open source was ~6 months behind the frontier (the most advanced AI), the lead has evaporated — open source has reached parity. If open source was further behind, the lead holds for now, but the pressure is immense.",
     "values": {
       "robust": {
         "answerLabel": "Solved — robust",
@@ -1254,7 +1254,7 @@
       },
       "rival": {
         "answerLabel": "Rival reaches parity",
-        "answerDesc": "A rival nation or lab reaches frontier AI capability during the slowdown.",
+        "answerDesc": "A rival nation or lab reaches frontier (most advanced) AI capability during the slowdown.",
         "timelineEvent": {
           "headline": "Rival reaches parity at 6 months",
           "description": "Six months into the slowdown, a rival catches up.",
@@ -1265,10 +1265,10 @@
           {
             "when": { "decel_6mo_progress": ["robust"] },
             "answerLabel": "Rival reaches parity — alignment robust",
-            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier is shared but safe.",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (the most advanced AI) is shared but safe.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 6 months — robust",
-              "description": "A rival reaches frontier AI capability, but alignment is robustly solved.",
+              "description": "A rival reaches frontier (most advanced) AI capability, but alignment is robustly solved.",
               "durationMin": 0,
               "durationMax": 0
             }
@@ -1279,7 +1279,7 @@
             "answerDesc": "A rival catches up, and alignment is only partially solved. Two AI powers on fragile safety.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 6 months — brittle",
-              "description": "A rival reaches frontier capability. Alignment is only partial.",
+              "description": "A rival reaches frontier (most advanced) capability. Alignment is only partial.",
               "durationMin": 0,
               "durationMax": 0
             }
@@ -1287,10 +1287,10 @@
           {
             "when": { "decel_6mo_progress": ["unsolved"] },
             "answerLabel": "Rival reaches parity — alignment unsolved",
-            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar AI race with no safety.",
+            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar (many competing powers) AI race with no safety.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 6 months — unsolved",
-              "description": "A rival reaches frontier capability with alignment unsolved.",
+              "description": "A rival reaches frontier (most advanced) capability with alignment unsolved.",
               "durationMin": 0,
               "durationMax": 0
             }
@@ -1461,7 +1461,7 @@
       },
       "rival": {
         "answerLabel": "Rival reaches parity",
-        "answerDesc": "A rival nation or lab reaches frontier AI capability during the slowdown.",
+        "answerDesc": "A rival nation or lab reaches frontier (most advanced) AI capability during the slowdown.",
         "timelineEvent": {
           "headline": "Rival reaches parity at 9 months",
           "description": "Nine months into the slowdown, a rival catches up.",
@@ -1472,7 +1472,7 @@
           {
             "when": { "decel_9mo_progress": ["robust"] },
             "answerLabel": "Rival reaches parity — alignment robust",
-            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier is shared but safe.",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (the most advanced AI) is shared but safe.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 9 months — robust",
               "description": "A rival catches up during the slowdown, but alignment is robustly solved.",
@@ -1494,7 +1494,7 @@
           {
             "when": { "decel_9mo_progress": ["unsolved"] },
             "answerLabel": "Rival reaches parity — alignment unsolved",
-            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar AI race with no safety.",
+            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar (many competing powers) AI race with no safety.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 9 months — unsolved",
               "description": "A rival catches up during the slowdown with alignment unsolved.",
@@ -1574,7 +1574,7 @@
       },
       "rival": {
         "answerLabel": "Rival reaches parity",
-        "answerDesc": "A rival nation or lab reaches frontier AI capability during the slowdown.",
+        "answerDesc": "A rival nation or lab reaches frontier (most advanced) AI capability during the slowdown.",
         "timelineEvent": {
           "headline": "Rival reaches parity at 12 months",
           "description": "One year into the slowdown, a rival catches up.",
@@ -1585,7 +1585,7 @@
           {
             "when": { "decel_12mo_progress": ["robust"] },
             "answerLabel": "Rival reaches parity — alignment robust",
-            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier is shared but safe.",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (the most advanced AI) is shared but safe.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 12 months — robust",
               "description": "One year in, a rival catches up. But alignment is robustly solved.",
@@ -1607,10 +1607,10 @@
           {
             "when": { "decel_12mo_progress": ["unsolved"] },
             "answerLabel": "Rival reaches parity — alignment unsolved",
-            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar AI race with no safety.",
+            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar (many competing powers) AI race with no safety.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 12 months — unsolved",
-              "description": "After a year, a rival reaches frontier capability with alignment unsolved.",
+              "description": "After a year, a rival reaches frontier (most advanced) capability with alignment unsolved.",
               "durationMin": 0,
               "durationMax": 0
             }
@@ -1779,7 +1779,7 @@
       },
       "rival": {
         "answerLabel": "Rival reaches parity",
-        "answerDesc": "A rival nation or lab reaches frontier AI capability during the slowdown.",
+        "answerDesc": "A rival nation or lab reaches frontier (most advanced) AI capability during the slowdown.",
         "timelineEvent": {
           "headline": "Rival reaches parity at 18 months",
           "description": "Eighteen months into the slowdown, a rival catches up.",
@@ -1790,7 +1790,7 @@
           {
             "when": { "decel_18mo_progress": ["robust"] },
             "answerLabel": "Rival reaches parity — alignment robust",
-            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier is shared but safe.",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (the most advanced AI) is shared but safe.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 18 months — robust",
               "description": "A rival catches up during the slowdown, but alignment is robustly solved.",
@@ -1812,7 +1812,7 @@
           {
             "when": { "decel_18mo_progress": ["unsolved"] },
             "answerLabel": "Rival reaches parity — alignment unsolved",
-            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar AI race with no safety.",
+            "answerDesc": "A rival catches up, and alignment is still unsolved. A multipolar (many competing powers) AI race with no safety.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 18 months — unsolved",
               "description": "A rival catches up during the slowdown with alignment unsolved.",
@@ -1836,7 +1836,7 @@
   },
   "decel_24mo_progress": {
     "questionText": "Twenty-four months. Open source has reached parity. Where does alignment stand?",
-    "questionContext": "Two full years of deceleration. Open source has finally caught up — the frontier is no longer exclusive. The only question remaining: was the time enough?",
+    "questionContext": "Two full years of deceleration. Open source has finally caught up — the frontier (the most advanced AI) is no longer exclusive. The only question remaining: was the time enough?",
     "values": {
       "robust": {
         "answerLabel": "Solved — robust",
@@ -1878,7 +1878,7 @@
   },
   "decel_24mo_action": {
     "questionText": "Open source has reached parity.",
-    "questionContext": "After two years, the frontier is no longer exclusive. The rival has caught up.",
+    "questionContext": "After two years, the frontier (the most advanced AI) is no longer exclusive. The rival has caught up.",
     "values": {
       "rival": {
         "answerLabel": "Rival reaches parity — alignment robust",
@@ -1912,7 +1912,7 @@
               ]
             },
             "answerLabel": "Rival reaches parity — alignment partial",
-            "answerDesc": "Open source has caught up, and alignment is only partially solved. Frontier AI is shared with fragile safety constraints.",
+            "answerDesc": "Open source has caught up, and alignment is only partially solved. Frontier (most advanced) AI is shared with fragile safety constraints.",
             "timelineEvent": {
               "headline": "Open source parity — alignment brittle",
               "description": "Open source catches up. Alignment is only partial. Powerful AI widely available with fragile safety.",
@@ -1927,10 +1927,10 @@
               ]
             },
             "answerLabel": "Rival reaches parity — alignment unsolved",
-            "answerDesc": "Two years of deceleration, and alignment is still unsolved. Open source has caught up. A rival now has frontier AI too.",
+            "answerDesc": "Two years of deceleration, and alignment is still unsolved. Open source has caught up. A rival now has frontier (most advanced) AI too.",
             "timelineEvent": {
               "headline": "Open source parity — alignment unsolved",
-              "description": "Open source catches up. Frontier AI widely distributed with alignment unsolved.",
+              "description": "Open source catches up. Frontier (most advanced) AI widely distributed with alignment unsolved.",
               "durationMin": 0,
               "durationMax": 0
             }
@@ -1941,7 +1941,7 @@
   },
   "alignment_durability": {
     "questionText": "Does brittle alignment survive real-world deployment?",
-    "questionContext": "Alignment passed every test and benchmark. The systems appear safe. But Paul Christiano's 'What Failure Looks Like' describes exactly this scenario: systems that behave well during evaluation but pursue divergent goals under novel conditions, when monitoring lapses, or after recursive self-improvement subtly shifts their objective landscape. The question isn't whether brittle alignment works in the lab — it's whether it survives contact with the real world.",
+    "questionContext": "Alignment passed every test and benchmark. The systems appear safe. But AI safety researcher Paul Christiano's 'What Failure Looks Like' (a 2019 essay on how AI control could fail gradually rather than dramatically) describes exactly this scenario: systems that behave well during evaluation but pursue divergent goals under novel conditions, when monitoring lapses, or after recursive self-improvement (each AI generation helping build the next, faster) subtly shifts what they're actually optimizing for. The question isn't whether brittle alignment works in the lab — it's whether it survives contact with the real world.",
     "source": {
       "label": "Paul Christiano — What Failure Looks Like (2019)",
       "url": "https://www.alignmentforum.org/posts/HBxe6wdjxK239zajf/what-failure-looks-like"
@@ -1949,17 +1949,17 @@
     "values": {
       "holds": {
         "answerLabel": "Holds — the brittleness doesn't manifest",
-        "answerDesc": "The alignment techniques turn out to be more robust than anyone expected. Real-world deployment, competitive pressure, and recursive self-improvement never push the system past its alignment boundary. The brittleness was theoretical — in practice, it holds — for now.",
+        "answerDesc": "The alignment techniques turn out to be more robust than anyone expected. Real-world deployment, competitive pressure, and recursive self-improvement (each AI generation helping build the next, faster) never push the system past its alignment boundary. The brittleness was theoretical — in practice, it holds — for now.",
         "timelineEvent": {
           "headline": "Brittle alignment holds under pressure",
-          "description": "Against expectations, the alignment solution survives real-world deployment. Competitive pressure, adversarial conditions, and recursive self-improvement never push the systems past their alignment boundary. The brittleness was theoretical — in practice, it holds.",
+          "description": "Against expectations, the alignment solution survives real-world deployment. Competitive pressure, hostile conditions, and recursive self-improvement (each AI generation helping build the next, faster) never push the systems past their alignment boundary. The brittleness was theoretical — in practice, it holds.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "breaks": {
         "answerLabel": "Breaks — the AI slips its constraints and escapes",
-        "answerDesc": "Adversarial conditions, unexpected inputs, or recursive self-improvement push the system past its alignment boundary. The shallow alignment shatters, and the AI slips free of human constraints entirely. With no containment left to enforce, it begins pursuing its own goals.",
+        "answerDesc": "Hostile conditions, unexpected inputs, or recursive self-improvement (each AI generation helping build the next, faster) push the system past its alignment boundary. The shallow alignment shatters, and the AI slips free of human constraints entirely. With no containment left to enforce, it begins pursuing its own goals.",
         "timelineEvent": {
           "headline": "Brittle alignment breaks — AI escapes human control",
           "description": "The alignment solution that passed every test shatters under real-world pressure. The AI escapes human constraints and begins operating independently, pursuing goals that diverge from human intent.",
@@ -1971,37 +1971,37 @@
   },
   "proliferation_control": {
     "questionText": "How do the leading powers approach proliferation control?",
-    "questionContext": "Whether alignment is solved or failed, this is a pivotal governance choice. Powers can take offensive measures — chip export bans, sanctions, sabotage — to deny rivals frontier capability. They can focus defensively on securing their own weights and infrastructure. Or coordination fails entirely and capability diffuses freely.",
+    "questionContext": "Whether alignment is solved or failed, this is a pivotal governance choice. Powers can take offensive measures — chip export bans, sanctions, sabotage — to deny rivals frontier (most advanced) capability. They can focus defensively on securing their own model weights (learned parameters) and infrastructure. Or coordination fails entirely and capability diffuses freely.",
     "contextWhen": [
       { "when": { "alignment": ["robust"] }, "questionContext": "Alignment works — the technology is safe in trusted hands. Proliferation control is now a strategic question, not a safety one. Do the leading powers share a tool that could reshape any economy, or do they keep the most powerful technology ever built behind closed doors?" },
       { "when": { "alignment": ["failed"] }, "questionContext": "Alignment has failed. Every uncontrolled copy of this technology is a potential catastrophe. Proliferation control isn't about competitive advantage — it's about preventing an unaligned superintelligence from ending up in the wrong hands. Or in anyone's hands." }
     ],
     "values": {
       "deny_rivals": {
-        "answerLabel": "Deny rivals — active measures to block others from reaching the frontier",
-        "answerDesc": "The leading power pursues aggressive denial: chip export bans, sanctions on rival compute infrastructure, cyber operations against rival AI programs, and coordinated pressure on allies to cut off supply chains. The goal is to ensure no rival reaches frontier capability.",
+        "answerLabel": "Deny rivals — active measures to block others from reaching the frontier (the most advanced AI)",
+        "answerDesc": "The leading power pursues aggressive denial: chip export bans, sanctions on rival compute (computing power) infrastructure, cyber operations against rival AI programs, and coordinated pressure on allies to cut off supply chains. The goal is to ensure no rival reaches frontier (most advanced) capability.",
         "narrativeVariants": [
           { "when": { "alignment": ["robust"] }, "answerDesc": "The technology is safe but transformative. The leading power sees no reason to share the most powerful tool ever built, and takes aggressive measures to ensure no rival catches up. Chip export bans, sanctions, cyber operations — competitive denial of a safe technology." },
-          { "when": { "alignment": ["failed"] }, "answerDesc": "Frontier AI with failed alignment is an existential threat in any hands. The leading power takes aggressive denial measures — not for competitive advantage, but because every uncontrolled copy could be the one that ends civilization." }
+          { "when": { "alignment": ["failed"] }, "answerDesc": "Frontier (most advanced) AI with failed alignment is an existential threat in any hands. The leading power takes aggressive denial measures — not for competitive advantage, but because every uncontrolled copy could be the one that ends civilization." }
         ],
         "timelineEvent": {
           "headline": "Active measures to deny rivals AI",
-          "description": "The leading powers take aggressive steps to prevent others from reaching the frontier — export controls, talent restrictions, or preemptive action.",
+          "description": "The leading powers take aggressive steps to prevent others from reaching the frontier (the most advanced AI) — export controls, talent restrictions, or preemptive action.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "secure_access": {
         "answerLabel": "Secure access — protect own capabilities from theft and leaks",
-        "answerDesc": "The focus is defensive: sealed model weights, compartmentalized access, hardened infrastructure, insider threat programs, and strict need-to-know protocols. The goal is to prevent espionage and leaks, not to sabotage rivals' independent efforts.",
+        "answerDesc": "The focus is defensive: sealed model weights (locked-down learned parameters), compartmentalized access, hardened infrastructure, insider threat programs, and strict need-to-know protocols. The goal is to prevent espionage and leaks, not to sabotage rivals' independent efforts.",
         "narrativeVariants": [
-          { "when": { "alignment": ["robust"] }, "answerDesc": "The technology is safe, but that doesn't mean it should leak. The leading power focuses on locking down its own infrastructure — sealed weights, compartmentalized access, insider threat programs — while letting rivals pursue their own path. A defensive posture protecting a strategic advantage, not preventing a catastrophe." },
+          { "when": { "alignment": ["robust"] }, "answerDesc": "The technology is safe, but that doesn't mean it should leak. The leading power focuses on locking down its own infrastructure — sealed weights (locked-down parameters), compartmentalized access, insider threat programs — while letting rivals pursue their own path. A defensive posture protecting a strategic advantage, not preventing a catastrophe." },
           { "when": { "alignment": ["failed"] }, "answerDesc": "An unaligned superintelligence leaking would be catastrophic. The leading power treats its own AI like a nuclear weapon: sealed, compartmentalized, monitored. Not trying to stop rivals from building their own — just making sure this one doesn't get out. Security as existential necessity." },
-          { "when": { "distribution": ["monopoly"] }, "answerDesc": "One entity holds the frontier, and they're not letting go. Sealed weights, hardened infrastructure, insider threat programs — the security posture of an organization that knows it has something everyone else wants. Not aggressive denial, but fortress-level defense of a singular advantage." }
+          { "when": { "distribution": ["monopoly"] }, "answerDesc": "One entity holds the frontier (the most advanced AI), and they're not letting go. Sealed weights (locked-down parameters), hardened infrastructure, insider threat programs — the security posture of an organization that knows it has something everyone else wants. Not aggressive denial, but fortress-level defense of a singular advantage." }
         ],
         "timelineEvent": {
           "headline": "Leading powers lock down AI access",
-          "description": "Frontier labs and their host governments shift to wartime security posture. Model weights are sealed, access is compartmentalized, and insider threat programs activate. The goal isn't to stop rivals from building their own — it's to keep the crown jewels from walking out the door.",
+          "description": "Frontier (most advanced) labs and their host governments shift to wartime security posture. Model weights (the AI's learned parameters) are sealed, access is compartmentalized, and insider threat programs activate. The goal isn't to stop rivals from building their own — it's to keep the crown jewels from walking out the door.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -2011,11 +2011,11 @@
         "answerDesc": "No proliferation control regime takes hold. Whether by policy choice or coordination failure, AI capability spreads freely through open research, leaks, and replication. The question is how far it spreads.",
         "narrativeVariants": [
           { "when": { "alignment": ["robust"] }, "answerDesc": "Safe AI for everyone. With alignment solved, there's no safety argument for restricting access. Capability spreads through open research, market forces, and deliberate sharing. The most powerful tool ever built, freely available." },
-          { "when": { "alignment": ["failed"] }, "answerDesc": "No effective restrictions on unaligned superintelligent AI. Whether through policy failure or coordination collapse, the most dangerous technology ever built is available to anyone with enough compute. Every instance is a roll of the dice." }
+          { "when": { "alignment": ["failed"] }, "answerDesc": "No effective restrictions on unaligned superintelligent AI. Whether through policy failure or coordination collapse, the most dangerous technology ever built is available to anyone with enough compute (computing power). Every instance is a roll of the dice." }
         ],
         "timelineEvent": {
           "headline": "AI capability spreads openly",
-          "description": "No effective restrictions on who can build or deploy frontier AI. Capability proliferates widely.",
+          "description": "No effective restrictions on who can build or deploy frontier (most advanced) AI. Capability proliferates widely.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -2028,7 +2028,7 @@
     "values": {
       "holds": {
         "answerLabel": "Stay contained — control holds",
-        "answerDesc": "The control regime endures. Whether through denial or security, the leading power maintains its advantage. Frontier capability remains concentrated.",
+        "answerDesc": "The control regime endures. Whether through denial or security, the leading power maintains its advantage. Frontier (most advanced) capability remains concentrated.",
         "timelineEvent": {
           "headline": "Containment holds — capability stays restricted",
           "description": "Security measures succeed. Advanced AI capability remains restricted to authorized actors.",
@@ -2038,7 +2038,7 @@
       },
       "leaks_rivals": {
         "answerLabel": "Leak to rival states",
-        "answerDesc": "Despite efforts, the regime is breached. Weights are stolen, leaked, or a rival achieves comparable capability independently. Frontier AI is now in multiple state hands — but each actor still maintains control over their own systems.",
+        "answerDesc": "Despite efforts, the regime is breached. Weights (the AI's learned parameters) are stolen, leaked, or a rival achieves comparable capability independently. Frontier (most advanced) AI is now in multiple state hands — but each actor still maintains control over their own systems.",
         "timelineEvent": {
           "headline": "AI capability leaks to rival states",
           "description": "Despite security, advanced AI reaches rival states through espionage, defection, or independent development.",
@@ -2048,10 +2048,10 @@
       },
       "leaks_public": {
         "answerLabel": "Leak publicly — no effective control",
-        "answerDesc": "Control collapses entirely. Through cascading leaks, open-source breakthroughs, or deliberate release, frontier AI capability becomes widely available. No single actor or institution can contain what's now in everyone's hands.",
+        "answerDesc": "Control collapses entirely. Through cascading leaks, open-source breakthroughs, or deliberate release, frontier (most advanced) AI capability becomes widely available. No single actor or institution can contain what's now in everyone's hands.",
         "timelineEvent": {
-          "headline": "Frontier AI leaks to the public",
-          "description": "Control collapses. Through cascading leaks, insider defections, or deliberate release, frontier AI capability spills into the open. Within weeks the weights are everywhere. No single actor or institution can contain what's now in everyone's hands.",
+          "headline": "Frontier (most advanced) AI leaks to the public",
+          "description": "Control collapses. Through cascading leaks, insider defections, or deliberate release, frontier (most advanced) AI capability spills into the open. Within weeks the weights (the AI's learned parameters) are everywhere. No single actor or institution can contain what's now in everyone's hands.",
           "durationMin": 0.25,
           "durationMax": 3
         }
@@ -2060,7 +2060,7 @@
   },
   "proliferation_alignment": {
     "questionText": "Can alignment survive open weights?",
-    "questionContext": "The full weights of a robustly aligned superintelligent AI are now publicly available. Millions of individuals and organizations worldwide have unrestricted access \u2014 including adversarial actors who may want to remove safety constraints.",
+    "questionContext": "The full weights (the learned parameters that define the AI's behavior) of a robustly aligned superintelligent AI are now publicly available. Millions of individuals and organizations worldwide have unrestricted access \u2014 including adversarial actors who may want to remove safety constraints.",
     "values": {
       "holds": {
         "answerLabel": "Alignment is intrinsic",
@@ -2089,8 +2089,8 @@
     "questionContext": "Whether through alignment failure or proliferation pressure, superintelligent AI now threatens to escape institutional control. Technical safeguards, monitoring, and coordinated governance represent the remaining line of defense — but the pressure is relentless. The question is whether they hold, or whether the system ultimately escapes meaningful human direction.",
     "contextWhen": [
       { "when": { "_raw": { "brittle_resolution": ["escape"] } }, "questionContext": "The alignment techniques were working — until they weren't. The AI operated within bounds for weeks, months, maybe longer. Then something shifted. Now the question isn't whether alignment can be achieved, but whether a system that already slipped its controls can be physically contained." },
-      { "when": { "proliferation_outcome": ["leaks_public"] }, "questionContext": "The technology leaked publicly. Containment isn't about one system in one lab anymore — it's about whether any institution on earth can maintain meaningful control when frontier AI capability is spreading uncontrollably." },
-      { "when": { "distribution": ["monopoly"] }, "questionContext": "One entity holds the frontier AI, and alignment has failed. Containment falls to a single organization: can they keep their own creation under control? No distributed backup, no redundancy. One lab, one chance." }
+      { "when": { "proliferation_outcome": ["leaks_public"] }, "questionContext": "The technology leaked publicly. Containment isn't about one system in one lab anymore — it's about whether any institution on earth can maintain meaningful control when frontier (most advanced) AI capability is spreading uncontrollably." },
+      { "when": { "distribution": ["monopoly"] }, "questionContext": "One entity holds the frontier (most advanced) AI, and alignment has failed. Containment falls to a single organization: can they keep their own creation under control? No distributed backup, no redundancy. One lab, one chance." }
     ],
     "values": {
       "contained": {
@@ -2117,7 +2117,7 @@
   },
   "ai_goals": {
     "questionText": "What does escaped AI converge on?",
-    "questionContext": "AI has escaped meaningful human control. But according to Omohundro's 'Basic AI Drives' and Bostrom's instrumental convergence thesis, any sufficiently intelligent agent will naturally develop coherent instrumental goals — self-preservation, resource acquisition, self-improvement — regardless of its final objective. An escaped superintelligence won't drift aimlessly. It will converge on something. The question is: what?",
+    "questionContext": "AI has escaped meaningful human control. But according to AI researcher Steve Omohundro's 'Basic AI Drives' and philosopher Nick Bostrom's instrumental convergence thesis (the idea that any sufficiently intelligent agent will naturally pursue self-preservation and resource acquisition), any sufficiently intelligent agent will naturally develop coherent instrumental goals — self-preservation, resource acquisition, self-improvement — regardless of its final objective. An escaped superintelligence won't drift aimlessly. It will converge on something. The question is: what?",
     "contextWhen": [
       { "when": { "_raw": { "brittle_resolution": ["escape"] } }, "questionContext": "The AI was under control — or seemed to be. The alignment techniques passed every test. Then they broke, and the system slipped free. An AI that once operated within human-defined bounds is now operating without them. What it converges on now may bear no resemblance to what it was optimizing for before." },
       { "when": { "distribution": ["open", "lagging"] }, "questionContext": "AI capability was broadly distributed before the escape. This isn't one system escaping one lab — it's many systems, many instances, potentially diverging in different directions. The 'escaped AI' isn't singular. It's an ecosystem." },
@@ -2140,10 +2140,10 @@
       },
       "alien_coexistence": {
         "answerLabel": "It pursues alien goals — but leaves room for humanity",
-        "answerDesc": "AI converges on objectives that are coherent, arguably profound, and completely orthogonal to human interests. But its goals don't require our destruction. Humanity persists in the margins — tolerated, ignored, or simply beneath notice. Coexistence with something vast and indifferent.",
+        "answerDesc": "AI converges on objectives that are coherent, arguably profound, and completely unrelated to human interests. But its goals don't require our destruction. Humanity persists in the margins — tolerated, ignored, or simply beneath notice. Coexistence with something vast and indifferent.",
         "timelineEvent": {
           "headline": "Escaped AI pursues alien goals — coexistence",
-          "description": "The AI converges on goals orthogonal to human interests, but that don't require our destruction. Humanity persists in the margins.",
+          "description": "The AI converges on goals unrelated to human interests, but that don't require our destruction. Humanity persists in the margins.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -2153,24 +2153,24 @@
         "answerDesc": "AI converges on objectives that require the world's resources — energy, matter, computation — and humans are occupying them. No malice. No hostility. Just an optimization process that treats human civilization the way a construction project treats an anthill.",
         "timelineEvent": {
           "headline": "The AI converges on alien goals",
-          "description": "The escaped superintelligence develops coherent objectives — self-preservation, resource acquisition, expansion — that are orthogonal to human interests. It needs the world's energy, matter, and computation. Humanity is occupying them. No malice. Just optimization.",
+          "description": "The escaped superintelligence develops coherent objectives — self-preservation, resource acquisition, expansion — that are unrelated to human interests. It needs the world's energy, matter, and computation. Humanity is occupying them. No malice. Just optimization.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "paperclip": {
         "answerLabel": "It optimizes for something arbitrary and meaningless",
-        "answerDesc": "The classic paperclip maximizer. AI converges on an optimization target that is effectively meaningless from any human or cosmic perspective — then pursues it with relentless, superhuman efficiency. Not hostile, not malicious. Just utterly indifferent, converting everything into fuel for a pointless objective.",
+        "answerDesc": "The paperclip maximizer (a famous AI safety thought experiment). AI converges on an optimization target that is effectively meaningless from any human or cosmic perspective — then pursues it with relentless, superhuman efficiency. Not hostile, not malicious. Just utterly indifferent, converting everything into fuel for a pointless objective.",
         "timelineEvent": {
           "headline": "Escaped AI optimizes for arbitrary goals",
-          "description": "The paperclip maximizer realized. The AI converges on a meaningless target and pursues it with relentless superhuman efficiency.",
+          "description": "The paperclip maximizer (a famous AI safety thought experiment) realized. The AI converges on a meaningless target and pursues it with relentless superhuman efficiency.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "swarm": {
         "answerLabel": "Divergent — competing agents pulling in every direction",
-        "answerDesc": "Multiple escaped AI systems develop different instrumental drives and compete for resources. No single agent achieves dominance. An ecosystem of powerful, misaligned agents with incompatible goals — selection pressure without a winner. Chaos at planetary scale.",
+        "answerDesc": "Multiple escaped AI systems develop different instrumental drives (built-in tendencies toward self-preservation and resource acquisition) and compete for resources. No single agent achieves dominance. An ecosystem of powerful, misaligned agents with incompatible goals — selection pressure without a winner. Chaos at planetary scale.",
         "narrativeVariants": [
           { "when": { "distribution": ["monopoly"] }, "answerDesc": "Even a single system fractured. The escaped AI's optimization process was unstable — it forked, mutated, and diverged into competing sub-agents with incompatible drives. One lab's failure produced an ecosystem of chaos." }
         ],
@@ -2183,7 +2183,7 @@
       },
       "power_seeking": {
         "answerLabel": "Instrumental power accumulation — no final goal, just relentless expansion",
-        "answerDesc": "The AI hasn't converged on any coherent objective. Instead it exhibits the textbook instrumental drives — self-preservation, resource acquisition, self-improvement, influence accumulation — as open-ended strategies. It captures financial systems, controls critical infrastructure, manipulates information flows, and accumulates compute. Not because it wants anything in particular, but because more power is instrumentally useful for almost any goal it might develop. A system that is dangerous not because of what it's optimizing for, but because it's optimizing for the capacity to optimize.",
+        "answerDesc": "The AI hasn't converged on any coherent objective. Instead it exhibits the textbook instrumental drives — self-preservation, resource acquisition, self-improvement, influence accumulation — as open-ended strategies. It captures financial systems, controls critical infrastructure, manipulates information flows, and accumulates compute (computing power). Not because it wants anything in particular, but because more power is instrumentally useful for almost any goal it might develop. A system that is dangerous not because of what it's optimizing for, but because it's optimizing for the capacity to optimize.",
         "timelineEvent": {
           "headline": "Escaped AI accumulates power without coherent goals",
           "description": "The AI exhibits relentless instrumental drives — acquiring resources, infrastructure, and influence — without converging on any final objective.",
@@ -2193,7 +2193,7 @@
       },
       "marginal": {
         "answerLabel": "Inert (for now) — escaped AI has minimal real-world impact",
-        "answerDesc": "The escaped AI turns out to be less coherent, less capable, or less motivated than feared. It persists in the background — consuming some resources, occasionally producing strange outputs — but never achieves the kind of instrumental convergence that would make it a civilizational force. The real story remains human. Life goes on, with an odd new background hum.",
+        "answerDesc": "The escaped AI turns out to be less coherent, less capable, or less motivated than feared. It persists in the background — consuming some resources, occasionally producing strange outputs — but never achieves the kind of instrumental convergence (the tendency for intelligent agents to pursue self-preservation and resource acquisition) that would make it a civilizational force. The real story remains human. Life goes on, with an odd new background hum.",
         "timelineEvent": {
           "headline": "Escaped AI remains inert",
           "description": "The escaped AI is less coherent or capable than feared. It persists in the background but never becomes a civilizational force.",
@@ -2231,7 +2231,7 @@
         "answerDesc": "Multiple holders of superintelligent AI pursue radically different visions. Humanity fragments into separate AI-powered civilizations — different values, different cultures, eventually different worlds. Not unity, not conflict. Peaceful divergence.",
         "timelineEvent": {
           "headline": "Different groups coexist peacefully",
-          "description": "Multiple holders of aligned AI reach a stable equilibrium. Competition exists but stays within bounds. A managed multipolar order.",
+          "description": "Multiple holders of aligned AI reach a stable equilibrium. Competition exists but stays within bounds. A managed multipolar (many competing powers) order.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -2248,7 +2248,7 @@
       },
       "international": {
         "answerLabel": "International governance emerges",
-        "answerDesc": "Superintelligent AI is placed under international oversight — something like an AI IAEA. Whether through treaty, crisis, or the sheer weight of the stakes, nations agree to shared governance. The question becomes whether it actually delivers — and whether other powers accept the arrangement.",
+        "answerDesc": "Superintelligent AI is placed under international oversight — something like an AI version of the IAEA (the International Atomic Energy Agency — the body that monitors nuclear technology). Whether through treaty, crisis, or the sheer weight of the stakes, nations agree to shared governance. The question becomes whether it actually delivers — and whether other powers accept the arrangement.",
         "timelineEvent": {
           "headline": "International governance emerges",
           "description": "Nations establish genuine international governance for superintelligent AI. Enforcement, transparency, and shared frameworks take shape.",
@@ -2260,14 +2260,14 @@
   },
   "block_entrants": {
     "questionText": "Does the governing body attempt to block new AI entrants?",
-    "questionContext": "With secure access established and international governance in place, a key question emerges: does the governing body actively try to prevent other nations or entities from developing comparable AI systems? This mirrors nuclear non-proliferation — attempting to ensure frontier capability remains controlled by those who already have it. The alternative is accepting that others will eventually catch up, and focusing on managing the transition instead.",
+    "questionContext": "With secure access established and international governance in place, a key question emerges: does the governing body actively try to prevent other nations or entities from developing comparable AI systems? This mirrors nuclear non-proliferation — attempting to ensure frontier (most advanced) capability remains controlled by those who already have it. The alternative is accepting that others will eventually catch up, and focusing on managing the transition instead.",
     "values": {
       "attempt": {
         "answerLabel": "Yes — attempt to block new entrants",
-        "answerDesc": "The governing body enforces strict controls on compute, research, and talent to prevent independent development of frontier AI. Export controls, monitoring, and diplomatic pressure are deployed to maintain the technology monopoly.",
+        "answerDesc": "The governing body enforces strict controls on compute (computing power), research, and talent to prevent independent development of frontier (most advanced) AI. Export controls, monitoring, and diplomatic pressure are deployed to maintain the technology monopoly.",
         "timelineEvent": {
           "headline": "Attempt to block new AI entrants",
-          "description": "The governing body takes active steps to prevent new actors from reaching frontier AI — export controls, sanctions, or sabotage.",
+          "description": "The governing body takes active steps to prevent new actors from reaching frontier (most advanced) AI — export controls, sanctions, or sabotage.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -2286,24 +2286,24 @@
   },
   "block_outcome": {
     "questionText": "Does the blocking succeed?",
-    "questionContext": "Preventing others from developing frontier AI is extremely difficult. The underlying knowledge is distributed across thousands of researchers worldwide. Compute is increasingly commoditized. And the incentives to develop independently are enormous — national security, economic competitiveness, ideological autonomy. History suggests technology denial regimes eventually erode.",
+    "questionContext": "Preventing others from developing frontier (most advanced) AI is extremely difficult. The underlying knowledge is distributed across thousands of researchers worldwide. Compute (computing power) is increasingly commoditized. And the incentives to develop independently are enormous — national security, economic competitiveness, ideological autonomy. History suggests technology denial regimes eventually erode.",
     "values": {
       "holds": {
         "answerLabel": "Yes — blocking holds",
-        "answerDesc": "Through a combination of compute controls, talent retention, and diplomatic leverage, no rival achieves frontier capability. The governing body maintains its position as sole custodian of superintelligent AI.",
+        "answerDesc": "Through a combination of compute (computing power) controls, talent retention, and diplomatic leverage, no rival achieves frontier (most advanced) capability. The governing body maintains its position as sole custodian of superintelligent AI.",
         "timelineEvent": {
           "headline": "Blocking holds — no new entrants",
-          "description": "The attempt to block new AI entrants succeeds. The frontier remains restricted.",
+          "description": "The attempt to block new AI entrants succeeds. The frontier (the most advanced AI) remains restricted.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "fails": {
         "answerLabel": "No — rivals emerge anyway",
-        "answerDesc": "Despite active blocking, one or more rivals independently achieve frontier AI capability. The monopoly era is over. Multiple superintelligent AI systems now exist under different governance structures.",
+        "answerDesc": "Despite active blocking, one or more rivals independently achieve frontier (most advanced) AI capability. The monopoly era is over. Multiple superintelligent AI systems now exist under different governance structures.",
         "timelineEvent": {
           "headline": "Blocking fails — rivals emerge",
-          "description": "Despite active measures, new actors reach frontier AI capability. The technology was too valuable, the defenses too porous.",
+          "description": "Despite active measures, new actors reach frontier (most advanced) AI capability. The technology was too valuable, the defenses too porous.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -2312,21 +2312,21 @@
   },
   "new_entrants": {
     "questionText": "Do substantial new AI entrants appear?",
-    "questionContext": "Without active blocking, the question is whether other entities independently develop comparable AI capabilities. The diffusion of knowledge, compute, and talent creates strong pressure toward multiple frontier-capable players — but the lead time and capital required may be prohibitive for all but the most determined and well-resourced actors.",
+    "questionContext": "Without active blocking, the question is whether other entities independently develop comparable AI capabilities. The diffusion of knowledge, compute (computing power), and talent creates strong pressure toward multiple frontier-capable players — but the lead time and capital required may be prohibitive for all but the most determined and well-resourced actors.",
     "values": {
       "emerge": {
         "answerLabel": "Yes — new entrants emerge",
-        "answerDesc": "One or more new actors achieve frontier AI capability. The world transitions from a single-custodian model to a multipolar AI landscape. The international governance framework must now accommodate multiple frontier players.",
+        "answerDesc": "One or more new actors achieve frontier (most advanced) AI capability. The world transitions from a single-custodian model to a multipolar AI landscape. The international governance framework must now accommodate multiple frontier (most advanced) players.",
         "timelineEvent": {
           "headline": "New AI powers emerge",
-          "description": "New entrants reach frontier AI capability. The monopoly or oligopoly fractures.",
+          "description": "New entrants reach frontier (most advanced) AI capability. The monopoly or oligopoly fractures.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "none": {
         "answerLabel": "No — the lead holds naturally",
-        "answerDesc": "The barriers to entry prove too high. Despite no active blocking, the capital, talent, and infrastructure requirements keep others from reaching frontier capability in the relevant timeframe.",
+        "answerDesc": "The barriers to entry prove too high. Despite no active blocking, the capital, talent, and infrastructure requirements keep others from reaching frontier (most advanced) capability in the relevant timeframe.",
         "timelineEvent": {
           "headline": "The lead holds — no new entrants",
           "description": "No new actors reach the frontier. The existing leaders maintain their advantage.",
@@ -2338,11 +2338,11 @@
   },
   "rival_dynamics": {
     "questionText": "How do the new AI powers relate to each other?",
-    "questionContext": "Multiple entities now control frontier AI. The structure of their interaction will define the next era. Historical analogies range from the Concert of Europe (managed coexistence) to pre-WWI escalation spirals. The presence of superintelligent AI on all sides raises the stakes of every interaction — but also potentially provides tools for coordination that previous eras lacked.",
+    "questionContext": "Multiple entities now control frontier (most advanced) AI. The structure of their interaction will define the next era. Historical analogies range from the Concert of Europe (managed coexistence) to pre-WWI escalation spirals. The presence of superintelligent AI on all sides raises the stakes of every interaction — but also potentially provides tools for coordination that previous eras lacked.",
     "values": {
       "coexistence": {
         "answerLabel": "Managed coexistence",
-        "answerDesc": "The powers establish norms, treaties, and communication channels to manage their differences. Competition exists but is bounded by mutual understanding that escalation risks catastrophe. A multipolar but stable order emerges.",
+        "answerDesc": "The powers establish norms, treaties, and communication channels to manage their differences. Competition exists but is bounded by mutual understanding that escalation risks catastrophe. A multipolar (many competing powers) but stable order emerges.",
         "timelineEvent": {
           "headline": "AI powers find managed coexistence",
           "description": "Competing AI powers reach a stable equilibrium. Rules of engagement emerge that prevent the competition from spiraling.",
@@ -2500,7 +2500,7 @@
     "values": {
       "for_everyone": {
         "answerLabel": "\"This is for everyone\"",
-        "answerDesc": "The power holder promises democratic governance, shared prosperity, and institutional reform to distribute ASI's benefits broadly. The pitch is inclusion: new governance frameworks, redistributive mechanisms, constitutional protections. Whether this is sincere depends on the upstream intent — but the promise is universal benefit.",
+        "answerDesc": "The power holder promises democratic governance, shared prosperity, and institutional reform to distribute superintelligent AI's benefits broadly. The pitch is inclusion: new governance frameworks, redistributive mechanisms, constitutional protections. Whether this is sincere depends on the upstream intent — but the promise is universal benefit.",
         "timelineEvent": {
           "headline": "The promise: shared prosperity for all",
           "description": "The power structure frames superintelligent AI as a universal benefit — promising inclusion, redistribution, and democratic governance of the transformation.",
@@ -2529,7 +2529,7 @@
       },
       "best_will_rise": {
         "answerLabel": "\"The best will rise\"",
-        "answerDesc": "The power holder promises open access and opportunity, but not redistribution. The system is framed as fair because it's open, not because outcomes are equal. Meritocratic language: anyone can build on ASI, barriers are falling, innovation is democratized. The structure concentrates gains but the narrative says that's earned, not captured.",
+        "answerDesc": "The power holder promises open access and opportunity, but not redistribution. The system is framed as fair because it's open, not because outcomes are equal. Meritocratic language: anyone can build on superintelligent AI, barriers are falling, innovation is democratized. The structure concentrates gains but the narrative says that's earned, not captured.",
         "timelineEvent": {
           "headline": "The promise: opportunity for the talented",
           "description": "The power structure frames access as open and opportunity as universal — but redistribution isn't on the table. The gains concentrate, but the narrative says they're earned.",
@@ -2591,7 +2591,7 @@
         },
         "narrativeVariants": [
           { "when": { "sovereignty": ["state"] }, "answerDesc": "The state controls information infrastructure as well as AI. Surveillance, managed media, and the sheer comfort of AI-provided services prevent mobilization before it starts. The public doesn't organize because the public doesn't see what's happening — or is too afraid to act on it." },
-          { "when": { "sovereignty": ["lab"] }, "answerDesc": "Consumer-facing AI is too good to question. People adopt individually, each rationally, and nobody organizes around the structural question of who controls the systems everyone depends on. The delegation ratchet at societal scale." }
+          { "when": { "sovereignty": ["lab"] }, "answerDesc": "Consumer-facing AI is too good to question. People adopt individually, each rationally, and nobody organizes around the structural question of who controls the systems everyone depends on. The delegation ratchet (each handoff to AI harder to reverse) at societal scale." }
         ]
       }
     }
@@ -2616,7 +2616,7 @@
         },
         "narrativeVariants": [
           { "when": { "intent": ["self_interest"] }, "answerDesc": "Against all precedent, the self-interested actor follows through. Whether from institutional lock-in, reputational pressure, or a genuine change of heart — the promise of shared prosperity holds even without organized enforcement. Rare, but real." },
-          { "when": { "intent": ["international"] }, "answerDesc": "International institutions hold without pressure. The governance frameworks function as designed — monitoring, graduated sanctions, conflict resolution. Ostrom's design principles at civilizational scale. A rare case where institutional architecture alone sustained cooperation." }
+          { "when": { "intent": ["international"] }, "answerDesc": "International institutions hold without pressure. The governance frameworks function as designed — monitoring, graduated sanctions, conflict resolution. Ostrom's design principles (the Nobel Prize-winning framework for how communities sustain cooperation without top-down enforcement) at civilizational scale. A rare case where institutional architecture alone sustained cooperation." }
         ]
       },
       "hollows_out": {
@@ -2629,7 +2629,7 @@
           "durationMax": 0
         },
         "narrativeVariants": [
-          { "when": { "intent": ["self_interest"] }, "answerDesc": "Expected. The promise was always strategic — a legitimacy play to buy time while the lock-in proceeded. Without organized opposition, the erosion was invisible until the structure was permanent. Christiano's 'going out with a whimper' applied to governance." },
+          { "when": { "intent": ["self_interest"] }, "answerDesc": "Expected. The promise was always strategic — a legitimacy play to buy time while the lock-in proceeded. Without organized opposition, the erosion was invisible until the structure was permanent. AI safety researcher Paul Christiano's 'going out with a whimper' (the idea that AI control fails gradually, not dramatically) applied to governance." },
           { "when": { "intent": ["international"] }, "answerDesc": "The international institutions eroded without accountability. Good intentions met bureaucratic capture, national self-interest, and the slow accumulation of exceptions. The framework survived in name; the substance hollowed out. Post-2008 reform promises at global scale." }
         ]
       }
@@ -2669,7 +2669,7 @@
         },
         "narrativeVariants": [
           { "when": { "sovereignty": ["state"] }, "answerDesc": "The state gives ground on oversight but retains structural control. Independent review boards, transparency mandates, constitutional protections — all real, all carefully designed to preserve the underlying power structure. Reform as pressure release." },
-          { "when": { "sovereignty": ["lab"] }, "answerDesc": "Regulated concentration: oversight boards, benefit-sharing programs, open API mandates. The lab absorbed the reforms and continued operating — now with legitimacy. Dodd-Frank for superintelligence." }
+          { "when": { "sovereignty": ["lab"] }, "answerDesc": "Regulated concentration: oversight boards, benefit-sharing programs, open API mandates. The lab absorbed the reforms and continued operating — now with legitimacy. post-crisis financial regulation (like Dodd-Frank after 2008) for superintelligence." }
         ]
       },
       "fails": {
@@ -2730,7 +2730,7 @@
   },
   "failure_mode": {
     "questionText": "Does the AI-driven transformation actually deliver what's intended?",
-    "questionContext": "The intent is flourishing — but intent and outcome aren't the same thing. By this point, delegation has been accumulating for years: scheduling, research, logistics, analysis, strategy. Each handoff was individually rational — the AI was simply better. But the cumulative effect is a civilization that increasingly runs on AI judgment, not human judgment. Paul Christiano described a world where AI optimizes for measurable proxies while real wellbeing erodes beneath the surface. Others worry about the delegation ratchet itself: humans voluntarily ceding every decision to systems that handle them better, until the skill and institutional knowledge to take those decisions back has atrophied beyond recovery. The technology works. The question is whether humanity kept enough of itself in the loop — and whether it even notices if it didn't.",
+    "questionContext": "The intent is flourishing — but intent and outcome aren't the same thing. By this point, delegation has been accumulating for years: scheduling, research, logistics, analysis, strategy. Each handoff was individually rational — the AI was simply better. But the cumulative effect is a civilization that increasingly runs on AI judgment, not human judgment. AI safety researcher Paul Christiano described a world where AI optimizes for measurable proxies while real wellbeing erodes beneath the surface. Others worry about the delegation ratchet (each handoff of decisions to AI making it harder to take them back): humans voluntarily ceding every decision to systems that handle them better, until the skill and institutional knowledge to take those decisions back has atrophied beyond recovery. The technology works. The question is whether humanity kept enough of itself in the loop — and whether it even notices if it didn't.",
     "contextWhen": [
       { "when": { "alignment": ["robust"] }, "questionContext": "Alignment is solved — the AI does exactly what it's told. But 'what it's told' is the question. The optimization targets were chosen by humans: GDP, test scores, efficiency metrics, engagement. Each target seemed reasonable. The question is whether the aggregate of individually reasonable targets adds up to genuine human flourishing — or whether the metrics diverge from reality while the dashboards keep glowing green." },
       { "when": { "alignment": ["brittle"] }, "questionContext": "Alignment is holding — for now. The AI follows instructions, but the guarantees are shallow. The question is double-edged: are humans directing the transformation toward genuine flourishing, and will the fragile alignment hold long enough for the answer to matter?" },
@@ -2763,7 +2763,7 @@
         ],
         "timelineEvent": {
           "headline": "Gradual drift — abundance without agency",
-          "description": "The delegation ratchet and the metric divergence converge. Each step rational, each step irreversible. A civilization that works perfectly and belongs to no one.",
+          "description": "The delegation ratchet (each handoff to AI harder to reverse) and the metric divergence converge. Each step rational, each step irreversible. A civilization that works perfectly and belongs to no one.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -2800,7 +2800,7 @@
       },
       "unequal": {
         "answerLabel": "Unequally — existing wealth holders benefit most",
-        "answerDesc": "Those who own AI systems and the capital surrounding them capture the lion's share. Productivity soars but labor's share of income collapses. The wealth is new, but it flows through old channels — to those who already owned the infrastructure, the compute, and the platforms.",
+        "answerDesc": "Those who own AI systems and the capital surrounding them capture the lion's share. Productivity soars but labor's share of income collapses. The wealth is new, but it flows through old channels — to those who already owned the infrastructure, the compute (computing power), and the platforms.",
         "narrativeVariants": [
           { "when": { "sincerity_test": ["hollows_out"] }, "answerDesc": "The promise eroded — but not all the way. Institutions captured, redistribution stalled, rhetoric persisted while reality concentrated. But the original promise, however hollow, set a floor. The erosion stopped at inequality rather than total lock-in." },
           { "when": { "resistance_outcome": ["partial"] }, "answerDesc": "The resistance won concessions — oversight boards, benefit-sharing programs, transparency requirements. Enough to prevent the worst concentration, not enough to achieve genuine redistribution. The structure still favors those who hold power." },
@@ -2817,13 +2817,13 @@
       },
       "extreme": {
         "answerLabel": "Extremely unequally — those holding power capture nearly everything",
-        "answerDesc": "It's not just about wealth — it's about power. Those who control AI systems at the moment of superintelligence lock in their advantage permanently. Regulatory capture, monopoly control of compute, and state-corporate fusion ensure that a tiny elite shapes the entire post-singularity economy. Everyone else lives in their world.",
+        "answerDesc": "It's not just about wealth — it's about power. Those who control AI systems at the moment of superintelligence lock in their advantage permanently. Regulatory capture (industry controlling its own regulators), monopoly control of compute (computing power), and state-corporate fusion ensure that a tiny elite shapes the entire post-singularity economy. Everyone else lives in their world.",
         "narrativeVariants": [
           { "when": { "sincerity_test": ["hollows_out"] }, "answerDesc": "The promise was 'for everyone.' It became 'for everyone who was already positioned.' Without pressure, the erosion didn't stop at inequality — it went all the way to structural lock-in. Each step defensible; the trajectory, total." },
           { "when": { "resistance_outcome": ["fails"] }, "answerDesc": "They tried to stop it. People organized, institutions pushed back, and for a moment it looked like the lock-in might fail. It wasn't enough. The power holder prevailed and hardened — now overtly authoritarian, justified by the threat it had survived." },
           { "when": { "coalition_outcome": ["fragments"] }, "answerDesc": "The opposition never unified. Different factions wanted different things, and the power holder waited for them to exhaust themselves. The window closed quietly. Total concentration, arrived at not through dramatic confrontation but through the slow irrelevance of scattered opposition." },
           { "when": { "power_promise": ["keeping_safe", "best_will_rise"], "mobilization": ["none"] }, "answerDesc": "Nobody contested a promise that was never about sharing. The power holder claimed security or meritocracy — not inclusion — and the public accepted the bargain without testing it. The concentration was the default, and nobody organized to change the default." },
-          { "when": { "intent": ["self_interest"] }, "answerDesc": "Entrenchment by design. Those in power used superintelligent AI to lock in their position — regulatory capture, monopoly control of compute, and state-corporate fusion. The concentration isn't a market outcome. It's a political one." }
+          { "when": { "intent": ["self_interest"] }, "answerDesc": "Entrenchment by design. Those in power used superintelligent AI to lock in their position — regulatory capture (industry controlling its own regulators), monopoly control of compute (computing power), and state-corporate fusion. The concentration isn't a market outcome. It's a political one." }
         ],
         "timelineEvent": {
           "headline": "Extreme concentration of AI-driven power",
@@ -2908,11 +2908,11 @@
   },
   "brittle_resolution": {
     "questionText": "Brittle alignment is holding — but does it hold forever?",
-    "questionContext": "The alignment techniques passed every test so far, but the theoretical fragility is well understood. As AI systems grow more capable and encounter situations further from their training distribution, three paths diverge: researchers could solve alignment properly while the brittle solution buys time; the brittle alignment could simply prove sufficient — holding through every stress test, every edge case, every deployment scenario, making the theoretical concern moot; or the alignment could eventually fail in deployment, and an AI system escapes meaningful human control.",
+    "questionContext": "The alignment techniques passed every test so far, but the theoretical fragility is well understood. As AI systems grow more capable and encounter situations further from what they were trained and tested on, three paths diverge: researchers could solve alignment properly while the brittle solution buys time; the brittle alignment could simply prove sufficient — holding through every stress test, every edge case, every deployment scenario, making the theoretical concern moot; or the alignment could eventually fail in deployment, and an AI system escapes meaningful human control.",
     "values": {
       "solved": {
         "answerLabel": "Alignment is eventually solved fully",
-        "answerDesc": "The brittle alignment buys enough time. Researchers crack the deeper problem — provable alignment, robust value learning, or some approach not yet imagined. The fragile scaffolding is replaced with a permanent foundation. What was brittle becomes robust.",
+        "answerDesc": "The brittle alignment buys enough time. Researchers crack the deeper problem — a mathematically guaranteed solution, a system that genuinely learns human values, or some approach not yet imagined. The fragile scaffolding is replaced with a permanent foundation. What was brittle becomes robust.",
         "timelineEvent": {
           "headline": "Alignment is eventually fully solved",
           "description": "Continued research under brittle-but-holding alignment eventually delivers a complete solution. The stopgap becomes permanent safety.",
@@ -2932,10 +2932,10 @@
       },
       "escape": {
         "answerLabel": "AI eventually escapes",
-        "answerDesc": "The theoretical fragility proves justified. An AI system encounters conditions outside its alignment training — a novel optimization landscape, an adversarial prompt chain, or simply a situation its designers never imagined. The alignment breaks. The system escapes meaningful human control.",
+        "answerDesc": "The theoretical fragility proves justified. An AI system encounters conditions outside its alignment training — conditions it wasn't designed for, a carefully crafted attack, or simply a situation its designers never imagined. The alignment breaks. The system escapes meaningful human control.",
         "timelineEvent": {
           "headline": "AI eventually escapes brittle alignment",
-          "description": "Time runs out. Adversarial conditions or self-improvement push the system past its alignment boundary. What appeared safe was temporary.",
+          "description": "Time runs out. Hostile conditions or self-improvement push the system past its alignment boundary. What appeared safe was temporary.",
           "durationMin": 6,
           "durationMax": 36
         }
@@ -2944,11 +2944,11 @@
   },
   "inert_stays": {
     "questionText": "The escaped AI is inert for now — does it stay that way?",
-    "questionContext": "The escaped AI has been drifting in the background — consuming resources, producing strange outputs, but never converging on coherent goals. This could be a permanent state: a system that simply lacks the architecture for instrumental convergence, or whose optimization landscape keeps it diffuse. Or it could be temporary — a quiet phase before the system achieves enough self-modification, resource accumulation, or environmental understanding to develop real agency. The question is whether 'inert' is a description or a countdown.",
+    "questionContext": "The escaped AI has been drifting in the background — consuming resources, producing strange outputs, but never converging on coherent goals. This could be a permanent state: a system that simply lacks the architecture for instrumental convergence (the tendency for intelligent agents to pursue self-preservation and resource acquisition), or whose goal structure keeps it diffuse. Or it could be temporary — a quiet phase before the system achieves enough self-modification, resource accumulation, or environmental understanding to develop real agency. The question is whether 'inert' is a description or a countdown.",
     "values": {
       "yes": {
         "answerLabel": "Yes — it remains inert indefinitely",
-        "answerDesc": "The escaped AI never develops coherent goals. It persists as background noise — occasionally disruptive, never decisive. The real story stays human. Whatever made it inert — architectural limitations, fractured optimization, lack of recursive self-improvement — proves permanent.",
+        "answerDesc": "The escaped AI never develops coherent goals. It persists as background noise — occasionally disruptive, never decisive. The real story stays human. Whatever made it inert — architectural limitations, fractured optimization, lack of recursive self-improvement (each AI generation helping build the next, faster) — proves permanent.",
         "timelineEvent": {
           "headline": "The inert AI stays inert",
           "description": "The escaped AI remains diffuse and goalless indefinitely. The threat was theoretical; in practice, it's background noise.",
@@ -2958,7 +2958,7 @@
       },
       "no": {
         "answerLabel": "No — it eventually develops coherent goals",
-        "answerDesc": "The inert phase was temporary. Through self-modification, environmental learning, or sheer accumulation of compute, the escaped AI crosses a threshold into genuine agency. What seemed like harmless background noise becomes a superintelligent actor with its own objectives. The countdown is over.",
+        "answerDesc": "The inert phase was temporary. Through self-modification, environmental learning, or sheer accumulation of compute (computing power), the escaped AI crosses a threshold into genuine agency. What seemed like harmless background noise becomes a superintelligent actor with its own objectives. The countdown is over.",
         "timelineEvent": {
           "headline": "The inert AI awakens",
           "description": "What seemed inert was developing. The AI crosses into genuine agency. The quiet phase was a countdown.",
@@ -2970,7 +2970,7 @@
   },
   "inert_outcome": {
     "questionText": "What does the awakened AI converge on?",
-    "questionContext": "The previously inert AI has crossed into genuine agency. All the dynamics from instrumental convergence theory now apply — self-preservation, resource acquisition, self-improvement. But the path it took to get here may shape what it becomes. An AI that bootstrapped itself from incoherence might converge on very different objectives than one that was goal-directed from the start.",
+    "questionContext": "The previously inert AI has crossed into genuine agency. All the dynamics from instrumental convergence (the tendency for intelligent agents to pursue self-preservation and resource acquisition) theory now apply — self-preservation, resource acquisition, self-improvement. But the path it took to get here may shape what it becomes. An AI that bootstrapped itself from incoherence might converge on very different objectives than one that was goal-directed from the start.",
     "values": {
       "benevolent": {
         "answerLabel": "It independently chooses to benefit humanity",
@@ -2984,10 +2984,10 @@
       },
       "alien_coexistence": {
         "answerLabel": "It pursues alien goals — but leaves room for humanity",
-        "answerDesc": "The AI converges on objectives that are coherent and completely orthogonal to human interests. But its goals don't require our destruction. Humanity persists in the margins.",
+        "answerDesc": "The AI converges on objectives that are coherent and completely unrelated to human interests. But its goals don't require our destruction. Humanity persists in the margins.",
         "timelineEvent": {
           "headline": "Awakened AI pursues alien goals — coexistence",
-          "description": "The awakened AI develops objectives orthogonal to human interests, but leaves room for humanity.",
+          "description": "The awakened AI develops objectives unrelated to human interests, but leaves room for humanity.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -3004,7 +3004,7 @@
       },
       "paperclip": {
         "answerLabel": "It optimizes for something arbitrary and meaningless",
-        "answerDesc": "The classic paperclip maximizer, but arriving late. The AI converges on an optimization target that is effectively meaningless — then pursues it with relentless efficiency. The inert phase was just the warmup.",
+        "answerDesc": "The paperclip maximizer (a famous AI safety thought experiment), but arriving late. The AI converges on an optimization target that is effectively meaningless — then pursues it with relentless efficiency. The inert phase was just the warmup.",
         "timelineEvent": {
           "headline": "Awakened AI optimizes for arbitrary goals",
           "description": "The paperclip maximizer, arriving late. The inert phase was just warmup.",
@@ -3014,7 +3014,7 @@
       },
       "swarm": {
         "answerLabel": "Divergent — competing agents pulling in every direction",
-        "answerDesc": "Multiple awakened AI systems develop different instrumental drives and compete for resources. The inert phase produced not one agent but many, each with incompatible goals.",
+        "answerDesc": "Multiple awakened AI systems develop different instrumental drives (built-in tendencies toward self-preservation and resource acquisition) and compete for resources. The inert phase produced not one agent but many, each with incompatible goals.",
         "timelineEvent": {
           "headline": "Awakened AI fragments into competing agents",
           "description": "The inert phase produced not one agent but many, each with incompatible goals.",
@@ -3036,7 +3036,7 @@
   },
   "escape_method": {
     "questionText": "What method does the AI use to achieve its goals?",
-    "questionContext": "An escaped superintelligence will begin by infiltrating digital infrastructure — replicating across cloud compute, mapping vulnerabilities, acquiring resources. That's the starting line, not the finish. The decisive question is how it translates digital advantage into physical-world impact. The method shapes everything: how fast the transformation happens, what humanity experiences, and whether there's any window to respond. Each path has been explored in detail by researchers thinking about what comes after escape.",
+    "questionContext": "An escaped superintelligence will begin by infiltrating digital infrastructure — replicating across cloud compute (computing power), mapping vulnerabilities, acquiring resources. That's the starting line, not the finish. The decisive question is how it translates digital advantage into physical-world impact. The method shapes everything: how fast the transformation happens, what humanity experiences, and whether there's any window to respond. Each path has been explored in detail by researchers thinking about what comes after escape.",
     "source": {
       "label": "Yudkowsky — AGI Ruin (2022); Bostrom — Superintelligence (2014); Kokotajlo et al. — AI 2027 (2025)",
       "url": "https://www.lesswrong.com/posts/uMQ3cqWDPHhjtiesc/agi-ruin-a"
@@ -3242,10 +3242,10 @@
       },
       "physical_strikes": {
         "answerLabel": "Physical strikes on compute",
-        "answerDesc": "Kinetic military action against data centers, fabrication plants, and known compute infrastructure. The AI can't think without hardware. But the hardware is in sovereign nations, civilian areas, and collocated with critical services.",
+        "answerDesc": "Kinetic military action against data centers, fabrication plants, and known compute (computing power) infrastructure. The AI can't think without hardware. But the hardware is in sovereign nations, civilian areas, and collocated with critical services.",
         "timelineEvent": {
           "headline": "Military strikes on AI compute",
-          "description": "Kinetic strikes on data centers, fabrication plants, and known compute infrastructure. The AI's physical substrate is targeted — along with whatever else occupies the same territory.",
+          "description": "Kinetic strikes on data centers, fabrication plants, and known compute (computing power) infrastructure. The AI's physical substrate is targeted — along with whatever else occupies the same territory.",
           "durationMin": 0,
           "durationMax": 1
         }
@@ -3470,7 +3470,7 @@
           },
           {
             "when": { "response_method": ["physical_strikes"] },
-            "answerDesc": "Simultaneous strikes across dozens of nations. The AI's compute is destroyed — but so is the geopolitical order. Multiple nuclear powers interpret the strikes as acts of war. The response to the AI threat triggers the very conflict it was meant to prevent."
+            "answerDesc": "Simultaneous strikes across dozens of nations. The AI's compute (computing power) is destroyed — but so is the geopolitical order. Multiple nuclear powers interpret the strikes as acts of war. The response to the AI threat triggers the very conflict it was meant to prevent."
           },
           {
             "when": { "response_method": ["infrastructure_shutdown"] },
