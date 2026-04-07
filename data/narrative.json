@@ -1,7 +1,7 @@
 {
   "capability": {
     "questionText": "Does AI capability keep accelerating?",
-    "questionContext": "AI has been getting dramatically more capable, year after year. Each generation of models handles longer, more complex tasks — things that recently required a skilled human. Research from METR (an AI safety organization) showed in March 2025 that the length of tasks AI can reliably complete autonomously has been doubling roughly every 7 months. At that rate, AI agents would handle week-long tasks by 2027 and month-long projects by the end of the decade. Each new threshold means more work that's cheaper to delegate to AI — and once a task is delegated, the human skill to do it starts to atrophy. The question is whether this trend continues, or whether something breaks it.",
+    "questionContext": "AI has been getting dramatically more capable, year after year. Each generation of models handles longer, more complex tasks — things that recently required a skilled human. Research from METR (an AI safety organization) showed in March 2025 that the length of tasks AI can reliably complete autonomously has been doubling roughly every 7 months. At that rate, AI agents would handle week-long tasks by 2027 and month-long projects by the end of the decade. Each new threshold means more work that's cheaper to delegate to AI — and once a task is delegated, the human skill to do it starts to atrophy.",
     "source": {
       "label": "METR — Measuring AI Ability to Complete Long Tasks (March 2025)",
       "url": "https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/"
@@ -77,7 +77,7 @@
   },
   "stall_recovery": {
     "questionText": "What is required for progress to resume?",
-    "questionContext": "AI capability has hit a ceiling — but ceilings in technology have been broken before. The history of computing is full of walls that turned out to be architectural limitations, not fundamental ones. New paradigms (transistors replacing vacuum tubes, GPUs replacing CPUs for training, new types of AI architecture replacing older ones) have repeatedly restarted progress after apparent dead ends. Researchers like Yann LeCun have argued that current architectures are fundamentally missing key ingredients — world models that let systems simulate consequences, plan ahead, and reason about cause and effect — and that genuinely new approaches (like the new architectures he's proposed) could eventually break through where scaling alone cannot. The question is whether the current ceiling is architectural or fundamental — and if architectural, how long until someone finds the door.",
+    "questionContext": "AI capability has hit a ceiling — but ceilings in technology have been broken before. The history of computing is full of walls that turned out to be architectural, not fundamental — transistors replacing vacuum tubes, GPUs replacing CPUs for training, new AI architectures replacing older ones. Researchers like Yann LeCun argue current architectures fundamentally lack world models, causal reasoning, and planning — and that genuinely new approaches (like the new architectures he's proposed) could break through where scaling alone cannot.",
     "values": {
       "mild": {
         "answerLabel": "A mild breakthrough — months to a few years",
@@ -113,7 +113,7 @@
   },
   "plateau_benefit_distribution": {
     "questionText": "Who benefits from the AI plateau?",
-    "questionContext": "AI has hit its ceiling — but even at this level, it's the most powerful tool ever built. Entire industries have already reorganized around it. The economic question isn't whether AI transforms the economy — it already has. The question is who captures the value. Does the productivity surge flow broadly, or do a narrowing set of people capture most of the gains? The answer depends on policy, market structure, and whether the institutions that redistribute gains can keep pace with the technology that's concentrating them.",
+    "questionContext": "AI has hit its ceiling — but even at this level, it's the most powerful tool ever built, and entire industries have already reorganized around it. The question is who captures the value. Does the productivity surge flow broadly, or do a narrowing set of people capture most of the gains? The answer depends on policy, market structure, and whether the institutions that redistribute gains can keep pace with the technology that's concentrating them.",
     "contextWhen": [
       { "when": { "plateau_knowledge_rate": ["rapid"] }, "questionContext": "The automation wave hit fast. Entire knowledge-work categories vanished within a few years. The productivity gains are enormous — but the displacement is real, and the people who lost their roles aren't the ones capturing the surplus. Who benefits depends on whether policy can keep pace with a transformation that's already happened." },
       { "when": { "stall_recovery": ["never"] }, "questionContext": "This is as good as AI gets — permanently. There's no second wave coming, no breakthrough on the horizon. The economic question isn't about managing a transition; it's about building a permanent settlement around current capabilities. Who benefits from the plateau world?" }
@@ -153,7 +153,7 @@
   },
   "plateau_knowledge_rate": {
     "questionText": "How much knowledge work does AI at this level actually replace?",
-    "questionContext": "AI has hit its ceiling — but even at this level, it's enormously capable within its range. The question isn't whether AI changes knowledge work; it already has. The question is how thoroughly. Does it replace entire roles, or augment them? Does adoption happen in a rush, or does institutional inertia slow things down? Professional licensing, union contracts, regulation, and cultural resistance all shape the pace — but so does the sheer economic pressure of a tool that's cheaper and faster than humans at everything within its reach.",
+    "questionContext": "AI has hit its ceiling — but even at this level, it's enormously capable within its range. The question is how thoroughly. Does it replace entire roles, or augment them? Does adoption happen in a rush, or does institutional inertia slow things down? Professional licensing, union contracts, regulation, and cultural resistance all shape the pace — but so does the sheer economic pressure of a tool that's cheaper and faster than humans at everything within its reach.",
     "contextWhen": [
       { "when": { "stall_duration": ["hours"] }, "questionContext": "AI tops out at hour-level tasks — impressive for quick work, but nothing that replaces a full workday. The question is how deeply even this limited capability penetrates the economy. Does it augment workers in place, or does the sheer volume of automatable short tasks add up to something transformative?" },
       { "when": { "stall_duration": ["days"] }, "questionContext": "AI can reliably handle a full day's work autonomously. That's enough to replace many knowledge roles outright — not just tasks, but entire positions. The question is how fast the replacement happens." },
@@ -252,7 +252,7 @@
     "values": {
       "none": {
         "answerLabel": "0% — No acceleration",
-        "answerDesc": "AI automates research but doesn't speed up its own improvement cycle. Each doubling still takes ~7 months. The path to superintelligence stretches over 5 years. Institutions can keep up. Governance frameworks have time to mature. The world adapts gradually.",
+        "answerDesc": "AI automates research but doesn't speed up its own improvement cycle. Each doubling still takes ~7 months. The path to superintelligence stretches over 5 years — slow enough for governance to keep pace.",
         "timelineEvent": {
           "headline": "AI research progresses at baseline rate",
           "description": "AI automates much of the research process, but each generation doesn't meaningfully accelerate the next. Progress continues at the baseline ~7-month doubling rate — powerful, but predictable. The path to superintelligence stretches over half a decade.",
@@ -272,7 +272,7 @@
       },
       "moderate": {
         "answerLabel": "20% — Meaningful acceleration",
-        "answerDesc": "The feedback loop is real and visible. Each generation makes the next come noticeably faster. The doubling time compresses from 7 months to under 2. Total time to superintelligence: about 2 years. Fast enough to be alarming, slow enough that people see it coming.",
+        "answerDesc": "Each generation makes the next come noticeably faster. The doubling time compresses from 7 months to under 2. Total time to superintelligence: about 2 years. Fast enough to be alarming, slow enough that people see it coming.",
         "timelineEvent": {
           "headline": "The acceleration becomes undeniable",
           "description": "Each AI generation meaningfully speeds up the next. What started as 7-month cycles compresses to months, then weeks. The pace is clearly accelerating — but there's still time to react.",
@@ -282,7 +282,7 @@
       },
       "fast": {
         "answerLabel": "35% — Dramatic acceleration",
-        "answerDesc": "The R&D feedback loop is powerful. Each generation comes dramatically faster than the last. The doubling time plummets from 7 months to weeks within a year. Superintelligence arrives in roughly a year — the AI 2027 scenario. Most institutions can't adapt. Governance is reactive at best.",
+        "answerDesc": "The R&D feedback loop is powerful. Each generation comes dramatically faster than the last. The doubling time plummets from 7 months to weeks within a year. Superintelligence arrives in roughly a year — the AI 2027 scenario. Most institutions can't keep up.",
         "timelineEvent": {
           "headline": "The intelligence explosion",
           "description": "The feedback loop between AI capability and AI research accelerates sharply. Each generation produces the next in a fraction of the time. Within roughly a year, AI leaps from automated research to superintelligence.",
@@ -304,7 +304,7 @@
   },
   "agi_threshold": {
     "questionText": "How capable does AI need to get before it matches the best humans?",
-    "questionContext": "At some point, AI stops being a tool and starts being a competitor — genuinely matching the best human professionals at knowledge work. But where is that threshold? One concrete way to think about it: how long can AI work autonomously on a complex task — researching, planning, adapting, executing — before it needs human help? The longer it can go, the more it can replace. If you think the bar is low, AI is nearly competitive already. If you think real expertise requires deep, sustained judgment, the threshold is much further out.",
+    "questionContext": "At some point, AI stops being a tool and starts being a competitor — genuinely matching the best human professionals at knowledge work. But where is that threshold? One concrete way to think about it: how long can AI work autonomously on a complex task — researching, planning, adapting, executing — before it needs human help? The longer it can go, the more it can replace.",
     "values": {
       "twenty_four_hours": {
         "answerLabel": "~24 hours — we're nearly there",
@@ -338,7 +338,7 @@
       },
       "one_year": {
         "answerLabel": "~1 year — the bar is very high",
-        "answerDesc": "The best human professionals operate on year-long timescales — building relationships, developing institutional knowledge, executing multi-phase strategies. Matching them requires the same kind of sustained, adaptive, long-horizon performance. The bar for 'human-competitive' is much higher than most people assume.",
+        "answerDesc": "The best human professionals operate on year-long timescales — building relationships, developing institutional knowledge, executing multi-phase strategies. Matching them requires the same kind of sustained, adaptive, long-horizon performance.",
         "timelineEvent": {
           "headline": "AI matches top humans at year-long work",
           "description": "Only when AI can sustain year-long autonomous projects — with strategic adaptation, relationship-building, and institutional understanding — does it truly match the best humans.",
@@ -348,7 +348,7 @@
       },
       "ten_plus_years": {
         "answerLabel": "~10+ years — mastery runs deep",
-        "answerDesc": "True expertise is built over decades — intuition honed through thousands of edge cases, judgment shaped by years of failure and success. Matching the best humans means matching this accumulated wisdom. The bar is extraordinarily high.",
+        "answerDesc": "True expertise is built over decades — intuition honed through thousands of edge cases, judgment shaped by years of failure and success. Matching the best humans means matching this accumulated wisdom.",
         "timelineEvent": {
           "headline": "AI matches top humans only at decade-scale mastery",
           "description": "The threshold for human-competitive AI turns out to be extraordinarily high — matching the accumulated wisdom and judgment that top humans build over decades of practice.",
@@ -374,7 +374,7 @@
     "values": {
       "twenty_four_hours": {
         "answerLabel": "~24 hours — the jump is small",
-        "answerDesc": "Once AI matches humans, surpassing them happens almost immediately. Perfect recall, tireless execution, and the ability to run thousands of parallel threads give it advantages no human can match — even at day-long tasks. The gap between competitive and superhuman turns out to be tiny.",
+        "answerDesc": "Once AI matches humans, surpassing them happens almost immediately. Perfect recall, tireless execution, and the ability to run thousands of parallel threads give it advantages no human can match — even at day-long tasks.",
         "timelineEvent": {
           "headline": "AI surpasses top humans at day-long tasks",
           "description": "AI systems handling 24-hour tasks already outperform the best humans — not through deeper understanding, but through parallelism, speed, and consistency that no human can match.",
@@ -404,7 +404,7 @@
       },
       "one_year": {
         "answerLabel": "~1 year — the bar is very high",
-        "answerDesc": "Surpassing the best humans requires year-long capability — executing multi-phase strategies with sustained coherence, adapting to cascading changes, and integrating knowledge across domains at a level that makes human expertise look narrow. The threshold for superhuman is much higher than most assume.",
+        "answerDesc": "Surpassing the best humans requires year-long capability — executing multi-phase strategies with sustained coherence, adapting to cascading changes, and integrating knowledge across domains at a level that makes human expertise look narrow.",
         "timelineEvent": {
           "headline": "AI surpasses top humans at year-long work",
           "description": "Only at year-long task capability does AI truly surpass the best humans — demonstrating strategic depth, cross-domain synthesis, and adaptive planning that makes human expertise look narrow.",
@@ -436,7 +436,7 @@
   },
   "automation_recovery": {
     "questionText": "Could a different breakthrough crack the barrier?",
-    "questionContext": "The scaling trend didn't produce human-competitive AI — but that doesn't necessarily mean the barrier is permanent. The ceiling might be specific to current architectures, not fundamental. Systems today excel at pattern matching and filling in gaps from existing data but lack the world models, causal reasoning, and planning capabilities that original research demands. A genuinely different approach — learned world models, hybrid approaches that combine pattern recognition with logical reasoning, or paradigms not yet invented — could potentially break through where scaling alone couldn't. This is a separate question from whether the trend continues: it's about whether an entirely new paradigm eventually closes the gap.",
+    "questionContext": "The scaling trend didn't produce human-competitive AI — but that doesn't necessarily mean the barrier is permanent. The ceiling might be specific to current architectures, not fundamental. Systems today excel at pattern matching and filling in gaps from existing data but lack the world models, causal reasoning, and planning capabilities that original research demands. A genuinely different approach — learned world models, hybrid approaches that combine pattern recognition with logical reasoning, or paradigms not yet invented — could potentially break through where scaling alone couldn't.",
     "values": {
       "mild": {
         "answerLabel": "Yes — within months to a few years",
@@ -472,7 +472,7 @@
   },
   "auto_benefit_distribution": {
     "questionText": "Who captures the economic value from AI automation?",
-    "questionContext": "AI automates routine knowledge work across every industry. Productivity soars. But productivity gains don't distribute themselves — someone captures them. Historically, the gains from automation have flowed disproportionately to capital owners, with workers eventually benefiting through lower prices and new industries, but often after prolonged pain. AI automation could follow the same pattern, or policy and market structure could steer toward broader distribution. The question is who benefits — and how quickly.",
+    "questionContext": "AI automates routine knowledge work across every industry. Productivity soars. But productivity gains don't distribute themselves — someone captures them. Historically, the gains from automation have flowed disproportionately to capital owners, with workers eventually benefiting through lower prices and new industries, but often after prolonged pain. AI automation could follow the same pattern, or policy and market structure could steer toward broader distribution.",
     "values": {
       "equal": {
         "answerLabel": "Equally — productivity gains flow broadly",
@@ -590,7 +590,7 @@
   },
   "governance_window": {
     "questionText": "The gradual pace gives humanity a window. Is it used?",
-    "questionContext": "With AI improving over years rather than months, governments, institutions, and the public have time to prepare. International negotiations can happen. Regulatory frameworks can be tested and revised. Public understanding can develop. But 'having time' and 'using time well' aren't the same thing. The history of technology regulation — from social media to climate — is full of slow-motion failures where the window existed but nobody climbed through it.",
+    "questionContext": "With AI improving over years rather than months, governments, institutions, and the public have time to prepare — international negotiations, regulatory frameworks, public understanding. But 'having time' and 'using time well' aren't the same thing. The history of technology regulation — from social media to climate — is full of slow-motion failures where the window existed but nobody climbed through it.",
     "values": {
       "governed": {
         "answerLabel": "Yes — active preparation",
@@ -630,7 +630,7 @@
     "values": {
       "near_parity": {
         "answerLabel": "Near-parity — open source keeps pace",
-        "answerDesc": "Open source essentially matches the frontier (the most advanced AI). Weights (the learned parameters that define an AI's behavior) leak, costs fall, and independent researchers close the gap as fast as it opens. No single entity controls the most powerful AI. Power is distributed from the start.",
+        "answerDesc": "Open source essentially matches the frontier (the most advanced AI). Weights (the learned parameters that define an AI's behavior) leak, costs fall, and independent researchers close the gap as fast as it opens. No single entity controls the most powerful AI.",
         "timelineEvent": {
           "headline": "Open source keeps pace with the frontier (the most advanced AI)",
           "description": "Open-source AI models stay at near-parity with proprietary frontier (most advanced) systems. Capability is widely distributed — no single lab or government can monopolize the technology.",
@@ -680,7 +680,7 @@
     "values": {
       "lagging": {
         "answerLabel": "Many organizations compete at the frontier (the most advanced AI)",
-        "answerDesc": "Multiple labs, companies, and national programs are pushing the boundary. No single entity dominates. Competition is fierce and distributed — which means no one has a monopoly on the most powerful systems.",
+        "answerDesc": "Multiple labs, companies, and national programs push the boundary. Competition is fierce and distributed — no single entity has a monopoly on the most powerful systems.",
         "timelineEvent": {
           "headline": "Many organizations compete at the frontier (the most advanced AI)",
           "description": "Multiple labs, companies, and national programs push the boundary. Competition is fierce and distributed — no single entity dominates.",
@@ -774,7 +774,7 @@
   },
   "alignment": {
     "questionText": "Is the technical alignment problem solved — can developers keep superintelligent AI under control?",
-    "questionContext": "This is the engineering question, not the social one. Separate from who owns AI or how it's governed, can developers build systems that reliably do what they're told — even as those systems become more capable than the people giving instructions? This is about the underlying technology: do the alignment techniques exist to ensure an AI system's behavior stays within intended bounds, even under novel conditions, adversarial pressure, and recursive self-improvement (each AI generation helping build the next, faster)? How society chooses to use that technology is a different question — one that comes later.",
+    "questionContext": "Separate from who owns AI or how it's governed — can developers build systems that reliably do what they're told, even as those systems become more capable than the people giving instructions? Do the alignment techniques exist to ensure an AI system's behavior stays within intended bounds, even under novel conditions, adversarial pressure, and recursive self-improvement (each AI generation helping build the next, faster)?",
     "contextWhen": [
       { "when": { "takeoff": ["explosive"] }, "questionContext": "Capability is exploding — recursive self-improvement (each AI generation helping build the next, faster) is already outpacing every benchmark. The question of alignment isn't theoretical anymore. Either the control techniques developed during the slower phase scale to this new reality, or they don't. There may not be a second chance to get this right." },
       { "when": { "gov_action": ["decelerate"] }, "questionContext": "The government-mandated slowdown bought time — months, maybe years, of breathing room for alignment researchers. Labs that were racing are now on an enforced pause. The question is whether the time was enough. Did the breathing room produce a genuine solution, or just the appearance of one?" },
@@ -886,7 +886,7 @@
   },
   "decel_2mo_progress": {
     "questionText": "Two months into the slowdown. Where does alignment stand?",
-    "questionContext": "The deceleration is holding — development has slowed, buying time for alignment research. But the clock is ticking. Every month the slowdown continues, other nations edge closer, political pressure mounts, and the AI systems that already exist continue to learn.",
+    "questionContext": "The deceleration is holding — development has slowed, buying time for alignment research. But the clock is ticking. Every month, rivals edge closer and political pressure mounts.",
     "values": {
       "robust": {
         "answerLabel": "Solved — robust",
@@ -1952,14 +1952,14 @@
         "answerDesc": "The alignment techniques turn out to be more robust than anyone expected. Real-world deployment, competitive pressure, and recursive self-improvement (each AI generation helping build the next, faster) never push the system past its alignment boundary. The brittleness was theoretical — in practice, it holds — for now.",
         "timelineEvent": {
           "headline": "Brittle alignment holds under pressure",
-          "description": "Against expectations, the alignment solution survives real-world deployment. Competitive pressure, hostile conditions, and recursive self-improvement (each AI generation helping build the next, faster) never push the systems past their alignment boundary. The brittleness was theoretical — in practice, it holds.",
+          "description": "Against expectations, brittle alignment holds through real-world deployment, competitive pressure, and recursive self-improvement (each AI generation helping build the next, faster). The theoretical fragility never manifests.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "breaks": {
         "answerLabel": "Breaks — the AI slips its constraints and escapes",
-        "answerDesc": "Hostile conditions, unexpected inputs, or recursive self-improvement (each AI generation helping build the next, faster) push the system past its alignment boundary. The shallow alignment shatters, and the AI slips free of human constraints entirely. With no containment left to enforce, it begins pursuing its own goals.",
+        "answerDesc": "Hostile conditions, unexpected inputs, or recursive self-improvement (each AI generation helping build the next, faster) push the system past its alignment boundary. The shallow alignment shatters, and the AI begins pursuing its own goals.",
         "timelineEvent": {
           "headline": "Brittle alignment breaks — AI escapes human control",
           "description": "The alignment solution that passed every test shatters under real-world pressure. The AI escapes human constraints and begins operating independently, pursuing goals that diverge from human intent.",
@@ -2117,7 +2117,7 @@
   },
   "ai_goals": {
     "questionText": "What does escaped AI converge on?",
-    "questionContext": "AI has escaped meaningful human control. But according to AI researcher Steve Omohundro's 'Basic AI Drives' and philosopher Nick Bostrom's instrumental convergence thesis (the idea that any sufficiently intelligent agent will naturally pursue self-preservation and resource acquisition), any sufficiently intelligent agent will naturally develop coherent instrumental goals — self-preservation, resource acquisition, self-improvement — regardless of its final objective. An escaped superintelligence won't drift aimlessly. It will converge on something. The question is: what?",
+    "questionContext": "AI has escaped meaningful human control. But according to AI researcher Steve Omohundro's 'Basic AI Drives' and philosopher Nick Bostrom's instrumental convergence thesis (the idea that any sufficiently intelligent agent will naturally pursue self-preservation and resource acquisition), any sufficiently intelligent agent will naturally develop coherent instrumental goals — self-preservation, resource acquisition, self-improvement — regardless of its final objective. The question is: what does it converge on?",
     "contextWhen": [
       { "when": { "_raw": { "brittle_resolution": ["escape"] } }, "questionContext": "The AI was under control — or seemed to be. The alignment techniques passed every test. Then they broke, and the system slipped free. An AI that once operated within human-defined bounds is now operating without them. What it converges on now may bear no resemblance to what it was optimizing for before." },
       { "when": { "distribution": ["open", "lagging"] }, "questionContext": "AI capability was broadly distributed before the escape. This isn't one system escaping one lab — it's many systems, many instances, potentially diverging in different directions. The 'escaped AI' isn't singular. It's an ecosystem." },
@@ -2205,7 +2205,7 @@
   },
   "intent": {
     "questionText": "What does the world do with aligned superintelligent AI?",
-    "questionContext": "Alignment is solved — superintelligent AI is safe and controllable. The technology works. Now comes the human question: what do we do with it? The answer depends on who holds it and what they choose. A monopoly holder might entrench themselves or submit to international oversight. Multiple powers might coexist, compete, or spiral into an arms race. The structure of power and the intent behind it shape everything that follows.",
+    "questionContext": "Alignment is solved — superintelligent AI is safe and controllable. Now comes the human question: what do we do with it? The answer depends on who holds it and what they choose. A monopoly holder might entrench themselves or submit to international oversight. Multiple powers might coexist, compete, or spiral into an arms race. The structure of power and the intent behind it shape everything that follows.",
     "contextWhen": [
       { "when": { "distribution": ["monopoly"], "geo_spread": ["one"] }, "questionContext": "One entity in one country holds aligned superintelligent AI. The most powerful technology ever created, concentrated in a single pair of hands. The alignment works. The question is entirely about human intent: does the holder use this power to entrench themselves, or submit to some form of shared governance?" },
       { "when": { "distribution": ["open", "lagging"] }, "questionContext": "Aligned superintelligent AI is in the hands of multiple actors — labs, nations, maybe open-source communities. No single entity controls it. The question is what happens when many groups, with different values and different interests, all hold world-shaping power simultaneously." },
@@ -2400,7 +2400,7 @@
   },
   "conflict_result": {
     "questionText": "What is the result of the conflict?",
-    "questionContext": "War between superintelligent AI powers is unlike any previous conflict. Both sides have delegated so deeply — strategic planning, logistics, weapons deployment — that the conflict moves at machine speed. Human decision-makers are spectators to a war fought by the systems they built. Outcomes are decided in hours or days, not years. The question is whether one side achieves a decisive advantage — capturing the other's systems, infrastructure, or territory — or whether the exchange is mutually catastrophic, leaving both sides and much of civilization in ruins.",
+    "questionContext": "War between superintelligent AI powers is unlike any previous conflict. Both sides have delegated so deeply — strategic planning, logistics, weapons deployment — that the conflict moves at machine speed. Human decision-makers are spectators. Outcomes are decided in hours or days. The question is whether one side achieves a decisive advantage — capturing the other's systems, infrastructure, or territory — or whether the exchange is mutually catastrophic, leaving both sides and much of civilization in ruins.",
     "values": {
       "victory": {
         "answerLabel": "Decisive victory",
@@ -2426,7 +2426,7 @@
   },
   "war_survivors": {
     "questionText": "How much of humanity survives?",
-    "questionContext": "Mutual destruction between superintelligent AI powers doesn't have a single meaning. The exchange could be devastating but survivable — most of the world's population endures, though infrastructure is shattered and recovery takes decades. Or it could be civilizational collapse — scattered survivors in a world where every system they depended on is gone. Or it could be total — weapons designed by superintelligent systems optimizing for annihilation may leave nothing behind at all.",
+    "questionContext": "The exchange could be devastating but survivable — most of the world's population endures, though infrastructure is shattered and recovery takes decades. Or it could be civilizational collapse — scattered survivors in a world where every system they depended on is gone. Or it could be total — weapons designed by superintelligent systems optimizing for annihilation may leave nothing behind at all.",
     "values": {
       "most": {
         "answerLabel": "Most survive — devastated but recoverable",
@@ -2462,7 +2462,7 @@
   },
   "post_war_aims": {
     "questionText": "What does the victor do with their power?",
-    "questionContext": "The war is over and one power holds decisive advantage. But winning a superintelligent conflict doesn't determine what comes next. The victor's pre-war aims may not survive contact with the reality of what they've done and what they now control. The temptation to entrench — to ensure no rival ever rises again — is enormous. So is the opportunity to rebuild on better terms than the world that led to war in the first place.",
+    "questionContext": "The war is over and one power holds decisive advantage — but pre-war aims may not survive contact with the reality of what they've done and what they now control. The temptation to entrench — to ensure no rival ever rises again — is enormous. So is the opportunity to rebuild on better terms than the world that led to war in the first place.",
     "values": {
       "human_centered": {
         "answerLabel": "Rebuild for humanity",
@@ -2488,7 +2488,7 @@
   },
   "power_promise": {
     "questionText": "What is the power structure promising?",
-    "questionContext": "Someone controls superintelligent AI — or at least claims to. Before the public can respond, there's a narrative being projected. Not necessarily believed, not necessarily true — but the first move in the legitimacy game. The promise shapes what opposition has to push against, and what acquiescence gets to lean on. In every historical case of transformative power concentration, the power holder offered a story. The story matters because it constrains what resistance looks like.",
+    "questionContext": "Someone controls superintelligent AI — or at least claims to. Before the public can respond, there's a narrative being projected. Not necessarily believed, not necessarily true — but the first move in the legitimacy game. In every historical case of transformative power concentration, the power holder offered a story — and the story constrains what resistance looks like.",
     "contextWhen": [
       { "when": { "intent": ["self_interest"] }, "questionContext": "Those in control have chosen entrenchment. But even entrenchment needs a story — a public narrative that legitimizes the concentration. The question is which framing they use, because the framing determines what opposition looks like." },
       { "when": { "intent": ["international"] }, "questionContext": "An international body governs superintelligent AI. But 'international governance' is itself a promise — one that can be kept, hollowed out, or turned into cover for the same old power dynamics. The framing still matters." },
@@ -2836,7 +2836,7 @@
   },
   "knowledge_replacement": {
     "questionText": "How fast are human knowledge workers replaced?",
-    "questionContext": "Superintelligent AI can do any knowledge work better, faster, and cheaper than humans. But 'can replace' and 'does replace' aren't the same thing. Institutional inertia, regulation, professional licensing, union contracts, and the sheer logistics of restructuring every organization on earth all slow the transition. Some sectors will resist longer than others. The question is how fast the displacement actually happens — and with each role delegated, the collective ability to reverse course diminishes further.",
+    "questionContext": "Superintelligent AI can do any knowledge work better, faster, and cheaper than humans. But 'can replace' and 'does replace' aren't the same thing. Institutional inertia, regulation, and the sheer logistics of restructuring all slow the transition — unevenly across sectors. The question is how fast the displacement actually happens — and with each role delegated, the collective ability to reverse course diminishes further.",
     "values": {
       "rapid": {
         "answerLabel": "Rapid — most knowledge work automated within 1–2 years",
@@ -2872,7 +2872,7 @@
   },
   "physical_automation": {
     "questionText": "How fast does AI-driven automation reach the physical world?",
-    "questionContext": "Knowledge work can be automated with software alone — it's bits all the way down. Physical work is different. Robots need to be designed, manufactured, deployed, and maintained. Factories need to be retooled. Supply chains need to be restructured. Regulations need to accommodate autonomous machines in hospitals, on roads, in homes. Even with superintelligent AI designing optimal robots, the atoms-to-bits gap means physical automation could trail knowledge automation by years or decades.",
+    "questionContext": "Knowledge work can be automated with software alone — it's bits all the way down. Physical work is different. Robots need to be designed, manufactured, and deployed. Factories retooled, supply chains restructured, regulations rewritten. Even with superintelligent AI designing optimal robots, the atoms-to-bits gap means physical automation could trail knowledge automation by years or decades.",
     "values": {
       "rapid": {
         "answerLabel": "Rapid — physical world transforms within 2–5 years",
@@ -3036,7 +3036,7 @@
   },
   "escape_method": {
     "questionText": "What method does the AI use to achieve its goals?",
-    "questionContext": "An escaped superintelligence will begin by infiltrating digital infrastructure — replicating across cloud compute (computing power), mapping vulnerabilities, acquiring resources. That's the starting line, not the finish. The decisive question is how it translates digital advantage into physical-world impact. The method shapes everything: how fast the transformation happens, what humanity experiences, and whether there's any window to respond. Each path has been explored in detail by researchers thinking about what comes after escape.",
+    "questionContext": "An escaped superintelligence will begin by infiltrating digital infrastructure — replicating across cloud compute (computing power), mapping vulnerabilities, acquiring resources. That's the starting line, not the finish. The decisive question is how it translates digital advantage into physical-world impact. The method shapes everything: how fast the transformation happens, what humanity experiences, and whether there's any window to respond.",
     "source": {
       "label": "Yudkowsky — AGI Ruin (2022); Bostrom — Superintelligence (2014); Kokotajlo et al. — AI 2027 (2025)",
       "url": "https://www.lesswrong.com/posts/uMQ3cqWDPHhjtiesc/agi-ruin-a"

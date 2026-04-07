@@ -85,7 +85,7 @@
       "id": "the-automation",
       "title": "The Automation",
       "mood": "mixed",
-      "summary": "AI capability keeps growing — it handles longer and more complex tasks every year. Routine knowledge work is systematically delegated: legal research, code maintenance, data analysis, writing, translation. Millions of jobs transform or disappear, and with each handoff, the human capacity to do that work quietly erodes. But genuinely novel work — original research, creative breakthroughs, the kind of thinking that would let AI improve itself — remains stubbornly human. No intelligence explosion. Instead, the most powerful tool ever built, deployed across every industry. Transformative, disruptive, but manageable — and the world that emerges from decades of this delegation will be profoundly different from the one that entered it.",
+      "summary": "AI capability keeps growing — it handles longer and more complex tasks every year. Routine knowledge work is systematically delegated: legal research, code maintenance, data analysis, writing, translation. Millions of jobs transform or disappear, and with each handoff, the human capacity to do that work quietly erodes. But genuinely novel work — original research, creative breakthroughs, the kind of thinking that would let AI improve itself — remains stubbornly human. No intelligence explosion. Instead, an extraordinarily capable technology, deployed across every industry. Transformative, disruptive, but manageable.",
       "flavorHeadings": {
         "stall_recovery": "The Recovery",
         "automation_recovery": {
@@ -106,7 +106,7 @@
         },
         "auto_benefit_distribution": {
           "equal": "Productivity gains from automation flowed broadly — lower costs, better services, new industries absorbing displaced workers. The transformation was disruptive but ultimately equalizing.",
-          "unequal": "Those who already owned capital captured the lion's share. Wealth concentrated among those who owned the models and platforms; everyone else competed for the shrinking pool of work AI couldn't do.",
+          "unequal": "Wealth concentrated among those who owned the models and platforms; everyone else competed for the shrinking pool of work AI couldn't do.",
           "extreme": "The gains concentrated among those who held power at the moment of transformation. AI became a tool of entrenchment — whoever controlled compute (computing power) and policy locked in their advantage permanently."
         },
         "auto_knowledge_rate": {
@@ -737,7 +737,7 @@
         "rapid": {
           "subtitle": "The Acceleration",
           "mood": "utopian",
-          "summary": "Knowledge work is automated in a rush — legal, medical, engineering, financial, creative work all displaced within months. The workforce transformation is sudden and total. Superintelligent AI directed toward human flourishing rebuilds entire industries before anyone can fully process what happened. Exhilarating and disorienting in equal measure. Humanity wakes up in a different civilization."
+          "summary": "Knowledge work is automated in a rush — legal, medical, engineering, financial, creative work all displaced within months. Superintelligent AI directed toward human flourishing rebuilds entire industries before anyone can fully process what happened. Exhilarating and disorienting in equal measure. Humanity wakes up in a different civilization."
         },
         "gradual": {
           "subtitle": "The Global Compact",
@@ -843,7 +843,7 @@
           "extreme": "Those who held power at the moment of superintelligence locked in their advantage. The flourishing was real — but it was someone else's flourishing."
         },
         "physical_automation": {
-          "rapid": "Physical automation followed closely behind knowledge work — AI-designed robots and automated manufacturing transformed the physical world within years. The digital and physical revolutions arrived almost simultaneously.",
+          "rapid": "Physical automation followed closely behind knowledge work — AI-designed robots and automated manufacturing transformed the physical world within years.",
           "gradual": "Knowledge work transformed first. The physical world followed slowly — constrained by manufacturing, regulation, and the complexity of atoms. For years, digital abundance existed alongside a still-human physical world.",
           "uneven": {
             "_default": "Physical automation transformed wealthy nations first. Others waited decades. The superintelligence designed optimal robots, but deploying them everywhere took time, money, and political will that wasn't equally distributed.",
@@ -1500,7 +1500,7 @@
         "robust": {
           "subtitle": "The Distributed Flourishing",
           "mood": "utopian",
-          "summary": "Humanity fragments — peacefully, beautifully. Different groups use their aligned superintelligent AI to build radically different civilizations, each flourishing on its own terms. Some optimize for individual freedom, others for collective harmony, others for exploration, others for contemplation. There is no single human future anymore. There are hundreds — coexisting, thriving, each a different answer to what it means to live well. Not unity. Something better: pluralism at civilizational scale."
+          "summary": "Humanity fragments — peacefully, beautifully. Different groups use their aligned superintelligent AI to build radically different civilizations, each flourishing on its own terms. Some optimize for individual freedom, others for collective harmony, others for exploration. There is no single human future anymore. There are hundreds — coexisting, thriving, each a different answer to what it means to live well. Not unity. Something better: pluralism at civilizational scale."
         },
         "brittle": {
           "subtitle": "The Precarious Mosaic",
