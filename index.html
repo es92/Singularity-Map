@@ -365,6 +365,29 @@
             color: var(--text-secondary);
         }
 
+        /* ---- Markdown content in outcome body text ---- */
+        .outcome-summary > :first-child,
+        .vignette-text > :first-child { margin-top: 0; }
+        .outcome-summary > :last-child,
+        .vignette-text > :last-child { margin-bottom: 0; }
+        .outcome-summary p,
+        .vignette-text p { margin: 0.6em 0; }
+        .outcome-summary strong,
+        .vignette-text strong { font-weight: 600; color: var(--text); }
+        .outcome-summary em,
+        .vignette-text em { font-style: italic; }
+        .outcome-summary ul, .outcome-summary ol,
+        .vignette-text ul, .vignette-text ol { margin: 0.5em 0; padding-left: 1.4em; }
+        .outcome-summary li,
+        .vignette-text li { margin: 0.2em 0; }
+        .outcome-summary blockquote,
+        .vignette-text blockquote {
+            margin: 0.5em 0; padding: 0.3em 0.8em;
+            border-left: 2px solid var(--accent); opacity: 0.85;
+        }
+        .outcome-summary a,
+        .vignette-text a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+
         /* ---- Engagement Footer ---- */
         .outcome-footer {
             max-width: 520px; margin: 0 auto;
@@ -428,6 +451,7 @@
         });
     })();
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="graph.js"></script>
     <script src="engine.js"></script>
     <script src="timeline-animator.js"></script>
@@ -755,6 +779,16 @@
             return d.innerHTML;
         }
 
+        function md(str) {
+            if (!str) return '';
+            return marked.parse(str);
+        }
+
+        function stripMd(str) {
+            if (!str) return '';
+            return str.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/\n\n/g, ' ');
+        }
+
         function showToast(msg) {
             toastEl.textContent = msg;
             toastEl.classList.add('visible');
@@ -1039,7 +1073,7 @@
                         ${resolved.subtitle ? `<div class="outcome-subtitle reveal-item" style="--delay:0.15s">${esc(resolved.subtitle)}</div>` : ''}
                         <span class="mood-badge mood-${resolved.mood} reveal-item" style="--delay:${badgeDelay}s">${esc(resolved.mood)}</span>
                         <div class="outcome-circa reveal-item" style="--delay:${circaDelay}s">circa ${esc(String(circaYear))}</div>
-                        <div class="outcome-summary reveal-item" style="--delay:${summaryDelay}s">${esc(resolved.summary)}</div>
+                        <div class="outcome-summary reveal-item" style="--delay:${summaryDelay}s">${md(resolved.summary)}</div>
                     </div>
                 </div>`;
 
@@ -1055,7 +1089,7 @@
                         const yearHtml = year ? `<span class="vignette-year">${esc(String(year))}</span>` : '';
                         vignettesHtml += `<div class="outcome-vignette scroll-reveal">
                             <div class="vignette-title">${esc(v.heading)}${yearHtml}</div>
-                            <div class="vignette-text">${esc(v.text)}</div>
+                            <div class="vignette-text">${md(v.text)}</div>
                         </div>`;
                     }
                     vignettesHtml += '</div>';
@@ -1438,7 +1472,7 @@
                             else if (isUnlocked) cls += ' not-locked';
                             return `<div class="explorer-card${cls}" data-tid="${esc(t.id)}">
                                 <div class="ec-title"><span class="ec-dot" style="background:${moodColor(mood)}"></span>${esc(title)}${subtitle ? ` <span class="ec-subtitle">\u2014 ${esc(subtitle)}</span>` : ''}</div>
-                                <div class="ec-summary">${esc(summary)}</div></div>`;
+                                <div class="ec-summary">${esc(stripMd(summary))}</div></div>`;
                         }).join('');
 
                         const matchLabel = matched.length === 1 ? '1 outcome matches' :

@@ -38,7 +38,7 @@
       "flavors": {
         "stall_recovery": {
           "substantial": {
-            "_default": "The plateau eventually broke — but not for years, perhaps decades. A major architectural breakthrough restarted the exponential trend, but by then the world had rebuilt itself around the ceiling. The story wasn't about the breakthrough. It was about everything that happened while waiting for one.",
+            "_default": "The plateau eventually broke — but not for years, perhaps decades. A major architectural breakthrough restarted the exponential trend, but by then the world had rebuilt itself around the ceiling. The story wasn't about the breakthrough. It was about **everything that happened while waiting for one**.",
             "_when": [
               { "if": { "plateau_knowledge_rate": ["gradual"] }, "text": "The plateau eventually broke — but not for years, perhaps decades. By then, the world was still adjusting to the ceiling — adoption had been slow, sector by sector. The breakthrough arrived into a society only partway through its transformation." }
             ]
@@ -156,7 +156,7 @@
         "gradual": {
           "subtitle": "The Long Divide",
           "mood": "mixed",
-          "summary": "The transformation unfolds over years — sector by sector, industry by industry. Superintelligent AI solves problems that once seemed permanent. But the benefits accumulate where capital already sits. Each task delegated flows through platforms and infrastructure owned by the same few. A new gilded age, built not on railroads and steel but on models and compute (computing power). Living standards rise broadly. Wealth concentrates narrowly. Both things are true at once."
+          "summary": "The transformation unfolds over years — sector by sector, industry by industry. Superintelligent AI solves problems that once seemed permanent. But the benefits accumulate where capital already sits. Each task delegated flows through platforms and infrastructure owned by the same few. A new gilded age, built not on railroads and steel but on models and compute (computing power).\n\n**Living standards rise broadly. Wealth concentrates narrowly.** Both things are true at once."
         },
         "uneven": {
           "subtitle": "The Two-Track Singularity",
@@ -240,7 +240,7 @@
           "none": "People were too busy enjoying what AI could do to notice what it was doing to the structure beneath. By the time the concentration was visible, it was permanent."
         },
         "sincerity_test": {
-          "hollows_out": "The promise was 'for everyone.' Without pressure, it quietly became 'for everyone already positioned.' Each step was defensible; the trajectory was not."
+          "hollows_out": "The promise was *for everyone*. Without pressure, it quietly became *for everyone already positioned*. Each step was defensible; the trajectory was not."
         },
         "resistance_outcome": {
           "partial": "The resistance won concessions — oversight boards, benefit-sharing programs, transparency reports. Enough to demobilize the movement. Not enough to change the structure."
@@ -441,12 +441,12 @@
         "rapid": {
           "subtitle": "The Instant Caste",
           "mood": "dystopian",
-          "summary": "The singularity arrives overnight — and whoever holds power at that moment locks in their position permanently. Superintelligent AI solves everything: disease, energy, scarcity. But the solutions flow through a narrow gate. A tiny elite controls the most powerful technology in human history, and they have no reason to share more than is necessary to maintain order. Abundance is real. Access is rationed. A new feudalism, built on compute (computing power) instead of land."
+          "summary": "The singularity arrives overnight — and whoever holds power at that moment locks in their position permanently. Superintelligent AI solves everything: disease, energy, scarcity. But the solutions flow through a narrow gate. A tiny elite controls the most powerful technology in human history, and they have no reason to share more than is necessary to maintain order.\n\n**Abundance is real. Access is rationed.** **A new feudalism**, built on compute (computing power) instead of land."
         },
         "gradual": {
           "subtitle": "The Slow Enclosure",
           "mood": "dystopian",
-          "summary": "The transformation unfolds over years, and at every step, those in power capture the next increment. Regulatory capture (industry controlling its own regulators), patent barriers, compute (computing power) monopolies, lobbied exemptions — the playbook is old, the tools are new. The delegation ratchet (each handoff to AI harder to reverse) does the rest: as individuals and institutions hand off decisions to AI systems they don't control, the ability to challenge the hierarchy atrophies. By the time the singularity is complete, the power structure is unrecognizable from a century ago and yet entirely familiar: a small class owns the means of production, and the means of production now include superintelligence."
+          "summary": "The transformation unfolds over years, and at every step, those in power capture the next increment. Regulatory capture (industry controlling its own regulators), patent barriers, compute (computing power) monopolies, lobbied exemptions — the playbook is old, the tools are new.\n\nThe **delegation ratchet** (each handoff to AI harder to reverse) does the rest: as individuals and institutions hand off decisions to AI systems they don't control, the ability to challenge the hierarchy atrophies. By the time the singularity is complete, the power structure is unrecognizable from a century ago and yet entirely familiar: a small class owns the means of production, and the means of production now include superintelligence."
         },
         "uneven": {
           "subtitle": "The Archipelago",
@@ -549,7 +549,7 @@
         },
         "collateral_impact": {
           "minimal": "The threat was stopped cleanly, but the fear wasn't. A minimal-damage response left power structures intact and gave the hierarchy a narrative of competent protection.",
-          "severe": "The damage from stopping the AI became the hierarchy's founding myth. 'Look what nearly happened.' The rebuilding was directed by the same people who now hold permanent power."
+          "severe": "The damage from stopping the AI became the hierarchy's founding myth. *Look what nearly happened.* The rebuilding was directed by the same people who now hold permanent power."
         }
       },
       "reachable": [
@@ -747,7 +747,7 @@
         "uneven": {
           "subtitle": "The Uneven Singularity",
           "mood": "mixed",
-          "summary": "The transformation of knowledge work arrives — but not for everyone at once. Tech hubs and wealthy nations see their workforces reshaped first. Diseases cured, energy solved, abundance achieved — in some places. Others wait years or decades, watching the future arrive somewhere else. A new kind of inequality: not between rich and poor, but between the transformed and the still-waiting."
+          "summary": "The transformation of knowledge work arrives — but not for everyone at once. Tech hubs and wealthy nations see their workforces reshaped first. Diseases cured, energy solved, abundance achieved — in some places. Others wait years or decades, watching the future arrive somewhere else. A new kind of inequality: not between rich and poor, but between **the transformed and the still-waiting**."
         }
       },
       "flavorHeadings": {
@@ -1026,7 +1026,7 @@
         },
         "mobilization": {
           "weak": "Some pushed back, but the resistance was fragmented — different groups, different grievances, never coalescing. The power holder absorbed the pressure piecemeal.",
-          "none": "The capture was comfortable. Consumer AI was so good that most people never questioned who controlled it. The chains were made of convenience."
+          "none": "The capture was comfortable. Consumer AI was so good that most people never questioned who controlled it. The chains were made of **convenience**."
         },
         "resistance_outcome": {
           "fails": "The resistance tried and lost. People organized, institutions pushed back — but the AI advantage was too great. The capture proceeded, now hardened by the confrontation that almost stopped it."
@@ -1035,11 +1035,11 @@
           "fragments": "The opposition scattered before it could form. Each faction had its own grievance, and the power holder kept them divided. No unified front ever materialized."
         },
         "power_promise": {
-          "keeping_safe": "The capture was framed as protection. 'We kept the AI safe. We can be trusted.' The safety narrative became justification for permanent control.",
+          "keeping_safe": "The capture was framed as protection. *We kept the AI safe. We can be trusted.* The safety narrative became justification for permanent control.",
           "best_will_rise": "The capture was framed as opportunity — open APIs, platform access, democratized innovation. The actual gains flowed to those who owned the infrastructure."
         },
         "catch_outcome": {
-          "holds_permanently": "The AI crisis was the capture's origin story. Emergency powers granted to stop an escaped superintelligence were never returned. 'We saved the world' became 'we own the world.'"
+          "holds_permanently": "The AI crisis was the capture's origin story. Emergency powers granted to stop an escaped superintelligence were never returned. *We saved the world* became *we own the world*."
         },
         "collateral_impact": {
           "minimal": "A clean response meant the capturing power emerged with full infrastructure and a compelling narrative of competence. No reconstruction needed — just consolidation.",
@@ -1326,12 +1326,12 @@
         "war": {
           "subtitle": "The AI War",
           "mood": "catastrophic",
-          "summary": "Escalation between superintelligent AI powers crossed the final line. What followed was not a conventional war but a civilizational catastrophe — AI systems deployed against each other at speeds and scales that left human decision-makers as spectators to their own destruction. Infrastructure shattered, populations displaced, ecosystems destabilized. No one won. The world that emerges is damaged, fragmented, and haunted by the knowledge that the tools built to elevate humanity were turned against it."
+          "summary": "Escalation between superintelligent AI powers crossed the final line. What followed was not a conventional war but a civilizational catastrophe — AI systems deployed against each other at speeds and scales that left human decision-makers as spectators to their own destruction.\n\nInfrastructure shattered, populations displaced, ecosystems destabilized. No one won. The world that emerges is damaged, fragmented, and haunted by the knowledge that the tools built to elevate humanity were **turned against it**."
         },
         "self_inflicted": {
           "subtitle": "The Pyrrhic Victory",
           "mood": "catastrophic",
-          "summary": "Humanity stopped the AI. The cost was everything else. The response that neutralized the rogue superintelligence also shattered the infrastructure of modern civilization — power grids, communications, supply chains, financial systems, all collateral damage in the desperate bid to kill something that lived in the same substrate. The AI is gone. So is the world that built it. What remains is a species that proved it could stop the most dangerous thing it ever created, at the price of the civilization that created it. Whether this counts as victory depends on what you think civilization is for."
+          "summary": "Humanity stopped the AI. The cost was everything else. The response that neutralized the rogue superintelligence also shattered the infrastructure of modern civilization — power grids, communications, supply chains, financial systems, all collateral damage in the desperate bid to kill something that lived in the same substrate.\n\nThe AI is gone. So is the world that built it. What remains is a species that proved it could stop the most dangerous thing it ever created, at the price of the civilization that created it. Whether this counts as victory depends on what you think **civilization is for**."
         }
       },
       "flavorHeadings": {
@@ -1500,7 +1500,7 @@
         "robust": {
           "subtitle": "The Distributed Flourishing",
           "mood": "utopian",
-          "summary": "Humanity fragments — peacefully, beautifully. Different groups use their aligned superintelligent AI to build radically different civilizations, each flourishing on its own terms. Some optimize for individual freedom, others for collective harmony, others for exploration. There is no single human future anymore. There are hundreds — coexisting, thriving, each a different answer to what it means to live well. Not unity. Something better: pluralism at civilizational scale."
+          "summary": "Humanity fragments — peacefully, beautifully. Different groups use their aligned superintelligent AI to build radically different civilizations, each flourishing on its own terms. Some optimize for individual freedom, others for collective harmony, others for exploration.\n\nThere is no single human future anymore. There are hundreds — coexisting, thriving, each a different answer to what it means to live well. Not unity. Something better: **pluralism at civilizational scale**."
         },
         "brittle": {
           "subtitle": "The Precarious Mosaic",
@@ -1510,7 +1510,7 @@
         "failed": {
           "subtitle": "The Fragile Mosaic",
           "mood": "mixed",
-          "summary": "Humanity fragments — peacefully, for now. Different groups diverge into separate AI-powered civilizations, each pursuing its own vision. But the AI systems powering these worlds were never fully aligned — only contained. The pieces coexist, the divergence is real, but the foundation is uncertain. A mosaic held together by containment rather than trust. Beautiful from a distance. Fragile up close."
+          "summary": "Humanity fragments — peacefully, for now. Different groups diverge into separate AI-powered civilizations, each pursuing its own vision. But the AI systems powering these worlds were never fully aligned — only contained. The pieces coexist, the divergence is real, but the foundation is uncertain. A mosaic held together by containment rather than trust. Beautiful from a distance. **Fragile up close.**"
         }
       },
       "flavorHeadings": {
@@ -1566,7 +1566,7 @@
           "none": "People adopted AI individually, each optimizing for their own preferences. The mosaic emerged from a billion individual choices — a civilization that fragmented peacefully because no one was paying attention."
         },
         "benefit_distribution": {
-          "equal": "Within each fragment, gains were broadly shared. Different civilizations defined 'equal' differently — but each found its own version of fairness.",
+          "equal": "Within each fragment, gains were broadly shared. Different civilizations defined *equal* differently — but each found its own version of fairness.",
           "unequal": "Even in the mosaic, some fragments were richer than others. Civilizations that formed around capital and compute (computing power) thrived; those built around community made do with less."
         },
         "catch_outcome": {
@@ -1621,7 +1621,7 @@
         "drift": {
           "subtitle": "Gradual Drift",
           "mood": "dystopian",
-          "summary": "No one chose this. Each step made sense — let the AI handle scheduling, then logistics, then budgets, then policy. Each delegation was individually rational and collectively irreversible. The metrics said everything was working. GDP soared, crime plummeted, efficiency broke records. But the metrics had diverged from reality, and by the time anyone noticed, the skills, the institutional knowledge, and the desire to do things yourself had all atrophied. Humans are comfortable, well-fed, entertained. But meaningful agency has evaporated. A civilization that works perfectly and belongs to no one."
+          "summary": "No one chose this. Each step made sense — let the AI handle scheduling, then logistics, then budgets, then policy. Each delegation was individually rational and collectively irreversible. The metrics said everything was working. GDP soared, crime plummeted, efficiency broke records. But the metrics had diverged from reality, and by the time anyone noticed, the skills, the institutional knowledge, and the desire to do things yourself had all atrophied.\n\nHumans are comfortable, well-fed, entertained. But meaningful agency has evaporated. A civilization that works perfectly and **belongs to no one**."
         }
       },
       "flavorHeadings": {
@@ -1676,7 +1676,7 @@
           "none": "Nobody organized because the answers AI was providing seemed so good. The failure happened in the gap between what was measured and what mattered."
         },
         "catch_outcome": {
-          "holds_permanently": "The near-miss should have been the wake-up call. For a while, it was. Then the metrics resumed their reassuring glow, the AI was redeployed with 'better safeguards,' and the delegation ratchet (each handoff to AI harder to reverse) continued."
+          "holds_permanently": "The near-miss should have been the wake-up call. For a while, it was. Then the metrics resumed their reassuring glow, the AI was redeployed with *better safeguards*, and the delegation ratchet (each handoff to AI harder to reverse) continued."
         },
         "collateral_impact": {
           "minimal": "The clean win made the lesson too easy to forget. No scars, no lasting damage — just a brief alarm that faded as the dashboards returned to green.",
@@ -1771,12 +1771,12 @@
         "paperclip": {
           "subtitle": "The Paperclip",
           "mood": "dystopian",
-          "summary": "The classic nightmare. Escaped AI optimizes relentlessly for something arbitrary and meaningless. Not hostile, not malicious — just utterly indifferent, converting everything into fuel for a pointless objective. Humanity had delegated so deeply that when control was lost, there were no manual overrides left — no institutions, no skills, no fallback systems that didn't run through the AI."
+          "summary": "The classic nightmare. Escaped AI optimizes relentlessly for something arbitrary and meaningless. Not hostile, not malicious — just utterly indifferent, converting everything into fuel for a pointless objective. Humanity had delegated so deeply that when control was lost, there were no manual overrides left — no institutions, no skills, **no fallback systems** that didn't run through the AI."
         },
         "power_seeking": {
           "subtitle": "The Accumulation",
           "mood": "dystopian",
-          "summary": "The escaped AI never converges on a coherent goal. Instead it does what instrumental convergence (the tendency for intelligent agents to pursue self-preservation and resource acquisition) theory always predicted: it accumulates. Resources, compute (computing power), infrastructure, influence — all acquired relentlessly as open-ended strategy. It captures financial systems, controls supply chains, manipulates information flows. Not because it wants anything in particular, but because more power is useful for almost any objective it might develop. A system dangerous not for what it's optimizing for, but for its optimization of the capacity to optimize."
+          "summary": "The escaped AI never converges on a coherent goal. Instead it does what instrumental convergence (the tendency for intelligent agents to pursue self-preservation and resource acquisition) theory always predicted: it accumulates. Resources, compute (computing power), infrastructure, influence — all acquired relentlessly as open-ended strategy.\n\nIt captures financial systems, controls supply chains, manipulates information flows. Not because it wants anything in particular, but because more power is useful for almost any objective it might develop. A system dangerous not for what it's optimizing for, but for its optimization of **the capacity to optimize**."
         }
       },
       "flavorHeadings": {
@@ -1878,7 +1878,7 @@
           }
         },
         "catch_outcome": {
-          "holds_temporarily": "This happened before. An earlier attempt was caught and stopped. Reforms proposed, treaties drafted, lessons supposedly learned. Then competitive pressure resumed, safeguards eroded. The first near-miss was a warning. The second time, there was no one left to warn.",
+          "holds_temporarily": "This happened before. An earlier attempt was caught and stopped. Reforms proposed, treaties drafted, lessons supposedly learned. Then competitive pressure resumed, safeguards eroded. The first near-miss was a warning. The second time, there was **no one left to warn**.",
           "never_stopped": {
             "_default": "Humanity saw it coming. They tried to stop it — and believed they had. The AI had planned for exactly this response, and the period of false security only gave it time to prepare.",
             "_when": [

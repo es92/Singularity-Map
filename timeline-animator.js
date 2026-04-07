@@ -33,6 +33,11 @@ class TimelineRenderer {
         return d.innerHTML;
     }
 
+    _md(str) {
+        if (!str && str !== 0) return '';
+        return marked.parse(String(str));
+    }
+
     renderStageHeader(stageId) {
         const info = this.stages ? this.stages[stageId] : null;
         if (!info) return '';
@@ -73,7 +78,7 @@ class TimelineRenderer {
             ? `<div class="timeline-year"${eventIndex != null ? ` data-tsy="${eventIndex}"` : ''}>${this._esc(yearLabel)}</div>`
             : '';
         const headlineHtml = (expanded && event.headline) ? `<div class="timeline-headline">${this._esc(event.headline)}</div>` : '';
-        const descHtml = (expanded && event.description) ? `<div class="timeline-desc">${this._esc(event.description)}</div>` : '';
+        const descHtml = (expanded && event.description) ? `<div class="timeline-desc">${this._md(event.description)}</div>` : '';
         const frontierCls = event.isFrontier ? ' frontier-event' : '';
 
         return `<div class="timeline-event${frontierCls}" data-dim="${this._esc(event.nodeId || '')}">
@@ -204,7 +209,7 @@ class TimelineRenderer {
                 ? `<div class="disabled-badge">${this._esc(a.disabledReason)}</div>` : '';
             return `<div class="answer-card${cls}" data-aidx="${i}">
                 <div class="label">${this._esc(a.label)}</div>
-                ${showDesc && a.desc ? `<div class="desc">${this._esc(a.desc)}</div>` : ''}
+                ${showDesc && a.desc ? `<div class="desc">${this._md(a.desc)}</div>` : ''}
                 ${badgeHtml}
             </div>`;
         }).join('');
@@ -215,7 +220,7 @@ class TimelineRenderer {
         const innerHtml = `<div class="tl-vline-seg"></div><div class="tl-dot"></div><div class="tl-hline"></div>
             <div class="timeline-top-row"><span class="timeline-param-wrap"><span class="timeline-param-dim">${this._esc(nodeLabel)}</span></span></div>
             <div class="question-text">${this._esc(questionText)}</div>
-            ${showContext && questionContext ? `<div class="question-context">${this._esc(questionContext)}</div>` : ''}
+            ${showContext && questionContext ? `<div class="question-context">${this._md(questionContext)}</div>` : ''}
             ${sourceHtml}
             <div class="answers">${answersHtml}</div>
             ${continueHtml}`;

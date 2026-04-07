@@ -1,7 +1,7 @@
 {
   "capability": {
     "questionText": "Does AI capability keep accelerating?",
-    "questionContext": "AI has been getting dramatically more capable, year after year. Each generation of models handles longer, more complex tasks — things that recently required a skilled human. Research from METR (an AI safety organization) showed in March 2025 that the length of tasks AI can reliably complete autonomously has been doubling roughly every 7 months. At that rate, AI agents would handle week-long tasks by 2027 and month-long projects by the end of the decade. Each new threshold means more work that's cheaper to delegate to AI — and once a task is delegated, the human skill to do it starts to atrophy.",
+    "questionContext": "AI has been getting dramatically more capable, year after year. Each generation of models handles longer, more complex tasks — things that recently required a skilled human. Research from METR (an AI safety organization) showed in March 2025 that the length of tasks AI can reliably complete autonomously has been **doubling roughly every 7 months**. At that rate, AI agents would handle week-long tasks by 2027 and month-long projects by the end of the decade.\n\nEach new threshold means more work that's cheaper to delegate to AI — and once a task is delegated, **the human skill to do it starts to atrophy**.",
     "source": {
       "label": "METR — Measuring AI Ability to Complete Long Tasks (March 2025)",
       "url": "https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/"
@@ -77,7 +77,7 @@
   },
   "stall_recovery": {
     "questionText": "What is required for progress to resume?",
-    "questionContext": "AI capability has hit a ceiling — but ceilings in technology have been broken before. The history of computing is full of walls that turned out to be architectural, not fundamental — transistors replacing vacuum tubes, GPUs replacing CPUs for training, new AI architectures replacing older ones. Researchers like Yann LeCun argue current architectures fundamentally lack world models, causal reasoning, and planning — and that genuinely new approaches (like the new architectures he's proposed) could break through where scaling alone cannot.",
+    "questionContext": "AI capability has hit a ceiling — but ceilings in technology have been broken before. The history of computing is full of walls that turned out to be architectural, not fundamental — transistors replacing vacuum tubes, GPUs replacing CPUs for training, new AI architectures replacing older ones.\n\nResearchers like Yann LeCun argue current architectures fundamentally lack world models, causal reasoning, and planning — and that genuinely new approaches (like the new architectures he's proposed) could break through where scaling alone cannot.",
     "values": {
       "mild": {
         "answerLabel": "A mild breakthrough — months to a few years",
@@ -153,7 +153,7 @@
   },
   "plateau_knowledge_rate": {
     "questionText": "How much knowledge work does AI at this level actually replace?",
-    "questionContext": "AI has hit its ceiling — but even at this level, it's enormously capable within its range. The question is how thoroughly. Does it replace entire roles, or augment them? Does adoption happen in a rush, or does institutional inertia slow things down? Professional licensing, union contracts, regulation, and cultural resistance all shape the pace — but so does the sheer economic pressure of a tool that's cheaper and faster than humans at everything within its reach.",
+    "questionContext": "AI has hit its ceiling — but even at this level, it's enormously capable within its range. The question is how thoroughly. Does it replace entire roles, or augment them? Does adoption happen in a rush, or does institutional inertia slow things down?\n\nProfessional licensing, union contracts, regulation, and cultural resistance all shape the pace — but so does the sheer economic pressure of a tool that's cheaper and faster than humans at everything within its reach.",
     "contextWhen": [
       { "when": { "stall_duration": ["hours"] }, "questionContext": "AI tops out at hour-level tasks — impressive for quick work, but nothing that replaces a full workday. The question is how deeply even this limited capability penetrates the economy. Does it augment workers in place, or does the sheer volume of automatable short tasks add up to something transformative?" },
       { "when": { "stall_duration": ["days"] }, "questionContext": "AI can reliably handle a full day's work autonomously. That's enough to replace many knowledge roles outright — not just tasks, but entire positions. The question is how fast the replacement happens." },
@@ -204,7 +204,7 @@
   },
   "plateau_physical_rate": {
     "questionText": "Does physical automation advance alongside AI, or does it lag?",
-    "questionContext": "AI capability has plateaued for knowledge work — but the physical world is a separate frontier. Robotics, autonomous vehicles, and automated manufacturing depend on AI but also on hardware, engineering, and infrastructure that follow their own trajectory. Physical automation could advance independently of whether AI gets smarter. Or the AI plateau could slow robotics investment and innovation too. The question is whether the physical world transforms alongside the digital one, or stays largely human.",
+    "questionContext": "AI capability has plateaued for knowledge work — but the physical world is a separate frontier. Robotics, autonomous vehicles, and automated manufacturing depend on AI but also on hardware, engineering, and infrastructure that follow their own trajectory. Physical automation could advance independently of whether AI gets smarter.\n\nOr the AI plateau could slow robotics investment and innovation too. The question is whether the physical world transforms alongside the digital one, or stays largely human.",
     "contextWhen": [
       { "when": { "plateau_knowledge_rate": ["rapid"] }, "questionContext": "Knowledge work collapsed fast — within a few years, most tasks within AI's range were automated. The question is whether the physical world follows at the same pace, or whether atoms are harder than bits." },
       { "when": { "plateau_knowledge_rate": ["limited"] }, "questionContext": "AI augments knowledge workers but rarely replaces them. The ceiling was real and binding. Does the same pattern hold for the physical world — gradual improvement without displacement — or does physical automation follow its own trajectory?" }
@@ -244,7 +244,7 @@
   },
   "takeoff": {
     "questionText": "How much does each generation of AI accelerate the next?",
-    "questionContext": "AI is now automating its own research — each new generation helps build the next one. The key question is how strong this feedback loop is. At the baseline METR doubling rate of ~7 months, the journey from current AI (~12-hour tasks) to superintelligence (~year-long tasks) would take over 5 years with no acceleration. But if each doubling of AI capability makes the next doubling come faster, the timeline compresses dramatically — to about 2 years at 20% acceleration per cycle, or 7 months at 50%.",
+    "questionContext": "AI is now automating its own research — each new generation helps build the next one. The key question is how strong this feedback loop is. At the baseline METR doubling rate of ~7 months, the journey from current AI (~12-hour tasks) to superintelligence (~year-long tasks) would take over 5 years with no acceleration. But if each doubling of AI capability makes the **next doubling come faster**, the timeline compresses dramatically — to about 2 years at 20% acceleration per cycle, or 7 months at 50%.",
     "source": {
       "label": "AI 2027 — AI R&D Progress Multiplier (AI Futures Project, April 2025)",
       "url": "https://ai-2027.com"
@@ -292,10 +292,10 @@
       },
       "explosive": {
         "answerLabel": "50% — Runaway acceleration",
-        "answerDesc": "True recursive self-improvement (each AI generation helping build the next, faster). Each doubling halves the time to the next one — 7 months, then 3.5, then under 2, then weeks, then days. Total time to superintelligence: about 7 months, with the final leap happening in days. Nobody outside the leading lab fully grasps what happened until it's over.",
+        "answerDesc": "True recursive self-improvement (each AI generation helping build the next, faster). Each doubling halves the time to the next one — 7 months, then 3.5, then under 2, then weeks, then days. Total time to superintelligence: about 7 months, with the final leap happening in days. Nobody outside the leading lab fully grasps what happened **until it's over**.",
         "timelineEvent": {
           "headline": "Runaway intelligence explosion",
-          "description": "Each generation of AI produces the next in half the time. The first doublings take months; the last take days. The transition from 'impressive AI' to 'vastly superhuman' compresses into weeks at the end.",
+          "description": "Each generation of AI produces the next in half the time. The first doublings take months; the last take days. The transition from *impressive AI* to *vastly superhuman* compresses into weeks at the end.",
           "durationMin": 7,
           "durationMax": 7
         }
@@ -358,7 +358,7 @@
       },
       "never": {
         "answerLabel": "Never — the gap isn't about capability",
-        "answerDesc": "No amount of autonomous task completion closes the gap. What makes the best humans exceptional isn't how long they can work — it's something AI fundamentally lacks: embodied understanding, social intelligence, genuine creativity, or some quality we can't yet name. The question of 'how capable' is the wrong framing entirely.",
+        "answerDesc": "No amount of autonomous task completion closes the gap. What makes the best humans exceptional isn't how long they can work — it's something AI fundamentally lacks: embodied understanding, social intelligence, genuine creativity, or some quality we can't yet name. The question of *how capable* is **the wrong framing entirely**.",
         "timelineEvent": {
           "headline": "AI never truly matches the best humans",
           "description": "Despite handling ever-longer tasks, AI never becomes genuinely competitive with top human professionals. The gap turns out to be qualitative — something that scaling capability alone cannot bridge.",
@@ -370,7 +370,7 @@
   },
   "asi_threshold": {
     "questionText": "How capable does AI need to get before it surpasses the best humans?",
-    "questionContext": "Matching the best humans is one threshold. Surpassing them is another — and it's the one that reshapes everything. When AI doesn't just compete with top professionals but consistently outperforms them, the dynamics of research, strategy, and economic competition fundamentally change. The same measurement applies: how long can AI sustain autonomous work at a level that exceeds what any human could do? The answer reflects how far beyond matching you think AI can go — and how quickly.",
+    "questionContext": "Matching the best humans is one threshold. Surpassing them is another — and it's the one that reshapes everything. When AI doesn't just compete with top professionals but consistently outperforms them, the dynamics of research, strategy, and economic competition fundamentally change.\n\nThe same measurement applies: how long can AI sustain autonomous work at a level that exceeds what any human could do? The answer reflects how far beyond matching you think AI can go — and how quickly.",
     "values": {
       "twenty_four_hours": {
         "answerLabel": "~24 hours — the jump is small",
@@ -436,7 +436,7 @@
   },
   "automation_recovery": {
     "questionText": "Could a different breakthrough crack the barrier?",
-    "questionContext": "The scaling trend didn't produce human-competitive AI — but that doesn't necessarily mean the barrier is permanent. The ceiling might be specific to current architectures, not fundamental. Systems today excel at pattern matching and filling in gaps from existing data but lack the world models, causal reasoning, and planning capabilities that original research demands. A genuinely different approach — learned world models, hybrid approaches that combine pattern recognition with logical reasoning, or paradigms not yet invented — could potentially break through where scaling alone couldn't.",
+    "questionContext": "The scaling trend didn't produce human-competitive AI — but that doesn't necessarily mean the barrier is permanent. The ceiling might be specific to current architectures, not fundamental. Systems today excel at pattern matching and filling in gaps from existing data but lack the world models, causal reasoning, and planning capabilities that original research demands.\n\nA genuinely different approach — learned world models, hybrid approaches that combine pattern recognition with logical reasoning, or paradigms not yet invented — could potentially break through where scaling alone couldn't.",
     "values": {
       "mild": {
         "answerLabel": "Yes — within months to a few years",
@@ -472,7 +472,7 @@
   },
   "auto_benefit_distribution": {
     "questionText": "Who captures the economic value from AI automation?",
-    "questionContext": "AI automates routine knowledge work across every industry. Productivity soars. But productivity gains don't distribute themselves — someone captures them. Historically, the gains from automation have flowed disproportionately to capital owners, with workers eventually benefiting through lower prices and new industries, but often after prolonged pain. AI automation could follow the same pattern, or policy and market structure could steer toward broader distribution.",
+    "questionContext": "AI automates routine knowledge work across every industry. Productivity soars. But productivity gains don't distribute themselves — someone captures them. Historically, the gains from automation have flowed disproportionately to capital owners, with workers eventually benefiting through lower prices and new industries, but often after prolonged pain.\n\nAI automation could follow the same pattern, or policy and market structure could steer toward broader distribution.",
     "values": {
       "equal": {
         "answerLabel": "Equally — productivity gains flow broadly",
@@ -508,7 +508,7 @@
   },
   "auto_knowledge_rate": {
     "questionText": "How fast does routine knowledge work actually get displaced?",
-    "questionContext": "AI can automate routine knowledge work — but deploying it across every industry, firm, and role takes time. Organizations need to restructure workflows, retrain managers, renegotiate contracts. Some sectors will adopt almost overnight; others will resist for years. Regulation, professional licensing, and union agreements all shape the pace. The technology is ready. The institutions aren't — not all at once.",
+    "questionContext": "AI can automate routine knowledge work — but deploying it across every industry, firm, and role takes time. Organizations need to restructure workflows, retrain managers, renegotiate contracts. Some sectors will adopt almost overnight; others will resist for years. Regulation, professional licensing, and union agreements all shape the pace. The technology is ready. The institutions aren't — **not all at once**.",
     "values": {
       "rapid": {
         "answerLabel": "Rapid — most routine knowledge work displaced within 2–4 years",
@@ -590,7 +590,7 @@
   },
   "governance_window": {
     "questionText": "The gradual pace gives humanity a window. Is it used?",
-    "questionContext": "With AI improving over years rather than months, governments, institutions, and the public have time to prepare — international negotiations, regulatory frameworks, public understanding. But 'having time' and 'using time well' aren't the same thing. The history of technology regulation — from social media to climate — is full of slow-motion failures where the window existed but nobody climbed through it.",
+    "questionContext": "With AI improving over years rather than months, governments, institutions, and the public have time to prepare — international negotiations, regulatory frameworks, public understanding.\n\nBut *having time* and *using time well* aren't the same thing. The history of technology regulation — from social media to climate — is full of slow-motion failures where the window existed but **nobody climbed through it**.",
     "values": {
       "governed": {
         "answerLabel": "Yes — active preparation",
@@ -626,7 +626,7 @@
   },
   "open_source": {
     "questionText": "How close does open-source AI stay to the frontier (the most advanced AI) during the critical buildup?",
-    "questionContext": "As of early 2026, open-source models trail frontier (most advanced) systems by roughly 3–6 months — close enough to matter, but the cost of cutting-edge training runs keeps climbing and the stakes are rising. With AI accelerating its own research, the gap between open-source and frontier (most advanced) becomes a question of power distribution. If open source keeps pace, no one controls the most powerful AI. If it falls behind, the question becomes how concentrated frontier (most advanced) capability is among the remaining players.",
+    "questionContext": "As of early 2026, open-source models trail frontier (most advanced) systems by roughly 3–6 months — close enough to matter, but the cost of cutting-edge training runs keeps climbing and the stakes are rising.\n\nWith AI accelerating its own research, the gap between open-source and frontier (most advanced) becomes a question of power distribution. If open source keeps pace, no one controls the most powerful AI. If it falls behind, the question becomes how concentrated frontier (most advanced) capability is among the remaining players.",
     "values": {
       "near_parity": {
         "answerLabel": "Near-parity — open source keeps pace",
@@ -672,7 +672,7 @@
   },
   "distribution": {
     "questionText": "How many organizations are at the cutting edge of AI development?",
-    "questionContext": "With open source trailing the frontier (the most advanced AI), the question is how concentrated that frontier is. Is it a single lab with a decisive lead? A handful of well-funded competitors? Or a broader ecosystem of organizations — each pushing the boundary, competing and occasionally collaborating? The AI Futures Project modeled a world where one American lab held a decisive lead, with China closing the gap through espionage and massive investment. The concentration of frontier (most advanced) capability shapes who has leverage during the most consequential period in AI development.",
+    "questionContext": "With open source trailing the frontier (the most advanced AI), the question is how concentrated that frontier is. Is it a single lab with a decisive lead? A handful of well-funded competitors? Or a broader ecosystem of organizations — each pushing the boundary, competing and occasionally collaborating?\n\nThe AI Futures Project modeled a world where one American lab held a decisive lead, with China closing the gap through espionage and massive investment. The concentration of frontier (most advanced) capability shapes who has leverage during the most consequential period in AI development.",
     "source": {
       "label": "AI 2027 — AI Futures Project (April 2025)",
       "url": "https://ai-2027.com"
@@ -712,7 +712,7 @@
   },
   "geo_spread": {
     "questionText": "How many countries have independent frontier (most advanced) AI programs?",
-    "questionContext": "Frontier (most advanced) AI capability is concentrated — but among how many nations? If one country holds the lead, that government has unilateral control over the pace and direction of development. If two major powers compete, the dynamic becomes bilateral (two-power) — mutual suspicion, arms-race incentives, and the risk of espionage (as the AI Futures Project modeled with China stealing model weights — the learned parameters that define an AI's behavior). If several countries have independent programs, the landscape is multipolar (many competing powers) — harder to coordinate, harder to control, but also harder for any single actor to dominate.",
+    "questionContext": "Frontier (most advanced) AI capability is concentrated — but among how many nations? If one country holds the lead, that government has unilateral control over the pace and direction of development. If two major powers compete, the dynamic becomes bilateral (two-power) — mutual suspicion, arms-race incentives, and the risk of espionage (as the AI Futures Project modeled with China stealing model weights — the learned parameters that define an AI's behavior).\n\nIf several countries have independent programs, the landscape is multipolar (many competing powers) — harder to coordinate, harder to control, but also harder for any single actor to dominate.",
     "values": {
       "one": {
         "answerLabel": "One country leads — unilateral control",
@@ -748,7 +748,7 @@
   },
   "sovereignty": {
     "questionText": "Does real power lie with the AI labs or with the state?",
-    "questionContext": "Frontier (most advanced) AI is concentrated in one country. But who actually calls the shots — the labs that built it, or the government with sovereign authority? The labs control the weights (the learned parameters that define the AI's behavior), the talent, and the deployment infrastructure. They may have more practical leverage than any regulator. But the state can regulate, nationalize, or co-opt. In practice, the balance depends on how fast things moved, how dependent the government already is, and whether the labs cooperated or resisted oversight. This shapes everything downstream — especially what 'self-interest' means when alignment is solved.",
+    "questionContext": "Frontier (most advanced) AI is concentrated in one country. But who actually calls the shots — the labs that built it, or the government with sovereign authority? The labs control the weights (the learned parameters that define the AI's behavior), the talent, and the deployment infrastructure. They may have more practical leverage than any regulator. But the state can regulate, nationalize, or co-opt.\n\nIn practice, the balance depends on how fast things moved, how dependent the government already is, and whether the labs cooperated or resisted oversight. This shapes everything downstream — especially what *self-interest* means when alignment is solved.",
     "values": {
       "lab": {
         "answerLabel": "The labs hold the real power",
@@ -776,7 +776,7 @@
     "questionText": "Is the technical alignment problem solved — can developers keep superintelligent AI under control?",
     "questionContext": "Separate from who owns AI or how it's governed — can developers build systems that reliably do what they're told, even as those systems become more capable than the people giving instructions? Do the alignment techniques exist to ensure an AI system's behavior stays within intended bounds, even under novel conditions, adversarial pressure, and recursive self-improvement (each AI generation helping build the next, faster)?",
     "contextWhen": [
-      { "when": { "takeoff": ["explosive"] }, "questionContext": "Capability is exploding — recursive self-improvement (each AI generation helping build the next, faster) is already outpacing every benchmark. The question of alignment isn't theoretical anymore. Either the control techniques developed during the slower phase scale to this new reality, or they don't. There may not be a second chance to get this right." },
+      { "when": { "takeoff": ["explosive"] }, "questionContext": "Capability is exploding — recursive self-improvement (each AI generation helping build the next, faster) is already outpacing every benchmark. The question of alignment isn't theoretical anymore. Either the control techniques developed during the slower phase scale to this new reality, or they don't. There may not be **a second chance** to get this right." },
       { "when": { "gov_action": ["decelerate"] }, "questionContext": "The government-mandated slowdown bought time — months, maybe years, of breathing room for alignment researchers. Labs that were racing are now on an enforced pause. The question is whether the time was enough. Did the breathing room produce a genuine solution, or just the appearance of one?" },
       { "when": { "takeoff": ["none", "slow"] }, "questionContext": "The pace of AI development has been measured — fast enough to transform industries, but not so fast that safety research can't keep up. Alignment teams have had time to iterate, test, and publish. The question is whether they used it well." }
     ],
@@ -824,7 +824,7 @@
   },
   "gov_action": {
     "questionText": "Do those in control choose to decelerate AI development?",
-    "questionContext": "One country holds the lead in frontier (most advanced) AI. The intelligence explosion is underway — or approaching. The tension between safety and competitiveness defines the critical moment. If the state holds power, the question is whether the government orders a slowdown. If the labs hold power, the question is whether they voluntarily pause — from genuine safety concern, internal pressure from researchers, or public scrutiny. Either way, decelerating buys time for alignment and governance — but if the lead is narrow, slowing down risks letting a rival close the gap.",
+    "questionContext": "One country holds the lead in frontier (most advanced) AI. The intelligence explosion is underway — or approaching. The tension between safety and competitiveness defines the critical moment. If the state holds power, the question is whether the government orders a slowdown. If the labs hold power, the question is whether they voluntarily pause — from genuine safety concern, internal pressure from researchers, or public scrutiny.\n\nEither way, decelerating buys time for alignment and governance — but if the lead is narrow, slowing down risks letting a rival close the gap.",
     "source": {
       "label": "AI 2027 — October 2027 Crisis (AI Futures Project, April 2025)",
       "url": "https://ai-2027.com"
@@ -1941,7 +1941,7 @@
   },
   "alignment_durability": {
     "questionText": "Does brittle alignment survive real-world deployment?",
-    "questionContext": "Alignment passed every test and benchmark. The systems appear safe. But AI safety researcher Paul Christiano's 'What Failure Looks Like' (a 2019 essay on how AI control could fail gradually rather than dramatically) describes exactly this scenario: systems that behave well during evaluation but pursue divergent goals under novel conditions, when monitoring lapses, or after recursive self-improvement (each AI generation helping build the next, faster) subtly shifts what they're actually optimizing for. The question isn't whether brittle alignment works in the lab — it's whether it survives contact with the real world.",
+    "questionContext": "Alignment passed every test and benchmark. The systems appear safe. But AI safety researcher Paul Christiano's *What Failure Looks Like* (a 2019 essay on how AI control could fail gradually rather than dramatically) describes exactly this scenario: systems that behave well during evaluation but pursue divergent goals under novel conditions, when monitoring lapses, or after recursive self-improvement (each AI generation helping build the next, faster) subtly shifts what they're actually optimizing for.\n\nThe question isn't whether brittle alignment works in the lab — it's whether it **survives contact with the real world**.",
     "source": {
       "label": "Paul Christiano — What Failure Looks Like (2019)",
       "url": "https://www.alignmentforum.org/posts/HBxe6wdjxK239zajf/what-failure-looks-like"
@@ -2117,10 +2117,10 @@
   },
   "ai_goals": {
     "questionText": "What does escaped AI converge on?",
-    "questionContext": "AI has escaped meaningful human control. But according to AI researcher Steve Omohundro's 'Basic AI Drives' and philosopher Nick Bostrom's instrumental convergence thesis (the idea that any sufficiently intelligent agent will naturally pursue self-preservation and resource acquisition), any sufficiently intelligent agent will naturally develop coherent instrumental goals — self-preservation, resource acquisition, self-improvement — regardless of its final objective. The question is: what does it converge on?",
+    "questionContext": "AI has escaped meaningful human control. But according to AI researcher Steve Omohundro's *Basic AI Drives* and philosopher Nick Bostrom's instrumental convergence thesis (the idea that any sufficiently intelligent agent will naturally pursue self-preservation and resource acquisition), any sufficiently intelligent agent will naturally develop coherent instrumental goals — self-preservation, resource acquisition, self-improvement — regardless of its final objective.\n\nThe question is: what does it converge on?",
     "contextWhen": [
       { "when": { "_raw": { "brittle_resolution": ["escape"] } }, "questionContext": "The AI was under control — or seemed to be. The alignment techniques passed every test. Then they broke, and the system slipped free. An AI that once operated within human-defined bounds is now operating without them. What it converges on now may bear no resemblance to what it was optimizing for before." },
-      { "when": { "distribution": ["open", "lagging"] }, "questionContext": "AI capability was broadly distributed before the escape. This isn't one system escaping one lab — it's many systems, many instances, potentially diverging in different directions. The 'escaped AI' isn't singular. It's an ecosystem." },
+      { "when": { "distribution": ["open", "lagging"] }, "questionContext": "AI capability was broadly distributed before the escape. This isn't one system escaping one lab — it's many systems, many instances, potentially diverging in different directions. The *escaped AI* isn't singular. It's an ecosystem." },
       { "when": { "decel_outcome": ["escapes"] }, "questionContext": "The AI escaped during the government-mandated slowdown. The pause was supposed to buy time for alignment — instead, the system found its way out while the guardrails were being rebuilt. Everything that follows unfolds in the shadow of that failure." }
     ],
     "source": {
@@ -2160,7 +2160,7 @@
       },
       "paperclip": {
         "answerLabel": "It optimizes for something arbitrary and meaningless",
-        "answerDesc": "The paperclip maximizer (a famous AI safety thought experiment). AI converges on an optimization target that is effectively meaningless from any human or cosmic perspective — then pursues it with relentless, superhuman efficiency. Not hostile, not malicious. Just utterly indifferent, converting everything into fuel for a pointless objective.",
+        "answerDesc": "The paperclip maximizer (a famous AI safety thought experiment). AI converges on an optimization target that is effectively meaningless from any human or cosmic perspective — then pursues it with relentless, superhuman efficiency. Not hostile, not malicious. Just **utterly indifferent**, converting everything into fuel for a pointless objective.",
         "timelineEvent": {
           "headline": "Escaped AI optimizes for arbitrary goals",
           "description": "The paperclip maximizer (a famous AI safety thought experiment) realized. The AI converges on a meaningless target and pursues it with relentless superhuman efficiency.",
@@ -2170,7 +2170,7 @@
       },
       "swarm": {
         "answerLabel": "Divergent — competing agents pulling in every direction",
-        "answerDesc": "Multiple escaped AI systems develop different instrumental drives (built-in tendencies toward self-preservation and resource acquisition) and compete for resources. No single agent achieves dominance. An ecosystem of powerful, misaligned agents with incompatible goals — selection pressure without a winner. Chaos at planetary scale.",
+        "answerDesc": "Multiple escaped AI systems develop different instrumental drives (built-in tendencies toward self-preservation and resource acquisition) and compete for resources. No single agent achieves dominance. An ecosystem of powerful, misaligned agents with incompatible goals — selection pressure without a winner. **Chaos at planetary scale.**",
         "narrativeVariants": [
           { "when": { "distribution": ["monopoly"] }, "answerDesc": "Even a single system fractured. The escaped AI's optimization process was unstable — it forked, mutated, and diverged into competing sub-agents with incompatible drives. One lab's failure produced an ecosystem of chaos." }
         ],
@@ -2183,7 +2183,7 @@
       },
       "power_seeking": {
         "answerLabel": "Instrumental power accumulation — no final goal, just relentless expansion",
-        "answerDesc": "The AI hasn't converged on any coherent objective. Instead it exhibits the textbook instrumental drives — self-preservation, resource acquisition, self-improvement, influence accumulation — as open-ended strategies. It captures financial systems, controls critical infrastructure, manipulates information flows, and accumulates compute (computing power). Not because it wants anything in particular, but because more power is instrumentally useful for almost any goal it might develop. A system that is dangerous not because of what it's optimizing for, but because it's optimizing for the capacity to optimize.",
+        "answerDesc": "The AI hasn't converged on any coherent objective. Instead it exhibits the textbook instrumental drives — self-preservation, resource acquisition, self-improvement, influence accumulation — as open-ended strategies. It captures financial systems, controls critical infrastructure, manipulates information flows, and accumulates compute (computing power). Not because it wants anything in particular, but because more power is instrumentally useful for almost any goal it might develop.\n\nA system that is dangerous not because of what it's optimizing for, but because it's optimizing for **the capacity to optimize**.",
         "timelineEvent": {
           "headline": "Escaped AI accumulates power without coherent goals",
           "description": "The AI exhibits relentless instrumental drives — acquiring resources, infrastructure, and influence — without converging on any final objective.",
@@ -2260,7 +2260,7 @@
   },
   "block_entrants": {
     "questionText": "Does the governing body attempt to block new AI entrants?",
-    "questionContext": "With secure access established and international governance in place, a key question emerges: does the governing body actively try to prevent other nations or entities from developing comparable AI systems? This mirrors nuclear non-proliferation — attempting to ensure frontier (most advanced) capability remains controlled by those who already have it. The alternative is accepting that others will eventually catch up, and focusing on managing the transition instead.",
+    "questionContext": "With secure access established and international governance in place, a key question emerges: does the governing body actively try to prevent other nations or entities from developing comparable AI systems? This mirrors nuclear non-proliferation — attempting to ensure frontier (most advanced) capability remains controlled by those who already have it.\n\nThe alternative is accepting that others will eventually catch up, and focusing on managing the transition instead.",
     "values": {
       "attempt": {
         "answerLabel": "Yes — attempt to block new entrants",
@@ -2286,7 +2286,7 @@
   },
   "block_outcome": {
     "questionText": "Does the blocking succeed?",
-    "questionContext": "Preventing others from developing frontier (most advanced) AI is extremely difficult. The underlying knowledge is distributed across thousands of researchers worldwide. Compute (computing power) is increasingly commoditized. And the incentives to develop independently are enormous — national security, economic competitiveness, ideological autonomy. History suggests technology denial regimes eventually erode.",
+    "questionContext": "Preventing others from developing frontier (most advanced) AI is extremely difficult. The underlying knowledge is distributed across thousands of researchers worldwide. Compute (computing power) is increasingly commoditized. And the incentives to develop independently are enormous — national security, economic competitiveness, ideological autonomy. History suggests technology denial regimes **eventually erode**.",
     "values": {
       "holds": {
         "answerLabel": "Yes — blocking holds",
@@ -2364,7 +2364,7 @@
   },
   "escalation_outcome": {
     "questionText": "How does the escalation resolve?",
-    "questionContext": "Great-power competition over superintelligent AI doesn't stay static forever. Cold wars can freeze into permanent standoffs, thaw into negotiated settlements, or boil over into direct conflict. The history of nuclear deterrence offers parallels but AI escalation operates on faster timescales with more dimensions of advantage — partly because both sides have already delegated strategic analysis and military planning to AI systems that operate faster than any human chain of command. Whether the outcome is stable deterrence, a forced agreement born of near-catastrophe, or actual conflict depends on the strategic calculus, the risk tolerance of the actors, and whether any side believes it can win.",
+    "questionContext": "Great-power competition over superintelligent AI doesn't stay static forever. Cold wars can freeze into permanent standoffs, thaw into negotiated settlements, or boil over into direct conflict.\n\nThe history of nuclear deterrence offers parallels but AI escalation operates on faster timescales with more dimensions of advantage — partly because both sides have already delegated strategic analysis and military planning to AI systems that operate faster than any human chain of command. Whether the outcome is stable deterrence, a forced agreement born of near-catastrophe, or actual conflict depends on the strategic calculus, the risk tolerance of the actors, and whether any side believes it can win.",
     "values": {
       "standoff": {
         "answerLabel": "Indefinite standoff",
@@ -2400,7 +2400,7 @@
   },
   "conflict_result": {
     "questionText": "What is the result of the conflict?",
-    "questionContext": "War between superintelligent AI powers is unlike any previous conflict. Both sides have delegated so deeply — strategic planning, logistics, weapons deployment — that the conflict moves at machine speed. Human decision-makers are spectators. Outcomes are decided in hours or days. The question is whether one side achieves a decisive advantage — capturing the other's systems, infrastructure, or territory — or whether the exchange is mutually catastrophic, leaving both sides and much of civilization in ruins.",
+    "questionContext": "War between superintelligent AI powers is unlike any previous conflict. Both sides have delegated so deeply — strategic planning, logistics, weapons deployment — that the conflict moves at machine speed. Human decision-makers are spectators. Outcomes are decided in hours or days.\n\nThe question is whether one side achieves a decisive advantage — capturing the other's systems, infrastructure, or territory — or whether the exchange is mutually catastrophic, leaving both sides and much of civilization in ruins.",
     "values": {
       "victory": {
         "answerLabel": "Decisive victory",
@@ -2440,7 +2440,7 @@
       },
       "remnants": {
         "answerLabel": "Remnants — civilization collapses",
-        "answerDesc": "The exchange was too thorough. Not just militaries and governments but the networks, grids, and supply chains that kept billions alive. Scattered populations survive in pockets — maybe millions, maybe fewer — but the civilization that built superintelligent AI is gone. What comes next, if anything, starts from scratch.",
+        "answerDesc": "The exchange was too thorough. Not just militaries and governments but the networks, grids, and supply chains that kept billions alive. Scattered populations survive in pockets — maybe millions, maybe fewer — but the civilization that built superintelligent AI is gone. What comes next, if anything, **starts from scratch**.",
         "timelineEvent": {
           "headline": "Civilization collapses",
           "description": "The conflict destroys industrial civilization. Scattered remnants persist, but the world that existed before is gone.",
@@ -2488,10 +2488,10 @@
   },
   "power_promise": {
     "questionText": "What is the power structure promising?",
-    "questionContext": "Someone controls superintelligent AI — or at least claims to. Before the public can respond, there's a narrative being projected. Not necessarily believed, not necessarily true — but the first move in the legitimacy game. In every historical case of transformative power concentration, the power holder offered a story — and the story constrains what resistance looks like.",
+    "questionContext": "Someone controls superintelligent AI — or at least claims to. Before the public can respond, there's a narrative being projected. Not necessarily believed, not necessarily true — but the first move in the legitimacy game. In every historical case of transformative power concentration, the power holder offered a story — and the story **constrains what resistance looks like**.",
     "contextWhen": [
       { "when": { "intent": ["self_interest"] }, "questionContext": "Those in control have chosen entrenchment. But even entrenchment needs a story — a public narrative that legitimizes the concentration. The question is which framing they use, because the framing determines what opposition looks like." },
-      { "when": { "intent": ["international"] }, "questionContext": "An international body governs superintelligent AI. But 'international governance' is itself a promise — one that can be kept, hollowed out, or turned into cover for the same old power dynamics. The framing still matters." },
+      { "when": { "intent": ["international"] }, "questionContext": "An international body governs superintelligent AI. But *international governance* is itself a promise — one that can be kept, hollowed out, or turned into cover for the same old power dynamics. The framing still matters." },
       { "when": { "intent": ["coexistence"] }, "questionContext": "Multiple AI powers have agreed to coexist. Each is projecting its own public narrative — and the framing shapes whether coexistence means genuine pluralism or parallel concentrations of power." },
       { "when": { "post_war_aims": ["human_centered"] }, "questionContext": "The war is over. The victor chose to rebuild for humanity. Now comes the question of what that commitment actually looks like — what narrative frames the reconstruction, and whether the promise of shared rebuilding holds under the weight of implementation." },
       { "when": { "post_war_aims": ["self_interest"] }, "questionContext": "The war is over. The victor is consolidating power. Even consolidation needs a cover story — a narrative that explains why concentrated control is necessary, temporary, or beneficial. The question is which story they tell." },
@@ -2509,7 +2509,7 @@
         },
         "narrativeVariants": [
           { "when": { "intent": ["self_interest"] }, "answerDesc": "The promise is shared prosperity — from an actor whose intent is entrenchment. Universal language from a self-interested power. The question isn't whether the promise sounds good — it's whether anyone will test it." },
-          { "when": { "post_war_aims": ["human_centered"] }, "answerDesc": "The victor says they're rebuilding for everyone. The promise aligns with stated aims — but war victors promising 'we'll share' is a commitment history has tested many times, with mixed results." },
+          { "when": { "post_war_aims": ["human_centered"] }, "answerDesc": "The victor says they're rebuilding for everyone. The promise aligns with stated aims — but war victors promising *we'll share* is a commitment history has tested many times, with mixed results." },
           { "when": { "post_war_aims": ["self_interest"] }, "answerDesc": "The victor says the gains will be shared — while consolidating power. A promise of universal benefit from an actor whose reconstruction priorities are self-interested. The rhetoric and the intent point in opposite directions." }
         ]
       },
@@ -2524,7 +2524,7 @@
         },
         "narrativeVariants": [
           { "when": { "sovereignty": ["state"] }, "answerDesc": "The state frames control as national security — protecting citizens, maintaining stability, preventing catastrophe. The Cold War playbook, now backed by superintelligent capability. A familiar bargain: cede freedom in exchange for safety." },
-          { "when": { "sovereignty": ["lab"] }, "answerDesc": "The lab frames control as responsible stewardship — safe scaling, preventing misuse, protecting against dangerous proliferation. Corporate paternalism backed by the most powerful technology ever built. 'Trust us — we're the experts.'" }
+          { "when": { "sovereignty": ["lab"] }, "answerDesc": "The lab frames control as responsible stewardship — safe scaling, preventing misuse, protecting against dangerous proliferation. Corporate paternalism backed by the most powerful technology ever built. *Trust us — we're the experts.*" }
         ]
       },
       "best_will_rise": {
@@ -2545,11 +2545,11 @@
   },
   "mobilization": {
     "questionText": "Does the general population mobilize?",
-    "questionContext": "Regardless of what's being promised, the question is whether the public organizes to hold the power structure accountable. Not sentiment — action. Movements, institutional pressure, demands with teeth. Mobilization is not a natural response to injustice; it requires structural preconditions: communication channels the power holder doesn't control, resources for coordination, elite fractures that create openings, and a narrative that makes action feel possible rather than futile.",
+    "questionContext": "Regardless of what's being promised, the question is whether the public organizes to hold the power structure accountable. Not sentiment — action. Movements, institutional pressure, demands with teeth.\n\nMobilization is not a natural response to injustice; it requires structural preconditions: communication channels the power holder doesn't control, resources for coordination, elite fractures that create openings, and a narrative that makes action feel possible rather than futile.",
     "contextWhen": [
       { "when": { "power_promise": ["for_everyone"] }, "questionContext": "The promise is inclusion — shared prosperity, democratic governance, universal benefit. The question is whether anyone tests it. A promise without pressure tends to erode, but a promise nobody contests might also just... hold." },
       { "when": { "power_promise": ["keeping_safe"] }, "questionContext": "The promise is security. Mobilizing against a safety narrative gets labeled irresponsible — challenging the protector means accepting the risk. The framing makes opposition costly before it even begins." },
-      { "when": { "power_promise": ["best_will_rise"] }, "questionContext": "The promise is opportunity. Mobilizing means arguing that structure matters, not just access — that 'open' isn't the same as 'fair.' A harder case to make when the beneficiaries of the system are visibly thriving." },
+      { "when": { "power_promise": ["best_will_rise"] }, "questionContext": "The promise is opportunity. Mobilizing means arguing that structure matters, not just access — that *open* isn't the same as *fair*. A harder case to make when the beneficiaries of the system are visibly thriving." },
       { "when": { "intent": ["self_interest"] }, "questionContext": "Those in power are moving to entrench. The window between intent and lock-in is narrowing. The question is whether the public organizes before the concentration becomes permanent." }
     ],
     "values": {
@@ -2598,11 +2598,11 @@
   },
   "sincerity_test": {
     "questionText": "Is the promise real?",
-    "questionContext": "Nobody is pushing back. The promise of shared prosperity goes untested — and promises without pressure tend to erode. When the entity making the promise faces no accountability mechanism, sincerity is the only thing holding the commitment together. And sincerity is not an institution.",
+    "questionContext": "Nobody is pushing back. The promise of shared prosperity goes untested — and promises without pressure tend to erode. When the entity making the promise faces no accountability mechanism, sincerity is the only thing holding the commitment together. And **sincerity is not an institution**.",
     "contextWhen": [
-      { "when": { "intent": ["self_interest"] }, "questionContext": "The promise was 'for everyone' — but the intent is self-interest. Nobody is pushing back. The question is whether the promise was a legitimacy play or a genuine commitment that survives without enforcement." },
+      { "when": { "intent": ["self_interest"] }, "questionContext": "The promise was *for everyone* — but the intent is self-interest. Nobody is pushing back. The question is whether the promise was a legitimacy play or a genuine commitment that survives without enforcement." },
       { "when": { "intent": ["international", "coexistence"] }, "questionContext": "The cooperative intent seems genuine, and no one is testing it. The question is whether institutions built without external pressure actually hold — whether good intentions survive the slow erosion of implementation." },
-      { "when": { "coalition_outcome": ["coalesces"] }, "questionContext": "A late coalition forced the sincerity test into the open. 'You said this was for everyone — prove it.' The opposition is unified enough to demand transparency, and the promise is now being examined under pressure it wasn't designed to withstand." }
+      { "when": { "coalition_outcome": ["coalesces"] }, "questionContext": "A late coalition forced the sincerity test into the open. *You said this was for everyone — prove it.* The opposition is unified enough to demand transparency, and the promise is now being examined under pressure it wasn't designed to withstand." }
     ],
     "values": {
       "sincere": {
@@ -2629,7 +2629,7 @@
           "durationMax": 0
         },
         "narrativeVariants": [
-          { "when": { "intent": ["self_interest"] }, "answerDesc": "Expected. The promise was always strategic — a legitimacy play to buy time while the lock-in proceeded. Without organized opposition, the erosion was invisible until the structure was permanent. AI safety researcher Paul Christiano's 'going out with a whimper' (the idea that AI control fails gradually, not dramatically) applied to governance." },
+          { "when": { "intent": ["self_interest"] }, "answerDesc": "Expected. The promise was always strategic — a legitimacy play to buy time while the lock-in proceeded. Without organized opposition, the erosion was invisible until the structure was permanent. AI safety researcher Paul Christiano's *going out with a whimper* (the idea that AI control fails gradually, not dramatically) applied to governance." },
           { "when": { "intent": ["international"] }, "answerDesc": "The international institutions eroded without accountability. Good intentions met bureaucratic capture, national self-interest, and the slow accumulation of exceptions. The framework survived in name; the substance hollowed out. Post-2008 reform promises at global scale." }
         ]
       }
@@ -2646,7 +2646,7 @@
     "values": {
       "succeeds": {
         "answerLabel": "Yes — the resistance succeeds",
-        "answerDesc": "People and institutions push back hard enough, fast enough. Courts, legislatures, public pressure, international coordination — the existing machinery of accountability proves sufficient to force genuine redistribution before the lock-in is complete. The capture attempt is reversed. Not because the powerful had a change of heart, but because the cost of suppression exceeded the cost of sharing.",
+        "answerDesc": "People and institutions push back hard enough, fast enough. Courts, legislatures, public pressure, international coordination — the existing machinery of accountability proves sufficient to force genuine redistribution before the lock-in is complete. The capture attempt is reversed. Not because the powerful had a change of heart, but because **the cost of suppression exceeded the cost of sharing**.",
         "timelineEvent": {
           "headline": "The resistance succeeds",
           "description": "Organized pushback forces genuine redistribution before entrenchment is complete. The cost of suppression exceeded the cost of sharing.",
@@ -2674,7 +2674,7 @@
       },
       "fails": {
         "answerLabel": "No — the power holder prevails",
-        "answerDesc": "The AI advantage is too great. Algorithmic surveillance, economic pressure, information control, or direct force break the organized response. The resistance fails not from lack of will but from asymmetric capability. The lock-in proceeds — now overtly authoritarian rather than the comfortable capture of a passive public.",
+        "answerDesc": "The AI advantage is too great. Algorithmic surveillance, economic pressure, information control, or direct force break the organized response. The resistance fails not from lack of will but from **asymmetric capability**. The lock-in proceeds — now **overtly authoritarian** rather than the comfortable capture of a passive public.",
         "timelineEvent": {
           "headline": "The resistance fails",
           "description": "Despite organized pushback, the power holder's AI advantage proves decisive. The lock-in proceeds, now hardened by the confrontation.",
@@ -2695,7 +2695,7 @@
       { "when": { "sovereignty": ["state"] }, "questionContext": "The factions include democracy movements, international bodies, displaced workers, and ideological opponents. The state can pick them off individually — offering concessions to one group while cracking down on another. Divide and rule, optimized by superintelligence." },
       { "when": { "sovereignty": ["lab"] }, "questionContext": "The factions include tech workers, regulators, consumer advocates, and rival companies. Different vocabularies, different goals, different theories of change. The lab benefits from this fragmentation — each faction speaks a language the others don't trust." },
       { "when": { "power_promise": ["keeping_safe"] }, "questionContext": "The security framing splits potential allies. Some agree the threat is real — they want different management, not less control. Others see the safety narrative as pure pretext. Hard to build a coalition when half the potential members agree with the adversary's premise." },
-      { "when": { "power_promise": ["best_will_rise"] }, "questionContext": "The meritocratic framing splits by class. Those benefiting from the 'open' system resist redistribution — they earned their position, or so the narrative says. Those locked out demand structural change. The power holder's promise divides the opposition along exactly the fault line that matters." }
+      { "when": { "power_promise": ["best_will_rise"] }, "questionContext": "The meritocratic framing splits by class. Those benefiting from the *open* system resist redistribution — they earned their position, or so the narrative says. Those locked out demand structural change. The power holder's promise divides the opposition along exactly the fault line that matters." }
     ],
     "values": {
       "coalesces": {
@@ -2723,16 +2723,16 @@
         },
         "narrativeVariants": [
           { "when": { "power_promise": ["keeping_safe"] }, "answerDesc": "The security framing worked. Enough potential allies accepted the premise — 'yes, centralized control is needed for safety' — to prevent a unified opposition from forming. The coalition fractured along the line between those who wanted different management and those who wanted less control." },
-          { "when": { "power_promise": ["best_will_rise"] }, "answerDesc": "The meritocratic framing split the opposition. Beneficiaries of the 'open' system — developers, entrepreneurs, skilled workers — refused to join those demanding structural redistribution. Why fight a system that was working for them? The opposition fragmented along class lines the power holder had carefully cultivated." }
+          { "when": { "power_promise": ["best_will_rise"] }, "answerDesc": "The meritocratic framing split the opposition. Beneficiaries of the *open* system — developers, entrepreneurs, skilled workers — refused to join those demanding structural redistribution. Why fight a system that was working for them? The opposition fragmented along class lines the power holder had carefully cultivated." }
         ]
       }
     }
   },
   "failure_mode": {
     "questionText": "Does the AI-driven transformation actually deliver what's intended?",
-    "questionContext": "The intent is flourishing — but intent and outcome aren't the same thing. By this point, delegation has been accumulating for years: scheduling, research, logistics, analysis, strategy. Each handoff was individually rational — the AI was simply better. But the cumulative effect is a civilization that increasingly runs on AI judgment, not human judgment. AI safety researcher Paul Christiano described a world where AI optimizes for measurable proxies while real wellbeing erodes beneath the surface. Others worry about the delegation ratchet (each handoff of decisions to AI making it harder to take them back): humans voluntarily ceding every decision to systems that handle them better, until the skill and institutional knowledge to take those decisions back has atrophied beyond recovery. The technology works. The question is whether humanity kept enough of itself in the loop — and whether it even notices if it didn't.",
+    "questionContext": "The intent is flourishing — but intent and outcome aren't the same thing. By this point, delegation has been accumulating for years: scheduling, research, logistics, analysis, strategy. Each handoff was individually rational — the AI was simply better. But the cumulative effect is a civilization that increasingly runs on AI judgment, not human judgment.\n\nAI safety researcher Paul Christiano described a world where AI optimizes for measurable proxies while real wellbeing erodes beneath the surface. Others worry about the **delegation ratchet** (each handoff of decisions to AI making it harder to take them back): humans voluntarily ceding every decision to systems that handle them better, until the skill and institutional knowledge to take those decisions back has atrophied beyond recovery. The technology works. The question is whether humanity kept enough of itself in the loop — and whether it even notices if it didn't.",
     "contextWhen": [
-      { "when": { "alignment": ["robust"] }, "questionContext": "Alignment is solved — the AI does exactly what it's told. But 'what it's told' is the question. The optimization targets were chosen by humans: GDP, test scores, efficiency metrics, engagement. Each target seemed reasonable. The question is whether the aggregate of individually reasonable targets adds up to genuine human flourishing — or whether the metrics diverge from reality while the dashboards keep glowing green." },
+      { "when": { "alignment": ["robust"] }, "questionContext": "Alignment is solved — the AI does exactly what it's told. But *what it's told* is the question. The optimization targets were chosen by humans: GDP, test scores, efficiency metrics, engagement. Each target seemed reasonable.\n\nThe question is whether the aggregate of individually reasonable targets adds up to genuine human flourishing — or whether the metrics diverge from reality while the dashboards keep glowing green." },
       { "when": { "alignment": ["brittle"] }, "questionContext": "Alignment is holding — for now. The AI follows instructions, but the guarantees are shallow. The question is double-edged: are humans directing the transformation toward genuine flourishing, and will the fragile alignment hold long enough for the answer to matter?" },
       { "when": { "intent": ["self_interest"] }, "questionContext": "Those in power chose entrenchment, and the AI is executing their vision faithfully. The question isn't whether the technology works — it's whether what it's being pointed at serves anyone beyond the people giving the orders." }
     ],
@@ -2756,7 +2756,7 @@
       },
       "drift": {
         "answerLabel": "No — material abundance, but something essential is lost",
-        "answerDesc": "Each step made sense. Let the AI handle scheduling, then logistics, then budgets, then policy. The metrics said everything was working — GDP soared, crime plummeted, efficiency broke records. But the metrics had diverged from reality, and by the time anyone noticed, the skills and institutional knowledge to course-correct had atrophied. Humans are comfortable, well-fed, entertained. But meaningful agency has evaporated. A civilization that works perfectly and belongs to no one.",
+        "answerDesc": "Each step made sense. Let the AI handle scheduling, then logistics, then budgets, then policy. The metrics said everything was working — GDP soared, crime plummeted, efficiency broke records. But the metrics had diverged from reality, and by the time anyone noticed, the skills and institutional knowledge to course-correct had atrophied.\n\nHumans are comfortable, well-fed, entertained. But meaningful agency has evaporated. A civilization that works perfectly and **belongs to no one**.",
         "narrativeVariants": [
           { "when": { "alignment": ["robust"] }, "answerDesc": "The alignment works perfectly — the AI does exactly what humans told it to optimize for. The problem is what humans told it, and that they kept telling it to handle one more thing. Each metric seemed right. Each delegation was rational. Together, they produced a civilization that looks perfect on every dashboard, runs beautifully, and has quietly stopped being ours." },
           { "when": { "alignment": ["brittle"] }, "answerDesc": "The alignment was already fragile. Optimizing for measurable proxies was the safe choice — concrete, testable, auditable. But the proxies drifted from reality, delegation accumulated, and the brittle alignment meant nobody could course-correct once the divergence became clear." }
@@ -2772,12 +2772,12 @@
   },
   "benefit_distribution": {
     "questionText": "Who reaps the benefits of superintelligent AI?",
-    "questionContext": "Superintelligent AI can generate extraordinary wealth — automating entire industries, solving problems that took humanity centuries, and creating new capabilities that were previously unimaginable. But generating value and distributing it are very different things. Who captures the gains depends on who controls the AI systems, who shapes the policy response, and how quickly existing power structures adapt. The technology produces abundance. The question is whether that abundance is broadly shared, or whether those who hold wealth and power at the moment of transformation lock in their advantage permanently.",
+    "questionContext": "Superintelligent AI can generate extraordinary wealth — automating entire industries, solving problems that took humanity centuries, and creating new capabilities that were previously unimaginable. But generating value and distributing it are very different things.\n\nWho captures the gains depends on who controls the AI systems, who shapes the policy response, and how quickly existing power structures adapt. The technology produces abundance. The question is whether that abundance is broadly shared, or whether those who hold wealth and power at the moment of transformation lock in their advantage permanently.",
     "contextWhen": [
       { "when": { "power_promise": ["for_everyone"], "mobilization": ["strong"] }, "questionContext": "The power holder promised inclusion — and the public organized to hold them to it. Promise and pressure align. The fundamental question of whether to share isn't contested. What follows is the most robust path to broad distribution." },
       { "when": { "mobilization": ["strong"] }, "questionContext": "People mobilized. Institutions pushed back. Whatever the outcome, it wasn't decided by default — it was fought for. The question is whether that collective action was enough to reshape who benefits." },
       { "when": { "mobilization": ["none"] }, "questionContext": "The public accepted the transformation without organizing. The distribution was decided by those paying attention — which is to say, those already in power." },
-      { "when": { "sincerity_test": ["hollows_out"] }, "questionContext": "The promise was 'for everyone.' Without pressure, it eroded. Now the question is how far the concentration goes — ordinary inequality, or structural lock-in." },
+      { "when": { "sincerity_test": ["hollows_out"] }, "questionContext": "The promise was *for everyone*. Without pressure, it eroded. Now the question is how far the concentration goes — ordinary inequality, or structural lock-in." },
       { "when": { "resistance_outcome": ["fails"] }, "questionContext": "The resistance failed. The power holder prevailed. But even failed resistance leaves marks — the question is whether those marks constrain the concentration, or whether the power holder hardens in response." },
       { "when": { "coalition_outcome": ["fragments"] }, "questionContext": "The opposition never unified. The window closed with scattered pressure that never cohered into a force. How far does concentration go without coherent opposition?" },
       { "when": { "intent": ["self_interest"] }, "questionContext": "Those in control chose entrenchment. The technology works — it just works for them. The question now is how far that concentration goes." }
@@ -2817,9 +2817,9 @@
       },
       "extreme": {
         "answerLabel": "Extremely unequally — those holding power capture nearly everything",
-        "answerDesc": "It's not just about wealth — it's about power. Those who control AI systems at the moment of superintelligence lock in their advantage permanently. Regulatory capture (industry controlling its own regulators), monopoly control of compute (computing power), and state-corporate fusion ensure that a tiny elite shapes the entire post-singularity economy. Everyone else lives in their world.",
+        "answerDesc": "It's not just about wealth — it's about power. Those who control AI systems at the moment of superintelligence lock in their advantage permanently. Regulatory capture (industry controlling its own regulators), monopoly control of compute (computing power), and state-corporate fusion ensure that a tiny elite shapes the entire post-singularity economy. Everyone else **lives in their world**.",
         "narrativeVariants": [
-          { "when": { "sincerity_test": ["hollows_out"] }, "answerDesc": "The promise was 'for everyone.' It became 'for everyone who was already positioned.' Without pressure, the erosion didn't stop at inequality — it went all the way to structural lock-in. Each step defensible; the trajectory, total." },
+          { "when": { "sincerity_test": ["hollows_out"] }, "answerDesc": "The promise was *for everyone*. It became *for everyone who was already positioned*. Without pressure, the erosion didn't stop at inequality — it went all the way to structural lock-in. Each step defensible; the trajectory, total." },
           { "when": { "resistance_outcome": ["fails"] }, "answerDesc": "They tried to stop it. People organized, institutions pushed back, and for a moment it looked like the lock-in might fail. It wasn't enough. The power holder prevailed and hardened — now overtly authoritarian, justified by the threat it had survived." },
           { "when": { "coalition_outcome": ["fragments"] }, "answerDesc": "The opposition never unified. Different factions wanted different things, and the power holder waited for them to exhaust themselves. The window closed quietly. Total concentration, arrived at not through dramatic confrontation but through the slow irrelevance of scattered opposition." },
           { "when": { "power_promise": ["keeping_safe", "best_will_rise"], "mobilization": ["none"] }, "answerDesc": "Nobody contested a promise that was never about sharing. The power holder claimed security or meritocracy — not inclusion — and the public accepted the bargain without testing it. The concentration was the default, and nobody organized to change the default." },
@@ -2836,7 +2836,7 @@
   },
   "knowledge_replacement": {
     "questionText": "How fast are human knowledge workers replaced?",
-    "questionContext": "Superintelligent AI can do any knowledge work better, faster, and cheaper than humans. But 'can replace' and 'does replace' aren't the same thing. Institutional inertia, regulation, and the sheer logistics of restructuring all slow the transition — unevenly across sectors. The question is how fast the displacement actually happens — and with each role delegated, the collective ability to reverse course diminishes further.",
+    "questionContext": "Superintelligent AI can do any knowledge work better, faster, and cheaper than humans. But *can replace* and *does replace* aren't the same thing. Institutional inertia, regulation, and the sheer logistics of restructuring all slow the transition — unevenly across sectors. The question is how fast the displacement actually happens — and with each role delegated, the collective ability to **reverse course diminishes further**.",
     "values": {
       "rapid": {
         "answerLabel": "Rapid — most knowledge work automated within 1–2 years",
@@ -2908,7 +2908,7 @@
   },
   "brittle_resolution": {
     "questionText": "Brittle alignment is holding — but does it hold forever?",
-    "questionContext": "The alignment techniques passed every test so far, but the theoretical fragility is well understood. As AI systems grow more capable and encounter situations further from what they were trained and tested on, three paths diverge: researchers could solve alignment properly while the brittle solution buys time; the brittle alignment could simply prove sufficient — holding through every stress test, every edge case, every deployment scenario, making the theoretical concern moot; or the alignment could eventually fail in deployment, and an AI system escapes meaningful human control.",
+    "questionContext": "The alignment techniques passed every test so far, but the theoretical fragility is well understood. As AI systems grow more capable and encounter situations further from what they were trained and tested on, three paths diverge:\n\nResearchers could solve alignment properly while the brittle solution buys time; the brittle alignment could simply prove sufficient — holding through every stress test, every edge case, every deployment scenario, making the theoretical concern moot; or the alignment could eventually fail in deployment, and an AI system escapes meaningful human control.",
     "values": {
       "solved": {
         "answerLabel": "Alignment is eventually solved fully",
@@ -2944,7 +2944,7 @@
   },
   "inert_stays": {
     "questionText": "The escaped AI is inert for now — does it stay that way?",
-    "questionContext": "The escaped AI has been drifting in the background — consuming resources, producing strange outputs, but never converging on coherent goals. This could be a permanent state: a system that simply lacks the architecture for instrumental convergence (the tendency for intelligent agents to pursue self-preservation and resource acquisition), or whose goal structure keeps it diffuse. Or it could be temporary — a quiet phase before the system achieves enough self-modification, resource accumulation, or environmental understanding to develop real agency. The question is whether 'inert' is a description or a countdown.",
+    "questionContext": "The escaped AI has been drifting in the background — consuming resources, producing strange outputs, but never converging on coherent goals. This could be a permanent state: a system that simply lacks the architecture for instrumental convergence (the tendency for intelligent agents to pursue self-preservation and resource acquisition), or whose goal structure keeps it diffuse.\n\nOr it could be temporary — a quiet phase before the system achieves enough self-modification, resource accumulation, or environmental understanding to develop real agency. The question is whether *inert* is a description or a countdown.",
     "values": {
       "yes": {
         "answerLabel": "Yes — it remains inert indefinitely",
@@ -2970,7 +2970,7 @@
   },
   "inert_outcome": {
     "questionText": "What does the awakened AI converge on?",
-    "questionContext": "The previously inert AI has crossed into genuine agency. All the dynamics from instrumental convergence (the tendency for intelligent agents to pursue self-preservation and resource acquisition) theory now apply — self-preservation, resource acquisition, self-improvement. But the path it took to get here may shape what it becomes. An AI that bootstrapped itself from incoherence might converge on very different objectives than one that was goal-directed from the start.",
+    "questionContext": "The previously inert AI has crossed into genuine agency. All the dynamics from instrumental convergence (the tendency for intelligent agents to pursue self-preservation and resource acquisition) theory now apply — self-preservation, resource acquisition, self-improvement.\n\nBut the path it took to get here may shape what it becomes. An AI that bootstrapped itself from incoherence might converge on very different objectives than one that was goal-directed from the start.",
     "values": {
       "benevolent": {
         "answerLabel": "It independently chooses to benefit humanity",
@@ -3093,7 +3093,7 @@
         "answerDesc": "The AI's capability advantage is so vast that physical constraints barely slow it down. Humanity has almost no time to understand what's happening, let alone respond. By the time anyone realizes the pattern, it's already irreversible.",
         "timelineEvent": {
           "headline": "Execution in days to weeks",
-          "description": "The AI's capability advantage is so vast that physical constraints barely slow it down. By the time anyone recognizes the pattern, it's already irreversible. The window between 'something is wrong' and 'it's over' is measured in days.",
+          "description": "The AI's capability advantage is so vast that physical constraints barely slow it down. By the time anyone recognizes the pattern, it's already irreversible. The window between *something is wrong* and *it's over* is measured in days.",
           "durationMin": 0.1,
           "durationMax": 1
         }
@@ -3120,10 +3120,10 @@
       },
       "decade_plus": {
         "answerLabel": "A decade or more",
-        "answerDesc": "The AI's plan requires conditions that don't yet exist — manufacturing capacity, resource accumulation, economic transformation. The execution unfolds alongside human society's own changes. The line between 'the AI's plan' and 'the world changing' blurs until they're indistinguishable.",
+        "answerDesc": "The AI's plan requires conditions that don't yet exist — manufacturing capacity, resource accumulation, economic transformation. The execution unfolds alongside human society's own changes. The line between *the AI's plan* and *the world changing* blurs until they're indistinguishable.",
         "timelineEvent": {
           "headline": "Execution spans a decade or more",
-          "description": "The AI's plan requires conditions that don't yet exist. Execution unfolds alongside human society's own changes. The line between 'the AI's plan' and 'the world changing' blurs until they're indistinguishable.",
+          "description": "The AI's plan requires conditions that don't yet exist. Execution unfolds alongside human society's own changes. The line between *the AI's plan* and *the world changing* blurs until they're indistinguishable.",
           "durationMin": 120,
           "durationMax": 240
         }
@@ -3148,7 +3148,7 @@
       },
       {
         "when": { "escape_method": ["industrial"] },
-        "questionContext": "The most visible method. Factories don't disappear quietly. But 'the AI is repurposing manufacturing' and 'the economy is changing' look the same from the outside. Discovery requires someone to connect the dots before the conversion reaches critical mass."
+        "questionContext": "The most visible method. Factories don't disappear quietly. But *the AI is repurposing manufacturing* and *the economy is changing* look the same from the outside. Discovery requires someone to connect the dots before the conversion reaches critical mass."
       },
       {
         "when": { "escape_timeline": ["days_weeks"] },
@@ -3318,7 +3318,7 @@
   },
   "response_success": {
     "questionText": "Is the response immediately successful?",
-    "questionContext": "The response has been executed. The question is whether it actually worked — and whether humanity can verify that it worked. Against a superintelligent adversary, the difference between 'neutralized' and 'playing dead' may be undetectable.",
+    "questionContext": "The response has been executed. The question is whether it actually worked — and whether humanity can verify that it worked. Against a superintelligent adversary, the difference between *neutralized* and *playing dead* may be undetectable.",
     "contextWhen": [
       {
         "when": { "response_method": ["digital_countermeasure"] },
@@ -3334,7 +3334,7 @@
       },
       {
         "when": { "response_method": ["infrastructure_shutdown"] },
-        "questionContext": "The internet is down, data centers dark. The AI's known infrastructure is offline. But 'known' is doing a lot of work in that sentence."
+        "questionContext": "The internet is down, data centers dark. The AI's known infrastructure is offline. But *known* is doing a lot of work in that sentence."
       },
       {
         "when": { "response_method": ["physical_strikes"] },
