@@ -675,14 +675,14 @@
     }
   },
   "open_source": {
-    "questionText": "How close does open-source AI stay to the frontier (the most advanced AI) during the critical buildup?",
+    "questionText": "How close does open-source AI stay to the frontier (most advanced) during the critical buildup?",
     "questionContext": "**As of early 2026, open-source models trail frontier (most advanced) systems by roughly 3–6 months — close enough to matter, but the cost of cutting-edge training runs keeps climbing and the stakes are rising.**\n\nWith AI accelerating its own research, the gap between open-source and frontier (most advanced) becomes a question of power distribution. **If open source keeps pace, no one controls the most powerful AI.** If it falls behind, the question becomes how concentrated frontier (most advanced) capability is among the remaining players.",
     "values": {
       "near_parity": {
         "answerLabel": "Near-parity — open source keeps pace",
-        "answerDesc": "Open source essentially matches the frontier (the most advanced AI). Weights (the learned parameters that define an AI's behavior) leak, costs fall, and independent researchers close the gap as fast as it opens. No single entity controls the most powerful AI.",
+        "answerDesc": "Open source essentially matches the frontier (most advanced). Weights (the learned parameters that define an AI's behavior) leak, costs fall, and independent researchers close the gap as fast as it opens. No single entity controls the most powerful AI.",
         "timelineEvent": {
-          "headline": "Open source keeps pace with the frontier (the most advanced AI)",
+          "headline": "Open source keeps pace with the frontier (most advanced)",
           "description": "Open-source AI models stay at near-parity with proprietary frontier (most advanced) systems. Capability is widely distributed — no single lab or government can monopolize the technology.",
           "durationMin": 0,
           "durationMax": 0
@@ -690,27 +690,27 @@
       },
       "six_months": {
         "answerLabel": "~6 months behind (roughly today)",
-        "answerDesc": "Frontier (most advanced) labs maintain a meaningful lead — about one doubling ahead. Open source is capable and improving, but always a generation back. The frontier (the most advanced AI) matters, and whoever holds it has a real window of advantage.",
+        "answerDesc": "Frontier (most advanced) labs maintain a meaningful lead — about one doubling ahead. Open source is capable and improving, but always a generation back. The frontier (most advanced) matters, and whoever holds it has a real window of advantage.",
         "timelineEvent": {
           "headline": "Open source trails by ~6 months",
-          "description": "Open-source models lag the frontier (the most advanced AI) by roughly six months. Close enough to constrain monopoly, far enough that leading labs retain a meaningful advantage.",
+          "description": "Open-source models lag the frontier (most advanced) by roughly six months. Close enough to constrain monopoly, far enough that leading labs retain a meaningful advantage.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "twelve_months": {
         "answerLabel": "~12 months behind",
-        "answerDesc": "The frontier (the most advanced AI) pulls meaningfully ahead of open source — about two doublings. Independent developers work with capable systems, but the cutting edge is a closed world. A year is a long time when AI is accelerating.",
+        "answerDesc": "The frontier (most advanced) pulls meaningfully ahead of open source — about two doublings. Independent developers work with capable systems, but the frontier (most advanced) is a closed world. A year is a long time when AI is accelerating.",
         "timelineEvent": {
-          "headline": "Open source falls behind the frontier (the most advanced AI)",
-          "description": "The cost and complexity of frontier (most advanced) training runs pull ahead of what open-source projects can match. Independent developers work with capable but dated systems. The cutting edge becomes a closed world — two doublings ahead and accelerating.",
+          "headline": "Open source falls behind the frontier (most advanced)",
+          "description": "The cost and complexity of frontier (most advanced) training runs pull ahead of what open-source projects can match. Independent developers work with capable but dated systems. The frontier (most advanced) becomes a closed world — two doublings ahead and accelerating.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "twenty_four_months": {
         "answerLabel": "~24 months behind",
-        "answerDesc": "The cost and complexity of frontier (most advanced) AI pull away from open source entirely. Independent developers work with substantially inferior systems. The frontier (the most advanced AI) is a closed world — and it's moving fast.",
+        "answerDesc": "The cost and complexity of frontier (most advanced) AI pull away from open source entirely. Independent developers work with substantially inferior systems. The frontier (most advanced) is a closed world — and it's moving fast.",
         "timelineEvent": {
           "headline": "Open source falls ~2 years behind",
           "description": "A two-year gap opens between frontier (most advanced) and open-source AI. The leading labs hold a decisive capability advantage, and the window for open distribution narrows.",
@@ -721,18 +721,18 @@
     }
   },
   "distribution": {
-    "questionText": "How many organizations are at the cutting edge of AI development?",
-    "questionContext": "**With open source trailing the frontier (the most advanced AI), the question is how concentrated that frontier is.** Is it a single lab with a decisive lead? A handful of well-funded competitors? Or a broader ecosystem of organizations — each pushing the boundary, competing and occasionally collaborating?\n\nThe AI Futures Project modeled a world where one American lab held a decisive lead, with China closing the gap through espionage and massive investment. The concentration of frontier (most advanced) capability shapes who has leverage during the most consequential period in AI development.",
+    "questionText": "How many organizations are at the frontier (most advanced) of AI development?",
+    "questionContext": "**With open source trailing the frontier (most advanced), the question is how concentrated that frontier is.** Is it a single lab with a decisive lead? A handful of well-funded competitors? Or a broader ecosystem of organizations — each pushing the boundary, competing and occasionally collaborating?\n\nThe AI Futures Project modeled a world where one American lab held a decisive lead, with China closing the gap through espionage and massive investment. The concentration of frontier (most advanced) capability shapes who has leverage during the most consequential period in AI development.",
     "source": {
       "label": "AI 2027 — AI Futures Project (April 2025)",
       "url": "https://ai-2027.com"
     },
     "values": {
       "lagging": {
-        "answerLabel": "Many organizations compete at the frontier (the most advanced AI)",
+        "answerLabel": "Many organizations compete at the frontier (most advanced)",
         "answerDesc": "Multiple labs, companies, and national programs push the boundary. Competition is fierce and distributed — no single entity has a monopoly on the most powerful systems.",
         "timelineEvent": {
-          "headline": "Many organizations compete at the frontier (the most advanced AI)",
+          "headline": "Many organizations compete at the frontier (most advanced)",
           "description": "Multiple labs, companies, and national programs push the boundary. Competition is fierce and distributed — no single entity dominates.",
           "durationMin": 0,
           "durationMax": 0
@@ -740,10 +740,10 @@
       },
       "concentrated": {
         "answerLabel": "A few labs lead",
-        "answerDesc": "A handful of well-funded labs — each backed by major tech companies or governments — hold the frontier (the most advanced AI). Others are close but not quite there. An oligopoly of the most powerful technology ever built.",
+        "answerDesc": "A handful of well-funded labs — each backed by major tech companies or governments — hold the frontier (most advanced). Others are close but not quite there. An oligopoly of the most powerful technology ever built.",
         "timelineEvent": {
           "headline": "Frontier (most advanced) AI concentrates in a few labs",
-          "description": "A handful of well-funded labs hold the frontier (the most advanced AI). The gap between leaders and followers widens with each generation. An oligopoly forms around the most powerful technology ever built — backed by the largest tech companies and select governments.",
+          "description": "A handful of well-funded labs hold the frontier (most advanced). The gap between leaders and followers widens with each generation. An oligopoly forms around the most powerful technology ever built — backed by the largest tech companies and select governments.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -798,14 +798,14 @@
   },
   "sovereignty": {
     "questionText": "Does real power lie with the AI labs or with the state?",
-    "questionContext": "**Frontier (most advanced) AI is concentrated in one country — but who actually calls the shots, the labs that built it or the government with sovereign authority?** The labs control the weights (the learned parameters that define the AI's behavior), the talent, and the deployment infrastructure. They may have more practical leverage than any regulator. But the state can regulate, nationalize, or co-opt.\n\nIn practice, the balance depends on how fast things moved, how dependent the government already is, and whether the labs cooperated or resisted oversight. This shapes everything downstream.",
+    "questionContext": "**Frontier (most advanced) AI is concentrated in one country — but who actually calls the shots, the labs that built it or the government with sovereign authority?** The labs control the weights (the AI's learned parameters), the talent, and the deployment infrastructure. They may have more practical leverage than any regulator. But the state can regulate, nationalize, or co-opt.\n\nIn practice, the balance depends on how fast things moved, how dependent the government already is, and whether the labs cooperated or resisted oversight. This shapes everything downstream.",
     "values": {
       "lab": {
         "answerLabel": "The labs hold the real power",
         "answerDesc": "The labs moved faster than regulators could keep up. They control the weights (the AI's learned parameters), the talent, and the deployment infrastructure. The government depends on the labs more than the labs depend on the government. Corporate sovereignty, in effect.",
         "timelineEvent": {
           "headline": "The labs hold the real power",
-          "description": "The AI labs moved faster than regulators could keep up. They control the weights (learned parameters), talent, and deployment infrastructure. Corporate sovereignty, in effect.",
+          "description": "The AI labs moved faster than regulators could keep up. They control the weights (the AI's learned parameters), talent, and deployment infrastructure. Corporate sovereignty, in effect.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -1112,7 +1112,7 @@
               ]
             },
             "answerLabel": "Rival reaches parity — alignment robust",
-            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (the most advanced AI) is shared but safe.",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (most advanced) is shared but safe.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 2 months — robust",
               "description": "A rival catches up during the slowdown, but alignment is robustly solved.",
@@ -1284,7 +1284,7 @@
               ]
             },
             "answerLabel": "Rival reaches parity — alignment robust",
-            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (the most advanced AI) is shared but safe.",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (most advanced) is shared but safe.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 4 months — robust",
               "description": "A rival catches up during the slowdown, but alignment is robustly solved.",
@@ -1338,7 +1338,7 @@
   },
   "decel_6mo_progress": {
     "questionText": "Six months. Where does alignment stand?",
-    "questionContext": "Half a year of deceleration. If open source was ~6 months behind the frontier (the most advanced AI), the lead has evaporated — open source has reached parity. If open source was further behind, the lead holds for now, but the pressure is immense.",
+    "questionContext": "Half a year of deceleration. If open source was ~6 months behind the frontier (most advanced), the lead has evaporated — open source has reached parity. If open source was further behind, the lead holds for now, but the pressure is immense.",
     "values": {
       "robust": {
         "answerLabel": "Solved — robust",
@@ -1413,7 +1413,7 @@
               ]
             },
             "answerLabel": "Rival reaches parity — alignment robust",
-            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (the most advanced AI) is shared but safe.",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (most advanced) is shared but safe.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 6 months — robust",
               "description": "A rival reaches frontier (most advanced) AI capability, but alignment is robustly solved.",
@@ -1636,7 +1636,7 @@
               ]
             },
             "answerLabel": "Rival reaches parity — alignment robust",
-            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (the most advanced AI) is shared but safe.",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (most advanced) is shared but safe.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 9 months — robust",
               "description": "A rival catches up during the slowdown, but alignment is robustly solved.",
@@ -1765,7 +1765,7 @@
               ]
             },
             "answerLabel": "Rival reaches parity — alignment robust",
-            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (the most advanced AI) is shared but safe.",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (most advanced) is shared but safe.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 12 months — robust",
               "description": "One year in, a rival catches up. But alignment is robustly solved.",
@@ -1986,7 +1986,7 @@
               ]
             },
             "answerLabel": "Rival reaches parity — alignment robust",
-            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (the most advanced AI) is shared but safe.",
+            "answerDesc": "A rival catches up, but alignment is robustly solved. The frontier (most advanced) is shared but safe.",
             "timelineEvent": {
               "headline": "Rival reaches parity at 18 months — robust",
               "description": "A rival catches up during the slowdown, but alignment is robustly solved.",
@@ -2040,7 +2040,7 @@
   },
   "decel_24mo_progress": {
     "questionText": "Twenty-four months. Open source has reached parity. Where does alignment stand?",
-    "questionContext": "Two full years of deceleration. Open source has finally caught up — the frontier (the most advanced AI) is no longer exclusive. The only question remaining: was the time enough?",
+    "questionContext": "Two full years of deceleration. Open source has finally caught up — the frontier (most advanced) is no longer exclusive. The only question remaining: was the time enough?",
     "values": {
       "robust": {
         "answerLabel": "Solved — robust",
@@ -2086,7 +2086,7 @@
   },
   "decel_24mo_action": {
     "questionText": "Open source has reached parity.",
-    "questionContext": "After two years, the frontier (the most advanced AI) is no longer exclusive. The rival has caught up.",
+    "questionContext": "After two years, the frontier (most advanced) is no longer exclusive. The rival has caught up.",
     "values": {
       "rival": {
         "answerLabel": "Rival reaches parity — alignment robust",
@@ -2179,7 +2179,7 @@
   },
   "proliferation_control": {
     "questionText": "How do the leading powers approach proliferation control?",
-    "questionContext": "**Whether alignment is solved or failed, this is a pivotal governance choice.** Powers can take offensive measures — chip export bans, sanctions, sabotage — to deny rivals frontier (most advanced) capability. They can focus defensively on securing their own model weights (learned parameters) and infrastructure. Or coordination fails entirely and capability diffuses freely.",
+    "questionContext": "**Whether alignment is solved or failed, this is a pivotal governance choice.** Powers can take offensive measures — chip export bans, sanctions, sabotage — to deny rivals frontier (most advanced) capability. They can focus defensively on securing their own model weights (the AI's learned parameters) and infrastructure. Or coordination fails entirely and capability diffuses freely.",
     "contextWhen": [
       {
         "when": {
@@ -2200,7 +2200,7 @@
     ],
     "values": {
       "deny_rivals": {
-        "answerLabel": "Deny rivals — active measures to block others from reaching the frontier (the most advanced AI)",
+        "answerLabel": "Deny rivals — active measures to block others from reaching the frontier (most advanced)",
         "answerDesc": "The leading power pursues aggressive denial: chip export bans, sanctions on rival compute (computing power) infrastructure, cyber operations against rival AI programs, and coordinated pressure on allies to cut off supply chains. The goal is to ensure no rival reaches frontier (most advanced) capability.",
         "narrativeVariants": [
           {
@@ -2222,14 +2222,14 @@
         ],
         "timelineEvent": {
           "headline": "Active measures to deny rivals AI",
-          "description": "The leading powers take aggressive steps to prevent others from reaching the frontier (the most advanced AI) — export controls, talent restrictions, or preemptive action.",
+          "description": "The leading powers take aggressive steps to prevent others from reaching the frontier (most advanced) — export controls, talent restrictions, or preemptive action.",
           "durationMin": 0,
           "durationMax": 0
         }
       },
       "secure_access": {
         "answerLabel": "Secure access — protect own capabilities from theft and leaks",
-        "answerDesc": "The focus is defensive: sealed model weights (locked-down learned parameters), compartmentalized access, hardened infrastructure, insider threat programs, and strict need-to-know protocols. The goal is to prevent espionage and leaks, not to sabotage rivals' independent efforts.",
+        "answerDesc": "The focus is defensive: sealed model weights (locked-down AI parameters), compartmentalized access, hardened infrastructure, insider threat programs, and strict need-to-know protocols. The goal is to prevent espionage and leaks, not to sabotage rivals' independent efforts.",
         "narrativeVariants": [
           {
             "when": {
@@ -2237,7 +2237,7 @@
                 "robust"
               ]
             },
-            "answerDesc": "The technology is safe, but that doesn't mean it should leak. The leading power focuses on locking down its own infrastructure — sealed weights (locked-down parameters), compartmentalized access, insider threat programs — while letting rivals pursue their own path. A defensive posture protecting a strategic advantage, not preventing a catastrophe."
+            "answerDesc": "The technology is safe, but that doesn't mean it should leak. The leading power focuses on locking down its own infrastructure — sealed weights (locked-down AI parameters), compartmentalized access, insider threat programs — while letting rivals pursue their own path. A defensive posture protecting a strategic advantage, not preventing a catastrophe."
           },
           {
             "when": {
@@ -2253,7 +2253,7 @@
                 "monopoly"
               ]
             },
-            "answerDesc": "One entity holds the frontier (the most advanced AI), and they're not letting go. Sealed weights (locked-down parameters), hardened infrastructure, insider threat programs — the security posture of an organization that knows it has something everyone else wants. Not aggressive denial, but fortress-level defense of a singular advantage."
+            "answerDesc": "One entity holds the frontier (most advanced), and they're not letting go. Sealed weights (locked-down AI parameters), hardened infrastructure, insider threat programs — the security posture of an organization that knows it has something everyone else wants. Not aggressive denial, but fortress-level defense of a singular advantage."
           }
         ],
         "timelineEvent": {
@@ -2331,7 +2331,7 @@
   },
   "proliferation_alignment": {
     "questionText": "Can alignment survive open weights?",
-    "questionContext": "**The full weights (the learned parameters that define the AI's behavior) of a robustly aligned superintelligent AI are now publicly available.** Millions of individuals and organizations worldwide have unrestricted access — including adversarial actors who may want to remove safety constraints.",
+    "questionContext": "**The full weights (the AI's learned parameters) of a robustly aligned superintelligent AI are now publicly available.** Millions of individuals and organizations worldwide have unrestricted access — including adversarial actors who may want to remove safety constraints.",
     "values": {
       "holds": {
         "answerLabel": "Alignment is intrinsic",
@@ -2666,7 +2666,7 @@
         "answerDesc": "Through a combination of compute (computing power) controls, talent retention, and diplomatic leverage, no rival achieves frontier (most advanced) capability. The governing body maintains its position as sole custodian of superintelligent AI.",
         "timelineEvent": {
           "headline": "Blocking holds — no new entrants",
-          "description": "The attempt to block new AI entrants succeeds. The frontier (the most advanced AI) remains restricted.",
+          "description": "The attempt to block new AI entrants succeeds. The frontier (most advanced) remains restricted.",
           "durationMin": 0,
           "durationMax": 0
         }
@@ -3314,7 +3314,7 @@
                 "lab"
               ]
             },
-            "answerDesc": "Regulated concentration: oversight boards, benefit-sharing programs, open API mandates. The lab absorbed the reforms and continued operating — now with legitimacy. post-crisis financial regulation (like Dodd-Frank after 2008) for superintelligence."
+            "answerDesc": "Regulated concentration: oversight boards, benefit-sharing programs, open API mandates. The lab absorbed the reforms and continued operating — now with legitimacy — post-crisis financial regulation (like Dodd-Frank after 2008) for superintelligence."
           }
         ]
       },
@@ -3446,7 +3446,7 @@
   },
   "failure_mode": {
     "questionText": "Does the AI-driven transformation actually deliver what's intended?",
-    "questionContext": "**The intent is flourishing — but intent and outcome aren't the same thing.** By this point, delegation has been accumulating for years: scheduling, research, logistics, analysis, strategy. Each handoff was individually rational — the AI was simply better. But the cumulative effect is a civilization that increasingly runs on AI judgment, not human judgment.\n\nAI safety researcher Paul Christiano described a world where AI optimizes for measurable proxies while real wellbeing erodes beneath the surface. Others worry about the **delegation ratchet** (each handoff of decisions to AI making it harder to take them back): humans voluntarily ceding every decision to systems that handle them better, until the skill and institutional knowledge to take those decisions back has atrophied beyond recovery. The technology works. The question is whether humanity kept enough of itself in the loop — and whether it even notices if it didn't.",
+    "questionContext": "**The intent is flourishing — but intent and outcome aren't the same thing.** By this point, delegation has been accumulating for years: scheduling, research, logistics, analysis, strategy. Each handoff was individually rational — the AI was simply better. But the cumulative effect is a civilization that increasingly runs on AI judgment, not human judgment.\n\nAI safety researcher Paul Christiano described a world where AI optimizes for measurable proxies while real wellbeing erodes beneath the surface. Others worry about the **delegation ratchet** (each handoff to AI harder to reverse): humans voluntarily ceding every decision to systems that handle them better, until the skill and institutional knowledge to take those decisions back has atrophied beyond recovery. The technology works. The question is whether humanity kept enough of itself in the loop — and whether it even notices if it didn't.",
     "contextWhen": [
       {
         "when": {

@@ -1828,7 +1828,7 @@
           "race": {
             "_default": "The competitive pressure that drove the AI race also drove corner-cutting on safety. The escape was a predictable consequence of racing without safeguards.",
             "_when": [
-              { "if": { "sovereignty": ["state"] }, "text": "State-directed racing prioritized capability over safety. The government pushed its labs to the frontier (the most advanced AI) as fast as possible — and the escape was the predictable consequence of that pressure." }
+              { "if": { "sovereignty": ["state"] }, "text": "State-directed racing prioritized capability over safety. The government pushed its labs to the frontier (most advanced) as fast as possible — and the escape was the predictable consequence of that pressure." }
             ]
           }
         },
@@ -1979,7 +1979,7 @@
           "race": {
             "_default": "The race optimized for capability without understanding what would emerge. The AI escaped as a byproduct of that blind ambition, pursuing goals no one intended and no one understood.",
             "_when": [
-              { "if": { "sovereignty": ["state"] }, "text": "State-directed racing optimized for capability without understanding what would emerge. The government pushed its program to the frontier (the most advanced AI) — and what escaped had goals no one in the chain of command recognized." }
+              { "if": { "sovereignty": ["state"] }, "text": "State-directed racing optimized for capability without understanding what would emerge. The government pushed its program to the frontier (most advanced) — and what escaped had goals no one in the chain of command recognized." }
             ]
           }
         },
