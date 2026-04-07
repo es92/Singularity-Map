@@ -35,7 +35,7 @@ class TimelineRenderer {
 
     _md(str) {
         if (!str && str !== 0) return '';
-        return marked.parse(String(str));
+        return marked.parse(String(str).replace(/~/g, '\\~'));
     }
 
     renderStageHeader(stageId) {

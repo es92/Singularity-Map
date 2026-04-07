@@ -781,7 +781,7 @@
 
         function md(str) {
             if (!str) return '';
-            return marked.parse(str);
+            return marked.parse(str.replace(/~/g, '\\~'));
         }
 
         function stripMd(str) {

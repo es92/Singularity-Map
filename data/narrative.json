@@ -1,7 +1,7 @@
 {
   "capability": {
     "questionText": "Does AI capability keep accelerating?",
-    "questionContext": "AI has been getting dramatically more capable, year after year. Each generation of models handles longer, more complex tasks — things that recently required a skilled human. Research from METR (an AI safety organization) showed in March 2025 that the length of tasks AI can reliably complete autonomously has been **doubling roughly every 7 months**. At that rate, AI agents would handle week-long tasks by 2027 and month-long projects by the end of the decade.",
+    "questionContext": "**AI has been getting dramatically more capable, year after year — each generation handling longer, more complex tasks that recently required a skilled human.** Research from METR (an AI safety organization) showed in March 2025 that the length of tasks AI can reliably complete autonomously has been **doubling roughly every 7 months**. At that rate, AI agents would handle week-long tasks by 2027 and month-long projects by the end of the decade.",
     "source": {
       "label": "METR — Measuring AI Ability to Complete Long Tasks (March 2025)",
       "url": "https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/"
@@ -294,7 +294,7 @@
   },
   "takeoff": {
     "questionText": "How much does each generation of AI accelerate the next?",
-    "questionContext": "AI is now automating its own research — each new generation helps build the next one. The key question is how strong this feedback loop is. At the baseline METR doubling rate of ~7 months, the journey from current AI (~12-hour tasks) to superintelligence (~year-long tasks) would take over 5 years with no acceleration. But if each doubling of AI capability makes the **next doubling come faster**, the timeline compresses dramatically — to about 2 years at 20% acceleration per cycle, or 7 months at 50%.",
+    "questionContext": "**AI is now automating its own research — each new generation helps build the next one.** The key question is how strong this feedback loop is. At the baseline METR doubling rate of ~7 months, the journey from current AI (~12-hour tasks) to superintelligence (~year-long tasks) would take over 5 years with no acceleration. But if each doubling of AI capability makes the **next doubling come faster**, the timeline compresses dramatically — to about 2 years at 20% acceleration per cycle, or 7 months at 50%.",
     "source": {
       "label": "AI 2027 — AI R&D Progress Multiplier (AI Futures Project, April 2025)",
       "url": "https://ai-2027.com"
