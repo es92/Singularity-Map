@@ -1574,7 +1574,7 @@
                 if (!resolved) return '';
 
                 const key = outcomeKey(t.id, resolved.variantKey);
-                logJourney(t.id, resolved.variantKey);
+                logJourney(t.id, resolved.variantKey, stack);
                 markDiscovered(key);
 
                 const dateMap = buildTimelineDateMap();
