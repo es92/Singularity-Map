@@ -12,7 +12,7 @@ const outcomes = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', '
 const narrative = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'narrative.json'), 'utf8'));
 const personalData = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'personal.json'), 'utf8'));
 const personas = JSON.parse(fs.readFileSync(path.join(__dirname, 'personas.json'), 'utf8'));
-const { resolveMilestoneText, filterMilestones, getCountryBucket } = require('../milestone-utils.js');
+const { getCountryBucket, resolvePersonalVignettes } = require('../milestone-utils.js');
 
 const templatesList = outcomes.templates;
 
@@ -428,20 +428,20 @@ ${optionsText}${disabledText}`;
     const template = matched.length > 0 ? matched[0] : null;
     const resolved = template ? resolveTemplate(template.id, eff) : null;
 
-    const personalMilestones = (template && template.milestones && persona.country && persona.profession)
-        ? resolveMilestonesForState(template, eff, {
+    const personalVignettes = (persona.country && persona.profession)
+        ? resolvePersonalVignettes(sel, {
             profession: persona.profession,
             country: persona.country,
-            bucket: getCountryBucket(persona.country, personalData),
-          })
+            is_ai_geo: persona.is_ai_geo || 'no',
+          }, personalData, narrative, NODES)
         : [];
 
-    return { log, sel, eff, template, resolved, apiCalls, personalMilestones };
+    return { log, sel, eff, template, resolved, apiCalls, personalVignettes };
 }
 
 // ── Persona review ──
 
-async function getPersonaReview(persona, mode, log, resolved, personalMilestones) {
+async function getPersonaReview(persona, mode, log, resolved, personalVignettes) {
     const choicesText = log.map((l, i) => {
         if (l.source === 'auto' && l.disabledReasons && l.disabledReasons.length > 0) {
             let text = `${i + 1}. "${getQuestionText(l.id)}" → ${getAnswerLabel(l.id, l.val)} [only option — previous choices ruled out:]`;
@@ -468,12 +468,11 @@ async function getPersonaReview(persona, mode, log, resolved, personalMilestones
     }
 
     const profLabel = personalData.professions.find(p => p.id === persona.profession)?.label || persona.profession;
-    let milestoneText = '';
-    if (personalMilestones && personalMilestones.length > 0) {
-        milestoneText = `\n\n**Your Personal Story** (as a ${profLabel} professional in ${persona.country}):\n`;
-        for (const m of personalMilestones) {
-            const anchor = m.anchor === 'end' ? ' from outcome' : '';
-            milestoneText += `\n- [+${m.offsetMonths}mo${anchor}] "${m.headline}": ${m.text}`;
+    let vignetteText = '';
+    if (personalVignettes && personalVignettes.length > 0) {
+        vignetteText = `\n\n**How It Reaches You** (as a ${profLabel} professional in ${persona.country}):\n`;
+        for (const v of personalVignettes) {
+            vignetteText += `\n- [${v.heading} · ${v.answerLabel}]: ${v.text}`;
         }
     }
 
@@ -481,7 +480,7 @@ async function getPersonaReview(persona, mode, log, resolved, personalMilestones
 
     const system = `You are ${persona.name}. ${persona.bio}
 
-You just completed an interactive scenario about the future of AI. You will be shown the questions you were asked, the choices that were made, the outcome you reached, and a personal story describing what happens to YOU based on your profession and country. Stay in character and respond with honest reactions as this persona.
+You just completed an interactive scenario about the future of AI. You will be shown the questions you were asked, the choices that were made, the outcome you reached, and personal vignettes describing how each world event reaches YOU based on your profession and country. Stay in character and respond with honest reactions as this persona.
 
 IMPORTANT CONTEXT about how choices were made:
 - For each question, you assigned probability ratings. ONE option was then sampled from your distribution.
@@ -496,7 +495,7 @@ Questions and choices:
 ${choicesText}
 
 Outcome reached:
-${outcomeText}${milestoneText}
+${outcomeText}${vignetteText}
 
 ---
 
@@ -507,11 +506,11 @@ Respond in JSON with these fields:
 - forced_choices: Any questions where none of the available options felt right. (array of objects with "question" and "complaint" fields, can be empty)
 - outcome_reaction: 2-3 sentences reacting to the outcome — does it feel like a fair conclusion from the choices made?
 - narrative_contradictions: List any vignettes where the text contradicts or doesn't match the choices you made. For each, cite the vignette heading and explain the mismatch. (array of objects with "heading" and "issue" fields, can be empty)
-- milestone_reaction: 1-2 sentences reacting to the personal story — does it feel real and specific for someone with your profession in your country? Does it reflect the drama of the world events? (string, or empty string if no personal story was shown)
-- milestone_issues: List any personal milestones that feel wrong, disconnected from the world events, or missing key events you'd expect. (array of objects with "headline" and "issue" fields, can be empty)
+- vignette_reaction: 1-2 sentences reacting to the personal vignettes — do they feel real and specific for someone with your profession in your country? Do they reflect the drama of the world events? (string, or empty string if no personal vignettes were shown)
+- vignette_issues: List any personal vignettes that feel wrong, disconnected from the world events, or missing key events you'd expect. (array of objects with "heading" and "issue" fields, can be empty)
 
 CRITICAL: You MUST return ONLY a single valid JSON object. No markdown, no explanation, no text before or after the JSON. The response must start with { and end with }. All string values must use double quotes. Do not include trailing commas. Example structure:
-{"satisfaction": 3, "accuracy": 3, "missing_questions": [], "forced_choices": [], "outcome_reaction": "...", "narrative_contradictions": [], "milestone_reaction": "...", "milestone_issues": []}`;
+{"satisfaction": 3, "accuracy": 3, "missing_questions": [], "forced_choices": [], "outcome_reaction": "...", "narrative_contradictions": [], "vignette_reaction": "...", "vignette_issues": []}`;
 
     const MAX_REVIEW_RETRIES = 2;
     for (let attempt = 0; attempt <= MAX_REVIEW_RETRIES; attempt++) {
@@ -525,7 +524,7 @@ CRITICAL: You MUST return ONLY a single valid JSON object. No markdown, no expla
                 continue;
             }
             console.error(`  Review API error after ${MAX_REVIEW_RETRIES + 1} attempts: ${err.message}`);
-            return { satisfaction: 0, accuracy: 0, missing_questions: [], forced_choices: [], outcome_reaction: 'Error generating review.', narrative_contradictions: [], milestone_reaction: '', milestone_issues: [], _error: true };
+            return { satisfaction: 0, accuracy: 0, missing_questions: [], forced_choices: [], outcome_reaction: 'Error generating review.', narrative_contradictions: [], vignette_reaction: '', vignette_issues: [], _error: true };
         }
     }
 }
@@ -613,21 +612,21 @@ function buildEvaluationMd(persona, mode, runNum, result, review) {
     }
     md += '\n';
 
-    const milestones = result.personalMilestones || [];
-    if (milestones.length > 0) {
+    const vignettes = result.personalVignettes || [];
+    if (vignettes.length > 0) {
         const profLabel = personalData.professions.find(p => p.id === persona.profession)?.label || persona.profession;
-        md += `## Personal Story (${persona.country} · ${profLabel})\n\n`;
-        for (const m of milestones) {
-            md += `- **[+${m.offsetMonths}mo] ${m.headline}** — ${m.text}\n`;
+        md += `## How It Reaches You (${persona.country} · ${profLabel})\n\n`;
+        for (const v of vignettes) {
+            md += `- **[${v.heading} · ${v.answerLabel}]** — ${v.text}\n`;
         }
         md += '\n';
-        md += `### Milestone Review\n\n`;
-        if (review.milestone_reaction) {
-            md += `- **Reaction:** "${review.milestone_reaction}"\n`;
+        md += `### Vignette Review\n\n`;
+        if (review.vignette_reaction) {
+            md += `- **Reaction:** "${review.vignette_reaction}"\n`;
         }
-        if (review.milestone_issues && review.milestone_issues.length > 0) {
+        if (review.vignette_issues && review.vignette_issues.length > 0) {
             md += `- **Issues:**\n`;
-            for (const mi of review.milestone_issues) md += `  - **${mi.headline}**: ${mi.issue}\n`;
+            for (const vi of review.vignette_issues) md += `  - **${vi.heading}**: ${vi.issue}\n`;
         } else {
             md += `- **Issues:** None\n`;
         }
@@ -661,8 +660,8 @@ async function generateReport(allResults) {
         if (r.missingQuestions.length > 0) reviewsText += `Missing: ${r.missingQuestions.join('; ')}\n`;
         if (r.forcedChoices.length > 0) reviewsText += `Forced: ${r.forcedChoices.map(f => f.question + ': ' + f.complaint).join('; ')}\n`;
         if (r.narrativeContradictions && r.narrativeContradictions.length > 0) reviewsText += `Contradictions: ${r.narrativeContradictions.map(c => c.heading + ': ' + c.issue).join('; ')}\n`;
-        if (r.milestoneReaction) reviewsText += `Milestone reaction (${r.personaProfession} in ${r.personaCountry}): ${r.milestoneReaction}\n`;
-        if (r.milestoneIssues && r.milestoneIssues.length > 0) reviewsText += `Milestone issues: ${r.milestoneIssues.map(m => m.headline + ': ' + m.issue).join('; ')}\n`;
+        if (r.vignetteReaction) reviewsText += `Vignette reaction (${r.personaProfession} in ${r.personaCountry}): ${r.vignetteReaction}\n`;
+        if (r.vignetteIssues && r.vignetteIssues.length > 0) reviewsText += `Vignette issues: ${r.vignetteIssues.map(v => v.heading + ': ' + v.issue).join('; ')}\n`;
         reviewsText += '\n';
     }
 
@@ -687,7 +686,7 @@ Write a report in markdown. Keep it under 2500 words. Sections:
 3. **Low Scores** — list any runs with satisfaction or accuracy below 3. One line each with persona, mode, score, and their complaint.
 4. **Recurring Feedback** — aggregate missing_questions and forced_choices. Only list items mentioned by 2+ personas.
 5. **Narrative Contradictions** — list every narrative_contradiction reported. Group by vignette heading. These are cases where the outcome text contradicts the choices made.
-6. **Milestone Feedback** — aggregate milestone_reaction and milestone_issues across all personas. Group by milestone headline. Flag issues mentioned by 2+ personas. Note patterns by profession or country.
+6. **Vignette Feedback** — aggregate vignette_reaction and vignette_issues across all personas. Group by vignette heading. Flag issues mentioned by 2+ personas. Note patterns by profession or country.
 7. **Issues** — up to 8 concrete problems. Each: one-line description, severity (critical/moderate/minor), affected file, proposed fix.
 8. **Top 3 Priorities** — the most impactful changes to make next.
 
@@ -895,54 +894,40 @@ Return ONLY the JSON array.`;
     }
 }
 
-const MILESTONE_PERSONAS = [
-    { profession: 'software', country: 'United States', bucket: 'us' },
-    { profession: 'healthcare', country: 'Germany', bucket: 'eu' },
-    { profession: 'trade', country: 'Nigeria', bucket: 'sub_saharan_africa' },
+const VIGNETTE_PERSONAS = [
+    { profession: 'software', country: 'United States', is_ai_geo: 'yes' },
+    { profession: 'healthcare', country: 'Germany', is_ai_geo: 'no' },
+    { profession: 'trade', country: 'Nigeria', is_ai_geo: 'no' },
 ];
 
-function resolveMilestonesForState(template, state, persona) {
-    const ctx = Object.assign({}, state, {
-        profession: persona.profession,
-        country_bucket: persona.bucket,
-        position: null,
-    });
-    const filtered = filterMilestones(template.milestones, state);
-    return filtered
-        .map(m => {
-            const text = resolveMilestoneText(m.text, ctx) || resolveMilestoneText(m.text, { _default: true });
-            if (!text) return null;
-            const headline = (m.headline || '').replace(/\{country\}/g, persona.country).replace(/\{profession\}/g, persona.profession);
-            const resolvedText = text.replace(/\{country\}/g, persona.country).replace(/\{profession\}/g, persona.profession);
-            return { headline, text: resolvedText, offsetMonths: m.offsetMonths, anchor: m.anchor || null };
-        })
-        .filter(Boolean);
+function resolveVignettesForState(state, persona) {
+    return resolvePersonalVignettes(state, persona, personalData, narrative, NODES);
 }
 
-async function auditMilestonesBatch(model, templateId, testCases) {
+async function auditVignetteBatch(model, templateId, testCases) {
     let casesText = '';
     for (let i = 0; i < testCases.length; i++) {
         const tc = testCases[i];
         casesText += `\n--- Test Case ${i + 1} ---\nWorld state: ${describeState(tc.state)}\nPersona: ${tc.persona.profession} in ${tc.persona.country}\n\nWorld timeline vignettes:\n`;
-        for (const v of tc.vignettes) {
+        for (const v of tc.worldVignettes) {
             casesText += `- [${v.heading}]: ${v.text}\n`;
         }
-        casesText += `\nPersonal milestones ("Your Story"):\n`;
-        for (const m of tc.milestones) {
-            casesText += `- [+${m.offsetMonths}mo] "${m.headline}": ${m.text}\n`;
+        casesText += `\nPersonal vignettes ("How It Reaches You"):\n`;
+        for (const v of tc.personalVignettes) {
+            casesText += `- [${v.heading} · ${v.answerLabel}]: ${v.text}\n`;
         }
     }
 
     const system = `You are a QA reviewer for a narrative scenario app about AI futures. Users make choices about AI development and receive:
 1. World timeline vignettes (what happens in the world)
-2. Personal milestones (what happens to YOU — based on profession, country, and the world events)
+2. Personal vignettes (how each world event reaches YOU — based on profession, country, and the world events)
 
-Your job: flag personal milestones that are disconnected from or inconsistent with the world timeline. Specifically check:
+Your job: flag personal vignettes that are disconnected from or inconsistent with the world timeline. Specifically check:
 
-- Key world events (state seizure of AI, arms races, mass automation, escalation, mobilization) that have NO reflection in the personal milestones
-- Personal milestones that describe events contradicting the world state
+- Key world events that have NO reflection in the personal vignettes
+- Personal vignettes that describe events contradicting the world state
 - Tone mismatches: dramatic world events paired with bland personal descriptions, or vice versa
-- Timeline mismatches: personal events dated before the world events that cause them
+- Fabricated details: specific names, times, numbers, or scenes not established in the world narrative
 
 Only flag genuine issues — not minor style differences. Be specific.`;
 
@@ -952,7 +937,7 @@ ${casesText}
 
 ---
 
-For each issue found, return a JSON array. Each entry: { "case": <number>, "milestone": "<milestone headline>", "issue": "<what's wrong and why>" }
+For each issue found, return a JSON array. Each entry: { "case": <number>, "heading": "<vignette heading>", "issue": "<what's wrong and why>" }
 
 If no issues, return an empty array: []
 
@@ -963,33 +948,32 @@ Return ONLY the JSON array.`;
         const parsed = parseJsonResponse(raw);
         return Array.isArray(parsed) ? parsed : [];
     } catch (err) {
-        console.error(`  Milestone audit API error for ${templateId}: ${err.message}`);
+        console.error(`  Vignette audit API error for ${templateId}: ${err.message}`);
         return [];
     }
 }
 
-async function auditToneForStory(model, templateId, persona, milestones, outcome) {
+async function auditToneForVignettes(model, templateId, persona, vignettes, outcome) {
     const profLabel = personalData.professions.find(p => p.id === persona.profession)?.label || persona.profession;
-    let storyText = `Outcome: ${outcome}\nPersona: ${profLabel} in ${persona.country}\n\nPersonal story milestones (in order):\n`;
-    for (const m of milestones) {
-        const anchor = m.anchor === 'end' ? ' [near outcome]' : '';
-        storyText += `\n${m.headline}${anchor}:\n${m.text}\n`;
+    let storyText = `Outcome: ${outcome}\nPersona: ${profLabel} in ${persona.country}\n\nPersonal vignettes (in order):\n`;
+    for (const v of vignettes) {
+        storyText += `\n${v.heading} · ${v.answerLabel}:\n${v.text}\n`;
     }
 
-    const system = `You are a narrative editor reviewing personal story milestones for an interactive AI futures scenario. The user made choices about the future of AI and received a sequence of personal milestones describing what happens to THEM.
+    const system = `You are a narrative editor reviewing personal vignettes for an interactive AI futures scenario. The user made choices about the future of AI and received personal vignettes describing how each world event reaches THEM.
 
-Read the milestone sequence as a complete narrative arc. Flag specific issues:
+Read the vignette sequence as a complete narrative. Flag specific issues:
 
 1. GENERIC: Lines that could describe anyone — no profession or country specificity. Quote the line.
 2. OVERWROUGHT: Portentous, grandiose, or emotionally manipulative language. Quote the line.
-3. REPETITIVE: Phrases or structures that repeat across milestones. Quote both instances.
-4. TONAL INCONSISTENCY: Shifts in register that feel jarring (e.g., clinical → melodramatic).
+3. REPETITIVE: Phrases or structures that repeat across vignettes. Quote both instances.
+4. TONAL INCONSISTENCY: Shifts in register that feel jarring (e.g., clinical to melodramatic).
 5. ARC PROBLEMS: Places where the emotional progression drops, stalls, or feels rushed.
-6. MISSING TEXTURE: Key moments where a specific detail (profession, country, institutional context) would make the milestone land but is absent.
+6. FABRICATED: Details not established in the world narrative — invented names, numbers, times, or scenes.
 
 Be specific and quote the text. Only flag things that would bother a thoughtful reader — not minor style preferences.`;
 
-    const user = `${storyText}\n\n---\n\nReturn a JSON array of issues. Each: { "type": "<GENERIC|OVERWROUGHT|REPETITIVE|TONAL|ARC|MISSING_TEXTURE>", "milestone": "<headline>", "quote": "<the specific text>", "issue": "<what's wrong>" }\n\nIf the story reads well, return an empty array: []\n\nReturn ONLY the JSON array.`;
+    const user = `${storyText}\n\n---\n\nReturn a JSON array of issues. Each: { "type": "<GENERIC|OVERWROUGHT|REPETITIVE|TONAL|ARC|FABRICATED>", "heading": "<vignette heading>", "quote": "<the specific text>", "issue": "<what's wrong>" }\n\nIf the vignettes read well, return an empty array: []\n\nReturn ONLY the JSON array.`;
 
     try {
         const raw = await callClaude(model, system, user, 4096);
@@ -1017,7 +1001,7 @@ async function runToneAudit() {
     const allIssues = [];
 
     for (const template of templatesList) {
-        if (!template.milestones || template.milestones.length === 0 || !template.reachable) continue;
+        if (!template.reachable) continue;
         process.stdout.write(`  ${template.id}...`);
 
         const testStates = generateTestStates(template);
@@ -1030,16 +1014,16 @@ async function runToneAudit() {
         let templateIssues = [];
 
         for (const persona of tonePersonas) {
-            const milestones = resolveMilestonesForState(template, state, persona);
-            if (milestones.length === 0) continue;
+            const vignettes = resolveVignettesForState(state, persona);
+            if (vignettes.length === 0) continue;
 
-            const issues = await auditToneForStory(AUDIT_MODEL, template.id, persona, milestones, outcomeName);
+            const issues = await auditToneForVignettes(AUDIT_MODEL, template.id, persona, vignettes, outcomeName);
             for (const issue of issues) {
                 templateIssues.push({
                     template: template.id,
                     persona: `${persona.profession} in ${persona.country}`,
                     type: issue.type,
-                    milestone: issue.milestone,
+                    heading: issue.heading,
                     quote: issue.quote,
                     issue: issue.issue,
                 });
@@ -1067,7 +1051,7 @@ async function runToneAudit() {
         for (const [type, issues] of Object.entries(byType).sort((a, b) => b[1].length - a[1].length)) {
             console.log(`\n  ${type} (${issues.length}):`);
             for (const issue of issues.slice(0, 5)) {
-                console.log(`    [${issue.template}] ${issue.persona} — "${issue.milestone}"`);
+                console.log(`    [${issue.template}] ${issue.persona} — "${issue.heading}"`);
                 if (issue.quote) console.log(`      Quote: "${issue.quote.substring(0, 100)}${issue.quote.length > 100 ? '...' : ''}"`);
                 console.log(`      ${issue.issue.substring(0, 150)}`);
             }
@@ -1135,56 +1119,56 @@ async function runAudit() {
         }
     }
 
-    // --- Milestone audit pass ---
-    console.log(`\nRunning personal milestone audit...\n`);
-    const milestoneIssues = [];
+    // --- Personal vignette audit pass ---
+    console.log(`\nRunning personal vignette audit...\n`);
+    const personalVignetteIssues = [];
 
     for (const template of templatesList) {
-        if (!template.milestones || template.milestones.length === 0 || !template.reachable) continue;
-        process.stdout.write(`  ${template.id} milestones...`);
+        if (!template.reachable) continue;
+        process.stdout.write(`  ${template.id} vignettes...`);
 
         const testStates = generateTestStates(template);
-        const milestoneCases = [];
+        const vignetteCases = [];
         const seenKeys = new Set();
 
         for (const state of testStates) {
             const resolved = resolveTemplate(template.id, state);
             if (!resolved) continue;
 
-            for (const persona of MILESTONE_PERSONAS) {
-                const milestones = resolveMilestonesForState(template, state, persona);
-                if (milestones.length === 0) continue;
+            for (const persona of VIGNETTE_PERSONAS) {
+                const pv = resolveVignettesForState(state, persona);
+                if (pv.length === 0) continue;
 
-                const key = milestones.map(m => m.headline + ':' + m.text.slice(0, 50)).join('|')
+                const key = pv.map(v => v.heading + ':' + v.text.slice(0, 50)).join('|')
                     + '||' + persona.profession;
                 if (seenKeys.has(key)) continue;
                 seenKeys.add(key);
 
-                milestoneCases.push({
+                vignetteCases.push({
                     state,
                     persona,
-                    vignettes: resolved.vignettes,
-                    milestones,
+                    worldVignettes: resolved.vignettes,
+                    personalVignettes: pv,
                 });
             }
         }
 
-        if (milestoneCases.length === 0) {
+        if (vignetteCases.length === 0) {
             console.log(' no test cases');
             continue;
         }
 
         const MAX_CASES = 10;
-        const batch = milestoneCases.slice(0, MAX_CASES);
-        const issues = await auditMilestonesBatch(AUDIT_MODEL, template.id, batch);
+        const batch = vignetteCases.slice(0, MAX_CASES);
+        const issues = await auditVignetteBatch(AUDIT_MODEL, template.id, batch);
 
         for (const issue of issues) {
-            milestoneIssues.push({
+            personalVignetteIssues.push({
                 template: template.id,
                 case: issue.case,
                 state: batch[issue.case - 1]?.state || {},
                 persona: batch[issue.case - 1]?.persona || {},
-                milestone: issue.milestone,
+                heading: issue.heading,
                 issue: issue.issue,
             });
         }
@@ -1196,17 +1180,17 @@ async function runAudit() {
         }
     }
 
-    if (milestoneIssues.length > 0) {
-        allIssues.push(...milestoneIssues.map(i => ({
-            ...i, type: 'milestone'
+    if (personalVignetteIssues.length > 0) {
+        allIssues.push(...personalVignetteIssues.map(i => ({
+            ...i, type: 'personal_vignette'
         })));
     }
 
     console.log(`\n--- Audit Summary ---`);
-    const vignetteCount = allIssues.filter(i => !i.type).length;
-    const msCount = allIssues.filter(i => i.type === 'milestone').length;
-    console.log(`Vignette issues: ${vignetteCount}`);
-    console.log(`Milestone issues: ${msCount}`);
+    const worldVignetteCount = allIssues.filter(i => !i.type).length;
+    const pvCount = allIssues.filter(i => i.type === 'personal_vignette').length;
+    console.log(`World vignette issues: ${worldVignetteCount}`);
+    console.log(`Personal vignette issues: ${pvCount}`);
     console.log(`Total issues: ${allIssues.length}`);
 
     if (allIssues.length > 0) {
@@ -1220,9 +1204,9 @@ async function runAudit() {
             console.log(`\n  ${tid} (${issues.length}):`);
             for (const issue of issues) {
                 const stateStr = describeState(issue.state);
-                if (issue.type === 'milestone') {
+                if (issue.type === 'personal_vignette') {
                     const persona = issue.persona;
-                    console.log(`    - [milestone: ${issue.milestone}] ${issue.issue}`);
+                    console.log(`    - [personal: ${issue.heading}] ${issue.issue}`);
                     console.log(`      Persona: ${persona.profession} in ${persona.country} | State: ${stateStr}`);
                 } else {
                     console.log(`    - [${issue.heading}] ${issue.issue}`);
@@ -1282,7 +1266,7 @@ async function main() {
         const label = `${persona.name} — ${modeLabel} — run ${run}/${K}`;
 
         const result = await simulatePath(persona, mode, { deterministic: isDeterministic });
-        const review = await getPersonaReview(persona, mode, result.log, result.resolved, result.personalMilestones);
+        const review = await getPersonaReview(persona, mode, result.log, result.resolved, result.personalVignettes);
 
         const outcomeTitle = result.resolved
             ? `${result.resolved.title}${result.resolved.subtitle ? ' — ' + result.resolved.subtitle : ''}`
@@ -1305,8 +1289,8 @@ async function main() {
             missingQuestions: review.missing_questions || [],
             forcedChoices: review.forced_choices || [],
             narrativeContradictions: review.narrative_contradictions || [],
-            milestoneReaction: review.milestone_reaction || '',
-            milestoneIssues: review.milestone_issues || [],
+            vignetteReaction: review.vignette_reaction || '',
+            vignetteIssues: review.vignette_issues || [],
             personaCountry: persona.country,
             personaProfession: persona.profession,
             reviewError: review._error || false,

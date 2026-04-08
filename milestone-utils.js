@@ -1,64 +1,7 @@
-// Shared milestone resolution utilities
-// Used by index.html (browser), validate.js, and evaluate.js
+// Shared personal vignette resolution utilities
+// Used by tests/evaluate.js and tests/validate.js
 
 (function () {
-
-function resolveMilestoneText(textSpec, ctx) {
-    if (typeof textSpec === 'string') return textSpec;
-    if (!textSpec || typeof textSpec !== 'object') return null;
-    for (const [dimKey, variants] of Object.entries(textSpec)) {
-        const val = ctx[dimKey];
-        if (!val) continue;
-        const resolved = variants[val];
-        if (resolved && typeof resolved === 'object' && !Array.isArray(resolved)) {
-            const nested = resolveMilestoneText(resolved, ctx);
-            if (nested) return nested;
-        }
-        if (typeof resolved === 'string') return resolved;
-        if (variants._default) {
-            if (typeof variants._default === 'string') return variants._default;
-            const nested = resolveMilestoneText(variants._default, ctx);
-            if (nested) return nested;
-        }
-        return null;
-    }
-    if (textSpec._default) return typeof textSpec._default === 'string' ? textSpec._default : null;
-    return null;
-}
-
-function filterMilestones(milestones, worldState) {
-    if (!milestones) return [];
-    return milestones.filter(m => {
-        if (!m.when) return true;
-        return Object.entries(m.when).every(([k, vals]) =>
-            worldState[k] && vals.includes(worldState[k])
-        );
-    });
-}
-
-function resolvePersonalMilestones(milestones, answers, worldState, personalData) {
-    if (!milestones || !answers) return [];
-    const bucket = getCountryBucket(answers.country, personalData);
-    const ctx = Object.assign({}, worldState, {
-        profession: answers.profession,
-        country_bucket: bucket,
-        position: answers.position || null,
-    });
-
-    const filtered = filterMilestones(milestones, worldState);
-
-    return filtered
-        .map(m => {
-            const text = resolveMilestoneText(m.text, ctx) || resolveMilestoneText(m.text, { _default: true });
-            if (!text) return null;
-            return {
-                offsetMonths: m.offsetMonths || 0,
-                headline: m.headline || '',
-                text,
-            };
-        })
-        .filter(Boolean);
-}
 
 function getCountryBucket(countryName, personalData) {
     if (!personalData) return 'rest';
@@ -66,25 +9,91 @@ function getCountryBucket(countryName, personalData) {
     return entry ? entry.bucket : 'rest';
 }
 
-function collectDimensions(textSpec, depth) {
-    const dims = new Set();
-    if (!textSpec || typeof textSpec !== 'object' || typeof textSpec === 'string') return dims;
-    for (const [k, v] of Object.entries(textSpec)) {
-        if (k === '_default') continue;
-        if (depth % 2 === 0) dims.add(k);
-        if (v && typeof v === 'object' && !Array.isArray(v)) {
-            for (const d of collectDimensions(v, depth + 1)) dims.add(d);
+function resolveNarrativeVariant(variants, sel) {
+    if (!variants || !sel) return null;
+    for (const v of variants) {
+        if (!v.when) return v;
+        const match = Object.entries(v.when).every(
+            ([k, vals]) => vals.includes(sel[k])
+        );
+        if (match) return v;
+    }
+    return null;
+}
+
+function resolvePersonalVignetteText(spec, ctx) {
+    if (!spec) return null;
+    if (typeof spec === 'string') return spec;
+    if (spec._when && Array.isArray(spec._when)) {
+        for (const rule of spec._when) {
+            if (!rule.if) continue;
+            const match = Object.entries(rule.if).every(([k, vals]) =>
+                ctx[k] && vals.includes(ctx[k])
+            );
+            if (match) return rule.text || null;
         }
     }
-    return dims;
+    return spec._default || null;
+}
+
+function resolvePersonalVignettes(sel, persona, personalData, narrative, nodes) {
+    if (!persona || !persona.country || !persona.profession) return [];
+    const bucket = getCountryBucket(persona.country, personalData);
+    const ctx = {
+        profession: persona.profession,
+        country_bucket: bucket,
+        is_ai_geo: persona.is_ai_geo || 'no',
+    };
+
+    const profEntry = personalData && personalData.professions.find(p => p.id === persona.profession);
+    const tokenReplace = (str) => {
+        if (!str) return str;
+        return str
+            .replace(/\{country\}/g, persona.country || '')
+            .replace(/\{profession\}/g, profEntry ? profEntry.label : (persona.profession || ''));
+    };
+
+    const vignettes = [];
+    for (const node of nodes) {
+        const value = sel[node.id];
+        if (!value) continue;
+        const edge = node.edges && node.edges.find(e => e.id === value);
+        if (!edge) continue;
+
+        const narr = narrative[node.id];
+        const narrEdge = narr && narr.values && narr.values[value];
+        if (!narrEdge) continue;
+
+        let pv = null;
+        let answerLabel = (narrEdge.answerLabel || edge.label);
+        if (narrEdge.narrativeVariants && sel) {
+            const variant = resolveNarrativeVariant(narrEdge.narrativeVariants, sel);
+            if (variant) {
+                if (variant.personalVignette) pv = variant.personalVignette;
+                if (variant.answerLabel) answerLabel = variant.answerLabel;
+            }
+        }
+        if (!pv && narrEdge.personalVignette) pv = narrEdge.personalVignette;
+        if (!pv) continue;
+
+        const text = resolvePersonalVignetteText(pv, ctx);
+        if (!text) continue;
+
+        vignettes.push({
+            nodeId: node.id,
+            heading: node.label || node.id,
+            answerLabel: answerLabel || edge.label || value,
+            text: tokenReplace(text),
+        });
+    }
+    return vignettes;
 }
 
 const exported = {
-    resolveMilestoneText,
-    filterMilestones,
-    resolvePersonalMilestones,
     getCountryBucket,
-    collectDimensions,
+    resolvePersonalVignetteText,
+    resolvePersonalVignettes,
+    resolveNarrativeVariant,
 };
 
 if (typeof module !== 'undefined' && module.exports) {
