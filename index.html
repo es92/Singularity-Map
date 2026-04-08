@@ -16,14 +16,6 @@
     <meta name="twitter:title" content="AI Singularity Map">
     <meta name="twitter:description" content="Choose your own adventure through the future of AI. ~20 questions, 28 possible outcomes.">
     <meta name="twitter:image" content="https://es92.github.io/Singularity-Map/og-image.png">
-    <!-- Google Analytics 4 — replace G-N8T4PES8VX with your Measurement ID -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N8T4PES8VX"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-N8T4PES8VX');
-    </script>
     <link rel="stylesheet" href="timeline.css">
     <style>
         #app { }
@@ -1161,7 +1153,7 @@
                     const answers = { country: selectedCountry, profession: selectedProf };
                     if (selectedPos) answers.position = selectedPos;
                     savePersonalAnswers(answers);
-                    track('personal_milestones', { country_bucket: getCountryBucket(selectedCountry), profession: selectedProf, position: selectedPos || null });
+
 
                     const resolved = resolvePersonalMilestones(template.milestones, answers, worldState, baseOffsetMonths, endOffsetMonths);
                     const stageHeader = section.querySelector('.timeline-stage-header').outerHTML;
@@ -1195,9 +1187,6 @@
         const LOGGER_URL = 'https://singularity-logger.evan-a-shapiro.workers.dev';
         let journeyId = null;
         let journeyStartTime = null;
-        function track(event, params) {
-            if (typeof gtag === 'function') gtag('event', event, params);
-        }
         function logStart() {
             journeyId = crypto.randomUUID();
             journeyStartTime = Date.now();
@@ -1584,8 +1573,7 @@
                 if (!resolved) return '';
 
                 const key = outcomeKey(t.id, resolved.variantKey);
-                track('outcome_reached', { outcome_id: t.id, variant_id: resolved.variantKey || null });
-                logJourney(t.id, resolved.variantKey, stack);
+                logJourney(t.id, resolved.variantKey);
                 markDiscovered(key);
 
                 const dateMap = buildTimelineDateMap();
@@ -1905,7 +1893,6 @@
                         questionZone.style.display = 'flex';
                         questionZone.style.flex = '1';
                         questionZone.querySelector('[data-action="begin"]').addEventListener('click', () => {
-                            track('journey_start');
                             logStart();
                             started = true;
                             mutateStack(s => s, { fadeFooterIn: true });
@@ -1962,7 +1949,6 @@
                                 continueBtn.addEventListener('click', () => {
                                     if (mapAnimator && mapAnimator.isAnimating()) return;
                                     const lockedValue = nextQ.forcedValue;
-                                    track('question_answered', { question_id: nextQ.node.id, answer: lockedValue, forced: true });
                                     mutateStack(s => Engine.push(s, nextQ.node.id, lockedValue));
                                 });
                             }
@@ -1975,7 +1961,6 @@
                                     const idx = parseInt(cardEl.dataset.aidx, 10);
                                     const answer = qResult.answerCards[idx];
                                     if (!answer || answer.disabled) return;
-                                    track('question_answered', { question_id: answer.nodeId, answer: answer.value });
                                     mutateStack(s => Engine.push(s, answer.nodeId, answer.value));
                                 });
                             });
@@ -2048,7 +2033,6 @@
                         const shareBtn = outcomeZone.querySelector('[data-action="outcome-share"]');
                         if (shareBtn) {
                             shareBtn.addEventListener('click', () => {
-                                track('outcome_shared');
                                 const eff2 = Engine.resolvedState(Engine.currentState(stack));
                                 const matched2 = templatesList.filter(t => Engine.templateMatches(t, eff2));
                                 let shareUrl = location.origin + location.pathname + location.hash;
@@ -2069,7 +2053,6 @@
                         const exploreBtn = outcomeZone.querySelector('[data-action="outcome-explore"]');
                         if (exploreBtn) {
                             exploreBtn.addEventListener('click', () => {
-                                track('explore_another');
                                 resetSelections();
                             });
                         }
@@ -2149,7 +2132,6 @@
             }
 
             function backToStart() {
-                track('back_to_start');
                 journeyId = null;
                 journeyStartTime = null;
                 stack = Engine.createStack();
@@ -2226,5 +2208,6 @@
 
     })();
     </script>
+    <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "806d98fc7eee45e4b64193613fbde417"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
