@@ -95,7 +95,7 @@
       "milestones": [
         {
           "offsetMonths": 3,
-          "headline": "AI arrives at your desk",
+          "headline": "AI arrives in your field",
           "text": {
             "profession": {
               "software": {
@@ -118,11 +118,45 @@
               },
               "legal_finance": "AI handles document review, contract analysis, and routine compliance. The grunt work that trained every junior associate is disappearing.",
               "creative": "AI-generated content floods your industry. Clients are asking why a draft takes you a week when AI does it in minutes.",
-              "education": "AI tutoring platforms arrive. Your students use them outside class. Some are learning faster than your curriculum can keep up with.",
+              "education": {
+                "stall_duration": {
+                  "hours": "AI tutoring tools launch — adaptive practice, instant feedback, personalized pacing. Useful for homework and test prep, but your classroom teaching is untouched. A supplement, nothing more.",
+                  "days": "AI tutors handle full day-length lessons. Students use them outside class and arrive knowing things you haven't taught yet. Your role starts shifting from knowledge delivery to something else.",
+                  "weeks": "AI tutoring systems manage week-long instructional sequences — complete units with assessment, feedback, and remediation. The question of what a teacher is FOR becomes urgent.",
+                  "months": "AI runs entire courses. Students learn faster through AI than in your classroom. Your value shifts entirely to the human elements — motivation, socialization, emotional support. The profession you trained for is unrecognizable.",
+                  "_default": "AI tutoring tools arrive in education. How much they change your work depends on how capable they are — but the direction is clear."
+                },
+                "_default": "AI tutoring tools arrive in education. How much they change your work depends on how capable they are — but the direction is clear."
+              },
               "trade": "AI hasn't touched your hands-on work directly, but the offices that manage your contracts, scheduling, and supply chains are automating fast.",
-              "government": "AI is deployed in public services — faster processing, better analysis. You see the efficiency gains firsthand, and the centralizing effects.",
-              "student_retired": "AI tools reshape how you learn or spend your time. The world is adapting to a powerful new assistant — and so are you.",
-              "_default": "AI tools arrive in your field. They handle the routine work faster than any human. The adjustment begins."
+              "government": {
+                "stall_duration": {
+                  "hours": "AI tools handle basic analysis and reporting — faster briefings, automated data pulls. Useful but limited. Your policy judgment is untouched.",
+                  "days": "AI handles day-length policy analysis. Draft reports, regulatory reviews, impact assessments — done in hours instead of weeks. The efficiency gains are real. The question of what requires human judgment starts shifting.",
+                  "weeks": "AI manages complex multi-day policy workflows. Regulatory analysis, legislative drafting, cross-agency coordination — increasingly handled by AI. Your role shifts from doing the analysis to directing and overseeing it.",
+                  "_default": "AI tools arrive in government. Policy analysis, reporting, and routine governance tasks start automating. How far it goes depends on the ceiling."
+                },
+                "_default": "AI tools arrive in government. Policy analysis, reporting, and routine governance tasks start automating. How far it goes depends on the ceiling."
+              },
+              "student_retired": {
+                "stall_duration": {
+                  "hours": "AI tools enter everyday life — better search, smarter assistants, AI-powered everything. If you're studying, they change how you learn. If you're retired, they change how you navigate the world. The impact is real but bounded.",
+                  "days": "AI handles day-length tasks that used to require professional expertise. If you're entering the workforce, the skills you're building are being repriced in real time. If you're retired, you're watching the world you knew reshape itself.",
+                  "weeks": "AI handles complex multi-day work. The career you're training for or the professional world you built is being restructured around capabilities that didn't exist a year ago.",
+                  "_default": "AI tools reshape how the world works. Whether you're entering it or observing from outside, the pace of change is visible and unsettling."
+                },
+                "_default": "AI tools reshape how the world works. Whether you're entering it or observing from outside, the pace of change is visible and unsettling."
+              },
+              "_default": {
+                "stall_duration": {
+                  "hours": "AI tools arrive in your field. They handle short tasks brilliantly — but the ceiling is low. Your core work is safe. The adjustment is real but bounded.",
+                  "days": "AI tools arrive in your field and handle a full day's work on well-scoped tasks. You're more productive, but the nature of the work is shifting. The ceiling is visible, and your role is being redefined around it.",
+                  "weeks": "AI tools handle multi-day projects in your field. The productivity gain is enormous — and so is the displacement pressure. The ceiling is high enough to reshape your entire profession.",
+                  "months": "AI handles month-long projects in your field autonomously. The role looks more like direction and oversight than hands-on work. Almost everything can be delegated. What remains is genuinely novel thinking.",
+                  "_default": "AI tools arrive in your field. They handle the routine work faster than any human. The adjustment begins — how much changes depends on where the ceiling falls."
+                },
+                "_default": "AI tools arrive in your field. They handle the routine work faster than any human. The adjustment begins — how much changes depends on where the ceiling falls."
+              }
             }
           }
         },
@@ -181,7 +215,45 @@
               "healthcare": "Hospitals restructure around AI capabilities. Some specialties expand; others contract. Retraining programs launch, but they can't absorb everyone.",
               "legal_finance": "Law and finance firms look nothing like they did two years ago. Half the associates are gone. Those who adapted early are thriving. The rest are scrambling.",
               "trade": "The knowledge-work restructuring ripples outward. The offices and companies that employed your clients are changing. Contracts shift. Demand patterns shift. You feel it downstream.",
-              "_default": "Your industry has restructured around the plateau. Some roles expanded, others vanished. The decisions you made in the first year are now locked in."
+              "_default": {
+                "stall_duration": {
+                  "hours": "The restructuring is modest. AI augments but doesn't replace. Your industry has adapted, and the adjustment — while real — is manageable. The ceiling kept the disruption bounded.",
+                  "days": "Your industry has restructured meaningfully. Roles that involved routine analysis or production have shrunk; roles requiring judgment, creativity, and relationships have grown. The transition is real but navigable.",
+                  "weeks": "Your industry looks nothing like it did two years ago. Teams are smaller. AI handles the analytical core of most roles. What remains is judgment, relationships, and the work that requires sustained human context. The adjustment has been wrenching.",
+                  "months": "Your industry has been gutted and rebuilt. Most routine and analytical work is automated. The roles that remain are senior, creative, or irreducibly human. Everyone you know has either adapted or is struggling to.",
+                  "_default": "Your industry has restructured around the plateau. The roles that remain depend on where the ceiling fell — and the decisions you made in the first year are now locked in."
+                },
+                "_default": "Your industry has restructured around the plateau. The roles that remain depend on where the ceiling fell — and the decisions you made in the first year are now locked in."
+              },
+              "education": {
+                "stall_duration": {
+                  "hours": "AI tutoring handles basic instruction, but the ceiling is low enough that your role stays mostly intact. Class sizes don't change. The technology is a supplement, not a replacement.",
+                  "days": "AI tutors handle full lessons and personalized practice. Districts start experimenting with larger class sizes and fewer teachers. Your role shifts toward the parts AI can't do — motivation, socialization, the human elements.",
+                  "weeks": "AI handles week-long instructional sequences. Some districts cut teaching positions significantly. The roles that remain focus on mentorship, behavioral support, and the irreducibly human parts of education. Retraining programs launch for displaced teachers.",
+                  "months": "AI runs entire courses autonomously. Teaching positions are cut dramatically. What remains is a fundamentally different role — part counselor, part community anchor, part quality assurance for AI instruction. Most teachers you know are looking for new careers.",
+                  "_default": "Education restructures around what AI can and can't do. The teaching roles that remain look nothing like what you trained for. How many remain depends on where the ceiling fell."
+                },
+                "_default": "Education restructures around what AI can and can't do. The teaching roles that remain look nothing like what you trained for. How many remain depends on where the ceiling fell."
+              },
+              "government": {
+                "stall_duration": {
+                  "hours": "AI handles routine analysis and reporting, but policy judgment stays human. Agencies are more efficient. Headcount holds steady. The work is changing at the margins.",
+                  "days": "AI handles day-length policy analysis and drafting. Agencies restructure — fewer analysts, more AI oversight roles. The institutional knowledge that used to take decades to build is now partially encoded in systems.",
+                  "weeks": "AI manages week-long regulatory reviews and policy cycles. Agencies shrink significantly. The remaining roles are senior judgment calls and political navigation — everything else is delegated.",
+                  "_default": "Government agencies restructure around AI capabilities. The analytical roles shrink; the political and oversight roles remain. How much changes depends on where the ceiling fell."
+                },
+                "_default": "Government agencies restructure around AI capabilities. The analytical roles shrink; the political and oversight roles remain. How much changes depends on where the ceiling fell."
+              },
+              "student_retired": {
+                "stall_duration": {
+                  "hours": "The restructuring is visible but limited. The career landscape you're entering or watching hasn't fundamentally changed — AI is a tool, not a replacement. The anxiety is real but the disruption is bounded.",
+                  "days": "The career landscape is shifting visibly. Entry-level positions in knowledge work are shrinking. If you're entering the workforce, the jobs you trained for look different. If you're watching from retirement, the world you built is being remodeled.",
+                  "weeks": "The career landscape has transformed. Many entry-level knowledge-work positions have disappeared. If you're starting out, the path is uncharted. If you're retired, you're watching the professional world you knew dissolve into something unrecognizable.",
+                  "months": "Most knowledge-work careers have been gutted. If you're entering the workforce, you're entering a world that bears no resemblance to what you trained for. If you're retired, you're watching an entire generation's assumptions about work collapse.",
+                  "_default": "The restructuring reshapes the career landscape. Whether you're entering it or watching from outside, the world of work looks fundamentally different from what anyone planned for."
+                },
+                "_default": "The restructuring reshapes the career landscape. Whether you're entering it or watching from outside, the world of work looks fundamentally different from what anyone planned for."
+              }
             }
           }
         },
@@ -217,9 +289,28 @@
           "headline": "The long plateau",
           "text": {
             "stall_recovery": {
-              "substantial": "The breakthrough eventually came — but people have already rebuilt their lives around the ceiling. The world that emerged is about to change again. The decisions you make in this next window will matter as much as the ones you made at the start.",
-              "never": "The ceiling held. No breakthrough, no second wave. This is the world now — and the lives people built in it are the ones they'll keep. The most powerful tool humanity ever created, deployed and adapted to, but never transcended.",
-              "_default": "Years into the plateau, the shape of people's lives has been set by how they responded to the first wave. Whether the ceiling breaks or holds, the choices you made defined the outcome."
+              "substantial": {
+                "profession": {
+                  "software": "The breakthrough came — AI capability resumed its climb past the ceiling. The world you built your career around is about to change again. The engineering skills you developed for the plateau era may not survive the next wave. The decisions you make in this window matter as much as the ones you made at the start.",
+                  "healthcare": "The breakthrough came — and medicine is about to transform again. The clinical roles you adapted to during the plateau are no longer the endpoint. Another wave of AI capability is coming, and this time the ceiling may not hold.",
+                  "education": "The breakthrough came. The plateau-era teaching role you built — part mentor, part counselor, part AI-quality overseer — is about to change again. If AI capability resumes climbing, the balance between human and machine instruction shifts once more.",
+                  "_default": "The breakthrough eventually came — but you've already rebuilt your life around the ceiling. The world that emerged from the plateau is about to change again. The skills, relationships, and adaptations that defined the plateau era may not survive what comes next."
+                }
+              },
+              "never": {
+                "profession": {
+                  "software": "The ceiling held permanently. The engineering career you rebuilt around it is the one you'll keep. AI handles everything up to its limit; you handle everything above it. The boundary is clear, stable, and permanent. The most powerful tool ever built — but a tool you've learned to work with.",
+                  "healthcare": "The ceiling held. Medicine adapted permanently to AI's capabilities and limitations. Your clinical role — the judgment calls, the patient relationships, the complex cases — is secure. The AI is extraordinary within its range and permanently bounded outside it.",
+                  "education": "The ceiling held. Education settled into its new form — AI handles instruction within its range, humans handle everything else. Your role is different from what you trained for but stable. The teaching profession survived, transformed.",
+                  "_default": "The ceiling held. No breakthrough, no second wave. This is the world now — and the career you built around the plateau is the one you'll keep. The most powerful tool humanity ever created, deployed and adapted to, but never transcended."
+                }
+              },
+              "_default": {
+                "profession": {
+                  "software": "Years into the plateau, your engineering career has been defined by how you responded to the first wave. Whether the ceiling breaks or holds, you've built something real on this side of it.",
+                  "_default": "Years into the plateau, the shape of your career has been set by how you responded to the first wave. Whether the ceiling breaks or holds, the choices you made defined where you landed."
+                }
+              }
             }
           }
         }
@@ -307,7 +398,8 @@
               "creative": "AI generates competent drafts, designs, and compositions. It can't originate, but it can execute. The gap between 'good enough' and 'exceptional' is where your value now lives.",
               "education": "AI tutoring handles knowledge delivery with superhuman patience. The remaining roles center on mentorship, motivation, and the social dimensions of learning.",
               "trade": "AI hasn't reached your hands-on work, but the offices above you — scheduling, logistics, contracts — are automating fast. You feel it in changed workflows and fewer middlemen.",
-              "_default": "AI takes over the routine parts of your work. It's not replacing you — yet — but the shape of your role is changing fast. The creative and judgment-intensive parts remain yours."
+              "_default": "AI takes over the routine parts of your work. It's not replacing you — yet — but the shape of your role is changing fast. The creative and judgment-intensive parts remain yours.",
+              "student_retired": "Whether you're entering the workforce or watching from retirement, AI's impact on routine knowledge work is visible everywhere. The career landscape is transforming — entry-level work is vanishing, and the skills the economy rewards are being repriced."
             }
           }
         },
@@ -359,9 +451,26 @@
           "headline": "The long automation",
           "text": {
             "automation_recovery": {
-              "substantial": "The barrier between routine and creative AI eventually broke — but it took decades. By then, you'd already rebuilt your life around the ceiling. The world you adapted to is changing again.",
-              "never": "The ceiling held permanently. Novel creative work, original research, and recursive self-improvement remained human. This is a world with the most powerful tool ever built — but a tool nonetheless. The careers built around that ceiling are the ones people will keep.",
-              "_default": "Years into the automation era, the shape of careers has been defined by how people responded to the first wave. Whether the ceiling breaks or holds, your choices set the trajectory."
+              "substantial": {
+                "profession": {
+                  "software": "The barrier between routine and creative AI eventually broke. The engineering world you built during the automation era is about to transform again — the ceiling that defined your career is gone.",
+                  "education": "The barrier broke. AI can now do creative and novel work. The teaching role you adapted to — mentor, motivator, human anchor — faces another wave of disruption as AI handles even the parts you thought were permanently yours.",
+                  "_default": "The barrier between routine and creative AI eventually broke — but it took decades. By then, you'd already rebuilt your life around the ceiling. The world you adapted to is changing again."
+                }
+              },
+              "never": {
+                "profession": {
+                  "software": "The ceiling held permanently. Novel engineering, architecture, research — these stayed human. You built a career around what AI can't do, and that career is secure. The most powerful tool ever built, but a tool you've mastered working alongside.",
+                  "education": "The ceiling held. Creative teaching, original curriculum design, and the irreducibly human parts of education remained yours permanently. The profession survived, transformed but stable.",
+                  "_default": "The ceiling held permanently. Novel creative work, original research, and recursive self-improvement remained human. This is a world with the most powerful tool ever built — but a tool nonetheless. The career you built around that ceiling is the one you'll keep."
+                }
+              },
+              "_default": {
+                "profession": {
+                  "software": "Years into the automation era, your engineering career has been defined by what AI can't do. Whether that ceiling breaks or holds, you've built something real on this side of it.",
+                  "_default": "Years into the automation era, the shape of careers has been defined by how people responded to the first wave. Whether the ceiling breaks or holds, your choices set the trajectory."
+                }
+              }
             }
           }
         }
@@ -740,7 +849,7 @@
               "creative": "AI produces extraordinary creative work. The commercial market restructures around AI platforms. The creators who own their relationship with AI thrive. Everyone else becomes content, not a creator.",
               "trade": {
                 "knowledge_replacement": {
-                  "rapid": "The offices that employed your clients vanish in months — legal, accounting, logistics management, all automated overnight. Physical work survives, but the economic ecosystem around it is gutted. Your hands still work. The contracts and clients that sustained them don't.",
+                  "rapid": "Your clients' offices empty out in months. Legal, accounting, logistics — automated. Physical work survives but the economic scaffolding collapses. Finding someone to pay you is the new problem.",
                   "gradual": "The knowledge-work economy restructures around you gradually. Your trade survives longer than most professions — but the contracts, the clients, the management layers you depended on keep changing underneath you. Adaptation is constant.",
                   "_default": "The knowledge-work upheaval reshapes the economy around you. The firms that employed your clients either automate or vanish. Your trade survives longer — but the economic ecosystem you depended on is transforming underneath you."
                 }
@@ -1736,7 +1845,7 @@
               "one": {
                 "sovereignty": {
                   "state": "A government seizes control of the leading AI labs. In {country}, the effects ripple immediately — tools shift behind state-controlled access. The technology that was reshaping your life now belongs to a power dynamic you didn't choose.",
-                  "lab": "A single lab holds the most powerful technology in history. In {country}, you feel it as dependency — the tools reshaping your life are controlled by an institution with power that rivals governments.",
+                  "lab": "A single lab holds the the most consequential technology in history. In {country}, you feel it as dependency — the tools reshaping your life are controlled by an institution with power that rivals governments.",
                   "_default": "The world's most powerful AI concentrates in a single country. In {country}, the implications are tangible — the technology reshaping your life is controlled by a power structure that may or may not answer to you, but certainly wasn't designed by you."
                 },
                 "_default": "The world's most powerful AI concentrates in a single country. In {country}, the implications are tangible — whether you're inside that power or watching from outside, the technology that shapes your life is controlled by forces beyond any individual's reach."
@@ -1804,7 +1913,7 @@
               },
               "trade": {
                 "knowledge_replacement": {
-                  "rapid": "The offices that employed your clients vanish in months — legal, accounting, logistics management, all automated overnight. Physical work survives, but the economic ecosystem around it is gutted. Your hands still work. The contracts and clients that sustained them don't.",
+                  "rapid": "The knowledge-work economy that fed your trade guts itself in months. Your hands-on skills endure — physical work can't be automated yet — but the contracts and management layers you depended on are gone.",
                   "gradual": "The knowledge-work economy restructures around you gradually. Your trade survives longer than most professions — but the contracts, the clients, the management layers you depended on keep changing underneath you. Adaptation is constant.",
                   "_default": "The knowledge-work upheaval reshapes the economy around you. Firms and institutions that employed your clients restructure or disappear. The physical transformation comes later — but the economic tremors reach you now."
                 }
@@ -1886,8 +1995,8 @@
             "country_bucket": {
               "us": {
                 "sovereignty": {
-                  "state": "The state-managed transition is deliberate and controlled. Government retraining programs, public AI services, centralized deployment — it's authoritative, but standards of living are climbing. After everything, this is working.",
-                  "_default": "The market-driven transition is chaotic but real. Retraining programs, income support, AI-driven public services — it's messy, but standards of living are climbing for everyone. After everything, this is working."
+                  "state": "The state-managed transition is deliberate and controlled. Government retraining programs, public AI services, centralized deployment — it's authoritative, but standards of living are climbing. It’s working.",
+                  "_default": "The market-driven transition is chaotic but real. Retraining programs, income support, AI-driven public services — it's messy, but standards of living are climbing for everyone. Somehow, it’s working."
                 }
               },
               "china": "The state manages the transition with systematic precision. Mandatory retraining, guaranteed placement, comprehensive deployment. Individual choice is limited — but the floor is rising fast.",
@@ -1922,11 +2031,11 @@
           "headline": "The new world",
           "text": {
             "profession": {
-              "software": "The field you trained for has been reinvented. The problems that matter now didn't exist six years ago. The flourishing is real — and finding your place in it is an open question with no precedent. After everything, that openness feels like a gift.",
+              "software": "The field you trained for has been reinvented. The problems that matter now didn't exist six years ago. The flourishing is real — and finding your place in it is an open question with no precedent. After everything, that's not nothing.",
               "healthcare": "Disease burden is plummeting. Life expectancy climbs. The healthcare system would have been science fiction a decade ago. The career you knew is gone — but what replaced it is extraordinary.",
-              "creative": "Production costs approach zero. Distribution is universal. The old gatekeepers and business models are gone. What you create and why is up to you in a way it never was before. After the upheaval, this freedom is dizzying.",
+              "creative": "Production costs approach zero. Distribution is universal. The old gatekeepers and business models are gone. What you create and why is up to you in a way it never was before. The freedom is dizzying.",
               "education": "Education has been reimagined. AI handles knowledge delivery; humans handle purpose, meaning, emotional growth. The role is more important than ever — even though it looks nothing like what anyone trained for.",
-              "_default": "Six years in, the flourishing is tangible. Life is materially better — but the deeper questions are just beginning. What do you do when survival is no longer the organizing principle? After everything you've been through, the question itself feels like a miracle.",
+              "_default": "Six years in, the flourishing is tangible. Life is materially better — but the deeper questions are just beginning. What do you do when survival is no longer the organizing principle? After everything, that's the question worth having.",
               "trade": "The physical world has been transformed. Automation reached your trade — how completely depends on the specifics. But the economy you're in now has more abundance, more safety nets, and more open questions about purpose than anything before it. Your hands-on skills carried you through the transition. What comes next is up to you.",
               "student_retired": "The world you trained for — or spent your life building — has been replaced by something better. Whether you're starting a career in the new economy or watching from a comfortable retirement, the flourishing is tangible. The deeper question — what to do when survival isn't the organizing principle — is the one everyone is grappling with now."
             }
@@ -2584,7 +2693,7 @@
               },
               "trade": {
                 "knowledge_replacement": {
-                  "rapid": "The offices that employed your clients vanish in months — legal, accounting, logistics management, all automated overnight. Physical work survives, but the economic ecosystem around it is gutted. Your hands still work. The contracts and clients that sustained them don't.",
+                  "rapid": "Clients' offices automate in months. Legal, logistics, accounting — all gone. Your trade survives but the business ecosystem that paid for it is being rebuilt from scratch.",
                   "gradual": "The knowledge-work economy restructures around you gradually. Your trade survives longer than most professions — but the contracts, the clients, the management layers you depended on keep changing underneath you. Adaptation is constant.",
                   "_default": "The arms race fragments supply chains. Your trade adapts to new geopolitical lines — different suppliers, different regulations, different uncertainty. The physical work continues. The economic context is transformed."
                 }
@@ -2890,7 +2999,7 @@
               "one": {
                 "sovereignty": {
                   "state": "A government seizes control of the leading AI labs. In {country}, the effects are immediate — tools shift behind state-controlled access. The technology now belongs to a power dynamic you didn't choose.",
-                  "lab": "A single lab holds the most powerful technology in history. In {country}, the tools reshaping your life are controlled by an institution with power that rivals governments.",
+                  "lab": "A single lab holds the the most transformative technology ever created. In {country}, the tools reshaping your life are controlled by an institution with power that rivals governments.",
                   "_default": "The world's most powerful AI concentrates in a single country. In {country}, the technology reshaping your life is controlled by a power structure that may or may not answer to you."
                 },
                 "_default": "The world's most powerful AI concentrates in a single country. In {country}, the implications are tangible — whether you're inside that power or watching from outside."
@@ -2928,7 +3037,7 @@
               },
               "trade": {
                 "knowledge_replacement": {
-                  "rapid": "The offices that employed your clients vanish in months — legal, accounting, logistics management, all automated overnight. Physical work survives, but the economic ecosystem around it is gutted. Your hands still work. The contracts and clients that sustained them don't.",
+                  "rapid": "The offices above you empty out. Contracts shift, supply chains restructure, the management layers that organized your work disappear. Physical skills survive. The economy that sustained them is transforming.",
                   "gradual": "The knowledge-work economy restructures around you gradually. Your trade survives longer than most professions — but the contracts, the clients, the management layers you depended on keep changing underneath you. Adaptation is constant.",
                   "_default": "The knowledge-work upheaval reshapes the economy around you. Firms that employed your clients restructure or disappear. None of it will matter soon — but you don't know that yet."
                 }
@@ -3331,7 +3440,7 @@
               "one": {
                 "sovereignty": {
                   "state": "A government seizes control of the leading AI labs. In {country}, the effects are immediate — tools you relied on shift behind state-controlled access. APIs change. Export controls tighten. The technology that felt like yours now belongs to a power dynamic you didn't choose.",
-                  "lab": "A single lab holds the most powerful technology ever built — and the government that hosts it can't quite control it either. In {country}, you feel it as dependency: the tools reshaping your life are controlled by an institution answerable to no one.",
+                  "lab": "A single lab holds the the defining technology of the century — and the government that hosts it can't quite control it either. In {country}, you feel it as dependency: the tools reshaping your life are controlled by an institution answerable to no one.",
                   "_default": "The world's most powerful AI concentrates in a single country. In {country}, the implications are tangible — the technology reshaping your life is controlled by a power structure that may or may not answer to you, but certainly wasn't designed by you."
                 },
                 "_default": "The world's most powerful AI concentrates in a single country. In {country}, the implications are tangible — whether you're inside that power or watching from outside, the technology that shapes your life is controlled by forces beyond any individual's reach."
@@ -3400,7 +3509,7 @@
               },
               "trade": {
                 "knowledge_replacement": {
-                  "rapid": "The offices that employed your clients vanish in months — legal, accounting, logistics management, all automated overnight. Physical work survives, but the economic ecosystem around it is gutted. Your hands still work. The contracts and clients that sustained them don't.",
+                  "rapid": "Your clients' offices empty out in months. Legal, accounting, logistics — automated. Physical work survives but the economic scaffolding collapses. Finding someone to pay you is the new problem.",
                   "gradual": "The knowledge-work economy restructures around you gradually. Your trade survives longer than most professions — but the contracts, the clients, the management layers you depended on keep changing underneath you. Adaptation is constant.",
                   "_default": "The knowledge-work upheaval reshapes the economy around you. The offices and institutions that employed your clients restructure or disappear. Demand patterns shift violently. You're downstream of the revolution — but the current is strong and getting stronger."
                 }
@@ -4007,7 +4116,7 @@
               "one": {
                 "sovereignty": {
                   "state": "A government seizes control of the leading AI labs. In {country}, the effects are immediate — tools shift behind state-controlled access. The technology now belongs to a power dynamic you didn't choose.",
-                  "lab": "A single lab holds the most powerful technology in history. In {country}, the tools reshaping your life are controlled by an institution with power that rivals governments.",
+                  "lab": "A single lab holds the technology that dwarfs everything before it. In {country}, the tools reshaping your life are controlled by an institution with power that rivals governments.",
                   "_default": "The world's most powerful AI concentrates in a single country. In {country}, the technology reshaping your life is controlled by a power structure that may or may not answer to you."
                 },
                 "_default": "The world's most powerful AI concentrates in a single country. In {country}, the implications are tangible — whether you're inside that power or watching from outside."
@@ -4045,7 +4154,7 @@
               },
               "trade": {
                 "knowledge_replacement": {
-                  "rapid": "The offices that employed your clients vanish in months — legal, accounting, logistics management, all automated overnight. Physical work survives, but the economic ecosystem around it is gutted. Your hands still work. The contracts and clients that sustained them don't.",
+                  "rapid": "The knowledge-work economy that fed your trade guts itself in months. Your hands-on skills endure — physical work can't be automated yet — but the contracts and management layers you depended on are gone.",
                   "gradual": "The knowledge-work economy restructures around you gradually. Your trade survives longer than most professions — but the contracts, the clients, the management layers you depended on keep changing underneath you. Adaptation is constant.",
                   "_default": "The knowledge-work upheaval reshapes the economy around you. Firms that employed your clients restructure or disappear. The transformation feels permanent. It isn't — but you adapt as if it is."
                 }
@@ -4092,9 +4201,9 @@
           "headline": "The false stability",
           "text": {
             "alignment": {
-              "brittle": "The alignment holds — for now. You build a career, make plans, settle into a world that feels stable. Most people stop worrying. The experts don't. The fragility is theoretical to everyone except those who understand the technical reality. Looking back, this was the calm before something broke.",
+              "brittle": "The alignment holds — for now. You build a career, make plans, settle into a world that feels stable. Most people stop worrying. The experts don't. The fragility is theoretical to everyone except those who understand the technical reality. Later, you’ll recognize this as the calm before something broke.",
               "failed": "The alignment was never solved. Containment is all that stands between the world and catastrophe — and everyone in the system knows how thin the walls are. You build a life in the shadow of something powerful and poorly understood. The question isn't whether the walls hold forever. It's when they don't.",
-              "_default": "The world settles into apparent stability. You adapt, build, plan around the assumption that the systems hold. For years, they do. Looking back, this was the window — the last period of normalcy before everything changed."
+              "_default": "The world settles into apparent stability. You adapt, build, plan around the assumption that the systems hold. For years, they do. In retrospect, this was the window — the last period of normalcy before everything changed."
             },
             "_default": "Years of apparent stability. You build a life around the technology. Looking back, this was the calm before everything changed."
           }
@@ -4369,7 +4478,7 @@
               "one": {
                 "sovereignty": {
                   "state": "A government seizes control of the leading AI labs. In {country}, the effects are immediate — tools shift behind state-controlled access. The technology now belongs to a power dynamic you didn't choose.",
-                  "lab": "A single lab holds the most powerful technology in history. In {country}, the tools reshaping your life are controlled by an institution with power that rivals governments.",
+                  "lab": "A single lab holds the the most consequential technology in history. In {country}, the tools reshaping your life are controlled by an institution with power that rivals governments.",
                   "_default": "The world's most powerful AI concentrates in a single country. In {country}, the technology reshaping your life is controlled by a power structure that may or may not answer to you."
                 },
                 "_default": "The world's most powerful AI concentrates in a single country. In {country}, the implications are tangible — whether you're inside that power or watching from outside."
@@ -4407,7 +4516,7 @@
               },
               "trade": {
                 "knowledge_replacement": {
-                  "rapid": "The offices that employed your clients vanish in months — legal, accounting, logistics management, all automated overnight. Physical work survives, but the economic ecosystem around it is gutted. Your hands still work. The contracts and clients that sustained them don't.",
+                  "rapid": "Clients' offices automate in months. Legal, logistics, accounting — all gone. Your trade survives but the business ecosystem that paid for it is being rebuilt from scratch.",
                   "gradual": "The knowledge-work economy restructures around you gradually. Your trade survives longer than most professions — but the contracts, the clients, the management layers you depended on keep changing underneath you. Adaptation is constant.",
                   "_default": "The knowledge-work upheaval reshapes the economy around you. Firms that employed your clients restructure or disappear. You rebuild your identity around the new reality. It feels permanent."
                 }
@@ -4456,7 +4565,7 @@
             "alignment": {
               "brittle": "The alignment holds — for now. You build a career, make plans, settle into a world that feels stable. Most people stop worrying. The experts don't. The fragility is theoretical to everyone except those who understand the technical reality. Looking back, this was the calm before something broke.",
               "failed": "The alignment was never solved. Containment is all that stands between the world and catastrophe — and everyone in the system knows how thin the walls are. You build a life in the shadow of something powerful and poorly understood. The question isn't whether the walls hold forever. It's when they don't.",
-              "_default": "The world settles into apparent stability. You adapt, build, plan around the assumption that the systems hold. For years, they do. Looking back, this was the window — the last period of normalcy before everything changed."
+              "_default": "The world settles into apparent stability. You adapt, build, plan around the assumption that the systems hold. For years, they do. You didn’t know it at the time, but this was the window — the last period of normalcy before everything changed."
             },
             "_default": "Years of apparent stability. You build a life around the technology. Looking back, this was the calm before everything changed."
           }
@@ -4714,7 +4823,7 @@
               "one": {
                 "sovereignty": {
                   "state": "A government seizes control of the leading AI labs. In {country}, the effects are immediate — tools shift behind state-controlled access. The technology now belongs to a power dynamic you didn't choose.",
-                  "lab": "A single lab holds the most powerful technology in history. In {country}, the tools reshaping your life are controlled by an institution with power that rivals governments.",
+                  "lab": "A single lab holds the the most transformative technology ever created. In {country}, the tools reshaping your life are controlled by an institution with power that rivals governments.",
                   "_default": "The world's most powerful AI concentrates in a single country. In {country}, the technology reshaping your life is controlled by a power structure that may or may not answer to you."
                 },
                 "_default": "The world's most powerful AI concentrates in a single country. In {country}, the implications are tangible — whether you're inside that power or watching from outside."
@@ -4752,7 +4861,7 @@
               },
               "trade": {
                 "knowledge_replacement": {
-                  "rapid": "The offices that employed your clients vanish in months — legal, accounting, logistics management, all automated overnight. Physical work survives, but the economic ecosystem around it is gutted. Your hands still work. The contracts and clients that sustained them don't.",
+                  "rapid": "The offices above you empty out. Contracts shift, supply chains restructure, the management layers that organized your work disappear. Physical skills survive. The economy that sustained them is transforming.",
                   "gradual": "The knowledge-work economy restructures around you gradually. Your trade survives longer than most professions — but the contracts, the clients, the management layers you depended on keep changing underneath you. Adaptation is constant.",
                   "_default": "The knowledge-work upheaval reshapes the economy around you. Firms that employed your clients restructure or disappear. You rebuild around the new reality — not knowing that multiple AI systems are diverging beneath the surface."
                 }
