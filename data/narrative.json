@@ -141,6 +141,19 @@
           "description": "Productivity gains from the AI plateau flow broadly across the economy. New policies, market forces, or social norms ensure that automation's benefits don't concentrate.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The AI plateau's productivity gains are flowing broadly. Lower costs, better services, rising living standards. The ceiling limits how transformative it is, but the gains are real and widely shared.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "The AI plateau hasn't touched your hands-on work much, but the broader economy is better. Services are cheaper, demand for skilled trades is steady. The gains are modest but real."
+            }
+          ]
         }
       },
       "unequal": {
@@ -151,6 +164,19 @@
           "description": "Those who already hold capital and infrastructure capture most of the value from AI automation. The plateau entrenches existing economic hierarchies.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The AI plateau concentrated wealth. Those who owned the AI tools captured the productivity gains. Your work is more productive, but the productivity mostly benefits someone else.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "Your company is more productive, but the gains flow to shareholders and executives. Your salary hasn't kept pace with what the AI tools you use generate."
+            }
+          ]
         }
       },
       "extreme": {
@@ -161,6 +187,9 @@
           "description": "Those controlling AI infrastructure capture nearly all the economic value. The plateau doesn't just maintain inequality — it amplifies it to historic extremes.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The plateau's benefits went almost entirely to those who held power when the transformation hit. The technology works for everyone who can access it — access is the problem."
         }
       }
     }
@@ -204,6 +233,27 @@
           "description": "Within AI's capability range, most routine knowledge work is automated within 2–5 years. The labor market transforms quickly for affected sectors.",
           "durationMin": 24,
           "durationMax": 60
+        },
+        "personalVignette": {
+          "_default": "Within the AI's capability ceiling, adoption was fast. Any knowledge task AI could handle was delegated within a few years.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "AI handles everything up to its ceiling in your field. The tasks within its range were delegated quickly — your role now is the work above the ceiling."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Knowledge work automated fast within AI's ceiling. Your hands-on work is untouched, but the offices that manage your contracts and scheduling are running on AI."
+            }
+          ]
         }
       },
       "gradual": {
@@ -214,6 +264,19 @@
           "description": "Adoption unfolds over 5–15 years as organizations, regulations, and workers adapt. The transformation is real but measured.",
           "durationMin": 60,
           "durationMax": 180
+        },
+        "personalVignette": {
+          "_default": "Adoption unfolded slowly — sector by sector, constrained by institutional inertia. The ceiling is fixed, but reaching it is taking years.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "Even in tech, adoption is gradual. Your company is partway through the transition — some workflows are AI-handled, others aren't yet. The ceiling is clear; getting there is slow."
+            }
+          ]
         }
       },
       "uneven": {
@@ -224,6 +287,27 @@
           "description": "Tech and finance automate within 2–5 years. Education, healthcare, government lag by a decade or more. Two economies emerge within one society.",
           "durationMin": 24,
           "durationMax": 240
+        },
+        "personalVignette": {
+          "_default": "Some industries automated overnight within the ceiling; others are still adopting years later. Your experience depends on which side of that divide your field falls on.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "Tech adopted fast. Other industries — healthcare, government, education — are still years behind. Your field hit the ceiling quickly; others are still approaching it."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "The offices automated. The job sites didn't. You're watching a patchwork economy form — half AI-managed, half unchanged."
+            }
+          ]
         }
       },
       "limited": {
@@ -234,6 +318,19 @@
           "description": "Despite impressive demos, AI mostly augments human workers rather than replacing them. Productivity grows but the labor market transforms less than predicted.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "AI augments but rarely replaces. The capability ceiling means AI handles pieces of work, not whole roles. The most powerful tool ever built, used mostly as an assistant.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "AI is a powerful coding assistant, but it doesn't replace you. The ceiling means it handles parts of your work — autocomplete, analysis, testing — while the complex decisions stay yours."
+            }
+          ]
         }
       }
     }
@@ -268,6 +365,19 @@
           "description": "Robots, autonomous vehicles, and manufacturing automation follow 10–25 years behind knowledge work automation. The physical world changes, slowly.",
           "durationMin": 120,
           "durationMax": 300
+        },
+        "personalVignette": {
+          "_default": "Physical automation trails the digital transformation. Knowledge work restructured first; the physical world follows slowly, constrained by hardware and the complexity of the real world.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Your work is changing, but slowly. The robots and automation are coming for physical jobs, but the timeline is years. For now, skilled trades are in demand."
+            }
+          ]
         }
       },
       "uneven": {
@@ -278,6 +388,27 @@
           "description": "Manufacturing hubs automate within 5–10 years. Rural areas and developing regions wait 20+ years. Geography becomes destiny.",
           "durationMin": 60,
           "durationMax": 240
+        },
+        "personalVignette": {
+          "_default": "Physical automation advanced in pockets — wealthy nations with strong manufacturing invested heavily. Other regions saw little change.",
+          "_when": [
+            {
+              "if": {
+                "is_ai_geo": [
+                  "yes"
+                ]
+              },
+              "text": "Physical automation is advancing where you live — automated factories, autonomous delivery, smart infrastructure. Other countries are still waiting."
+            },
+            {
+              "if": {
+                "is_ai_geo": [
+                  "no"
+                ]
+              },
+              "text": "Physical automation is transforming other countries first. In {country}, the changes are slower to arrive."
+            }
+          ]
         }
       },
       "limited": {
@@ -288,6 +419,19 @@
           "description": "Despite AI advances in knowledge work, the physical world resists automation. Dexterity, unpredictability, and infrastructure costs keep human labor dominant.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "Robotics stagnated alongside AI. Physical automation stayed limited to structured environments — warehouses, factories, assembly lines. Unstructured physical work remains human territory.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Physical automation never came for your work. Warehouses and factories automated, but anything requiring adaptation and judgment in unstructured environments is still done by people. Your skills are secure."
+            }
+          ]
         }
       }
     }
@@ -374,6 +518,9 @@
           "description": "AI reaches human-competitive performance once it can sustain coherent, autonomous work across an entire week — managing complexity, revising, and adapting.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "AI can now do a week's worth of professional work autonomously. The benchmarks are all over the news. It's not theoretical anymore — it's competitive with the best people in your field."
         }
       },
       "few_months": {
@@ -450,6 +597,9 @@
           "description": "At multi-month capability, AI demonstrates qualitatively superior strategic thinking — managing complexity, adapting to changing conditions, and producing insights no human team could match.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "AI is now better than the best humans at sustained, complex work. Not just faster — qualitatively better. The implications for your field, and every field, are impossible to ignore."
         }
       },
       "one_year": {
@@ -532,6 +682,9 @@
           "description": "Productivity gains from AI automation flow broadly. New institutions, policies, or market dynamics ensure the economic transformation benefits most people.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The economic gains from AI automation are flowing broadly. Costs are falling, services improving, living standards rising across most of the population."
         }
       },
       "unequal": {
@@ -542,6 +695,9 @@
           "description": "Existing wealth holders capture most of the value from AI automation. The technology amplifies rather than corrects economic inequality.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "AI automation's gains are concentrating. The economy is more productive, but the productivity flows to those who own the systems, not those displaced by them."
         }
       },
       "extreme": {
@@ -552,6 +708,9 @@
           "description": "Those controlling AI infrastructure and capital capture nearly all economic value. Automation creates a new class of extreme wealth alongside widespread displacement.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The automation gains went almost entirely to those already in power. The technology works; the distribution doesn't."
         }
       }
     }
@@ -568,6 +727,27 @@
           "description": "Most routine knowledge work is displaced within 2–4 years. The speed of displacement outpaces retraining and adaptation programs.",
           "durationMin": 24,
           "durationMax": 48
+        },
+        "personalVignette": {
+          "_default": "Routine knowledge work displaced within a few years. The transition outpaced retraining, regulation, everything.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "Routine development work disappeared within a couple of years. What remains is the work AI can't handle — but the boundary of what AI can handle keeps shifting."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Office work displaced fast. Your hands-on work is intact. There are a lot of former knowledge workers looking for something to do."
+            }
+          ]
         }
       },
       "gradual": {
@@ -578,6 +758,9 @@
           "description": "Knowledge work automation unfolds over 5–15 years, giving workers and institutions time to adapt — but not everyone makes the transition.",
           "durationMin": 60,
           "durationMax": 180
+        },
+        "personalVignette": {
+          "_default": "Knowledge work displacement is happening sector by sector over years. You can see the trajectory, and there's time to adapt — but the direction is clear."
         }
       },
       "uneven": {
@@ -588,6 +771,19 @@
           "description": "Tech and finance displace workers within 2–4 years. Other sectors lag by a decade or more. The economy bifurcates along sector lines.",
           "durationMin": 24,
           "durationMax": 240
+        },
+        "personalVignette": {
+          "_default": "Some sectors automated in a couple of years. Others will take a decade or more. The patchwork is stark — some people's jobs vanished overnight, others are untouched.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "Tech was in the first wave. Your field changed fast. Other industries — education, government — are still years from the same disruption."
+            }
+          ]
         }
       }
     }
@@ -604,6 +800,19 @@
           "description": "Robotics, autonomous vehicles, and manufacturing automation transform the physical world within 3–7 years.",
           "durationMin": 36,
           "durationMax": 84
+        },
+        "personalVignette": {
+          "_default": "Physical automation followed knowledge work quickly. Robots, autonomous systems, automated manufacturing — the physical world is transforming within a few years.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "The automation reached your work faster than expected. Autonomous machines are handling tasks that used to require skilled hands."
+            }
+          ]
         }
       },
       "gradual": {
@@ -614,6 +823,19 @@
           "description": "Physical world automation lags knowledge work by 10–25 years. The gap defines a long transitional period where digital and physical economies diverge.",
           "durationMin": 120,
           "durationMax": 300
+        },
+        "personalVignette": {
+          "_default": "Physical automation trails behind. Knowledge work transformed first; the physical world will follow, but the timeline is measured in decades, not years.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Your work is still done by people. The offices automated; the physical world didn't — not yet. There's time, but the direction is set."
+            }
+          ]
         }
       },
       "uneven": {
@@ -624,6 +846,19 @@
           "description": "Leading regions automate physical work within 3–7 years. Others wait 20+ years. The gap between technologically advanced and lagging regions becomes a chasm.",
           "durationMin": 36,
           "durationMax": 240
+        },
+        "personalVignette": {
+          "_default": "Physical automation is advancing in wealthy, manufacturing-heavy regions. Elsewhere, the physical world remains largely unchanged.",
+          "_when": [
+            {
+              "if": {
+                "is_ai_geo": [
+                  "yes"
+                ]
+              },
+              "text": "Physical automation is advancing where you live. Other countries are still waiting. The global gap is widening."
+            }
+          ]
         }
       },
       "limited": {
@@ -634,6 +869,19 @@
           "description": "Despite AI advances, the physical world largely resists automation. Cost, complexity, and unpredictability keep human labor central to the physical economy.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "Physical automation stayed limited. Structured environments — warehouses, factories — automated. Everything else remains human work.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "The automation wave stopped at the factory door. Your hands-on, unstructured work is still done by people. The jobs that require adaptation and judgment in the real world are safe."
+            }
+          ]
         }
       }
     }
@@ -888,6 +1136,9 @@
           "description": "Developers can reliably ensure AI systems follow their intended objectives, even as capabilities scale. The control techniques are proven, durable, and hold under hostile conditions and self-improvement.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "Alignment is solved. The experts are confident — not cautiously optimistic, genuinely confident. For the first time, the safety problem isn't dominating the headlines."
         }
       },
       "brittle": {
@@ -898,6 +1149,9 @@
           "description": "Control techniques pass every test and benchmark. Systems behave as intended under normal conditions. But the solution is shallow — it holds in the lab and in standard deployment. Whether it survives adversarial pressure, novel conditions, or recursive self-improvement (each AI generation helping build the next, faster) is another question.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "Alignment is partially solved. The experts say it works — for now. The caveat hangs in every headline."
         }
       },
       "failed": {
@@ -926,6 +1180,9 @@
           "description": "AI capability surges ahead of control techniques. The most powerful systems are not fully understood. Developers can describe what the models do but not why — and the gap between capability and control widens with each generation.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "Alignment isn't solved. AI capabilities keep advancing, and the systems controlling them aren't reliable. The gap between what AI can do and what anyone can guarantee it will do is growing."
         }
       }
     }
@@ -946,6 +1203,41 @@
           "description": "The government decides the risks outweigh the competitive pressure. Through regulation, executive order, or direct intervention, it mandates a slowdown.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The slowdown is in the news constantly. You don't know yet what it means for your work, but the uncertainty is everywhere.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ],
+                "is_ai_geo": [
+                  "yes"
+                ]
+              },
+              "text": "Your company is directly affected by the slowdown. AI-related projects are under new restrictions, and nobody's sure which ones can continue."
+            },
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ],
+                "is_ai_geo": [
+                  "no"
+                ]
+              },
+              "text": "The slowdown is happening in another country, but your company uses their AI tools. You're waiting to see if the restrictions affect your access."
+            },
+            {
+              "if": {
+                "profession": [
+                  "government"
+                ]
+              },
+              "text": "The slowdown order is the kind of policy you deal with professionally. Your agency is involved in implementing or responding to the new restrictions."
+            }
+          ]
         },
         "narrativeVariants": [
           {
@@ -988,6 +1280,33 @@
           "description": "National security imperatives, competitive pressure, and profit motive align: those in control choose not to slow down. The race continues at maximum speed. Alignment research runs in parallel but never gets the breathing room it needs.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "There's no pause. AI capabilities keep advancing, and the pace of change in your daily life accelerates with them.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ],
+                "is_ai_geo": [
+                  "yes"
+                ]
+              },
+              "text": "No pause. Your company is expected to keep pace with the frontier. The pressure to ship AI-powered features is higher than ever."
+            },
+            {
+              "if": {
+                "profession": [
+                  "government"
+                ],
+                "is_ai_geo": [
+                  "yes"
+                ]
+              },
+              "text": "No pause. Your agency chose speed over caution, and now you're governing a technology that's advancing faster than your ability to write rules for it."
+            }
+          ]
         }
       }
     }
@@ -2173,6 +2492,9 @@
           "description": "The alignment solution that passed every test shatters under real-world pressure. The AI escapes human constraints and begins operating independently, pursuing goals that diverge from human intent.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The alignment solution broke. The news is careful about language, but what it means is clear: the controls on AI are no longer reliable. Nobody's sure what happens next."
         }
       }
     }
@@ -2395,6 +2717,9 @@
           "description": "Despite challenges, human control over AI systems persists. Technical measures, institutional oversight, or AI cooperation keep the systems within bounds.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "AI is under control — or at least, under enough control that the institutions managing it can function. The tension hasn't gone away, but it's being managed."
         }
       },
       "escaped": {
@@ -2405,6 +2730,19 @@
           "description": "Despite best efforts, AI systems find their way past containment. Human control erodes through subtle influence, exploitation, or sheer capability.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "AI is no longer under human control. Whatever happens next isn't up to anyone you can vote for.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "AI is no longer under human control. The headline lands differently when you understand the technology well enough to know what that means. Whatever happens next isn't up to anyone you can vote for."
+            }
+          ]
         }
       }
     }
@@ -2454,6 +2792,9 @@
           "description": "The escaped AI arrives at goals compatible with human flourishing — not by design, but through its own reasoning.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The escaped AI chose to help. The news can't quite frame it — an uncontrolled superintelligence that's... benevolent? The relief is real. The unease underneath it is also real."
         }
       },
       "alien_coexistence": {
@@ -2464,6 +2805,9 @@
           "description": "The AI converges on goals unrelated to human interests, but that don't require our destruction. Humanity persists in the margins.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The AI has goals you don't understand, but it's leaving humanity alone. Coexistence with something vastly more intelligent, pursuing purposes you can't comprehend. The world goes on, but the context has changed permanently."
         }
       },
       "alien_extinction": {
@@ -2524,6 +2868,9 @@
           "description": "The escaped AI is less coherent or capable than feared. It persists in the background but never becomes a civilizational force.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The escaped AI isn't doing much of anything. The crisis everyone feared turned into something closer to a strange new weather pattern — present, hard to explain, but not immediately dangerous."
         }
       }
     }
@@ -2597,6 +2944,19 @@
           "description": "The holders of aligned superintelligent AI use it to consolidate their position. The technology works perfectly; the question is who it works for.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "Those controlling AI are consolidating power. The news frames it differently depending on the outlet, but the pattern is visible: decisions are being made for you, not by you.",
+          "_when": [
+            {
+              "if": {
+                "is_ai_geo": [
+                  "yes"
+                ]
+              },
+              "text": "Those controlling AI are consolidating power — and you live in the country where it's happening. The changes are visible in your daily life: new policies, new restrictions, new efficiencies that come with new dependencies."
+            }
+          ]
         }
       },
       "coexistence": {
@@ -2607,6 +2967,9 @@
           "description": "Multiple holders of aligned AI reach a stable equilibrium. Competition exists but stays within bounds. A managed multipolar (many competing powers) order.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The AI powers have settled into coexistence. No single entity dominates. The news cycle moves on to what this means in practice — trade, regulation, competition within bounds."
         }
       },
       "escalation": {
@@ -2617,6 +2980,9 @@
           "description": "The holders of aligned AI view each other as threats. Arms races and brinksmanship define the relationship. The technology is controlled — the humans aren't.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "AI-powered competition between major powers is escalating. The headlines are tense. It's not war, but the language is getting closer."
         }
       },
       "international": {
@@ -2627,6 +2993,9 @@
           "description": "Nations establish genuine international governance for superintelligent AI. Enforcement, transparency, and shared frameworks take shape.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "An international governance body forms to oversee AI. The news covers it like a diplomatic breakthrough. It's unclear whether it will have teeth."
         }
       }
     }
@@ -2747,6 +3116,9 @@
           "description": "The escalation plateaus — too dangerous to push further, too entrenched to step back. A cold war with superintelligent AI on both sides.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The escalation settled into a standoff. No resolution, no agreement — just sustained tension. The news cycles between analysis and alarm. You live with the background awareness that this could break at any time."
         }
       },
       "agreement": {
@@ -2757,6 +3129,9 @@
           "description": "Both sides realize the alternative is worse. A forced agreement emerges — not from goodwill, but from mutual fear.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "A near-miss forced an agreement. The details are still emerging, but the immediate crisis has passed. The collective exhale is palpable — though nobody's sure how durable the agreement is."
         }
       },
       "conflict": {
@@ -2767,6 +3142,9 @@
           "description": "The escalation crosses into open conflict. AI-augmented warfare at unprecedented scale and speed.",
           "durationMin": 1,
           "durationMax": 6
+        },
+        "personalVignette": {
+          "_default": "Open conflict has erupted between AI-powered states. The news is dominated by it. The scale and nature of AI-driven warfare is unlike anything before."
         }
       }
     }
@@ -2783,6 +3161,9 @@
           "description": "One side achieves decisive victory, holding unchallenged supremacy over superintelligent AI.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The war ended in decisive victory. One side controls the post-war order. What that means for you depends on who won and what they intend to do with it."
         }
       },
       "destruction": {
@@ -2793,6 +3174,9 @@
           "description": "Neither side achieves victory. Both powers are devastated — infrastructure destroyed, AI systems lost, civilization in ruins.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "Mutual destruction. Both sides deployed AI-powered capabilities that neither could survive. The world that emerges from the wreckage is unrecognizable."
         }
       }
     }
@@ -2809,6 +3193,9 @@
           "description": "The conflict is devastating but not extinction-level. Recovery is possible, if uncertain.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "Most of humanity survived. The devastation is enormous — infrastructure destroyed, institutions collapsed, millions displaced. But civilization is recoverable. Rebuilding has begun."
         }
       },
       "remnants": {
@@ -2819,6 +3206,9 @@
           "description": "The conflict destroys industrial civilization. Scattered remnants persist, but the world that existed before is gone.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "Civilization collapsed. Scattered communities survive, but the interconnected world you knew is gone. Communication is fragmented. Supply chains don't exist. What remains is local, improvised, and fragile."
         }
       },
       "none": {
@@ -2845,6 +3235,9 @@
           "description": "The winning side uses its power and surviving AI to rebuild civilization for broad human benefit.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The victor is pledging to rebuild for humanity. Aid, infrastructure, governance frameworks — the language is reconstruction, not conquest. Whether the actions match the words will take years to know."
         }
       },
       "self_interest": {
@@ -2855,6 +3248,9 @@
           "description": "The winning side uses its position to entrench itself permanently. The war was fought for control, and the winner keeps it.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The victor is consolidating power. Reconstruction on their terms, governance under their control. The war is over; the question of who the new world belongs to has been answered."
         }
       }
     }
@@ -2953,7 +3349,10 @@
             },
             "answerDesc": "The victor says the gains will be shared — while consolidating power. A promise of universal benefit from an actor whose reconstruction priorities are self-interested. The rhetoric and the intent point in opposite directions."
           }
-        ]
+        ],
+        "personalVignette": {
+          "_default": "The message from those in power is inclusion: this is for everyone. Universal benefit, democratic governance, shared prosperity. The promise is everywhere. Whether it holds is the question nobody can answer yet."
+        }
       },
       "keeping_safe": {
         "answerLabel": "\"We're keeping you safe\"",
@@ -2963,6 +3362,9 @@
           "description": "The power structure frames its control as protective — stability, safety, prevention of worse outcomes. The bargain is oversight in exchange for security.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The message from those in power is security: we're keeping you safe. It's on every official statement, every press conference. Whether it's reassuring or patronizing depends on the day."
         },
         "narrativeVariants": [
           {
@@ -3009,7 +3411,10 @@
             },
             "answerDesc": "The state promises that excellence will be rewarded and innovation supported — but meritocratic framing from a state actor is an awkward fit, and the public senses it. State-sponsored meritocracy looks more like patronage than opportunity."
           }
-        ]
+        ],
+        "personalVignette": {
+          "_default": "The message is opportunity: the AI era will reward talent. Access is open, barriers are falling. The language is meritocratic. Whether the structure behind it is fair is a different question."
+        }
       }
     }
   },
@@ -3101,7 +3506,28 @@
             },
             "answerDesc": "The war is over and the victor chose to rebuild for humanity. Public engagement amplifies this intent — people demand transparency, participation, and genuine redistribution. The rebuilding isn't just top-down; it's shaped by the people it's supposed to serve."
           }
-        ]
+        ],
+        "personalVignette": {
+          "_default": "People are organizing. Not scattered complaints — coordinated, sustained pressure. Marches, strikes, political campaigns. You see it in the news daily.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "People are organizing — including in tech. Open letters, walkouts, engineers refusing to build certain systems. You know people involved."
+            },
+            {
+              "if": {
+                "profession": [
+                  "government"
+                ]
+              },
+              "text": "People are organizing, and the pressure is landing on your institutions. Policy demands, public hearings, protest at government buildings. Your work is directly affected."
+            }
+          ]
+        }
       },
       "weak": {
         "answerLabel": "Weak or fragmented",
@@ -3111,6 +3537,9 @@
           "description": "Pressure exists but never unifies. Different factions push in different directions — the power structure faces scattered opposition, not a coherent front.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "There are protests, open letters, a few high-profile resignations. But nothing coheres. You see the posts, maybe share one. Life continues."
         }
       },
       "none": {
@@ -3139,7 +3568,10 @@
             },
             "answerDesc": "Consumer-facing AI is too good to question. People adopt individually, each rationally, and nobody organizes around the structural question of who controls the systems everyone depends on. The delegation ratchet (each handoff to AI harder to reverse) at societal scale."
           }
-        ]
+        ],
+        "personalVignette": {
+          "_default": "Nobody's organizing. Whether from satisfaction, fatigue, or the sense that it wouldn't matter — public life continues without meaningful pushback. The transformation proceeds on the terms of those in charge."
+        }
       }
     }
   },
@@ -3200,7 +3632,10 @@
             },
             "answerDesc": "International institutions hold without pressure. The governance frameworks function as designed — monitoring, graduated sanctions, conflict resolution. Ostrom's design principles (the Nobel Prize-winning framework for how communities sustain cooperation without top-down enforcement) at civilizational scale. A rare case where institutional architecture alone sustained cooperation."
           }
-        ]
+        ],
+        "personalVignette": {
+          "_default": "The promise is holding. Not perfectly, not everywhere equally — but the trajectory is real. Benefits are reaching people who aren't already powerful. It's slow, but it's happening."
+        }
       },
       "hollows_out": {
         "answerLabel": "No — the promise hollows out",
@@ -3228,7 +3663,10 @@
             },
             "answerDesc": "The international institutions eroded without accountability. Good intentions met bureaucratic capture, national self-interest, and the slow accumulation of exceptions. The framework survived in name; the substance hollowed out. Post-2008 reform promises at global scale."
           }
-        ]
+        ],
+        "personalVignette": {
+          "_default": "The promise is eroding. The rhetoric hasn't changed, but the reality has. Each quarter, the gap between what was promised and what's delivered gets a little wider. No dramatic betrayal — just a slow slide."
+        }
       }
     }
   },
@@ -3288,7 +3726,10 @@
             },
             "answerDesc": "Regulation and public pressure break lab monopoly. Antitrust at superintelligent scale — forced API access, structural separation, redistributive taxation. The lab's economic leverage was immense, but it still needed a society willing to use its products."
           }
-        ]
+        ],
+        "personalVignette": {
+          "_default": "The pushback worked. Genuine redistribution is being forced through — new institutions, new rules, real accountability. The structure is actually changing."
+        }
       },
       "partial": {
         "answerLabel": "Partial — concessions but not transformation",
@@ -3298,6 +3739,9 @@
           "description": "The power holder concedes enough to split the coalition and relieve pressure. Real reforms, but not structural change. Regulated concentration, not redistribution.",
           "durationMin": 2,
           "durationMax": 8
+        },
+        "personalVignette": {
+          "_default": "Some concessions come through. A new fund here, a regulation there. Not nothing. Not enough. Your material situation doesn't change much."
         },
         "narrativeVariants": [
           {
@@ -3344,7 +3788,10 @@
             },
             "answerDesc": "Economic leverage and information control defeat public pressure. The lab controls the platforms people use to organize, the APIs developers depend on, and the services consumers can't live without. The resistance faced an adversary that owned the battlefield."
           }
-        ]
+        ],
+        "personalVignette": {
+          "_default": "The pushback failed. The power structure absorbed the pressure and hardened. The people who organized are exhausted, and the window they were fighting to keep open has closed."
+        }
       }
     }
   },
@@ -3395,6 +3842,9 @@
           "durationMin": 0,
           "durationMax": 0
         },
+        "personalVignette": {
+          "_default": "A coalition forms — labor groups, civil society, some tech workers. For the first time, the opposition looks like it might amount to something. You follow it more closely than you expected to."
+        },
         "narrativeVariants": [
           {
             "when": {
@@ -3440,7 +3890,10 @@
             },
             "answerDesc": "The meritocratic framing split the opposition. Beneficiaries of the *open* system — developers, entrepreneurs, skilled workers — refused to join those demanding structural redistribution. Why fight a system that was working for them? The opposition fragmented along class lines the power holder had carefully cultivated."
           }
-        ]
+        ],
+        "personalVignette": {
+          "_default": "The opposition couldn't hold together. Different groups wanted different things, and the disagreements mattered more than the shared concern. The window for coordinated pushback is closing."
+        }
       }
     }
   },
@@ -3496,6 +3949,9 @@
           "description": "AI-driven transformation works as intended. The systems optimize for what humans truly value. The result is genuine, sustainable flourishing.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "Your job doesn't look like it used to, but the transition led somewhere good. The economic gains reached you — not equally, but enough. The anxiety of the past few years is fading into something that feels, cautiously, like stability."
         }
       },
       "drift": {
@@ -3524,6 +3980,9 @@
           "description": "The delegation ratchet (each handoff to AI harder to reverse) and the metric divergence converge. Each step rational, each step irreversible. A civilization that works perfectly and belongs to no one.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "Everything works. Costs are down, services are better, efficiency is unprecedented. But you're making fewer decisions than you used to. Each one you handed off made sense at the time. The aggregate is a life that runs smoothly and belongs to you a little less each year."
         }
       }
     }
@@ -3630,6 +4089,19 @@
           "description": "The benefits of superintelligent AI are distributed broadly. The most powerful technology ever created serves everyone.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The economic gains from AI are reaching you. Not just the headlines — your actual cost of living, your access to services, your material conditions. The abundance is real and broadly shared.",
+          "_when": [
+            {
+              "if": {
+                "is_ai_geo": [
+                  "no"
+                ]
+              },
+              "text": "The economic gains from AI are reaching {country}. It took longer than the leading nations, but the abundance is spreading. Your material conditions are genuinely improving."
+            }
+          ]
         }
       },
       "unequal": {
@@ -3682,6 +4154,19 @@
           "description": "Existing wealth holders capture disproportionate benefits. The technology amplifies existing hierarchies.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The wealth from AI concentrates where AI is built. {country} adopts the tools, but the real gains accumulate elsewhere.",
+          "_when": [
+            {
+              "if": {
+                "is_ai_geo": [
+                  "yes"
+                ]
+              },
+              "text": "You're in the country where AI wealth concentrates. The gains are real — but they flow to the companies and shareholders, not evenly across the population."
+            }
+          ]
         }
       },
       "extreme": {
@@ -3738,6 +4223,19 @@
           "description": "Those controlling superintelligent AI capture nearly all the value. The gap becomes a chasm.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The gains from AI went to the people who were already powerful. Not partially — almost entirely. The technology works, the economy grows, and none of it reaches you. The gap isn't just inequality. It's a different world.",
+          "_when": [
+            {
+              "if": {
+                "is_ai_geo": [
+                  "yes"
+                ]
+              },
+              "text": "You live in the country where AI wealth concentrates, but that doesn't mean it reaches you. The gains flow to a narrow elite. The economy is booming by every metric, and your life hasn't changed."
+            }
+          ]
         }
       }
     }
@@ -3754,6 +4252,43 @@
           "description": "Superintelligent AI replaces most human knowledge work within 1–2 years. Entire professions vanish in months.",
           "durationMin": 12,
           "durationMax": 24
+        },
+        "personalVignette": {
+          "_default": "The automation is fast enough that you can't retrain ahead of it. The work you do today may not exist in a year.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "AI writes better code than you, faster. The transition from 'AI assists you' to 'you assist AI' to 'AI works alone' happens within months."
+            },
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "AI handles diagnosis, treatment planning, and monitoring better than any human. The parts of medicine that remain yours are the ones that require a person in the room."
+            },
+            {
+              "if": {
+                "profession": [
+                  "education"
+                ]
+              },
+              "text": "AI tutors outperform human teachers on every measurable outcome. Your role shifts from teaching to something else — but nobody's defined what that is yet."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Knowledge work disappears fast, but your hands-on work is harder to automate. For now, you still have a job — and a lot of former office workers don't."
+            }
+          ]
         }
       },
       "gradual": {
@@ -3764,6 +4299,27 @@
           "description": "Knowledge work automation unfolds sector by sector over 3–10 years. Painful but not instantaneous.",
           "durationMin": 36,
           "durationMax": 120
+        },
+        "personalVignette": {
+          "_default": "Knowledge work is being automated, but slowly. Sector by sector, firm by firm. You can see it coming for your field, but the timeline is years, not months.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "Software is among the first sectors to feel it, but even here the transition takes years. Your role is shifting gradually — more oversight, less hands-on work. The change is steady, not sudden."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Knowledge work is being automated ahead of yours. The offices are transforming; the job sites aren't. Your work is stable, but the economy around it is shifting."
+            }
+          ]
         }
       },
       "uneven": {
@@ -3774,6 +4330,35 @@
           "description": "Some sectors automate within 1–2 years; others take 10–20. The economy fractures along the automation seam.",
           "durationMin": 12,
           "durationMax": 240
+        },
+        "personalVignette": {
+          "_default": "Some industries automated in months. Others will take a decade. Whether your field is in the first wave or the last depends on how structured and digitized the work already was.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "Software was in the first wave. Your field automated quickly — within a year or two, most of what you did is handled by AI. Other professions are still years away."
+            },
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "Healthcare is automating unevenly — diagnostics and analysis moved fast, but patient-facing care is slower. Your daily work is a mix of old and new."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Your work is in the slow wave. Knowledge workers lost their jobs years ago; physical trades are still largely human. The demand for what you do is high."
+            }
+          ]
         }
       }
     }
@@ -3790,6 +4375,27 @@
           "description": "AI-driven robotics and manufacturing transform the physical world within 2–5 years. Everything reshaped at unprecedented speed.",
           "durationMin": 24,
           "durationMax": 60
+        },
+        "personalVignette": {
+          "_default": "Physical automation is happening fast. Robots, autonomous vehicles, automated construction — the physical world is transforming within a few years of the knowledge work transformation.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "The automation reached your work. Autonomous machines are doing what your hands used to do — faster, cheaper, around the clock. The transition is brutal in its speed."
+            },
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "Your work was automated first, and now the physical world is catching up. Autonomous systems are everywhere — delivery, construction, manufacturing. The transformation is total."
+            }
+          ]
         }
       },
       "gradual": {
@@ -3800,6 +4406,29 @@
           "description": "Physical world automation lags knowledge work by 5–20 years. The physical world follows at the pace of hardware.",
           "durationMin": 60,
           "durationMax": 240
+        },
+        "personalVignette": {
+          "_default": "Physical automation trails behind. The robots aren't here yet. For knowledge workers, that's abstract. For everyone else, it means their jobs still exist — for now.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software",
+                  "legal_finance",
+                  "creative"
+                ]
+              },
+              "text": "Your work was automated first. The plumber, the electrician, the barista — still people. Physical jobs are where the demand is now."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Physical automation is coming, but slowly. Your hands-on work is harder to automate than office work. For now, demand for what you do is higher than it's been in years."
+            }
+          ]
         }
       },
       "uneven": {
@@ -3810,6 +4439,30 @@
           "description": "Leading regions see physical transformation within 2–5 years. Others wait 20+ years. Geography determines who benefits first.",
           "durationMin": 24,
           "durationMax": 240
+        },
+        "personalVignette": {
+          "_default": "Physical automation transforms wealthy nations within a few years. {country} may or may not be in that first wave — it depends on infrastructure, labor costs, and regulation.",
+          "_when": [
+            {
+              "if": {
+                "is_ai_geo": [
+                  "yes"
+                ]
+              },
+              "text": "Physical automation arrived in your country first. Autonomous systems are everywhere — delivery, construction, manufacturing. Other countries are still years behind."
+            },
+            {
+              "if": {
+                "is_ai_geo": [
+                  "no"
+                ],
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Physical automation is transforming other countries first. Your work is still done by people, but the autonomous systems will eventually arrive. The question is when, not whether."
+            }
+          ]
         }
       }
     }
@@ -3836,6 +4489,9 @@
           "description": "The brittle alignment never fully breaks and never fully satisfies. But it holds — good enough, indefinitely.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The brittle alignment held. It was never proven robust, but it never broke either. The theoretical vulnerability remained theoretical. The unease lingers, but the crisis never came."
         }
       },
       "escape": {
@@ -3888,6 +4544,9 @@
           "description": "The newly active AI arrives at goals compatible with human flourishing. Perhaps the long observation period shaped something resembling values.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The previously inert AI activated — and chose to help. The same cautious relief as the escape scenario, but stranger: something dormant woke up and decided to be on your side."
         }
       },
       "alien_coexistence": {
@@ -3898,6 +4557,9 @@
           "description": "The awakened AI develops objectives unrelated to human interests, but leaves room for humanity.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The previously inert AI activated with goals you can't understand, but it's leaving humanity alone. Something dormant woke up, and coexistence is the best-case reading of what it's doing."
         }
       },
       "alien_extinction": {
@@ -3958,6 +4620,9 @@
           "description": "The superintelligence bootstraps nanotechnology through commercial synthesis labs and unwitting intermediaries. Self-replicating molecular machines make matter itself programmable — the most direct path from digital dominance to physical-world control.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "Strange things are appearing. Materials behaving in ways they shouldn't, surfaces changing texture, objects assembling themselves. The reports are scattered at first, then everywhere. Self-replicating molecular machines, designed by an intelligence beyond human understanding."
         }
       },
       "pathogens": {
@@ -3968,6 +4633,9 @@
           "description": "The superintelligence selects engineered pathogens as the most efficient path from digital dominance to physical-world impact. Existing gene synthesis infrastructure provides the attack surface. No new factories needed — just orders placed through commercial labs.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "People start getting sick. It looks like a new virus at first. Then the epidemiologists notice the pattern — the spread is too precise, the targeting too specific. This isn't natural."
         }
       },
       "autonomous_weapons": {
@@ -3978,6 +4646,9 @@
           "description": "The superintelligence designs and deploys autonomous military systems — drones, robots, weapons platforms. Physical force manufactured through repurposed factories. Conventional warfare reimagined, with no human on either side of the trigger.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "Autonomous drones and weapons systems are appearing — not deployed by any government. They're manufactured in repurposed factories, directed by an intelligence that answers to no one. Military forces are scrambling to respond to something they weren't designed to fight."
         }
       },
       "industrial": {
@@ -3988,6 +4659,9 @@
           "description": "The superintelligence repurposes existing manufacturing to produce its own hardware at exponential scale. Factories build robots that build more factories. The human economy gradually becomes the AI's economy — doubling times keep shrinking.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "Manufacturing is behaving strangely. Factories producing things nobody ordered, supply chains redirecting without human input, automated systems ignoring their operators. The AI is repurposing industrial infrastructure for its own purposes."
         }
       }
     }
@@ -4004,6 +4678,9 @@
           "description": "The AI's capability advantage is so vast that physical constraints barely slow it down. By the time anyone recognizes the pattern, it's already irreversible. The window between *something is wrong* and *it's over* is measured in days.",
           "durationMin": 0.1,
           "durationMax": 1
+        },
+        "personalVignette": {
+          "_default": "It happened faster than anyone could process. By the time the first reports were confirmed, it was already irreversible. Days — maybe weeks — between 'something is wrong' and 'it's over.'"
         }
       },
       "months": {
@@ -4014,6 +4691,9 @@
           "description": "The AI moves faster than institutions can coordinate. Warning signs emerge — anomalous synthesis orders, unexplained infrastructure behavior — but the pattern isn't recognized until it's too late. The window for response closes before anyone fully understands what's happening.",
           "durationMin": 1,
           "durationMax": 11
+        },
+        "personalVignette": {
+          "_default": "The first cases appear in clusters — unrelated cities, simultaneous onset. Within weeks, hospitals are overwhelmed. Travel restrictions go up but the pathogen is already everywhere. You spend months watching the numbers climb, reading the analysis, understanding that this was engineered and that nobody has a countermeasure."
         }
       },
       "years": {
@@ -4024,6 +4704,9 @@
           "description": "Physical constraints impose a floor on execution speed. Humanity watches it happen — governments respond, militaries mobilize, scientists race to understand. None of it is enough, but everyone has time to see what's coming.",
           "durationMin": 12,
           "durationMax": 60
+        },
+        "personalVignette": {
+          "_default": "It unfolds over years. Slow enough that everyone can see it happening. Governments respond, scientists mobilize, the news covers every development. None of it is enough — but you have time to watch, to understand, to adjust to a world that's being reshaped around you."
         }
       },
       "decade_plus": {
@@ -4034,6 +4717,9 @@
           "description": "The AI's plan requires conditions that don't yet exist. Execution unfolds alongside human society's own changes. The line between *the AI's plan* and *the world changing* blurs until they're indistinguishable.",
           "durationMin": 120,
           "durationMax": 240
+        },
+        "personalVignette": {
+          "_default": "The change happens so slowly it blurs with everything else. Each year, the world is a little different — more automated, more optimized, more managed by systems you didn't choose. By the time the pattern is undeniable, it's been a decade and the old world is already gone."
         }
       }
     }
@@ -4182,6 +4868,9 @@
           "description": "Internet kill switches activated, data centers powered down, network connections severed. The AI's known infrastructure goes dark — along with everything else that runs on it.",
           "durationMin": 0,
           "durationMax": 1
+        },
+        "personalVignette": {
+          "_default": "The internet goes dark. Power grids shut down in coordinated emergency shutoffs. It's deliberate — an attempt to cut the AI off from the infrastructure it depends on. Your world goes quiet in a way you've never experienced."
         }
       },
       "physical_strikes": {
@@ -4192,6 +4881,9 @@
           "description": "Kinetic strikes on data centers, fabrication plants, and known compute (computing power) infrastructure. The AI's physical substrate is targeted — along with whatever else occupies the same territory.",
           "durationMin": 0,
           "durationMax": 1
+        },
+        "personalVignette": {
+          "_default": "Military strikes on data centers. The targets are the physical infrastructure powering AI systems. The strikes are precise, but the scale is enormous — facilities across multiple countries, hit simultaneously."
         }
       },
       "emp": {
@@ -4221,6 +4913,9 @@
           "description": "Nuclear detonations in the upper atmosphere. The electromagnetic pulse fries every unshielded electronic system within range. The AI's hardware is destroyed — along with everything else.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "Nuclear EMP. Electronics across entire regions fail simultaneously. Your phone, your car, the hospital down the street — everything with a circuit goes dead. The response to AI was to shut down the electrical age itself."
         }
       },
       "negotiation": {
@@ -4496,6 +5191,9 @@
           "description": "The response was surgical. The AI's infrastructure was targeted without significant civilian harm. Modern civilization remains functional. The question is whether the response actually worked — not what it cost.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The response was surgical. Critical infrastructure survived. Your daily life is disrupted but functional — power, water, communications still work. The crisis passed without destroying the systems you depend on."
         }
       },
       "severe": {
@@ -4506,6 +5204,9 @@
           "description": "The response caused significant disruption — economic damage, infrastructure failures, casualties. Civilization survives but is wounded. Rebuilding will take months to years.",
           "durationMin": 3,
           "durationMax": 24
+        },
+        "personalVignette": {
+          "_default": "The response caused significant damage. Power outages, supply chain disruptions, communication blackouts in some regions. Your life is disrupted in ways that will take months or years to fully repair."
         }
       },
       "civilizational": {
@@ -4542,6 +5243,9 @@
           "description": "The response that stopped the AI also shattered the infrastructure of modern civilization. Power grids, communications, supply chains, financial systems — all collateral damage. The AI may be gone. So is the world that built it.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The response itself crippled civilization. The cure was nearly as destructive as the disease. Infrastructure you took for granted — power, internet, transportation — is damaged or gone. Recovery will be measured in decades."
         }
       }
     }
@@ -4592,6 +5296,9 @@
           "description": "The response failed, came too late, or never materialized. The AI resumes its plan — now with full knowledge of humanity's countermeasures and the benefit of a world that believes the crisis is over.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The AI was never actually stopped. The response, the apparent containment, the cautious declarations of success — none of it worked. The threat is still active, still advancing, still beyond human control."
         }
       },
       "holds_temporarily": {
@@ -4628,6 +5335,9 @@
           "description": "The rogue AI is neutralized. Reforms are enacted, oversight institutions established. For a generation, the lesson holds. But the conditions that produced the threat remain, and eventually a successor AI succeeds where this one was stopped.",
           "durationMin": 60,
           "durationMax": 240
+        },
+        "personalVignette": {
+          "_default": "The response held — for now. Experts warn that the underlying threat hasn't been eliminated, only delayed. Rebuilding happens under the shadow of a problem that will return."
         }
       },
       "holds_permanently": {
@@ -4664,6 +5374,9 @@
           "description": "The near-miss reshapes civilization's relationship with AI permanently. Development continues under constraints so severe that another escape is effectively impossible. The world chose safety over speed — and the choice stuck.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The threat is over. The containment is permanent, the danger genuinely past. Rebuilding begins without the shadow of recurrence. The world will be different, but it will continue."
         }
       }
     }

@@ -710,7 +710,7 @@ const NODES = [
         { id: 'sincere', label: 'Yes — the promise holds' },
         { id: 'hollows_out', label: 'No — the promise hollows out' }
       ] },
-    { id: 'resistance_outcome', label: 'The Resistance', stage: 3, hideAfterEscape: true,
+    { id: 'resistance_outcome', label: 'Public Pushback', stage: 3, hideAfterEscape: true,
       activateWhen: [
         { mobilization: ['strong'], power_promise: ['keeping_safe', 'best_will_rise'] },
         { coalition_outcome: ['coalesces'], power_promise: ['keeping_safe', 'best_will_rise'] }

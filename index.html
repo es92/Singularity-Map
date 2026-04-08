@@ -471,6 +471,17 @@
         .personal-milestone .timeline-desc p { margin: 0.6em 0; }
         .personal-milestone .timeline-desc strong { font-weight: 600; color: var(--text); }
         .personal-milestone .timeline-desc em { font-style: italic; }
+        .personal-vignette-heading {
+            font-size: 0.82rem; font-weight: 600;
+            color: var(--text);
+            opacity: 0.8;
+        }
+        .personal-vignette-answer {
+            margin-left: 0.5em;
+            font-weight: 400;
+            color: var(--text-dim);
+        }
+        .personal-vignette-answer::before { content: '· '; }
 
         @media (max-width: 600px) {
             .personal-pills { gap: 0.35rem; }
@@ -827,7 +838,7 @@
             container.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
         }
 
-        // --- Personal Milestones ---
+        // --- Personal Vignettes ---
         function savePersonalAnswers(answers) {
             personalAnswers = answers;
             try { localStorage.setItem(PERSONAL_STORAGE_KEY, JSON.stringify(answers)); } catch {}
@@ -839,156 +850,100 @@
             return entry ? entry.bucket : 'rest';
         }
 
-        function resolveMilestoneText(textSpec, personalCtx) {
-            if (typeof textSpec === 'string') return textSpec;
-            if (!textSpec || typeof textSpec !== 'object') return null;
-            for (const [dimKey, variants] of Object.entries(textSpec)) {
-                const val = personalCtx[dimKey];
-                if (!val) continue;
-                const resolved = variants[val];
-                if (resolved && typeof resolved === 'object' && !Array.isArray(resolved)) {
-                    const nested = resolveMilestoneText(resolved, personalCtx);
-                    if (nested) return nested;
-                }
-                if (typeof resolved === 'string') return resolved;
-                if (variants._default) {
-                    if (typeof variants._default === 'string') return variants._default;
-                    const nested = resolveMilestoneText(variants._default, personalCtx);
-                    if (nested) return nested;
-                }
-                return null;
-            }
-            if (textSpec._default) return typeof textSpec._default === 'string' ? textSpec._default : null;
-            return null;
+        function shouldShowAiGeoQuestion(worldState, bucket) {
+            if (!personalData) return false;
+            const geo = worldState.geo_spread;
+            if (!geo) return false;
+            const bucketInfo = personalData.countryBuckets[bucket];
+            if (!bucketInfo) return false;
+            if (geo === 'one' && bucketInfo.plausibleLeader) return true;
+            if (geo === 'two' && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) return true;
+            return false;
         }
 
-        function resolvePersonalMilestones(milestones, answers, worldState, baseOffsetMonths, endOffsetMonths) {
-            if (!milestones || !answers) return [];
+        function resolvePersonalVignetteText(spec, ctx) {
+            if (!spec) return null;
+            if (typeof spec === 'string') return spec;
+            if (spec._when && Array.isArray(spec._when)) {
+                for (const rule of spec._when) {
+                    if (!rule.if) continue;
+                    const match = Object.entries(rule.if).every(([k, vals]) =>
+                        ctx[k] && vals.includes(ctx[k])
+                    );
+                    if (match) return rule.text || null;
+                }
+            }
+            return spec._default || null;
+        }
+
+        function resolvePersonalVignettes(stack, answers, dateMap) {
+            if (!answers || !answers.country || !answers.profession) return [];
+            const sel = Engine.currentState(stack);
             const bucket = getCountryBucket(answers.country);
-            const ctx = Object.assign({}, worldState, {
+            const ctx = {
                 profession: answers.profession,
                 country_bucket: bucket,
-                position: answers.position || null,
-            });
+                is_ai_geo: answers.is_ai_geo || 'no',
+            };
 
+            const profLabel = personalData && personalData.professions.find(p => p.id === answers.profession);
             const tokenReplace = (str) => {
                 if (!str) return str;
-                const profLabel = personalData && personalData.professions.find(p => p.id === answers.profession);
                 return str
                     .replace(/\{country\}/g, answers.country || '')
                     .replace(/\{profession\}/g, profLabel ? profLabel.label : (answers.profession || ''));
             };
 
-            return milestones
-                .filter(m => {
-                    if (!m.when) return true;
-                    return Object.entries(m.when).every(([k, vals]) =>
-                        worldState[k] && vals.includes(worldState[k])
-                    );
-                })
-                .map(m => {
-                    const text = resolveMilestoneText(m.text, ctx) || resolveMilestoneText(m.text, { _default: true });
-                    if (!text) return null;
-                    const totalMonths = m.anchor === 'end'
-                        ? (endOffsetMonths || 0) + (m.offsetMonths || 0)
-                        : baseOffsetMonths + (m.offsetMonths || 0);
-                    const dateInfo = formatMonths(totalMonths);
-                    return {
-                        year: dateInfo.year,
-                        headline: tokenReplace(m.headline || ''),
-                        text: tokenReplace(text),
-                    };
-                })
-                .filter(Boolean);
-        }
+            const vignettes = [];
+            for (const node of Engine.displayOrder(stack)) {
+                const value = sel[node.id];
+                if (!value) continue;
+                const edge = node.edges && node.edges.find(e => e.id === value);
+                if (!edge) continue;
 
-        function needsPositionQuestion(worldState, bucket) {
-            if (!personalData) return null;
-            const geo = worldState.geo_spread;
-            if (!geo) return null;
-            const bucketInfo = personalData.countryBuckets[bucket];
-            if (!bucketInfo) return null;
-            if (geo === 'one' && bucketInfo.plausibleLeader) {
-                return { type: 'one', options: [
-                    { id: 'leader', label: 'Yes' },
-                    { id: 'outside', label: 'No' },
-                ]};
-            }
-            if (geo === 'two' && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) {
-                return { type: 'two', options: [
-                    { id: 'leader', label: 'Yes, the leading power' },
-                    { id: 'rival', label: 'Yes, the rival' },
-                    { id: 'outside', label: 'No' },
-                ]};
-            }
-            return null;
-        }
-
-        function buildPersonalQuestionsHtml(worldState, existingAnswers) {
-            if (!personalData) return '';
-            const countries = personalData.countries;
-            const professions = personalData.professions;
-            const selCountry = existingAnswers ? existingAnswers.country : '';
-            const selProf = existingAnswers ? existingAnswers.profession : '';
-
-            let optionsHtml = '<option value="">Select your country...</option>';
-            for (const c of countries) {
-                const sel = c.name === selCountry ? ' selected' : '';
-                optionsHtml += `<option value="${esc(c.name)}"${sel}>${esc(c.name)}</option>`;
-            }
-
-            let profPills = '';
-            for (const p of professions) {
-                const active = p.id === selProf ? ' active' : '';
-                profPills += `<button class="personal-pill${active}" data-prof="${esc(p.id)}">${esc(p.label)}</button>`;
-            }
-
-            const bucket = selCountry ? getCountryBucket(selCountry) : null;
-            const posQ = bucket ? needsPositionQuestion(worldState, bucket) : null;
-            let posHtml = '';
-            if (posQ) {
-                const selPos = existingAnswers ? existingAnswers.position : '';
-                const countryName = selCountry || 'your country';
-                const prompt = posQ.type === 'one'
-                    ? `In this scenario, one country achieved AI dominance. Is ${esc(countryName)} that country?`
-                    : `In this scenario, two powers have AI. Is ${esc(countryName)} one of them?`;
-                let posPills = '';
-                for (const o of posQ.options) {
-                    const active = o.id === selPos ? ' active' : '';
-                    posPills += `<button class="personal-pill${active}" data-pos="${esc(o.id)}">${esc(o.label)}</button>`;
+                let pv = null;
+                let answerLabel = edge.label;
+                if (edge.narrativeVariants && sel) {
+                    const variant = resolveNarrativeVariant(edge.narrativeVariants, sel);
+                    if (variant) {
+                        if (variant.personalVignette) pv = variant.personalVignette;
+                        if (variant.answerLabel) answerLabel = variant.answerLabel;
+                    }
                 }
-                posHtml = `<div class="personal-q personal-position-q">
-                    <label class="personal-label">${prompt}</label>
-                    <div class="personal-pills personal-pos-pills">${posPills}</div>
-                </div>`;
-            }
+                if (!pv && edge.personalVignette) pv = edge.personalVignette;
+                if (!pv) continue;
 
-            return `<div class="personal-questions">
-                <div class="personal-q">
-                    <label class="personal-label">Where do you live?</label>
-                    <select class="personal-country-select">${optionsHtml}</select>
-                </div>
-                <div class="personal-q">
-                    <label class="personal-label">What do you do?</label>
-                    <div class="personal-pills personal-prof-pills">${profPills}</div>
-                </div>
-                ${posHtml}
-                <button class="btn btn-primary personal-submit" disabled>Show me</button>
-            </div>`;
+                const text = resolvePersonalVignetteText(pv, ctx);
+                if (!text) continue;
+
+                vignettes.push({
+                    nodeId: node.id,
+                    heading: node.label || node.id,
+                    answerLabel: answerLabel || edge.label || value,
+                    dateInfo: dateMap && dateMap[node.id] ? dateMap[node.id] : null,
+                    text: tokenReplace(text),
+                });
+            }
+            return vignettes;
         }
 
-        function buildPersonalTimelineHtml(milestones) {
-            if (!milestones || milestones.length === 0) return '';
+        function buildPersonalVignettesHtml(vignettes) {
+            if (!vignettes || vignettes.length === 0) return '';
             let html = '';
-            for (let i = 0; i < milestones.length; i++) {
-                const m = milestones[i];
+            let lastDateLabel = null;
+            for (let i = 0; i < vignettes.length; i++) {
+                const v = vignettes[i];
+                const dateLabel = v.dateInfo ? v.dateInfo.label : null;
+                const showDate = dateLabel && (i === 0 || dateLabel !== lastDateLabel);
+                const yearHtml = showDate ? `<span class="timeline-year">${esc(dateLabel)}</span>` : '';
+                if (dateLabel) lastDateLabel = dateLabel;
                 html += `<div class="timeline-event personal-milestone scroll-reveal">
                     <div class="tl-vline-seg"></div><div class="tl-dot"></div><div class="tl-hline"></div>
                     <div class="timeline-top-row">
-                        <span class="timeline-headline">${esc(m.headline)}</span>
-                        <span class="timeline-year">${esc(String(m.year))}</span>
+                        <span class="personal-vignette-heading">${esc(v.heading)}<span class="personal-vignette-answer">${esc(v.answerLabel)}</span></span>
+                        ${yearHtml}
                     </div>
-                    <div class="timeline-desc">${md(m.text)}</div>
+                    <div class="timeline-desc">${md(v.text)}</div>
                 </div>`;
             }
             return html;
@@ -1016,28 +971,80 @@
             }
         }
 
-        function buildPersonalSectionHtml(template, worldState, baseOffsetMonths, endOffsetMonths) {
-            return ''; // TEMPORARILY DISABLED – "Your Story" section has issues
-            if (!personalData || !template.milestones || template.milestones.length === 0) return '';
+        function buildPersonalQuestionsHtml(worldState, existingAnswers) {
+            if (!personalData) return '';
+            const countries = personalData.countries;
+            const professions = personalData.professions;
+            const selCountry = existingAnswers ? existingAnswers.country : '';
+            const selProf = existingAnswers ? existingAnswers.profession : '';
 
-            const stageHeader = `<div class="timeline-stage-header"><div class="tl-stage-bg"></div><span class="timeline-stage-label">Your Story</span></div>`;
+            let optionsHtml = '<option value="">Select your country...</option>';
+            for (const c of countries) {
+                const s = c.name === selCountry ? ' selected' : '';
+                optionsHtml += `<option value="${esc(c.name)}"${s}>${esc(c.name)}</option>`;
+            }
+
+            let profPills = '';
+            for (const p of professions) {
+                const active = p.id === selProf ? ' active' : '';
+                profPills += `<button class="personal-pill${active}" data-prof="${esc(p.id)}">${esc(p.label)}</button>`;
+            }
+
+            const bucket = selCountry ? getCountryBucket(selCountry) : null;
+            const showAiGeo = bucket ? shouldShowAiGeoQuestion(worldState, bucket) : false;
+            let aiGeoHtml = '';
+            if (showAiGeo) {
+                const selAiGeo = existingAnswers ? existingAnswers.is_ai_geo : '';
+                const geo = worldState.geo_spread;
+                const prompt = geo === 'one'
+                    ? `In this scenario, one country leads in AI. Is ${esc(selCountry || 'your country')} that country?`
+                    : `In this scenario, two powers lead in AI. Is ${esc(selCountry || 'your country')} one of them?`;
+                const yesActive = selAiGeo === 'yes' ? ' active' : '';
+                const noActive = selAiGeo === 'no' ? ' active' : '';
+                aiGeoHtml = `<div class="personal-q personal-aigeo-q">
+                    <label class="personal-label">${prompt}</label>
+                    <div class="personal-pills personal-aigeo-pills">
+                        <button class="personal-pill${yesActive}" data-aigeo="yes">Yes</button>
+                        <button class="personal-pill${noActive}" data-aigeo="no">No</button>
+                    </div>
+                </div>`;
+            }
+
+            return `<div class="personal-questions">
+                <div class="personal-q">
+                    <label class="personal-label">Where do you live?</label>
+                    <select class="personal-country-select">${optionsHtml}</select>
+                </div>
+                <div class="personal-q">
+                    <label class="personal-label">What do you do?</label>
+                    <div class="personal-pills personal-prof-pills">${profPills}</div>
+                </div>
+                ${aiGeoHtml}
+                <button class="btn btn-primary personal-submit" disabled>Show me</button>
+            </div>`;
+        }
+
+        function buildPersonalSectionHtml(stack, worldState, dateMap) {
+            if (!personalData) return '';
+
+            const stageHeader = `<div class="timeline-stage-header"><div class="tl-stage-bg"></div><span class="timeline-stage-label">How It Reaches You</span></div>`;
 
             if (personalAnswers && personalAnswers.country && personalAnswers.profession) {
                 const bucket = getCountryBucket(personalAnswers.country);
-                const posQ = needsPositionQuestion(worldState, bucket);
-                const needsPos = posQ && !personalAnswers.position;
+                const showAiGeo = shouldShowAiGeoQuestion(worldState, bucket);
+                const needsAiGeo = showAiGeo && !personalAnswers.is_ai_geo;
 
-                if (!needsPos) {
-                    const resolved = resolvePersonalMilestones(template.milestones, personalAnswers, worldState, baseOffsetMonths, endOffsetMonths);
-                    if (resolved.length === 0) return '';
-                    const timelineHtml = buildPersonalTimelineHtml(resolved);
+                if (!needsAiGeo) {
+                    const vignettes = resolvePersonalVignettes(stack, personalAnswers, dateMap);
+                    if (vignettes.length === 0) return '';
+                    const vignetteHtml = buildPersonalVignettesHtml(vignettes);
                     return `<div class="personal-timeline timeline">
                         ${stageHeader}
                         <div class="personal-header-row">
                             <span class="personal-context">${esc(personalAnswers.country)} · ${esc(personalData.professions.find(p => p.id === personalAnswers.profession)?.label || personalAnswers.profession)}</span>
                             <button class="personal-edit-link" data-action="personal-edit">Edit</button>
                         </div>
-                        ${timelineHtml}
+                        ${vignetteHtml}
                     </div>`;
                 }
             }
@@ -1052,22 +1059,25 @@
             </div>`;
         }
 
-        function wirePersonalSection(container, template, worldState, baseOffsetMonths, endOffsetMonths) {
+        function wirePersonalSection(container, stack, worldState, dateMap) {
             if (!container) return;
             const personalTl = container.querySelector('.personal-timeline');
             if (personalTl && !personalTl.dataset.personalState) {
                 requestAnimationFrame(() => adjustPersonalVlines(personalTl));
             }
 
+            function showQuestions(section) {
+                section.dataset.personalState = 'questions';
+                const stageHeader = section.querySelector('.timeline-stage-header').outerHTML;
+                section.innerHTML = stageHeader + buildPersonalQuestionsHtml(worldState, personalAnswers);
+                wirePersonalQuestionHandlers(section, stack, worldState, dateMap, container);
+            }
+
             const startBtn = container.querySelector('[data-action="personal-start"]');
             if (startBtn) {
                 startBtn.addEventListener('click', () => {
                     const section = container.querySelector('.personal-timeline');
-                    if (!section) return;
-                    section.dataset.personalState = 'questions';
-                    const stageHeader = section.querySelector('.timeline-stage-header').outerHTML;
-                    section.innerHTML = stageHeader + buildPersonalQuestionsHtml(worldState, personalAnswers);
-                    wirePersonalQuestionHandlers(section, template, worldState, baseOffsetMonths, endOffsetMonths, container);
+                    if (section) showQuestions(section);
                 });
             }
 
@@ -1075,55 +1085,49 @@
             if (editBtn) {
                 editBtn.addEventListener('click', () => {
                     const section = container.querySelector('.personal-timeline');
-                    if (!section) return;
-                    section.dataset.personalState = 'questions';
-                    const stageHeader = section.querySelector('.timeline-stage-header').outerHTML;
-                    section.innerHTML = stageHeader + buildPersonalQuestionsHtml(worldState, personalAnswers);
-                    wirePersonalQuestionHandlers(section, template, worldState, baseOffsetMonths, endOffsetMonths, container);
+                    if (section) showQuestions(section);
                 });
             }
         }
 
-        function wirePersonalQuestionHandlers(section, template, worldState, baseOffsetMonths, endOffsetMonths, outcomeContainer) {
+        function wirePersonalQuestionHandlers(section, stack, worldState, dateMap, outcomeContainer) {
             const countrySelect = section.querySelector('.personal-country-select');
             const profPills = section.querySelector('.personal-prof-pills');
             const submitBtn = section.querySelector('.personal-submit');
             let selectedCountry = countrySelect ? countrySelect.value : '';
             let selectedProf = section.querySelector('.personal-prof-pills .active')?.dataset.prof || '';
-            let selectedPos = section.querySelector('.personal-pos-pills .active')?.dataset.pos || '';
+            let selectedAiGeo = section.querySelector('.personal-aigeo-pills .active')?.dataset.aigeo || '';
 
             function updateSubmitState() {
-                const posSection = section.querySelector('.personal-position-q');
-                const needsPos = posSection && !selectedPos;
-                if (submitBtn) submitBtn.disabled = !selectedCountry || !selectedProf || needsPos;
+                const aiGeoSection = section.querySelector('.personal-aigeo-q');
+                const needsAiGeo = aiGeoSection && !selectedAiGeo;
+                if (submitBtn) submitBtn.disabled = !selectedCountry || !selectedProf || needsAiGeo;
             }
 
-            function refreshPositionQuestion() {
-                const oldPosQ = section.querySelector('.personal-position-q');
-                if (oldPosQ) oldPosQ.remove();
-                selectedPos = '';
+            function refreshAiGeoQuestion() {
+                const oldQ = section.querySelector('.personal-aigeo-q');
+                if (oldQ) oldQ.remove();
+                selectedAiGeo = '';
                 if (!selectedCountry) { updateSubmitState(); return; }
                 const bucket = getCountryBucket(selectedCountry);
-                const posQ = needsPositionQuestion(worldState, bucket);
-                if (!posQ) { updateSubmitState(); return; }
-                const countryName = selectedCountry;
-                const prompt = posQ.type === 'one'
-                    ? `In this scenario, one country achieved AI dominance. Is ${esc(countryName)} that country?`
-                    : `In this scenario, two powers have AI. Is ${esc(countryName)} one of them?`;
-                let posPills = '';
-                for (const o of posQ.options) {
-                    posPills += `<button class="personal-pill" data-pos="${esc(o.id)}">${esc(o.label)}</button>`;
-                }
-                const posHtml = `<div class="personal-q personal-position-q">
+                if (!shouldShowAiGeoQuestion(worldState, bucket)) { updateSubmitState(); return; }
+                const geo = worldState.geo_spread;
+                const prompt = geo === 'one'
+                    ? `In this scenario, one country leads in AI. Is ${esc(selectedCountry)} that country?`
+                    : `In this scenario, two powers lead in AI. Is ${esc(selectedCountry)} one of them?`;
+                const html = `<div class="personal-q personal-aigeo-q">
                     <label class="personal-label">${prompt}</label>
-                    <div class="personal-pills personal-pos-pills">${posPills}</div>
+                    <div class="personal-pills personal-aigeo-pills">
+                        <button class="personal-pill" data-aigeo="yes">Yes</button>
+                        <button class="personal-pill" data-aigeo="no">No</button>
+                    </div>
                 </div>`;
-                submitBtn.insertAdjacentHTML('beforebegin', posHtml);
-                section.querySelectorAll('.personal-pos-pills .personal-pill').forEach(pill => {
+                submitBtn.insertAdjacentHTML('beforebegin', html);
+                section.querySelectorAll('.personal-aigeo-pills .personal-pill').forEach(pill => {
                     pill.addEventListener('click', () => {
-                        section.querySelectorAll('.personal-pos-pills .personal-pill').forEach(p => p.classList.remove('active'));
+                        section.querySelectorAll('.personal-aigeo-pills .personal-pill').forEach(p => p.classList.remove('active'));
                         pill.classList.add('active');
-                        selectedPos = pill.dataset.pos;
+                        selectedAiGeo = pill.dataset.aigeo;
                         updateSubmitState();
                     });
                 });
@@ -1133,7 +1137,7 @@
             if (countrySelect) {
                 countrySelect.addEventListener('change', () => {
                     selectedCountry = countrySelect.value;
-                    refreshPositionQuestion();
+                    refreshAiGeoQuestion();
                     updateSubmitState();
                 });
             }
@@ -1152,11 +1156,10 @@
             if (submitBtn) {
                 submitBtn.addEventListener('click', () => {
                     const answers = { country: selectedCountry, profession: selectedProf };
-                    if (selectedPos) answers.position = selectedPos;
+                    if (selectedAiGeo) answers.is_ai_geo = selectedAiGeo;
                     savePersonalAnswers(answers);
 
-
-                    const resolved = resolvePersonalMilestones(template.milestones, answers, worldState, baseOffsetMonths, endOffsetMonths);
+                    const vignettes = resolvePersonalVignettes(stack, answers, dateMap);
                     const stageHeader = section.querySelector('.timeline-stage-header').outerHTML;
                     const profLabel = personalData.professions.find(p => p.id === selectedProf)?.label || selectedProf;
                     section.innerHTML = stageHeader +
@@ -1164,8 +1167,8 @@
                             <span class="personal-context">${esc(selectedCountry)} · ${esc(profLabel)}</span>
                             <button class="personal-edit-link" data-action="personal-edit">Edit</button>
                         </div>` +
-                        buildPersonalTimelineHtml(resolved);
-                    section.dataset.personalState = 'milestones';
+                        buildPersonalVignettesHtml(vignettes);
+                    section.dataset.personalState = 'vignettes';
 
                     setupOutcomeReveals(section);
                     requestAnimationFrame(() => adjustPersonalVlines(section));
@@ -1175,7 +1178,7 @@
                             section.dataset.personalState = 'questions';
                             const sh = section.querySelector('.timeline-stage-header').outerHTML;
                             section.innerHTML = sh + buildPersonalQuestionsHtml(worldState, personalAnswers);
-                            wirePersonalQuestionHandlers(section, template, worldState, baseOffsetMonths, endOffsetMonths, outcomeContainer);
+                            wirePersonalQuestionHandlers(section, stack, worldState, dateMap, outcomeContainer);
                         });
                     }
                 });
@@ -1495,11 +1498,13 @@
                     const d = timelineDurations[i];
                     const nodeId = timelineNodeIds[i];
                     if (nodeId && !map[nodeId]) {
-                        map[nodeId] = formatMonths(cumulative + d.current).year;
+                        const fm = formatMonths(cumulative + d.current);
+                        map[nodeId] = { year: fm.year, month: fm.month, label: fm.month + ' ' + fm.year };
                     }
                     cumulative += d.current;
                 }
-                map._totalYear = formatMonths(cumulative).year;
+                const totalFm = formatMonths(cumulative);
+                map._totalYear = totalFm.year;
                 return map;
             }
 
@@ -1602,8 +1607,8 @@
                 if (vignettes.length > 0) {
                     vignettesHtml = '<div class="outcome-vignettes">';
                     for (const v of vignettes) {
-                        const year = dateMap[v.nodeId];
-                        const yearHtml = year ? `<span class="vignette-year">${esc(String(year))}</span>` : '';
+                        const dateInfo = dateMap[v.nodeId];
+                        const yearHtml = dateInfo ? `<span class="vignette-year">${esc(dateInfo.label)}</span>` : '';
                         vignettesHtml += `<div class="outcome-vignette scroll-reveal">
                             <div class="vignette-title">${esc(v.heading)}${yearHtml}</div>
                             <div class="vignette-text">${md(v.text)}</div>
@@ -1618,7 +1623,7 @@
                 }
 
                 const cumulativeMonths = timelineDurations.reduce((sum, d) => sum + d.current, 0);
-                const personalHtml = buildPersonalSectionHtml(t, eff, 0, cumulativeMonths);
+                const personalHtml = buildPersonalSectionHtml(stack, eff, dateMap);
 
                 const ctaHtml = `<div class="outcome-cta scroll-reveal" style="text-align:center;margin:2rem 0;">
                     <button class="btn btn-primary" data-action="outcome-share">Share This Future</button>
@@ -2060,8 +2065,8 @@
                         const eff = Engine.resolvedState(Engine.currentState(stack));
                         const matchedT = templatesList.filter(t => Engine.templateMatches(t, eff));
                         if (matchedT.length > 0) {
-                            const cumMonths = timelineDurations.reduce((sum, d) => sum + d.current, 0);
-                            wirePersonalSection(outcomeZone, matchedT[0], eff, 0, cumMonths);
+                            const personalDateMap = buildTimelineDateMap();
+                            wirePersonalSection(outcomeZone, stack, eff, personalDateMap);
                         }
                     } else {
                         outcomeZone.innerHTML = '';
