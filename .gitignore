@@ -2,4 +2,7 @@ node_modules/
 .env
 tests/evaluations/
 tests/report.md
+tests/tone-audit-report.json
 .claude
+.DS_Store
+.cursor

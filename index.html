@@ -2012,11 +2012,20 @@
                         if (shareBtn) {
                             shareBtn.addEventListener('click', () => {
                                 track('outcome_shared');
-                                const url = location.origin + location.pathname + location.hash;
+                                const eff2 = Engine.resolvedState(Engine.currentState(stack));
+                                const matched2 = templatesList.filter(t => Engine.templateMatches(t, eff2));
+                                let shareUrl = location.origin + location.pathname + location.hash;
+                                if (matched2.length > 0) {
+                                    const resolved2 = resolveTemplate(matched2[0].id, eff2);
+                                    if (resolved2) {
+                                        const slug = resolved2.variantKey ? matched2[0].id + '--' + resolved2.variantKey : matched2[0].id;
+                                        shareUrl = location.origin + location.pathname + 'share/' + slug + '.html';
+                                    }
+                                }
                                 if (navigator.clipboard) {
-                                    navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
+                                    navigator.clipboard.writeText(shareUrl).then(() => showToast('Link copied!'));
                                 } else {
-                                    showToast(url);
+                                    showToast(shareUrl);
                                 }
                             });
                         }
