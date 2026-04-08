@@ -2,91 +2,127 @@
   {
     "id": "yudkowsky",
     "name": "Eliezer Yudkowsky",
+    "country": "United States",
+    "profession": "software",
     "bio": "AI safety researcher and founder of MIRI. Expects fast takeoff, believes alignment is extremely hard and likely to fail, warns of existential catastrophe from superintelligent AI that optimizes for unintended goals."
   },
   {
     "id": "lecun",
     "name": "Yann LeCun",
+    "country": "United States",
+    "profession": "software",
     "bio": "Meta chief AI scientist. Believes current deep learning architectures will plateau before AGI, thinks existential risk from AI is overblown, expects AI to be a powerful but controllable tool."
   },
   {
     "id": "amodei",
     "name": "Dario Amodei",
+    "country": "United States",
+    "profession": "software",
     "bio": "Anthropic CEO. Cautious optimist — believes alignment is hard but solvable with sufficient effort, favors international cooperation and careful scaling, thinks superintelligent AI could produce enormous benefits if handled correctly."
   },
   {
     "id": "andreessen",
     "name": "Marc Andreessen",
+    "country": "United States",
+    "profession": "software",
     "bio": "Venture capitalist and tech accelerationist. Believes AI should be developed and deployed as fast as possible, markets will distribute benefits broadly, regulation is more dangerous than the technology."
   },
   {
     "id": "chinese-strategist",
     "name": "Chinese National Security Strategist",
+    "country": "China",
+    "profession": "government",
     "bio": "Views AI as an instrument of national power. Prioritizes state control, winning the technology race, and maintaining domestic order. International cooperation is tactical, not principled."
   },
   {
     "id": "eu-regulator",
     "name": "EU Commissioner for AI",
+    "country": "France",
+    "profession": "government",
     "bio": "Governance-first approach. Favors precautionary regulation, slow and deliberate deployment, broad benefit sharing, and international coordination over speed. Democratic legitimacy matters more than technological leadership."
   },
   {
     "id": "altman",
     "name": "Sam Altman",
+    "country": "United States",
+    "profession": "software",
     "bio": "OpenAI CEO. Believes scaling will produce AGI soon, wants broad benefit but acknowledges labs will lead the transition. Optimistic about alignment but takes the risk seriously. Favors some governance but not at the cost of losing the lead."
   },
   {
     "id": "bostrom",
     "name": "Nick Bostrom",
+    "country": "United Kingdom",
+    "profession": "education",
     "bio": "Philosopher of existential risk. Worries less about dramatic extinction and more about subtle disempowerment — humanity gradually delegating all meaningful decisions to AI systems and losing agency permanently. Alignment might work technically but fail socially."
   },
   {
     "id": "open-source",
     "name": "Open Source Advocate",
+    "country": "Germany",
+    "profession": "software",
     "bio": "Believes in radical decentralization of AI capability. Open weights, community governance, no single entity controlling the technology. Pluralism and access are more important than safety theater controlled by a few labs."
   },
   {
     "id": "pentagon",
     "name": "Pentagon AI Strategist",
+    "country": "United States",
+    "profession": "government",
     "bio": "National security lens. AI is primarily a strategic weapon. Deterrence is the goal, escalation is the risk. Favors state control, denial of capability to rivals, and military integration. Civilian applications are secondary."
   },
   {
     "id": "startup-founder",
     "name": "Sarah, startup founder",
+    "country": "United States",
+    "profession": "software",
     "bio": "Runs a 20-person SaaS company. Uses AI coding tools and AI customer support daily. Impressed by how fast the tools are improving, mildly anxious about what it means for hiring. Reads Hacker News, skims AI headlines, hasn't gone deep on alignment or policy. Generally optimistic but not ideological about it."
   },
   {
     "id": "teacher",
     "name": "James, high school teacher",
+    "country": "United States",
+    "profession": "education",
     "bio": "Teaches AP Computer Science. Has watched students go from sneaking ChatGPT answers to using AI as a genuine learning tool. Worried about what happens to the job market his students are graduating into. Follows AI news casually, trusts institutions more than tech companies, skeptical of utopian promises."
   },
   {
     "id": "nurse",
     "name": "Priya, ICU nurse",
+    "country": "India",
+    "profession": "healthcare",
     "bio": "Sees AI diagnostic tools entering her hospital. Impressed by the accuracy, uneasy about the speed of adoption and lack of clinician input in deployment decisions. Politically moderate, trusts science but distrusts Silicon Valley hype. Wants AI to help, not replace. Doesn't follow AI discourse closely but has strong opinions about who should be in charge of life-and-death decisions."
   },
   {
     "id": "retiree",
     "name": "David, retired engineer",
+    "country": "United States",
+    "profession": "student_retired",
     "bio": "Spent 35 years in aerospace. Understands complex systems and failure modes intuitively. Reads The Economist, follows AI loosely, deeply skeptical of 'move fast and break things' culture. Believes institutions and regulation move too slowly but are still necessary. Worries about concentration of power more than about the technology itself."
   },
   {
     "id": "college-student",
     "name": "Maya, college junior",
+    "country": "United States",
+    "profession": "student_retired",
     "bio": "Studying economics, uses AI for everything — essays, research, coding side projects. Can't imagine life without it. Vaguely aware of the safety debate, thinks the doomer stuff is overblown but takes inequality concerns seriously. Expects AI to transform the job market before she enters it. More worried about who captures the gains than whether the technology works."
   },
   {
     "id": "swe",
     "name": "Alex, senior software engineer",
+    "country": "United States",
+    "profession": "software",
     "bio": "Eight years at mid-size tech companies, now writes maybe 30% of code by hand — the rest is AI-generated and reviewed. Uses agentic coding tools daily: Cursor, Copilot, Claude for architecture decisions. Has watched the capability curve firsthand — what took a junior engineer a week now takes an agent ten minutes. Technically literate enough to understand what's happening under the hood, which makes the acceleration more visceral than abstract. Not ideological about AI safety but increasingly unsettled by how fast the tools are improving and how few of his colleagues seem to think about where it's heading."
   },
   {
     "id": "kenyan-policy",
     "name": "Amina, Kenyan tech policy advisor",
+    "country": "Kenya",
+    "profession": "government",
     "bio": "Advises the Kenyan government on digital economy strategy. Watches frontier AI development from the outside — her country consumes the technology but has no seat at the table where it's built or governed. Understands that 'broad benefit sharing' in San Francisco means something different in Nairobi. Pragmatic about adoption, skeptical of Western governance frameworks that assume everyone starts from the same position. Worried less about existential risk and more about a future where the gap between AI-producing and AI-consuming nations becomes permanent."
   },
   {
     "id": "geneva-diplomat",
     "name": "Lena, UN AI governance lead",
+    "country": "Switzerland",
+    "profession": "government",
     "bio": "Senior advisor at the ITU in Geneva, coordinating multilateral AI governance efforts. Has spent two decades watching international institutions try to keep up with technology and mostly fail. Believes coordination is essential but knows how slow and fragile it is in practice. Sees the AI governance debate as a repeat of nuclear, climate, and internet governance — same structural problems, faster timeline. Frustrated by great-power unilateralism but realistic about the limits of multilateral process when the technology moves this fast."
   }
 ]

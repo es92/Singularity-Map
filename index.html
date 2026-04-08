@@ -388,6 +388,93 @@
         .outcome-summary a,
         .vignette-text a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
 
+        /* ---- Personal Milestones ---- */
+        .personal-timeline {
+            max-width: 640px; margin: 2rem auto 0;
+            padding-bottom: 1rem;
+        }
+        .personal-timeline .timeline-stage-header { margin-top: 0; }
+        .personal-timeline .timeline-event { padding-top: 1.2rem; }
+        .personal-timeline .timeline-headline { font-size: 0.95rem; }
+        .personal-cta-card {
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .personal-cta-title {
+            font-size: 1.1rem; font-weight: 600;
+            margin-bottom: 0.4rem;
+        }
+        .personal-cta-desc {
+            font-size: 0.88rem; color: var(--text-secondary);
+            margin-bottom: 1rem; line-height: 1.5;
+        }
+        .personal-questions {
+            padding: 1.25rem 0;
+        }
+        .personal-q { margin-bottom: 1.25rem; }
+        .personal-label {
+            display: block; font-size: 0.88rem; font-weight: 600;
+            margin-bottom: 0.5rem; color: var(--text);
+        }
+        .personal-country-select {
+            width: 100%; padding: 0.5rem 0.75rem;
+            font-size: 0.9rem; border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg); color: var(--text);
+            appearance: auto;
+        }
+        .personal-pills {
+            display: flex; flex-wrap: wrap; gap: 0.4rem;
+        }
+        .personal-pill {
+            padding: 0.35rem 0.75rem;
+            font-size: 0.82rem; border-radius: 20px;
+            border: 1px solid var(--border);
+            background: transparent; color: var(--text-secondary);
+            cursor: pointer; transition: all 0.15s ease;
+        }
+        .personal-pill:hover {
+            border-color: var(--accent); color: var(--text);
+        }
+        .personal-pill.active {
+            background: var(--accent); color: var(--bg);
+            border-color: var(--accent); font-weight: 600;
+        }
+        .personal-submit {
+            margin-top: 0.75rem;
+        }
+        .personal-submit:disabled {
+            opacity: 0.4; cursor: not-allowed;
+        }
+        .personal-header-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.5rem 0 0.25rem;
+            margin-bottom: 0.25rem;
+        }
+        .personal-context {
+            font-size: 0.82rem; color: var(--text-dim);
+            font-weight: 500;
+        }
+        .personal-edit-link {
+            font-size: 0.78rem; color: var(--accent);
+            background: none; border: none; cursor: pointer;
+            text-decoration: underline; text-underline-offset: 2px;
+            padding: 0;
+        }
+        .personal-milestone .timeline-desc > :first-child { margin-top: 0; }
+        .personal-milestone .timeline-desc > :last-child { margin-bottom: 0; }
+        .personal-milestone .timeline-desc p { margin: 0.6em 0; }
+        .personal-milestone .timeline-desc strong { font-weight: 600; color: var(--text); }
+        .personal-milestone .timeline-desc em { font-style: italic; }
+
+        @media (max-width: 600px) {
+            .personal-pills { gap: 0.35rem; }
+            .personal-pill { font-size: 0.78rem; padding: 0.3rem 0.6rem; }
+        }
+
         /* ---- Engagement Footer ---- */
         .outcome-footer {
             max-width: 520px; margin: 0 auto;
@@ -465,6 +552,9 @@
         let templatesMap = {};
         let templatesList = [];
         let discovered = new Set();
+        let personalData = null;
+        let personalAnswers = null;
+        const PERSONAL_STORAGE_KEY = 'singularity-map-personal';
         const { SCENARIO, NODES, NODE_MAP } = window.Graph;
 
         loadDiscovered();
@@ -512,15 +602,20 @@
         // --- Data Loading ---
         async function loadData() {
             const cacheBust = '?v=' + Date.now();
-            const [oRes, nRes] = await Promise.all([
+            const [oRes, nRes, pRes] = await Promise.all([
                 fetch('data/outcomes.json' + cacheBust),
                 fetch('data/narrative.json' + cacheBust),
+                fetch('data/personal.json' + cacheBust),
             ]);
             if (!oRes.ok || !nRes.ok) {
                 throw new Error('Could not load data files. Are you running a local server?');
             }
             const oData = await oRes.json();
             const narrative = await nRes.json();
+            if (pRes.ok) {
+                personalData = await pRes.json();
+                try { personalAnswers = JSON.parse(localStorage.getItem(PERSONAL_STORAGE_KEY)); } catch {}
+            }
 
             if (narrative._stages) SCENARIO.stages = narrative._stages;
             for (const [nodeId, narr] of Object.entries(narrative)) {
@@ -703,6 +798,374 @@
             return variantKey ? templateId + '/' + variantKey : templateId;
         }
 
+        function setupOutcomeReveals(container) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+            container.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+        }
+
+        // --- Personal Milestones ---
+        function savePersonalAnswers(answers) {
+            personalAnswers = answers;
+            try { localStorage.setItem(PERSONAL_STORAGE_KEY, JSON.stringify(answers)); } catch {}
+        }
+
+        function getCountryBucket(countryName) {
+            if (!personalData) return 'rest';
+            const entry = personalData.countries.find(c => c.name === countryName);
+            return entry ? entry.bucket : 'rest';
+        }
+
+        function resolveMilestoneText(textSpec, personalCtx) {
+            if (typeof textSpec === 'string') return textSpec;
+            if (!textSpec || typeof textSpec !== 'object') return null;
+            for (const [dimKey, variants] of Object.entries(textSpec)) {
+                const val = personalCtx[dimKey];
+                if (!val) continue;
+                const resolved = variants[val];
+                if (resolved && typeof resolved === 'object' && !Array.isArray(resolved)) {
+                    const nested = resolveMilestoneText(resolved, personalCtx);
+                    if (nested) return nested;
+                }
+                if (typeof resolved === 'string') return resolved;
+                if (variants._default) {
+                    if (typeof variants._default === 'string') return variants._default;
+                    const nested = resolveMilestoneText(variants._default, personalCtx);
+                    if (nested) return nested;
+                }
+                return null;
+            }
+            if (textSpec._default) return typeof textSpec._default === 'string' ? textSpec._default : null;
+            return null;
+        }
+
+        function resolvePersonalMilestones(milestones, answers, worldState, baseOffsetMonths, endOffsetMonths) {
+            if (!milestones || !answers) return [];
+            const bucket = getCountryBucket(answers.country);
+            const ctx = Object.assign({}, worldState, {
+                profession: answers.profession,
+                country_bucket: bucket,
+                position: answers.position || null,
+            });
+
+            const tokenReplace = (str) => {
+                if (!str) return str;
+                const profLabel = personalData && personalData.professions.find(p => p.id === answers.profession);
+                return str
+                    .replace(/\{country\}/g, answers.country || '')
+                    .replace(/\{profession\}/g, profLabel ? profLabel.label : (answers.profession || ''));
+            };
+
+            return milestones
+                .filter(m => {
+                    if (!m.when) return true;
+                    return Object.entries(m.when).every(([k, vals]) =>
+                        worldState[k] && vals.includes(worldState[k])
+                    );
+                })
+                .map(m => {
+                    const text = resolveMilestoneText(m.text, ctx) || resolveMilestoneText(m.text, { _default: true });
+                    if (!text) return null;
+                    const totalMonths = m.anchor === 'end'
+                        ? (endOffsetMonths || 0) + (m.offsetMonths || 0)
+                        : baseOffsetMonths + (m.offsetMonths || 0);
+                    const dateInfo = formatMonths(totalMonths);
+                    return {
+                        year: dateInfo.year,
+                        headline: tokenReplace(m.headline || ''),
+                        text: tokenReplace(text),
+                    };
+                })
+                .filter(Boolean);
+        }
+
+        function needsPositionQuestion(worldState, bucket) {
+            if (!personalData) return null;
+            const geo = worldState.geo_spread;
+            if (!geo) return null;
+            const bucketInfo = personalData.countryBuckets[bucket];
+            if (!bucketInfo) return null;
+            if (geo === 'one' && bucketInfo.plausibleLeader) {
+                return { type: 'one', options: [
+                    { id: 'leader', label: 'Yes' },
+                    { id: 'outside', label: 'No' },
+                ]};
+            }
+            if (geo === 'two' && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) {
+                return { type: 'two', options: [
+                    { id: 'leader', label: 'Yes, the leading power' },
+                    { id: 'rival', label: 'Yes, the rival' },
+                    { id: 'outside', label: 'No' },
+                ]};
+            }
+            return null;
+        }
+
+        function buildPersonalQuestionsHtml(worldState, existingAnswers) {
+            if (!personalData) return '';
+            const countries = personalData.countries;
+            const professions = personalData.professions;
+            const selCountry = existingAnswers ? existingAnswers.country : '';
+            const selProf = existingAnswers ? existingAnswers.profession : '';
+
+            let optionsHtml = '<option value="">Select your country...</option>';
+            for (const c of countries) {
+                const sel = c.name === selCountry ? ' selected' : '';
+                optionsHtml += `<option value="${esc(c.name)}"${sel}>${esc(c.name)}</option>`;
+            }
+
+            let profPills = '';
+            for (const p of professions) {
+                const active = p.id === selProf ? ' active' : '';
+                profPills += `<button class="personal-pill${active}" data-prof="${esc(p.id)}">${esc(p.label)}</button>`;
+            }
+
+            const bucket = selCountry ? getCountryBucket(selCountry) : null;
+            const posQ = bucket ? needsPositionQuestion(worldState, bucket) : null;
+            let posHtml = '';
+            if (posQ) {
+                const selPos = existingAnswers ? existingAnswers.position : '';
+                const countryName = selCountry || 'your country';
+                const prompt = posQ.type === 'one'
+                    ? `In this scenario, one country achieved AI dominance. Is ${esc(countryName)} that country?`
+                    : `In this scenario, two powers have AI. Is ${esc(countryName)} one of them?`;
+                let posPills = '';
+                for (const o of posQ.options) {
+                    const active = o.id === selPos ? ' active' : '';
+                    posPills += `<button class="personal-pill${active}" data-pos="${esc(o.id)}">${esc(o.label)}</button>`;
+                }
+                posHtml = `<div class="personal-q personal-position-q">
+                    <label class="personal-label">${prompt}</label>
+                    <div class="personal-pills personal-pos-pills">${posPills}</div>
+                </div>`;
+            }
+
+            return `<div class="personal-questions">
+                <div class="personal-q">
+                    <label class="personal-label">Where do you live?</label>
+                    <select class="personal-country-select">${optionsHtml}</select>
+                </div>
+                <div class="personal-q">
+                    <label class="personal-label">What do you do?</label>
+                    <div class="personal-pills personal-prof-pills">${profPills}</div>
+                </div>
+                ${posHtml}
+                <button class="btn btn-primary personal-submit" disabled>Show me</button>
+            </div>`;
+        }
+
+        function buildPersonalTimelineHtml(milestones) {
+            if (!milestones || milestones.length === 0) return '';
+            let html = '';
+            for (let i = 0; i < milestones.length; i++) {
+                const m = milestones[i];
+                html += `<div class="timeline-event personal-milestone scroll-reveal">
+                    <div class="tl-vline-seg"></div><div class="tl-dot"></div><div class="tl-hline"></div>
+                    <div class="timeline-top-row">
+                        <span class="timeline-headline">${esc(m.headline)}</span>
+                        <span class="timeline-year">${esc(String(m.year))}</span>
+                    </div>
+                    <div class="timeline-desc">${md(m.text)}</div>
+                </div>`;
+            }
+            return html;
+        }
+
+        function adjustPersonalVlines(container) {
+            if (!container) return;
+            const events = container.querySelectorAll('.timeline-event');
+            const dots = [], segs = [], parents = [];
+            events.forEach(evt => {
+                const dot = evt.querySelector('.tl-dot');
+                const seg = evt.querySelector('.tl-vline-seg');
+                if (dot && seg) { dots.push(dot); segs.push(seg); parents.push(evt); }
+            });
+            for (let i = 0; i < dots.length; i++) {
+                if (i === 0) { segs[i].style.display = 'none'; continue; }
+                const prevRect = dots[i - 1].getBoundingClientRect();
+                const currRect = dots[i].getBoundingClientRect();
+                const evtRect = parents[i].getBoundingClientRect();
+                const prevCenter = prevRect.top + prevRect.height / 2;
+                const currCenter = currRect.top + currRect.height / 2;
+                segs[i].style.display = '';
+                segs[i].style.top = (prevCenter - evtRect.top) + 'px';
+                segs[i].style.height = (currCenter - prevCenter) + 'px';
+            }
+        }
+
+        function buildPersonalSectionHtml(template, worldState, baseOffsetMonths, endOffsetMonths) {
+            if (!personalData || !template.milestones || template.milestones.length === 0) return '';
+
+            const stageHeader = `<div class="timeline-stage-header"><div class="tl-stage-bg"></div><span class="timeline-stage-label">Your Story</span></div>`;
+
+            if (personalAnswers && personalAnswers.country && personalAnswers.profession) {
+                const bucket = getCountryBucket(personalAnswers.country);
+                const posQ = needsPositionQuestion(worldState, bucket);
+                const needsPos = posQ && !personalAnswers.position;
+
+                if (!needsPos) {
+                    const resolved = resolvePersonalMilestones(template.milestones, personalAnswers, worldState, baseOffsetMonths, endOffsetMonths);
+                    if (resolved.length === 0) return '';
+                    const timelineHtml = buildPersonalTimelineHtml(resolved);
+                    return `<div class="personal-timeline timeline">
+                        ${stageHeader}
+                        <div class="personal-header-row">
+                            <span class="personal-context">${esc(personalAnswers.country)} · ${esc(personalData.professions.find(p => p.id === personalAnswers.profession)?.label || personalAnswers.profession)}</span>
+                            <button class="personal-edit-link" data-action="personal-edit">Edit</button>
+                        </div>
+                        ${timelineHtml}
+                    </div>`;
+                }
+            }
+
+            return `<div class="personal-timeline timeline" data-personal-state="cta">
+                ${stageHeader}
+                <div class="personal-cta-card scroll-reveal">
+                    <div class="personal-cta-title">What happens to you?</div>
+                    <div class="personal-cta-desc">See how this future plays out in your life — based on where you live and what you do. Nothing is collected or sent anywhere.</div>
+                    <button class="btn btn-primary" data-action="personal-start">Personalize this outcome</button>
+                </div>
+            </div>`;
+        }
+
+        function wirePersonalSection(container, template, worldState, baseOffsetMonths, endOffsetMonths) {
+            if (!container) return;
+            const personalTl = container.querySelector('.personal-timeline');
+            if (personalTl && !personalTl.dataset.personalState) {
+                requestAnimationFrame(() => adjustPersonalVlines(personalTl));
+            }
+
+            const startBtn = container.querySelector('[data-action="personal-start"]');
+            if (startBtn) {
+                startBtn.addEventListener('click', () => {
+                    const section = container.querySelector('.personal-timeline');
+                    if (!section) return;
+                    section.dataset.personalState = 'questions';
+                    const stageHeader = section.querySelector('.timeline-stage-header').outerHTML;
+                    section.innerHTML = stageHeader + buildPersonalQuestionsHtml(worldState, personalAnswers);
+                    wirePersonalQuestionHandlers(section, template, worldState, baseOffsetMonths, endOffsetMonths, container);
+                });
+            }
+
+            const editBtn = container.querySelector('[data-action="personal-edit"]');
+            if (editBtn) {
+                editBtn.addEventListener('click', () => {
+                    const section = container.querySelector('.personal-timeline');
+                    if (!section) return;
+                    section.dataset.personalState = 'questions';
+                    const stageHeader = section.querySelector('.timeline-stage-header').outerHTML;
+                    section.innerHTML = stageHeader + buildPersonalQuestionsHtml(worldState, personalAnswers);
+                    wirePersonalQuestionHandlers(section, template, worldState, baseOffsetMonths, endOffsetMonths, container);
+                });
+            }
+        }
+
+        function wirePersonalQuestionHandlers(section, template, worldState, baseOffsetMonths, endOffsetMonths, outcomeContainer) {
+            const countrySelect = section.querySelector('.personal-country-select');
+            const profPills = section.querySelector('.personal-prof-pills');
+            const submitBtn = section.querySelector('.personal-submit');
+            let selectedCountry = countrySelect ? countrySelect.value : '';
+            let selectedProf = section.querySelector('.personal-prof-pills .active')?.dataset.prof || '';
+            let selectedPos = section.querySelector('.personal-pos-pills .active')?.dataset.pos || '';
+
+            function updateSubmitState() {
+                const posSection = section.querySelector('.personal-position-q');
+                const needsPos = posSection && !selectedPos;
+                if (submitBtn) submitBtn.disabled = !selectedCountry || !selectedProf || needsPos;
+            }
+
+            function refreshPositionQuestion() {
+                const oldPosQ = section.querySelector('.personal-position-q');
+                if (oldPosQ) oldPosQ.remove();
+                selectedPos = '';
+                if (!selectedCountry) { updateSubmitState(); return; }
+                const bucket = getCountryBucket(selectedCountry);
+                const posQ = needsPositionQuestion(worldState, bucket);
+                if (!posQ) { updateSubmitState(); return; }
+                const countryName = selectedCountry;
+                const prompt = posQ.type === 'one'
+                    ? `In this scenario, one country achieved AI dominance. Is ${esc(countryName)} that country?`
+                    : `In this scenario, two powers have AI. Is ${esc(countryName)} one of them?`;
+                let posPills = '';
+                for (const o of posQ.options) {
+                    posPills += `<button class="personal-pill" data-pos="${esc(o.id)}">${esc(o.label)}</button>`;
+                }
+                const posHtml = `<div class="personal-q personal-position-q">
+                    <label class="personal-label">${prompt}</label>
+                    <div class="personal-pills personal-pos-pills">${posPills}</div>
+                </div>`;
+                submitBtn.insertAdjacentHTML('beforebegin', posHtml);
+                section.querySelectorAll('.personal-pos-pills .personal-pill').forEach(pill => {
+                    pill.addEventListener('click', () => {
+                        section.querySelectorAll('.personal-pos-pills .personal-pill').forEach(p => p.classList.remove('active'));
+                        pill.classList.add('active');
+                        selectedPos = pill.dataset.pos;
+                        updateSubmitState();
+                    });
+                });
+                updateSubmitState();
+            }
+
+            if (countrySelect) {
+                countrySelect.addEventListener('change', () => {
+                    selectedCountry = countrySelect.value;
+                    refreshPositionQuestion();
+                    updateSubmitState();
+                });
+            }
+
+            if (profPills) {
+                profPills.querySelectorAll('.personal-pill').forEach(pill => {
+                    pill.addEventListener('click', () => {
+                        profPills.querySelectorAll('.personal-pill').forEach(p => p.classList.remove('active'));
+                        pill.classList.add('active');
+                        selectedProf = pill.dataset.prof;
+                        updateSubmitState();
+                    });
+                });
+            }
+
+            if (submitBtn) {
+                submitBtn.addEventListener('click', () => {
+                    const answers = { country: selectedCountry, profession: selectedProf };
+                    if (selectedPos) answers.position = selectedPos;
+                    savePersonalAnswers(answers);
+                    track('personal_milestones', { country_bucket: getCountryBucket(selectedCountry), profession: selectedProf, position: selectedPos || null });
+
+                    const resolved = resolvePersonalMilestones(template.milestones, answers, worldState, baseOffsetMonths, endOffsetMonths);
+                    const stageHeader = section.querySelector('.timeline-stage-header').outerHTML;
+                    const profLabel = personalData.professions.find(p => p.id === selectedProf)?.label || selectedProf;
+                    section.innerHTML = stageHeader +
+                        `<div class="personal-header-row">
+                            <span class="personal-context">${esc(selectedCountry)} · ${esc(profLabel)}</span>
+                            <button class="personal-edit-link" data-action="personal-edit">Edit</button>
+                        </div>` +
+                        buildPersonalTimelineHtml(resolved);
+                    section.dataset.personalState = 'milestones';
+
+                    setupOutcomeReveals(section);
+                    requestAnimationFrame(() => adjustPersonalVlines(section));
+                    const editBtn = section.querySelector('[data-action="personal-edit"]');
+                    if (editBtn) {
+                        editBtn.addEventListener('click', () => {
+                            section.dataset.personalState = 'questions';
+                            const sh = section.querySelector('.timeline-stage-header').outerHTML;
+                            section.innerHTML = sh + buildPersonalQuestionsHtml(worldState, personalAnswers);
+                            wirePersonalQuestionHandlers(section, template, worldState, baseOffsetMonths, endOffsetMonths, outcomeContainer);
+                        });
+                    }
+                });
+            }
+
+            updateSubmitState();
+        }
+
         // --- Analytics ---
         function track(event, params) {
             if (typeof gtag === 'function') gtag('event', event, params);
@@ -733,8 +1196,16 @@
                         else if (dk === 'et') { flags.expandTimeline = dv !== '0'; }
                         else if (dk === 'so') { flags.showOutcomes = dv === '1'; }
                         else if (dk === 'db') { flags.debugMode = dv === '1'; }
+                        else if (dk === 'pc' || dk === 'pp' || dk === 'pos') { flags[dk] = dv; }
                         else { pairs.push({ nodeId: dk, edgeId: dv }); }
                     });
+                }
+                if (flags.pc || flags.pp) {
+                    const urlPersonal = {};
+                    if (flags.pc) urlPersonal.country = flags.pc;
+                    if (flags.pp) urlPersonal.profession = flags.pp;
+                    if (flags.pos) urlPersonal.position = flags.pos;
+                    savePersonalAnswers(urlPersonal);
                 }
                 return { screen: 'map', started: true, pairs, lockedOutcomeId, flags };
             }
@@ -1035,17 +1506,6 @@
                 </div>`;
             }
 
-            function setupOutcomeReveals(container) {
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            entry.target.classList.add('revealed');
-                            observer.unobserve(entry.target);
-                        }
-                    });
-                }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-                container.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
-            }
 
             function buildOutcomeSectionHtml() {
                 const eff = Engine.resolvedState(Engine.currentState(stack));
@@ -1100,6 +1560,9 @@
                     narrativeHtml = `<div class="outcome-narrative">${vignettesHtml}</div>`;
                 }
 
+                const cumulativeMonths = timelineDurations.reduce((sum, d) => sum + d.current, 0);
+                const personalHtml = buildPersonalSectionHtml(t, eff, 0, cumulativeMonths);
+
                 const totalOutcomes = countTotalOutcomes();
                 const footerHtml = `<div class="outcome-footer scroll-reveal">
                     <div class="discovery-counter">You've discovered <strong>${discovered.size}</strong> of <strong>${totalOutcomes}</strong> possible futures</div>
@@ -1109,7 +1572,7 @@
                     </div>
                 </div>`;
 
-                return heroHtml + pathHtml + narrativeHtml + footerHtml;
+                return heroHtml + pathHtml + narrativeHtml + personalHtml + footerHtml;
             }
 
             
@@ -1134,6 +1597,11 @@
                 if (!expandTimeline) entries.push('et=0');
                 if (showOutcomes) entries.push('so=1');
                 if (debugMode) entries.push('db=1');
+                if (personalAnswers) {
+                    if (personalAnswers.country) entries.push('pc=' + encodeURIComponent(personalAnswers.country));
+                    if (personalAnswers.profession) entries.push('pp=' + encodeURIComponent(personalAnswers.profession));
+                    if (personalAnswers.position) entries.push('pos=' + encodeURIComponent(personalAnswers.position));
+                }
                 if (entries.length > 0) hash += '?' + entries.join('&');
                 const stateFlags = { fullQuestions, expandTimeline, showOutcomes, debugMode };
                 const pairs = stack.filter(e => e.nodeId).map(e => ({ nodeId: e.nodeId, edgeId: e.edgeId }));
@@ -1523,6 +1991,12 @@
                                 track('explore_another');
                                 resetSelections();
                             });
+                        }
+                        const eff = Engine.resolvedState(Engine.currentState(stack));
+                        const matchedT = templatesList.filter(t => Engine.templateMatches(t, eff));
+                        if (matchedT.length > 0) {
+                            const cumMonths = timelineDurations.reduce((sum, d) => sum + d.current, 0);
+                            wirePersonalSection(outcomeZone, matchedT[0], eff, 0, cumMonths);
                         }
                     } else {
                         outcomeZone.innerHTML = '';
