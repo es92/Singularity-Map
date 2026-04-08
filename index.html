@@ -1195,7 +1195,7 @@
         function track(event, params) {
             if (typeof gtag === 'function') gtag('event', event, params);
         }
-        function logJourney(outcomeId, variantId) {
+        function logJourney(outcomeId, variantId, stack) {
             const sel = Engine.currentState(stack);
             const path = {};
             for (const [k, v] of Object.entries(sel)) {
@@ -1566,7 +1566,7 @@
 
                 const key = outcomeKey(t.id, resolved.variantKey);
                 track('outcome_reached', { outcome_id: t.id, variant_id: resolved.variantKey || null });
-                logJourney(t.id, resolved.variantKey);
+                logJourney(t.id, resolved.variantKey, stack);
                 markDiscovered(key);
 
                 const dateMap = buildTimelineDateMap();
