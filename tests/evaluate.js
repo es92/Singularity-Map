@@ -84,6 +84,7 @@ const CONCURRENCY = parseInt(getArg('--concurrency', '10'), 10);
 const GENERATE_REPORT = args.includes('--report');
 const REPORT_ONLY = args.includes('--report-only');
 const AUDIT_MODE = args.includes('--audit');
+const TONE_AUDIT = args.includes('--tone-audit');
 const modes = MODE_ARG === 'both' ? ['want', 'likely'] : [MODE_ARG];
 
 // ── Anthropic client ──
@@ -967,6 +968,118 @@ Return ONLY the JSON array.`;
     }
 }
 
+async function auditToneForStory(model, templateId, persona, milestones, outcome) {
+    const profLabel = personalData.professions.find(p => p.id === persona.profession)?.label || persona.profession;
+    let storyText = `Outcome: ${outcome}\nPersona: ${profLabel} in ${persona.country}\n\nPersonal story milestones (in order):\n`;
+    for (const m of milestones) {
+        const anchor = m.anchor === 'end' ? ' [near outcome]' : '';
+        storyText += `\n${m.headline}${anchor}:\n${m.text}\n`;
+    }
+
+    const system = `You are a narrative editor reviewing personal story milestones for an interactive AI futures scenario. The user made choices about the future of AI and received a sequence of personal milestones describing what happens to THEM.
+
+Read the milestone sequence as a complete narrative arc. Flag specific issues:
+
+1. GENERIC: Lines that could describe anyone — no profession or country specificity. Quote the line.
+2. OVERWROUGHT: Portentous, grandiose, or emotionally manipulative language. Quote the line.
+3. REPETITIVE: Phrases or structures that repeat across milestones. Quote both instances.
+4. TONAL INCONSISTENCY: Shifts in register that feel jarring (e.g., clinical → melodramatic).
+5. ARC PROBLEMS: Places where the emotional progression drops, stalls, or feels rushed.
+6. MISSING TEXTURE: Key moments where a specific detail (profession, country, institutional context) would make the milestone land but is absent.
+
+Be specific and quote the text. Only flag things that would bother a thoughtful reader — not minor style preferences.`;
+
+    const user = `${storyText}\n\n---\n\nReturn a JSON array of issues. Each: { "type": "<GENERIC|OVERWROUGHT|REPETITIVE|TONAL|ARC|MISSING_TEXTURE>", "milestone": "<headline>", "quote": "<the specific text>", "issue": "<what's wrong>" }\n\nIf the story reads well, return an empty array: []\n\nReturn ONLY the JSON array.`;
+
+    try {
+        const raw = await callClaude(model, system, user, 4096);
+        return parseJsonResponse(raw);
+    } catch (err) {
+        console.error(`  Tone audit API error for ${templateId}/${persona.profession}: ${err.message}`);
+        return [];
+    }
+}
+
+async function runToneAudit() {
+    initClient();
+    const AUDIT_MODEL = process.env.AUDIT_MODEL || REVIEW_MODEL;
+    console.log(`\nRunning personal story tone audit...`);
+    console.log(`Model: ${AUDIT_MODEL}\n`);
+
+    const tonePersonas = [
+        { profession: 'software', country: 'United States', bucket: 'us' },
+        { profession: 'education', country: 'United States', bucket: 'us' },
+        { profession: 'healthcare', country: 'India', bucket: 'india' },
+        { profession: 'trade', country: 'Nigeria', bucket: 'sub_saharan_africa' },
+        { profession: 'student_retired', country: 'Germany', bucket: 'eu' },
+    ];
+
+    const allIssues = [];
+
+    for (const template of templatesList) {
+        if (!template.milestones || template.milestones.length === 0 || !template.reachable) continue;
+        process.stdout.write(`  ${template.id}...`);
+
+        const testStates = generateTestStates(template);
+        if (testStates.length === 0) { console.log(' no test states'); continue; }
+
+        const state = testStates[0];
+        const resolved = resolveTemplate(template.id, state);
+        const outcomeName = resolved ? `${resolved.title}${resolved.subtitle ? ' — ' + resolved.subtitle : ''} (${resolved.mood})` : template.id;
+
+        let templateIssues = [];
+
+        for (const persona of tonePersonas) {
+            const milestones = resolveMilestonesForState(template, state, persona);
+            if (milestones.length === 0) continue;
+
+            const issues = await auditToneForStory(AUDIT_MODEL, template.id, persona, milestones, outcomeName);
+            for (const issue of issues) {
+                templateIssues.push({
+                    template: template.id,
+                    persona: `${persona.profession} in ${persona.country}`,
+                    type: issue.type,
+                    milestone: issue.milestone,
+                    quote: issue.quote,
+                    issue: issue.issue,
+                });
+            }
+        }
+
+        if (templateIssues.length > 0) {
+            allIssues.push(...templateIssues);
+            console.log(` ${templateIssues.length} issues across ${tonePersonas.length} personas`);
+        } else {
+            console.log(` clean (${tonePersonas.length} personas)`);
+        }
+    }
+
+    console.log(`\n--- Tone Audit Summary ---`);
+    console.log(`Total issues: ${allIssues.length}`);
+
+    if (allIssues.length > 0) {
+        const byType = {};
+        for (const i of allIssues) {
+            if (!byType[i.type]) byType[i.type] = [];
+            byType[i.type].push(i);
+        }
+        console.log(`\nBy type:`);
+        for (const [type, issues] of Object.entries(byType).sort((a, b) => b[1].length - a[1].length)) {
+            console.log(`\n  ${type} (${issues.length}):`);
+            for (const issue of issues.slice(0, 5)) {
+                console.log(`    [${issue.template}] ${issue.persona} — "${issue.milestone}"`);
+                if (issue.quote) console.log(`      Quote: "${issue.quote.substring(0, 100)}${issue.quote.length > 100 ? '...' : ''}"`);
+                console.log(`      ${issue.issue.substring(0, 150)}`);
+            }
+            if (issues.length > 5) console.log(`    ... and ${issues.length - 5} more`);
+        }
+    }
+
+    const reportPath = path.join(__dirname, 'tone-audit-report.json');
+    fs.writeFileSync(reportPath, JSON.stringify(allIssues, null, 2));
+    console.log(`\nFull report: ${reportPath}`);
+}
+
 async function runAudit() {
     initClient();
     const AUDIT_MODEL = process.env.AUDIT_MODEL || REVIEW_MODEL;
@@ -1232,7 +1345,7 @@ async function reportOnly() {
     console.log('Report written to tests/report.md');
 }
 
-(AUDIT_MODE ? runAudit() : REPORT_ONLY ? reportOnly() : main()).catch(err => {
+(TONE_AUDIT ? runToneAudit() : AUDIT_MODE ? runAudit() : REPORT_ONLY ? reportOnly() : main()).catch(err => {
     console.error('Fatal:', err);
     process.exit(1);
 });
