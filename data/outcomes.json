@@ -1946,8 +1946,8 @@
         "takeoff": "The Takeoff",
         "governance": "Governance",
         "sovereignty": {
-          "lab": "Corporate Sovereignty",
-          "state": "State Capture"
+          "lab": "Corporate Control",
+          "state": "State Control"
         },
         "rival_emerges": "The Rival",
         "stall_recovery": "The Recovery",

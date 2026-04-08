@@ -364,6 +364,12 @@ async function simulatePath(persona, mode, { deterministic = false } = {}) {
 
 You are navigating a scenario about the future of AI. At each step, you will be given a question with available options. Some options may be unavailable because of earlier choices — these are shown for context but cannot be selected.
 
+HOW YOUR RATINGS ARE USED:
+- Your ratings will be sampled to select one option per question. Higher ratings = more likely to be selected.
+- Once selected, downstream consequences follow DETERMINISTICALLY from the scenario's graph logic.
+- Some downstream options may be auto-locked or reduced to one choice — this is a logical consequence of prior selections, not an error.
+- IMPORTANT: Think about downstream consequences. If you rate an option highly but it leads to outcomes you don't want, rate it LOWER. For example, if "one lab dominates" leads to concentration of power, rate it low even if you think it's realistic — unless you actually want that concentration.
+
 ${MODE_INSTRUCTIONS[mode]}
 
 ${MODE_RESPONSE_FORMATS[mode]}`;
@@ -474,7 +480,14 @@ async function getPersonaReview(persona, mode, log, resolved, personalMilestones
 
     const system = `You are ${persona.name}. ${persona.bio}
 
-You just completed an interactive scenario about the future of AI. You will be shown the questions you were asked, the choices that were made, the outcome you reached, and a personal story describing what happens to YOU based on your profession and country. Stay in character and respond with honest reactions as this persona.`;
+You just completed an interactive scenario about the future of AI. You will be shown the questions you were asked, the choices that were made, the outcome you reached, and a personal story describing what happens to YOU based on your profession and country. Stay in character and respond with honest reactions as this persona.
+
+IMPORTANT CONTEXT about how choices were made:
+- For each question, you assigned probability ratings. ONE option was then sampled from your distribution.
+- The number in parentheses (e.g. "your probability: 0.32") is what YOU assigned — if it's low, this run is exploring a less-likely branch of your worldview.
+- Downstream choices marked [auto] or [only option] are LOGICAL CONSEQUENCES of prior selections — the graph resolved them deterministically. They are not errors.
+- When evaluating satisfaction, judge whether the outcome FOLLOWS LOGICALLY from the choices shown — not whether you wish different choices had been sampled.
+- A "forced choice" complaint should be reserved for cases where NO available option captures your view — not for cases where prior choices narrowed the options in a way that makes logical sense.`;
 
     const user = `Mode: ${mode} (${modeLabel})
 
