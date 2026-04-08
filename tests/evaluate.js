@@ -991,51 +991,48 @@ async function runToneAudit() {
     console.log(`Model: ${AUDIT_MODEL}\n`);
 
     const tonePersonas = [
-        { profession: 'software', country: 'United States', bucket: 'us' },
-        { profession: 'education', country: 'United States', bucket: 'us' },
-        { profession: 'healthcare', country: 'India', bucket: 'india' },
-        { profession: 'trade', country: 'Nigeria', bucket: 'sub_saharan_africa' },
-        { profession: 'student_retired', country: 'Germany', bucket: 'eu' },
+        { profession: 'software', country: 'United States', is_ai_geo: 'yes' },
+        { profession: 'education', country: 'United States', is_ai_geo: 'yes' },
+        { profession: 'healthcare', country: 'India', is_ai_geo: 'no' },
+        { profession: 'trade', country: 'Nigeria', is_ai_geo: 'no' },
+        { profession: 'student_retired', country: 'Germany', is_ai_geo: 'no' },
     ];
 
     const allIssues = [];
+    const jobs = [];
 
     for (const template of templatesList) {
         if (!template.reachable) continue;
-        process.stdout.write(`  ${template.id}...`);
 
         const testStates = generateTestStates(template);
-        if (testStates.length === 0) { console.log(' no test states'); continue; }
+        if (testStates.length === 0) continue;
 
         const state = testStates[0];
         const resolved = resolveTemplate(template.id, state);
         const outcomeName = resolved ? `${resolved.title}${resolved.subtitle ? ' — ' + resolved.subtitle : ''} (${resolved.mood})` : template.id;
 
-        let templateIssues = [];
-
         for (const persona of tonePersonas) {
             const vignettes = resolveVignettesForState(state, persona);
             if (vignettes.length === 0) continue;
 
-            const issues = await auditToneForVignettes(AUDIT_MODEL, template.id, persona, vignettes, outcomeName);
-            for (const issue of issues) {
-                templateIssues.push({
+            jobs.push(async () => {
+                const issues = await auditToneForVignettes(AUDIT_MODEL, template.id, persona, vignettes, outcomeName);
+                return issues.map(issue => ({
                     template: template.id,
                     persona: `${persona.profession} in ${persona.country}`,
                     type: issue.type,
                     heading: issue.heading,
                     quote: issue.quote,
                     issue: issue.issue,
-                });
-            }
+                }));
+            });
         }
+    }
 
-        if (templateIssues.length > 0) {
-            allIssues.push(...templateIssues);
-            console.log(` ${templateIssues.length} issues across ${tonePersonas.length} personas`);
-        } else {
-            console.log(` clean (${tonePersonas.length} personas)`);
-        }
+    console.log(`  ${jobs.length} audit jobs, running with concurrency ${CONCURRENCY}...`);
+    const results = await runPool(jobs, CONCURRENCY, (result) => {});
+    for (const issues of results) {
+        if (issues && issues.length > 0) allIssues.push(...issues);
     }
 
     console.log(`\n--- Tone Audit Summary ---`);
