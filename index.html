@@ -1597,17 +1597,21 @@
                 const cumulativeMonths = timelineDurations.reduce((sum, d) => sum + d.current, 0);
                 const personalHtml = buildPersonalSectionHtml(t, eff, 0, cumulativeMonths);
 
+                const ctaHtml = `<div class="outcome-cta scroll-reveal" style="text-align:center;margin:2rem 0;">
+                    <button class="btn btn-primary" data-action="outcome-share">Share This Future</button>
+                    <button class="btn btn-ghost" data-action="outcome-explore">Explore Another Path</button>
+                </div>`;
+
                 const totalOutcomes = countTotalOutcomes();
                 const footerHtml = `<div class="outcome-footer scroll-reveal">
                     <div class="discovery-counter">You've discovered <strong>${discovered.size}</strong> of <strong>${totalOutcomes}</strong> possible futures</div>
                     <div class="outcome-cta">
-                        <button class="btn btn-primary" data-action="outcome-share">Share This Future</button>
                         <button class="btn btn-ghost" data-action="outcome-explore">Explore Another Path</button>
                     </div>
                     ${siteFooterHtml()}
                 </div>`;
 
-                return heroHtml + pathHtml + narrativeHtml + personalHtml + footerHtml;
+                return heroHtml + pathHtml + narrativeHtml + ctaHtml + personalHtml + footerHtml;
             }
 
             
