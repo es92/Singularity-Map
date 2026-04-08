@@ -1024,6 +1024,7 @@
         }
 
         function buildPersonalSectionHtml(template, worldState, baseOffsetMonths, endOffsetMonths) {
+            return ''; // TEMPORARILY DISABLED – "Your Story" section has issues
             if (!personalData || !template.milestones || template.milestones.length === 0) return '';
 
             const stageHeader = `<div class="timeline-stage-header"><div class="tl-stage-bg"></div><span class="timeline-stage-label">Your Story</span></div>`;
@@ -1192,8 +1193,19 @@
 
         // --- Analytics ---
         const LOGGER_URL = 'https://singularity-logger.evan-a-shapiro.workers.dev';
+        let journeyId = null;
+        let journeyStartTime = null;
         function track(event, params) {
             if (typeof gtag === 'function') gtag('event', event, params);
+        }
+        function logStart() {
+            journeyId = crypto.randomUUID();
+            journeyStartTime = Date.now();
+            fetch(LOGGER_URL + '/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ journey_id: journeyId }),
+            }).catch(() => {});
         }
         function logJourney(outcomeId, variantId, stack) {
             const sel = Engine.currentState(stack);
@@ -1202,10 +1214,17 @@
                 if (k.startsWith('_')) continue;
                 path[k] = v;
             }
-            fetch(LOGGER_URL, {
+            const elapsedMs = journeyStartTime ? Date.now() - journeyStartTime : null;
+            fetch(LOGGER_URL + '/complete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ outcome_id: outcomeId, variant_id: variantId || null, path }),
+                body: JSON.stringify({
+                    journey_id: journeyId || crypto.randomUUID(),
+                    outcome_id: outcomeId,
+                    variant_id: variantId || null,
+                    path,
+                    elapsed_ms: elapsedMs,
+                }),
             }).catch(() => {});
         }
 
@@ -1614,7 +1633,6 @@
 
                 const ctaHtml = `<div class="outcome-cta scroll-reveal" style="text-align:center;margin:2rem 0;">
                     <button class="btn btn-primary" data-action="outcome-share">Share This Future</button>
-                    <button class="btn btn-ghost" data-action="outcome-explore">Explore Another Path</button>
                 </div>`;
 
                 const totalOutcomes = countTotalOutcomes();
@@ -1623,7 +1641,6 @@
                     <div class="outcome-cta">
                         <button class="btn btn-ghost" data-action="outcome-explore">Explore Another Path</button>
                     </div>
-                    ${siteFooterHtml()}
                 </div>`;
 
                 return heroHtml + pathHtml + narrativeHtml + ctaHtml + personalHtml + footerHtml;
@@ -1889,6 +1906,7 @@
                         questionZone.style.flex = '1';
                         questionZone.querySelector('[data-action="begin"]').addEventListener('click', () => {
                             track('journey_start');
+                            logStart();
                             started = true;
                             mutateStack(s => s, { fadeFooterIn: true });
                         });
@@ -2126,11 +2144,14 @@
             function resetSelections() {
                 stack = Engine.createStack();
                 started = true;
+                logStart();
                 update();
             }
 
             function backToStart() {
                 track('back_to_start');
+                journeyId = null;
+                journeyStartTime = null;
                 stack = Engine.createStack();
                 started = false;
                 history.replaceState({ screen: 'map' }, '', location.pathname);
