@@ -189,7 +189,25 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The plateau's benefits went almost entirely to those who held power when the transformation hit. The technology works for everyone who can access it — access is the problem."
+          "_default": "The plateau's benefits went almost entirely to those who held power when the transformation hit. The technology works for everyone who can access it — access is the problem.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "The plateau's benefits went to those who owned the AI tools. Your productivity went up; the gains went to shareholders. The ceiling that limits AI also limits how far you can fall — but the inequality is locked in."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "The plateau's benefits went to those who owned the AI tools. Your hands-on work wasn't automated, but the economy restructured around you. The jobs are there; the wages haven't kept up."
+            }
+          ]
         }
       }
     }
@@ -684,7 +702,17 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The economic gains from AI automation are flowing broadly. Costs are falling, services improving, living standards rising across most of the population."
+          "_default": "The economic gains from AI automation are flowing broadly. Costs are falling, services improving, living standards rising across most of the population.",
+          "_when": [
+            {
+              "if": {
+                "is_ai_geo": [
+                  "no"
+                ]
+              },
+              "text": "The economic gains from AI automation are reaching {country}. It took longer than the leading nations, but costs are falling and services improving where you live."
+            }
+          ]
         }
       },
       "unequal": {
@@ -697,7 +725,25 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "AI automation's gains are concentrating. The economy is more productive, but the productivity flows to those who own the systems, not those displaced by them."
+          "_default": "AI automation's gains are concentrating. The economy is more productive, but the productivity flows to those who own the systems, not those displaced by them.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "AI automation made your company more productive. The productivity mostly benefited the people who own the company."
+            },
+            {
+              "if": {
+                "is_ai_geo": [
+                  "no"
+                ]
+              },
+              "text": "The wealth from AI automation concentrates where AI is built. {country} uses the tools, but the real gains accumulate elsewhere."
+            }
+          ]
         }
       },
       "extreme": {
@@ -710,7 +756,25 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The automation gains went almost entirely to those already in power. The technology works; the distribution doesn't."
+          "_default": "The automation gains went almost entirely to those already in power. The technology works; the distribution doesn't.",
+          "_when": [
+            {
+              "if": {
+                "is_ai_geo": [
+                  "yes"
+                ]
+              },
+              "text": "You live in the country where AI automation wealth concentrates, but that doesn't mean it reaches you. The gains flow to a narrow elite."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "The automation gains went to those already in power. Your hands-on work survived, but the economy it sits in serves someone else."
+            }
+          ]
         }
       }
     }
@@ -760,7 +824,25 @@
           "durationMax": 180
         },
         "personalVignette": {
-          "_default": "Knowledge work displacement is happening sector by sector over years. You can see the trajectory, and there's time to adapt — but the direction is clear."
+          "_default": "Knowledge work displacement is happening sector by sector over years. You can see the trajectory, and there's time to adapt — but the direction is clear.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "Knowledge work displacement is happening gradually, even in tech. Your role is shifting year by year — more oversight, less hands-on. The pace is manageable, but the direction is clear."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Knowledge work is being displaced ahead of yours, sector by sector. The offices are changing; your job site isn't — not yet."
+            }
+          ]
         }
       },
       "uneven": {
