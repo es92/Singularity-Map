@@ -17,9 +17,10 @@ const {
     resolvedState, templateMatches,
     createStack, push, currentState, stackHas, displayOrder
 } = require('./engine.js');
-const { resolveMilestoneText, filterMilestones, collectDimensions } = require('./milestone-utils.js');
+const { resolvePersonalVignettes, resolvePersonalVignetteText, getCountryBucket } = require('./milestone-utils.js');
 
 const outcomes = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/outcomes.json'), 'utf8'));
+const narrative = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/narrative.json'), 'utf8'));
 const personalData = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/personal.json'), 'utf8'));
 const templatesList = outcomes.templates;
 
@@ -668,191 +669,142 @@ function printPhase3(coverage) {
 // Phase 4 — Milestone Validation
 // ════════════════════════════════════════════════════════
 
-function runMilestoneValidation() {
+function runVignetteValidation() {
     const errors = [];
     const warnings = [];
-    const metaNodes = new Set(NODES.map(d => d.id));
 
-    const TEST_PROFESSIONS = ['software', 'healthcare', 'trade', 'government'];
-    const TEST_BUCKETS = ['us', 'china', 'eu', 'rest'];
+    const TEST_PERSONAS = [
+        { profession: 'software', country: 'United States', is_ai_geo: 'yes' },
+        { profession: 'healthcare', country: 'Germany', is_ai_geo: 'no' },
+        { profession: 'trade', country: 'Nigeria', is_ai_geo: 'no' },
+        { profession: 'government', country: 'China', is_ai_geo: 'yes' },
+    ];
 
-    // --- Check 1: When-condition validation ---
-    for (const t of templatesList) {
-        if (!t.milestones) continue;
-        for (let i = 0; i < t.milestones.length; i++) {
-            const m = t.milestones[i];
-            if (!m.when) continue;
-            for (const [k, vals] of Object.entries(m.when)) {
-                if (!metaNodes.has(k)) {
-                    errors.push(`[milestones] ${t.id} milestone ${i} ("${m.headline}"): when references unknown node "${k}"`);
-                } else {
-                    const validEdges = new Set(NODE_MAP[k].edges.map(e => e.id));
-                    for (const v of vals) {
-                        if (!validEdges.has(v)) {
-                            errors.push(`[milestones] ${t.id} milestone ${i} ("${m.headline}"): when references unknown edge "${k}=${v}"`);
+    // --- Check 1: personalVignette _when condition validation ---
+    for (const [nodeId, node] of Object.entries(narrative)) {
+        if (!node.values) continue;
+        for (const [edgeId, edge] of Object.entries(node.values)) {
+            const pv = edge.personalVignette;
+            if (!pv) continue;
+            if (pv._when) {
+                for (let i = 0; i < pv._when.length; i++) {
+                    const rule = pv._when[i];
+                    if (!rule.if) {
+                        errors.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: missing "if" condition`);
+                        continue;
+                    }
+                    if (!rule.text) {
+                        errors.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: missing "text" field`);
+                    }
+                    for (const [k, vals] of Object.entries(rule.if)) {
+                        if (!['profession', 'country_bucket', 'is_ai_geo'].includes(k)) {
+                            warnings.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: condition key "${k}" is not profession/country_bucket/is_ai_geo`);
+                        }
+                        if (!Array.isArray(vals)) {
+                            errors.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: condition "${k}" must be an array`);
                         }
                     }
                 }
             }
+            if (!pv._default && (!pv._when || pv._when.length === 0) && typeof pv !== 'string') {
+                errors.push(`[vignettes] ${nodeId}.${edgeId}: personalVignette has no _default and no _when rules`);
+            }
         }
     }
 
-    // --- Check 2: Resolution completeness ---
-    const nullMilestones = new Map();
-    for (const t of templatesList) {
-        if (!t.milestones || t.milestones.length === 0) continue;
-        if (!t.reachable) continue;
+    // --- Check 2: Resolution completeness across personas ---
+    let totalVignettes = 0;
+    let withWhen = 0;
+    const nullResolutions = [];
 
-        for (const reachable of t.reachable) {
-            const baseState = {};
-            for (const [k, vals] of Object.entries(reachable)) {
-                if (k === '_not') continue;
-                baseState[k] = Array.isArray(vals) ? vals[0] : vals;
-            }
+    for (const [nodeId, node] of Object.entries(narrative)) {
+        if (!node.values) continue;
+        for (const [edgeId, edge] of Object.entries(node.values)) {
+            const pv = edge.personalVignette;
+            if (!pv) continue;
+            totalVignettes++;
+            if (pv._when && pv._when.length > 0) withWhen++;
 
-            const filtered = filterMilestones(t.milestones, baseState);
-
-            for (const prof of TEST_PROFESSIONS) {
-                for (const bucket of TEST_BUCKETS) {
-                    const ctx = Object.assign({}, baseState, {
-                        profession: prof,
-                        country_bucket: bucket,
-                        position: null,
+            for (const persona of TEST_PERSONAS) {
+                const bucket = getCountryBucket(persona.country, personalData);
+                const ctx = {
+                    profession: persona.profession,
+                    country_bucket: bucket,
+                    is_ai_geo: persona.is_ai_geo,
+                };
+                const text = resolvePersonalVignetteText(pv, ctx);
+                if (!text) {
+                    nullResolutions.push({
+                        node: nodeId,
+                        edge: edgeId,
+                        persona: `${persona.profession} in ${persona.country}`,
                     });
+                }
+            }
+        }
+    }
 
-                    for (const m of filtered) {
-                        const text = resolveMilestoneText(m.text, ctx)
-                            || resolveMilestoneText(m.text, { _default: true });
-                        if (!text) {
-                            const key = `${t.id}||${m.headline}`;
-                            if (!nullMilestones.has(key)) {
-                                nullMilestones.set(key, { template: t.id, headline: m.headline, count: 0, example: null });
-                            }
-                            const entry = nullMilestones.get(key);
-                            entry.count++;
-                            if (!entry.example) {
-                                entry.example = `prof=${prof}, bucket=${bucket}, state=${Object.entries(baseState).filter(([k]) => !k.startsWith('_')).map(([k,v]) => k+'='+v).join(',')}`;
-                            }
-                        }
+    for (const nr of nullResolutions) {
+        warnings.push(`[vignettes] ${nr.node}.${nr.edge}: resolves to null for ${nr.persona}`);
+    }
+
+    // --- Check 3: Coverage — which nodes have personalVignettes ---
+    const nodesWithVignettes = new Set();
+    const nodesWithoutVignettes = new Set();
+    for (const node of NODES) {
+        if (node.derived) continue;
+        if (!node.edges) continue;
+        let hasAny = false;
+        for (const edge of node.edges) {
+            const narr = narrative[node.id];
+            const narrEdge = narr && narr.values && narr.values[edge.id];
+            if (narrEdge && narrEdge.personalVignette) {
+                hasAny = true;
+                break;
+            }
+        }
+        if (hasAny) {
+            nodesWithVignettes.add(node.id);
+        } else {
+            nodesWithoutVignettes.add(node.id);
+        }
+    }
+
+    // --- Check 4: Token validation — {country} and {profession} are valid ---
+    for (const [nodeId, node] of Object.entries(narrative)) {
+        if (!node.values) continue;
+        for (const [edgeId, edge] of Object.entries(node.values)) {
+            const pv = edge.personalVignette;
+            if (!pv) continue;
+            const texts = [];
+            if (pv._default) texts.push(pv._default);
+            if (pv._when) for (const rule of pv._when) if (rule.text) texts.push(rule.text);
+            if (typeof pv === 'string') texts.push(pv);
+            for (const text of texts) {
+                const tokens = text.match(/\{[^}]+\}/g) || [];
+                for (const token of tokens) {
+                    if (token !== '{country}' && token !== '{profession}') {
+                        errors.push(`[vignettes] ${nodeId}.${edgeId}: unknown token "${token}" in text`);
                     }
                 }
             }
         }
     }
 
-    for (const [, entry] of nullMilestones) {
-        errors.push(
-            `[milestones] ${entry.template} milestone "${entry.headline}" resolves to null ` +
-            `(${entry.count} combos, e.g. ${entry.example})`
-        );
-    }
-
-    // --- Check 3: Dimension coverage audit ---
-    const REQUIRED_DIMS_SINGULARITY = ['profession'];
-    const RECOMMENDED_DIMS_SINGULARITY = ['country_bucket', 'knowledge_replacement', 'mobilization'];
-
-    const coverageTable = [];
-    for (const t of templatesList) {
-        if (!t.milestones || t.milestones.length === 0) continue;
-
-        const isSingularity = t.reachable && t.reachable.some(r =>
-            r.capability && r.capability.includes('singularity') &&
-            (!r.automation || r.automation.includes('deep'))
-        );
-
-        const allDims = new Set();
-        for (const m of t.milestones) {
-            for (const d of collectDimensions(m.text, 0)) allDims.add(d);
-        }
-
-        const hasDim = (d) => allDims.has(d);
-        const hasCountryOrPosition = hasDim('country_bucket') || hasDim('position');
-
-        coverageTable.push({
-            id: t.id,
-            count: t.milestones.length,
-            isSingularity,
-            dims: [...allDims].sort(),
-            profession: hasDim('profession'),
-            countryOrPosition: hasCountryOrPosition,
-            knowledgeReplacement: hasDim('knowledge_replacement'),
-            mobilization: hasDim('mobilization'),
-        });
-
-        if (isSingularity) {
-            if (!hasDim('profession')) {
-                warnings.push(`[coverage] ${t.id}: singularity-path outcome missing 'profession' dimension in milestones`);
-            }
-            if (!hasCountryOrPosition) {
-                warnings.push(`[coverage] ${t.id}: singularity-path outcome missing 'country_bucket' or 'position' dimension in milestones`);
-            }
-            if (!hasDim('knowledge_replacement')) {
-                warnings.push(`[coverage] ${t.id}: singularity-path outcome missing 'knowledge_replacement' dimension in milestones`);
-            }
-            if (!hasDim('mobilization')) {
-                warnings.push(`[coverage] ${t.id}: singularity-path outcome missing 'mobilization' dimension in milestones`);
-            }
-        }
-    }
-
-    // --- Check 4: Offset range sanity ---
-    const LATE_STAGE_NODES = new Set([
-        'ai_goals', 'escape_method', 'escape_timeline', 'discovery_timing',
-        'response_method', 'response_success', 'catch_outcome',
-        'war_survivors', 'conflict_result',
-    ]);
-
-    for (const t of templatesList) {
-        if (!t.milestones || t.milestones.length === 0) continue;
-        if (!t.reachable) continue;
-
-        const requiresLateNodes = t.reachable.some(r =>
-            Object.keys(r).some(k => LATE_STAGE_NODES.has(k))
-        );
-
-        if (!requiresLateNodes) continue;
-
-        const hasEndAnchored = t.milestones.some(m => m.anchor === 'end');
-        if (hasEndAnchored) continue;
-
-        const maxOffset = Math.max(...t.milestones.map(m => m.offsetMonths || 0));
-        if (maxOffset < 36) {
-            warnings.push(
-                `[offset] ${t.id}: requires late-stage nodes (${
-                    [...new Set(t.reachable.flatMap(r => Object.keys(r).filter(k => LATE_STAGE_NODES.has(k))))].join(', ')
-                }) but max milestone offset is only ${maxOffset} months — personal timeline may be dated too early`
-            );
-        }
-    }
-
-    return { errors, warnings, coverageTable };
+    return { errors, warnings, totalVignettes, withWhen, nodesWithVignettes, nodesWithoutVignettes };
 }
 
 function printPhase4(result) {
     if (result.errors.length === 0 && result.warnings.length === 0) {
-        console.log('  ✓ All milestone structural checks passed');
+        console.log('  ✓ All vignette structural checks passed');
     }
     for (const e of result.errors) console.log(`  ✗ ${e}`);
     for (const w of result.warnings) console.log(`  ⚠ ${w}`);
 
-    if (result.coverageTable.length > 0) {
-        console.log('\n  Milestone dimension coverage:');
-        const header = '    ' + 'Outcome'.padEnd(28) + 'N'.padStart(3) + '  Prof  Geo   KR    Mob   Dims';
-        console.log(header);
-        console.log('    ' + '─'.repeat(header.length - 4));
-        for (const row of result.coverageTable) {
-            const mark = (v) => v ? ' ✓  ' : ' ✗  ';
-            const prefix = row.isSingularity ? '' : '  ';
-            console.log(
-                '    ' + (prefix + row.id).padEnd(28) +
-                String(row.count).padStart(3) + ' ' +
-                mark(row.profession) +
-                mark(row.countryOrPosition) +
-                mark(row.knowledgeReplacement) +
-                mark(row.mobilization) +
-                row.dims.join(', ')
-            );
-        }
+    console.log(`\n  Personal vignettes: ${result.totalVignettes} total (${result.withWhen} customized)`);
+    console.log(`  Nodes with vignettes: ${result.nodesWithVignettes.size} / ${result.nodesWithVignettes.size + result.nodesWithoutVignettes.size}`);
+    if (result.nodesWithoutVignettes.size > 0 && result.nodesWithoutVignettes.size <= 30) {
+        console.log(`  Nodes without: ${[...result.nodesWithoutVignettes].join(', ')}`);
     }
 }
 
@@ -895,11 +847,11 @@ console.log('Phase 3: Edge Coverage');
 printPhase3(phase2.coverage);
 console.log();
 
-// Phase 4 — Milestone Validation
+// Phase 4 — Personal Vignette Validation
 const t4 = Date.now();
-const phase4 = runMilestoneValidation();
+const phase4 = runVignetteValidation();
 const phase4ms = Date.now() - t4;
-console.log(`Phase 4: Milestone Validation (${phase4ms}ms)`);
+console.log(`Phase 4: Personal Vignette Validation (${phase4ms}ms)`);
 printPhase4(phase4);
 console.log();
 
