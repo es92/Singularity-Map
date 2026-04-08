@@ -191,10 +191,10 @@
           "text": {
             "country_bucket": {
               "us": "AI adoption is near-total within the capability ceiling. The US drove the rollout — every knowledge worker uses AI daily, the infrastructure was built here first. The debate has shifted from 'will it replace me' to 'what's left for me to do.'",
-              "china": "State-driven deployment is aggressive and systematic. Every sector AI can reach has been reached. The efficiency gains are real — and tightly managed.",
+              "china": "State-driven AI deployment is aggressive and systematic. China didn't wait for AI to arrive — it drove the rollout. Every sector the technology can reach has been reached. The efficiency gains are real and centrally directed.",
               "eu": "The EU shaped the rollout through regulation — slower than the US, but more deliberate. In {country}, worker protections cushioned the transition. AI is woven into public services on terms European institutions negotiated, not just adopted.",
               "india": "AI leapfrogs traditional infrastructure in some sectors. Mobile-first AI services reach hundreds of millions. But the plateau means the transformation is bounded.",
-              "japan_korea": "Adoption is rapid and thorough. AI fills gaps left by an aging workforce. The plateau is almost welcome — a powerful tool that doesn't threaten to replace everything.",
+              "japan_korea": "AI adoption is rapid and thorough — Japan and South Korea embraced it early. AI fills gaps left by an aging workforce. In {country}, the plateau is almost welcome: a powerful tool that doesn't threaten to replace everything.",
               "_default": "AI deployment reaches {country}, shaped by local institutions and economics. The plateau means the transformation is real but bounded — disruptive, not existential."
             }
           }
@@ -329,7 +329,7 @@
           "text": {
             "country_bucket": {
               "us": "Automation is pervasive. Every knowledge-work role has been reshaped by AI. The US led the adoption wave — and now lives with the consequences: extraordinary productivity alongside wrenching displacement.",
-              "china": "State-driven deployment is systematic. Every sector AI can reach has been reached. The efficiency gains are real — and centrally directed.",
+              "china": "State-driven automation deployment is systematic and total. China led the rollout alongside the US. Every sector AI can reach has been reached. The efficiency gains are real — and centrally directed.",
               "eu": "The EU shaped the automation rollout through regulation — slower than the US, but with stronger worker protections and institutional guardrails. In {country}, the transition is managed on European terms.",
               "india": "AI leapfrogs some traditional infrastructure. Mobile-first AI services reach hundreds of millions. But adoption is deeply uneven between urban and rural, formal and informal economy.",
               "_default": {
@@ -3519,7 +3519,19 @@
       },
       "flavors": {
         "benefit_distribution": {
-          "equal": "The gains were broadly shared — which made the failure all the more insidious. Everyone benefited. Everyone was complicit. The wrong metrics felt like progress because they were everyone's progress.",
+          "equal": {
+            "_default": "The gains were broadly shared — which made the failure all the more insidious. Everyone benefited. Everyone was complicit. The wrong metrics felt like progress because they were everyone's progress.",
+            "_when": [
+              {
+                "if": {
+                  "alignment": [
+                    "robust"
+                  ]
+                },
+                "text": "The gains were broadly shared — which made the drift harder to see. The AI was aligned and working as intended. The problem wasn't the technology. It was that everyone delegated the same things, measured the same proxies, and slowly lost the capacity to do the work themselves. Comfortable, shared, and hollow."
+              }
+            ]
+          },
           "unequal": "The failure hit hardest for those who didn't own the systems. The wealthy saw dashboards that said everything was fine. Everyone else felt the divergence — but lacked the power to change course.",
           "extreme": "Those who held power captured nearly everything — then delegated the rest to AI that optimized for their metrics, not humanity's wellbeing. The failure wasn't just technological. It was political."
         },
@@ -3527,16 +3539,52 @@
           "open": "With AI everywhere, the failure was distributed too. No one was to blame because everyone contributed.",
           "lagging": "The lag gave some communities time to see what was happening — but not enough to change course.",
           "concentrated": "Those controlling AI saw the metrics they wanted. Everyone else saw the world they were losing.",
-          "monopoly": "One entity's optimization targets became humanity's fate. They meant well. It didn't matter."
+          "monopoly": {
+            "_default": "One entity's optimization targets became humanity's fate. They meant well. It didn't matter.",
+            "_when": [
+              {
+                "if": {
+                  "alignment": [
+                    "robust"
+                  ]
+                },
+                "text": "One entity controlled the infrastructure everything ran through. The AI was aligned — it did what it was asked. The problem was what it was asked to do: optimize for the metrics its controllers measured. They meant well. The metrics didn't."
+              }
+            ]
+          }
         },
         "takeoff": {
-          "fast": "The speed of the intelligence explosion meant the wrong metrics were locked in before anyone noticed they were wrong."
+          "fast": {
+            "_default": "The speed of the intelligence explosion meant the wrong metrics were locked in before anyone noticed they were wrong.",
+            "_when": [
+              {
+                "if": {
+                  "alignment": [
+                    "robust"
+                  ]
+                },
+                "text": "The speed of the intelligence explosion meant delegation happened faster than anyone could evaluate what was being delegated. The AI worked perfectly. The choices about what to delegate were made too fast to question."
+              }
+            ]
+          }
         },
         "governance": {
           "slowdown": "The slowdown was supposed to prevent exactly this. More time, more oversight — and yet the failure was subtler than anyone anticipated. The dashboards glowed green.",
           "partial": "The governance frameworks were sophisticated enough to look effective and shallow enough to miss what mattered.",
           "failed": "With no effective governance, no one watched the right indicators. The failure crept in unnoticed.",
-          "race": "Competitive pressure optimized for speed and measurable outputs — exactly the proxies that diverged from reality."
+          "race": {
+            "_default": "Competitive pressure optimized for speed and measurable outputs — exactly the proxies that diverged from reality.",
+            "_when": [
+              {
+                "if": {
+                  "alignment": [
+                    "robust"
+                  ]
+                },
+                "text": "Competitive pressure drove maximum delegation at maximum speed. The AI was aligned — it did what it was told. The race ensured it was told to optimize for what was measurable, not what mattered."
+              }
+            ]
+          }
         },
         "sovereignty": {
           "lab": "The delegation flowed through corporate platforms — the lab's apps, APIs, optimization targets. The wrong proxies were corporate proxies: engagement, revenue, efficiency.",
