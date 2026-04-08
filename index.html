@@ -1191,8 +1191,22 @@
         }
 
         // --- Analytics ---
+        const LOGGER_URL = 'https://singularity-logger.evan-a-shapiro.workers.dev';
         function track(event, params) {
             if (typeof gtag === 'function') gtag('event', event, params);
+        }
+        function logJourney(outcomeId, variantId) {
+            const sel = Engine.currentState(stack);
+            const path = {};
+            for (const [k, v] of Object.entries(sel)) {
+                if (k.startsWith('_')) continue;
+                path[k] = v;
+            }
+            fetch(LOGGER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ outcome_id: outcomeId, variant_id: variantId || null, path }),
+            }).catch(() => {});
         }
 
         function siteFooterHtml() {
@@ -1552,6 +1566,7 @@
 
                 const key = outcomeKey(t.id, resolved.variantKey);
                 track('outcome_reached', { outcome_id: t.id, variant_id: resolved.variantKey || null });
+                logJourney(t.id, resolved.variantKey);
                 markDiscovered(key);
 
                 const dateMap = buildTimelineDateMap();
