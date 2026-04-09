@@ -485,10 +485,8 @@ ${optionsText}${disabledText}`;
     let isAiGeo = 'no';
     if (geo === 'one' && bucketInfo && bucketInfo.plausibleLeader) isAiGeo = 'yes';
     else if (geo === 'two' && bucketInfo && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) isAiGeo = 'yes';
-    else if (!geo && bucketInfo && bucketInfo.plausibleLeader) {
-        const dist = eff.distribution || sel.distribution;
-        if (dist === 'monopoly' || dist === 'concentrated') isAiGeo = 'yes';
-    }
+    else if (geo === 'several' && bucketInfo && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) isAiGeo = 'yes';
+    else if (!geo && bucketInfo && bucketInfo.plausibleLeader) isAiGeo = 'yes';
 
     const personalVignettes = (persona.country && persona.profession)
         ? resolvePersonalVignettes(sel, {

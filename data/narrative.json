@@ -1300,7 +1300,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "Alignment is solved — the AI does what it's told. The question now is what it's being told to do, and by whom.",
+          "_default": "Alignment is solved — the AI does what it's told, reliably, even under pressure. The safety problem that dominated the last decade of AI research has a working answer.",
           "_when": [
             {
               "if": {
@@ -1308,7 +1308,7 @@
                   "software"
                 ]
               },
-              "text": "Alignment is solved. If you work in tech, you know what that means technically. What it means for the world depends on who's giving the instructions."
+              "text": "Alignment is solved. The models behave as intended — not just in testing, but in deployment, at scale, under adversarial conditions. The safety layer holds."
             }
           ]
         }
@@ -4291,7 +4291,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The technology works as designed. Whether it serves you depends on who's directing it and what they chose to optimize for."
+          "_default": "The technology works as designed — and what it was designed to do is working. Your daily life is measurably better. Not a utopian abstraction; the gains are specific, tangible, and reaching you."
         }
       },
       "drift": {

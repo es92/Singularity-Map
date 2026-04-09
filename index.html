@@ -878,6 +878,16 @@
             return false;
         }
 
+        function autoComputeAiGeo(worldState, bucket) {
+            if (!personalData) return 'no';
+            const bucketInfo = personalData.countryBuckets[bucket];
+            if (!bucketInfo) return 'no';
+            const geo = worldState.geo_spread;
+            if (geo === 'several' && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) return 'yes';
+            if (!geo && bucketInfo.plausibleLeader) return 'yes';
+            return 'no';
+        }
+
         function resolvePersonalVignetteText(spec, ctx) {
             if (!spec) return null;
             if (typeof spec === 'string') return spec;
@@ -900,7 +910,7 @@
             const ctx = Object.assign({}, sel, {
                 profession: answers.profession,
                 country_bucket: bucket,
-                is_ai_geo: answers.is_ai_geo || 'no',
+                is_ai_geo: answers.is_ai_geo || autoComputeAiGeo(sel, bucket),
             });
 
             const profLabel = personalData && personalData.professions.find(p => p.id === answers.profession);
