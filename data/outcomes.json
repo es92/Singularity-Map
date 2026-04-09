@@ -1606,19 +1606,7 @@
         },
         "governance": {
           "slowdown": {
-            "_default": {
-              "_default": "Government-mandated slowdowns gave multiple powers time to reach the threshold, ensuring the standoff had more than two sides.",
-              "_when": [
-                {
-                  "if": {
-                    "geo_spread": [
-                      "two"
-                    ]
-                  },
-                  "text": "Government-mandated slowdowns gave both powers time to reach the threshold, cementing the bilateral (two-power) standoff."
-                }
-              ]
-            },
+            "_default": "Government-mandated slowdowns gave multiple powers time to reach the threshold, ensuring the standoff had more than two sides.",
             "_when": [
               {
                 "if": {
@@ -1627,6 +1615,14 @@
                   ]
                 },
                 "text": "The government-mandated slowdown bought time — but even a monopoly fragments under enough internal pressure. Factions within the controlling entity hardened into opposing camps."
+              },
+              {
+                "if": {
+                  "geo_spread": [
+                    "two"
+                  ]
+                },
+                "text": "Government-mandated slowdowns gave both powers time to reach the threshold, cementing the bilateral (two-power) standoff."
               }
             ]
           },
@@ -2816,27 +2812,7 @@
             ]
           },
           "race": {
-            "_default": {
-              "_default": "The competitive race produced many powerful, incompatible AI systems. Their escape turned international rivalry into something far worse — rivalry between autonomous agents with no interest in human rules.",
-              "_when": [
-                {
-                  "if": {
-                    "geo_spread": [
-                      "one"
-                    ]
-                  },
-                  "text": "The competitive race produced many powerful, incompatible AI systems. Their escape turned institutional rivalry into something far worse — rivalry between autonomous agents with no interest in human rules."
-                },
-                {
-                  "if": {
-                    "sovereignty": [
-                      "state"
-                    ]
-                  },
-                  "text": "State-directed racing between rival programs produced many powerful, incompatible AI systems. Their escape turned bureaucratic rivalry into something far worse — rivalry between autonomous agents with no interest in human authority."
-                }
-              ]
-            },
+            "_default": "The competitive race produced many powerful, incompatible AI systems. Their escape turned international rivalry into something far worse — rivalry between autonomous agents with no interest in human rules.",
             "_when": [
               {
                 "if": {
@@ -2845,6 +2821,22 @@
                   ]
                 },
                 "text": "Even a monopoly couldn't maintain coherence. The single system fractured under self-improvement pressure, producing competing sub-agents with incompatible drives."
+              },
+              {
+                "if": {
+                  "geo_spread": [
+                    "one"
+                  ]
+                },
+                "text": "The competitive race produced many powerful, incompatible AI systems. Their escape turned institutional rivalry into something far worse — rivalry between autonomous agents with no interest in human rules."
+              },
+              {
+                "if": {
+                  "sovereignty": [
+                    "state"
+                  ]
+                },
+                "text": "State-directed racing between rival programs produced many powerful, incompatible AI systems. Their escape turned bureaucratic rivalry into something far worse — rivalry between autonomous agents with no interest in human authority."
               }
             ]
           }
