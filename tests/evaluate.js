@@ -313,8 +313,26 @@ function resolveTemplate(templateId, state) {
 
 // ── DAG walking ──
 
+function getNextNode(sel) {
+    for (const node of NODES) {
+        if (node.terminal || node.derived) continue;
+        if (!Engine.isNodeVisible(sel, node)) continue;
+        if (Engine.isNodeLocked(sel, node) !== null) continue;
+        if (sel[node.id]) continue;
+        return node;
+    }
+    for (const node of NODES) {
+        if (!node.terminal || node.derived) continue;
+        if (!Engine.isNodeVisible(sel, node)) continue;
+        if (Engine.isNodeLocked(sel, node) !== null) continue;
+        if (sel[node.id]) continue;
+        return node;
+    }
+    return null;
+}
+
 async function simulatePath(persona, mode, { deterministic = false } = {}) {
-    const sel = { _locked: {} };
+    let stack = Engine.createStack();
     const log = [];
     let apiCalls = 0;
     const pathContext = [];
@@ -322,8 +340,10 @@ async function simulatePath(persona, mode, { deterministic = false } = {}) {
     const loggedNodes = new Set();
 
     for (let pass = 0; pass < 500; pass++) {
-        const prevLocked = sel._locked ? { ...sel._locked } : {};
-        Engine.cleanSelection(sel);
+        const prevSel = Engine.currentState(stack);
+        const prevLocked = prevSel._locked ? { ...prevSel._locked } : {};
+
+        const sel = Engine.currentState(stack);
         let acted = false;
 
         for (const node of NODES) {
@@ -355,34 +375,38 @@ async function simulatePath(persona, mode, { deterministic = false } = {}) {
             acted = true;
         }
 
-        for (const node of NODES) {
-            if (node.derived) continue;
-            if (!Engine.isNodeVisible(sel, node)) continue;
-            if (sel[node.id]) continue;
+        const next = getNextNode(sel);
+        if (!next) {
+            if (!acted) break;
+            continue;
+        }
 
-            const enabledEdges = node.edges.filter(e => !Engine.isEdgeDisabled(sel, node, e));
-            if (enabledEdges.length === 0) continue;
+        const enabledEdges = next.edges.filter(e => !Engine.isEdgeDisabled(sel, next, e));
+        if (enabledEdges.length === 0) {
+            if (!acted) break;
+            continue;
+        }
 
-            const optionsText = enabledEdges.map(e => {
-                const label = getAnswerLabel(node.id, e.id, sel);
-                const desc = getAnswerDesc(node.id, e.id, sel);
-                return `- ${e.id}: "${label}"${desc ? ' — ' + desc : ''}`;
+        const optionsText = enabledEdges.map(e => {
+            const label = getAnswerLabel(next.id, e.id, sel);
+            const desc = getAnswerDesc(next.id, e.id, sel);
+            return `- ${e.id}: "${label}"${desc ? ' — ' + desc : ''}`;
+        }).join('\n');
+
+        const disabledEdges = next.edges.filter(e => Engine.isEdgeDisabled(sel, next, e));
+        let disabledText = '';
+        if (disabledEdges.length > 0) {
+            const lines = disabledEdges.map(e => {
+                const label = getAnswerLabel(next.id, e.id, sel);
+                const reason = Engine.getEdgeDisabledReason(sel, next, e);
+                return reason
+                    ? `- ✗ "${label}" — unavailable: ${reason}`
+                    : `- ✗ "${label}" — unavailable`;
             }).join('\n');
+            disabledText = `\n\nUnavailable options (ruled out by earlier choices):\n${lines}`;
+        }
 
-            const disabledEdges = node.edges.filter(e => Engine.isEdgeDisabled(sel, node, e));
-            let disabledText = '';
-            if (disabledEdges.length > 0) {
-                const lines = disabledEdges.map(e => {
-                    const label = getAnswerLabel(node.id, e.id, sel);
-                    const reason = Engine.getEdgeDisabledReason(sel, node, e);
-                    return reason
-                        ? `- ✗ "${label}" — unavailable: ${reason}`
-                        : `- ✗ "${label}" — unavailable`;
-                }).join('\n');
-                disabledText = `\n\nUnavailable options (ruled out by earlier choices):\n${lines}`;
-            }
-
-            const system = `You are roleplaying as ${persona.name}. ${persona.bio}
+        const system = `You are roleplaying as ${persona.name}. ${persona.bio}
 
 You are navigating a scenario about the future of AI. At each step, you will be given a question with available options. Some options may be unavailable because of earlier choices — these are shown for context but cannot be selected.
 
@@ -396,61 +420,60 @@ ${MODE_INSTRUCTIONS[mode]}
 
 ${MODE_RESPONSE_FORMATS[mode]}`;
 
-            const wantFraming = mode === 'want'
-                ? 'Imagine your ideal scenario — the best realistic version of events from this persona\'s perspective.\n\n'
-                : '';
-            const user = `${pathContext.length > 0 ? 'Choices made so far:\n' + pathContext.join('\n') + '\n\n---\n\n' : ''}${wantFraming}**${getQuestionText(node.id)}**
+        const wantFraming = mode === 'want'
+            ? 'Imagine your ideal scenario — the best realistic version of events from this persona\'s perspective.\n\n'
+            : '';
+        const user = `${pathContext.length > 0 ? 'Choices made so far:\n' + pathContext.join('\n') + '\n\n---\n\n' : ''}${wantFraming}**${getQuestionText(next.id)}**
 
-${getQuestionContext(node.id, sel)}
+${getQuestionContext(next.id, sel)}
 
 Available options:
 ${optionsText}${disabledText}`;
 
-            const edgeSchema = {
-                type: 'object',
-                properties: Object.fromEntries(enabledEdges.map(e => [e.id, { type: 'number' }])),
-                required: enabledEdges.map(e => e.id),
-                additionalProperties: false,
-            };
+        const edgeSchema = {
+            type: 'object',
+            properties: Object.fromEntries(enabledEdges.map(e => [e.id, { type: 'number' }])),
+            required: enabledEdges.map(e => e.id),
+            additionalProperties: false,
+        };
 
-            let weights;
-            try {
-                const raw = await callClaude(EVAL_MODEL, system, user, 256, { jsonSchema: edgeSchema });
-                apiCalls++;
-                weights = parseJsonResponse(raw);
-            } catch (err) {
-                console.error(`  API error at ${node.id}: ${err.message}, falling back to uniform`);
-                weights = {};
-                for (const e of enabledEdges) weights[e.id] = 1.0 / enabledEdges.length;
-            }
-
-            const validProbs = {};
-            for (const e of enabledEdges) {
-                validProbs[e.id] = Math.max(weights[e.id] || 0, 0.01);
-            }
-            if (mode === 'want') {
-                for (const k of Object.keys(validProbs)) validProbs[k] = Math.pow(validProbs[k], 3);
-            }
-            const total = Object.values(validProbs).reduce((s, p) => s + p, 0);
-            for (const k of Object.keys(validProbs)) validProbs[k] /= total;
-
-            const chosen = deterministic
-                ? Object.entries(validProbs).reduce((a, b) => b[1] > a[1] ? b : a)[0]
-                : sampleFromDistribution(validProbs);
-            sel[node.id] = chosen;
-            log.push({
-                id: node.id, label: node.label, val: chosen,
-                prob: validProbs[chosen], probs: validProbs, source: 'llm'
-            });
-            pathContext.push(`- ${getQuestionText(node.id)}: ${getAnswerLabel(node.id, chosen, sel)}`);
-            acted = true;
-            break;
+        let weights;
+        try {
+            const raw = await callClaude(EVAL_MODEL, system, user, 256, { jsonSchema: edgeSchema });
+            apiCalls++;
+            weights = parseJsonResponse(raw);
+        } catch (err) {
+            console.error(`  API error at ${next.id}: ${err.message}, falling back to uniform`);
+            weights = {};
+            for (const e of enabledEdges) weights[e.id] = 1.0 / enabledEdges.length;
         }
+
+        const validProbs = {};
+        for (const e of enabledEdges) {
+            validProbs[e.id] = Math.max(weights[e.id] || 0, 0.01);
+        }
+        if (mode === 'want') {
+            for (const k of Object.keys(validProbs)) validProbs[k] = Math.pow(validProbs[k], 3);
+        }
+        const total = Object.values(validProbs).reduce((s, p) => s + p, 0);
+        for (const k of Object.keys(validProbs)) validProbs[k] /= total;
+
+        const chosen = deterministic
+            ? Object.entries(validProbs).reduce((a, b) => b[1] > a[1] ? b : a)[0]
+            : sampleFromDistribution(validProbs);
+        stack = Engine.push(stack, next.id, chosen);
+        const newSel = Engine.currentState(stack);
+        log.push({
+            id: next.id, label: next.label, val: chosen,
+            prob: validProbs[chosen], probs: validProbs, source: 'llm'
+        });
+        pathContext.push(`- ${getQuestionText(next.id)}: ${getAnswerLabel(next.id, chosen, newSel)}`);
+        acted = true;
+
         if (!acted) break;
     }
 
-    Engine.cleanSelection(sel);
-
+    const sel = Engine.currentState(stack);
     const eff = Engine.resolvedState(sel);
     const matched = templatesList.filter(t => Engine.templateMatches(t, eff));
     const template = matched.length > 0 ? matched[0] : null;

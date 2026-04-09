@@ -321,8 +321,17 @@ function selKey(sel) {
 }
 
 function getNextNode(sel) {
+    // First pass: non-terminal questions (matches index.html behavior)
     for (const node of NODES) {
         if (node.terminal || node.derived) continue;
+        if (!isNodeVisible(sel, node)) continue;
+        if (isNodeLocked(sel, node) !== null) continue;
+        if (sel[node.id]) continue;
+        return node;
+    }
+    // Second pass: terminal questions (shown alongside outcome in index.html)
+    for (const node of NODES) {
+        if (!node.terminal || node.derived) continue;
         if (!isNodeVisible(sel, node)) continue;
         if (isNodeLocked(sel, node) !== null) continue;
         if (sel[node.id]) continue;
