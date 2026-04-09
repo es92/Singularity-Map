@@ -962,8 +962,12 @@ If no contradictions, return an empty array: []
 
 Return ONLY the JSON array.`;
 
+    const schema = {
+        type: 'array',
+        items: { type: 'object', properties: { case: { type: 'integer' }, heading: { type: 'string' }, issue: { type: 'string' } }, required: ['case', 'heading', 'issue'], additionalProperties: false }
+    };
     try {
-        const raw = await callClaude(model, system, user, 4096);
+        const raw = await callClaude(model, system, user, 4096, { jsonSchema: schema });
         const parsed = parseJsonResponse(raw);
         return Array.isArray(parsed) ? parsed : [];
     } catch (err) {
@@ -1021,8 +1025,12 @@ If no issues, return an empty array: []
 
 Return ONLY the JSON array.`;
 
+    const schema = {
+        type: 'array',
+        items: { type: 'object', properties: { case: { type: 'integer' }, heading: { type: 'string' }, issue: { type: 'string' } }, required: ['case', 'heading', 'issue'], additionalProperties: false }
+    };
     try {
-        const raw = await callClaude(model, system, user, 4096);
+        const raw = await callClaude(model, system, user, 4096, { jsonSchema: schema });
         const parsed = parseJsonResponse(raw);
         return Array.isArray(parsed) ? parsed : [];
     } catch (err) {
@@ -1074,8 +1082,12 @@ Be specific and quote the text. Only flag things that would bother a thoughtful 
 
     const user = `${contextText}\n\n---\n\nReturn a JSON array of issues. Each: { "type": "<FABRICATED|OVERWROUGHT|REPETITIVE|COULD_CUSTOMIZE>", "heading": "<vignette heading>", "quote": "<the specific text>", "issue": "<what's wrong>" }\n\nIf the vignettes read well, return an empty array: []\n\nReturn ONLY the JSON array.`;
 
+    const schema = {
+        type: 'array',
+        items: { type: 'object', properties: { type: { type: 'string' }, heading: { type: 'string' }, quote: { type: 'string' }, issue: { type: 'string' } }, required: ['type', 'heading', 'quote', 'issue'], additionalProperties: false }
+    };
     try {
-        const raw = await callClaude(model, system, user, 4096);
+        const raw = await callClaude(model, system, user, 4096, { jsonSchema: schema });
         return parseJsonResponse(raw);
     } catch (err) {
         console.error(`  Vignette audit API error for ${templateId}/${persona.profession}: ${err.message}`);
