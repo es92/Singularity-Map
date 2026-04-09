@@ -428,11 +428,18 @@ ${optionsText}${disabledText}`;
     const template = matched.length > 0 ? matched[0] : null;
     const resolved = template ? resolveTemplate(template.id, eff) : null;
 
+    const bucket = getCountryBucket(persona.country, personalData);
+    const bucketInfo = personalData.countryBuckets[bucket];
+    const geo = eff.geo_spread || sel.geo_spread;
+    let isAiGeo = 'no';
+    if (geo === 'one' && bucketInfo && bucketInfo.plausibleLeader) isAiGeo = 'yes';
+    if (geo === 'two' && bucketInfo && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) isAiGeo = 'yes';
+
     const personalVignettes = (persona.country && persona.profession)
         ? resolvePersonalVignettes(sel, {
             profession: persona.profession,
             country: persona.country,
-            is_ai_geo: persona.is_ai_geo || 'no',
+            is_ai_geo: isAiGeo,
           }, personalData, narrative, NODES)
         : [];
 
