@@ -210,7 +210,7 @@
       "flavors": {
         "distribution": {
           "open": "AI capability was widely distributed, but concentration wasn't about access — it was about leverage. Everyone had the tools. Those with capital, data, and scale extracted the most value.",
-          "lagging": "Frontier (most advanced) labs set the pace and captured the rents. Open-source alternatives followed eventually, but first-mover advantage translated into lasting wealth concentration.",
+          "lagging": "Frontier labs set the pace and captured the rents. Alternatives followed eventually, but first-mover advantage translated into lasting wealth concentration.",
           "concentrated": {
             "_default": "A handful of organizations sat at the center of the transformation. Their investors, employees, and partners were the primary beneficiaries. Everyone else benefited secondhand.",
             "_when": [
@@ -549,7 +549,7 @@
       "flavors": {
         "distribution": {
           "open": "Even with widely available AI, power concentrated. Open access to tools didn't translate to open outcomes — those with capital and institutional power extracted the most from the same technology.",
-          "lagging": "Frontier (most advanced) labs held the decisive advantage long enough to entrench. Open-source narrowed the capability gap; it never closed the power gap.",
+          "lagging": "Frontier labs held the decisive advantage long enough to entrench. Competing alternatives narrowed the capability gap; they never closed the power gap.",
           "concentrated": "Concentration was the plan. A few entities built the most powerful AI, set the terms of access, and shaped the world that emerged. The hierarchy was designed, not accidental.",
           "monopoly": "One entity, one technology, one set of terms. The monopoly didn't need to be oppressive — it just needed to be the only option. And it was."
         },
@@ -1334,7 +1334,7 @@
       "flavors": {
         "distribution": {
           "open": "Even with AI widely available, those who moved first leveraged their head start into lasting dominance.",
-          "lagging": "Open source nipped at the edges, but the gap was enough for those in power to entrench before alternatives caught up.",
+          "lagging": "Alternatives nipped at the edges, but the gap was enough for those in power to entrench before competitors caught up.",
           "concentrated": "With AI in few hands, capture was almost inevitable. Those with the tools wrote the rules.",
           "monopoly": "Monopoly made capture effortless. One entity, one technology, one set of rules — theirs."
         },
@@ -1626,9 +1626,45 @@
               }
             ]
           },
-          "partial": "Attempts at coordination produced half-measures. Each power followed the rules it liked and ignored the rest.",
-          "failed": "Failed regulation meant no coordinated response. Each power developed independently; the standoff emerged from mutual suspicion rather than managed competition.",
-          "race": "The national security framing guaranteed the standoff. Governments didn't just allow the arms race — they drove it."
+          "partial": {
+            "_default": "Attempts at coordination produced half-measures. Each power followed the rules it liked and ignored the rest.",
+            "_when": [
+              {
+                "if": {
+                  "distribution": [
+                    "monopoly"
+                  ]
+                },
+                "text": "Attempts at coordination produced half-measures. The monopoly followed the rules that suited it and ignored the rest — and internal factions did the same."
+              }
+            ]
+          },
+          "failed": {
+            "_default": "Failed regulation meant no coordinated response. Each power developed independently; the standoff emerged from mutual suspicion rather than managed competition.",
+            "_when": [
+              {
+                "if": {
+                  "distribution": [
+                    "monopoly"
+                  ]
+                },
+                "text": "Failed regulation meant no coordinated response. The monopoly fractured along internal fault lines; the standoff emerged from competing factions within a single entity, not between nations."
+              }
+            ]
+          },
+          "race": {
+            "_default": "The national security framing guaranteed the standoff. Governments didn't just allow the arms race — they drove it.",
+            "_when": [
+              {
+                "if": {
+                  "distribution": [
+                    "monopoly"
+                  ]
+                },
+                "text": "The national security framing guaranteed the standoff. Even within a monopoly, competing factions used the security rationale to justify their own bids for control."
+              }
+            ]
+          }
         },
         "sovereignty": {
           "lab": "The standoff was between corporations as much as nations. The labs held the real leverage — governments depended on them for strategic capability. A cold war where the arms manufacturers were the real powers.",
@@ -2553,15 +2589,27 @@
         },
         "response_method": {
           "competitive_paralysis": {
-            "_default": "Everyone saw the threat. No one acted first. Each power calculated that acting alone meant bearing the cost while rivals benefited. The prisoner's dilemma at civilizational scale.",
+            "_default": {
+              "_default": "Everyone saw the threat. No one acted first. Each power calculated that acting alone meant bearing the cost while rivals benefited. The prisoner's dilemma at civilizational scale.",
+              "_when": [
+                {
+                  "if": {
+                    "geo_spread": [
+                      "one"
+                    ]
+                  },
+                  "text": "Everyone saw the threat. No faction acted first. Each calculated that acting alone meant bearing the cost while others benefited. The prisoner's dilemma at institutional scale."
+                }
+              ]
+            },
             "_when": [
               {
                 "if": {
-                  "geo_spread": [
-                    "one"
+                  "distribution": [
+                    "monopoly"
                   ]
                 },
-                "text": "Everyone saw the threat. No faction acted first. Each calculated that acting alone meant bearing the cost while others benefited. The prisoner's dilemma at institutional scale."
+                "text": "Everyone saw the threat. No one acted. The monopoly that created the problem calculated that containing its own creation meant admitting liability. External actors calculated that intervening meant confrontation with the monopoly. Paralysis from every direction."
               }
             ]
           },
