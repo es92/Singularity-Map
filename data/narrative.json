@@ -152,6 +152,14 @@
                 ]
               },
               "text": "The AI plateau hasn't changed your day-to-day work much. But the cost of living is lower, and there's more demand for people who work with their hands. The gains are modest but you feel them."
+            },
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "AI-assisted diagnostics are reducing costs and improving access. The gains are reaching patients — shorter waits, cheaper tests, better triage. Your workload is shifting, not shrinking."
             }
           ]
         }
@@ -286,6 +294,22 @@
                 ]
               },
               "text": "The offices that used to manage your contracts are running on AI now. Your actual work is the same — but the people who used to do the paperwork aren't there anymore."
+            },
+            {
+              "if": {
+                "profession": [
+                  "education"
+                ]
+              },
+              "text": "AI handles curriculum design, grading, and tutoring within its capability ceiling. The tasks it can do, it does faster than you. Your role shifts to the work above the ceiling — the parts that require a person in the room."
+            },
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "AI handles diagnostics, clinical documentation, and treatment planning within its capability ceiling. The knowledge tasks it can do, it does faster and more consistently. Your role shifts to complex judgment and patient care."
             }
           ]
         }
@@ -417,7 +441,7 @@
           "durationMax": 300
         },
         "personalVignette": {
-          "_default": "Physical automation trails the digital transformation. Knowledge work restructured first; the physical world follows slowly, constrained by hardware and the complexity of the real world.",
+          "_default": "Robots and autonomous systems are coming, but slowly. The timeline for physical automation is years, maybe decades. The world around you is changing at two speeds — digital work transformed, physical work mostly untouched.",
           "_when": [
             {
               "if": {
