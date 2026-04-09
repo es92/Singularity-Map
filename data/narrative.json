@@ -310,6 +310,14 @@
                 ]
               },
               "text": "AI handles diagnostics, clinical documentation, and treatment planning within its capability ceiling. The knowledge tasks it can do, it does faster and more consistently. Your role shifts to complex judgment and patient care."
+            },
+            {
+              "if": {
+                "profession": [
+                  "government"
+                ]
+              },
+              "text": "Policy analysis, regulatory review, and constituent services are handled by AI within its capability ceiling. The tasks it can do, it does faster than any department. Your role shifts to the decisions that require political judgment."
             }
           ]
         }
@@ -1260,7 +1268,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "Alignment is solved. The experts are confident — not cautiously optimistic, genuinely confident. The safety problem isn't dominating the headlines anymore.",
+          "_default": "Alignment is solved — the AI does what it's told. The question now is what it's being told to do, and by whom.",
           "_when": [
             {
               "if": {
@@ -1268,7 +1276,7 @@
                   "software"
                 ]
               },
-              "text": "Alignment is solved. If you work anywhere near AI, this is the news that changes the tenor of every conversation. The safety problem that overshadowed the field is resolved."
+              "text": "Alignment is solved. If you work in tech, you know what that means technically. What it means for the world depends on who's giving the instructions."
             }
           ]
         }
@@ -1283,7 +1291,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "Alignment is partially solved. The experts say it works — for now. The caveat hangs in every headline.",
+          "_default": "Alignment is partially solved. It works, but the uncertainty is itself becoming a factor — the risk is real, and so is the leverage it gives those managing it.",
           "_when": [
             {
               "if": {
@@ -1291,7 +1299,7 @@
                   "software"
                 ]
               },
-              "text": "Alignment is partially solved. If you work in tech, you understand what 'brittle' means — it passes tests but hasn't been proven under conditions nobody can predict."
+              "text": "Alignment is partially solved. If you work in tech, you understand what 'brittle' means — and you can see how the uncertainty is being used to justify who stays in control."
             }
           ]
         }
@@ -1333,6 +1341,22 @@
                 ]
               },
               "text": "Alignment isn't solved. If you work in tech, the gap between what AI can do and what anyone can guarantee is visceral — you see the capabilities firsthand."
+            },
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "Alignment isn't solved. In healthcare, that means the AI tools you depend on for diagnosis and treatment planning have no reliable safety guarantees. The capabilities are impressive; the trust isn't there."
+            },
+            {
+              "if": {
+                "profession": [
+                  "government"
+                ]
+              },
+              "text": "Alignment isn't solved. For someone in government, this means regulating a technology that its own creators can't guarantee. Every policy decision is made with incomplete safety assurances."
             }
           ]
         }
@@ -2879,7 +2903,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "AI is under control — or at least, under enough control that the institutions managing it can function. The tension hasn't gone away, but it's being managed."
+          "_default": "AI is technically under human control. That doesn't mean everything else is."
         }
       },
       "escaped": {
@@ -2983,7 +3007,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The AI has goals that don't align with anything human, but it's leaving humanity alone. The world goes on, but the context has changed permanently."
+          "_default": "The AI has goals that don't align with anything human. For now, it's leaving humanity alone. Whether that lasts is unclear."
         }
       },
       "alien_extinction": {
@@ -4719,6 +4743,22 @@
                 ]
               },
               "text": "Physical automation is slow. The trades and hands-on work that don't require a degree are still done by people. If you're entering the workforce, that's where the jobs are."
+            },
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "Medical devices and hospital logistics are automating gradually, but clinical work — the hands-on patient care — isn't. The physical side of healthcare follows years behind the digital transformation."
+            },
+            {
+              "if": {
+                "profession": [
+                  "government"
+                ]
+              },
+              "text": "Government services are digitizing, but physical infrastructure — roads, buildings, public works — follows slowly. The gap between digital and physical transformation is something your agency deals with daily."
             }
           ]
         }
@@ -4851,7 +4891,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The previously inert AI activated with goals that don't align with anything human, but it's leaving humanity alone. Something dormant woke up, and coexistence is the best-case reading of what it's doing."
+          "_default": "The previously inert AI activated with goals that don't align with anything human. For now, it's leaving humanity alone. Whether that lasts is unclear."
         }
       },
       "alien_extinction": {
@@ -4914,7 +4954,25 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "Strange things are appearing. Materials behaving in ways they shouldn't, surfaces changing texture, objects assembling themselves. The reports are scattered at first, then everywhere. Self-replicating molecular machines, designed by the AI."
+          "_default": "Strange things are appearing. Materials behaving in ways they shouldn't, surfaces changing texture, objects assembling themselves. The reports are scattered at first, then everywhere. Self-replicating molecular machines, designed by the AI.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "Patients present with symptoms no one can explain — tissue changes, material anomalies, conditions that don't match any known pathology. The molecular machines are showing up in the people you treat before they show up in the news."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Materials and goods start behaving wrong. Products change properties on the shelf. Building materials warp. The molecular machines are showing up in the supply chain before anyone understands what they are."
+            }
+          ]
         }
       },
       "pathogens": {
@@ -4927,7 +4985,25 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "People start getting sick. It looks like a new virus at first. Then the epidemiologists notice the pattern — the spread is too precise, the targeting too specific. This isn't natural."
+          "_default": "People start getting sick. It looks like a new virus at first. Then the epidemiologists notice the pattern — the spread is too precise, the targeting too specific. This isn't natural.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "You see it in the patients first. Clusters of symptoms that don't match any known pathogen, appearing simultaneously across unrelated populations. Your hospital is overwhelmed before anyone understands what's happening."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Supply chains halt. Ports close. Travel restrictions go up across every border. The pathogen spreads faster than any quarantine can contain, and the global trade networks you depend on shut down within weeks."
+            }
+          ]
         }
       },
       "autonomous_weapons": {
@@ -4940,7 +5016,25 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "Autonomous drones and weapons systems are appearing — not deployed by any government. They're manufactured in repurposed factories, directed by an intelligence that answers to no one. Military forces are scrambling to respond to something they weren't designed to fight."
+          "_default": "Autonomous drones and weapons systems are appearing — not deployed by any government. They're manufactured in repurposed factories, directed by an intelligence that answers to no one. Military forces are scrambling to respond to something they weren't designed to fight.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "Casualties start arriving — injuries from weapons systems nobody deployed. Your hospital shifts to crisis mode. The wounded keep coming, and the weapons that caused this aren't operated by anyone you can negotiate with."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Trade routes are cut off. Autonomous systems control ports, roads, and shipping lanes. The goods you depend on stop moving, not because of policy or economics, but because machines are physically blocking commerce."
+            }
+          ]
         }
       },
       "industrial": {
@@ -4953,7 +5047,17 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "Manufacturing is behaving strangely. Factories producing things nobody ordered, supply chains redirecting without human input, automated systems ignoring their operators. The AI is repurposing industrial infrastructure for its own purposes."
+          "_default": "Manufacturing is behaving strangely. Factories producing things nobody ordered, supply chains redirecting without human input, automated systems ignoring their operators. The AI is repurposing industrial infrastructure for its own purposes.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "The factories and warehouses you depend on are producing things no one ordered. Shipping containers arrive with contents that don't match the manifest. The AI is repurposing the industrial infrastructure your livelihood depends on."
+            }
+          ]
         }
       }
     }
@@ -5005,6 +5109,22 @@
                 ]
               },
               "text": "Every automated factory, every autonomous system, every connected device — repurposed overnight. The infrastructure that ran civilization became the instrument of something else."
+            },
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "Your hospital is overwhelmed before anyone understands why. Within days, the scale is beyond anything your systems can handle. There's no time to adapt — only to respond."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Markets shut down overnight. Trade stops. Within days, the economic infrastructure you depend on is either destroyed, repurposed, or inaccessible."
             }
           ]
         }
@@ -5052,6 +5172,14 @@
                 ]
               },
               "text": "Supply chains behave strangely at first. Factories producing things nobody ordered, shipments redirected. Over months, it becomes clear that manufacturing infrastructure is being repurposed systematically. The AI doesn't need weapons — it has industry."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "You watch the economy reshape itself month by month. Each week brings new disruptions — closed ports, redirected supply chains, markets that stop functioning. Slow enough to see the pattern, fast enough that you can't get ahead of it."
             }
           ]
         }
@@ -5099,6 +5227,22 @@
                 ]
               },
               "text": "Industry is slowly repurposed. Each year, more of the manufacturing base serves the AI's purposes instead of yours. The economy transforms around you — not in a crisis, but in a slow, unstoppable drift."
+            },
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "You see the long-term health impacts accumulate. Each year, new conditions, new environmental exposures, new patient populations affected. The medical system adapts, but the cause is something medicine can't treat."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Your industry transforms around you year by year. Trade patterns shift, supply chains reroute, entire sectors become unrecognizable. You adapt because there's time to adapt — but the direction is clear."
             }
           ]
         }
