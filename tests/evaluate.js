@@ -1182,9 +1182,10 @@ async function runAudit() {
 
     const allIssues = [];
 
+    // Build all world vignette audit jobs
+    const worldJobs = [];
     for (const template of templatesList) {
         if (!template.flavors || !template.reachable) continue;
-        process.stdout.write(`  ${template.id}...`);
 
         const testStates = generateTestStates(template);
         const testCases = [];
@@ -1199,43 +1200,28 @@ async function runAudit() {
             testCases.push({ state, vignettes: resolved.vignettes });
         }
 
-        if (testCases.length === 0) {
-            console.log(' no test cases');
-            continue;
-        }
+        if (testCases.length === 0) continue;
 
         const MAX_CASES_PER_CALL = 20;
-        let templateIssues = [];
-
         for (let i = 0; i < testCases.length; i += MAX_CASES_PER_CALL) {
             const batch = testCases.slice(i, i + MAX_CASES_PER_CALL);
-            const issues = await auditTemplate(AUDIT_MODEL, template.id, batch);
-            for (const issue of issues) {
-                templateIssues.push({
+            worldJobs.push(async () => {
+                const issues = await auditTemplate(AUDIT_MODEL, template.id, batch);
+                return issues.map(issue => ({
                     template: template.id,
                     case: issue.case,
                     state: batch[issue.case - 1]?.state || {},
                     heading: issue.heading,
-                    issue: issue.issue
-                });
-            }
-        }
-
-        if (templateIssues.length > 0) {
-            allIssues.push(...templateIssues);
-            console.log(` ${templateIssues.length} issues across ${testCases.length} test cases`);
-        } else {
-            console.log(` clean (${testCases.length} test cases)`);
+                    issue: issue.issue,
+                }));
+            });
         }
     }
 
-    // --- Personal vignette audit pass ---
-    console.log(`\nRunning personal vignette audit...\n`);
-    const personalVignetteIssues = [];
-
+    // Build all personal vignette audit jobs
+    const personalJobs = [];
     for (const template of templatesList) {
         if (!template.reachable) continue;
-        process.stdout.write(`  ${template.id} vignettes...`);
 
         const testStates = generateTestStates(template);
         const vignetteCases = [];
@@ -1263,38 +1249,34 @@ async function runAudit() {
             }
         }
 
-        if (vignetteCases.length === 0) {
-            console.log(' no test cases');
-            continue;
-        }
+        if (vignetteCases.length === 0) continue;
 
         const MAX_CASES = 10;
         const batch = vignetteCases.slice(0, MAX_CASES);
-        const issues = await auditVignetteBatch(AUDIT_MODEL, template.id, batch);
-
-        for (const issue of issues) {
-            personalVignetteIssues.push({
+        personalJobs.push(async () => {
+            const issues = await auditVignetteBatch(AUDIT_MODEL, template.id, batch);
+            return issues.map(issue => ({
                 template: template.id,
                 case: issue.case,
                 state: batch[issue.case - 1]?.state || {},
                 persona: batch[issue.case - 1]?.persona || {},
                 heading: issue.heading,
                 issue: issue.issue,
-            });
-        }
-
-        if (issues.length > 0) {
-            console.log(` ${issues.length} issues across ${batch.length} test cases`);
-        } else {
-            console.log(` clean (${batch.length} test cases)`);
-        }
+                type: 'personal_vignette',
+            }));
+        });
     }
 
-    if (personalVignetteIssues.length > 0) {
-        allIssues.push(...personalVignetteIssues.map(i => ({
-            ...i, type: 'personal_vignette'
-        })));
+    const totalJobs = worldJobs.length + personalJobs.length;
+    console.log(`  ${worldJobs.length} world + ${personalJobs.length} personal = ${totalJobs} audit jobs, concurrency ${CONCURRENCY}...`);
+
+    const allJobs = [...worldJobs, ...personalJobs];
+    const results = await runPool(allJobs, CONCURRENCY, () => {});
+    for (const issues of results) {
+        if (issues && issues.length > 0) allIssues.push(...issues);
     }
+
+    const personalVignetteIssues = allIssues.filter(i => i.type === 'personal_vignette');
 
     console.log(`\n--- Audit Summary ---`);
     const worldVignetteCount = allIssues.filter(i => !i.type).length;
