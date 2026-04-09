@@ -279,6 +279,11 @@ class TimelineRenderer {
     }
 
     _adjustVlines() {
+        if (this.questionZoneEl && this._headerEl) {
+            this.questionZoneEl.style.paddingBottom = (window.scrollY + window.innerHeight) + 'px';
+        }
+        this._updateScrollPadding();
+
         const events = this.timelineEl.querySelectorAll('.timeline-event');
         const dots = [];
         const segs = [];
@@ -318,6 +323,24 @@ class TimelineRenderer {
         qzSeg.style.display = '';
         qzSeg.style.top = (prevCenter - cardRect.top) + 'px';
         qzSeg.style.height = Math.max(0, currCenter - prevCenter) + 'px';
+    }
+
+    _updateScrollPadding() {
+        if (!this._headerEl || !this.questionZoneEl) return;
+        const card = this._getCard();
+        if (!card) { this.questionZoneEl.style.paddingBottom = ''; return; }
+
+        const currentPadding = parseFloat(this.questionZoneEl.style.paddingBottom) || 0;
+        const headerHeight = this._headerEl.offsetHeight;
+        const desiredOffset = 50;
+        const cardTop = card.getBoundingClientRect().top + window.scrollY;
+        const viewportHeight = window.innerHeight;
+        const docHeight = document.documentElement.scrollHeight;
+        const naturalHeight = docHeight - currentPadding;
+
+        const neededPadding = cardTop + viewportHeight - headerHeight - desiredOffset - naturalHeight;
+        const appliedPadding = neededPadding > 0 ? neededPadding : 0;
+        this.questionZoneEl.style.paddingBottom = appliedPadding + 'px';
     }
 }
 
@@ -485,6 +508,9 @@ class TimelineAnimator extends TimelineRenderer {
         const oldEventCount = timeline.querySelectorAll('.timeline-event').length;
         const oldHeaderCount = timeline.querySelectorAll('.timeline-stage-header').length;
 
+        const footerEl = this.containerEl.querySelector('.map-actions');
+        const footerOriginalTop = footerEl ? footerEl.getBoundingClientRect().top : null;
+
         // --- 1. Apply end state (no inflation, natural layout) ---
         this.containerEl.classList.add('flip-animating');
         applyEndState();
@@ -560,6 +586,16 @@ class TimelineAnimator extends TimelineRenderer {
         let newCardDy = null;
         if (newCard) {
             newCardDy = flip.slide(newCard, startCardRect.top + startCardRect.height, { fade: true });
+        }
+
+        if (footerEl && footerOriginalTop !== null) {
+            const footerDy = footerOriginalTop - footerEl.getBoundingClientRect().top;
+            if (Math.abs(footerDy) > 1) {
+                footerEl.animate(
+                    [{ transform: `translateY(${footerDy}px)` }, { transform: 'translateY(0)' }],
+                    { duration: 750, easing: 'ease-out', fill: 'none' }
+                );
+            }
         }
 
         let outcomeDy = null;
@@ -675,6 +711,7 @@ class TimelineAnimator extends TimelineRenderer {
 
                 this.containerEl.classList.remove('flip-animating');
                 this.morphAnimating = false;
+                this._updateScrollPadding();
                 if (onComplete) onComplete();
             }
         };
