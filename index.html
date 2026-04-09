@@ -868,7 +868,7 @@
                 for (const rule of spec._when) {
                     if (!rule.if) continue;
                     const match = Object.entries(rule.if).every(([k, vals]) =>
-                        ctx[k] && vals.includes(ctx[k])
+                        ctx[k] && Array.isArray(vals) && vals.includes(ctx[k])
                     );
                     if (match) return rule.text || null;
                 }
