@@ -60,14 +60,16 @@ Rate each option from 1 to 100 based on how much the persona would WANT it to ha
 
 Do NOT let your assessment of what is "realistic" influence the scores. This is purely about preference intensity.
 
-Return a JSON object mapping each option ID to a whole number between 1 and 100. Return ONLY the JSON object, no other text.`,
+Return a JSON object mapping each option ID to a whole number between 1 and 100.
+
+CRITICAL: You MUST return ONLY a single valid JSON object. No markdown, no explanation, no text before or after the JSON. The response must start with { and end with }. Example: {"option_a": 80, "option_b": 20}`,
 
     likely: 'For each option, estimate the probability that this persona would judge it MOST LIKELY to actually happen — i.e., their honest prediction, regardless of what they want.'
 };
 
 const MODE_RESPONSE_FORMATS = {
-    want: 'Return a JSON object mapping each option ID to a desirability score from 1 to 100. Return ONLY the JSON object, no other text.',
-    likely: 'Return a JSON object mapping each option ID to a probability (0.0-1.0). Probabilities must sum to 1.0. Return ONLY the JSON object, no other text.'
+    want: 'CRITICAL: You MUST return ONLY a single valid JSON object mapping each option ID to a desirability score from 1 to 100. No markdown, no explanation, no text before or after the JSON. The response must start with { and end with }.',
+    likely: 'CRITICAL: You MUST return ONLY a single valid JSON object mapping each option ID to a probability (0.0-1.0). Probabilities must sum to 1.0. No markdown, no explanation, no text before or after the JSON. The response must start with { and end with }.'
 };
 
 // ── CLI args ──
@@ -387,7 +389,8 @@ ${optionsText}${disabledText}`;
 
             let weights;
             try {
-                const raw = await callClaude(EVAL_MODEL, system, user, 256, { prefill: '{' });
+                const usesPrefill = EVAL_MODEL.includes('haiku');
+                const raw = await callClaude(EVAL_MODEL, system, user, 256, usesPrefill ? { prefill: '{' } : {});
                 apiCalls++;
                 weights = parseJsonResponse(raw);
             } catch (err) {
