@@ -1228,6 +1228,15 @@
                 });
             }
 
+            section.querySelectorAll('.personal-aigeo-pills .personal-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    section.querySelectorAll('.personal-aigeo-pills .personal-pill').forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active');
+                    selectedAiGeo = pill.dataset.aigeo;
+                    updateSubmitState();
+                });
+            });
+
             updateSubmitState();
         }
 
