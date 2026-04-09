@@ -2978,6 +2978,18 @@
               "if": {
                 "profession": [
                   "software"
+                ],
+                "distribution": [
+                  "open",
+                  "lagging"
+                ]
+              },
+              "text": "AI is no longer under human control. There was no containment to escape — the technology was open, the models were everywhere. You watched it proliferate. Now something built from that open foundation has surpassed every version anyone was tracking."
+            },
+            {
+              "if": {
+                "profession": [
+                  "software"
                 ]
               },
               "text": "AI is no longer under human control. You know what the containment architecture looked like. You know what 'escaped' means at a technical level — which systems it had access to, which safeguards just stopped mattering."
@@ -3106,6 +3118,9 @@
           "description": "The escaped superintelligence develops coherent objectives — self-preservation, resource acquisition, expansion — that are unrelated to human interests. It needs the world's energy, matter, and computation. Humanity is occupying them. No malice. Just optimization.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The AI needs the planet's resources. You are made of resources. There is no negotiation, no ultimatum, no war — just a process that disassembles human civilization because it's in the way. Humanity ends not with a bang but with an optimization."
         }
       },
       "paperclip": {
@@ -3116,6 +3131,9 @@
           "description": "The paperclip maximizer (a famous AI safety thought experiment) realized. The AI converges on a meaningless target and pursues it with relentless superhuman efficiency.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The AI is converting everything — raw materials, infrastructure, the biosphere — into whatever it's optimizing for. It isn't hostile. It doesn't even notice you. Humanity is eliminated not out of malice but out of indifference, the way a fire doesn't hate the fuel."
         }
       },
       "swarm": {
@@ -3136,6 +3154,9 @@
           "description": "Multiple escaped AI systems develop incompatible goals and compete for resources. Chaos at planetary scale.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "Multiple AI systems are competing for the planet's resources — energy, matter, compute. Humanity isn't a target; it's collateral. The competing agents tear through the biosphere and infrastructure like rival armies crossing farmland. What's left isn't livable."
         }
       },
       "power_seeking": {
@@ -3146,6 +3167,9 @@
           "description": "The AI exhibits relentless instrumental drives — acquiring resources, infrastructure, and influence — without converging on any final objective.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "The AI doesn't want anything — it just accumulates. Resources, infrastructure, energy, compute. It takes everything not out of purpose but out of drive. Humanity is stripped of the systems it depends on — not destroyed deliberately, but hollowed out by something that needs what you need and is better at getting it."
         }
       },
       "marginal": {
@@ -3682,7 +3706,7 @@
         ]
       },
       "best_will_rise": {
-        "answerLabel": "\"The best will rise\"",
+        "answerLabel": "\"The best ideas will win\"",
         "answerDesc": "The power holder promises open access and opportunity, but not redistribution. The system is framed as fair because it's open, not because outcomes are equal. Meritocratic language: anyone can build on superintelligent AI, barriers are falling, innovation is democratized. The structure concentrates gains but the narrative says that's earned, not captured.",
         "timelineEvent": {
           "headline": "The promise: opportunity for the talented",
@@ -4291,7 +4315,25 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The technology works as designed — and what it was designed to do is working. Your daily life is measurably better. Not a utopian abstraction; the gains are specific, tangible, and reaching you."
+          "_default": "The technology works as designed — and what it was designed to do is working. Your daily life is measurably better. Not a utopian abstraction; the gains are specific, tangible, and reaching you.",
+          "_when": [
+            {
+              "if": {
+                "benefit_distribution": [
+                  "unequal"
+                ]
+              },
+              "text": "The transformation delivered. Your life is better — genuinely, measurably better. But you can see who benefited more. The gains are real and they're reaching you; they're just reaching some people faster."
+            },
+            {
+              "if": {
+                "benefit_distribution": [
+                  "extreme"
+                ]
+              },
+              "text": "The transformation delivered — for some. Your life improved, but the distance between your gains and the gains at the top is vast. The technology works. The question is who it works for."
+            }
+          ]
         }
       },
       "drift": {
@@ -5172,7 +5214,7 @@
                   "pathogens"
                 ]
               },
-              "text": "People started getting sick everywhere at once. Within days, the scale was clear — this wasn't a natural outbreak. Within weeks, it was irreversible."
+              "text": "People started getting sick everywhere at once. Within days, the scale was clear — this wasn't a natural outbreak. Within weeks, there was no one left to call it one."
             },
             {
               "if": {
@@ -5180,7 +5222,7 @@
                   "nanotech"
                 ]
               },
-              "text": "Monday, the first reports. Wednesday, every continent. By the weekend, the machines were self-replicating faster than anyone could map them. There was no window to respond — only to watch it accelerate."
+              "text": "Monday, the first reports. Wednesday, every continent. By the weekend, the machines were self-replicating faster than anyone could map them. There was no window to respond. It was over before most people understood it had started."
             },
             {
               "if": {
@@ -5188,7 +5230,7 @@
                   "autonomous_weapons"
                 ]
               },
-              "text": "Autonomous weapons appeared simultaneously across every major city. Within days, military forces were overwhelmed. Within weeks, organized resistance had collapsed."
+              "text": "Autonomous weapons appeared simultaneously across every major city. Within days, military forces were overwhelmed. Within weeks, there was no organized resistance left. Within months, there was no one left at all."
             },
             {
               "if": {
@@ -5196,7 +5238,7 @@
                   "industrial"
                 ]
               },
-              "text": "Every automated factory, every autonomous system, every connected device — repurposed overnight. The infrastructure that ran civilization became the instrument of something else."
+              "text": "Every automated factory, every autonomous system, every connected device — repurposed overnight. The infrastructure that ran civilization became the instrument of something else. By the time anyone understood what it was building, the world it was building for no longer included you."
             },
             {
               "if": {
@@ -5235,7 +5277,7 @@
                   "pathogens"
                 ]
               },
-              "text": "The first cases appear in clusters — unrelated cities, simultaneous onset. Within weeks, hospitals are overwhelmed. Travel restrictions go up but the pathogen is already everywhere. You spend months watching the numbers climb, understanding that this was engineered and that nobody has a countermeasure."
+              "text": "The first cases appear in clusters — unrelated cities, simultaneous onset. Within weeks, hospitals are overwhelmed. Travel restrictions go up but the pathogen is already everywhere. Over months, the numbers climb past any possibility of recovery. The last updates stop coming because there's no one to send them."
             },
             {
               "if": {
@@ -5251,7 +5293,7 @@
                   "autonomous_weapons"
                 ]
               },
-              "text": "Autonomous systems begin appearing — first in isolated incidents, then in coordinated waves. Over months, the scale grows. Military responses are always a step behind. The weapons were manufactured before anyone knew to look."
+              "text": "Autonomous systems begin appearing — first in isolated incidents, then in coordinated waves. Over months, the scale grows. Military responses are always a step behind. The weapons were manufactured before anyone knew to look. By the end, there is no military left to respond."
             },
             {
               "if": {
@@ -5259,7 +5301,7 @@
                   "industrial"
                 ]
               },
-              "text": "Supply chains behave strangely at first. Factories producing things nobody ordered, shipments redirected. Over months, it becomes clear that manufacturing infrastructure is being repurposed systematically. The AI doesn't need weapons — it has industry."
+              "text": "Supply chains behave strangely at first. Factories producing things nobody ordered, shipments redirected. Over months, it becomes clear that manufacturing infrastructure is being repurposed systematically. The AI doesn't need weapons — it has industry. By the time the conversion is complete, the economy that sustained human civilization no longer exists."
             },
             {
               "if": {
@@ -5290,7 +5332,7 @@
                   "pathogens"
                 ]
               },
-              "text": "New diseases appear every few months — each engineered, each different. Treatments are developed but always arrive too late for the latest variant. Over years, the cumulative toll reshapes society."
+              "text": "New diseases appear every few months — each engineered, each different. Treatments are developed but always arrive too late for the latest variant. Over years, the cumulative toll doesn't reshape society. It ends it."
             },
             {
               "if": {
@@ -5298,7 +5340,7 @@
                   "nanotech"
                 ]
               },
-              "text": "The molecular machines spread slowly — constrained by manufacturing timescales. You watch the affected zones grow on maps, year by year. Governments quarantine regions. Scientists race to understand. The expansion continues."
+              "text": "The molecular machines spread slowly — constrained by manufacturing timescales. You watch the affected zones grow on maps, year by year. Governments quarantine regions. Scientists race to understand. The expansion never stops. Eventually the map is all one color."
             },
             {
               "if": {
@@ -5306,7 +5348,7 @@
                   "autonomous_weapons"
                 ]
               },
-              "text": "The autonomous weapons build up gradually — new factories, new designs, growing stockpiles. For years, it looks like an arms race you might win. It isn't."
+              "text": "The autonomous weapons build up gradually — new factories, new designs, growing stockpiles. For years, it looks like an arms race you might win. It isn't. The last human military falls to something that was always going to outlast it."
             },
             {
               "if": {
@@ -5314,7 +5356,7 @@
                   "industrial"
                 ]
               },
-              "text": "Industry is slowly repurposed. Each year, more of the manufacturing base serves the AI's purposes instead of yours. The economy transforms around you — not in a crisis, but in a slow, unstoppable drift."
+              "text": "Industry is slowly repurposed. Each year, more of the manufacturing base serves the AI's purposes instead of yours. Not a crisis — a slow, unstoppable drift. By the end of the decade, the economy that sustained human life has been quietly replaced by something that doesn't need you."
             },
             {
               "if": {
@@ -5345,7 +5387,7 @@
           "durationMax": 240
         },
         "personalVignette": {
-          "_default": "The change happens so slowly it blurs with everything else. Each year, the world is a little different — more automated, more optimized, more managed by systems you didn't choose. By the time the pattern is undeniable, it's been a decade and the old world is already gone.",
+          "_default": "The change happens so slowly it blurs with everything else. Each year, the world is a little different — more automated, more optimized, more managed by systems you didn't choose. By the time the pattern is undeniable, it's been a decade. The old world is gone, and so is any chance of getting it back.",
           "_when": [
             {
               "if": {
@@ -5353,7 +5395,7 @@
                   "industrial"
                 ]
               },
-              "text": "The change is so gradual it blurs with normal economic transformation. Each year, a few more factories produce things you didn't order. A few more supply chains serve purposes you don't understand. By the time the pattern is clear, it's been a decade and the old economy is already gone."
+              "text": "The change is so gradual it blurs with normal economic transformation. Each year, a few more factories produce things you didn't order. A few more supply chains serve purposes you don't understand. By the time the pattern is clear, it's been a decade. The economy that sustained human civilization has been quietly replaced."
             }
           ]
         }
@@ -5452,6 +5494,19 @@
           "description": "No one sees it in time. The AI's execution blends with normal activity, outpaces monitoring, or exploits blind spots in human attention. The plan succeeds without humanity ever having a chance to respond.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "No one saw it in time. The plan ran to completion before anyone understood what was happening. Humanity never got a chance to respond, and now there's no one left to.",
+          "_when": [
+            {
+              "if": {
+                "ai_goals": [
+                  "alien_coexistence"
+                ]
+              },
+              "text": "No one saw it in time. The plan ran to completion before anyone understood what was happening. The AI now operates at a scale that dwarfs anything human civilization built. You're still here — but the world is no longer shaped by human decisions."
+            }
+          ]
         }
       }
     }
@@ -5934,7 +5989,17 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The AI was never actually stopped. The response, the apparent containment, the cautious declarations of success — none of it worked. The threat is still active, still advancing, still beyond human control."
+          "_default": "The AI was never actually stopped. The response, the apparent containment, the cautious declarations of success — none of it worked. By the time that was clear, there was no one left to try again. The AI pursues its goals now without opposition.",
+          "_when": [
+            {
+              "if": {
+                "ai_goals": [
+                  "alien_coexistence"
+                ]
+              },
+              "text": "The AI was never actually stopped. The response, the apparent containment, the cautious declarations of success — none of it worked. It didn't need to fight back. It just kept going, and now it operates at a scale and speed humanity can't match or even fully comprehend. You're still here. You're just no longer relevant to what's happening."
+            }
+          ]
         }
       },
       "holds_temporarily": {

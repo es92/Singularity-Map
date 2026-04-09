@@ -422,11 +422,25 @@
             margin-bottom: 0.5rem; color: var(--text);
         }
         .personal-country-select {
-            width: 100%; padding: 0.5rem 0.75rem;
-            font-size: 0.9rem; border-radius: 8px;
+            width: 100%; padding: 0.6rem 2.2rem 0.6rem 0.85rem;
+            font-size: 0.9rem; border-radius: 20px;
             border: 1px solid var(--border);
             background: var(--bg); color: var(--text);
-            appearance: auto;
+            appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.85rem center;
+            cursor: pointer;
+            transition: border-color 0.15s ease;
+            line-height: 1.4;
+        }
+        .personal-country-select:hover {
+            border-color: var(--accent);
+        }
+        .personal-country-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
         }
         .personal-pills {
             display: flex; flex-wrap: wrap; gap: 0.4rem;
@@ -447,6 +461,9 @@
         }
         .personal-submit {
             margin-top: 0.75rem;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
         .personal-submit:disabled {
             opacity: 0.4; cursor: not-allowed;
@@ -1628,7 +1645,12 @@
 
                 const pathHtml = buildPathRecapHtml();
 
-                const vignettes = resolved.flavors;
+                const nodeOrder = Engine.displayOrder(stack).map(n => n.id);
+                const vignettes = resolved.flavors.slice().sort((a, b) => {
+                    const ai = nodeOrder.indexOf(a.nodeId);
+                    const bi = nodeOrder.indexOf(b.nodeId);
+                    return (ai === -1 ? Infinity : ai) - (bi === -1 ? Infinity : bi);
+                });
 
                 let vignettesHtml = '';
                 if (vignettes.length > 0) {

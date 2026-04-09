@@ -536,7 +536,7 @@ const NODES = [
           label: 'Holds',
           requires: { proliferation_control: ['deny_rivals', 'secure_access'] }
         },
-        { id: 'leaks_rivals', label: 'Leaks to rivals' },
+        { id: 'leaks_rivals', label: 'Leaks to rivals', disabledWhen: [{ proliferation_control: ['none'], reason: 'The technology is already openly available — there are no restrictions to leak past' }] },
         { id: 'leaks_public', label: 'Leaks publicly' }
       ] },
     { id: 'proliferation_alignment', label: 'Alignment Under Open Weights', stage: 2,
@@ -692,7 +692,7 @@ const NODES = [
       edges: [
         { id: 'for_everyone', label: 'This is for everyone' },
         { id: 'keeping_safe', label: 'We\'re keeping you safe' },
-        { id: 'best_will_rise', label: 'The best will rise' }
+        { id: 'best_will_rise', label: 'The best ideas will win' }
       ] },
     { id: 'mobilization', label: 'Mobilization', stage: 3, hideAfterEscape: true,
       activateWhen: [{ _set: ['power_promise'] }],
@@ -814,9 +814,9 @@ const NODES = [
         }
       ],
       edges: [
-        { id: 'nanotech', label: 'Nanotechnology' },
-        { id: 'pathogens', label: 'Engineered pathogens' },
-        { id: 'autonomous_weapons', label: 'Autonomous weapons' },
+        { id: 'nanotech', label: 'Nanotechnology', disabledWhen: [{ ai_goals: ['alien_coexistence'], reason: 'A tolerant alien intelligence reshapes infrastructure, not biology' }] },
+        { id: 'pathogens', label: 'Engineered pathogens', disabledWhen: [{ ai_goals: ['alien_coexistence'], reason: 'Bioweapons are incompatible with leaving room for humanity' }] },
+        { id: 'autonomous_weapons', label: 'Autonomous weapons', disabledWhen: [{ ai_goals: ['alien_coexistence'], reason: 'Military force is incompatible with leaving room for humanity' }] },
         { id: 'industrial', label: 'Industrial conversion' }
       ] },
     { id: 'escape_timeline', label: 'Execution Speed', stage: 3,
