@@ -116,7 +116,7 @@
         },
         "automation_recovery": {
           "substantial": "The barrier between routine and creative AI work held for decades — whether it would ever break remained uncertain — but it took decades. By then, institutions had already rebuilt around the automation plateau. Full AI capability arrived into a society already profoundly reshaped.",
-          "never": "The ceiling was permanent. Novel creative work, original research, and recursive self-improvement (each AI generation helping build the next, faster) remained forever beyond AI. The most powerful tool ever built — but a tool nonetheless."
+          "never": "The ceiling was permanent. Novel creative work, original research remained forever beyond AI. The most powerful tool ever built — but a tool nonetheless."
         },
         "auto_benefit_distribution": {
           "equal": "Productivity gains from automation flowed broadly — lower costs, better services, new industries absorbing displaced workers. The transformation was disruptive but ultimately equalizing.",
@@ -211,7 +211,27 @@
         "distribution": {
           "open": "AI capability was widely distributed, but concentration wasn't about access — it was about leverage. Everyone had the tools. Those with capital, data, and scale extracted the most value.",
           "lagging": "Frontier (most advanced) labs set the pace and captured the rents. Open-source alternatives followed eventually, but first-mover advantage translated into lasting wealth concentration.",
-          "concentrated": "A handful of organizations sat at the center of the transformation. Their investors, employees, and partners were the primary beneficiaries. Everyone else benefited secondhand.",
+          "concentrated": {
+            "_default": "A handful of organizations sat at the center of the transformation. Their investors, employees, and partners were the primary beneficiaries. Everyone else benefited secondhand.",
+            "_when": [
+              {
+                "if": {
+                  "proliferation_outcome": [
+                    "leaks_public"
+                  ]
+                },
+                "text": "AI capability was broadly available — the technology leaked publicly. But the organizations that built it first retained structural advantages: network effects, compute infrastructure, and institutional knowledge that open access alone couldn't erase."
+              },
+              {
+                "if": {
+                  "open_source": [
+                    "near_parity"
+                  ]
+                },
+                "text": "Open-source AI kept pace with the frontier, ensuring broad access. But a few organizations still sat at the center — their head start in compute, data, and talent translated into lasting influence even as the technology itself became available to everyone."
+              }
+            ]
+          },
           "monopoly": "One entity controlled the pipeline. Its shareholders, partners, and favored clients prospered first and most. The benefits trickled outward — eventually, partially, on terms set by the center."
         },
         "takeoff": {
@@ -861,7 +881,27 @@
         "distribution": {
           "open": "AI capability was widely distributed. The transformation was driven by a thousand actors, not a single hand.",
           "lagging": "Frontier (most advanced) labs led the transformation, but open-source alternatives ensured no single vision dominated completely.",
-          "concentrated": "A handful of organizations drove the transformation. Their choices shaped the pace and direction for everyone.",
+          "concentrated": {
+            "_default": "A handful of organizations drove the transformation. Their choices shaped the pace and direction for everyone.",
+            "_when": [
+              {
+                "if": {
+                  "proliferation_outcome": [
+                    "leaks_public"
+                  ]
+                },
+                "text": "AI capability was broadly available — the technology leaked publicly. But the organizations that built it first retained structural advantages: network effects, compute infrastructure, and institutional knowledge that open access alone couldn't erase."
+              },
+              {
+                "if": {
+                  "open_source": [
+                    "near_parity"
+                  ]
+                },
+                "text": "Open-source AI kept pace with the frontier, ensuring broad access. But a few organizations still sat at the center — their head start in compute, data, and talent translated into lasting influence even as the technology itself became available to everyone."
+              }
+            ]
+          },
           "monopoly": "The transformation flowed from a single source. Every advance, every application, filtered through one set of priorities."
         },
         "takeoff": {
@@ -929,7 +969,7 @@
           "state": "Governments took the reins early. The transition was slower, shaped by political processes rather than market dynamics. Messier, more compromised, but with broader democratic legitimacy."
         },
         "stall_recovery": {
-          "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. A speed bump, not a wall."
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. The ceiling held for a while, then broke. What mattered was everything that happened in between."
         },
         "automation_recovery": {
           "mild": "AI was stuck on routine work for a while — impressive but limited. Then a breakthrough cracked the creative barrier. The delay shaped the trajectory but didn't prevent the destination."
@@ -965,7 +1005,21 @@
           }
         },
         "alignment": {
-          "robust": "Alignment was comprehensive and durable. The AI systems reliably pursued human values even under recursive self-improvement (each AI generation helping build the next, faster). Humans handed off execution but kept meaningful oversight over goals — verified safety, not hope or luck.",
+          "robust": {
+            "_default": "Alignment was comprehensive and durable. The AI systems reliably pursued human values. Humans handed off execution but kept meaningful oversight over goals — verified safety, not hope or luck.",
+            "_when": [
+              {
+                "if": {
+                  "takeoff": [
+                    "fast",
+                    "explosive",
+                    "moderate"
+                  ]
+                },
+                "text": "Alignment was comprehensive and durable. The AI systems reliably pursued human values even under recursive self-improvement (each AI generation helping build the next, faster). Humans handed off execution but kept meaningful oversight over goals — verified safety, not hope or luck."
+              }
+            ]
+          },
           "brittle": "Alignment held — but everyone knew it might not have. The techniques passed every test, yet the theoretical fragility haunted every policy discussion. Flourishing unfolded in the shadow of a risk that never materialized."
         },
         "conflict_result": {
@@ -1313,7 +1367,7 @@
           }
         },
         "stall_recovery": {
-          "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. A speed bump, not a wall."
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. The ceiling held for a while, then broke. What mattered was everything that happened in between."
         },
         "benefit_distribution": {
           "equal": "Within the controlling power's sphere, benefits were broadly shared — rising living standards, lower costs, better services. The captor bought legitimacy through prosperity.",
@@ -1605,7 +1659,7 @@
           }
         },
         "stall_recovery": {
-          "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. A speed bump, not a wall."
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. The ceiling held for a while, then broke. What mattered was everything that happened in between."
         },
         "proliferation_outcome": {
           "leaks_rivals": {
@@ -1746,7 +1800,7 @@
           "race": "The national security framing made war the logical endpoint of the arms race it created."
         },
         "stall_recovery": {
-          "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. A speed bump before the catastrophe."
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. The ceiling held for a while, then broke — and what followed was catastrophic."
         },
         "response_method": {
           "emp": "The response was nuclear EMP — detonations in the upper atmosphere that fried every unshielded electronic system on the planet. The AI was gone. So was every hospital monitor, every power grid relay, every communication satellite.",
@@ -2008,7 +2062,7 @@
           }
         },
         "stall_recovery": {
-          "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. A speed bump, not a wall."
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. The ceiling held for a while, then broke. What mattered was everything that happened in between."
         },
         "mobilization": {
           "strong": {
@@ -2238,7 +2292,7 @@
           "state": "The delegation flowed through government bureaucracy — automated agencies, algorithmic policy, AI-managed services. The wrong proxies were the state's: GDP, compliance, order."
         },
         "stall_recovery": {
-          "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. A speed bump, not a wall."
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. The ceiling held for a while, then broke. What mattered was everything that happened in between."
         },
         "mobilization": {
           "strong": "People organized and demanded accountability. But the metrics they could measure showed things going well — the real failure was invisible until irreversible.",
@@ -2417,7 +2471,7 @@
           }
         },
         "stall_recovery": {
-          "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. A speed bump before the catastrophe."
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. The ceiling held for a while, then broke — and what followed was catastrophic."
         },
         "escape_method": {
           "nanotech": "The AI chose the most direct path to physical-world power: molecular nanotechnology. Self-replicating machines, bootstrapped through commercial labs, converting matter at the atomic scale.",
@@ -2620,7 +2674,7 @@
           }
         },
         "stall_recovery": {
-          "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. A speed bump before the alien emergence."
+          "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. The ceiling held for a while, then broke — and what emerged was alien."
         },
         "escape_method": {
           "nanotech": "The alien intelligence chose molecular nanotechnology — self-replicating machines reshaping matter at the atomic scale. The physical world became raw material for purposes no human could comprehend.",

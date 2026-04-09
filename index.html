@@ -866,12 +866,15 @@
 
         function shouldShowAiGeoQuestion(worldState, bucket) {
             if (!personalData) return false;
-            const geo = worldState.geo_spread;
-            if (!geo) return false;
             const bucketInfo = personalData.countryBuckets[bucket];
             if (!bucketInfo) return false;
+            const geo = worldState.geo_spread;
             if (geo === 'one' && bucketInfo.plausibleLeader) return true;
             if (geo === 'two' && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) return true;
+            if (!geo && bucketInfo.plausibleLeader) {
+                const dist = worldState.distribution;
+                if (dist === 'monopoly' || dist === 'concentrated') return true;
+            }
             return false;
         }
 

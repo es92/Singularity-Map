@@ -1434,7 +1434,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "There's no pause. AI capabilities keep advancing, and the pace of change in your daily life accelerates with them.",
+          "_default": "Development continues at full speed. AI capabilities keep advancing, and the pace of change in your daily life accelerates with them.",
           "_when": [
             {
               "if": {
@@ -1445,7 +1445,7 @@
                   "yes"
                 ]
               },
-              "text": "No pause. Your company is expected to keep pace with the frontier. The pressure to ship AI-powered features is higher than ever."
+              "text": "Development continues at full speed. Your company is expected to keep pace with the frontier. The pressure to ship AI-powered features is higher than ever."
             },
             {
               "if": {
@@ -1456,7 +1456,7 @@
                   "yes"
                 ]
               },
-              "text": "No pause. Your agency chose speed over caution, and now you're governing a technology that's advancing faster than your ability to write rules for it."
+              "text": "Development continues at full speed. Your agency is governing a technology that's advancing faster than your ability to write rules for it."
             }
           ]
         }
@@ -2901,6 +2901,22 @@
                 ]
               },
               "text": "AI is no longer under human control. The headline lands differently when you understand the technology well enough to know what that means. Whatever happens next isn't up to anyone you can vote for."
+            },
+            {
+              "if": {
+                "country_bucket": [
+                  "china"
+                ]
+              },
+              "text": "AI is no longer under human control. The institutions that were supposed to manage this — the ones you work within — have lost their grip. Whatever comes next, no government directive will contain it."
+            },
+            {
+              "if": {
+                "profession": [
+                  "government"
+                ]
+              },
+              "text": "AI is no longer under human control. For someone in your position, this isn't an abstract headline — it's the failure of the institutional frameworks you've spent your career building."
             }
           ]
         }
@@ -4163,7 +4179,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The transformation delivered what was intended. Your material conditions improved — not perfectly, not for everyone equally, but genuinely. Whether that's enough depends on what else happened along the way."
+          "_default": "The technology works as designed. Whether it serves you depends on who's directing it and what they chose to optimize for."
         }
       },
       "drift": {

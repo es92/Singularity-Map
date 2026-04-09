@@ -484,7 +484,11 @@ ${optionsText}${disabledText}`;
     const geo = eff.geo_spread || sel.geo_spread;
     let isAiGeo = 'no';
     if (geo === 'one' && bucketInfo && bucketInfo.plausibleLeader) isAiGeo = 'yes';
-    if (geo === 'two' && bucketInfo && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) isAiGeo = 'yes';
+    else if (geo === 'two' && bucketInfo && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) isAiGeo = 'yes';
+    else if (!geo && bucketInfo && bucketInfo.plausibleLeader) {
+        const dist = eff.distribution || sel.distribution;
+        if (dist === 'monopoly' || dist === 'concentrated') isAiGeo = 'yes';
+    }
 
     const personalVignettes = (persona.country && persona.profession)
         ? resolvePersonalVignettes(sel, {
