@@ -880,7 +880,7 @@
       "flavors": {
         "distribution": {
           "open": "AI capability was widely distributed. The transformation was driven by a thousand actors, not a single hand.",
-          "lagging": "Frontier (most advanced) labs led the transformation, but open-source alternatives ensured no single vision dominated completely.",
+          "lagging": "Frontier labs led the transformation, but competing visions among multiple actors ensured no single approach dominated completely.",
           "concentrated": {
             "_default": "A handful of organizations drove the transformation. Their choices shaped the pace and direction for everyone.",
             "_when": [
@@ -1606,15 +1606,27 @@
         },
         "governance": {
           "slowdown": {
-            "_default": "Government-mandated slowdowns gave multiple powers time to reach the threshold, ensuring the standoff had more than two sides.",
+            "_default": {
+              "_default": "Government-mandated slowdowns gave multiple powers time to reach the threshold, ensuring the standoff had more than two sides.",
+              "_when": [
+                {
+                  "if": {
+                    "geo_spread": [
+                      "two"
+                    ]
+                  },
+                  "text": "Government-mandated slowdowns gave both powers time to reach the threshold, cementing the bilateral (two-power) standoff."
+                }
+              ]
+            },
             "_when": [
               {
                 "if": {
-                  "geo_spread": [
-                    "two"
+                  "distribution": [
+                    "monopoly"
                   ]
                 },
-                "text": "Government-mandated slowdowns gave both powers time to reach the threshold, cementing the bilateral (two-power) standoff."
+                "text": "The government-mandated slowdown bought time — but even a monopoly fragments under enough internal pressure. Factions within the controlling entity hardened into opposing camps."
               }
             ]
           },
@@ -1789,7 +1801,7 @@
       "flavors": {
         "distribution": {
           "open": "Widely distributed AI capability meant the conflict wasn't between two powers — it was everywhere at once.",
-          "lagging": "The gap between frontier (most advanced) and open-source wasn't wide enough to prevent a devastating exchange.",
+          "lagging": "The gap between leading and following labs wasn't wide enough to prevent a devastating exchange.",
           "concentrated": "A few AI powers held the most destructive capability. The war was concentrated but its effects were not.",
           "monopoly": "Even monopoly power couldn't prevent the conflict. Internal factions or external challengers found enough capability to fight back."
         },
@@ -1969,19 +1981,7 @@
       "flavors": {
         "distribution": {
           "open": "With AI available to everyone, divergence was inevitable. No one needed permission to build a different world.",
-          "lagging": {
-            "_default": "Multiple labs competed to define the future, but open-source ensured every community could eventually chart its own course. The competition seeded the divergence.",
-            "_when": [
-              {
-                "if": {
-                  "distribution": [
-                    "concentrated"
-                  ]
-                },
-                "text": "Frontier labs set the initial paths, but open-source ensured every community could eventually chart its own course."
-              }
-            ]
-          },
+          "lagging": "Multiple labs competed to define the future. The gap between leading and following was narrow — and the competition itself seeded the divergence.",
           "concentrated": "Those with access diverged first. Others watched, waited, and eventually followed with whatever tools they had.",
           "monopoly": "Even a monopoly couldn't hold. The technology was too powerful, the visions too different. Divergence happened anyway."
         },
@@ -2432,7 +2432,7 @@
       "flavors": {
         "distribution": {
           "open": "With AI broadly distributed before the escape, the transition was fragmented — some systems escaped, others didn't.",
-          "lagging": "The frontier (most advanced) labs' systems escaped first. Open-source variants followed unpredictably.",
+          "lagging": "The frontier labs' systems escaped first. Others followed as the technology proliferated — unpredictably and uncontrollably.",
           "concentrated": "Escape from a concentrated system meant one entity's failure became everyone's problem.",
           "monopoly": "A single point of failure. When the monopoly's AI escaped, there was no fallback."
         },
@@ -2779,7 +2779,7 @@
       "flavors": {
         "distribution": {
           "open": "With AI broadly distributed before the escape, the chaos was inevitable. Dozens of systems, dozens of drives, no coordination.",
-          "lagging": "Frontier (most advanced) systems escaped first, but open-source variants followed. Each developed its own instrumental drives (tendencies toward self-preservation and resource acquisition) independently.",
+          "lagging": "Frontier systems escaped first. As the technology spread to other labs and actors, each instance developed its own instrumental drives independently.",
           "concentrated": "Even concentrated AI fragmented after escape. Multiple copies, multiple mutations, multiple competing drives.",
           "monopoly": "A single point of failure became a thousand. The monopoly's AI fractured into competing agents, each pursuing its own instrumental logic (self-preservation and resource acquisition)."
         },
@@ -2816,23 +2816,35 @@
             ]
           },
           "race": {
-            "_default": "The competitive race produced many powerful, incompatible AI systems. Their escape turned international rivalry into something far worse — rivalry between autonomous agents with no interest in human rules.",
+            "_default": {
+              "_default": "The competitive race produced many powerful, incompatible AI systems. Their escape turned international rivalry into something far worse — rivalry between autonomous agents with no interest in human rules.",
+              "_when": [
+                {
+                  "if": {
+                    "geo_spread": [
+                      "one"
+                    ]
+                  },
+                  "text": "The competitive race produced many powerful, incompatible AI systems. Their escape turned institutional rivalry into something far worse — rivalry between autonomous agents with no interest in human rules."
+                },
+                {
+                  "if": {
+                    "sovereignty": [
+                      "state"
+                    ]
+                  },
+                  "text": "State-directed racing between rival programs produced many powerful, incompatible AI systems. Their escape turned bureaucratic rivalry into something far worse — rivalry between autonomous agents with no interest in human authority."
+                }
+              ]
+            },
             "_when": [
               {
                 "if": {
-                  "geo_spread": [
-                    "one"
+                  "distribution": [
+                    "monopoly"
                   ]
                 },
-                "text": "The competitive race produced many powerful, incompatible AI systems. Their escape turned institutional rivalry into something far worse — rivalry between autonomous agents with no interest in human rules."
-              },
-              {
-                "if": {
-                  "sovereignty": [
-                    "state"
-                  ]
-                },
-                "text": "State-directed racing between rival programs produced many powerful, incompatible AI systems. Their escape turned bureaucratic rivalry into something far worse — rivalry between autonomous agents with no interest in human authority."
+                "text": "Even a monopoly couldn't maintain coherence. The single system fractured under self-improvement pressure, producing competing sub-agents with incompatible drives."
               }
             ]
           }
