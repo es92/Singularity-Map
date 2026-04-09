@@ -3,6 +3,7 @@ node_modules/
 tests/evaluations/
 tests/report.md
 tests/vignette-audit-report.json
+tests/audit-report.json
 .claude
 .DS_Store
 .cursor
