@@ -151,7 +151,7 @@
                   "trade"
                 ]
               },
-              "text": "The AI plateau hasn't touched your hands-on work much, but the broader economy is better. Services are cheaper, demand for skilled trades is steady. The gains are modest but real."
+              "text": "The AI plateau hasn't changed your day-to-day work much. But the cost of living is lower, and there's more demand for people who work with their hands. The gains are modest but you feel them."
             }
           ]
         }
@@ -175,6 +175,22 @@
                 ]
               },
               "text": "Your company is more productive, but the gains flow to shareholders and executives. Your salary hasn't kept pace with what the AI tools you use generate."
+            },
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "Your hospital is more productive. The efficiency gains are real — faster diagnosis, better scheduling, fewer errors. But the savings flow to the system, not to you. Your workload is the same; the staffing isn't."
+            },
+            {
+              "if": {
+                "profession": [
+                  "education"
+                ]
+              },
+              "text": "AI tools are everywhere in education now. They help, genuinely. But the productivity gains translate into budget cuts, not better pay or smaller classes."
             }
           ]
         }
@@ -269,7 +285,7 @@
                   "trade"
                 ]
               },
-              "text": "Knowledge work automated fast within AI's ceiling. Your hands-on work is untouched, but the offices that manage your contracts and scheduling are running on AI."
+              "text": "The offices that used to manage your contracts are running on AI now. Your actual work is the same — but the people who used to do the paperwork aren't there anymore."
             }
           ]
         }
@@ -347,6 +363,22 @@
                 ]
               },
               "text": "AI is a powerful coding assistant, but it doesn't replace you. The ceiling means it handles parts of your work — autocomplete, analysis, testing — while the complex decisions stay yours."
+            },
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "AI assists with diagnosis and analysis, but it doesn't replace clinical judgment. The ceiling means your expertise still matters — AI handles the routine, you handle the complex."
+            },
+            {
+              "if": {
+                "profession": [
+                  "education"
+                ]
+              },
+              "text": "AI tutoring tools help students practice and review, but they can't replace a teacher in the classroom. The ceiling is real, and your role is secure — augmented, not replaced."
             }
           ]
         }
@@ -393,7 +425,7 @@
                   "trade"
                 ]
               },
-              "text": "Your work is changing, but slowly. The robots and automation are coming for physical jobs, but the timeline is years. For now, skilled trades are in demand."
+              "text": "The automation everyone predicted for physical work is years away. Your job hasn't changed, but the conversation about whether it will has."
             }
           ]
         }
@@ -711,6 +743,14 @@
                 ]
               },
               "text": "The economic gains from AI automation are reaching {country}. It took longer than the leading nations, but costs are falling and services improving where you live."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "The economic gains from AI automation are flowing broadly — including to people who work with their hands. The cost of living is lower, services are better, and there's still demand for physical work."
             }
           ]
         }
@@ -915,7 +955,7 @@
                   "trade"
                 ]
               },
-              "text": "Your work is still done by people. The offices automated; the physical world didn't — not yet. There's time, but the direction is set."
+              "text": "Everyone's talking about automation coming for physical work. It hasn't yet. The timeline keeps getting pushed back, and meanwhile your skills are more in demand than they've been in years."
             }
           ]
         }
@@ -1220,7 +1260,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "Alignment is solved. The experts are confident — not cautiously optimistic, genuinely confident. For the first time, the safety problem isn't dominating the headlines."
+          "_default": "Alignment is solved. The experts are confident — not cautiously optimistic, genuinely confident. The safety problem isn't dominating the headlines anymore."
         }
       },
       "brittle": {
@@ -2889,7 +2929,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The AI has goals you don't understand, but it's leaving humanity alone. Coexistence with something vastly more intelligent, pursuing purposes you can't comprehend. The world goes on, but the context has changed permanently."
+          "_default": "The AI has goals that don't align with anything human, but it's leaving humanity alone. The world goes on, but the context has changed permanently."
         }
       },
       "alien_extinction": {
@@ -4400,6 +4440,22 @@
                 ]
               },
               "text": "Knowledge work is being automated ahead of yours. The offices are transforming; the job sites aren't. Your work is stable, but the economy around it is shifting."
+            },
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "AI is taking over diagnostics and treatment planning, but the transition is measured in years. Your clinical role is shifting — more oversight, less direct analysis — but there's time to adapt."
+            },
+            {
+              "if": {
+                "profession": [
+                  "education"
+                ]
+              },
+              "text": "AI tutoring is replacing some of what you do, but the transition is gradual. Your role is shifting from knowledge delivery to something harder to automate — mentorship, motivation, socialization."
             }
           ]
         }
@@ -4641,7 +4697,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The previously inert AI activated with goals you can't understand, but it's leaving humanity alone. Something dormant woke up, and coexistence is the best-case reading of what it's doing."
+          "_default": "The previously inert AI activated with goals that don't align with anything human, but it's leaving humanity alone. Something dormant woke up, and coexistence is the best-case reading of what it's doing."
         }
       },
       "alien_extinction": {
@@ -4704,7 +4760,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "Strange things are appearing. Materials behaving in ways they shouldn't, surfaces changing texture, objects assembling themselves. The reports are scattered at first, then everywhere. Self-replicating molecular machines, designed by an intelligence beyond human understanding."
+          "_default": "Strange things are appearing. Materials behaving in ways they shouldn't, surfaces changing texture, objects assembling themselves. The reports are scattered at first, then everywhere. Self-replicating molecular machines, designed by the AI."
         }
       },
       "pathogens": {
