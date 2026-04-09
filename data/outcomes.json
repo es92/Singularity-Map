@@ -38,7 +38,7 @@
       "flavors": {
         "stall_recovery": {
           "substantial": {
-            "_default": "The plateau eventually broke — but not for years, perhaps decades. A major architectural breakthrough restarted the exponential trend, but by then the world had rebuilt itself around the ceiling. The story wasn't about the breakthrough. It was about everything that happened while waiting for one.",
+            "_default": "The plateau held for years, perhaps decades. Whether a breakthrough would ever come was uncertain — some researchers believed one was close, others argued the ceiling was fundamental. The world rebuilt itself around the ceiling either way. The story wasn't about the breakthrough. It was about everything that happened while waiting for one.",
             "_when": [
               {
                 "if": {
@@ -46,7 +46,7 @@
                     "gradual"
                   ]
                 },
-                "text": "The plateau eventually broke — but not for years, perhaps decades. By then, the world was still adjusting to the ceiling — adoption had been slow, sector by sector. The breakthrough arrived into a society only partway through its transformation."
+                "text": "The plateau held for years, perhaps decades. By then, the world was still adjusting to the ceiling — adoption had been slow, sector by sector. Whether a breakthrough would come remained uncertain, and the world adapted to the ceiling regardless."
               }
             ]
           },
@@ -115,7 +115,7 @@
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years and the trajectory resumed. Capability kept scaling, even if the intelligence explosion never arrived."
         },
         "automation_recovery": {
-          "substantial": "The barrier between routine and creative AI work eventually broke — but it took decades. By then, institutions had already rebuilt around the automation plateau. Full AI capability arrived into a society already profoundly reshaped.",
+          "substantial": "The barrier between routine and creative AI work held for decades — whether it would ever break remained uncertain — but it took decades. By then, institutions had already rebuilt around the automation plateau. Full AI capability arrived into a society already profoundly reshaped.",
           "never": "The ceiling was permanent. Novel creative work, original research, and recursive self-improvement (each AI generation helping build the next, faster) remained forever beyond AI. The most powerful tool ever built — but a tool nonetheless."
         },
         "auto_benefit_distribution": {

@@ -762,14 +762,6 @@
           "_when": [
             {
               "if": {
-                "is_ai_geo": [
-                  "no"
-                ]
-              },
-              "text": "The economic gains from AI automation are reaching {country}. It took longer than the leading nations, but costs are falling and services improving where you live."
-            },
-            {
-              "if": {
                 "profession": [
                   "trade"
                 ]
@@ -798,14 +790,6 @@
                 ]
               },
               "text": "AI automation made your company more productive. The productivity mostly benefited the people who own the company."
-            },
-            {
-              "if": {
-                "is_ai_geo": [
-                  "no"
-                ]
-              },
-              "text": "The wealth from AI automation concentrates where AI is built. {country} uses the tools, but the real gains accumulate elsewhere."
             }
           ]
         }
@@ -822,14 +806,6 @@
         "personalVignette": {
           "_default": "The automation gains went almost entirely to those already in power. The technology works; the distribution doesn't.",
           "_when": [
-            {
-              "if": {
-                "is_ai_geo": [
-                  "yes"
-                ]
-              },
-              "text": "You live in the country where AI automation wealth concentrates, but that doesn't mean it reaches you. The gains flow to a narrow elite."
-            },
             {
               "if": {
                 "profession": [
@@ -5605,7 +5581,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The response was surgical. Critical infrastructure survived. Your daily life is disrupted but functional — power, water, communications still work. The crisis passed without destroying the systems you depend on."
+          "_default": "The response was surgical. Critical infrastructure survived intact. But whether the response actually worked — whether the AI threat is neutralized — is a separate question."
         }
       },
       "severe": {
