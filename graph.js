@@ -742,7 +742,6 @@ const NODES = [
             { power_promise: ['for_everyone'], mobilization: ['strong'], reason: 'Promise and pressure aligned — broadly shared outcomes, not partial inequality' },
             { sincerity_test: ['sincere'], reason: 'Genuine cooperative intent produced broadly shared outcomes' },
             { resistance_outcome: ['succeeds'], reason: 'Successful resistance forced genuine redistribution' },
-            { power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'], reason: 'Without any contest, power concentrates to the maximum extent' }
           ] },
         { id: 'extreme', label: 'Power concentrates',
           disabledWhen: [

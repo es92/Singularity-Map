@@ -396,6 +396,7 @@ ${optionsText}${disabledText}`;
                 type: 'object',
                 properties: Object.fromEntries(enabledEdges.map(e => [e.id, { type: 'number' }])),
                 required: enabledEdges.map(e => e.id),
+                additionalProperties: false,
             };
 
             let weights;
@@ -538,13 +539,14 @@ CRITICAL: You MUST return ONLY a single valid JSON object. No markdown, no expla
             satisfaction: { type: 'integer' },
             accuracy: { type: 'integer' },
             missing_questions: { type: 'array', items: { type: 'string' } },
-            forced_choices: { type: 'array', items: { type: 'object', properties: { question: { type: 'string' }, complaint: { type: 'string' } }, required: ['question', 'complaint'] } },
+            forced_choices: { type: 'array', items: { type: 'object', properties: { question: { type: 'string' }, complaint: { type: 'string' } }, required: ['question', 'complaint'], additionalProperties: false } },
             outcome_reaction: { type: 'string' },
-            narrative_contradictions: { type: 'array', items: { type: 'object', properties: { heading: { type: 'string' }, issue: { type: 'string' } }, required: ['heading', 'issue'] } },
+            narrative_contradictions: { type: 'array', items: { type: 'object', properties: { heading: { type: 'string' }, issue: { type: 'string' } }, required: ['heading', 'issue'], additionalProperties: false } },
             vignette_reaction: { type: 'string' },
-            vignette_issues: { type: 'array', items: { type: 'object', properties: { heading: { type: 'string' }, issue: { type: 'string' } }, required: ['heading', 'issue'] } },
+            vignette_issues: { type: 'array', items: { type: 'object', properties: { heading: { type: 'string' }, issue: { type: 'string' } }, required: ['heading', 'issue'], additionalProperties: false } },
         },
         required: ['satisfaction', 'accuracy', 'missing_questions', 'forced_choices', 'outcome_reaction', 'narrative_contradictions', 'vignette_reaction', 'vignette_issues'],
+        additionalProperties: false,
     };
 
     const MAX_REVIEW_RETRIES = 2;

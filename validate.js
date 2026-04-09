@@ -696,9 +696,10 @@ function runVignetteValidation() {
                     if (!rule.text) {
                         errors.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: missing "text" field`);
                     }
+                    const validConditionKeys = new Set(['profession', 'country_bucket', 'is_ai_geo', ...NODES.map(n => n.id)]);
                     for (const [k, vals] of Object.entries(rule.if)) {
-                        if (!['profession', 'country_bucket', 'is_ai_geo'].includes(k)) {
-                            warnings.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: condition key "${k}" is not profession/country_bucket/is_ai_geo`);
+                        if (!validConditionKeys.has(k)) {
+                            warnings.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: condition key "${k}" is not a known dimension`);
                         }
                         if (!Array.isArray(vals)) {
                             errors.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: condition "${k}" must be an array`);

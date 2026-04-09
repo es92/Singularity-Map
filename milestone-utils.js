@@ -39,11 +39,11 @@ function resolvePersonalVignetteText(spec, ctx) {
 function resolvePersonalVignettes(sel, persona, personalData, narrative, nodes) {
     if (!persona || !persona.country || !persona.profession) return [];
     const bucket = getCountryBucket(persona.country, personalData);
-    const ctx = {
+    const ctx = Object.assign({}, sel, {
         profession: persona.profession,
         country_bucket: bucket,
         is_ai_geo: persona.is_ai_geo || 'no',
-    };
+    });
 
     const profEntry = personalData && personalData.professions.find(p => p.id === persona.profession);
     const tokenReplace = (str) => {

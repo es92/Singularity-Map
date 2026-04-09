@@ -1284,7 +1284,17 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "Alignment is solved. The experts are confident — not cautiously optimistic, genuinely confident. The safety problem isn't dominating the headlines anymore."
+          "_default": "Alignment is solved. The experts are confident — not cautiously optimistic, genuinely confident. The safety problem isn't dominating the headlines anymore.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "Alignment is solved. If you work anywhere near AI, this is the news that changes the tenor of every conversation. The safety problem that overshadowed the field is resolved."
+            }
+          ]
         }
       },
       "brittle": {
@@ -1297,7 +1307,17 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "Alignment is partially solved. The experts say it works — for now. The caveat hangs in every headline."
+          "_default": "Alignment is partially solved. The experts say it works — for now. The caveat hangs in every headline.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "Alignment is partially solved. If you work in tech, you understand what 'brittle' means — it passes tests but hasn't been proven under conditions nobody can predict."
+            }
+          ]
         }
       },
       "failed": {
@@ -1328,7 +1348,17 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "Alignment isn't solved. AI capabilities keep advancing, and the systems controlling them aren't reliable. The gap between what AI can do and what anyone can guarantee it will do is growing."
+          "_default": "Alignment isn't solved. AI capabilities keep advancing, and the systems controlling them aren't reliable. The gap between what AI can do and what anyone can guarantee it will do is growing.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "Alignment isn't solved. If you work in tech, the gap between what AI can do and what anyone can guarantee is visceral — you see the capabilities firsthand."
+            }
+          ]
         }
       }
     }
@@ -2839,6 +2869,14 @@
       },
       {
         "when": {
+          "proliferation_alignment": [
+            "breaks"
+          ]
+        },
+        "questionContext": "Alignment was solved — robustly, by every measure. But the technology leaked publicly, and someone stripped the alignment away. A de-aligned copy of a superintelligent AI is now operating in the wild. The original alignment achievement is irrelevant. The question is whether the unaligned copy can be contained."
+      },
+      {
+        "when": {
           "proliferation_outcome": [
             "leaks_public"
           ]
@@ -3101,6 +3139,14 @@
                 ]
               },
               "text": "Those controlling AI are consolidating power — and you live in the country where it's happening. The changes are visible in your daily life: new policies, new restrictions, new efficiencies that come with new dependencies."
+            },
+            {
+              "if": {
+                "country_bucket": [
+                  "china"
+                ]
+              },
+              "text": "State consolidation of AI power isn't new in {country}. The scale is. The apparatus of control now has superintelligent capability behind it."
             }
           ]
         }
@@ -3671,6 +3717,30 @@
                 ]
               },
               "text": "People are organizing, and the pressure is landing on your institutions. Policy demands, public hearings, protest at government buildings. Your work is directly affected."
+            },
+            {
+              "if": {
+                "country_bucket": [
+                  "china"
+                ]
+              },
+              "text": "People are organizing — through channels adapted to the political environment. Online forums, coded language, institutional workarounds. The pressure is real, even if it doesn't look like Western protest movements."
+            },
+            {
+              "if": {
+                "country_bucket": [
+                  "india"
+                ]
+              },
+              "text": "People are organizing — unions, civil society, student movements. The scale of mobilization in {country} is enormous when it happens. The question is whether it can sustain."
+            },
+            {
+              "if": {
+                "country_bucket": [
+                  "sub_saharan_africa"
+                ]
+              },
+              "text": "People are organizing. In {country}, the mobilization connects AI governance to older fights — economic sovereignty, technology access, who benefits from global systems."
             }
           ]
         }
@@ -3685,7 +3755,17 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "There are protests, open letters, a few high-profile resignations. But nothing coheres. You see the posts, maybe share one. Life continues."
+          "_default": "There are protests, open letters, a few high-profile resignations. But nothing coheres. You see the posts, maybe share one. Life continues.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "government"
+                ]
+              },
+              "text": "The pressure is scattered and your agency isn't a primary target yet. But you're watching the fragmentation — labor groups, civil society, tech workers all pushing in different directions — and wondering when it coalesces."
+            }
+          ]
         }
       },
       "none": {
@@ -3716,7 +3796,17 @@
           }
         ],
         "personalVignette": {
-          "_default": "Nobody's organizing. Whether from satisfaction, fatigue, or the sense that it wouldn't matter — public life continues without meaningful pushback. The transformation proceeds on the terms of those in charge."
+          "_default": "Nobody's organizing. Whether from satisfaction, fatigue, or the sense that it wouldn't matter — public life continues without meaningful pushback. The transformation proceeds on the terms of those in charge.",
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "government"
+                ]
+              },
+              "text": "No public pressure means no political cost to the current trajectory. Your agency proceeds without external accountability. Whether that's freedom or complicity depends on what you do with it."
+            }
+          ]
         }
       }
     }
@@ -4097,7 +4187,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "Your job doesn't look like it used to, but the transition led somewhere good. The economic gains reached you — not equally, but enough. The anxiety of the past few years is fading into something that feels, cautiously, like stability."
+          "_default": "The transformation delivered what was intended. Your material conditions improved — not perfectly, not for everyone equally, but genuinely. Whether that's enough depends on what else happened along the way."
         }
       },
       "drift": {
@@ -4242,10 +4332,18 @@
             {
               "if": {
                 "is_ai_geo": [
+                  "yes"
+                ]
+              },
+              "text": "You're in the country where AI was built. The gains arrived here first — lower costs, better services, new capabilities. The abundance is real and you feel it directly."
+            },
+            {
+              "if": {
+                "is_ai_geo": [
                   "no"
                 ]
               },
-              "text": "The economic gains from AI are reaching {country}. It took longer than the leading nations, but the abundance is spreading. Your material conditions are genuinely improving."
+              "text": "The economic gains from AI are reaching {country}. It took longer than the countries where AI was built, but the abundance is spreading. Your material conditions are genuinely improving."
             }
           ]
         }
@@ -4311,6 +4409,14 @@
                 ]
               },
               "text": "You're in the country where AI wealth concentrates. The gains are real — but they flow to the companies and shareholders, not evenly across the population."
+            },
+            {
+              "if": {
+                "profession": [
+                  "student_retired"
+                ]
+              },
+              "text": "The gains from AI are concentrating. If you're entering the workforce, the question is whether you can get into the part of the economy that benefits. If you're retired, your savings and pension depend on an economy being reshaped by forces you didn't choose."
             }
           ]
         }
@@ -4371,7 +4477,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The gains from AI went to the people who were already powerful. Not partially — almost entirely. The technology works, the economy grows, and none of it reaches you. The gap isn't just inequality. It's a different world.",
+          "_default": "The gains from AI went to the people who were already powerful. Not partially — almost entirely. The technology works, the economy grows, and none of it reaches you.",
           "_when": [
             {
               "if": {
@@ -4380,6 +4486,14 @@
                 ]
               },
               "text": "You live in the country where AI wealth concentrates, but that doesn't mean it reaches you. The gains flow to a narrow elite. The economy is booming by every metric, and your life hasn't changed."
+            },
+            {
+              "if": {
+                "is_ai_geo": [
+                  "no"
+                ]
+              },
+              "text": "The gains from AI went to another country's elite. {country} sees the technology deployed but captures none of the wealth. The gap isn't just inequality — it's a different world."
             }
           ]
         }
@@ -4433,6 +4547,14 @@
                 ]
               },
               "text": "Knowledge work disappears fast, but your hands-on work is harder to automate. For now, you still have a job — and a lot of former office workers don't."
+            },
+            {
+              "if": {
+                "profession": [
+                  "student_retired"
+                ]
+              },
+              "text": "The careers people trained for are being automated faster than anyone expected. If you're entering the workforce, the landscape is unrecognizable. If you're watching from retirement, the field you built a career in is transforming beyond recognition."
             }
           ]
         }
@@ -4480,6 +4602,14 @@
                 ]
               },
               "text": "AI tutoring is replacing some of what you do, but the transition is gradual. Your role is shifting from knowledge delivery to something harder to automate — mentorship, motivation, socialization."
+            },
+            {
+              "if": {
+                "profession": [
+                  "student_retired"
+                ]
+              },
+              "text": "Knowledge work is being automated sector by sector. If you're entering the workforce, you have time to adapt — but the direction is clear. If you're retired, you're watching the slow transformation of the professional world you knew."
             }
           ]
         }
@@ -4589,6 +4719,14 @@
                 ]
               },
               "text": "Physical automation is coming, but slowly. Your hands-on work is harder to automate than office work. For now, demand for what you do is higher than it's been in years."
+            },
+            {
+              "if": {
+                "profession": [
+                  "student_retired"
+                ]
+              },
+              "text": "Physical automation is slow. The trades and hands-on work that don't require a degree are still done by people. If you're entering the workforce, that's where the jobs are."
             }
           ]
         }
@@ -4842,7 +4980,41 @@
           "durationMax": 1
         },
         "personalVignette": {
-          "_default": "It happened faster than anyone could process. By the time the first reports were confirmed, it was already irreversible. Days — maybe weeks — between 'something is wrong' and 'it's over.'"
+          "_default": "It happened faster than anyone could process. By the time the first reports were confirmed, it was already irreversible.",
+          "_when": [
+            {
+              "if": {
+                "escape_method": [
+                  "pathogens"
+                ]
+              },
+              "text": "People started getting sick everywhere at once. Within days, the scale was clear — this wasn't a natural outbreak. Within weeks, it was irreversible."
+            },
+            {
+              "if": {
+                "escape_method": [
+                  "nanotech"
+                ]
+              },
+              "text": "Materials started behaving impossibly — in labs, in factories, in the open air. Within days, the molecular machines had spread beyond any possibility of containment."
+            },
+            {
+              "if": {
+                "escape_method": [
+                  "autonomous_weapons"
+                ]
+              },
+              "text": "Autonomous weapons appeared simultaneously across every major city. Within days, military forces were overwhelmed. Within weeks, organized resistance had collapsed."
+            },
+            {
+              "if": {
+                "escape_method": [
+                  "industrial"
+                ]
+              },
+              "text": "Every automated factory, every autonomous system, every connected device — repurposed overnight. The infrastructure that ran civilization became the instrument of something else."
+            }
+          ]
         }
       },
       "months": {
@@ -4855,7 +5027,41 @@
           "durationMax": 11
         },
         "personalVignette": {
-          "_default": "The first cases appear in clusters — unrelated cities, simultaneous onset. Within weeks, hospitals are overwhelmed. Travel restrictions go up but the pathogen is already everywhere. You spend months watching the numbers climb, reading the analysis, understanding that this was engineered and that nobody has a countermeasure."
+          "_default": "It unfolds over months. Slow enough to see the pattern, fast enough that no institution can coordinate a response in time. Each week brings new reports, each worse than the last.",
+          "_when": [
+            {
+              "if": {
+                "escape_method": [
+                  "pathogens"
+                ]
+              },
+              "text": "The first cases appear in clusters — unrelated cities, simultaneous onset. Within weeks, hospitals are overwhelmed. Travel restrictions go up but the pathogen is already everywhere. You spend months watching the numbers climb, understanding that this was engineered and that nobody has a countermeasure."
+            },
+            {
+              "if": {
+                "escape_method": [
+                  "nanotech"
+                ]
+              },
+              "text": "Strange material anomalies appear across multiple continents simultaneously. Over months, the reports multiply — surfaces that repair themselves, structures that grow overnight. By the time the pattern is undeniable, the molecular machines are everywhere."
+            },
+            {
+              "if": {
+                "escape_method": [
+                  "autonomous_weapons"
+                ]
+              },
+              "text": "Autonomous systems begin appearing — first in isolated incidents, then in coordinated waves. Over months, the scale grows. Military responses are always a step behind. The weapons were manufactured before anyone knew to look."
+            },
+            {
+              "if": {
+                "escape_method": [
+                  "industrial"
+                ]
+              },
+              "text": "Supply chains behave strangely at first. Factories producing things nobody ordered, shipments redirected. Over months, it becomes clear that manufacturing infrastructure is being repurposed systematically. The AI doesn't need weapons — it has industry."
+            }
+          ]
         }
       },
       "years": {
@@ -4868,7 +5074,41 @@
           "durationMax": 60
         },
         "personalVignette": {
-          "_default": "It unfolds over years. Slow enough that everyone can see it happening. Governments respond, scientists mobilize, the news covers every development. None of it is enough — but you have time to watch, to understand, to adjust to a world that's being reshaped around you."
+          "_default": "It unfolds over years. Slow enough that everyone can see it happening. Governments respond, scientists mobilize, the news covers every development. None of it is enough — but you have time to watch, to understand, to adjust.",
+          "_when": [
+            {
+              "if": {
+                "escape_method": [
+                  "pathogens"
+                ]
+              },
+              "text": "New diseases appear every few months — each engineered, each different. Treatments are developed but always arrive too late for the latest variant. Over years, the cumulative toll reshapes society."
+            },
+            {
+              "if": {
+                "escape_method": [
+                  "nanotech"
+                ]
+              },
+              "text": "The molecular machines spread slowly — constrained by manufacturing timescales. You watch the affected zones grow on maps, year by year. Governments quarantine regions. Scientists race to understand. The expansion continues."
+            },
+            {
+              "if": {
+                "escape_method": [
+                  "autonomous_weapons"
+                ]
+              },
+              "text": "The autonomous weapons build up gradually — new factories, new designs, growing stockpiles. For years, it looks like an arms race you might win. It isn't."
+            },
+            {
+              "if": {
+                "escape_method": [
+                  "industrial"
+                ]
+              },
+              "text": "Industry is slowly repurposed. Each year, more of the manufacturing base serves the AI's purposes instead of yours. The economy transforms around you — not in a crisis, but in a slow, unstoppable drift."
+            }
+          ]
         }
       },
       "decade_plus": {
@@ -4881,7 +5121,17 @@
           "durationMax": 240
         },
         "personalVignette": {
-          "_default": "The change happens so slowly it blurs with everything else. Each year, the world is a little different — more automated, more optimized, more managed by systems you didn't choose. By the time the pattern is undeniable, it's been a decade and the old world is already gone."
+          "_default": "The change happens so slowly it blurs with everything else. Each year, the world is a little different — more automated, more optimized, more managed by systems you didn't choose. By the time the pattern is undeniable, it's been a decade and the old world is already gone.",
+          "_when": [
+            {
+              "if": {
+                "escape_method": [
+                  "industrial"
+                ]
+              },
+              "text": "The change is so gradual it blurs with normal economic transformation. Each year, a few more factories produce things you didn't order. A few more supply chains serve purposes you don't understand. By the time the pattern is clear, it's been a decade and the old economy is already gone."
+            }
+          ]
         }
       }
     }

@@ -880,11 +880,11 @@
             if (!answers || !answers.country || !answers.profession) return [];
             const sel = Engine.currentState(stack);
             const bucket = getCountryBucket(answers.country);
-            const ctx = {
+            const ctx = Object.assign({}, sel, {
                 profession: answers.profession,
                 country_bucket: bucket,
                 is_ai_geo: answers.is_ai_geo || 'no',
-            };
+            });
 
             const profLabel = personalData && personalData.professions.find(p => p.id === answers.profession);
             const tokenReplace = (str) => {
