@@ -28,7 +28,7 @@ function resolveConditionalText(entry, state) {
         if (entry._when) {
             for (const cond of entry._when) {
                 const match = Object.entries(cond.if).every(
-                    ([k, vals]) => vals.includes(state[k])
+                    ([k, vals]) => Array.isArray(vals) && vals.includes(state[k])
                 );
                 if (match) return cond.text;
             }
@@ -193,9 +193,23 @@ function resolveNarrativeVariant(variants, sel) {
     if (!variants || !sel) return null;
     for (const v of variants) {
         if (!v.when) return v;
-        const match = Object.entries(v.when).every(([nodeId, vals]) =>
-            sel[nodeId] && vals.includes(sel[nodeId])
-        );
+        let match = true;
+        for (const [k, vals] of Object.entries(v.when)) {
+            if (k === '_raw') {
+                for (const [rk, rv] of Object.entries(vals)) {
+                    if (!sel[rk] || !rv.includes(sel[rk])) { match = false; break; }
+                }
+            } else if (k === '_eff') {
+                for (const [ek, ev] of Object.entries(vals)) {
+                    if (!sel[ek] || !ev.includes(sel[ek])) { match = false; break; }
+                }
+            } else if (k.startsWith('_')) {
+                continue;
+            } else {
+                if (!Array.isArray(vals) || !vals.includes(sel[k])) { match = false; break; }
+            }
+            if (!match) break;
+        }
         if (match) return v;
     }
     return null;

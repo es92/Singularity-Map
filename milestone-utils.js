@@ -9,14 +9,32 @@ function getCountryBucket(countryName, personalData) {
     return entry ? entry.bucket : 'rest';
 }
 
+function matchWhen(when, sel) {
+    for (const [k, vals] of Object.entries(when)) {
+        if (k === '_raw') {
+            for (const [rk, rv] of Object.entries(vals)) {
+                if (!sel[rk] || !rv.includes(sel[rk])) return false;
+            }
+        } else if (k === '_eff') {
+            for (const [ek, ev] of Object.entries(vals)) {
+                const v = sel[ek];
+                if (!v || !ev.includes(v)) return false;
+            }
+        } else if (k.startsWith('_')) {
+            continue;
+        } else {
+            if (!Array.isArray(vals)) continue;
+            if (!vals.includes(sel[k])) return false;
+        }
+    }
+    return true;
+}
+
 function resolveNarrativeVariant(variants, sel) {
     if (!variants || !sel) return null;
     for (const v of variants) {
         if (!v.when) return v;
-        const match = Object.entries(v.when).every(
-            ([k, vals]) => vals.includes(sel[k])
-        );
-        if (match) return v;
+        if (matchWhen(v.when, sel)) return v;
     }
     return null;
 }
