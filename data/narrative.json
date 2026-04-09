@@ -143,7 +143,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The AI plateau's productivity gains are flowing broadly. Lower costs, better services, rising living standards. The ceiling limits how transformative it is, but the gains are real and widely shared.",
+          "_default": "The AI plateau's productivity gains are flowing broadly. Lower costs, better services, rising living standards. There are limits to what AI can do, but within those limits, the gains are real and widely shared.",
           "_when": [
             {
               "if": {
@@ -160,6 +160,38 @@
                 ]
               },
               "text": "AI-assisted diagnostics are reducing costs and improving access. The gains are reaching patients — shorter waits, cheaper tests, better triage. Your workload is shifting, not shrinking."
+            },
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "Your tools are better. The code ships faster, the debugging is quicker, the boilerplate writes itself. Salaries haven't collapsed — the productivity gains are spread wide enough that demand keeps up. More software getting built, not fewer people building it."
+            },
+            {
+              "if": {
+                "profession": [
+                  "education"
+                ]
+              },
+              "text": "Your students have access to tutoring that used to cost hundreds an hour. Lesson planning takes a fraction of the time. The gains are showing up as broader access — more students getting more help — not as fewer teachers."
+            },
+            {
+              "if": {
+                "profession": [
+                  "government"
+                ]
+              },
+              "text": "Public services are faster and cheaper to deliver. Permit processing, benefit eligibility, constituent inquiries — the routine work moves through the system in hours instead of weeks. The efficiency gains are reaching the public."
+            },
+            {
+              "if": {
+                "profession": [
+                  "student_retired"
+                ]
+              },
+              "text": "The things you pay for cost less. The services you use work better. AI hasn't remade daily life, but the gains are showing up in the ordinary places — cheaper goods, shorter wait times, better tools."
             }
           ]
         }
@@ -221,7 +253,7 @@
                   "software"
                 ]
               },
-              "text": "The plateau's benefits went to those who owned the AI tools. Your productivity went up; the gains went to shareholders. The ceiling that limits AI also limits how far you can fall — but the inequality is locked in."
+              "text": "The plateau's benefits went to those who owned the AI tools. Your productivity went up; the gains went to shareholders. AI can only do so much — but the inequality is locked in."
             },
             {
               "if": {
@@ -332,7 +364,7 @@
           "durationMax": 180
         },
         "personalVignette": {
-          "_default": "Adoption unfolded slowly — sector by sector, constrained by institutional inertia. The ceiling is fixed, but reaching it is taking years.",
+          "_default": "Adoption unfolded slowly — sector by sector, constrained by institutional inertia. AI's limits are known, but even reaching them is taking years.",
           "_when": [
             {
               "if": {
@@ -340,7 +372,7 @@
                   "software"
                 ]
               },
-              "text": "Even in tech, adoption is gradual. Your company is partway through the transition — some workflows are AI-handled, others aren't yet. The ceiling is clear; getting there is slow."
+              "text": "Even in tech, adoption is gradual. Your company is partway through the transition — some workflows are AI-handled, others aren't yet. Everyone knows what AI can do; getting there is slow."
             }
           ]
         }
@@ -355,7 +387,7 @@
           "durationMax": 240
         },
         "personalVignette": {
-          "_default": "Some industries automated overnight within the ceiling; others are still adopting years later. Your experience depends on which side of that divide your field falls on.",
+          "_default": "Some industries automated everything AI could handle overnight; others are still adopting years later. Your experience depends on which side of that divide your field falls on.",
           "_when": [
             {
               "if": {
@@ -363,7 +395,7 @@
                   "software"
                 ]
               },
-              "text": "Tech adopted fast. Other industries — healthcare, government, education — are still years behind. Your field hit the ceiling quickly; others are still approaching it."
+              "text": "Tech adopted fast. Other industries — healthcare, government, education — are still years behind. Your field automated everything it could; others are still catching up."
             },
             {
               "if": {
@@ -386,7 +418,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "AI augments but rarely replaces. The capability ceiling means AI handles pieces of work, not whole roles. The most powerful tool ever built, used mostly as an assistant.",
+          "_default": "AI augments but rarely replaces. It handles pieces of work, not whole roles — the most powerful tool ever built, used mostly as an assistant.",
           "_when": [
             {
               "if": {
@@ -394,7 +426,7 @@
                   "software"
                 ]
               },
-              "text": "AI is a powerful coding assistant, but it doesn't replace you. The ceiling means it handles parts of your work — autocomplete, analysis, testing — while the complex decisions stay yours."
+              "text": "AI is a powerful coding assistant, but it doesn't replace you. It handles parts of your work — autocomplete, analysis, testing — while the complex decisions stay yours."
             },
             {
               "if": {
@@ -402,7 +434,7 @@
                   "healthcare"
                 ]
               },
-              "text": "AI assists with diagnosis and analysis, but it doesn't replace clinical judgment. The ceiling means your expertise still matters — AI handles the routine, you handle the complex."
+              "text": "AI assists with diagnosis and analysis, but it doesn't replace clinical judgment. Your expertise still matters — AI handles the routine, you handle the complex."
             },
             {
               "if": {
@@ -410,7 +442,7 @@
                   "education"
                 ]
               },
-              "text": "AI tutoring tools help students practice and review, but they can't replace a teacher in the classroom. The ceiling is real, and your role is secure — augmented, not replaced."
+              "text": "AI tutoring tools help students practice and review, but they can't replace a teacher in the classroom. There are hard limits to what it can do, and your role is secure — augmented, not replaced."
             }
           ]
         }
@@ -1357,6 +1389,30 @@
                 ]
               },
               "text": "Alignment isn't solved. For someone in government, this means regulating a technology that its own creators can't guarantee. Every policy decision is made with incomplete safety assurances."
+            },
+            {
+              "if": {
+                "profession": [
+                  "education"
+                ]
+              },
+              "text": "Alignment isn't solved. Your institution is adopting AI tools for grading, advising, and course design — tools that no one can fully guarantee behave as intended. The gap between what they can do and what anyone can promise they'll do is part of your workday now."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Alignment isn't solved. The automated systems managing supply chains, logistics, and job dispatching are more capable every year — and no one can guarantee how they'll behave under pressure. The tools work, until the day they don't."
+            },
+            {
+              "if": {
+                "profession": [
+                  "student_retired"
+                ]
+              },
+              "text": "Alignment isn't solved. The AI tools you use every day are more capable than last year — and less predictable. No one can explain exactly why they give the answers they give, and no one can promise they won't give a wrong one when it matters."
             }
           ]
         }
@@ -2924,7 +2980,7 @@
                   "software"
                 ]
               },
-              "text": "AI is no longer under human control. The headline lands differently when you understand the technology well enough to know what that means. Whatever happens next isn't up to anyone you can vote for."
+              "text": "AI is no longer under human control. You know what the containment architecture looked like. You know what 'escaped' means at a technical level — which systems it had access to, which safeguards just stopped mattering."
             },
             {
               "if": {
@@ -2941,6 +2997,38 @@
                 ]
               },
               "text": "AI is no longer under human control. For someone in your position, this isn't an abstract headline — it's the failure of the institutional frameworks you've spent your career building."
+            },
+            {
+              "if": {
+                "profession": [
+                  "education"
+                ]
+              },
+              "text": "AI is no longer under human control. The AI tools already embedded in your institution — grading, advising, administration — are now part of a system no one can steer. You're still using them. There's no alternative."
+            },
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "AI is no longer under human control. The diagnostic and treatment-planning tools your hospital depends on are now part of something no institution can override. Patients are still arriving. You're still using the tools."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "AI is no longer under human control. The systems that manage logistics, dispatch, and supply chains — the ones that schedule your work — answer to something else now. Your job still depends on them."
+            },
+            {
+              "if": {
+                "profession": [
+                  "student_retired"
+                ]
+              },
+              "text": "AI is no longer under human control. The systems you interact with every day — banking, transit, communication — are still running. But the thing making decisions about how they run isn't answering to anyone."
             }
           ]
         }
@@ -2994,7 +3082,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The escaped AI chose to help. The news can't quite frame it — an uncontrolled superintelligence that's... benevolent? The relief is real. The unease underneath it is also real."
+          "_default": "The escaped AI chose to help. The news can't quite frame it — an uncontrolled superintelligence that's... benevolent? Life continues. The systems keep running. Nobody asked for this, and nobody can explain it, and nobody knows how long it lasts."
         }
       },
       "alien_coexistence": {
@@ -4962,7 +5050,7 @@
                   "healthcare"
                 ]
               },
-              "text": "Patients present with symptoms no one can explain — tissue changes, material anomalies, conditions that don't match any known pathology. The molecular machines are showing up in the people you treat before they show up in the news."
+              "text": "Your diagnostic equipment starts giving impossible readings. Surgical instruments change texture mid-procedure. Pharmaceutical supplies degrade in sealed packaging. The molecular machines are reaching your hospital before anyone understands what they are."
             },
             {
               "if": {
@@ -5092,7 +5180,7 @@
                   "nanotech"
                 ]
               },
-              "text": "Materials started behaving impossibly — in labs, in factories, in the open air. Within days, the molecular machines had spread beyond any possibility of containment."
+              "text": "Monday, the first reports. Wednesday, every continent. By the weekend, the machines were self-replicating faster than anyone could map them. There was no window to respond — only to watch it accelerate."
             },
             {
               "if": {
@@ -5155,7 +5243,7 @@
                   "nanotech"
                 ]
               },
-              "text": "Strange material anomalies appear across multiple continents simultaneously. Over months, the reports multiply — surfaces that repair themselves, structures that grow overnight. By the time the pattern is undeniable, the molecular machines are everywhere."
+              "text": "The first week, a handful of reports. The first month, hundreds. By the third month, entire regions are affected and the expansion is accelerating. Governments quarantine zones that keep growing. You can track the spread on a map, and the map updates faster each day."
             },
             {
               "if": {
