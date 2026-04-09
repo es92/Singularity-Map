@@ -128,26 +128,31 @@ function acquireSlot() {
     return _callQueue;
 }
 
-async function callClaude(model, system, user, maxTokens = 256, { prefill } = {}) {
+async function callClaude(model, system, user, maxTokens = 256, { jsonSchema } = {}) {
     initClient();
     const MAX_RETRIES = 6;
     let backoff = 2000;
 
     const messages = [{ role: 'user', content: user }];
-    if (prefill) messages.push({ role: 'assistant', content: prefill });
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         await acquireSlot();
         try {
-            const resp = await client.messages.create({
+            const params = {
                 model,
                 max_tokens: maxTokens,
                 temperature: 0,
                 system,
                 messages,
-            });
+            };
+            if (jsonSchema) {
+                params.output_config = {
+                    format: { type: 'json_schema', schema: jsonSchema }
+                };
+            }
+            const resp = await client.messages.create(params);
             const text = resp.content[0].text.trim();
-            return prefill ? prefill + text : text;
+            return text;
         } catch (err) {
             const status = err?.status || err?.error?.status;
             if (status === 429 && attempt < MAX_RETRIES) {
@@ -389,8 +394,7 @@ ${optionsText}${disabledText}`;
 
             let weights;
             try {
-                const usesPrefill = EVAL_MODEL.includes('haiku');
-                const raw = await callClaude(EVAL_MODEL, system, user, 256, usesPrefill ? { prefill: '{' } : {});
+                const raw = await callClaude(EVAL_MODEL, system, user, 256);
                 apiCalls++;
                 weights = parseJsonResponse(raw);
             } catch (err) {
@@ -522,10 +526,25 @@ Respond in JSON with these fields:
 CRITICAL: You MUST return ONLY a single valid JSON object. No markdown, no explanation, no text before or after the JSON. The response must start with { and end with }. All string values must use double quotes. Do not include trailing commas. Example structure:
 {"satisfaction": 3, "accuracy": 3, "missing_questions": [], "forced_choices": [], "outcome_reaction": "...", "narrative_contradictions": [], "vignette_reaction": "...", "vignette_issues": []}`;
 
+    const reviewSchema = {
+        type: 'object',
+        properties: {
+            satisfaction: { type: 'integer' },
+            accuracy: { type: 'integer' },
+            missing_questions: { type: 'array', items: { type: 'string' } },
+            forced_choices: { type: 'array', items: { type: 'object', properties: { question: { type: 'string' }, complaint: { type: 'string' } }, required: ['question', 'complaint'] } },
+            outcome_reaction: { type: 'string' },
+            narrative_contradictions: { type: 'array', items: { type: 'object', properties: { heading: { type: 'string' }, issue: { type: 'string' } }, required: ['heading', 'issue'] } },
+            vignette_reaction: { type: 'string' },
+            vignette_issues: { type: 'array', items: { type: 'object', properties: { heading: { type: 'string' }, issue: { type: 'string' } }, required: ['heading', 'issue'] } },
+        },
+        required: ['satisfaction', 'accuracy', 'missing_questions', 'forced_choices', 'outcome_reaction', 'narrative_contradictions', 'vignette_reaction', 'vignette_issues'],
+    };
+
     const MAX_REVIEW_RETRIES = 2;
     for (let attempt = 0; attempt <= MAX_REVIEW_RETRIES; attempt++) {
         try {
-            const raw = await callClaude(REVIEW_MODEL, system, user, 1536);
+            const raw = await callClaude(REVIEW_MODEL, system, user, 1536, { jsonSchema: reviewSchema });
             return parseJsonResponse(raw);
         } catch (err) {
             if (attempt < MAX_REVIEW_RETRIES) {
