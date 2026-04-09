@@ -953,27 +953,48 @@ Return ONLY the JSON array.`;
     }
 }
 
-async function auditToneForVignettes(model, templateId, persona, vignettes, outcome) {
+async function auditToneForVignettes(model, templateId, persona, personalVignettes, worldVignettes, outcome) {
     const profLabel = personalData.professions.find(p => p.id === persona.profession)?.label || persona.profession;
-    let storyText = `Outcome: ${outcome}\nPersona: ${profLabel} in ${persona.country}\n\nPersonal vignettes (in order):\n`;
-    for (const v of vignettes) {
-        storyText += `\n${v.heading} · ${v.answerLabel}:\n${v.text}\n`;
+
+    let contextText = `Outcome: ${outcome}\nPersona: ${profLabel} in ${persona.country} (is_ai_geo: ${persona.is_ai_geo || 'no'})\n`;
+
+    if (worldVignettes && worldVignettes.length > 0) {
+        contextText += `\nWorld timeline (what happened in the world):\n`;
+        for (const v of worldVignettes) {
+            contextText += `- [${v.heading}]: ${v.text}\n`;
+        }
     }
 
-    const system = `You are a narrative editor reviewing personal vignettes for an interactive AI futures scenario. The user made choices about the future of AI and received personal vignettes describing how each world event reaches THEM.
+    contextText += `\nPersonal vignettes (how it reaches the reader):\n`;
+    for (const v of personalVignettes) {
+        contextText += `\n${v.heading} · ${v.answerLabel}:\n${v.text}\n`;
+    }
 
-Read the vignette sequence as a complete narrative. Flag specific issues:
+    const system = `You are a narrative editor reviewing personal vignettes for an interactive AI futures scenario. The user made choices about the future of AI, received world timeline vignettes (what happened), and personal vignettes (how each event reaches them based on profession and country).
 
-1. GENERIC: Lines that could describe anyone — no profession or country specificity. Quote the line.
-2. OVERWROUGHT: Portentous, grandiose, or emotionally manipulative language. Quote the line.
-3. REPETITIVE: Phrases or structures that repeat across vignettes. Quote both instances.
-4. TONAL INCONSISTENCY: Shifts in register that feel jarring (e.g., clinical to melodramatic).
-5. ARC PROBLEMS: Places where the emotional progression drops, stalls, or feels rushed.
-6. FABRICATED: Details not established in the world narrative — invented names, numbers, times, or scenes.
+IMPORTANT CONTEXT about how this system works:
+- Each personal vignette corresponds to ONE question/answer in the scenario. Consider each vignette in the context of the world events that precede and surround it.
+- Some vignettes are intentionally general — events like "alignment is solved" or "AI escapes control" are news that everyone hears about the same way regardless of profession. These should NOT be flagged as generic.
+- Only flag GENERIC when a vignette describes an event that WOULD land differently by profession or country, but the text doesn't reflect that difference.
+- Register variation across vignettes is intentional — a flat statement, a question, a fragment. Do NOT flag register shifts as tonal inconsistency.
 
-Be specific and quote the text. Only flag things that would bother a thoughtful reader — not minor style preferences.`;
+STYLE PRINCIPLES (flag violations of these):
+1. Don't invent what the story doesn't establish. Every detail must be traceable to the world narrative or the user's inputs (profession, country, is_ai_geo).
+2. Personal over macro. Translate the world event into what the reader would notice — don't just restate the macro framing with "you" in front.
+3. Active over passive. The reader is a protagonist, not a spectator.
+4. Earn the emotion. No "after everything" or "against the odds." Let events create the feeling.
+5. Country as context, not decoration. Don't invent local color the narrative doesn't establish.
 
-    const user = `${storyText}\n\n---\n\nReturn a JSON array of issues. Each: { "type": "<GENERIC|OVERWROUGHT|REPETITIVE|TONAL|ARC|FABRICATED>", "heading": "<vignette heading>", "quote": "<the specific text>", "issue": "<what's wrong>" }\n\nIf the vignettes read well, return an empty array: []\n\nReturn ONLY the JSON array.`;
+Flag these specific issue types:
+
+1. FABRICATED: Details not established in the world narrative — invented names, numbers, times, scenes, institutions. This is the most important category.
+2. OVERWROUGHT: Portentous or emotionally manipulative language that isn't earned by the events.
+3. REPETITIVE: The same phrase, idea, or reassurance appearing in multiple vignettes on this path.
+4. COULD_CUSTOMIZE: A vignette where the world event WOULD land differently by profession or country, but the text is generic. Only flag this when customization would be meaningful — not for universal news events.
+
+Be specific and quote the text. Only flag things that would bother a thoughtful reader.`;
+
+    const user = `${contextText}\n\n---\n\nReturn a JSON array of issues. Each: { "type": "<FABRICATED|OVERWROUGHT|REPETITIVE|COULD_CUSTOMIZE>", "heading": "<vignette heading>", "quote": "<the specific text>", "issue": "<what's wrong>" }\n\nIf the vignettes read well, return an empty array: []\n\nReturn ONLY the JSON array.`;
 
     try {
         const raw = await callClaude(model, system, user, 4096);
@@ -1011,12 +1032,14 @@ async function runVignetteAudit() {
         const resolved = resolveTemplate(template.id, state);
         const outcomeName = resolved ? `${resolved.title}${resolved.subtitle ? ' — ' + resolved.subtitle : ''} (${resolved.mood})` : template.id;
 
+        const worldVignettes = resolved ? resolved.vignettes : [];
+
         for (const persona of tonePersonas) {
             const vignettes = resolveVignettesForState(state, persona);
             if (vignettes.length === 0) continue;
 
             jobs.push(async () => {
-                const issues = await auditToneForVignettes(AUDIT_MODEL, template.id, persona, vignettes, outcomeName);
+                const issues = await auditToneForVignettes(AUDIT_MODEL, template.id, persona, vignettes, worldVignettes, outcomeName);
                 return issues.map(issue => ({
                     template: template.id,
                     persona: `${persona.profession} in ${persona.country}`,
