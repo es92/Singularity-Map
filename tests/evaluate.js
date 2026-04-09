@@ -392,9 +392,15 @@ ${getQuestionContext(node.id, sel)}
 Available options:
 ${optionsText}${disabledText}`;
 
+            const edgeSchema = {
+                type: 'object',
+                properties: Object.fromEntries(enabledEdges.map(e => [e.id, { type: 'number' }])),
+                required: enabledEdges.map(e => e.id),
+            };
+
             let weights;
             try {
-                const raw = await callClaude(EVAL_MODEL, system, user, 256);
+                const raw = await callClaude(EVAL_MODEL, system, user, 256, { jsonSchema: edgeSchema });
                 apiCalls++;
                 weights = parseJsonResponse(raw);
             } catch (err) {
