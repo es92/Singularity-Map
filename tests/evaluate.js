@@ -84,7 +84,7 @@ const CONCURRENCY = parseInt(getArg('--concurrency', '10'), 10);
 const GENERATE_REPORT = args.includes('--report');
 const REPORT_ONLY = args.includes('--report-only');
 const AUDIT_MODE = args.includes('--audit');
-const TONE_AUDIT = args.includes('--tone-audit');
+const VIGNETTE_AUDIT = args.includes('--vignette-audit');
 const modes = MODE_ARG === 'both' ? ['want', 'likely'] : [MODE_ARG];
 
 // ── Anthropic client ──
@@ -979,15 +979,15 @@ Be specific and quote the text. Only flag things that would bother a thoughtful 
         const raw = await callClaude(model, system, user, 4096);
         return parseJsonResponse(raw);
     } catch (err) {
-        console.error(`  Tone audit API error for ${templateId}/${persona.profession}: ${err.message}`);
+        console.error(`  Vignette audit API error for ${templateId}/${persona.profession}: ${err.message}`);
         return [];
     }
 }
 
-async function runToneAudit() {
+async function runVignetteAudit() {
     initClient();
     const AUDIT_MODEL = process.env.AUDIT_MODEL || REVIEW_MODEL;
-    console.log(`\nRunning personal story tone audit...`);
+    console.log(`\nRunning personal vignette audit...`);
     console.log(`Model: ${AUDIT_MODEL}\n`);
 
     const tonePersonas = [
@@ -1035,7 +1035,7 @@ async function runToneAudit() {
         if (issues && issues.length > 0) allIssues.push(...issues);
     }
 
-    console.log(`\n--- Tone Audit Summary ---`);
+    console.log(`\n--- Personal Vignette Audit Summary ---`);
     console.log(`Total issues: ${allIssues.length}`);
 
     if (allIssues.length > 0) {
@@ -1056,7 +1056,7 @@ async function runToneAudit() {
         }
     }
 
-    const reportPath = path.join(__dirname, 'tone-audit-report.json');
+    const reportPath = path.join(__dirname, 'vignette-audit-report.json');
     fs.writeFileSync(reportPath, JSON.stringify(allIssues, null, 2));
     console.log(`\nFull report: ${reportPath}`);
 }
@@ -1326,7 +1326,7 @@ async function reportOnly() {
     console.log('Report written to tests/report.md');
 }
 
-(TONE_AUDIT ? runToneAudit() : AUDIT_MODE ? runAudit() : REPORT_ONLY ? reportOnly() : main()).catch(err => {
+(VIGNETTE_AUDIT ? runVignetteAudit() : AUDIT_MODE ? runAudit() : REPORT_ONLY ? reportOnly() : main()).catch(err => {
     console.error('Fatal:', err);
     process.exit(1);
 });
