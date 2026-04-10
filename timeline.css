@@ -239,6 +239,7 @@ body::before {
 .timeline-light .timeline-headline,
 .timeline-light .timeline-desc,
 .timeline-light .timeline-slider { display: none; }
+.hide-sliders .timeline-slider { display: none; }
 .timeline-light .timeline-event { margin-bottom: 0.65rem; padding-top: 0; }
 .timeline-light .tl-dot { top: calc(0.67rem); }
 

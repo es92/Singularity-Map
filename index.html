@@ -1457,6 +1457,7 @@
                         else if (dk === 'fq') { flags.fullQuestions = dv !== '0'; }
                         else if (dk === 'et') { flags.expandTimeline = dv !== '0'; }
                         else if (dk === 'sq') { flags.shortQuestions = dv === '1'; }
+                        else if (dk === 'cd') { flags.customDurations = dv === '1'; }
                         else if (dk === 'db') { flags.debugMode = dv === '1'; }
                         else if (dk === 'pp') { flags[dk] = dv; }
                         else { pairs.push({ nodeId: dk, edgeId: dv }); }
@@ -1558,6 +1559,7 @@
                 ? flags.shortQuestions
                 : window.matchMedia('(max-width: 580px)').matches;
             let expandTimeline = flags.expandTimeline !== false;
+            let customDurations = flags.customDurations === true;
             let debugMode = flags.debugMode === true;
             let timelineDurations = [];
             let timelineNodeIds = [];
@@ -2101,12 +2103,13 @@
                 if (!fullQuestions) entries.push('fq=0');
                 if (shortQuestions) entries.push('sq=1');
                 if (!expandTimeline) entries.push('et=0');
+                if (customDurations) entries.push('cd=1');
                 if (debugMode) entries.push('db=1');
                 if (personalAnswers) {
                     if (personalAnswers.profession) entries.push('pp=' + encodeURIComponent(personalAnswers.profession));
                 }
                 if (entries.length > 0) hash += '?' + entries.join('&');
-                const stateFlags = { fullQuestions, shortQuestions, expandTimeline, debugMode };
+                const stateFlags = { fullQuestions, shortQuestions, expandTimeline, customDurations, debugMode };
                 const pairs = stack.filter(e => e.nodeId).map(e => ({ nodeId: e.nodeId, edgeId: e.edgeId }));
                 const state = { screen: 'map', pairs, lockedOutcomeId: lockedId + (lockedVariantKey ? '--' + lockedVariantKey : ''), flags: stateFlags, started };
                 if (shouldPush) {
@@ -2292,6 +2295,7 @@
                 }
                 if (timelineEl && started) {
                     timelineEl.classList.toggle('timeline-light', !expandTimeline);
+                    timelineEl.classList.toggle('hide-sliders', !customDurations);
                     const tlResult = mapAnimator.renderTimeline(events, {
                         expanded: expandTimeline,
                         formatRange,
@@ -2551,6 +2555,7 @@
                                 <label class="map-toggle"><input type="checkbox" data-flag="fq"${fullQuestions ? ' checked' : ''}><span>Question Mode</span></label>
                                 <label class="map-toggle"><input type="checkbox" data-flag="sq"${shortQuestions ? ' checked' : ''}><span>Short Questions</span></label>
                                 <label class="map-toggle"><input type="checkbox" data-flag="et"${expandTimeline ? ' checked' : ''}><span>Expand Timeline</span></label>
+                                <label class="map-toggle"><input type="checkbox" data-flag="cd"${customDurations ? ' checked' : ''}><span>Duration Sliders</span></label>
                             </div>
                         </div>
                         <div class="debug-panel" style="display:none"></div>
@@ -2586,6 +2591,7 @@
                     if (cb.dataset.flag === 'fq') fullQuestions = cb.checked;
                     if (cb.dataset.flag === 'sq') shortQuestions = cb.checked;
                     if (cb.dataset.flag === 'et') expandTimeline = cb.checked;
+                    if (cb.dataset.flag === 'cd') customDurations = cb.checked;
                     
                     update();
                 });
