@@ -512,8 +512,12 @@ class TimelineAnimator extends TimelineRenderer {
         const footerOriginalTop = footerEl ? footerEl.getBoundingClientRect().top : null;
 
         // --- 1. Apply end state (no inflation, natural layout) ---
+        const savedScrollY = window.scrollY;
         this.containerEl.classList.add('flip-animating');
         applyEndState();
+        if (window.scrollY !== savedScrollY) {
+            window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+        }
 
         // --- 2. Snapshot end positions ---
         const newCard = this._getCard();
