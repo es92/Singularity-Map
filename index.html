@@ -2150,7 +2150,7 @@
                                 reachable: o.reachable,
                                 disabled: o.disabled,
                                 disabledReason: o.disabledReason || null,
-                            })),
+                            })).sort((a, b) => (a.disabled ? 1 : 0) - (b.disabled ? 1 : 0)),
                         };
                         const qResult = mapAnimator.renderQuestionCard(questionData, {
                             compact: !fullQuestions,
