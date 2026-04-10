@@ -78,20 +78,20 @@ body{
     width:1200px;height:630px;
     display:flex;align-items:center;justify-content:center;
     text-align:center;
-    padding:3rem 4rem;
+    padding:1.5rem 2.5rem;
     background:${heroGradient};
     border:1px solid ${m.border};
     border-radius:12px;
     position:relative;
 }
-.inner{max-width:700px;margin:0 auto}
+.inner{max-width:1000px;margin:0 auto}
 .title{
-    font-size:3.2rem;font-weight:700;
+    font-size:3.5rem;font-weight:700;
     letter-spacing:-0.03em;line-height:1.1;
     margin-bottom:0.5rem;color:#e4e4f0;
 }
 .subtitle{
-    font-size:1.35rem;font-weight:400;
+    font-size:1.5rem;font-weight:400;
     font-style:italic;margin-bottom:0.85rem;opacity:0.8;color:#e4e4f0;
 }
 .mood-badge{
@@ -103,7 +103,7 @@ body{
     margin-bottom:1.25rem;
 }
 .summary{
-    font-size:1.1rem;line-height:1.75;
+    font-size:1.3rem;line-height:1.65;
     color:#9898b0;
 }
 </style></head>
@@ -144,7 +144,6 @@ function sharePageHtml(card) {
     <meta name="twitter:title" content="I got: ${esc(displayTitle)}">
     <meta name="twitter:description" content="${esc(truncDesc)}">
     <meta name="twitter:image" content="${imgUrl}">
-    <meta http-equiv="refresh" content="0;url=${BASE_URL}">
     <style>
         body{background:#08080f;color:#e4e4f0;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem}
         a{color:#00c8ff}
@@ -155,6 +154,7 @@ function sharePageHtml(card) {
         <h1>${esc(displayTitle)}</h1>
         <p style="margin-top:1rem">Redirecting to <a href="${BASE_URL}">AI Singularity Map</a>...</p>
     </div>
+    <script>location.href="${BASE_URL}";</script>
 </body>
 </html>`;
 }
