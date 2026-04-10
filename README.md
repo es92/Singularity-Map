@@ -14,6 +14,8 @@ Outcomes range from The Flourishing (genuine shared abundance) to The Ruin (civi
 
 The app also generates personalized vignettes based on your profession and country — how each world event reaches you specifically.
 
+Think of this as a tool for exploring possibilities about AI, not as a source of truth about what will happen. The real world will likely be messier, more surprising, and shaped by factors simple branching can't capture. But we do expect many of these components to appear as AI develops, and mapping how they connect may help you reason about them before they do.
+
 ## Running locally
 
 No build step. It's a static site.
