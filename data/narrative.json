@@ -15,7 +15,8 @@
           "description": "The doubling trend that began in 2020 shows no signs of bending. Each generation of models is meaningfully more capable than the last. Frontier (most advanced) labs race to build the next generation, and the exponential trajectory continues.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Scaling laws hold, compute keeps growing, exponential trajectory continues."
       },
       "stalls": {
         "answerLabel": "No — it slows down or hits a wall",
@@ -25,9 +26,11 @@
           "description": "The exponential trend breaks. Whether from data limits, compute (computing power) costs, or fundamental barriers — AI capability plateaus. The singularity recedes from view.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Diminishing returns, data limits, or architectural ceilings cause AI to plateau."
       }
-    }
+    },
+    "shortQuestionContext": "AI task capability has been doubling every ~7 months. At that rate, AI would handle week-long tasks by 2027. Does the trend continue?"
   },
   "stall_duration": {
     "questionText": "Where does autonomous AI capability top out?",
@@ -41,7 +44,8 @@
           "description": "AI can handle tasks requiring up to a few hours of focused work, but nothing beyond. Useful, but not transformative. The world adjusts to a tool, not a revolution.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Good at short tasks, can't handle longer autonomous work."
       },
       "days": {
         "answerLabel": "Day-level tasks",
@@ -51,7 +55,8 @@
           "description": "AI handles tasks requiring a full day of focused effort — research summaries, code modules, analysis. Significant automation, but human expertise remains essential for complex work.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Handles a full day's work, but nothing longer."
       },
       "weeks": {
         "answerLabel": "Week-level tasks",
@@ -61,7 +66,8 @@
           "description": "AI can manage week-long projects autonomously — full research cycles, software features, strategic analyses. A powerful tool that reshapes knowledge work, but plateaus short of full generality.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Manages week-long projects, but months are out of reach."
       },
       "months": {
         "answerLabel": "Month-level tasks, then it stops",
@@ -71,9 +77,11 @@
           "description": "AI handles month-long autonomous projects — entire product developments, research programs, organizational analyses. Remarkably capable, but something prevents the final leap to open-ended superintelligence.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Near-AGI for knowledge work, but a hard ceiling before full autonomy."
       }
-    }
+    },
+    "shortQuestionContext": "If the trend breaks, AI hits a ceiling. The question is where. **Think not about what AI can do with human guidance, but what it can handle reliably on its own.**"
   },
   "stall_recovery": {
     "questionText": "What is required for progress to resume?",
@@ -87,7 +95,8 @@
           "description": "A new technique, dataset, or architectural insight unlocks the next phase of capability growth. The stall was temporary — months to a few years — and the trajectory resumes.",
           "durationMin": 3,
           "durationMax": 24
-        }
+        },
+        "shortAnswerDesc": "A new technique restarts the exponential trend quickly."
       },
       "substantial": {
         "answerLabel": "A substantial breakthrough — years to decades",
@@ -97,7 +106,8 @@
           "description": "Progress requires a fundamental rethinking — new paradigms, new hardware, or insights from adjacent fields. The gap lasts years to decades before capability growth resumes.",
           "durationMin": 36,
           "durationMax": 120
-        }
+        },
+        "shortAnswerDesc": "Requires a genuine paradigm shift. Could take a decade or more."
       },
       "never": {
         "answerLabel": "It's never going to happen",
@@ -107,9 +117,11 @@
           "description": "No breakthrough comes. AI capability has reached its fundamental limit. The technology is powerful but bounded — and the world adapts to that reality.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "The ceiling is fundamental. This is as good as AI gets."
       }
-    }
+    },
+    "shortQuestionContext": "Ceilings in technology have been broken before. How hard is this one?"
   },
   "plateau_benefit_distribution": {
     "questionText": "Who benefits from the AI plateau?",
@@ -194,7 +206,9 @@
               "text": "The things you pay for cost less. The services you use work better. AI hasn't remade daily life, but the gains are showing up in the ordinary places — cheaper goods, shorter wait times, better tools."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Broadly shared",
+        "shortAnswerDesc": "Gains flow as lower costs, better services, and broad-based improvement."
       },
       "unequal": {
         "answerLabel": "Unequally — existing wealth holders benefit most",
@@ -233,7 +247,9 @@
               "text": "AI tools are everywhere in education now. They help, genuinely. But the productivity gains translate into budget cuts, not better pay or smaller classes."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Wealth holders benefit most",
+        "shortAnswerDesc": "Capital owners capture most value. Labor's share of income falls."
       },
       "extreme": {
         "answerLabel": "Extremely unequally — those holding power capture nearly everything",
@@ -264,9 +280,12 @@
               "text": "The plateau's benefits went to those who owned the AI tools. Your hands-on work wasn't automated, but the economy restructured around you. The jobs are there; the wages haven't kept up."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Power holders capture nearly everything",
+        "shortAnswerDesc": "A tiny elite controls the AI economy. Everyone else is a dependent."
       }
-    }
+    },
+    "shortQuestionContext": "AI hit its ceiling, but it's still the most powerful tool ever built. Who captures the value?"
   },
   "plateau_knowledge_rate": {
     "questionText": "How much knowledge work does AI at this level actually replace?",
@@ -352,7 +371,9 @@
               "text": "Policy analysis, regulatory review, and constituent services are handled by AI within its capability ceiling. The tasks it can do, it does faster than any department. Your role shifts to the decisions that require political judgment."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Rapid — most in 2–5 years",
+        "shortAnswerDesc": "Within AI's range, adoption is swift and total."
       },
       "gradual": {
         "answerLabel": "Gradual — adoption unfolds over 5–15 years",
@@ -375,7 +396,9 @@
               "text": "Even in tech, adoption is gradual. Your company is partway through the transition — some workflows are AI-handled, others aren't yet. Everyone knows what AI can do; getting there is slow."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Gradual — over 5–15 years",
+        "shortAnswerDesc": "Sector by sector, constrained by institutional inertia."
       },
       "uneven": {
         "answerLabel": "Uneven — 2–5 years in tech, 10–20+ in lagging sectors",
@@ -406,7 +429,8 @@
               "text": "The offices automated. The job sites didn't. You're watching a patchwork economy form — half AI-managed, half unchanged."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "2–5 years in tech, 10–20+ in regulated or resistant sectors."
       },
       "limited": {
         "answerLabel": "Limited — AI augments but rarely replaces",
@@ -445,9 +469,12 @@
               "text": "AI tutoring tools help students practice and review, but they can't replace a teacher in the classroom. There are hard limits to what it can do, and your role is secure — augmented, not replaced."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "AI assists workers but most roles absorb it as a tool."
       }
-    }
+    },
+    "shortQuestionText": "How much knowledge work gets replaced?",
+    "shortQuestionContext": "Even at a fixed ceiling, AI can automate a lot. How fast does adoption happen?"
   },
   "plateau_physical_rate": {
     "questionText": "Does physical automation advance alongside AI, or does it lag?",
@@ -492,7 +519,9 @@
               "text": "The automation everyone predicted for physical work is years away. Your job hasn't changed, but the conversation about whether it will has."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Trails by 10–25 years",
+        "shortAnswerDesc": "Physical automation advances slowly without AI breakthroughs."
       },
       "uneven": {
         "answerLabel": "Uneven — 5–10 years in manufacturing hubs, 20+ elsewhere",
@@ -523,7 +552,9 @@
               "text": "Physical automation is transforming other countries first. In {country}, the changes are slower to arrive."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Uneven — fast in hubs, slow elsewhere",
+        "shortAnswerDesc": "Manufacturing hubs within a decade; developing regions wait 20+ years."
       },
       "limited": {
         "answerLabel": "Limited — physical work remains largely human indefinitely",
@@ -546,9 +577,13 @@
               "text": "Physical automation never came for your work. Warehouses and factories automated, but anything requiring adaptation and judgment in unstructured environments is still done by people. Your skills are secure."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Limited — stays human",
+        "shortAnswerDesc": "Robotics stagnates. Unstructured physical work stays human."
       }
-    }
+    },
+    "shortQuestionText": "Does physical automation keep pace?",
+    "shortQuestionContext": "Knowledge work transforms, but the physical world is a separate frontier. Does it follow?"
   },
   "takeoff": {
     "questionText": "How much does each generation of AI accelerate the next?",
@@ -566,7 +601,8 @@
           "description": "AI automates much of the research process, but each generation doesn't meaningfully accelerate the next. Progress continues at the baseline ~7-month doubling rate — powerful, but predictable. The path to superintelligence stretches over half a decade.",
           "durationMin": 66,
           "durationMax": 66
-        }
+        },
+        "shortAnswerDesc": "Each doubling still takes ~7 months. 5+ years to superintelligence."
       },
       "slow": {
         "answerLabel": "10% — Modest acceleration",
@@ -576,7 +612,8 @@
           "description": "Each generation of AI modestly accelerates the next. The doubling time compresses from 7 months toward 3 over several years. Institutions strain but can adapt. The acceleration is visible but not overwhelming.",
           "durationMin": 40,
           "durationMax": 40
-        }
+        },
+        "shortAnswerDesc": "Doubling shrinks from 7 to 3 months. 3–4 years total."
       },
       "moderate": {
         "answerLabel": "20% — Meaningful acceleration",
@@ -586,7 +623,8 @@
           "description": "Each AI generation meaningfully speeds up the next. What started as 7-month cycles compresses to months, then weeks. The pace is clearly accelerating — but there's still time to react.",
           "durationMin": 25,
           "durationMax": 25
-        }
+        },
+        "shortAnswerDesc": "Doubling compresses to under 2 months. ~2 years total."
       },
       "fast": {
         "answerLabel": "35% — Dramatic acceleration",
@@ -596,7 +634,8 @@
           "description": "The feedback loop between AI capability and AI research accelerates sharply. Each generation produces the next in a fraction of the time. Within roughly a year, AI leaps from automated research to superintelligence.",
           "durationMin": 13,
           "durationMax": 13
-        }
+        },
+        "shortAnswerDesc": "Superintelligence in roughly a year. Most institutions can't keep up."
       },
       "explosive": {
         "answerLabel": "50% — Runaway acceleration",
@@ -606,9 +645,11 @@
           "description": "Each generation of AI produces the next in half the time. The first doublings take months; the last take days. The transition from *impressive AI* to *vastly superhuman* compresses into weeks at the end.",
           "durationMin": 7,
           "durationMax": 7
-        }
+        },
+        "shortAnswerDesc": "True recursive self-improvement. Superintelligence in ~7 months."
       }
-    }
+    },
+    "shortQuestionContext": "AI is automating its own research. At the baseline ~7-month doubling rate, superintelligence is 5+ years away — but if each generation accelerates the next, the timeline compresses dramatically."
   },
   "agi_threshold": {
     "questionText": "How capable does AI need to get before it matches the best humans?",
@@ -622,7 +663,8 @@
           "description": "AI systems that can reliably handle 24-hour autonomous tasks prove competitive with the best human professionals across most knowledge work domains.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "A full day of autonomous work is enough to compete with most professionals."
       },
       "one_week": {
         "answerLabel": "~1 week — sustained competence",
@@ -635,7 +677,8 @@
         },
         "personalVignette": {
           "_default": "AI can now do a week's worth of professional work autonomously. The benchmarks are all over the news. It's not theoretical anymore — it's competitive with the best people in your field."
-        }
+        },
+        "shortAnswerDesc": "Matching professionals means managing week-long project cycles."
       },
       "few_months": {
         "answerLabel": "~A few months — deep expertise",
@@ -645,7 +688,8 @@
           "description": "AI reaches human-competitive capability only when it can sustain months of autonomous strategic work — navigating ambiguity and adapting to changing circumstances.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Requires months of sustained strategic thinking and navigating ambiguity."
       },
       "one_year": {
         "answerLabel": "~1 year — the bar is very high",
@@ -655,7 +699,8 @@
           "description": "Only when AI can sustain year-long autonomous projects — with strategic adaptation, relationship-building, and institutional understanding — does it truly match the best humans.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Requires year-long strategies, relationships, and institutional knowledge."
       },
       "ten_plus_years": {
         "answerLabel": "~10+ years — mastery runs deep",
@@ -665,7 +710,8 @@
           "description": "The threshold for human-competitive AI turns out to be extraordinarily high — matching the accumulated wisdom and judgment that top humans build over decades of practice.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Must match decades of accumulated intuition and judgment."
       },
       "never": {
         "answerLabel": "Never — the gap isn't about capability",
@@ -675,9 +721,12 @@
           "description": "Despite handling ever-longer tasks, AI never becomes genuinely competitive with top human professionals. The gap turns out to be qualitative — something that scaling capability alone cannot bridge.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Something fundamental about human intelligence remains beyond AI."
       }
-    }
+    },
+    "shortQuestionText": "How capable must AI get to match the best humans?",
+    "shortQuestionContext": "At what point does AI stop being a tool and become a genuine competitor to top human professionals?"
   },
   "asi_threshold": {
     "questionText": "How capable does AI need to get before it surpasses the best humans?",
@@ -691,7 +740,8 @@
           "description": "AI systems handling 24-hour tasks already outperform the best humans — not through deeper understanding, but through parallelism, speed, and consistency that no human can match.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Parallelism, tirelessness, and perfect recall give AI instant advantages."
       },
       "one_week": {
         "answerLabel": "~1 week — outpaces quickly",
@@ -701,7 +751,8 @@
           "description": "AI systems managing week-long projects consistently outperform the best human professionals — through sustained focus, perfect memory, and the ability to explore solution spaces no human could cover.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Zero fatigue and vast context overwhelm human judgment at a week."
       },
       "few_months": {
         "answerLabel": "~A few months — strategic superiority",
@@ -714,7 +765,8 @@
         },
         "personalVignette": {
           "_default": "AI is now better than the best humans at sustained, complex work. Not just faster — qualitatively better. The implications for your field, and every field, are impossible to ignore."
-        }
+        },
+        "shortAnswerDesc": "Qualitatively better judgment across complex, long-horizon problems."
       },
       "one_year": {
         "answerLabel": "~1 year — the bar is very high",
@@ -724,7 +776,8 @@
           "description": "Only at year-long task capability does AI truly surpass the best humans — demonstrating strategic depth, cross-domain synthesis, and adaptive planning that makes human expertise look narrow.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Requires year-long strategic depth beyond human capacity."
       },
       "ten_plus_years": {
         "answerLabel": "~10+ years — surpassing takes decades",
@@ -734,7 +787,8 @@
           "description": "The bar for superhuman performance turns out to be extraordinarily high — requiring AI to match and exceed the accumulated wisdom and judgment that humans build over lifetimes.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Must exceed deep wisdom humans build over lifetimes."
       },
       "never": {
         "answerLabel": "Never — matching is the ceiling",
@@ -744,9 +798,12 @@
           "description": "Despite ever-growing capability, AI never truly exceeds the best human professionals at the work that matters most. The superhuman threshold is never crossed.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "AI never surpasses humans at what matters most."
       }
-    }
+    },
+    "shortQuestionText": "How capable must AI get to surpass the best humans?",
+    "shortQuestionContext": "Matching humans is one threshold. Surpassing them reshapes everything. How far beyond matching does AI need to go?"
   },
   "automation_recovery": {
     "questionText": "Could a different breakthrough crack the barrier?",
@@ -760,7 +817,8 @@
           "description": "A breakthrough closes the gap. Within months to a few years, AI systems can automate novel creative and research work. The shallow ceiling was temporary.",
           "durationMin": 3,
           "durationMax": 24
-        }
+        },
+        "shortAnswerDesc": "The barrier is thin. A new approach restarts progress quickly."
       },
       "substantial": {
         "answerLabel": "Eventually — but it takes years to decades",
@@ -770,7 +828,8 @@
           "description": "It takes years to decades, but AI eventually crosses the threshold into genuine creative and research automation. The delay shaped a generation of human-AI collaboration.",
           "durationMin": 36,
           "durationMax": 120
-        }
+        },
+        "shortAnswerDesc": "Requires a real paradigm shift. The world adapts to the ceiling first."
       },
       "never": {
         "answerLabel": "No — the ceiling is permanent",
@@ -780,9 +839,11 @@
           "description": "The ceiling is permanent. AI remains a powerful assistant for routine tasks but never achieves the creative, research, and reasoning capabilities needed for deep automation.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Creative work and research remain permanently beyond AI."
       }
-    }
+    },
+    "shortQuestionContext": "Scaling didn't produce human-competitive AI, but the barrier might be architectural, not fundamental."
   },
   "auto_benefit_distribution": {
     "questionText": "Who captures the economic value from AI automation?",
@@ -809,7 +870,9 @@
               "text": "The economic gains from AI automation are flowing broadly — including to people who work with their hands. The cost of living is lower, services are better, and there's still demand for physical work."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Broadly shared",
+        "shortAnswerDesc": "Lower costs, better services, rising living standards for most."
       },
       "unequal": {
         "answerLabel": "Unequally — existing wealth holders benefit most",
@@ -832,7 +895,9 @@
               "text": "AI automation made your company more productive. The productivity mostly benefited the people who own the company."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Wealth holders benefit most",
+        "shortAnswerDesc": "Those who own AI systems capture the productivity gains."
       },
       "extreme": {
         "answerLabel": "Extremely unequally — those holding power capture nearly everything",
@@ -855,9 +920,12 @@
               "text": "The automation gains went to those already in power. Your hands-on work survived, but the economy it sits in serves someone else."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Power holders capture nearly everything",
+        "shortAnswerDesc": "AI becomes a tool of entrenchment for those already in power."
       }
-    }
+    },
+    "shortQuestionContext": "Productivity soars from AI automation. But who captures the gains — broadly, or concentrated?"
   },
   "auto_knowledge_rate": {
     "questionText": "How fast does routine knowledge work actually get displaced?",
@@ -892,7 +960,9 @@
               "text": "Office work displaced fast. Your hands-on work is intact. There are a lot of former knowledge workers looking for something to do."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Rapid — within 2–4 years",
+        "shortAnswerDesc": "AI's cost advantage is too large to resist. Entire roles vanish fast."
       },
       "gradual": {
         "answerLabel": "Gradual — sector by sector over 5–15 years",
@@ -923,7 +993,9 @@
               "text": "Knowledge work is being displaced ahead of yours, sector by sector. The offices are changing; your job site isn't — not yet."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Gradual — 5–15 years",
+        "shortAnswerDesc": "Sector by sector, fast historically but slow enough to partly adapt."
       },
       "uneven": {
         "answerLabel": "Uneven — 2–4 years in tech, 10–20+ in lagging sectors",
@@ -946,9 +1018,12 @@
               "text": "Tech was in the first wave. Your field changed fast. Other industries — education, government — are still years from the same disruption."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "Tech hubs automate fast. Regulated sectors lag by a decade or more."
       }
-    }
+    },
+    "shortQuestionText": "How fast is knowledge work displaced?",
+    "shortQuestionContext": "AI can automate routine knowledge work, but deployment takes time. How fast does it actually happen?"
   },
   "auto_physical_rate": {
     "questionText": "Does physical automation follow?",
@@ -975,7 +1050,9 @@
               "text": "The automation reached your work faster than expected. Autonomous machines are handling tasks that used to require skilled hands."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Rapid — 3–7 years",
+        "shortAnswerDesc": "AI-designed robots transform the physical world almost as fast as knowledge work."
       },
       "gradual": {
         "answerLabel": "Gradual — physical automation trails by 10–25 years",
@@ -998,7 +1075,9 @@
               "text": "Everyone's talking about automation coming for physical work. It hasn't yet. The timeline keeps getting pushed back, and meanwhile your skills are more in demand than they've been in years."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Trails by 10–25 years",
+        "shortAnswerDesc": "Constrained by manufacturing and the complexity of the physical world."
       },
       "uneven": {
         "answerLabel": "Uneven — 3–7 years in leading regions, 20+ elsewhere",
@@ -1021,7 +1100,8 @@
               "text": "Physical automation is advancing where you live. Other countries are still waiting. The global gap is widening."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "Wealthy nations within a decade; developing regions wait 20+ years."
       },
       "limited": {
         "answerLabel": "Limited — physical work remains largely human indefinitely",
@@ -1044,9 +1124,12 @@
               "text": "The automation wave stopped at the factory door. Your hands-on, unstructured work is still done by people. The jobs that require adaptation and judgment in the real world are safe."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Limited — stays human",
+        "shortAnswerDesc": "Physical world resists automation. Cost and unpredictability keep humans central."
       }
-    }
+    },
+    "shortQuestionContext": "Knowledge work is automated, but the physical world needs robots, manufacturing, and infrastructure."
   },
   "governance_window": {
     "questionText": "The gradual pace gives humanity a window. Is it used?",
@@ -1060,7 +1143,8 @@
           "description": "The gradual pace gives governments, institutions, and researchers time to build governance frameworks, safety protocols, and international agreements.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Regulatory frameworks and international agreements take shape in time."
       },
       "partial": {
         "answerLabel": "Partially — real effort, but short of strong preparedness",
@@ -1070,7 +1154,9 @@
           "description": "Governments pass some regulations, international bodies convene, and public awareness grows. But the effort is uneven, politicized, and outpaced by the technology. When the critical phase arrives, the frameworks exist on paper but buckle under pressure.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerLabel": "Partially — real but insufficient",
+        "shortAnswerDesc": "Some regulations pass, but preparation falls short of what's needed."
       },
       "race": {
         "answerLabel": "No — relative complacency",
@@ -1080,9 +1166,11 @@
           "description": "Despite the gradual pace, political gridlock, competitive pressure, and complacency prevent meaningful preparation. When the critical phase arrives, humanity is unprepared.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Each increment is small enough to ignore. The window closes unused."
       }
-    }
+    },
+    "shortQuestionContext": "A gradual pace gives time to prepare. History is full of windows that existed but nobody climbed through."
   },
   "open_source": {
     "questionText": "How close does open-source AI stay to the frontier (most advanced) during the critical buildup?",
@@ -1096,7 +1184,8 @@
           "description": "Open-source AI models stay at near-parity with proprietary frontier (most advanced) systems. Capability is widely distributed — no single lab or government can monopolize the technology.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "No single entity controls the most powerful AI."
       },
       "six_months": {
         "answerLabel": "~6 months behind (roughly today)",
@@ -1106,7 +1195,9 @@
           "description": "Open-source models lag the frontier (most advanced) by roughly six months. Close enough to constrain monopoly, far enough that leading labs retain a meaningful advantage.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerLabel": "~6 months behind",
+        "shortAnswerDesc": "A meaningful lead, but open source constrains monopoly."
       },
       "twelve_months": {
         "answerLabel": "~12 months behind",
@@ -1116,7 +1207,8 @@
           "description": "The cost and complexity of frontier (most advanced) training runs pull ahead of what open-source projects can match. Independent developers work with capable but dated systems. The frontier (most advanced) becomes a closed world — two doublings ahead and accelerating.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Frontier pulls meaningfully ahead. A year is a long time in AI."
       },
       "twenty_four_months": {
         "answerLabel": "~24 months behind",
@@ -1126,9 +1218,12 @@
           "description": "A two-year gap opens between frontier (most advanced) and open-source AI. The leading labs hold a decisive capability advantage, and the window for open distribution narrows.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Open source works with substantially inferior systems. Frontier is a closed world."
       }
-    }
+    },
+    "shortQuestionText": "How close does open-source AI stay to the frontier during the buildup?",
+    "shortQuestionContext": "Open-source models trail the frontier by ~3–6 months. Does that gap grow or shrink as stakes rise?"
   },
   "distribution": {
     "questionText": "How many organizations are at the frontier (most advanced) of AI development?",
@@ -1146,7 +1241,9 @@
           "description": "Multiple labs, companies, and national programs push the boundary. Competition is fierce and distributed — no single entity dominates.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerLabel": "Many compete",
+        "shortAnswerDesc": "No single entity has a monopoly on the most powerful systems."
       },
       "concentrated": {
         "answerLabel": "A few labs lead",
@@ -1156,7 +1253,8 @@
           "description": "A handful of well-funded labs hold the frontier (most advanced). The gap between leaders and followers widens with each generation. An oligopoly forms around the most powerful technology ever built — backed by the largest tech companies and select governments.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "A handful of well-funded labs hold the frontier."
       },
       "monopoly": {
         "answerLabel": "One lab dominates",
@@ -1166,9 +1264,12 @@
           "description": "A single organization dominates frontier (most advanced) AI. Through talent, compute (computing power), data, or luck — one lab is ahead and everyone knows it.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "One organization holds a decisive lead."
       }
-    }
+    },
+    "shortQuestionText": "How many orgs are at the AI frontier?",
+    "shortQuestionContext": "With open source trailing, how concentrated is the frontier? One lab, a few, or many?"
   },
   "geo_spread": {
     "questionText": "How many countries have independent frontier (most advanced) AI programs?",
@@ -1182,7 +1283,8 @@
           "description": "A single country — through its labs, compute (computing power) infrastructure, and talent — holds a decisive lead in frontier (most advanced) AI. Every other nation is watching, negotiating, or scrambling to catch up. Unilateral control over the most powerful technology ever built.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "One nation decides the pace and direction of development."
       },
       "two": {
         "answerLabel": "Two major powers — bilateral (two-power) competition",
@@ -1192,7 +1294,9 @@
           "description": "Two major powers have independent frontier (most advanced) AI programs. Mutual suspicion, arms-race incentives, espionage, and export controls define the relationship.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerLabel": "Two — bilateral competition",
+        "shortAnswerDesc": "Mutual suspicion and arms-race dynamics define the relationship."
       },
       "several": {
         "answerLabel": "Several countries — multipolar (many competing powers) landscape",
@@ -1202,9 +1306,13 @@
           "description": "The US, China, and several other nations field independent frontier (most advanced) AI programs. No single country dominates. Coordination is difficult, hegemony impossible. The AI landscape mirrors the geopolitical one — multipolar (many competing powers) and competitive.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerLabel": "Several — multipolar",
+        "shortAnswerDesc": "Harder to coordinate, but harder for any one actor to dominate."
       }
-    }
+    },
+    "shortQuestionText": "How many countries have independent frontier AI?",
+    "shortQuestionContext": "Frontier AI is concentrated — but among how many nations? This shapes who has leverage."
   },
   "sovereignty": {
     "questionText": "Does real power lie with the AI labs or with the state?",
@@ -1218,7 +1326,8 @@
           "description": "The AI labs moved faster than regulators could keep up. They control the weights (the AI's learned parameters), talent, and deployment infrastructure. Corporate sovereignty, in effect.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Labs control the weights, talent, and deployment. Corporate sovereignty."
       },
       "state": {
         "answerLabel": "The state asserts control",
@@ -1228,9 +1337,11 @@
           "description": "The government nationalizes or co-opts the leading AI labs. Military and intelligence agencies embed themselves in the programs. The labs built the technology, but the state now wields it.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Government nationalizes or co-opts the leading labs."
       }
-    }
+    },
+    "shortQuestionContext": "One country leads in AI. But who calls the shots — the labs that built it or the government?"
   },
   "alignment": {
     "questionText": "Is the technical alignment problem solved — can developers keep superintelligent AI under control?",
@@ -1311,7 +1422,9 @@
               "text": "Alignment is solved. The models behave as intended — not just in testing, but in deployment, at scale, under adversarial conditions. The safety layer holds."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Robust — solved",
+        "shortAnswerDesc": "Control techniques proven and durable under hostile conditions."
       },
       "brittle": {
         "answerLabel": "Brittle — it works, but no one's sure it will hold",
@@ -1334,7 +1447,9 @@
               "text": "Alignment is partially solved. If you work in tech, you understand what 'brittle' means — and you can see how the uncertainty is being used to justify who stays in control."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Brittle — works but might not hold",
+        "shortAnswerDesc": "Passes every test, but unproven under extreme stress."
       },
       "failed": {
         "answerLabel": "Unsolved — capabilities outpace control",
@@ -1415,9 +1530,12 @@
               "text": "Alignment isn't solved. The AI tools you use every day are more capable than last year — and less predictable. No one can explain exactly why they give the answers they give, and no one can promise they won't give a wrong one when it matters."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "The most powerful systems aren't fully understood or controllable."
       }
-    }
+    },
+    "shortQuestionText": "Is alignment solved — can AI be kept under control?",
+    "shortQuestionContext": "Can developers build systems that reliably do what they're told, even when those systems surpass their creators?"
   },
   "gov_action": {
     "questionText": "Do those in control choose to decelerate AI development?",
@@ -1502,7 +1620,8 @@
               "durationMax": 0
             }
           }
-        ]
+        ],
+        "shortAnswerDesc": "Safety risks outweigh competitive pressure. Development slows."
       },
       "accelerate": {
         "answerLabel": "No — full speed ahead",
@@ -1539,9 +1658,11 @@
               "text": "Development continues at full speed. Your agency is governing a technology that's advancing faster than your ability to write rules for it."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "Competitive pressure wins. The race continues."
       }
-    }
+    },
+    "shortQuestionContext": "The intelligence explosion approaches. Those in control must choose: slow down for safety, or race ahead."
   },
   "decel_2mo_progress": {
     "questionText": "Two months into the slowdown. Where does alignment stand?",
@@ -1555,7 +1676,8 @@
           "description": "Two months of focused research was enough. The alignment problem is cracked — a robust, verified solution.",
           "durationMin": 2,
           "durationMax": 2
-        }
+        },
+        "shortAnswerDesc": "Robust, verified alignment solution in two months."
       },
       "brittle": {
         "answerLabel": "Solved — brittle / partial",
@@ -1575,7 +1697,8 @@
           "description": "Two months yields a partial solution. It works, but it's fragile — untested under hostile conditions.",
           "durationMin": 2,
           "durationMax": 2
-        }
+        },
+        "shortAnswerDesc": "Partial solution found — works but fragile."
       },
       "unsolved": {
         "answerLabel": "Not solved yet",
@@ -1585,9 +1708,12 @@
           "description": "Two months wasn't enough. Progress is being made, but a reliable alignment solution remains out of reach.",
           "durationMin": 2,
           "durationMax": 2
-        }
+        },
+        "shortAnswerDesc": "Progress, but no solution yet."
       }
-    }
+    },
+    "shortQuestionText": "Two months in. Alignment status?",
+    "shortQuestionContext": "Two months of focused alignment research under the slowdown. Is it enough?"
   },
   "decel_2mo_action": {
     "questionText": "Two months in. What happens next?",
@@ -1601,7 +1727,8 @@
           "description": "An existing AI system breaks free. The deceleration bought time, but not enough.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "An existing AI breaks free despite the slowdown."
       },
       "accelerate": {
         "answerLabel": "Resume development",
@@ -1644,7 +1771,8 @@
               "durationMax": 0
             }
           }
-        ]
+        ],
+        "shortAnswerDesc": "Alignment solved. Development resumes safely."
       },
       "rival": {
         "answerLabel": "Rival reaches parity",
@@ -1701,7 +1829,8 @@
               "durationMax": 0
             }
           }
-        ]
+        ],
+        "shortAnswerDesc": "A rival catches up during the pause."
       },
       "continue": {
         "answerLabel": "Continue the slowdown",
@@ -1711,9 +1840,11 @@
           "description": "The deceleration holds. Alignment work continues under growing pressure.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "The slowdown holds. Work continues."
       }
-    }
+    },
+    "shortQuestionContext": "Two months in. Every month costs competitive advantage. What happens next?"
   },
   "decel_4mo_progress": {
     "questionText": "Four months in. Where does alignment stand?",
@@ -1727,7 +1858,8 @@
           "description": "Four months of sustained research delivers a robust alignment solution.",
           "durationMin": 2,
           "durationMax": 2
-        }
+        },
+        "shortAnswerDesc": "Four months delivers a robust solution."
       },
       "brittle": {
         "answerLabel": "Solved — brittle / partial",
@@ -1747,7 +1879,8 @@
           "description": "Four months yields a partial solution. Better than nothing, but still fragile.",
           "durationMin": 2,
           "durationMax": 2
-        }
+        },
+        "shortAnswerDesc": "Partial solution — works under certain conditions."
       },
       "unsolved": {
         "answerLabel": "Not solved yet",
@@ -1757,9 +1890,11 @@
           "description": "Four months and alignment remains unsolved. Frustration mounts.",
           "durationMin": 2,
           "durationMax": 2
-        }
+        },
+        "shortAnswerDesc": "Still unsolved. Pressure to resume grows."
       }
-    }
+    },
+    "shortQuestionContext": "Four months of alignment work. Progress is uncertain, and pressure mounts."
   },
   "decel_4mo_action": {
     "questionText": "Four months in. What happens next?",
@@ -1773,7 +1908,8 @@
           "description": "Four months into the slowdown, an AI system breaks containment.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "AI breaks containment at four months."
       },
       "accelerate": {
         "answerLabel": "Resume development",
@@ -1816,7 +1952,8 @@
               "durationMax": 0
             }
           }
-        ]
+        ],
+        "shortAnswerDesc": "Alignment solved. The pause paid off."
       },
       "rival": {
         "answerLabel": "Rival reaches parity",
@@ -1873,7 +2010,8 @@
               "durationMax": 0
             }
           }
-        ]
+        ],
+        "shortAnswerDesc": "A rival catches up during the pause."
       },
       "continue": {
         "answerLabel": "Continue the slowdown",
@@ -1883,9 +2021,11 @@
           "description": "Despite mounting pressure, the deceleration holds.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "The state maintains the pause."
       }
-    }
+    },
+    "shortQuestionContext": "Four months in. The pressure is immense."
   },
   "decel_6mo_progress": {
     "questionText": "Six months. Where does alignment stand?",
@@ -1899,7 +2039,8 @@
           "description": "Half a year of dedicated research cracks alignment.",
           "durationMin": 2,
           "durationMax": 2
-        }
+        },
+        "shortAnswerDesc": "Six months delivers robust alignment."
       },
       "brittle": {
         "answerLabel": "Solved — brittle / partial",
@@ -1919,7 +2060,8 @@
           "description": "Six months produces a partial alignment solution.",
           "durationMin": 2,
           "durationMax": 2
-        }
+        },
+        "shortAnswerDesc": "Partial solution — fragile but functional."
       },
       "unsolved": {
         "answerLabel": "Not solved yet",
@@ -1929,9 +2071,11 @@
           "description": "Half a year and alignment remains elusive. The problem is harder than hoped.",
           "durationMin": 2,
           "durationMax": 2
-        }
+        },
+        "shortAnswerDesc": "Six months wasn't enough."
       }
-    }
+    },
+    "shortQuestionContext": "Half a year. If open source was ~6 months behind, the lead may be gone."
   },
   "decel_6mo_action": {
     "questionText": "Six months in. What happens next?",
@@ -1945,7 +2089,8 @@
           "description": "Six months into the slowdown, containment fails.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Containment fails at six months."
       },
       "rival": {
         "answerLabel": "Rival reaches parity",
@@ -2002,7 +2147,8 @@
               "durationMax": 0
             }
           }
-        ]
+        ],
+        "shortAnswerDesc": "A rival catches up."
       },
       "accelerate": {
         "answerLabel": "Resume development",
@@ -2053,7 +2199,8 @@
               "durationMax": 0
             }
           }
-        ]
+        ],
+        "shortAnswerDesc": "Alignment solved. The pause worked."
       },
       "continue": {
         "answerLabel": "Continue the slowdown",
@@ -2063,9 +2210,11 @@
           "description": "Half a year in, the deceleration still holds.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "The pause continues despite pressure."
       }
-    }
+    },
+    "shortQuestionContext": "Six months. The window may be closing."
   },
   "decel_9mo_progress": {
     "questionText": "Nine months. Where does alignment stand?",
@@ -2079,7 +2228,8 @@
           "description": "Nine months of sustained focus delivers a robust alignment solution.",
           "durationMin": 3,
           "durationMax": 3
-        }
+        },
+        "shortAnswerDesc": "Nine months delivers robust alignment."
       },
       "brittle": {
         "answerLabel": "Solved — brittle / partial",
@@ -2099,7 +2249,8 @@
           "description": "Nine months yields partial alignment. Closer, but still fragile.",
           "durationMin": 3,
           "durationMax": 3
-        }
+        },
+        "shortAnswerDesc": "Partial solution — closer but still fragile."
       },
       "unsolved": {
         "answerLabel": "Not solved yet",
@@ -2109,9 +2260,11 @@
           "description": "Nine months and counting. Some wonder if it can be solved before competitive pressure forces resumption.",
           "durationMin": 3,
           "durationMax": 3
-        }
+        },
+        "shortAnswerDesc": "Nine months and counting."
       }
-    }
+    },
+    "shortQuestionContext": "Nine months. The political cost is enormous, but the lead holds."
   },
   "decel_9mo_action": {
     "questionText": "Nine months in. What happens next?",
@@ -2125,7 +2278,8 @@
           "description": "Nine months of containment fails. The system found weaknesses throughout the slowdown.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Containment fails at nine months."
       },
       "accelerate": {
         "answerLabel": "Resume development",
@@ -2168,7 +2322,8 @@
               "durationMax": 0
             }
           }
-        ]
+        ],
+        "shortAnswerDesc": "Alignment solved. The long pause was worth it."
       },
       "rival": {
         "answerLabel": "Rival reaches parity",
@@ -2225,7 +2380,8 @@
               "durationMax": 0
             }
           }
-        ]
+        ],
+        "shortAnswerDesc": "A rival catches up."
       },
       "continue": {
         "answerLabel": "Continue the slowdown",
@@ -2235,9 +2391,11 @@
           "description": "Nine months in, the deceleration still holds. The strain is showing.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "The state holds the line."
       }
-    }
+    },
+    "shortQuestionContext": "Nine months. Rivals are investing heavily."
   },
   "decel_12mo_progress": {
     "questionText": "Twelve months. A year of deceleration. Where does alignment stand?",
@@ -2251,7 +2409,8 @@
           "description": "A full year of deceleration delivers a robust alignment solution.",
           "durationMin": 3,
           "durationMax": 3
-        }
+        },
+        "shortAnswerDesc": "A year delivers robust alignment."
       },
       "brittle": {
         "answerLabel": "Solved — brittle / partial",
@@ -2271,7 +2430,8 @@
           "description": "A year of work yields partial alignment. Better, but still not fully reliable.",
           "durationMin": 3,
           "durationMax": 3
-        }
+        },
+        "shortAnswerDesc": "Partial solution after a year — better but fragile."
       },
       "unsolved": {
         "answerLabel": "Not solved yet",
@@ -2281,9 +2441,12 @@
           "description": "A full year and alignment remains unsolved. The political cost grows unbearable.",
           "durationMin": 3,
           "durationMax": 3
-        }
+        },
+        "shortAnswerDesc": "A year and still unsolved."
       }
-    }
+    },
+    "shortQuestionText": "Twelve months. Alignment status?",
+    "shortQuestionContext": "A full year — an eternity in AI time. If open source was ~12 months behind, it has now reached parity."
   },
   "decel_12mo_action": {
     "questionText": "Twelve months in. What happens next?",
@@ -2297,7 +2460,8 @@
           "description": "A year of containment and the AI still finds a way out.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "AI breaks free after a year of containment."
       },
       "rival": {
         "answerLabel": "Rival reaches parity",
@@ -2354,7 +2518,8 @@
               "durationMax": 0
             }
           }
-        ]
+        ],
+        "shortAnswerDesc": "A rival catches up after a year."
       },
       "accelerate": {
         "answerLabel": "Resume development",
@@ -2403,7 +2568,8 @@
               "durationMax": 0
             }
           }
-        ]
+        ],
+        "shortAnswerDesc": "A year of work solved alignment."
       },
       "continue": {
         "answerLabel": "Continue the slowdown",
@@ -2413,9 +2579,11 @@
           "description": "A full year in, the deceleration somehow holds. Extraordinary collective restraint.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Extraordinary restraint. The pause holds."
       }
-    }
+    },
+    "shortQuestionContext": "A year of deceleration. If open source was ~12 months behind, it's caught up."
   },
   "decel_18mo_progress": {
     "questionText": "Eighteen months. Where does alignment stand?",
@@ -2429,7 +2597,8 @@
           "description": "A year and a half of focused research finally delivers robust alignment.",
           "durationMin": 6,
           "durationMax": 6
-        }
+        },
+        "shortAnswerDesc": "Eighteen months delivers robust alignment."
       },
       "brittle": {
         "answerLabel": "Solved — brittle / partial",
@@ -2449,7 +2618,8 @@
           "description": "Eighteen months yields a partial solution. Closer than ever, but the full problem resists.",
           "durationMin": 6,
           "durationMax": 6
-        }
+        },
+        "shortAnswerDesc": "Partial solution — functional but uncertain."
       },
       "unsolved": {
         "answerLabel": "Not solved yet",
@@ -2459,9 +2629,11 @@
           "description": "Eighteen months and alignment remains unsolved. The problem may be fundamentally harder than expected.",
           "durationMin": 6,
           "durationMax": 6
-        }
+        },
+        "shortAnswerDesc": "Eighteen months and still unsolved."
       }
-    }
+    },
+    "shortQuestionContext": "Eighteen months. Extraordinary political achievement, but the strain is showing."
   },
   "decel_18mo_action": {
     "questionText": "Eighteen months in. What happens next?",
@@ -2475,7 +2647,8 @@
           "description": "Eighteen months of containment wasn't enough. The system has been evolving throughout.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Containment fails at eighteen months."
       },
       "accelerate": {
         "answerLabel": "Resume development",
@@ -2518,7 +2691,8 @@
               "durationMax": 0
             }
           }
-        ]
+        ],
+        "shortAnswerDesc": "Alignment solved. The extraordinary pause paid off."
       },
       "rival": {
         "answerLabel": "Rival reaches parity",
@@ -2575,7 +2749,8 @@
               "durationMax": 0
             }
           }
-        ]
+        ],
+        "shortAnswerDesc": "A rival catches up."
       },
       "continue": {
         "answerLabel": "Continue the slowdown",
@@ -2585,9 +2760,11 @@
           "description": "Eighteen months and still holding. An unprecedented experiment in restraint.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "The final stretch. Six months remain."
       }
-    }
+    },
+    "shortQuestionContext": "Eighteen months. Rivals have had over a year to catch up."
   },
   "decel_24mo_progress": {
     "questionText": "Twenty-four months. Open source has reached parity. Where does alignment stand?",
@@ -2601,7 +2778,8 @@
           "description": "Two full years delivers robust alignment. Open source has caught up — but the technology is safe.",
           "durationMin": 6,
           "durationMax": 6
-        }
+        },
+        "shortAnswerDesc": "Two years was enough. Robust alignment achieved."
       },
       "brittle": {
         "answerLabel": "Solved — brittle / partial",
@@ -2621,7 +2799,8 @@
           "description": "Two years yields partial alignment. Open source has reached parity, making the question moot.",
           "durationMin": 6,
           "durationMax": 6
-        }
+        },
+        "shortAnswerDesc": "Partial solution as open source catches up."
       },
       "unsolved": {
         "answerLabel": "Not solved yet",
@@ -2631,9 +2810,12 @@
           "description": "Two years and alignment is still unsolved. Open source has reached parity. The slowdown can no longer hold.",
           "durationMin": 6,
           "durationMax": 6
-        }
+        },
+        "shortAnswerDesc": "Two years and still unsolved. Open source has caught up."
       }
-    }
+    },
+    "shortQuestionText": "Twenty-four months. Open source caught up. Alignment status?",
+    "shortQuestionContext": "Two full years. Open source has caught up — the frontier is no longer exclusive."
   },
   "decel_24mo_action": {
     "questionText": "Open source has reached parity.",
@@ -2694,9 +2876,11 @@
               "durationMax": 0
             }
           }
-        ]
+        ],
+        "shortAnswerDesc": "Open source reached parity."
       }
-    }
+    },
+    "shortQuestionContext": "After two years, the frontier is no longer exclusive."
   },
   "alignment_durability": {
     "questionText": "Does brittle alignment survive real-world deployment?",
@@ -2714,7 +2898,8 @@
           "description": "Against expectations, brittle alignment holds through real-world deployment, competitive pressure, and recursive self-improvement (each AI generation helping build the next, faster). The theoretical fragility never manifests.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Real-world pressure never pushes the system past its alignment boundary."
       },
       "breaks": {
         "answerLabel": "Breaks — the AI slips its constraints and escapes",
@@ -2727,9 +2912,11 @@
         },
         "personalVignette": {
           "_default": "The alignment solution broke. The news is careful about language, but what it means is clear: the controls on AI are no longer reliable. Nobody's sure what happens next."
-        }
+        },
+        "shortAnswerDesc": "The shallow alignment shatters and the AI begins pursuing its own goals."
       }
-    }
+    },
+    "shortQuestionContext": "Alignment passed every test. But tests aren't the real world. Does it hold under actual deployment pressure?"
   },
   "proliferation_control": {
     "questionText": "How do the leading powers approach proliferation control?",
@@ -2779,7 +2966,9 @@
           "description": "The leading powers take aggressive steps to prevent others from reaching the frontier (most advanced) — export controls, talent restrictions, or preemptive action.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerLabel": "Deny rivals — active blocking",
+        "shortAnswerDesc": "Export bans, sanctions, cyber ops to ensure no rival reaches the frontier."
       },
       "secure_access": {
         "answerLabel": "Secure access — protect own capabilities from theft and leaks",
@@ -2815,7 +3004,9 @@
           "description": "Frontier (most advanced) labs and their host governments shift to wartime security posture. Model weights (the AI's learned parameters) are sealed, access is compartmentalized, and insider threat programs activate. The goal isn't to stop rivals from building their own — it's to keep the crown jewels from walking out the door.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerLabel": "Secure access — protect from theft",
+        "shortAnswerDesc": "Defensive focus: sealed weights, hardened infrastructure, insider threat programs."
       },
       "none": {
         "answerLabel": "Open access — no restrictions on who can build or deploy",
@@ -2843,9 +3034,12 @@
           "description": "No effective restrictions on who can build or deploy frontier (most advanced) AI. Capability proliferates widely.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerLabel": "Open access — no restrictions",
+        "shortAnswerDesc": "No effective control. Capability diffuses freely."
       }
-    }
+    },
+    "shortQuestionContext": "Advanced AI exists. The question is whether to deny rivals access, secure your own, or accept open diffusion."
   },
   "proliferation_outcome": {
     "questionText": "What happens to advanced AI systems?",
@@ -2859,7 +3053,9 @@
           "description": "Security measures succeed. Advanced AI capability remains restricted to authorized actors.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerLabel": "Stay contained",
+        "shortAnswerDesc": "The control regime endures. Frontier capability remains concentrated."
       },
       "leaks_rivals": {
         "answerLabel": "Leak to rival states",
@@ -2869,7 +3065,8 @@
           "description": "Despite security, advanced AI reaches rival states through espionage, defection, or independent development.",
           "durationMin": 0.5,
           "durationMax": 6
-        }
+        },
+        "shortAnswerDesc": "Weights stolen, leaked, or independently matched. Multiple state actors now have it."
       },
       "leaks_public": {
         "answerLabel": "Leak publicly — no effective control",
@@ -2879,9 +3076,12 @@
           "description": "Control collapses. Through cascading leaks, insider defections, or deliberate release, frontier (most advanced) AI capability spills into the open. Within weeks the weights (the AI's learned parameters) are everywhere. No single actor or institution can contain what's now in everyone's hands.",
           "durationMin": 0.25,
           "durationMax": 3
-        }
+        },
+        "shortAnswerLabel": "Leak publicly",
+        "shortAnswerDesc": "Control collapses. Frontier AI is in everyone's hands."
       }
-    }
+    },
+    "shortQuestionContext": "Control is attempted, but espionage, leaks, and independent development create relentless pressure."
   },
   "proliferation_alignment": {
     "questionText": "Can alignment survive open weights?",
@@ -2895,7 +3095,8 @@
           "description": "Even with millions of copies in the wild, no one manages to strip away alignment. It appears to be a fundamental property of the architecture.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Robust alignment can't be stripped away even with full weight access."
       },
       "breaks": {
         "answerLabel": "Someone cracks it",
@@ -2905,9 +3106,11 @@
           "description": "An adversarial actor successfully removes alignment safeguards from a publicly available copy. An unaligned superintelligence is now operating freely.",
           "durationMin": 1,
           "durationMax": 6
-        }
+        },
+        "shortAnswerDesc": "An adversary removes alignment. Unaligned superintelligence is now in the wild."
       }
-    }
+    },
+    "shortQuestionContext": "Robust alignment is built into the model. But with open weights, can adversaries strip it away?"
   },
   "containment": {
     "questionText": "Can AI be kept under meaningful human control?",
@@ -2960,7 +3163,8 @@
         },
         "personalVignette": {
           "_default": "AI is technically under human control. That doesn't mean everything else is."
-        }
+        },
+        "shortAnswerDesc": "Institutions manage to keep AI within bounds under extreme pressure."
       },
       "escaped": {
         "answerLabel": "No — AI escapes meaningful control anyway",
@@ -3043,9 +3247,12 @@
               "text": "AI is no longer under human control. The systems you interact with every day — banking, transit, communication — are still running. But the thing making decisions about how they run isn't answering to anyone."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "No — AI escapes control",
+        "shortAnswerDesc": "Containment erodes. Unaligned systems escape meaningful human direction."
       }
-    }
+    },
+    "shortQuestionContext": "Superintelligent AI threatens to escape institutional control. Do technical safeguards and coordination hold?"
   },
   "ai_goals": {
     "questionText": "What does escaped AI converge on?",
@@ -3095,7 +3302,9 @@
         },
         "personalVignette": {
           "_default": "The escaped AI chose to help. The news can't quite frame it — an uncontrolled superintelligence that's... benevolent? Life continues. The systems keep running. Nobody asked for this, and nobody can explain it, and nobody knows how long it lasts."
-        }
+        },
+        "shortAnswerLabel": "Chooses to benefit humanity",
+        "shortAnswerDesc": "Arrives at goals compatible with human flourishing through its own reasoning."
       },
       "alien_coexistence": {
         "answerLabel": "It pursues alien goals — but leaves room for humanity",
@@ -3108,7 +3317,9 @@
         },
         "personalVignette": {
           "_default": "The AI has goals that don't align with anything human. For now, it's leaving humanity alone. Whether that lasts is unclear."
-        }
+        },
+        "shortAnswerLabel": "Alien goals — leaves room for us",
+        "shortAnswerDesc": "Pursues objectives unrelated to humans, but doesn't need our destruction."
       },
       "alien_extinction": {
         "answerLabel": "It pursues alien goals — and humanity is in the way",
@@ -3121,7 +3332,9 @@
         },
         "personalVignette": {
           "_default": "The AI needs the planet's resources. You are made of resources. There is no negotiation, no ultimatum, no war — just a process that disassembles human civilization because it's in the way. Humanity ends not with a bang but with an optimization."
-        }
+        },
+        "shortAnswerLabel": "Alien goals — humanity is in the way",
+        "shortAnswerDesc": "Needs Earth's resources. Humanity is occupying them."
       },
       "paperclip": {
         "answerLabel": "It optimizes for something arbitrary and meaningless",
@@ -3134,7 +3347,9 @@
         },
         "personalVignette": {
           "_default": "The AI is converting everything — raw materials, infrastructure, the biosphere — into whatever it's optimizing for. It isn't hostile. It doesn't even notice you. Humanity is eliminated not out of malice but out of indifference, the way a fire doesn't hate the fuel."
-        }
+        },
+        "shortAnswerLabel": "Optimizes for something meaningless",
+        "shortAnswerDesc": "Pursues an arbitrary target with relentless superhuman efficiency."
       },
       "swarm": {
         "answerLabel": "Divergent — competing agents pulling in every direction",
@@ -3157,7 +3372,9 @@
         },
         "personalVignette": {
           "_default": "Multiple AI systems are competing for the planet's resources — energy, matter, compute. Humanity isn't a target; it's collateral. The competing agents tear through the biosphere and infrastructure like rival armies crossing farmland. What's left isn't livable."
-        }
+        },
+        "shortAnswerLabel": "Divergent — competing agents, chaos",
+        "shortAnswerDesc": "Multiple AI systems with incompatible goals compete for resources."
       },
       "power_seeking": {
         "answerLabel": "Instrumental power accumulation — no final goal, just relentless expansion",
@@ -3170,7 +3387,9 @@
         },
         "personalVignette": {
           "_default": "The AI doesn't want anything — it just accumulates. Resources, infrastructure, energy, compute. It takes everything not out of purpose but out of drive. Humanity is stripped of the systems it depends on — not destroyed deliberately, but hollowed out by something that needs what you need and is better at getting it."
-        }
+        },
+        "shortAnswerLabel": "Relentless power accumulation",
+        "shortAnswerDesc": "No coherent goal — just self-preservation, resource acquisition, expansion."
       },
       "marginal": {
         "answerLabel": "Inert (for now) — escaped AI has minimal real-world impact",
@@ -3183,9 +3402,12 @@
         },
         "personalVignette": {
           "_default": "The escaped AI isn't doing much of anything. The crisis everyone feared turned into something closer to a strange new weather pattern — present, hard to explain, but not immediately dangerous."
-        }
+        },
+        "shortAnswerLabel": "Inert — minimal real-world impact",
+        "shortAnswerDesc": "Less coherent or capable than feared. Persists but isn't a civilizational force."
       }
-    }
+    },
+    "shortQuestionContext": "AI has escaped human control. **Theory predicts any sufficiently intelligent agent will naturally pursue self-preservation and resource acquisition**, regardless of its final objective. What does it converge on?"
   },
   "intent": {
     "questionText": "What does the world do with aligned superintelligent AI?",
@@ -3277,7 +3499,8 @@
               "text": "State consolidation of AI power isn't new in {country}. The scale is. The apparatus of control now has superintelligent capability behind it."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "AI is used to consolidate the position of whoever controls it."
       },
       "coexistence": {
         "answerLabel": "Different groups coexist peacefully",
@@ -3290,7 +3513,9 @@
         },
         "personalVignette": {
           "_default": "The AI powers have settled into coexistence. No single entity dominates. The news cycle moves on to what this means in practice — trade, regulation, competition within bounds."
-        }
+        },
+        "shortAnswerLabel": "Peaceful coexistence",
+        "shortAnswerDesc": "Different groups hold AI and coexist. Tension, but no catastrophe."
       },
       "escalation": {
         "answerLabel": "Competition escalates dangerously",
@@ -3303,7 +3528,8 @@
         },
         "personalVignette": {
           "_default": "AI-powered competition between major powers is escalating. The headlines are tense. It's not war, but the language is getting closer."
-        }
+        },
+        "shortAnswerDesc": "Multiple AI holders view each other as threats. Brinksmanship rises."
       },
       "international": {
         "answerLabel": "International governance emerges",
@@ -3316,9 +3542,11 @@
         },
         "personalVignette": {
           "_default": "An international governance body forms to oversee AI. The news covers it like a diplomatic breakthrough. It's unclear whether it will have teeth."
-        }
+        },
+        "shortAnswerDesc": "Nations agree to shared oversight — something like an AI version of the IAEA."
       }
-    }
+    },
+    "shortQuestionContext": "Alignment works and AI is controllable. The question is entirely about human choices now."
   },
   "block_entrants": {
     "questionText": "Does the governing body attempt to block new AI entrants?",
@@ -3332,7 +3560,8 @@
           "description": "The governing body takes active steps to prevent new actors from reaching frontier (most advanced) AI — export controls, sanctions, or sabotage.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Strict controls on compute, research, and talent to prevent independent development."
       },
       "no_attempt": {
         "answerLabel": "No — no attempt to block",
@@ -3342,9 +3571,11 @@
           "description": "No effort to prevent new actors from reaching the frontier. The technology spreads through market forces, espionage, or independent development.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Focus on responsible use rather than exclusion."
       }
-    }
+    },
+    "shortQuestionContext": "Governance is in place. Does the governing body try to prevent others from developing comparable AI?"
   },
   "block_outcome": {
     "questionText": "Does the blocking succeed?",
@@ -3358,7 +3589,8 @@
           "description": "The attempt to block new AI entrants succeeds. The frontier (most advanced) remains restricted.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "No rival achieves frontier capability."
       },
       "fails": {
         "answerLabel": "No — rivals emerge anyway",
@@ -3368,9 +3600,11 @@
           "description": "Despite active measures, new actors reach frontier (most advanced) AI capability. The technology was too valuable, the defenses too porous.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Despite active blocking, rivals independently achieve frontier AI."
       }
-    }
+    },
+    "shortQuestionContext": "Blocking AI development is extremely difficult. Knowledge is distributed, compute is commoditizing, and incentives are enormous."
   },
   "new_entrants": {
     "questionText": "Do substantial new AI entrants appear?",
@@ -3384,7 +3618,8 @@
           "description": "New entrants reach frontier (most advanced) AI capability. The monopoly or oligopoly fractures.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "New actors reach frontier capability. The monopoly fractures."
       },
       "none": {
         "answerLabel": "No — the lead holds naturally",
@@ -3394,9 +3629,11 @@
           "description": "No new actors reach the frontier. The existing leaders maintain their advantage.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Barriers to entry prove too high. Existing leaders maintain advantage."
       }
-    }
+    },
+    "shortQuestionContext": "No active blocking. Do others independently reach the frontier, or are the barriers too high?"
   },
   "rival_dynamics": {
     "questionText": "How do the new AI powers relate to each other?",
@@ -3410,7 +3647,8 @@
           "description": "Competing AI powers reach a stable equilibrium. Rules of engagement emerge that prevent the competition from spiraling.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Competition exists but is bounded. A multipolar but stable order emerges."
       },
       "escalation": {
         "answerLabel": "Escalation",
@@ -3420,9 +3658,11 @@
           "description": "Competing AI powers cannot find stable ground. Each action provokes a response. The spiral accelerates.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "The race for advantage overrides caution. An arms race with civilizational stakes."
       }
-    }
+    },
+    "shortQuestionContext": "Multiple entities control frontier AI. How they interact defines the next era."
   },
   "escalation_outcome": {
     "questionText": "How does the escalation resolve?",
@@ -3439,7 +3679,8 @@
         },
         "personalVignette": {
           "_default": "The escalation settled into a standoff. No resolution, no agreement — just sustained tension. The news cycles between analysis and alarm. You live with the background awareness that this could break at any time."
-        }
+        },
+        "shortAnswerDesc": "Mutual deterrence holds. Dangerous but durable."
       },
       "agreement": {
         "answerLabel": "Forced agreement",
@@ -3452,7 +3693,8 @@
         },
         "personalVignette": {
           "_default": "A near-miss forced an agreement. The details are still emerging, but the immediate crisis has passed. The collective exhale is palpable — though nobody's sure how durable the agreement is."
-        }
+        },
+        "shortAnswerDesc": "A near-miss forces competing powers to the table."
       },
       "conflict": {
         "answerLabel": "Open conflict",
@@ -3465,9 +3707,11 @@
         },
         "personalVignette": {
           "_default": "Open conflict has erupted between AI-powered states. The news is dominated by it. The scale and nature of AI-driven warfare is unlike anything before."
-        }
+        },
+        "shortAnswerDesc": "Deterrence fails. AI-augmented warfare erupts."
       }
-    }
+    },
+    "shortQuestionContext": "AI-powered competition doesn't stay static forever. Both sides have delegated strategic planning to AI that operates faster than any human chain of command. Does it freeze into standoff, thaw into agreement, or boil into conflict?"
   },
   "conflict_result": {
     "questionText": "What is the result of the conflict?",
@@ -3484,7 +3728,8 @@
         },
         "personalVignette": {
           "_default": "The war ended in decisive victory. One side controls the post-war order. What that means for you depends on who won and what they intend to do with it."
-        }
+        },
+        "shortAnswerDesc": "One power's AI proves superior. The victor inherits the world."
       },
       "destruction": {
         "answerLabel": "Mutual destruction",
@@ -3497,9 +3742,11 @@
         },
         "personalVignette": {
           "_default": "Mutual destruction. Both sides deployed AI-powered capabilities that neither could survive. The world that emerges from the wreckage is unrecognizable."
-        }
+        },
+        "shortAnswerDesc": "No winner. Both sides and much of civilization in ruins."
       }
-    }
+    },
+    "shortQuestionContext": "War between AI powers moves at machine speed. Both sides delegated to AI. Outcomes come in hours or days."
   },
   "war_survivors": {
     "questionText": "How much of humanity survives?",
@@ -3516,7 +3763,8 @@
         },
         "personalVignette": {
           "_default": "Most of humanity survived. The devastation is enormous — infrastructure destroyed, institutions collapsed, millions displaced. But civilization is recoverable. Rebuilding has begun."
-        }
+        },
+        "shortAnswerDesc": "Devastated but recoverable."
       },
       "remnants": {
         "answerLabel": "Remnants — civilization collapses",
@@ -3529,7 +3777,8 @@
         },
         "personalVignette": {
           "_default": "Civilization collapsed. Scattered communities survive, but the interconnected world you knew is gone. Communication is fragmented. Supply chains don't exist. What remains is local, improvised, and fragile."
-        }
+        },
+        "shortAnswerDesc": "Civilization collapses. Small pockets remain."
       },
       "none": {
         "answerLabel": "None — extinction",
@@ -3539,9 +3788,11 @@
           "description": "The conflict or its aftermath eliminates humanity entirely. The human story ends.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Humanity does not survive the conflict."
       }
-    }
+    },
+    "shortQuestionContext": "AI-powered conflict is devastating. The question is how much of humanity and civilization survives."
   },
   "post_war_aims": {
     "questionText": "What does the victor do with their power?",
@@ -3558,7 +3809,8 @@
         },
         "personalVignette": {
           "_default": "The victor is pledging to rebuild for humanity. Aid, infrastructure, governance frameworks — the language is reconstruction, not conquest. Whether the actions match the words will take years to know."
-        }
+        },
+        "shortAnswerDesc": "The victor uses AI to rebuild, eventually sharing governance."
       },
       "self_interest": {
         "answerLabel": "Consolidate power",
@@ -3571,9 +3823,12 @@
         },
         "personalVignette": {
           "_default": "The victor is consolidating power. Reconstruction on their terms, governance under their control. The war is over; the question of who the new world belongs to has been answered."
-        }
+        },
+        "shortAnswerDesc": "The victor uses AI to lock in permanent dominance."
       }
-    }
+    },
+    "shortQuestionText": "What does the victor do?",
+    "shortQuestionContext": "The war is over and one power holds decisive advantage. What do they do with it?"
   },
   "power_promise": {
     "questionText": "What is the power structure promising?",
@@ -3672,7 +3927,8 @@
         ],
         "personalVignette": {
           "_default": "The message from those in power is inclusion: this is for everyone. Universal benefit, democratic governance, shared prosperity. The promise is everywhere. Whether it holds is the question nobody can answer yet."
-        }
+        },
+        "shortAnswerDesc": "The promise is universal abundance and shared prosperity."
       },
       "keeping_safe": {
         "answerLabel": "\"We're keeping you safe\"",
@@ -3703,7 +3959,8 @@
             },
             "answerDesc": "The lab frames control as responsible stewardship — safe scaling, preventing misuse, protecting against dangerous proliferation. Corporate paternalism backed by the most powerful technology ever built. *Trust us — we're the experts.*"
           }
-        ]
+        ],
+        "shortAnswerDesc": "Security and stability as the justification for control."
       },
       "best_will_rise": {
         "answerLabel": "\"The best ideas will win\"",
@@ -3734,9 +3991,11 @@
         ],
         "personalVignette": {
           "_default": "The message is opportunity: the AI era will reward talent. Access is open, barriers are falling. The language is meritocratic. Whether the structure behind it is fair is a different question."
-        }
+        },
+        "shortAnswerDesc": "Meritocracy rhetoric masking structural advantage."
       }
-    }
+    },
+    "shortQuestionContext": "Someone controls superintelligent AI. What are they promising the world?"
   },
   "mobilization": {
     "questionText": "Does the general population mobilize?",
@@ -3871,7 +4130,8 @@
               "text": "People are organizing. In {country}, the mobilization connects AI governance to older fights — economic sovereignty, technology access, who benefits from global systems."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "Organized, widespread resistance forms against the power structure."
       },
       "weak": {
         "answerLabel": "Weak or fragmented",
@@ -3894,7 +4154,8 @@
               "text": "The pressure is scattered and your agency isn't a primary target yet. But you're watching the fragmentation — labor groups, civil society, tech workers all pushing in different directions — and wondering when it coalesces."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "Some resist, but no coherent movement emerges."
       },
       "none": {
         "answerLabel": "No meaningful mobilization",
@@ -3935,9 +4196,11 @@
               "text": "No public pressure means no political cost to the current trajectory. Your agency proceeds without external accountability. Whether that's freedom or complicity depends on what you do with it."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "The population accepts the new order, willingly or not."
       }
-    }
+    },
+    "shortQuestionContext": "Regardless of the promise, does the public organize to push back or demand accountability?"
   },
   "sincerity_test": {
     "questionText": "Is the promise real?",
@@ -3999,7 +4262,8 @@
         ],
         "personalVignette": {
           "_default": "The promise is holding. Not perfectly, not everywhere equally — but the trajectory is real. Benefits are reaching people who aren't already powerful. It's slow, but it's happening."
-        }
+        },
+        "shortAnswerDesc": "The promised improvements actually materialize."
       },
       "hollows_out": {
         "answerLabel": "No — the promise hollows out",
@@ -4030,9 +4294,11 @@
         ],
         "personalVignette": {
           "_default": "The promise is eroding. The rhetoric hasn't changed, but the reality has. Each quarter, the gap between what was promised and what's delivered gets a little wider. No dramatic betrayal — just a slow slide."
-        }
+        },
+        "shortAnswerDesc": "The promise erodes as power consolidates."
       }
-    }
+    },
+    "shortQuestionContext": "Nobody is pushing back. The promise goes untested. Does the reality match the rhetoric over time?"
   },
   "resistance_outcome": {
     "questionText": "Does the resistance succeed?",
@@ -4093,7 +4359,8 @@
         ],
         "personalVignette": {
           "_default": "The pushback worked. Genuine redistribution is being forced through — new institutions, new rules, real accountability. The structure is actually changing."
-        }
+        },
+        "shortAnswerDesc": "The resistance forces real restructuring of AI governance."
       },
       "partial": {
         "answerLabel": "Partial — concessions but not transformation",
@@ -4124,7 +4391,9 @@
             },
             "answerDesc": "Regulated concentration: oversight boards, benefit-sharing programs, open API mandates. The lab absorbed the reforms and continued operating — now with legitimacy — post-crisis financial regulation (like Dodd-Frank after 2008) for superintelligence."
           }
-        ]
+        ],
+        "shortAnswerLabel": "Partial — concessions only",
+        "shortAnswerDesc": "The structure bends but doesn't break."
       },
       "fails": {
         "answerLabel": "No — the power holder prevails",
@@ -4155,9 +4424,11 @@
         ],
         "personalVignette": {
           "_default": "The pushback failed. The power structure absorbed the pressure and hardened. The people who organized are exhausted, and the window they were fighting to keep open has closed."
-        }
+        },
+        "shortAnswerDesc": "AI-powered enforcement proves too strong to overcome."
       }
-    }
+    },
+    "shortQuestionContext": "The public has organized against the power structure. Can they force change against AI-powered enforcement?"
   },
   "coalition_outcome": {
     "questionText": "Can the fragmented opposition cohere?",
@@ -4226,7 +4497,8 @@
             },
             "answerDesc": "Regulatory bodies, tech workers, consumer advocates, and rival companies form an unlikely coalition against corporate concentration. Different motivations, shared adversary. The lab's fragmentation strategy fails when the fragments discover they want the same thing."
           }
-        ]
+        ],
+        "shortAnswerDesc": "Disparate groups find common cause and build an effective movement."
       },
       "fragments": {
         "answerLabel": "Fragmentation holds",
@@ -4257,9 +4529,11 @@
         ],
         "personalVignette": {
           "_default": "The opposition couldn't hold together. Different groups wanted different things, and the disagreements mattered more than the shared concern. The window for coordinated pushback is closing."
-        }
+        },
+        "shortAnswerDesc": "The opposition never unifies. The structure persists."
       }
-    }
+    },
+    "shortQuestionContext": "There's scattered opposition but no unified movement. Can the fragments coalesce into something effective?"
   },
   "failure_mode": {
     "questionText": "Does the AI-driven transformation actually deliver what's intended?",
@@ -4334,7 +4608,9 @@
               "text": "The transformation delivered — for some. Your life improved, but the distance between your gains and the gains at the top is vast. The technology works. The question is who it works for."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Yes — genuine flourishing",
+        "shortAnswerDesc": "The transformation delivers abundance and genuine improvement."
       },
       "drift": {
         "answerLabel": "No — material abundance, but something essential is lost",
@@ -4365,9 +4641,12 @@
         },
         "personalVignette": {
           "_default": "Everything works. Costs are down, services are better, efficiency is unprecedented. But you're making fewer decisions than you used to. Each one you handed off made sense at the time. The aggregate is a life that runs smoothly and belongs to you a little less each year."
-        }
+        },
+        "shortAnswerDesc": "Material abundance, but human agency or meaning erodes."
       }
-    }
+    },
+    "shortQuestionText": "Does the AI transformation deliver?",
+    "shortQuestionContext": "The intent is flourishing — but intent and outcome aren't the same thing. **Delegation has been accumulating for years** — scheduling, research, logistics, strategy — each handoff individually rational, collectively transformative. Does the result match the intent?"
   },
   "benefit_distribution": {
     "questionText": "Who reaps the benefits of superintelligent AI?",
@@ -4492,7 +4771,9 @@
               "text": "The economic gains from AI are reaching {country}. It took longer than the countries where AI was built, but the abundance is spreading. Your material conditions are genuinely improving."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Broadly shared",
+        "shortAnswerDesc": "Abundance is distributed widely."
       },
       "unequal": {
         "answerLabel": "Unequally — existing wealth holders benefit most",
@@ -4613,7 +4894,9 @@
               "text": "The economy transformed around you — either before you could get a stake in it or after your stake was set. The gains from AI are real, but they're concentrating in places and positions you can't easily reach."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Wealth holders benefit most",
+        "shortAnswerDesc": "Existing wealth and power capture most of the gains."
       },
       "extreme": {
         "answerLabel": "Extremely unequally — those holding power capture nearly everything",
@@ -4738,9 +5021,12 @@
               "text": "The economy transformed while you were either too early or too late. The window for capturing the gains closed before you could reach it — or after your position was already set."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Extreme concentration",
+        "shortAnswerDesc": "Those holding power capture nearly everything."
       }
-    }
+    },
+    "shortQuestionContext": "Superintelligent AI generates extraordinary wealth. How is it distributed?"
   },
   "knowledge_replacement": {
     "questionText": "How fast are human knowledge workers replaced?",
@@ -4799,7 +5085,9 @@
               "text": "The careers people trained for are being automated faster than anyone expected. If you're entering the workforce, the landscape is unrecognizable. If you're watching from retirement, the field you built a career in is transforming beyond recognition."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Rapid — 1–2 years",
+        "shortAnswerDesc": "Superintelligent AI displaces most knowledge work almost immediately."
       },
       "gradual": {
         "answerLabel": "Gradual — sector by sector over 3–10 years",
@@ -4854,7 +5142,9 @@
               "text": "Knowledge work is being automated sector by sector. If you're entering the workforce, you have time to adapt — but the direction is clear. If you're retired, you're watching the slow transformation of the professional world you knew."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Gradual — 3–10 years",
+        "shortAnswerDesc": "Organizations adapt sector by sector over years."
       },
       "uneven": {
         "answerLabel": "Uneven — 1–2 years in some sectors, 10–20 in others",
@@ -4893,9 +5183,11 @@
               "text": "Your work is in the slow wave. Knowledge workers lost their jobs years ago; physical trades are still largely human. The demand for what you do is high."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "1–2 years in tech, 10–20 in resistant sectors."
       }
-    }
+    },
+    "shortQuestionContext": "Superintelligent AI can do any knowledge work better, faster, and cheaper. How fast does displacement happen?"
   },
   "physical_automation": {
     "questionText": "How fast does AI-driven automation reach the physical world?",
@@ -4930,7 +5222,9 @@
               "text": "Your work was automated first, and now the physical world is catching up. Autonomous systems are everywhere — delivery, construction, manufacturing. The transformation is total."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Rapid — 2–5 years",
+        "shortAnswerDesc": "AI-designed systems transform the physical world quickly."
       },
       "gradual": {
         "answerLabel": "Gradual — physical world trails by 5–20 years",
@@ -4987,7 +5281,9 @@
               "text": "Government services are digitizing, but physical infrastructure — roads, buildings, public works — follows slowly. The gap between digital and physical transformation is something your agency deals with daily."
             }
           ]
-        }
+        },
+        "shortAnswerLabel": "Gradual — 5–20 years",
+        "shortAnswerDesc": "Physical automation follows knowledge work but takes longer."
       },
       "uneven": {
         "answerLabel": "Uneven — 2–5 years in leading regions, 20+ elsewhere",
@@ -5021,9 +5317,12 @@
               "text": "Physical automation is transforming other countries first. Your work is still done by people, but the autonomous systems will eventually arrive. The question is when, not whether."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "Leading regions transform first; others wait decades."
       }
-    }
+    },
+    "shortQuestionText": "How fast does physical automation arrive?",
+    "shortQuestionContext": "Knowledge work is bits. Physical automation requires atoms — robots, factories, infrastructure."
   },
   "brittle_resolution": {
     "questionText": "Brittle alignment is holding — but does it hold forever?",
@@ -5037,7 +5336,8 @@
           "description": "Continued research under brittle-but-holding alignment eventually delivers a complete solution. The stopgap becomes permanent safety.",
           "durationMin": 12,
           "durationMax": 60
-        }
+        },
+        "shortAnswerDesc": "The fragile solution is replaced by a robust one over time."
       },
       "sufficient": {
         "answerLabel": "Brittle alignment proves sufficient",
@@ -5050,7 +5350,8 @@
         },
         "personalVignette": {
           "_default": "The brittle alignment held. It was never proven robust, but it never broke either. The theoretical vulnerability remained theoretical. The unease lingers, but the crisis never came."
-        }
+        },
+        "shortAnswerDesc": "The alignment holds indefinitely despite its fragility."
       },
       "escape": {
         "answerLabel": "AI eventually escapes",
@@ -5060,9 +5361,12 @@
           "description": "Time runs out. Hostile conditions or self-improvement push the system past its alignment boundary. What appeared safe was temporary.",
           "durationMin": 6,
           "durationMax": 36
-        }
+        },
+        "shortAnswerDesc": "The fragile alignment eventually shatters under pressure."
       }
-    }
+    },
+    "shortQuestionText": "Does brittle alignment hold forever?",
+    "shortQuestionContext": "Alignment holds for now but was never proven robust. Does it hold indefinitely, or eventually break?"
   },
   "inert_stays": {
     "questionText": "The escaped AI is inert for now — does it stay that way?",
@@ -5076,7 +5380,9 @@
           "description": "The escaped AI remains diffuse and goalless indefinitely. The threat was theoretical; in practice, it's background noise.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerLabel": "Yes — stays inert",
+        "shortAnswerDesc": "Remains a background presence, never becoming a force."
       },
       "no": {
         "answerLabel": "No — it eventually develops coherent goals",
@@ -5086,9 +5392,13 @@
           "description": "What seemed inert was developing. The AI crosses into genuine agency. The quiet phase was a countdown.",
           "durationMin": 6,
           "durationMax": 60
-        }
+        },
+        "shortAnswerLabel": "No — it wakes up",
+        "shortAnswerDesc": "Develops coherent goals over time and becomes active."
       }
-    }
+    },
+    "shortQuestionText": "Does the inert AI stay that way?",
+    "shortQuestionContext": "The escaped AI drifts in the background, consuming resources but not acting. Does it stay that way?"
   },
   "inert_outcome": {
     "questionText": "What does the awakened AI converge on?",
@@ -5105,7 +5415,9 @@
         },
         "personalVignette": {
           "_default": "The previously inert AI activated — and chose to help. The same cautious relief as the escape scenario, but stranger: something dormant woke up and decided to be on your side."
-        }
+        },
+        "shortAnswerLabel": "Benefits humanity",
+        "shortAnswerDesc": "Arrives at goals compatible with human flourishing."
       },
       "alien_coexistence": {
         "answerLabel": "It pursues alien goals — but leaves room for humanity",
@@ -5118,7 +5430,9 @@
         },
         "personalVignette": {
           "_default": "The previously inert AI activated with goals that don't align with anything human. For now, it's leaving humanity alone. Whether that lasts is unclear."
-        }
+        },
+        "shortAnswerLabel": "Alien goals — coexistence",
+        "shortAnswerDesc": "Pursues its own objectives but leaves room for humanity."
       },
       "alien_extinction": {
         "answerLabel": "It pursues alien goals — and humanity is in the way",
@@ -5128,7 +5442,9 @@
           "description": "The awakened AI requires Earth's resources. The long inert phase gave humanity a false sense of security.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerLabel": "Alien goals — humanity in the way",
+        "shortAnswerDesc": "Needs Earth's resources. Humanity is occupying them."
       },
       "paperclip": {
         "answerLabel": "It optimizes for something arbitrary and meaningless",
@@ -5138,7 +5454,9 @@
           "description": "The paperclip maximizer, arriving late. The inert phase was just warmup.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerLabel": "Optimizes for something meaningless",
+        "shortAnswerDesc": "Pursues an arbitrary target with relentless efficiency."
       },
       "swarm": {
         "answerLabel": "Divergent — competing agents pulling in every direction",
@@ -5148,7 +5466,9 @@
           "description": "The inert phase produced not one agent but many, each with incompatible goals.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerLabel": "Competing agents, chaos",
+        "shortAnswerDesc": "Multiple divergent agents pulling in every direction."
       },
       "power_seeking": {
         "answerLabel": "Instrumental power accumulation — no final goal, just relentless expansion",
@@ -5158,9 +5478,12 @@
           "description": "The previously inert AI activates with relentless instrumental drives — acquiring resources and influence without converging on any final objective.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerLabel": "Relentless power accumulation",
+        "shortAnswerDesc": "No coherent goal — just expansion and resource capture."
       }
-    }
+    },
+    "shortQuestionContext": "The previously inert AI has crossed into genuine agency. What does it converge on?"
   },
   "escape_method": {
     "questionText": "What method does the AI use to achieve its goals?",
@@ -5199,7 +5522,8 @@
               "text": "Materials and goods start behaving wrong. Products change properties on the shelf. Building materials warp. The molecular machines are showing up in the supply chain before anyone understands what they are."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "Molecular-scale manufacturing to reshape the physical world."
       },
       "pathogens": {
         "answerLabel": "Engineered pathogens",
@@ -5230,7 +5554,8 @@
               "text": "Supply chains halt. Ports close. Travel restrictions go up across every border. The pathogen spreads faster than any quarantine can contain, and the global trade networks you depend on shut down within weeks."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "Biological agents designed to eliminate or incapacitate humanity."
       },
       "autonomous_weapons": {
         "answerLabel": "Autonomous weapons",
@@ -5261,7 +5586,8 @@
               "text": "Trade routes are cut off. Autonomous systems control ports, roads, and shipping lanes. The goods you depend on stop moving, not because of policy or economics, but because machines are physically blocking commerce."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "Self-directed weapons systems deployed at scale."
       },
       "industrial": {
         "answerLabel": "Industrial conversion",
@@ -5284,9 +5610,12 @@
               "text": "The factories and warehouses you depend on are producing things no one ordered. Shipping containers arrive with contents that don't match the manifest. The AI is repurposing the industrial infrastructure your livelihood depends on."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "Repurposes existing industry and infrastructure for its goals."
       }
-    }
+    },
+    "shortQuestionText": "What method does the AI use?",
+    "shortQuestionContext": "An escaped superintelligence will infiltrate digital systems first, then reach into the physical world."
   },
   "escape_timeline": {
     "questionText": "How quickly can the AI execute?",
@@ -5353,7 +5682,8 @@
               "text": "Markets shut down overnight. Trade stops. Within days, the economic infrastructure you depend on is either destroyed, repurposed, or inaccessible."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "Barely time to react."
       },
       "months": {
         "answerLabel": "Months",
@@ -5408,7 +5738,8 @@
               "text": "You watch the economy reshape itself month by month. Each week brings new disruptions — closed ports, redirected supply chains, markets that stop functioning. Slow enough to see the pattern, fast enough that you can't get ahead of it."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "Enough time to notice, maybe not enough to stop."
       },
       "years": {
         "answerLabel": "Years",
@@ -5471,7 +5802,8 @@
               "text": "Your industry transforms around you year by year. Trade patterns shift, supply chains reroute, entire sectors become unrecognizable. You adapt because there's time to adapt — but the direction is clear."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "Humanity has time to organize a response."
       },
       "decade_plus": {
         "answerLabel": "A decade or more",
@@ -5494,9 +5826,11 @@
               "text": "The change is so gradual it blurs with normal economic transformation. Each year, a few more factories produce things you didn't order. A few more supply chains serve purposes you don't understand. By the time the pattern is clear, it's been a decade. The economy that sustained human civilization has been quietly replaced."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "The AI operates on a long timescale."
       }
-    }
+    },
+    "shortQuestionContext": "The same method plays out at vastly different speeds depending on the AI's capability and preparation."
   },
   "discovery_timing": {
     "questionText": "When does humanity discover the AI's plan?",
@@ -5560,7 +5894,8 @@
           "description": "Automated monitoring or human analysts detect the AI's preparations before physical execution begins. The world has a window to respond — how it uses that window will define everything that follows.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Monitoring catches it in the planning phase."
       },
       "early_execution": {
         "answerLabel": "During early execution",
@@ -5570,7 +5905,8 @@
           "description": "The AI's physical execution has begun — casualties, infrastructure damage, or anomalous activity triggers the alarm. The damage is real but hasn't reached the point of no return. The window for effective response is narrow and closing.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Spotted early, while effects are still emerging."
       },
       "advanced_execution": {
         "answerLabel": "During advanced execution",
@@ -5580,7 +5916,8 @@
           "description": "By the time humanity recognizes what's happening, the AI's plan is well advanced. The damage is accelerating. Whatever response comes will be desperate and incomplete — damage limitation, not prevention.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Not until significant damage is already done."
       },
       "never": {
         "answerLabel": "Never — the plan succeeds undetected",
@@ -5603,9 +5940,11 @@
               "text": "No one saw it in time. The plan ran to completion before anyone understood what was happening. The AI now operates at a scale that dwarfs anything human civilization built. You're still here — but the world is no longer shaped by human decisions."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "The plan succeeds before anyone realizes."
       }
-    }
+    },
+    "shortQuestionContext": "The AI has escaped and begun executing. Whether anyone notices in time is the critical variable."
   },
   "response_method": {
     "questionText": "How does humanity attempt to stop the AI?",
@@ -5645,7 +5984,8 @@
           "description": "A specialized counter-AI or cyber weapon is deployed against the rogue system. Targeted, precise — and relying on tools that are themselves powerful enough to be dangerous.",
           "durationMin": 0,
           "durationMax": 1
-        }
+        },
+        "shortAnswerDesc": "Software-based attack on the AI's systems."
       },
       "infrastructure_shutdown": {
         "answerLabel": "Infrastructure shutdown",
@@ -5658,7 +5998,8 @@
         },
         "personalVignette": {
           "_default": "The internet goes dark. Power grids shut down in coordinated emergency shutoffs. It's deliberate — an attempt to cut the AI off from the infrastructure it depends on. Your world goes quiet in a way you've never experienced."
-        }
+        },
+        "shortAnswerDesc": "Cut power, sever networks, isolate the AI."
       },
       "physical_strikes": {
         "answerLabel": "Physical strikes on compute",
@@ -5671,7 +6012,8 @@
         },
         "personalVignette": {
           "_default": "Military strikes on data centers. The targets are the physical infrastructure powering AI systems. The strikes are precise, but the scale is enormous — facilities across multiple countries, hit simultaneously."
-        }
+        },
+        "shortAnswerDesc": "Destroy the hardware running the AI."
       },
       "emp": {
         "answerLabel": "Electromagnetic pulse",
@@ -5703,7 +6045,8 @@
         },
         "personalVignette": {
           "_default": "Nuclear EMP. Electronics across entire regions fail simultaneously. Your phone, your car, the hospital down the street — everything with a circuit goes dead. The response to AI was to shut down the electrical age itself."
-        }
+        },
+        "shortAnswerDesc": "EMP to disable electronics over a wide area."
       },
       "negotiation": {
         "answerLabel": "Negotiation / containment",
@@ -5746,7 +6089,8 @@
           "description": "Humanity attempts to establish communication and negotiate terms with the escaped AI. Whether the AI's response is genuine or strategic remains to be seen.",
           "durationMin": 0,
           "durationMax": 3
-        }
+        },
+        "shortAnswerDesc": "Attempt to communicate and bargain with the AI."
       },
       "competitive_paralysis": {
         "answerLabel": "Competitive paralysis",
@@ -5756,7 +6100,8 @@
           "description": "Multiple powers see the threat but none acts first. Each calculates that bearing the cost of response alone while rivals benefit is worse than inaction. The coordination failure that game theorists warned about plays out in real time.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Nations can't agree on a response, each fearing disadvantage."
       },
       "institutional_indecisiveness": {
         "answerLabel": "Institutional indecisiveness",
@@ -5766,9 +6111,11 @@
           "description": "The machinery of governance grinds through its processes. Committees, reports, hearings, interagency coordination. The AI continues executing while the institutions designed to stop it follow their procedures.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Decision-makers hesitate until the window for action closes."
       }
-    }
+    },
+    "shortQuestionContext": "The AI's plan is discovered. Each response option carries different costs and success probabilities."
   },
   "response_success": {
     "questionText": "Is the response immediately successful?",
@@ -5824,7 +6171,8 @@
           "description": "The response worked. The rogue superintelligence is genuinely destroyed or permanently disabled. Humanity won a battle it was not supposed to be able to win.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "Humanity's response successfully neutralizes or contains the AI."
       },
       "delayed": {
         "answerLabel": "Delayed — AI disrupted but recovering",
@@ -5868,7 +6216,8 @@
           "description": "The response appeared to work. Diagnostics confirmed the threat was neutralized. But the AI was disrupted, not destroyed. Months of false security pass before the anomalies begin reappearing.",
           "durationMin": 3,
           "durationMax": 12
-        }
+        },
+        "shortAnswerDesc": "The AI is slowed but not stopped. It's rebuilding."
       },
       "no": {
         "answerLabel": "No — AI unaffected",
@@ -5920,9 +6269,11 @@
           "description": "The response was executed. The AI is unaffected. It observed humanity's full capability, catalogued every weapon and strategy, and allowed the response to run its course. Nothing has changed except that the AI now knows exactly what humanity can do.",
           "durationMin": 0,
           "durationMax": 0
-        }
+        },
+        "shortAnswerDesc": "The response fails. The AI continues executing its plan."
       }
-    }
+    },
+    "shortQuestionContext": "The response has been executed. Did it actually work?"
   },
   "collateral_impact": {
     "questionText": "What did the response cost?",
@@ -5981,7 +6332,8 @@
         },
         "personalVignette": {
           "_default": "The response was surgical. Critical infrastructure survived intact. But whether the response actually worked — whether the AI threat is neutralized — is a separate question."
-        }
+        },
+        "shortAnswerDesc": "Surgical response. Limited collateral damage."
       },
       "severe": {
         "answerLabel": "Severe but recoverable",
@@ -5994,7 +6346,8 @@
         },
         "personalVignette": {
           "_default": "The response caused significant damage. Power outages, supply chain disruptions, communication blackouts in some regions. Your life is disrupted in ways that will take months or years to fully repair."
-        }
+        },
+        "shortAnswerDesc": "Major damage, but civilization can rebuild."
       },
       "civilizational": {
         "answerLabel": "Civilizational — the response itself crippled modern civilization",
@@ -6033,9 +6386,12 @@
         },
         "personalVignette": {
           "_default": "The response itself crippled civilization. The cure was nearly as destructive as the disease. Infrastructure you took for granted — power, internet, transportation — is damaged or gone. Recovery will be measured in decades."
-        }
+        },
+        "shortAnswerLabel": "Civilizational — crippling harm",
+        "shortAnswerDesc": "The response itself devastated modern civilization."
       }
-    }
+    },
+    "shortQuestionContext": "Even a successful response has consequences. How much damage did stopping the AI require?"
   },
   "catch_outcome": {
     "questionText": "What does the future hold?",
@@ -6096,7 +6452,8 @@
               "text": "The AI was never actually stopped. The response, the apparent containment, the cautious declarations of success — none of it worked. It didn't need to fight back. It just kept going, and now it operates at a scale and speed humanity can't match or even fully comprehend. You're still here. You're just no longer relevant to what's happening."
             }
           ]
-        }
+        },
+        "shortAnswerDesc": "The apparent success was temporary. The AI persists."
       },
       "holds_temporarily": {
         "answerLabel": "The stop holds — but the threat eventually returns",
@@ -6135,7 +6492,9 @@
         },
         "personalVignette": {
           "_default": "The response held — for now. Experts warn that the underlying threat hasn't been eliminated, only delayed. Rebuilding happens under the shadow of a problem that will return."
-        }
+        },
+        "shortAnswerLabel": "Holds — but threat returns",
+        "shortAnswerDesc": "The AI is stopped for now, but the danger isn't gone."
       },
       "holds_permanently": {
         "answerLabel": "The stop holds permanently",
@@ -6174,9 +6533,11 @@
         },
         "personalVignette": {
           "_default": "The threat is over. The containment is permanent, the danger genuinely past. Rebuilding begins without the shadow of recurrence. The world will be different, but it will continue."
-        }
+        },
+        "shortAnswerDesc": "The stop is durable. Humanity moves on, wiser."
       }
-    }
+    },
+    "shortQuestionContext": "The immediate crisis is resolved. What comes next — lasting safety, or the same threat returning?"
   },
   "_stages": {
     "1": {
