@@ -45,6 +45,16 @@
             filter: brightness(1.15);
             box-shadow: 0 0 24px var(--accent-glow);
         }
+        .btn-secondary {
+            background: rgba(255,255,255,0.95); color: #1a1a2e;
+            border: 1.5px solid rgba(0,0,0,0.15);
+            padding: 0.55rem 1.6rem;
+        }
+        .btn-secondary:hover {
+            background: #fff;
+            border-color: var(--accent);
+            box-shadow: 0 0 16px var(--accent-glow);
+        }
         .btn-ghost {
             background: transparent; color: var(--text-secondary);
             padding: 0.5rem 0.75rem; font-size: 0.9rem;
@@ -522,10 +532,22 @@
             font-size: 0.88rem; color: var(--text-dim); margin-bottom: 1.5rem;
         }
         .discovery-counter strong { color: var(--text); font-weight: 600; }
-        .outcome-cta {
-            display: flex; gap: 0.75rem;
-            justify-content: center; flex-wrap: wrap;
+        .discovery-counter a {
+            color: var(--text-dim); text-decoration: none;
+            transition: color 0.2s var(--ease);
         }
+        .discovery-counter a:hover { color: var(--accent); }
+        .outcome-cta { margin-bottom: 0.75rem; }
+        .outcome-links {
+            display: flex; flex-direction: column; gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .outcome-links a {
+            color: var(--text-dim); font-size: 0.88rem;
+            text-decoration: none; transition: color 0.2s var(--ease);
+        }
+        .outcome-links a:hover { color: var(--accent); }
         .share-section {
             text-align: center;
             margin: 2rem 0;
@@ -2042,13 +2064,16 @@
                         <button class="share-btn share-li" data-share="linkedin"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg><span>LinkedIn</span></button>
                         <button class="share-btn share-copy" data-share="copy"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span>Copy Link</span></button>
                     </div>
+                </div>
+                <div class="outcome-links scroll-reveal">
+                    <a href="#" data-action="outcome-review">Review Answers &rarr;</a>
                 </div>`;
 
                 const totalOutcomes = countTotalOutcomes();
                 const footerHtml = `<div class="outcome-footer scroll-reveal">
-                    <div class="discovery-counter">You've discovered <strong>${discovered.size}</strong> of <strong>${totalOutcomes}</strong> possible futures</div>
+                    <div class="discovery-counter">You've discovered <strong>${discovered.size}</strong> of <strong>${totalOutcomes}</strong> possible futures. <a href="#" data-action="outcome-browse">Browse all ${totalOutcomes} outcomes &rarr;</a></div>
                     <div class="outcome-cta">
-                        <button class="btn btn-ghost" data-action="outcome-explore">Explore Another Path</button>
+                        <button class="btn btn-primary" data-action="outcome-explore">Play Again</button>
                     </div>
                 </div>`;
 
@@ -2469,6 +2494,20 @@
                                 resetSelections();
                             });
                         }
+                        const browseBtn = outcomeZone.querySelector('[data-action="outcome-browse"]');
+                        if (browseBtn) {
+                            browseBtn.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                location.hash = '/about?outcomes=1';
+                            });
+                        }
+                        const reviewBtn = outcomeZone.querySelector('[data-action="outcome-review"]');
+                        if (reviewBtn) {
+                            reviewBtn.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            });
+                        }
                         const eff = Engine.resolvedState(Engine.currentState(stack));
                         const matchedT = templatesList.filter(t => Engine.templateMatches(t, eff));
                         if (matchedT.length > 0) {
@@ -2564,6 +2603,7 @@
             }
 
             function resetSelections() {
+                _pushNextSync = true;
                 stack = Engine.createStack();
                 started = true;
                 logStart();
