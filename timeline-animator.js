@@ -51,20 +51,24 @@ class TimelineRenderer {
         }
         const allLocked = event.isLocked;
         const pills = event.siblings.map(s => {
+            const pillText = s.shortLabel || s.label;
             const active = event.isFrontier ? false : s.value === event.selectedValue;
             if (event.isFrontier) {
-                if (s.disabled || !s.reachable) return `<span class="tl-pill disabled">${this._esc(s.label)}</span>`;
-                return `<span class="tl-pill" data-pathaction="frontier" data-dim="${this._esc(s.nodeId)}" data-val="${this._esc(s.value)}">${this._esc(s.label)}</span>`;
+                if (s.disabled || !s.reachable) return `<span class="tl-pill disabled">${this._esc(pillText)}</span>`;
+                return `<span class="tl-pill" data-pathaction="frontier" data-dim="${this._esc(s.nodeId)}" data-val="${this._esc(s.value)}">${this._esc(pillText)}</span>`;
             }
             if (active) {
-                return `<span class="tl-pill active${allLocked ? ' locked' : ''}" data-pathaction="unclick" data-dim="${this._esc(event.nodeId)}">${this._esc(s.label)}</span>`;
+                return `<span class="tl-pill active${allLocked ? ' locked' : ''}" data-pathaction="unclick" data-dim="${this._esc(event.nodeId)}">${this._esc(pillText)}</span>`;
             }
             if (allLocked || s.disabled || !s.reachable) {
-                return `<span class="tl-pill disabled">${this._esc(s.label)}</span>`;
+                return `<span class="tl-pill disabled">${this._esc(pillText)}</span>`;
             }
-            return `<span class="tl-pill" data-pathaction="change" data-dim="${this._esc(s.nodeId)}" data-val="${this._esc(s.value)}">${this._esc(s.label)}</span>`;
+            return `<span class="tl-pill" data-pathaction="change" data-dim="${this._esc(s.nodeId)}" data-val="${this._esc(s.value)}">${this._esc(pillText)}</span>`;
         }).join('');
-        return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${this._esc(event.nodeLabel)}</span><span class="tl-pills">${pills}</span></span>`;
+        const undoHtml = (!event.isFrontier && event.selectedValue)
+            ? `<button class="tl-undo" data-pathaction="unclick" data-dim="${this._esc(event.nodeId)}" aria-label="Go back to this question">&#x21a9;</button>`
+            : '';
+        return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${this._esc(event.nodeLabel)}${undoHtml}</span><span class="tl-pills">${pills}</span></span>`;
     }
 
     renderEvent(event, options) {

@@ -95,22 +95,22 @@ const NODES = [
     { id: 'agi_threshold', label: 'Human-Competitive AI', stage: 1,
       activateWhen: [{ capability: ['singularity'] }],
       edges: [
-        { id: 'twenty_four_hours', label: '~24 hours — we\'re nearly there' },
-        { id: 'one_week', label: '~1 week — sustained competence' },
-        { id: 'few_months', label: '~A few months — deep expertise' },
-        { id: 'one_year', label: '~1 year — the bar is very high' },
-        { id: 'ten_plus_years', label: '~10+ years — mastery runs deep' },
+        { id: 'twenty_four_hours', label: '~24 hours — we\'re nearly there', shortLabel: '~24 hours' },
+        { id: 'one_week', label: '~1 week — sustained competence', shortLabel: '~1 week' },
+        { id: 'few_months', label: '~A few months — deep expertise', shortLabel: '~A few months' },
+        { id: 'one_year', label: '~1 year — the bar is very high', shortLabel: '~1 year' },
+        { id: 'ten_plus_years', label: '~10+ years — mastery runs deep', shortLabel: '~10+ years' },
         { id: 'never', label: 'Never' }
       ] },
     { id: 'asi_threshold', label: 'Superhuman AI', stage: 1,
       activateWhen: [{ capability: ['singularity'], _set: ['agi_threshold'] }],
       edges: [
-        { id: 'twenty_four_hours', label: '~24 hours — the jump is small', requires: { agi_threshold: ['twenty_four_hours'] } },
-        { id: 'one_week', label: '~1 week — outpaces quickly', requires: { agi_threshold: ['twenty_four_hours', 'one_week'] } },
-        { id: 'few_months', label: '~A few months — strategic superiority', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months'] } },
-        { id: 'one_year', label: '~1 year — the bar is very high', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year'] } },
-        { id: 'ten_plus_years', label: '~10+ years — surpassing takes decades', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year', 'ten_plus_years'] } },
-        { id: 'never', label: 'Never — matching is the ceiling' }
+        { id: 'twenty_four_hours', label: '~24 hours — the jump is small', shortLabel: '~24 hours', requires: { agi_threshold: ['twenty_four_hours'] } },
+        { id: 'one_week', label: '~1 week — outpaces quickly', shortLabel: '~1 week', requires: { agi_threshold: ['twenty_four_hours', 'one_week'] } },
+        { id: 'few_months', label: '~A few months — strategic superiority', shortLabel: '~A few months', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months'] } },
+        { id: 'one_year', label: '~1 year — the bar is very high', shortLabel: '~1 year', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year'] } },
+        { id: 'ten_plus_years', label: '~10+ years — surpassing takes decades', shortLabel: '~10+ years', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year', 'ten_plus_years'] } },
+        { id: 'never', label: 'Never — matching is the ceiling', shortLabel: 'Never' }
       ] },
     { id: 'automation', label: 'Knowledge Work', derived: true, forwardKey: true,
       derivedFrom: [
@@ -322,7 +322,7 @@ const NODES = [
       ] },
     { id: 'inert_stays', label: 'Does Escaped AI Stay Inert?', stage: 3,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'] }],
-      edges: [ { id: 'yes', label: 'Yes — remains inert' }, { id: 'no', label: 'No — eventually develops goals and escapes' } ] },
+      edges: [ { id: 'yes', label: 'Yes — remains inert' }, { id: 'no', label: 'No — eventually develops goals and escapes', shortLabel: 'No — develops goals' } ] },
     { id: 'inert_outcome', label: 'AI Eventually Converges On', stage: 3,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], inert_stays: ['no'] }],
       edges: [
@@ -344,7 +344,7 @@ const NODES = [
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], gov_action: ['decelerate'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
-        { id: 'brittle', label: 'Solved — brittle / partial' },
+        { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
         { id: 'unsolved', label: 'Not solved yet', disabledWhen: [{ alignment: ['brittle'], reason: 'Alignment is already partially solved' }] }
       ] },
     { id: 'decel_2mo_action', label: '2mo Decision', stage: 2,
@@ -365,7 +365,7 @@ const NODES = [
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_2mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
-        { id: 'brittle', label: 'Solved — brittle / partial' },
+        { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
         { id: 'unsolved', label: 'Not solved yet', disabledWhen: [{ alignment: ['brittle'], reason: 'Alignment is already partially solved' }] }
       ] },
     { id: 'decel_4mo_action', label: '4mo Decision', stage: 2,
@@ -386,7 +386,7 @@ const NODES = [
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_4mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
-        { id: 'brittle', label: 'Solved — brittle / partial' },
+        { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
         { id: 'unsolved', label: 'Not solved yet', disabledWhen: [{ alignment: ['brittle'], reason: 'Alignment is already partially solved' }] }
       ] },
     { id: 'decel_6mo_action', label: '6mo Decision', stage: 2,
@@ -425,7 +425,7 @@ const NODES = [
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_6mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
-        { id: 'brittle', label: 'Solved — brittle / partial' },
+        { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
         { id: 'unsolved', label: 'Not solved yet', disabledWhen: [{ alignment: ['brittle'], reason: 'Alignment is already partially solved' }] }
       ] },
     { id: 'decel_9mo_action', label: '9mo Decision', stage: 2,
@@ -446,7 +446,7 @@ const NODES = [
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_9mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
-        { id: 'brittle', label: 'Solved — brittle / partial' },
+        { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
         { id: 'unsolved', label: 'Not solved yet', disabledWhen: [{ alignment: ['brittle'], reason: 'Alignment is already partially solved' }] }
       ] },
     { id: 'decel_12mo_action', label: '12mo Decision', stage: 2,
@@ -475,7 +475,7 @@ const NODES = [
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_12mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
-        { id: 'brittle', label: 'Solved — brittle / partial' },
+        { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
         { id: 'unsolved', label: 'Not solved yet', disabledWhen: [{ alignment: ['brittle'], reason: 'Alignment is already partially solved' }] }
       ] },
     { id: 'decel_18mo_action', label: '18mo Decision', stage: 2,
@@ -496,7 +496,7 @@ const NODES = [
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_18mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
-        { id: 'brittle', label: 'Solved — brittle / partial' },
+        { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
         { id: 'unsolved', label: 'Not solved yet', disabledWhen: [{ alignment: ['brittle'], reason: 'Alignment is already partially solved' }] }
       ] },
     { id: 'decel_24mo_action', label: '24mo Decision', stage: 2,
@@ -548,7 +548,7 @@ const NODES = [
         }
       ],
       edges: [
-        { id: 'holds', label: 'Alignment is intrinsic' },
+        { id: 'holds', label: 'Alignment is intrinsic', shortLabel: 'Intrinsic' },
         { id: 'breaks', label: 'Someone cracks it' }
       ] },
     { id: 'intent', label: 'Intent', stage: 2, forwardKey: true, hideAfterEscape: true,
@@ -654,8 +654,8 @@ const NODES = [
         { catch_outcome: ['holds_permanently'], collateral_impact: ['civilizational'] }
       ],
       edges: [
-        { id: 'most', label: 'Most — devastated but recoverable' },
-        { id: 'remnants', label: 'Remnants — civilization collapses' },
+        { id: 'most', label: 'Most — devastated but recoverable', shortLabel: 'Most survive' },
+        { id: 'remnants', label: 'Remnants — civilization collapses', shortLabel: 'Remnants' },
         { id: 'none', label: 'None — extinction' }
       ] },
     { id: 'post_war_aims', label: 'Victor\'s Aims', stage: 3,
@@ -691,14 +691,14 @@ const NODES = [
       edges: [
         { id: 'for_everyone', label: 'This is for everyone' },
         { id: 'keeping_safe', label: 'We\'re keeping you safe' },
-        { id: 'best_will_rise', label: 'The best ideas will win' }
+        { id: 'best_will_rise', label: 'The best ideas will win', shortLabel: 'Best ideas win' }
       ] },
     { id: 'mobilization', label: 'Mobilization', stage: 3, hideAfterEscape: true,
       activateWhen: [{ _set: ['power_promise'] }],
       edges: [
         { id: 'strong', label: 'Strong mobilization' },
         { id: 'weak', label: 'Weak or fragmented' },
-        { id: 'none', label: 'No meaningful mobilization' }
+        { id: 'none', label: 'No meaningful mobilization', shortLabel: 'No mobilization' }
       ] },
     { id: 'sincerity_test', label: 'Sincerity Test', stage: 3, hideAfterEscape: true,
       activateWhen: [
@@ -706,8 +706,8 @@ const NODES = [
         { power_promise: ['for_everyone'], coalition_outcome: ['coalesces'] }
       ],
       edges: [
-        { id: 'sincere', label: 'Yes — the promise holds' },
-        { id: 'hollows_out', label: 'No — the promise hollows out' }
+        { id: 'sincere', label: 'Yes — the promise holds', shortLabel: 'Yes — holds' },
+        { id: 'hollows_out', label: 'No — the promise hollows out', shortLabel: 'No — hollows out' }
       ] },
     { id: 'resistance_outcome', label: 'Public Pushback', stage: 3, hideAfterEscape: true,
       activateWhen: [
@@ -776,9 +776,9 @@ const NODES = [
         }
       ],
       edges: [
-        { id: 'solved', label: 'Alignment fully solved' },
-        { id: 'sufficient', label: 'Brittle alignment holds' },
-        { id: 'escape', label: 'AI eventually escapes' }
+        { id: 'solved', label: 'Alignment fully solved', shortLabel: 'Fully solved' },
+        { id: 'sufficient', label: 'Brittle alignment holds', shortLabel: 'Brittle holds' },
+        { id: 'escape', label: 'AI eventually escapes', shortLabel: 'Escapes' }
       ] },
     { id: 'failure_mode', label: 'Delivery', stage: 3, forwardKey: true, hideAfterEscape: true,
       activateWhen: [
@@ -816,7 +816,7 @@ const NODES = [
         { id: 'nanotech', label: 'Nanotechnology', disabledWhen: [{ ai_goals: ['alien_coexistence'], reason: 'A tolerant alien intelligence reshapes infrastructure, not biology' }] },
         { id: 'pathogens', label: 'Engineered pathogens', disabledWhen: [{ ai_goals: ['alien_coexistence'], reason: 'Bioweapons are incompatible with leaving room for humanity' }] },
         { id: 'autonomous_weapons', label: 'Autonomous weapons', disabledWhen: [{ ai_goals: ['alien_coexistence'], reason: 'Military force is incompatible with leaving room for humanity' }] },
-        { id: 'industrial', label: 'Industrial conversion' }
+        { id: 'industrial', label: 'Industrial conversion', shortLabel: 'Industrial' }
       ] },
     { id: 'escape_timeline', label: 'Execution Speed', stage: 3,
       activateWhen: [
@@ -855,31 +855,31 @@ const NODES = [
         }
       ],
       edges: [
-        { id: 'before_physical', label: 'Before physical execution', disabledWhen: [{ escape_timeline: ['days_weeks'], reason: 'At this speed, there\'s no time for pre-execution detection' }] },
-        { id: 'early_execution', label: 'During early execution' },
-        { id: 'advanced_execution', label: 'During advanced execution' },
-        { id: 'never', label: 'Never — the plan succeeds undetected' }
+        { id: 'before_physical', label: 'Before physical execution', shortLabel: 'Before execution', disabledWhen: [{ escape_timeline: ['days_weeks'], reason: 'At this speed, there\'s no time for pre-execution detection' }] },
+        { id: 'early_execution', label: 'During early execution', shortLabel: 'Early execution' },
+        { id: 'advanced_execution', label: 'During advanced execution', shortLabel: 'Late execution' },
+        { id: 'never', label: 'Never — the plan succeeds undetected', shortLabel: 'Never detected' }
       ] },
     { id: 'response_method', label: 'Response', stage: 3,
       activateWhen: [
         { discovery_timing: ['before_physical', 'early_execution', 'advanced_execution'] }
       ],
       edges: [
-        { id: 'digital_countermeasure', label: 'Targeted digital countermeasure' },
-        { id: 'infrastructure_shutdown', label: 'Infrastructure shutdown' },
-        { id: 'physical_strikes', label: 'Physical strikes on compute' },
-        { id: 'emp', label: 'Electromagnetic pulse' },
-        { id: 'negotiation', label: 'Negotiation / containment' },
-        { id: 'competitive_paralysis', label: 'Competitive paralysis', disabledWhen: [{ geo_spread: ['one'], reason: 'Only one actor — no competitive dynamic' }] },
-        { id: 'institutional_indecisiveness', label: 'Institutional indecisiveness' }
+        { id: 'digital_countermeasure', label: 'Targeted digital countermeasure', shortLabel: 'Digital counter' },
+        { id: 'infrastructure_shutdown', label: 'Infrastructure shutdown', shortLabel: 'Infra shutdown' },
+        { id: 'physical_strikes', label: 'Physical strikes on compute', shortLabel: 'Physical strikes' },
+        { id: 'emp', label: 'Electromagnetic pulse', shortLabel: 'EMP' },
+        { id: 'negotiation', label: 'Negotiation / containment', shortLabel: 'Negotiation' },
+        { id: 'competitive_paralysis', label: 'Competitive paralysis', shortLabel: 'Paralysis', disabledWhen: [{ geo_spread: ['one'], reason: 'Only one actor — no competitive dynamic' }] },
+        { id: 'institutional_indecisiveness', label: 'Institutional indecisiveness', shortLabel: 'Indecisiveness' }
       ] },
     { id: 'response_success', label: 'Success?', stage: 3,
       activateWhen: [
         { response_method: ['digital_countermeasure', 'infrastructure_shutdown', 'physical_strikes', 'emp', 'negotiation'] }
       ],
       edges: [
-        { id: 'yes', label: 'Yes — AI actually neutralized' },
-        { id: 'delayed', label: 'Delayed — AI disrupted but recovering' },
+        { id: 'yes', label: 'Yes — AI actually neutralized', shortLabel: 'Yes — neutralized' },
+        { id: 'delayed', label: 'Delayed — AI disrupted but recovering', shortLabel: 'Delayed' },
         { id: 'no', label: 'No — AI unaffected' }
       ] },
     { id: 'collateral_impact', label: 'Collateral', stage: 3,
@@ -887,16 +887,16 @@ const NODES = [
         { response_success: ['yes', 'delayed', 'no'] }
       ],
       edges: [
-        { id: 'minimal', label: 'Minimal — surgical, civilization intact',
+        { id: 'minimal', label: 'Minimal — surgical, civilization intact', shortLabel: 'Minimal',
           disabledWhen: [
             { response_method: ['emp'], reason: 'EMP can\'t be surgical' },
             { response_method: ['infrastructure_shutdown'], reason: 'Shutting down internet infrastructure can\'t be minimal' }
           ] },
-        { id: 'severe', label: 'Severe but recoverable',
+        { id: 'severe', label: 'Severe but recoverable', shortLabel: 'Severe',
           disabledWhen: [
             { response_method: ['emp'], reason: 'EMP damage is worse than severe' }
           ] },
-        { id: 'civilizational', label: 'Civilizational — the response itself crippled modern civilization',
+        { id: 'civilizational', label: 'Civilizational — the response itself crippled modern civilization', shortLabel: 'Civilizational',
           disabledWhen: [
             { response_method: ['digital_countermeasure'], reason: 'Targeted software can\'t cause civilizational damage' },
             { response_method: ['negotiation'], reason: 'Talking can\'t cause civilizational damage' }
@@ -908,11 +908,11 @@ const NODES = [
         { response_method: ['competitive_paralysis', 'institutional_indecisiveness'] }
       ],
       edges: [
-        { id: 'never_stopped', label: 'The AI was never actually stopped',
+        { id: 'never_stopped', label: 'The AI was never actually stopped', shortLabel: 'Never stopped',
           disabledWhen: [{ response_success: ['yes'], reason: 'The response succeeded' }] },
-        { id: 'holds_temporarily', label: 'The stop holds — but the threat eventually returns',
+        { id: 'holds_temporarily', label: 'The stop holds — but the threat eventually returns', shortLabel: 'Holds temporarily',
           requires: { response_success: ['yes'] } },
-        { id: 'holds_permanently', label: 'The stop holds permanently',
+        { id: 'holds_permanently', label: 'The stop holds permanently', shortLabel: 'Holds permanently',
           requires: { response_success: ['yes'] } }
       ] },
     { id: 'decel_outcome', label: 'Deceleration Outcome', derived: true,

@@ -1759,7 +1759,7 @@
                                     const reason = Engine.getEdgeDisabledReason(sel, node, v);
                                     const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, sel) : null;
                                     return {
-                                        value: v.id, label: v.label,
+                                        value: v.id, label: v.label, shortLabel: v.shortLabel,
                                         answerLabel: (variant && variant.answerLabel) || v.answerLabel || v.label,
                                         answerDesc: (variant && variant.answerDesc) || v.answerDesc || '',
                                         shortAnswerLabel: (variant && variant.shortAnswerLabel) || v.shortAnswerLabel || null,
@@ -1785,6 +1785,7 @@
                             return {
                                 value: v.id,
                                 label: v.label,
+                                shortLabel: v.shortLabel,
                                 answerLabel: (variant && variant.answerLabel) || v.answerLabel || v.label,
                                 answerDesc: (variant && variant.answerDesc) || v.answerDesc || '',
                                 shortAnswerLabel: (variant && variant.shortAnswerLabel) || v.shortAnswerLabel || null,
@@ -1816,7 +1817,7 @@
                         if (!fullQuestions) {
                             foundFrontier = true;
                             const siblings = nextQ.options.map(o => ({
-                                value: o.value, label: o.label,
+                                value: o.value, label: o.label, shortLabel: o.shortLabel,
                                 nodeId: o.nodeId, reachable: o.reachable,
                                 disabled: o.disabled,
                             }));
@@ -1829,7 +1830,7 @@
                         if (!fullQuestions && nextQ && nextQ.node.id === node.id) {
                             foundFrontier = true;
                             const siblings = nextQ.options.map(o => ({
-                                value: o.value, label: o.label,
+                                value: o.value, label: o.label, shortLabel: o.shortLabel,
                                 nodeId: o.nodeId, reachable: o.reachable,
                                 disabled: o.disabled,
                             }));
@@ -1844,7 +1845,7 @@
                     const siblings = node.edges
                         .map(v => {
                             const edgeDisabled = Engine.isEdgeDisabled(sel, node, v) && v.id !== value;
-                            return { value: v.id, label: v.label, nodeId: node.id, reachable: edgeDisabled ? false : true, disabled: edgeDisabled };
+                            return { value: v.id, label: v.label, shortLabel: v.shortLabel, nodeId: node.id, reachable: edgeDisabled ? false : true, disabled: edgeDisabled };
                         });
                     events.push({
                         headline: narr.headline || '', description: narr.description || '',
@@ -2313,7 +2314,7 @@
                             updateTimelineLabels();
                         });
                     });
-                    timelineEl.querySelectorAll('.tl-pill').forEach(pill => {
+                    timelineEl.querySelectorAll('.tl-pill, .tl-undo').forEach(pill => {
                         pill.addEventListener('click', () => {
                             const action = pill.dataset.pathaction;
                             if (!action) return;
@@ -2329,6 +2330,16 @@
                             }
                         });
                     });
+                    if (!expandTimeline) {
+                        timelineEl.querySelectorAll('.tl-pills').forEach(group => {
+                            const pills = group.querySelectorAll('.tl-pill');
+                            if (pills.length < 2) return;
+                            pills.forEach(p => { p.style.minWidth = ''; });
+                            let maxW = 0;
+                            pills.forEach(p => { maxW = Math.max(maxW, p.offsetWidth); });
+                            pills.forEach(p => { p.style.minWidth = maxW + 'px'; p.style.textAlign = 'center'; });
+                        });
+                    }
                 }
 
                 const questionZone = app.querySelector('.question-zone');
