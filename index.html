@@ -588,9 +588,14 @@
             display: flex; align-items: center; justify-content: center;
             gap: 1rem; padding: 1.25rem 0 0.5rem;
             font-size: 0.8rem; color: var(--text-dim);
+            flex-wrap: wrap;
         }
         .map-actions .site-footer {
             margin-left: auto; padding: 0;
+        }
+        @media (max-width: 580px) {
+            .map-actions { justify-content: center; }
+            .map-actions .site-footer { margin-left: 0; width: 100%; }
         }
         .site-footer a {
             color: var(--text-dim); text-decoration: none;
@@ -1334,15 +1339,22 @@
 
         // --- Analytics ---
         const LOGGER_URL = 'https://singularity-logger.evan-a-shapiro.workers.dev';
+        function uuid() {
+            try { return crypto.randomUUID(); } catch (_) {}
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                const r = Math.random() * 16 | 0;
+                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+        }
         let journeyId = null;
         let journeyStartTime = null;
         function getSessionId() {
             let sid = localStorage.getItem('sm_sid');
-            if (!sid) { sid = crypto.randomUUID(); localStorage.setItem('sm_sid', sid); }
+            if (!sid) { sid = uuid(); localStorage.setItem('sm_sid', sid); }
             return sid;
         }
         function logStart() {
-            journeyId = crypto.randomUUID();
+            journeyId = uuid();
             journeyStartTime = Date.now();
             fetch(LOGGER_URL + '/start', {
                 method: 'POST',
@@ -1362,7 +1374,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    journey_id: journeyId || crypto.randomUUID(),
+                    journey_id: journeyId || uuid(),
                     session_id: getSessionId(),
                     outcome_id: outcomeId,
                     variant_id: variantId || null,
@@ -2104,13 +2116,10 @@
                             </div>`;
                         questionZone.style.display = 'flex';
                         questionZone.style.flex = '1';
-                        questionZone.querySelector('[data-action="begin"]').addEventListener('click', () => {
-                            logStart();
-                            started = true;
-                            mutateStack(s => s, { fadeFooterIn: true });
-                        });
+                        questionZone.style.paddingLeft = '0';
                     } else if (fullQuestions && nextQ) {
                         questionZone.style.flex = '';
+                        questionZone.style.paddingLeft = '';
                         const questionData = {
                             nodeLabel: nextQ.node.label,
                             questionText: nextQ.node.questionText || nextQ.node.label,
@@ -2181,6 +2190,7 @@
                         questionZone.innerHTML = '';
                         questionZone.style.display = 'none';
                         questionZone.style.flex = '';
+                        questionZone.style.paddingLeft = '';
                     }
                 }
 
@@ -2282,7 +2292,7 @@
                 }
 
                 const animating = mapAnimator && mapAnimator.isAnimating();
-                if (mapAnimator && !animating) mapAnimator._adjustVlines();
+                if (mapAnimator && !animating && started) mapAnimator._adjustVlines();
                 if (!animating) syncHash();
             }
 
@@ -2360,6 +2370,11 @@
             app.addEventListener('click', e => {
                 if (e.target.closest('[data-action="home"]')) backToStart();
                 if (e.target.closest('[data-action="reset"]')) resetSelections();
+                if (e.target.closest('[data-action="begin"]')) {
+                    logStart();
+                    started = true;
+                    mutateStack(s => s, { fadeFooterIn: true });
+                }
             });
 
             window.toggleDebug = () => { debugMode = !debugMode; update(); return debugMode ? 'Debug ON' : 'Debug OFF'; };
