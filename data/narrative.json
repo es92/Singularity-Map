@@ -6003,7 +6003,7 @@
           "durationMin": 0,
           "durationMax": 0
         },
-        "shortAnswerDesc": "Humanity's response successfully neutralizes or contains the AI."
+        "shortAnswerDesc": "Humanity's response successfully neutralizes or contains the AI. For now."
       },
       "delayed": {
         "answerLabel": "Delayed — AI disrupted but recovering",
