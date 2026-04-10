@@ -524,9 +524,9 @@
             margin: 2rem 0;
         }
         .share-label {
-            font-size: 0.88rem;
+            font-size: 0.95rem;
             font-weight: 600;
-            color: var(--text-secondary);
+            color: var(--text);
             margin-bottom: 0.75rem;
         }
         .share-buttons {
@@ -539,22 +539,34 @@
             display: inline-flex;
             align-items: center;
             gap: 0.4rem;
-            padding: 0.5rem 1rem;
+            padding: 0.55rem 1.1rem;
             border-radius: 20px;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-            color: var(--text-secondary);
-            font-size: 0.82rem;
+            border: 1px solid var(--border-hover);
+            background: var(--bg-card-hover);
+            color: var(--text);
+            font-size: 0.85rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.15s var(--ease);
         }
         .share-btn:hover {
-            border-color: var(--border-hover);
+            border-color: var(--accent);
             color: var(--text);
-            background: var(--bg-card-hover);
+            box-shadow: 0 0 12px var(--accent-glow);
         }
         .share-btn svg { flex-shrink: 0; }
+        .share-x { border-color: rgba(160,170,180,0.4); color: #c0c8d0; }
+        .share-x:hover { border-color: #c0c8d0; }
+        .share-wa { border-color: rgba(37,211,102,0.35); color: #25d366; }
+        .share-wa:hover { border-color: #25d366; }
+        .share-li { border-color: rgba(10,102,194,0.4); color: #5ba3d9; }
+        .share-li:hover { border-color: #5ba3d9; }
+        .share-copy { border-color: rgba(0,200,255,0.3); color: var(--accent); }
+        .share-copy:hover { border-color: var(--accent); }
+        [data-theme="light"] .share-x { border-color: rgba(0,0,0,0.15); color: var(--text); }
+        [data-theme="light"] .share-wa { border-color: rgba(37,211,102,0.3); color: #128c3e; }
+        [data-theme="light"] .share-li { border-color: rgba(10,102,194,0.3); color: #0a66c2; }
+        [data-theme="light"] .share-copy { border-color: rgba(0,144,204,0.3); color: var(--accent); }
         .share-native {
             background: var(--accent);
             color: var(--pill-active-text);

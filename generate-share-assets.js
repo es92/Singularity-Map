@@ -135,14 +135,14 @@ function sharePageHtml(card) {
     <meta name="description" content="${esc(truncDesc)}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="${BASE_URL}share/${card.slug}.html">
-    <meta property="og:title" content="I got: ${esc(displayTitle)}">
-    <meta property="og:description" content="${esc(truncDesc)}">
+    <meta property="og:title" content="AI Singularity Map: See what your AI future could be">
+    <meta property="og:description" content="I got: ${esc(displayTitle)}">
     <meta property="og:image" content="${imgUrl}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="I got: ${esc(displayTitle)}">
-    <meta name="twitter:description" content="${esc(truncDesc)}">
+    <meta name="twitter:title" content="AI Singularity Map: See what your AI future could be">
+    <meta name="twitter:description" content="I got: ${esc(displayTitle)}">
     <meta name="twitter:image" content="${imgUrl}">
     <style>
         body{background:#08080f;color:#e4e4f0;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem}
