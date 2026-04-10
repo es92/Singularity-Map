@@ -1020,21 +1020,16 @@
         }
 
         function resolvePersonalVignettes(stack, answers, dateMap) {
-            if (!answers || !answers.country || !answers.profession) return [];
+            if (!answers || !answers.profession) return [];
             const sel = Engine.currentState(stack);
-            const bucket = getCountryBucket(answers.country);
             const ctx = Object.assign({}, sel, {
                 profession: answers.profession,
-                country_bucket: bucket,
-                is_ai_geo: answers.is_ai_geo || autoComputeAiGeo(sel, bucket),
             });
 
             const profLabel = personalData && personalData.professions.find(p => p.id === answers.profession);
             const tokenReplace = (str) => {
                 if (!str) return str;
-                return str
-                    .replace(/\{country\}/g, answers.country || '')
-                    .replace(/\{profession\}/g, profLabel ? profLabel.label : (answers.profession || ''));
+                return str.replace(/\{profession\}/g, profLabel ? profLabel.label : (answers.profession || ''));
             };
 
             const professionalNodes = new Set([
@@ -1070,7 +1065,19 @@
                     text: tokenReplace(text),
                 });
             }
-            return vignettes;
+
+            const benefitNodes = new Set([
+                'plateau_benefit_distribution', 'auto_benefit_distribution', 'benefit_distribution',
+            ]);
+            const deathNodes = new Set([
+                'escape_method', 'war_survivors',
+            ]);
+            const hasDeath = vignettes.some(v => deathNodes.has(v.nodeId));
+            const reordered = vignettes.filter(v => !benefitNodes.has(v.nodeId));
+            if (!hasDeath) {
+                reordered.push(...vignettes.filter(v => benefitNodes.has(v.nodeId)));
+            }
+            return reordered;
         }
 
         function buildPersonalVignettesHtml(vignettes) {
@@ -1119,16 +1126,8 @@
 
         function buildPersonalQuestionsHtml(worldState, existingAnswers) {
             if (!personalData) return '';
-            const countries = personalData.countries;
             const professions = personalData.professions;
-            const selCountry = existingAnswers ? existingAnswers.country : '';
             const selProf = existingAnswers ? existingAnswers.profession : '';
-
-            let optionsHtml = '<option value="">Select your country...</option>';
-            for (const c of countries) {
-                const s = c.name === selCountry ? ' selected' : '';
-                optionsHtml += `<option value="${esc(c.name)}"${s}>${esc(c.name)}</option>`;
-            }
 
             let profPills = '';
             for (const p of professions) {
@@ -1136,36 +1135,11 @@
                 profPills += `<button class="personal-pill${active}" data-prof="${esc(p.id)}">${esc(p.label)}</button>`;
             }
 
-            const bucket = selCountry ? getCountryBucket(selCountry) : null;
-            const showAiGeo = bucket ? shouldShowAiGeoQuestion(worldState, bucket) : false;
-            let aiGeoHtml = '';
-            if (showAiGeo) {
-                const selAiGeo = existingAnswers ? existingAnswers.is_ai_geo : '';
-                const geo = worldState.geo_spread;
-                const prompt = geo === 'one'
-                    ? `In this scenario, one country leads in AI. Is ${esc(selCountry || 'your country')} that country?`
-                    : `In this scenario, two powers lead in AI. Is ${esc(selCountry || 'your country')} one of them?`;
-                const yesActive = selAiGeo === 'yes' ? ' active' : '';
-                const noActive = selAiGeo === 'no' ? ' active' : '';
-                aiGeoHtml = `<div class="personal-q personal-aigeo-q">
-                    <label class="personal-label">${prompt}</label>
-                    <div class="personal-pills personal-aigeo-pills">
-                        <button class="personal-pill${yesActive}" data-aigeo="yes">Yes</button>
-                        <button class="personal-pill${noActive}" data-aigeo="no">No</button>
-                    </div>
-                </div>`;
-            }
-
             return `<div class="personal-questions">
-                <div class="personal-q">
-                    <label class="personal-label">Where do you live?</label>
-                    <select class="personal-country-select">${optionsHtml}</select>
-                </div>
                 <div class="personal-q">
                     <label class="personal-label">What do you do?</label>
                     <div class="personal-pills personal-prof-pills">${profPills}</div>
                 </div>
-                ${aiGeoHtml}
                 <button class="btn btn-primary personal-submit" disabled>Show me</button>
             </div>`;
         }
@@ -1175,31 +1149,26 @@
 
             const stageHeader = `<div class="timeline-stage-header"><div class="tl-stage-bg"></div><span class="timeline-stage-label">How It Reaches You</span></div>`;
 
-            if (personalAnswers && personalAnswers.country && personalAnswers.profession) {
-                const bucket = getCountryBucket(personalAnswers.country);
-                const showAiGeo = shouldShowAiGeoQuestion(worldState, bucket);
-                const needsAiGeo = showAiGeo && !personalAnswers.is_ai_geo;
-
-                if (!needsAiGeo) {
-                    const vignettes = resolvePersonalVignettes(stack, personalAnswers, dateMap);
-                    if (vignettes.length === 0) return '';
-                    const vignetteHtml = buildPersonalVignettesHtml(vignettes);
-                    return `<div class="personal-timeline timeline">
-                        ${stageHeader}
-                        <div class="personal-header-row">
-                            <span class="personal-context">${esc(personalAnswers.country)} · ${esc(personalData.professions.find(p => p.id === personalAnswers.profession)?.label || personalAnswers.profession)}</span>
-                            <button class="personal-edit-link" data-action="personal-edit">Edit</button>
-                        </div>
-                        ${vignetteHtml}
-                    </div>`;
-                }
+            if (personalAnswers && personalAnswers.profession) {
+                const vignettes = resolvePersonalVignettes(stack, personalAnswers, dateMap);
+                if (vignettes.length === 0) return '';
+                const vignetteHtml = buildPersonalVignettesHtml(vignettes);
+                const profLabel = personalData.professions.find(p => p.id === personalAnswers.profession)?.label || personalAnswers.profession;
+                return `<div class="personal-timeline timeline">
+                    ${stageHeader}
+                    <div class="personal-header-row">
+                        <span class="personal-context">${esc(profLabel)}</span>
+                        <button class="personal-edit-link" data-action="personal-edit">Edit</button>
+                    </div>
+                    ${vignetteHtml}
+                </div>`;
             }
 
             return `<div class="personal-timeline timeline" data-personal-state="cta">
                 ${stageHeader}
                 <div class="personal-cta-card scroll-reveal">
                     <div class="personal-cta-title">What happens to you?</div>
-                    <div class="personal-cta-desc">See how this future plays out in your life — based on where you live and what you do. Nothing is collected or sent anywhere.</div>
+                    <div class="personal-cta-desc">See how this future plays out in your life — based on what you do. Nothing is collected or sent anywhere.</div>
                     <button class="btn btn-primary" data-action="personal-start">Personalize this outcome</button>
                 </div>
             </div>`;
@@ -1237,55 +1206,12 @@
         }
 
         function wirePersonalQuestionHandlers(section, stack, worldState, dateMap, outcomeContainer, onSave) {
-            const countrySelect = section.querySelector('.personal-country-select');
             const profPills = section.querySelector('.personal-prof-pills');
             const submitBtn = section.querySelector('.personal-submit');
-            let selectedCountry = countrySelect ? countrySelect.value : '';
             let selectedProf = section.querySelector('.personal-prof-pills .active')?.dataset.prof || '';
-            let selectedAiGeo = section.querySelector('.personal-aigeo-pills .active')?.dataset.aigeo || '';
 
             function updateSubmitState() {
-                const aiGeoSection = section.querySelector('.personal-aigeo-q');
-                const needsAiGeo = aiGeoSection && !selectedAiGeo;
-                if (submitBtn) submitBtn.disabled = !selectedCountry || !selectedProf || needsAiGeo;
-            }
-
-            function refreshAiGeoQuestion() {
-                const oldQ = section.querySelector('.personal-aigeo-q');
-                if (oldQ) oldQ.remove();
-                selectedAiGeo = '';
-                if (!selectedCountry) { updateSubmitState(); return; }
-                const bucket = getCountryBucket(selectedCountry);
-                if (!shouldShowAiGeoQuestion(worldState, bucket)) { updateSubmitState(); return; }
-                const geo = worldState.geo_spread;
-                const prompt = geo === 'one'
-                    ? `In this scenario, one country leads in AI. Is ${esc(selectedCountry)} that country?`
-                    : `In this scenario, two powers lead in AI. Is ${esc(selectedCountry)} one of them?`;
-                const html = `<div class="personal-q personal-aigeo-q">
-                    <label class="personal-label">${prompt}</label>
-                    <div class="personal-pills personal-aigeo-pills">
-                        <button class="personal-pill" data-aigeo="yes">Yes</button>
-                        <button class="personal-pill" data-aigeo="no">No</button>
-                    </div>
-                </div>`;
-                submitBtn.insertAdjacentHTML('beforebegin', html);
-                section.querySelectorAll('.personal-aigeo-pills .personal-pill').forEach(pill => {
-                    pill.addEventListener('click', () => {
-                        section.querySelectorAll('.personal-aigeo-pills .personal-pill').forEach(p => p.classList.remove('active'));
-                        pill.classList.add('active');
-                        selectedAiGeo = pill.dataset.aigeo;
-                        updateSubmitState();
-                    });
-                });
-                updateSubmitState();
-            }
-
-            if (countrySelect) {
-                countrySelect.addEventListener('change', () => {
-                    selectedCountry = countrySelect.value;
-                    refreshAiGeoQuestion();
-                    updateSubmitState();
-                });
+                if (submitBtn) submitBtn.disabled = !selectedProf;
             }
 
             if (profPills) {
@@ -1301,8 +1227,7 @@
 
             if (submitBtn) {
                 submitBtn.addEventListener('click', () => {
-                    const answers = { country: selectedCountry, profession: selectedProf };
-                    if (selectedAiGeo) answers.is_ai_geo = selectedAiGeo;
+                    const answers = { profession: selectedProf };
                     savePersonalAnswers(answers);
                     if (onSave) onSave();
 
@@ -1311,7 +1236,7 @@
                     const profLabel = personalData.professions.find(p => p.id === selectedProf)?.label || selectedProf;
                     section.innerHTML = stageHeader +
                         `<div class="personal-header-row">
-                            <span class="personal-context">${esc(selectedCountry)} · ${esc(profLabel)}</span>
+                            <span class="personal-context">${esc(profLabel)}</span>
                             <button class="personal-edit-link" data-action="personal-edit">Edit</button>
                         </div>` +
                         buildPersonalVignettesHtml(vignettes);
@@ -1428,16 +1353,12 @@
                         else if (dk === 'sq') { flags.shortQuestions = dv === '1'; }
                         else if (dk === 'so') { flags.showOutcomes = dv === '1'; }
                         else if (dk === 'db') { flags.debugMode = dv === '1'; }
-                        else if (dk === 'pc' || dk === 'pp' || dk === 'pos') { flags[dk] = dv; }
+                        else if (dk === 'pp') { flags[dk] = dv; }
                         else { pairs.push({ nodeId: dk, edgeId: dv }); }
                     });
                 }
-                if (flags.pc || flags.pp) {
-                    const urlPersonal = {};
-                    if (flags.pc) urlPersonal.country = flags.pc;
-                    if (flags.pp) urlPersonal.profession = flags.pp;
-                    if (flags.pos) urlPersonal.position = flags.pos;
-                    savePersonalAnswers(urlPersonal);
+                if (flags.pp) {
+                    savePersonalAnswers({ profession: flags.pp });
                 }
                 return { screen: 'map', started: true, pairs, lockedOutcomeId, flags };
             }
@@ -1923,9 +1844,7 @@
                 if (showOutcomes) entries.push('so=1');
                 if (debugMode) entries.push('db=1');
                 if (personalAnswers) {
-                    if (personalAnswers.country) entries.push('pc=' + encodeURIComponent(personalAnswers.country));
                     if (personalAnswers.profession) entries.push('pp=' + encodeURIComponent(personalAnswers.profession));
-                    if (personalAnswers.position) entries.push('pos=' + encodeURIComponent(personalAnswers.position));
                 }
                 if (entries.length > 0) hash += '?' + entries.join('&');
                 const stateFlags = { fullQuestions, shortQuestions, expandTimeline, showOutcomes, debugMode };

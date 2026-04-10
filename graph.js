@@ -780,7 +780,7 @@ const NODES = [
         { id: 'sufficient', label: 'Brittle alignment holds' },
         { id: 'escape', label: 'AI eventually escapes' }
       ] },
-    { id: 'failure_mode', label: 'Implementation', stage: 3, forwardKey: true, hideAfterEscape: true,
+    { id: 'failure_mode', label: 'Delivery', stage: 3, forwardKey: true, hideAfterEscape: true,
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['for_everyone'], mobilization: ['strong'] },
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['sincerity_test'] },
@@ -800,7 +800,7 @@ const NODES = [
       ],
       edges: [
         { id: 'none', label: 'Succeeds' },
-        { id: 'drift', label: 'Gradual drift' }
+        { id: 'drift', label: 'Wrong metrics' }
       ] },
     { id: 'escape_method', label: 'Method', stage: 3,
       activateWhen: [

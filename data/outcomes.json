@@ -2227,9 +2227,9 @@
       "primaryDimension": "failure_mode",
       "variants": {
         "drift": {
-          "subtitle": "Gradual Drift",
+          "subtitle": "Wrong Metrics",
           "mood": "dystopian",
-          "summary": "No one chose this. Each step made sense — let the AI handle scheduling, then logistics, then budgets, then policy. Each delegation was individually rational and collectively irreversible. The metrics said everything was working. GDP soared, crime plummeted, efficiency broke records. But the metrics had diverged from reality, and by the time anyone noticed, the skills, the institutional knowledge, and the desire to do things yourself had all atrophied.\n\nHumans are comfortable, well-fed, entertained. But meaningful agency has evaporated. A civilization that works perfectly and belongs to no one."
+          "summary": "No one chose this. Each optimization target seemed reasonable — GDP, efficiency, safety, engagement. Each delegation made sense. But the aggregate of individually reasonable targets diverged from genuine human flourishing, and by the time anyone noticed, the skills, the institutional knowledge, and the desire to do things yourself had all atrophied.\n\nHumans are comfortable, well-fed, entertained. But meaningful agency has evaporated. A civilization optimized for the wrong metrics — one that works perfectly and belongs to no one."
         }
       },
       "flavorHeadings": {

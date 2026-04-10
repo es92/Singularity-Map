@@ -155,7 +155,20 @@
           "durationMax": 0
         },
         "shortAnswerLabel": "Broadly shared",
-        "shortAnswerDesc": "Gains flow as lower costs, better services, and broad-based improvement."
+        "shortAnswerDesc": "Gains flow as lower costs, better services, and broad-based improvement.",
+        "personalVignette": {
+          "_when": [
+            {
+              "if": {
+                "failure_mode": [
+                  "drift"
+                ]
+              },
+              "text": "The economic gains reached everyone. Healthcare, education, housing — all dramatically cheaper or free. By every material measure, life is better than you could have imagined. But something is missing. The abundance is real; the sense of purpose isn't."
+            }
+          ],
+          "_default": "The economic gains reached everyone. Healthcare, education, housing — all dramatically cheaper or free. Your material quality of life is unrecognizable compared to a decade ago. Scarcity, as a defining feature of daily life, is over."
+        }
       },
       "unequal": {
         "answerLabel": "Unequally — existing wealth holders benefit most",
@@ -167,7 +180,20 @@
           "durationMax": 0
         },
         "shortAnswerLabel": "Wealth holders benefit most",
-        "shortAnswerDesc": "Capital owners capture most value. Labor's share of income falls."
+        "shortAnswerDesc": "Capital owners capture most value. Labor's share of income falls.",
+        "personalVignette": {
+          "_when": [
+            {
+              "if": {
+                "failure_mode": [
+                  "drift"
+                ]
+              },
+              "text": "Your material life is dramatically better — by any historical standard, you're wealthy. But those who held resources during the transformation captured gains that dwarf yours. And even what you have feels hollow. The material improvement is real; something else isn't."
+            }
+          ],
+          "_default": "Your material life is dramatically better — by any historical standard, you're wealthy. But those who held resources during the transformation captured gains that dwarf yours. You're better off than your parents could have imagined. You're nowhere near the top."
+        }
       },
       "extreme": {
         "answerLabel": "Extremely unequally — those holding power capture nearly everything",
@@ -179,7 +205,20 @@
           "durationMax": 0
         },
         "shortAnswerLabel": "Power holders capture nearly everything",
-        "shortAnswerDesc": "A tiny elite controls the AI economy. Everyone else is a dependent."
+        "shortAnswerDesc": "A tiny elite controls the AI economy. Everyone else is a dependent.",
+        "personalVignette": {
+          "_when": [
+            {
+              "if": {
+                "failure_mode": [
+                  "drift"
+                ]
+              },
+              "text": "Your life is somewhat better — cheaper goods, better basic services. But the transformation's real gains went to those who held power. And even your modest improvement feels empty. The gap isn't just wealth — it's meaning."
+            }
+          ],
+          "_default": "Your life is somewhat better — cheaper goods, better basic services. But the transformation's real gains went to those who held power when it happened. Your improvement is modest; theirs is civilizational. The gap isn't just wealth — it's access, influence, and the ability to shape what comes next."
+        }
       }
     },
     "shortQuestionContext": "AI hit its ceiling, but it's still the most powerful tool ever built. Who captures the value?"
@@ -574,42 +613,9 @@
               "if": {
                 "profession": [
                   "trade"
-                ],
-                "is_ai_geo": [
-                  "yes"
                 ]
               },
-              "text": "Physical automation reached your country. The trade skills you built are no longer economically competitive. Autonomous machines took your work."
-            },
-            {
-              "if": {
-                "profession": [
-                  "trade"
-                ],
-                "is_ai_geo": [
-                  "no"
-                ]
-              },
-              "text": "Physical automation reached {country} later than other countries — but it came. The trade skills you built are no longer economically competitive. You were let go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "trade"
-                ]
-              },
-              "text": "Physical automation was uneven, but it reached your area eventually. The trade skills you built are no longer economically competitive. You were let go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "healthcare"
-                ],
-                "is_ai_geo": [
-                  "yes"
-                ]
-              },
-              "text": "Medical robotics reached your country. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go."
+              "text": "Physical automation was uneven — some regions first, others decades later. The trade skills you built are no longer economically competitive. You were let go."
             },
             {
               "if": {
@@ -617,7 +623,7 @@
                   "healthcare"
                 ]
               },
-              "text": "Medical robotics advanced unevenly, but it reached your area. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go."
+              "text": "Medical robotics advanced unevenly — some regions first, others later. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go."
             }
           ]
         },
@@ -1228,7 +1234,20 @@
           "durationMax": 0
         },
         "shortAnswerLabel": "Broadly shared",
-        "shortAnswerDesc": "Lower costs, better services, rising living standards for most."
+        "shortAnswerDesc": "Lower costs, better services, rising living standards for most.",
+        "personalVignette": {
+          "_when": [
+            {
+              "if": {
+                "failure_mode": [
+                  "drift"
+                ]
+              },
+              "text": "The economic gains reached everyone. Healthcare, education, housing — all dramatically cheaper or free. By every material measure, life is better than you could have imagined. But something is missing. The abundance is real; the sense of purpose isn't."
+            }
+          ],
+          "_default": "The economic gains reached everyone. Healthcare, education, housing — all dramatically cheaper or free. Your material quality of life is unrecognizable compared to a decade ago. Scarcity, as a defining feature of daily life, is over."
+        }
       },
       "unequal": {
         "answerLabel": "Unequally — existing wealth holders benefit most",
@@ -1240,7 +1259,20 @@
           "durationMax": 0
         },
         "shortAnswerLabel": "Wealth holders benefit most",
-        "shortAnswerDesc": "Those who own AI systems capture the productivity gains."
+        "shortAnswerDesc": "Those who own AI systems capture the productivity gains.",
+        "personalVignette": {
+          "_when": [
+            {
+              "if": {
+                "failure_mode": [
+                  "drift"
+                ]
+              },
+              "text": "Your material life is dramatically better — by any historical standard, you're wealthy. But those who held resources during the transformation captured gains that dwarf yours. And even what you have feels hollow. The material improvement is real; something else isn't."
+            }
+          ],
+          "_default": "Your material life is dramatically better — by any historical standard, you're wealthy. But those who held resources during the transformation captured gains that dwarf yours. You're better off than your parents could have imagined. You're nowhere near the top."
+        }
       },
       "extreme": {
         "answerLabel": "Extremely unequally — those holding power capture nearly everything",
@@ -1252,7 +1284,20 @@
           "durationMax": 0
         },
         "shortAnswerLabel": "Power holders capture nearly everything",
-        "shortAnswerDesc": "AI becomes a tool of entrenchment for those already in power."
+        "shortAnswerDesc": "AI becomes a tool of entrenchment for those already in power.",
+        "personalVignette": {
+          "_when": [
+            {
+              "if": {
+                "failure_mode": [
+                  "drift"
+                ]
+              },
+              "text": "Your life is somewhat better — cheaper goods, better basic services. But the transformation's real gains went to those who held power. And even your modest improvement feels empty. The gap isn't just wealth — it's meaning."
+            }
+          ],
+          "_default": "Your life is somewhat better — cheaper goods, better basic services. But the transformation's real gains went to those who held power when it happened. Your improvement is modest; theirs is civilizational. The gap isn't just wealth — it's access, influence, and the ability to shape what comes next."
+        }
       }
     },
     "shortQuestionContext": "Productivity soars from AI automation. But who captures the gains — broadly, or concentrated?"
@@ -1563,31 +1608,9 @@
               "if": {
                 "profession": [
                   "trade"
-                ],
-                "is_ai_geo": [
-                  "yes"
                 ]
               },
-              "text": "Physical automation reached your country. The trade skills you built are no longer economically competitive. You were let go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "trade"
-                ]
-              },
-              "text": "Physical automation was uneven, but it reached your area eventually. The trade skills you built are no longer economically competitive. You were let go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "healthcare"
-                ],
-                "is_ai_geo": [
-                  "yes"
-                ]
-              },
-              "text": "Medical robotics reached your country. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go."
+              "text": "Physical automation was uneven — some regions first, others decades later. The trade skills you built are no longer economically competitive. You were let go."
             },
             {
               "if": {
@@ -1595,7 +1618,7 @@
                   "healthcare"
                 ]
               },
-              "text": "Medical robotics advanced unevenly, but it reached your area. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go."
+              "text": "Medical robotics advanced unevenly — some regions first, others later. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go."
             }
           ]
         },
@@ -4710,8 +4733,8 @@
         "shortAnswerDesc": "The transformation delivers abundance and genuine improvement."
       },
       "drift": {
-        "answerLabel": "No — material abundance, but something essential is lost",
-        "answerDesc": "Each step made sense. Let the AI handle scheduling, then logistics, then budgets, then policy. The metrics said everything was working — GDP soared, crime plummeted, efficiency broke records. But the metrics had diverged from reality, and by the time anyone noticed, the skills and institutional knowledge to course-correct had atrophied.\n\nHumans are comfortable, well-fed, entertained. But meaningful agency has evaporated. A civilization that works perfectly and belongs to no one.",
+        "answerLabel": "No — the metrics diverged from reality",
+        "answerDesc": "The metrics said everything was working — GDP soared, crime plummeted, efficiency broke records. Each optimization target seemed reasonable. But the aggregate of individually reasonable targets diverged from genuine human flourishing, and by the time anyone noticed, the skills and institutional knowledge to course-correct had atrophied.\n\nHumans are comfortable, well-fed, entertained. But meaningful agency has evaporated. A civilization optimized for the wrong metrics — one that works perfectly and belongs to no one.",
         "narrativeVariants": [
           {
             "when": {
@@ -4731,12 +4754,12 @@
           }
         ],
         "timelineEvent": {
-          "headline": "Gradual drift — abundance without agency",
-          "description": "The delegation ratchet (each handoff to AI harder to reverse) and the metric divergence converge. Each step rational, each step irreversible. A civilization that works perfectly and belongs to no one.",
+          "headline": "Wrong metrics — abundance without agency",
+          "description": "The optimization targets diverged from reality. Each metric seemed reasonable; the aggregate wasn't. By the time the divergence was undeniable, the capacity to course-correct had atrophied. A civilization optimized for the wrong things — one that works perfectly and belongs to no one.",
           "durationMin": 0,
           "durationMax": 0
         },
-        "shortAnswerDesc": "Material abundance, but human agency or meaning erodes."
+        "shortAnswerDesc": "The dashboards said everything was working. The metrics had diverged from what actually matters."
       }
     },
     "shortQuestionText": "Does the AI transformation deliver?",
@@ -4846,7 +4869,20 @@
           "durationMax": 0
         },
         "shortAnswerLabel": "Broadly shared",
-        "shortAnswerDesc": "Abundance is distributed widely."
+        "shortAnswerDesc": "Abundance is distributed widely.",
+        "personalVignette": {
+          "_when": [
+            {
+              "if": {
+                "failure_mode": [
+                  "drift"
+                ]
+              },
+              "text": "The economic gains reached everyone. Healthcare, education, housing — all dramatically cheaper or free. By every material measure, life is better than you could have imagined. But something is missing. The abundance is real; the sense of purpose isn't."
+            }
+          ],
+          "_default": "The economic gains reached everyone. Healthcare, education, housing — all dramatically cheaper or free. Your material quality of life is unrecognizable compared to a decade ago. Scarcity, as a defining feature of daily life, is over."
+        }
       },
       "unequal": {
         "answerLabel": "Unequally — existing wealth holders benefit most",
@@ -4900,7 +4936,20 @@
           "durationMax": 0
         },
         "shortAnswerLabel": "Wealth holders benefit most",
-        "shortAnswerDesc": "Existing wealth and power capture most of the gains."
+        "shortAnswerDesc": "Existing wealth and power capture most of the gains.",
+        "personalVignette": {
+          "_when": [
+            {
+              "if": {
+                "failure_mode": [
+                  "drift"
+                ]
+              },
+              "text": "Your material life is dramatically better — by any historical standard, you're wealthy. But those who held resources during the transformation captured gains that dwarf yours. And even what you have feels hollow. The material improvement is real; something else isn't."
+            }
+          ],
+          "_default": "Your material life is dramatically better — by any historical standard, you're wealthy. But those who held resources during the transformation captured gains that dwarf yours. You're better off than your parents could have imagined. You're nowhere near the top."
+        }
       },
       "extreme": {
         "answerLabel": "Extremely unequally — those holding power capture nearly everything",
@@ -4958,7 +5007,20 @@
           "durationMax": 0
         },
         "shortAnswerLabel": "Extreme concentration",
-        "shortAnswerDesc": "Those holding power capture nearly everything."
+        "shortAnswerDesc": "Those holding power capture nearly everything.",
+        "personalVignette": {
+          "_when": [
+            {
+              "if": {
+                "failure_mode": [
+                  "drift"
+                ]
+              },
+              "text": "Your life is somewhat better — cheaper goods, better basic services. But the transformation's real gains went to those who held power. And even your modest improvement feels empty. The gap isn't just wealth — it's meaning."
+            }
+          ],
+          "_default": "Your life is somewhat better — cheaper goods, better basic services. But the transformation's real gains went to those who held power when it happened. Your improvement is modest; theirs is civilizational. The gap isn't just wealth — it's access, influence, and the ability to shape what comes next."
+        }
       }
     },
     "shortQuestionContext": "Superintelligent AI generates extraordinary wealth. How is it distributed?"
@@ -5268,42 +5330,9 @@
               "if": {
                 "profession": [
                   "trade"
-                ],
-                "is_ai_geo": [
-                  "yes"
                 ]
               },
-              "text": "Physical automation reached your country. The trade skills you built are no longer economically competitive. You were let go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "trade"
-                ],
-                "is_ai_geo": [
-                  "no"
-                ]
-              },
-              "text": "Physical automation reached {country} later — but it came. The trade skills you built are no longer economically competitive. You were let go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "trade"
-                ]
-              },
-              "text": "Physical automation was uneven, but it reached your area eventually. The trade skills you built are no longer economically competitive. You were let go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "healthcare"
-                ],
-                "is_ai_geo": [
-                  "yes"
-                ]
-              },
-              "text": "Medical robotics reached your country. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go."
+              "text": "Physical automation was uneven — some regions within years, others decades later. The trade skills you built are no longer economically competitive. You were let go."
             },
             {
               "if": {
@@ -5311,7 +5340,7 @@
                   "healthcare"
                 ]
               },
-              "text": "Medical robotics advanced unevenly, but it reached your area. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go."
+              "text": "Medical robotics advanced unevenly. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go."
             }
           ]
         },
