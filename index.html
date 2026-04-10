@@ -2180,14 +2180,14 @@
                             });
                         }
                         if (qResult.isForced) {
+                            const advanceForced = () => {
+                                if (mapAnimator && mapAnimator.isAnimating()) return;
+                                mutateStack(s => Engine.push(s, nextQ.node.id, nextQ.forcedValue));
+                            };
                             const continueBtn = questionZone.querySelector('.forced-continue-btn');
-                            if (continueBtn) {
-                                continueBtn.addEventListener('click', () => {
-                                    if (mapAnimator && mapAnimator.isAnimating()) return;
-                                    const lockedValue = nextQ.forcedValue;
-                                    mutateStack(s => Engine.push(s, nextQ.node.id, lockedValue));
-                                });
-                            }
+                            if (continueBtn) continueBtn.addEventListener('click', advanceForced);
+                            const forcedCard = questionZone.querySelector('.answer-card.forced-selected');
+                            if (forcedCard) forcedCard.addEventListener('click', advanceForced);
                         } else {
                             questionZone.querySelectorAll('.answer-card').forEach(cardEl => {
                                 cardEl.addEventListener('click', () => {

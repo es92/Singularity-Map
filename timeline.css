@@ -352,7 +352,7 @@ body::before {
 .answer-card.forced-selected {
     border-color: var(--accent); background: var(--bg-card-hover);
     box-shadow: 0 0 20px var(--accent-glow);
-    cursor: default;
+    cursor: pointer;
 }
 .answer-card.forced-selected:hover {
     border-color: var(--accent); background: var(--bg-card-hover);
