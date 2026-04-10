@@ -1493,14 +1493,27 @@
                 let foundFrontier = false;
 
                 for (const node of Engine.displayOrder(stack)) {
+                    if (!fullQuestions && foundFrontier) break;
+
                     const locked = Engine.isNodeLocked(sel, node);
                     const value = sel[node.id] || locked;
                     const isLockedNode = locked !== null;
 
-                    if (nextQ && nextQ.isForced && node.id === nextQ.node.id) continue;
+                    if (nextQ && nextQ.isForced && node.id === nextQ.node.id) {
+                        if (!fullQuestions) {
+                            foundFrontier = true;
+                            const siblings = nextQ.options.map(o => ({
+                                value: o.value, label: o.label,
+                                nodeId: o.nodeId, reachable: o.reachable,
+                                disabled: o.disabled,
+                            }));
+                            events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: node.stage, year: '', paramLabel: '', nodeLabel: node.label, nodeId: node.id, selectedValue: null, siblings, isFrontier: true });
+                        }
+                        continue;
+                    }
 
                     if (!value) {
-                        if (!foundFrontier && !fullQuestions && nextQ && nextQ.node.id === node.id) {
+                        if (!fullQuestions && nextQ && nextQ.node.id === node.id) {
                             foundFrontier = true;
                             const siblings = nextQ.options.map(o => ({
                                 value: o.value, label: o.label,
@@ -1932,7 +1945,9 @@
                             const nodeId = pill.dataset.dim;
                             const val = pill.dataset.val;
 
-                            if (action === 'frontier' || action === 'change') {
+                            if (action === 'frontier') {
+                                mutateStack(s => Engine.push(s, nodeId, val));
+                            } else if (action === 'change') {
                                 mutateStack(s => Engine.push(Engine.popTo(s, nodeId), nodeId, val));
                             } else if (action === 'unclick') {
                                 mutateStack(s => Engine.popTo(s, nodeId));
