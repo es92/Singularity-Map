@@ -1037,6 +1037,12 @@
                     .replace(/\{profession\}/g, profLabel ? profLabel.label : (answers.profession || ''));
             };
 
+            const professionalNodes = new Set([
+                'agi_threshold', 'plateau_knowledge_rate', 'auto_knowledge_rate',
+                'knowledge_replacement', 'plateau_physical_rate', 'auto_physical_rate',
+                'physical_automation',
+            ]);
+
             const vignettes = [];
             for (const node of Engine.displayOrder(stack)) {
                 const value = sel[node.id];
@@ -1045,13 +1051,9 @@
                 if (!edge) continue;
 
                 let pv = null;
-                let answerLabel = edge.label;
                 if (edge.narrativeVariants && sel) {
                     const variant = resolveNarrativeVariant(edge.narrativeVariants, sel);
-                    if (variant) {
-                        if (variant.personalVignette) pv = variant.personalVignette;
-                        if (variant.answerLabel) answerLabel = variant.answerLabel;
-                    }
+                    if (variant && variant.personalVignette) pv = variant.personalVignette;
                 }
                 if (!pv && edge.personalVignette) pv = edge.personalVignette;
                 if (!pv) continue;
@@ -1059,11 +1061,12 @@
                 const text = resolvePersonalVignetteText(pv, ctx);
                 if (!text) continue;
 
+                const dateInfo = dateMap && dateMap[node.id] ? dateMap[node.id] : null;
+
                 vignettes.push({
                     nodeId: node.id,
-                    heading: node.label || node.id,
-                    answerLabel: answerLabel || edge.label || value,
-                    dateInfo: dateMap && dateMap[node.id] ? dateMap[node.id] : null,
+                    category: professionalNodes.has(node.id) ? 'Professional Impact' : 'Personal Impact',
+                    dateInfo,
                     text: tokenReplace(text),
                 });
             }
@@ -1076,14 +1079,14 @@
             let lastDateLabel = null;
             for (let i = 0; i < vignettes.length; i++) {
                 const v = vignettes[i];
-                const dateLabel = v.dateInfo ? v.dateInfo.label : null;
+                const dateLabel = v.dateInfo ? (v.dateInfo.rangeLabel || v.dateInfo.label) : null;
                 const showDate = dateLabel && (i === 0 || dateLabel !== lastDateLabel);
                 const yearHtml = showDate ? `<span class="timeline-year">${esc(dateLabel)}</span>` : '';
                 if (dateLabel) lastDateLabel = dateLabel;
                 html += `<div class="timeline-event personal-milestone scroll-reveal">
                     <div class="tl-vline-seg"></div><div class="tl-dot"></div><div class="tl-hline"></div>
                     <div class="timeline-top-row">
-                        <span class="personal-vignette-heading">${esc(v.heading)}<span class="personal-vignette-answer">${esc(v.answerLabel)}</span></span>
+                        <span class="personal-vignette-heading">${esc(v.category)}</span>
                         ${yearHtml}
                     </div>
                     <div class="timeline-desc">${md(v.text)}</div>
@@ -1202,7 +1205,7 @@
             </div>`;
         }
 
-        function wirePersonalSection(container, stack, worldState, dateMap) {
+        function wirePersonalSection(container, stack, worldState, dateMap, onSave) {
             if (!container) return;
             const personalTl = container.querySelector('.personal-timeline');
             if (personalTl && !personalTl.dataset.personalState) {
@@ -1213,7 +1216,7 @@
                 section.dataset.personalState = 'questions';
                 const stageHeader = section.querySelector('.timeline-stage-header').outerHTML;
                 section.innerHTML = stageHeader + buildPersonalQuestionsHtml(worldState, personalAnswers);
-                wirePersonalQuestionHandlers(section, stack, worldState, dateMap, container);
+                wirePersonalQuestionHandlers(section, stack, worldState, dateMap, container, onSave);
             }
 
             const startBtn = container.querySelector('[data-action="personal-start"]');
@@ -1233,7 +1236,7 @@
             }
         }
 
-        function wirePersonalQuestionHandlers(section, stack, worldState, dateMap, outcomeContainer) {
+        function wirePersonalQuestionHandlers(section, stack, worldState, dateMap, outcomeContainer, onSave) {
             const countrySelect = section.querySelector('.personal-country-select');
             const profPills = section.querySelector('.personal-prof-pills');
             const submitBtn = section.querySelector('.personal-submit');
@@ -1301,6 +1304,7 @@
                     const answers = { country: selectedCountry, profession: selectedProf };
                     if (selectedAiGeo) answers.is_ai_geo = selectedAiGeo;
                     savePersonalAnswers(answers);
+                    if (onSave) onSave();
 
                     const vignettes = resolvePersonalVignettes(stack, answers, dateMap);
                     const stageHeader = section.querySelector('.timeline-stage-header').outerHTML;
@@ -1321,7 +1325,7 @@
                             section.dataset.personalState = 'questions';
                             const sh = section.querySelector('.timeline-stage-header').outerHTML;
                             section.innerHTML = sh + buildPersonalQuestionsHtml(worldState, personalAnswers);
-                            wirePersonalQuestionHandlers(section, stack, worldState, dateMap, outcomeContainer);
+                            wirePersonalQuestionHandlers(section, stack, worldState, dateMap, outcomeContainer, onSave);
                         });
                     }
                 });
@@ -1694,12 +1698,41 @@
                     const nodeId = timelineNodeIds[i];
                     if (nodeId && !map[nodeId]) {
                         const fm = formatMonths(cumulative + d.current);
-                        map[nodeId] = { year: fm.year, month: fm.month, label: fm.month + ' ' + fm.year };
+                        const entry = { year: fm.year, month: fm.month, label: fm.month + ' ' + fm.year };
+                        if (d.min !== d.max) {
+                            entry.rangeLabel = formatRange(cumulative + d.min, cumulative + d.max);
+                        }
+                        map[nodeId] = entry;
                     }
                     cumulative += d.current;
                 }
                 const totalFm = formatMonths(cumulative);
                 map._totalYear = totalFm.year;
+
+                const sel = Engine.currentState(stack);
+                const agiVal = sel['agi_threshold'];
+                const takeoffVal = sel['takeoff'];
+                if (agiVal && takeoffVal) {
+                    const agiDoublings = { twenty_four_hours: 1, one_week: 3.8, few_months: 7.5, one_year: 9.5, ten_plus_years: 9.5 };
+                    const takeoffAccel = { none: 0, slow: 0.1, moderate: 0.2, fast: 0.35, explosive: 0.5 };
+                    const T = 9.5;
+                    const N = agiDoublings[agiVal];
+                    const a = takeoffAccel[takeoffVal];
+                    if (N != null && a != null) {
+                        const fraction = a === 0 ? N / T : (1 - Math.pow(1 - a, N)) / (1 - Math.pow(1 - a, T));
+                        let takeoffStart = 0, takeoffDur = 0;
+                        for (let i = 0; i < timelineNodeIds.length; i++) {
+                            if (timelineNodeIds[i] === 'takeoff') { takeoffDur = timelineDurations[i].current; break; }
+                            takeoffStart += timelineDurations[i].current;
+                        }
+                        if (takeoffDur) {
+                            const months = takeoffStart + takeoffDur * fraction;
+                            const fm = formatMonths(months);
+                            map['agi_threshold'] = { year: fm.year, month: fm.month, label: fm.month + ' ' + fm.year };
+                        }
+                    }
+                }
+
                 return map;
             }
 
@@ -2298,7 +2331,7 @@
                         const matchedT = templatesList.filter(t => Engine.templateMatches(t, eff));
                         if (matchedT.length > 0) {
                             const personalDateMap = buildTimelineDateMap();
-                            wirePersonalSection(outcomeZone, stack, eff, personalDateMap);
+                            wirePersonalSection(outcomeZone, stack, eff, personalDateMap, syncHash);
                         }
                     } else {
                         outcomeZone.innerHTML = '';
