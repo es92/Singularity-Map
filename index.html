@@ -286,6 +286,10 @@
                         radial-gradient(ellipse at 60% 100%, rgba(255,51,102,0.08) 0%, transparent 50%);
             border: 1px solid rgba(170,68,255,0.12);
         }
+        .mood-bg-catastrophic {
+            background: radial-gradient(ellipse at 50% 0%, rgba(255,51,102,0.2) 0%, rgba(255,51,102,0.05) 60%, transparent 100%);
+            border: 1px solid rgba(255,51,102,0.2);
+        }
 
         /* Hero reveal stagger */
         @keyframes heroReveal {
@@ -1454,7 +1458,8 @@
 
             function moodColor(mood) {
                 const map = { utopian:'var(--mood-utopian)', dystopian:'var(--mood-dystopian)',
-                    mixed:'var(--mood-mixed)', stagnant:'var(--mood-stagnant)', chaotic:'var(--mood-chaotic)' };
+                    mixed:'var(--mood-mixed)', stagnant:'var(--mood-stagnant)', chaotic:'var(--mood-chaotic)',
+                    catastrophic:'var(--mood-catastrophic)' };
                 return map[mood] || 'var(--text-dim)';
             }
 

@@ -45,6 +45,7 @@ function cardHtml(card) {
         mixed:    { color: '#ffaa22', bg: 'rgba(255,170,34,0.12)', border: 'rgba(255,170,34,0.25)', glow: 'rgba(255,170,34,0.12)' },
         stagnant: { color: '#7888aa', bg: 'rgba(120,136,170,0.12)',border: 'rgba(120,136,170,0.25)',glow: 'rgba(120,136,170,0.12)' },
         chaotic:  { color: '#aa44ff', bg: 'rgba(170,68,255,0.12)', border: 'rgba(170,68,255,0.25)', glow: 'rgba(170,68,255,0.15)' },
+        catastrophic: { color: '#cc2244', bg: 'rgba(204,34,68,0.15)', border: 'rgba(204,34,68,0.3)', glow: 'rgba(204,34,68,0.2)' },
     };
     const m = moodColors[card.mood] || moodColors.mixed;
 
@@ -54,6 +55,7 @@ function cardHtml(card) {
         mixed:     `radial-gradient(ellipse at 30% 0%, rgba(255,170,34,0.12) 0%, transparent 50%), radial-gradient(ellipse at 70% 0%, rgba(0,200,255,0.08) 0%, transparent 50%)`,
         stagnant:  `radial-gradient(ellipse at 50% 0%, rgba(120,136,170,0.12) 0%, rgba(120,136,170,0.03) 60%, transparent 100%)`,
         chaotic:   `radial-gradient(ellipse at 40% 0%, rgba(170,68,255,0.15) 0%, transparent 50%), radial-gradient(ellipse at 60% 100%, rgba(255,51,102,0.08) 0%, transparent 50%)`,
+        catastrophic: `radial-gradient(ellipse at 50% 0%, rgba(204,34,68,0.2) 0%, rgba(204,34,68,0.05) 60%, transparent 100%)`,
     };
     const heroGradient = moodBgMap[card.mood] || moodBgMap.mixed;
 

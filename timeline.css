@@ -24,6 +24,7 @@
     --mood-mixed: #ffaa22;
     --mood-stagnant: #7888aa;
     --mood-chaotic: #aa44ff;
+    --mood-catastrophic: #cc2244;
 
     --pill-active-text: #000;
     --shadow-card: rgba(0, 0, 0, 0.25);
@@ -51,6 +52,7 @@
     --mood-mixed: #c88000;
     --mood-stagnant: #607088;
     --mood-chaotic: #8830cc;
+    --mood-catastrophic: #b01830;
 
     --pill-active-text: #fff;
     --shadow-card: rgba(0, 0, 0, 0.08);
