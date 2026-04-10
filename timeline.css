@@ -364,6 +364,13 @@ body::before {
 .question-card .answer-card.disabled > .desc {
     opacity: 0.5;
 }
+@media (max-width: 580px) {
+    .answer-card { padding: 0.75rem 1.2rem; }
+    .answer-card .disabled-badge {
+        margin: 0.4rem -1.2rem -0.75rem;
+        padding: 0.35rem 1.2rem;
+    }
+}
 .forced-continue {
     margin-top: 0.25rem; margin-bottom: 0.5rem;
 }
