@@ -92,7 +92,10 @@
             display: inline-block; width: 8px; height: 8px; border-radius: 50%;
             margin-right: 0.4rem; vertical-align: middle;
         }
-        @media (min-width: 580px) { .explorer-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 580px) {
+            .explorer-grid { grid-template-columns: repeat(2, 1fr); }
+            .explorer-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+        }
         /* ---- Error / Loading ---- */
         .loading, .error-screen {
             display: flex; flex-direction: column;
@@ -638,6 +641,83 @@
         .about-cta {
             text-align: center;
             margin-top: 2.5rem;
+        }
+        .locked-outcome-pill {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            padding: 0.2rem 0.55rem; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 500;
+            background: var(--bg-card); color: var(--text-secondary);
+            border: 1px solid var(--border-hover);
+            pointer-events: auto; cursor: default;
+            white-space: nowrap; max-width: 200px;
+        }
+        .mood-pill-utopian { background: rgba(0,224,136,0.15); }
+        .mood-pill-dystopian { background: rgba(255,51,102,0.15); }
+        .mood-pill-mixed { background: rgba(255,170,34,0.12); }
+        .mood-pill-stagnant { background: rgba(120,136,170,0.12); }
+        .mood-pill-chaotic { background: rgba(170,68,255,0.15); }
+        .mood-pill-catastrophic { background: rgba(204,34,68,0.18); }
+        .locked-outcome-label {
+            overflow: hidden; text-overflow: ellipsis;
+        }
+        .lock-icon-wrap {
+            flex-shrink: 0; width: 12px; height: 12px; position: relative;
+        }
+        .lock-icon, .lock-dismiss {
+            position: absolute; top: 0; left: 0;
+            transition: opacity 0.15s;
+        }
+        .lock-icon { display: block; opacity: 1; }
+        .lock-dismiss {
+            cursor: pointer; font-size: 1rem; line-height: 12px;
+            opacity: 0; width: 12px; text-align: center;
+        }
+        .locked-outcome-pill:hover .lock-icon { opacity: 0; }
+        .locked-outcome-pill:hover .lock-dismiss { opacity: 1; }
+        @media (max-width: 580px) {
+            .lock-icon { opacity: 0; }
+            .lock-dismiss { opacity: 0.6; }
+        }
+        .about-outcomes-wrap {
+            position: relative;
+            margin-top: 0.75rem;
+        }
+        .about-outcomes-wrap.collapsed .about-outcomes-inner {
+            max-height: 120px;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .about-outcomes-fade {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0; right: 0;
+            bottom: 2.5rem;
+            background: linear-gradient(to bottom, transparent 0%, var(--bg) 70%);
+            pointer-events: none;
+        }
+        .about-outcomes-wrap.collapsed .about-outcomes-fade {
+            display: block;
+        }
+        .about-outcomes-btn {
+            display: block;
+            margin: 0.5rem auto 0;
+        }
+        .about-outcome-group {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin: 1.25rem 0 0.5rem;
+        }
+        .about-outcome-group:first-child {
+            margin-top: 0;
+        }
+        .about-outcome-preview {
+            margin-bottom: 1rem;
+        }
+        .about-outcomes-inner .explorer-card.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 12px var(--accent-glow);
         }
 
         @media (max-width: 820px) {
@@ -1355,7 +1435,6 @@
                         else if (dk === 'fq') { flags.fullQuestions = dv !== '0'; }
                         else if (dk === 'et') { flags.expandTimeline = dv !== '0'; }
                         else if (dk === 'sq') { flags.shortQuestions = dv === '1'; }
-                        else if (dk === 'so') { flags.showOutcomes = dv === '1'; }
                         else if (dk === 'db') { flags.debugMode = dv === '1'; }
                         else if (dk === 'pp') { flags[dk] = dv; }
                         else { pairs.push({ nodeId: dk, edgeId: dv }); }
@@ -1367,7 +1446,8 @@
                 return { screen: 'map', started: true, pairs, lockedOutcomeId, flags };
             }
             if (hash.startsWith('/about')) {
-                return { screen: 'about' };
+                const showOutcomes = hash.includes('outcomes=1');
+                return { screen: 'about', showOutcomes };
             }
             return { screen: 'map' };
         }
@@ -1376,7 +1456,7 @@
 
         function renderState(state, animated) {
             if (state.screen === 'about') {
-                renderAbout();
+                renderAbout(state.showOutcomes);
                 return;
             }
             const render = () => {
@@ -1424,6 +1504,13 @@
             return str.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/\n\n/g, ' ');
         }
 
+        function moodColor(mood) {
+            const map = { utopian:'var(--mood-utopian)', dystopian:'var(--mood-dystopian)',
+                mixed:'var(--mood-mixed)', stagnant:'var(--mood-stagnant)', chaotic:'var(--mood-chaotic)',
+                catastrophic:'var(--mood-catastrophic)' };
+            return map[mood] || 'var(--text-dim)';
+        }
+
         function showToast(msg) {
             toastEl.textContent = msg;
             toastEl.classList.add('visible');
@@ -1440,14 +1527,15 @@
                     stack = Engine.push(stack, nodeId, edgeId);
                 }
             }
-            let lockedId = (lockedOutcomeId && templatesMap[lockedOutcomeId]) ? lockedOutcomeId : '';
+            const lockParts = lockedOutcomeId ? lockedOutcomeId.split('--') : [];
+            let lockedId = (lockParts[0] && templatesMap[lockParts[0]]) ? lockParts[0] : '';
+            let lockedVariantKey = lockParts[1] || '';
             const flags = initialFlags || {};
             let fullQuestions = flags.fullQuestions !== false;
             let shortQuestions = flags.shortQuestions !== undefined
                 ? flags.shortQuestions
                 : window.matchMedia('(max-width: 580px)').matches;
             let expandTimeline = flags.expandTimeline !== false;
-            let showOutcomes = flags.showOutcomes === true;
             let debugMode = flags.debugMode === true;
             let timelineDurations = [];
             let timelineNodeIds = [];
@@ -1456,23 +1544,165 @@
             const hasSelections = stack.length > 1;
             let started = hasSelections || initialStarted === true;
 
-            function moodColor(mood) {
-                const map = { utopian:'var(--mood-utopian)', dystopian:'var(--mood-dystopian)',
-                    mixed:'var(--mood-mixed)', stagnant:'var(--mood-stagnant)', chaotic:'var(--mood-chaotic)',
-                    catastrophic:'var(--mood-catastrophic)' };
-                return map[mood] || 'var(--text-dim)';
-            }
-
             function getLockedTemplate() {
                 return lockedId ? templatesMap[lockedId] : null;
+            }
+
+            function _enumerateDecelExits(s, seen, visited) {
+                const sel = Engine.currentState(s);
+                const decelKey = Object.keys(sel).filter(k => k.startsWith('decel_')).sort().map(k => k + '=' + sel[k]).join('&');
+                if (visited.has(decelKey)) return;
+                visited.add(decelKey);
+
+                for (const node of Engine.displayOrder(s)) {
+                    if (sel[node.id]) continue;
+                    if (!node.id.startsWith('decel_') || node.derived) continue;
+                    const locked = Engine.isNodeLocked(sel, node);
+                    if (locked !== null) {
+                        _enumerateDecelExits(Engine.push(s, node.id, locked), seen, visited);
+                        return;
+                    }
+                    if (!Engine.isNodeVisible(sel, node)) continue;
+                    for (const e of node.edges) {
+                        if (Engine.isEdgeDisabled(sel, node, e)) continue;
+                        _enumerateDecelExits(Engine.push(s, node.id, e.id), seen, visited);
+                    }
+                    return;
+                }
+                const eff = Engine.resolvedState(sel);
+                const key = (eff.decel_outcome || '') + '|' + (eff.decel_align_progress || '');
+                if (!seen.has(key)) { seen.set(key, s); }
+            }
+
+            const _derivableKeys = new Set();
+            for (const [nid, n] of Object.entries(Engine.NODE_MAP)) {
+                if (n.derivedFrom && n.derivedFrom.length > 0) _derivableKeys.add(nid);
+            }
+
+            function _couldDeriveTo(nodeId, allowed, sel) {
+                const node = Engine.NODE_MAP[nodeId];
+                if (!node || !node.derivedFrom) return false;
+                return node.derivedFrom.some(rule => {
+                    if (rule.value && allowed.includes(rule.value)) {
+                        if (!rule.when) return true;
+                        return Object.entries(rule.when).every(([tk, tv]) => !sel[tk] || sel[tk] === tv);
+                    }
+                    if (rule.fromDim) return !sel[rule.fromDim] || allowed.includes(sel[rule.fromDim]);
+                    if (rule.valueMap) return Object.values(rule.valueMap).some(v => allowed.includes(v));
+                    return false;
+                });
+            }
+
+            function _smartPartialMatch(template, eff, sel) {
+                if (!template.reachable) return true;
+                return template.reachable.some(cond => {
+                    for (const [k, allowed] of Object.entries(cond)) {
+                        if (k === '_not') continue;
+                        if (!eff[k]) continue;
+                        if (allowed.includes(eff[k])) continue;
+                        if (_derivableKeys.has(k) && _couldDeriveTo(k, allowed, sel)) continue;
+                        return false;
+                    }
+                    if (cond._not) {
+                        for (const [k, excluded] of Object.entries(cond._not)) {
+                            if (!eff[k]) continue;
+                            if (!excluded.includes(eff[k])) continue;
+                            if (_derivableKeys.has(k)) {
+                                const ne = (Engine.NODE_MAP[k].edges || []).map(e => e.id).filter(v => !excluded.includes(v));
+                                if (_couldDeriveTo(k, ne, sel)) continue;
+                            }
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+            }
+
+            function _getRelevantNodes(template, variantKey) {
+                const rel = new Set();
+                if (!template.reachable) return rel;
+                for (const cond of template.reachable) {
+                    for (const k of Object.keys(cond)) {
+                        if (k === '_not') { for (const nk of Object.keys(cond._not)) rel.add(nk); }
+                        else rel.add(k);
+                    }
+                }
+                if (variantKey && template.primaryDimension) rel.add(template.primaryDimension);
+                let changed = true;
+                while (changed) { changed = false;
+                    for (const nid of [...rel]) {
+                        const node = Engine.NODE_MAP[nid]; if (!node) continue;
+                        if (node.derivedFrom) for (const r of node.derivedFrom) {
+                            if (r.when) for (const tk of Object.keys(r.when)) { if (!rel.has(tk)) { rel.add(tk); changed = true; } }
+                            if (r.effective) for (const ek of Object.keys(r.effective)) { if (!rel.has(ek)) { rel.add(ek); changed = true; } }
+                            if (r.fromDim && !rel.has(r.fromDim)) { rel.add(r.fromDim); changed = true; }
+                            if (r.whenSet && !rel.has(r.whenSet)) { rel.add(r.whenSet); changed = true; }
+                        }
+                        if (node.activateWhen) for (const c of node.activateWhen) {
+                            for (const k of Object.keys(c)) { if (!k.startsWith('_') && !rel.has(k)) { rel.add(k); changed = true; } }
+                        }
+                    }
+                }
+                return rel;
+            }
+
+            const _reachCache = new Map();
+            let _reachRelevant = null;
+
+            function _canReach(s, template, variantKey, maxDepth) {
+                if (maxDepth <= 0) return false;
+                const sel = Engine.currentState(s);
+                const cacheKey = Object.keys(sel).sort().map(k => k + '=' + sel[k]).join('&');
+                if (_reachCache.has(cacheKey)) return _reachCache.get(cacheKey);
+
+                const eff = Engine.resolvedState(sel);
+                let result = false;
+
+                if (!_smartPartialMatch(template, eff, sel)) {
+                } else if (Engine.templateMatches(template, eff) && (!variantKey || !template.primaryDimension || eff[template.primaryDimension] === variantKey)) {
+                    result = true;
+                } else {
+                    for (const node of Engine.displayOrder(s)) {
+                        if (sel[node.id]) continue;
+                        const locked = Engine.isNodeLocked(sel, node);
+                        if (locked !== null) {
+                            result = _canReach(Engine.push(s, node.id, locked), template, variantKey, maxDepth - 1);
+                            break;
+                        }
+                        if (!Engine.isNodeVisible(sel, node)) continue;
+
+                        if (node.id.startsWith('decel_') && !node.derived) {
+                            const exits = new Map();
+                            _enumerateDecelExits(s, exits, new Set());
+                            for (const exitStack of exits.values()) {
+                                if (_canReach(exitStack, template, variantKey, maxDepth - 1)) { result = true; break; }
+                            }
+                            break;
+                        }
+
+                        if (!_reachRelevant.has(node.id)) {
+                            const first = node.edges.find(e => !Engine.isEdgeDisabled(sel, node, e));
+                            if (first) result = _canReach(Engine.push(s, node.id, first.id), template, variantKey, maxDepth - 1);
+                            break;
+                        }
+
+                        for (const e of node.edges) {
+                            if (Engine.isEdgeDisabled(sel, node, e)) continue;
+                            if (_canReach(Engine.push(s, node.id, e.id), template, variantKey, maxDepth - 1)) { result = true; break; }
+                        }
+                        break;
+                    }
+                }
+
+                _reachCache.set(cacheKey, result);
+                return result;
             }
 
             function wouldReachOutcome(nodeId, edgeId) {
                 const t = getLockedTemplate();
                 if (!t) return true;
-                const testStack = Engine.push(stack, nodeId, edgeId);
-                const eff = Engine.resolvedState(Engine.currentState(testStack));
-                return Engine.templatePartialMatch(t, eff);
+                if (!_reachRelevant) _reachRelevant = _getRelevantNodes(t, lockedVariantKey);
+                return _canReach(Engine.push(stack, nodeId, edgeId), t, lockedVariantKey, 40);
             }
 
             function mutateStack(action, opts) {
@@ -1590,7 +1820,7 @@
                     const siblings = node.edges
                         .map(v => {
                             const edgeDisabled = Engine.isEdgeDisabled(sel, node, v) && v.id !== value;
-                            return { value: v.id, label: v.label, nodeId: node.id, reachable: edgeDisabled ? false : (v.id === value || wouldReachOutcome(node.id, v.id)), disabled: edgeDisabled };
+                            return { value: v.id, label: v.label, nodeId: node.id, reachable: edgeDisabled ? false : true, disabled: edgeDisabled };
                         });
                     events.push({
                         headline: narr.headline || '', description: narr.description || '',
@@ -1842,19 +2072,18 @@
                         entries.push(encodeURIComponent(entry.nodeId) + '=' + encodeURIComponent(entry.edgeId));
                     }
                 }
-                if (lockedId) entries.push('locked=' + encodeURIComponent(lockedId));
+                if (lockedId) entries.push('locked=' + encodeURIComponent(lockedId + (lockedVariantKey ? '--' + lockedVariantKey : '')));
                 if (!fullQuestions) entries.push('fq=0');
                 if (shortQuestions) entries.push('sq=1');
                 if (!expandTimeline) entries.push('et=0');
-                if (showOutcomes) entries.push('so=1');
                 if (debugMode) entries.push('db=1');
                 if (personalAnswers) {
                     if (personalAnswers.profession) entries.push('pp=' + encodeURIComponent(personalAnswers.profession));
                 }
                 if (entries.length > 0) hash += '?' + entries.join('&');
-                const stateFlags = { fullQuestions, shortQuestions, expandTimeline, showOutcomes, debugMode };
+                const stateFlags = { fullQuestions, shortQuestions, expandTimeline, debugMode };
                 const pairs = stack.filter(e => e.nodeId).map(e => ({ nodeId: e.nodeId, edgeId: e.edgeId }));
-                const state = { screen: 'map', pairs, lockedOutcomeId: lockedId, flags: stateFlags, started };
+                const state = { screen: 'map', pairs, lockedOutcomeId: lockedId + (lockedVariantKey ? '--' + lockedVariantKey : ''), flags: stateFlags, started };
                 if (shouldPush) {
                     history.pushState(state, '', '#' + hash);
                 } else {
@@ -1939,7 +2168,11 @@
                 return changes;
             }
 
+            let _skipCacheClear = false;
+
             function update() {
+                if (_skipCacheClear) { _skipCacheClear = false; }
+                else { _reachCache.clear(); _reachRelevant = null; }
                 const sel = Engine.currentState(stack);
 
                 const debugPanel = app.querySelector('.debug-panel');
@@ -2154,7 +2387,44 @@
                                     const idx = parseInt(cardEl.dataset.aidx, 10);
                                     const answer = qResult.answerCards[idx];
                                     if (!answer || answer.disabled) return;
-                                    mutateStack(s => Engine.push(s, answer.nodeId, answer.value));
+                                    if (lockedId) {
+                                        cardEl.classList.add('computing');
+                                        const bar = document.createElement('div');
+                                        bar.className = 'compute-bar';
+                                        cardEl.style.position = 'relative';
+                                        cardEl.appendChild(bar);
+                                        const fillAnim = bar.animate(
+                                            [{ transform: 'scaleX(0)' }, { transform: 'scaleX(0.9)' }],
+                                            { duration: 2000, fill: 'forwards', easing: 'linear' }
+                                        );
+                                        requestAnimationFrame(() => requestAnimationFrame(() => {
+                                            const savedStack = stack;
+                                            stack = Engine.push(stack, answer.nodeId, answer.value);
+                                            _reachCache.clear();
+                                            _reachRelevant = null;
+                                            findNextQuestion();
+                                            stack = savedStack;
+
+                                            const currentTime = fillAnim.currentTime || 0;
+                                            const rawScale = Math.min((currentTime / 2000) * 0.9, 0.9);
+                                            const currentScale = Math.max(rawScale, 0.3);
+                                            fillAnim.cancel();
+                                            bar.style.transform = 'scaleX(' + currentScale + ')';
+                                            requestAnimationFrame(() => {
+                                                const finishAnim = bar.animate(
+                                                    [{ transform: 'scaleX(' + currentScale + ')' }, { transform: 'scaleX(1)' }],
+                                                    { duration: 150, fill: 'forwards', easing: 'ease-out' }
+                                                );
+                                                finishAnim.onfinish = () => {
+                                                    bar.style.transform = 'scaleX(1)';
+                                                    _skipCacheClear = true;
+                                                    mutateStack(s => Engine.push(s, answer.nodeId, answer.value));
+                                                };
+                                            });
+                                        }));
+                                    } else {
+                                        mutateStack(s => Engine.push(s, answer.nodeId, answer.value));
+                                    }
                                 });
                             });
                         }
@@ -2163,58 +2433,6 @@
                         questionZone.style.display = 'none';
                         questionZone.style.flex = '';
                         questionZone.style.paddingLeft = '';
-                    }
-                }
-
-                const outcomesGrid = app.querySelector('.map-outcomes-zone');
-                if (outcomesGrid) {
-                    if (showOutcomes) {
-                        const eff = Engine.resolvedState(Engine.currentState(stack));
-                        const matched = [], partial = [];
-                        for (const t of templatesList) {
-                            if (Engine.templateMatches(t, eff)) matched.push(t);
-                            else if (Engine.templatePartialMatch(t, eff)) partial.push(t);
-                        }
-
-                        const cardsHtml = templatesList.map(t => {
-                            const resolved = resolveTemplate(t.id, eff);
-                            const title = resolved ? resolved.title : t.title || t.id;
-                            const subtitle = resolved ? resolved.subtitle : null;
-                            const mood = resolved ? resolved.mood : t.mood || 'mixed';
-                            const summary = resolved ? resolved.summary : t.summary || '';
-                            const isMatch = matched.includes(t);
-                            const isPartial = partial.includes(t);
-                            const isLocked = lockedId && t.id === lockedId;
-                            const isUnlocked = lockedId && t.id !== lockedId;
-                            let cls = isMatch ? ' matched' : (!isMatch && !isPartial ? ' dimmed' : '');
-                            if (isLocked) cls += ' locked';
-                            else if (isUnlocked) cls += ' not-locked';
-                            return `<div class="explorer-card${cls}" data-tid="${esc(t.id)}">
-                                <div class="ec-title"><span class="ec-dot" style="background:${moodColor(mood)}"></span>${esc(title)}${subtitle ? ` <span class="ec-subtitle">\u2014 ${esc(subtitle)}</span>` : ''}</div>
-                                <div class="ec-summary">${esc(stripMd(summary))}</div></div>`;
-                        }).join('');
-
-                        const matchLabel = matched.length === 1 ? '1 outcome matches' :
-                            matched.length > 1 ? matched.length + ' outcomes match' : '';
-
-                        outcomesGrid.innerHTML = `
-                            <div class="map-outcomes-label">Possible Outcomes${matchLabel ? ` <span class="map-outcomes-count">(${matchLabel})</span>` : ''}</div>
-                            <div class="explorer-grid">${cardsHtml}</div>`;
-                        outcomesGrid.style.display = '';
-
-                        outcomesGrid.querySelectorAll('.explorer-card').forEach(card => {
-                            card.addEventListener('click', () => {
-                                if (card.classList.contains('dimmed')) return;
-                                const tid = card.dataset.tid;
-                                if (tid) {
-                                    lockedId = (tid === lockedId) ? '' : tid;
-                                    update();
-                                }
-                            });
-                        });
-                    } else {
-                        outcomesGrid.innerHTML = '';
-                        outcomesGrid.style.display = 'none';
                     }
                 }
 
@@ -2271,14 +2489,29 @@
             app.innerHTML = `
                 <div class="map-screen">
                     <div class="map-toolbar">
+                        <div style="display:flex;align-items:center;gap:3rem;pointer-events:auto">
                         <span class="map-title" data-action="home" style="cursor:pointer">AI Singularity Map</span>
+                        ${lockedId ? (() => {
+                            const lt = templatesMap[lockedId];
+                            const lv = lockedVariantKey && lt.variants ? lt.variants[lockedVariantKey] : null;
+                            const lockLabel = lv && lv.subtitle ? lt.title + ': ' + lv.subtitle : lt.title;
+                            const lockMood = (lv && lv.mood) || lt.mood || 'mixed';
+                            const mc = moodColor(lockMood);
+                            return `<span class="locked-outcome-pill mood-pill-${lockMood}" title="Showing paths to: ${esc(lockLabel)}">
+                                <span class="lock-icon-wrap">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lock-icon"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                    <span class="lock-dismiss" data-action="unlock">&times;</span>
+                                </span>
+                                <span class="locked-outcome-label">${esc(lockLabel)}</span>
+                            </span>`;
+                        })() : ''}
+                        </div>
                         <div class="map-settings-wrap">
                             <button class="map-view-btn" aria-label="View options"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="4" x2="14" y2="4"/><line x1="10" y1="4" x2="3" y2="4"/><line x1="21" y1="12" x2="12" y2="12"/><line x1="8" y1="12" x2="3" y2="12"/><line x1="21" y1="20" x2="16" y2="20"/><line x1="12" y1="20" x2="3" y2="20"/><circle cx="12" cy="4" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="14" cy="20" r="2"/></svg></button>
                             <div class="map-settings-dropdown" style="display:none">
                                 <label class="map-toggle"><input type="checkbox" data-flag="fq"${fullQuestions ? ' checked' : ''}><span>Question Mode</span></label>
                                 <label class="map-toggle"><input type="checkbox" data-flag="sq"${shortQuestions ? ' checked' : ''}><span>Short Questions</span></label>
                                 <label class="map-toggle"><input type="checkbox" data-flag="et"${expandTimeline ? ' checked' : ''}><span>Expand Timeline</span></label>
-                                <label class="map-toggle"><input type="checkbox" data-flag="so"${showOutcomes ? ' checked' : ''}><span>Show Outcomes</span></label>
                             </div>
                         </div>
                         <div class="debug-panel" style="display:none"></div>
@@ -2286,7 +2519,6 @@
                     <div class="map-timeline timeline"></div>
                     <div class="question-zone"></div>
                     <div class="map-outcome-zone" style="display:none"></div>
-                    <div class="map-outcomes-zone" style="display:none"></div>
                     <div class="map-actions">
                         <button class="btn btn-ghost" data-action="home">Back to Start</button>
                         <button class="btn btn-ghost" data-action="reset">Reset</button>
@@ -2315,11 +2547,21 @@
                     if (cb.dataset.flag === 'fq') fullQuestions = cb.checked;
                     if (cb.dataset.flag === 'sq') shortQuestions = cb.checked;
                     if (cb.dataset.flag === 'et') expandTimeline = cb.checked;
-                    if (cb.dataset.flag === 'so') showOutcomes = cb.checked;
                     
                     update();
                 });
             });
+
+            const unlockBtn = app.querySelector('[data-action="unlock"]');
+            if (unlockBtn) {
+                unlockBtn.addEventListener('click', () => {
+                    lockedId = '';
+                    lockedVariantKey = '';
+                    const pill = app.querySelector('.locked-outcome-pill');
+                    if (pill) pill.remove();
+                    update();
+                });
+            }
 
             function resetSelections() {
                 stack = Engine.createStack();
@@ -2403,8 +2645,48 @@
             });
         }
 
+        function buildOutcomeCards() {
+            const groupOrder = [
+                'the-plateau', 'the-automation',
+                'the-flourishing', 'the-mosaic',
+                'the-gilded-singularity', 'the-standoff',
+                'the-failure', 'the-capture', 'the-new-hierarchy',
+                'the-escape', 'the-alien-ai', 'the-chaos', 'the-ruin',
+            ];
+            const groups = [];
+            const templateById = {};
+            for (const t of templatesList) templateById[t.id] = t;
+
+            for (const id of groupOrder) {
+                const t = templateById[id];
+                if (!t) continue;
+                const cards = [];
+                if (t.variants) {
+                    for (const [vKey, v] of Object.entries(t.variants)) {
+                        cards.push({
+                            slug: t.id + '--' + vKey,
+                            title: t.title,
+                            subtitle: v.subtitle || null,
+                            mood: v.mood || t.mood || 'mixed',
+                            summary: v.summary || t.summary || '',
+                        });
+                    }
+                } else {
+                    cards.push({
+                        slug: t.id,
+                        title: t.title,
+                        subtitle: t.subtitle || null,
+                        mood: t.mood || 'mixed',
+                        summary: t.summary || '',
+                    });
+                }
+                groups.push({ label: t.title, cards });
+            }
+            return groups;
+        }
+
         // --- Render: About ---
-        function renderAbout() {
+        function renderAbout(showOutcomes) {
             window.scrollTo({ top: 0, behavior: 'instant' });
             app.innerHTML = `
                 <div class="map-screen">
@@ -2430,6 +2712,25 @@
                         <div class="about-cta">
                             <button class="btn btn-primary" data-action="back">Back to Map</button>
                         </div>
+
+                        <section style="margin-top:3rem">
+                            <h2>Preview Outcomes</h2>
+                            <p>${buildOutcomeCards().reduce((n, g) => n + g.cards.length, 0)} possible outcomes. Click any for a preview.</p>
+                            <div class="about-outcomes-wrap${showOutcomes ? '' : ' collapsed'}">
+                                <div class="about-outcomes-inner">
+                                    ${buildOutcomeCards().map(g => `
+                                        <h3 class="about-outcome-group">${esc(g.label)}</h3>
+                                        <div class="explorer-grid${g.cards.length === 3 ? ' cols-3' : ''}">${g.cards.map(c =>
+                                            `<div class="explorer-card" data-slug="${esc(c.slug)}">
+                                                <div class="ec-title"><span class="ec-dot" style="background:${moodColor(c.mood)}"></span>${c.subtitle ? esc(c.subtitle) : esc(c.title)}</div>
+                                                <div class="ec-summary">${esc(stripMd(c.summary))}</div></div>`
+                                        ).join('')}</div>
+                                    `).join('')}
+                                </div>
+                                <div class="about-outcomes-fade"></div>
+                                <button class="btn btn-ghost about-outcomes-btn">${showOutcomes ? 'Hide outcomes' : 'Show all outcomes'}</button>
+                            </div>
+                        </section>
                     </div>
                     <div class="map-actions">
                         <button class="btn btn-ghost" data-action="back">Back to Start</button>
@@ -2437,6 +2738,67 @@
                     </div>
                 </div>`;
             app.querySelectorAll('[data-action="back"]').forEach(el => el.addEventListener('click', () => history.back()));
+
+            const outcomesWrap = app.querySelector('.about-outcomes-wrap');
+            const outcomesBtn = app.querySelector('.about-outcomes-btn');
+            if (outcomesWrap && outcomesBtn) {
+                outcomesBtn.addEventListener('click', () => {
+                    const collapsed = outcomesWrap.classList.toggle('collapsed');
+                    outcomesBtn.textContent = collapsed ? 'Show all outcomes' : 'Hide outcomes';
+                    history.replaceState(null, '', '#/about' + (collapsed ? '' : '?outcomes=1'));
+                });
+                let openSlug = null;
+                outcomesWrap.querySelectorAll('.explorer-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const slug = card.dataset.slug;
+                        if (!slug) return;
+
+                        const existing = outcomesWrap.querySelector('.about-outcome-preview');
+                        if (existing) existing.remove();
+                        outcomesWrap.querySelectorAll('.explorer-card.active').forEach(c => c.classList.remove('active'));
+
+                        if (slug === openSlug) { openSlug = null; return; }
+                        openSlug = slug;
+
+                        const parts = slug.split('--');
+                        const t = templatesMap[parts[0]];
+                        if (!t) return;
+                        const vKey = parts[1] || null;
+                        let title = t.title, subtitle = null, mood, summary;
+                        if (vKey && t.variants && t.variants[vKey]) {
+                            const v = t.variants[vKey];
+                            subtitle = v.subtitle; mood = v.mood || t.mood || 'mixed'; summary = v.summary || '';
+                        } else if (t.variants) {
+                            const first = Object.entries(t.variants)[0];
+                            subtitle = first[1].subtitle; mood = first[1].mood || t.mood || 'mixed'; summary = first[1].summary || '';
+                        } else {
+                            mood = t.mood || 'mixed'; summary = t.summary || '';
+                        }
+
+                        const previewHtml = `<div class="about-outcome-preview outcome-hero mood-bg-${mood}">
+                            <div class="outcome-hero-inner">
+                                <div class="outcome-title" style="font-size:1.8rem">${esc(title)}</div>
+                                ${subtitle ? `<div class="outcome-subtitle">${esc(subtitle)}</div>` : ''}
+                                <span class="mood-badge" style="background:${moodColor(mood)}22;color:${moodColor(mood)};border:1px solid ${moodColor(mood)}44">${esc(mood)}</span>
+                                <div class="outcome-summary" style="margin-top:0.75rem;font-size:0.95rem">${md(summary)}</div>
+                                <button class="btn btn-primary about-explore-link" data-explore="${esc(slug)}" style="margin-top:1.25rem">Explore paths that lead to this outcome</button>
+                            </div>
+                        </div>`;
+
+                        card.classList.add('active');
+                        const grid = card.closest('.explorer-grid');
+                        grid.insertAdjacentHTML('beforebegin', previewHtml);
+                        const preview = outcomesWrap.querySelector('.about-outcome-preview');
+                        preview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        const exploreLink = preview.querySelector('.about-explore-link');
+                        if (exploreLink) {
+                            exploreLink.addEventListener('click', () => {
+                                location.hash = '/map?locked=' + encodeURIComponent(exploreLink.dataset.explore);
+                            });
+                        }
+                    });
+                });
+            }
         }
 
         // --- Render: Error ---

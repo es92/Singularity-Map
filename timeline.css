@@ -359,6 +359,20 @@ body::before {
 .answer-card.forced-selected:hover {
     border-color: var(--accent); background: var(--bg-card-hover);
 }
+.answer-card.computing {
+    position: relative;
+    pointer-events: none;
+}
+.compute-bar {
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 100%;
+    background: var(--accent);
+    opacity: 0.12;
+    border-radius: var(--radius);
+    transform-origin: left;
+    will-change: transform;
+}
 .question-card .answer-card.disabled {
     pointer-events: none;
 }
