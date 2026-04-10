@@ -162,7 +162,7 @@ body::before {
     position: absolute; left: -1.1rem; top: 0.6rem;
 }
 .tl-undo:hover { opacity: 1; color: var(--accent); }
-.timeline-headline { font-weight: 500; margin-bottom: 0.2rem; font-size: 0.98rem; }
+.timeline-headline { font-weight: 500; margin-bottom: 0.2rem; font-size: 0.82rem; }
 .timeline-desc { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6; }
 
 /* ---- Markdown content in body-text fields ---- */
@@ -220,7 +220,7 @@ body::before {
 }
 .tl-pill:hover:not(.active):not(.locked):not(.disabled) { border-color: var(--border-hover); color: var(--text); }
 .tl-pill.active {
-    background: var(--accent); color: var(--pill-active-text);
+    background: rgba(0, 200, 255, 0.25); color: var(--accent);
     border-color: var(--accent); font-weight: 600; cursor: default;
 }
 .tl-pill.locked {
