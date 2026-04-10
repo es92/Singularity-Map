@@ -2214,6 +2214,19 @@
             });
 
             window.toggleDebug = () => { debugMode = !debugMode; update(); return debugMode ? 'Debug ON' : 'Debug OFF'; };
+            window.DebugSelectRandom = () => {
+                const nextQ = findNextQuestion();
+                if (!nextQ) return 'No question available';
+                if (nextQ.isForced) {
+                    mutateStack(s => Engine.push(s, nextQ.node.id, nextQ.forcedValue));
+                    return nextQ.node.id + ' = ' + nextQ.forcedValue + ' (forced)';
+                }
+                const enabled = nextQ.options.filter(o => !o.disabled);
+                if (enabled.length === 0) return 'No enabled options';
+                const pick = enabled[Math.floor(Math.random() * enabled.length)];
+                mutateStack(s => Engine.push(s, pick.nodeId, pick.value));
+                return nextQ.node.id + ' = ' + pick.value;
+            };
             listen('[data-action="share"]', 'click', () => {
                 const url = location.origin + location.pathname + location.hash;
                 if (navigator.clipboard) {
