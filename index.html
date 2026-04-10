@@ -1336,13 +1336,18 @@
         const LOGGER_URL = 'https://singularity-logger.evan-a-shapiro.workers.dev';
         let journeyId = null;
         let journeyStartTime = null;
+        function getSessionId() {
+            let sid = localStorage.getItem('sm_sid');
+            if (!sid) { sid = crypto.randomUUID(); localStorage.setItem('sm_sid', sid); }
+            return sid;
+        }
         function logStart() {
             journeyId = crypto.randomUUID();
             journeyStartTime = Date.now();
             fetch(LOGGER_URL + '/start', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ journey_id: journeyId }),
+                body: JSON.stringify({ journey_id: journeyId, session_id: getSessionId() }),
             }).catch(() => {});
         }
         function logJourney(outcomeId, variantId, stack) {
@@ -1358,6 +1363,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     journey_id: journeyId || crypto.randomUUID(),
+                    session_id: getSessionId(),
                     outcome_id: outcomeId,
                     variant_id: variantId || null,
                     path,
