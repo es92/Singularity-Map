@@ -119,12 +119,16 @@ function matchCondition(sel, cond, node) {
     return true;
 }
 
+function isNodeActivatedByRules(sel, node) {
+    if (!node.activateWhen) return true;
+    return node.activateWhen.some(c => matchCondition(sel, c, node));
+}
+
 function isNodeActivated(sel, node) {
     for (const rule of HIDE_FLAG_RULES) {
         if (rule.nodes.has(node.id) && matchCondition(sel, rule.when, {})) return false;
     }
-    if (!node.activateWhen) return true;
-    return node.activateWhen.some(c => matchCondition(sel, c, node));
+    return isNodeActivatedByRules(sel, node);
 }
 
 function isNodeVisible(sel, node) {
@@ -209,7 +213,7 @@ function cleanSelection(sel) {
         let changed = false;
         for (const node of NODES) {
             if (!isNodeVisible(sel, node)) {
-                if (sel[node.id] !== undefined) {
+                if (sel[node.id] !== undefined && !isNodeActivatedByRules(sel, node)) {
                     delete sel[node.id];
                     delete sel._locked[node.id];
                     changed = true;

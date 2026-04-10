@@ -4546,15 +4546,63 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The wealth from AI concentrates where AI is built. {country} adopts the tools, but the real gains accumulate elsewhere.",
+          "_default": "Your life is materially better — cheaper services, smarter tools, fewer frustrations. But the gap is visible. The gains are real; they're just reaching the top a lot faster than they're reaching you. You're not struggling. You're watching others accelerate away.",
           "_when": [
             {
               "if": {
-                "is_ai_geo": [
-                  "yes"
+                "profession": [
+                  "software"
                 ]
               },
-              "text": "You're in the country where AI wealth concentrates. The gains are real — but they flow to the companies and shareholders, not evenly across the population."
+              "text": "You ship more in a week than you used to in a month. AI made you dramatically more productive. But the value you create flows to the platform owners, the shareholders, the people who own the compute. Your output tripled; your compensation didn't."
+            },
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "Your patients get better care — faster diagnosis, more precise treatment. AI made you better at your job. But the savings flow to the hospital systems and insurers. The patients benefit, the owners benefit more. You're somewhere in between."
+            },
+            {
+              "if": {
+                "profession": [
+                  "creative"
+                ]
+              },
+              "text": "The tools are extraordinary — you can create things that would have taken a team and months of work. But the platforms that distribute your work capture most of the value. You make more, earn about the same, and watch the gap widen."
+            },
+            {
+              "if": {
+                "profession": [
+                  "legal_finance"
+                ]
+              },
+              "text": "AI handles the analysis, the research, the pattern recognition. Your judgment still matters — but the leverage it creates flows to the firm, the fund, the partners. The value chain got shorter. Your position in it didn't improve."
+            },
+            {
+              "if": {
+                "profession": [
+                  "education"
+                ]
+              },
+              "text": "AI tutors and adaptive learning tools work alongside you. Education is measurably better. But the value flows to the platforms, not the educators. Your students benefit; your economic position doesn't keep pace."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Your hands-on work is still yours. But the economy around you reorganized — the wealth landed in tech, in platforms, in equity. You're employed, you're stable, and the gains are piling up somewhere you can't follow."
+            },
+            {
+              "if": {
+                "profession": [
+                  "government"
+                ]
+              },
+              "text": "You see the impact in the public sector — AI-driven efficiency, better services, lower costs. But the wealth it generates stays private. Government captures efficiency; the private sector captures the fortune."
             },
             {
               "if": {
@@ -4562,7 +4610,7 @@
                   "student_retired"
                 ]
               },
-              "text": "The gains from AI are concentrating. If you're entering the workforce, the question is whether you can get into the part of the economy that benefits. If you're retired, your savings and pension depend on an economy being reshaped by forces you didn't choose."
+              "text": "The economy transformed around you — either before you could get a stake in it or after your stake was set. The gains from AI are real, but they're concentrating in places and positions you can't easily reach."
             }
           ]
         }
@@ -4623,23 +4671,71 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The gains from AI went to the people who were already powerful. Not partially — almost entirely. The technology works, the economy grows, and none of it reaches you.",
+          "_default": "The economy is booming. The numbers have never been better. And almost none of it reaches you. You interact with the technology every day — you depend on it, benefit from it in small ways. But the wealth it generates has concentrated so far above you that your gains feel like rounding errors.",
           "_when": [
             {
               "if": {
-                "is_ai_geo": [
-                  "yes"
+                "profession": [
+                  "software"
                 ]
               },
-              "text": "You live in the country where AI wealth concentrates, but that doesn't mean it reaches you. The gains flow to a narrow elite. The economy is booming by every metric, and your life hasn't changed."
+              "text": "You used to build the future. Now the future builds itself, and the people who own the systems capture everything. Your skills still have value — for now — but the gap between what you produce and what you earn has become almost absurd."
             },
             {
               "if": {
-                "is_ai_geo": [
-                  "no"
+                "profession": [
+                  "healthcare"
                 ]
               },
-              "text": "The gains from AI went to another country's elite. {country} sees the technology deployed but captures none of the wealth. The gap isn't just inequality — it's a different world."
+              "text": "AI has made medicine extraordinary. Outcomes have never been better. But the entire economic structure of healthcare now serves the platform owners. You deliver the care; they capture the value."
+            },
+            {
+              "if": {
+                "profession": [
+                  "creative"
+                ]
+              },
+              "text": "The tools can generate anything. So can everyone else. Your taste, your judgment, your voice still matter — but the economic value of creative work has collapsed while the platforms that distribute it have never been more profitable."
+            },
+            {
+              "if": {
+                "profession": [
+                  "legal_finance"
+                ]
+              },
+              "text": "AI does the analysis now. Your judgment is still worth something, but the leverage it creates flows entirely to the people above you. The value chain shortened. You weren't at the end that benefited."
+            },
+            {
+              "if": {
+                "profession": [
+                  "education"
+                ]
+              },
+              "text": "AI teaches better than you can. The role that remains is somewhere between mentor and administrator, and the economic value of that role has cratered. Education improved. Educators didn't."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Your hands-on work outlasted the office jobs. But the economy restructured around you — the wealth went somewhere you can't follow. You're employed, you're stable, and you're watching a different world pull away."
+            },
+            {
+              "if": {
+                "profession": [
+                  "government"
+                ]
+              },
+              "text": "You serve an institution that's supposed to represent the public interest, but the real power moved to the entities that own AI. Policy follows their needs now. Your role is increasingly to manage the fallout."
+            },
+            {
+              "if": {
+                "profession": [
+                  "student_retired"
+                ]
+              },
+              "text": "The economy transformed while you were either too early or too late. The window for capturing the gains closed before you could reach it — or after your position was already set."
             }
           ]
         }

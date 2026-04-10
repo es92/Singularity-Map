@@ -11,8 +11,7 @@ const SCENARIO = {
     hideConditions: [
         { flag: 'hideAfterEscape', when: {
           _set: ['ai_goals'],
-          _rawNot: { ai_goals: ['marginal', 'benevolent'] },
-          _eff: { alignment: ['failed'], containment: ['escaped'] }
+          _rawNot: { ai_goals: ['marginal', 'benevolent'] }
         } },
         { flag: 'hideOnBrittleEscape', when: {
           alignment_durability: ['breaks'],
