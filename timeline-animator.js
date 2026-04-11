@@ -66,7 +66,7 @@ class TimelineRenderer {
             return `<span class="tl-pill" data-pathaction="change" data-dim="${this._esc(s.nodeId)}" data-val="${this._esc(s.value)}">${this._esc(pillText)}</span>`;
         }).join('');
         const undoHtml = (!event.isFrontier && event.selectedValue)
-            ? `<button class="tl-undo" data-pathaction="unclick" data-dim="${this._esc(event.nodeId)}" aria-label="Go back to this question">&#x21a9;</button>`
+            ? `<button class="tl-undo" data-pathaction="unclick" data-dim="${this._esc(event.nodeId)}" aria-label="Go back to this question">&#x21a9;&#xFE0E;</button>`
             : '';
         return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${this._esc(event.nodeLabel)}${undoHtml}</span><span class="tl-pills">${pills}</span></span>`;
     }
@@ -581,7 +581,7 @@ class TimelineAnimator extends TimelineRenderer {
         const stripSel = this._stripFromAnimation;
         newEvents.forEach(el => {
             const fadeChildren = Array.from(el.querySelectorAll(
-                '.tl-pills, .timeline-year, .timeline-headline, .timeline-desc, .timeline-slider'
+                '.tl-pills, .tl-undo, .timeline-year, .timeline-headline, .timeline-desc, .timeline-slider'
             )).filter(c => !stripSel || !c.matches(stripSel));
             const dy = flip.slide(el, startCardRect.top, { fadeChildren });
             eventDys.push(dy);
