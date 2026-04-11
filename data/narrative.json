@@ -4244,11 +4244,39 @@
     "contextWhen": [
       {
         "when": {
+          "power_promise": ["for_everyone"],
+          "governance_window": ["governed"]
+        },
+        "questionContext": "The promise is inclusion — and years of active governance preparation left real infrastructure to test it against. Regulatory bodies, international frameworks, an informed public. The scaffolding for accountability exists. The question is whether anyone uses it, or whether the promise is comfortable enough that no one bothers."
+      },
+      {
+        "when": {
+          "power_promise": ["for_everyone"],
+          "governance_window": ["race"]
+        },
+        "questionContext": "The promise is inclusion. But the earlier window for governance preparation went unused — no institutions exist to test the promise against. Anyone who wants to hold power accountable has to build the tools from scratch."
+      },
+      {
+        "when": {
           "power_promise": [
             "for_everyone"
           ]
         },
         "questionContext": "The promise is inclusion — shared prosperity, democratic governance, universal benefit. The question is whether anyone tests it. A promise without pressure tends to erode, but a promise nobody contests might also just... hold."
+      },
+      {
+        "when": {
+          "power_promise": ["keeping_safe"],
+          "governance_window": ["governed"]
+        },
+        "questionContext": "The promise is security. Mobilizing against a safety narrative is always hard — but years of governance preparation left institutions that can distinguish real safety from safety theater. The infrastructure for informed pushback exists, even if using it feels reckless."
+      },
+      {
+        "when": {
+          "power_promise": ["keeping_safe"],
+          "governance_window": ["race"]
+        },
+        "questionContext": "The promise is security. And the window for governance preparation was wasted — no one built the institutions that could distinguish real safety from safety theater. The framing makes opposition costly, and there's nothing to push back with."
       },
       {
         "when": {
@@ -4260,11 +4288,39 @@
       },
       {
         "when": {
+          "power_promise": ["best_will_rise"],
+          "governance_window": ["governed"]
+        },
+        "questionContext": "The promise is opportunity. Mobilizing means arguing that structure matters, not just access. But governance preparation left institutions that can measure whether the playing field is actually level — data, oversight, precedent. The argument is hard, but the tools to make it exist."
+      },
+      {
+        "when": {
+          "power_promise": ["best_will_rise"],
+          "governance_window": ["race"]
+        },
+        "questionContext": "The promise is opportunity. Mobilizing means arguing that structure matters, not just access — that *open* isn't the same as *fair*. But the window for governance preparation went unused, and there's nowhere to make the argument."
+      },
+      {
+        "when": {
           "power_promise": [
             "best_will_rise"
           ]
         },
         "questionContext": "The promise is opportunity. Mobilizing means arguing that structure matters, not just access — that *open* isn't the same as *fair*. A harder case to make when the beneficiaries of the system are visibly thriving."
+      },
+      {
+        "when": {
+          "intent": ["self_interest"],
+          "governance_window": ["governed"]
+        },
+        "questionContext": "Those in power are moving to entrench. But years of governance preparation left institutions that weren't built for this exact scenario but aren't nothing either. Regulatory bodies, international agreements, public awareness — infrastructure that raises the cost of consolidation."
+      },
+      {
+        "when": {
+          "intent": ["self_interest"],
+          "governance_window": ["race"]
+        },
+        "questionContext": "Those in power are moving to entrench. And the earlier window for governance preparation went unused. The window between intent and lock-in is narrowing, and there's nothing structural in the way."
       },
       {
         "when": {
@@ -4779,6 +4835,22 @@
     "contextWhen": [
       {
         "when": {
+          "power_promise": ["for_everyone"],
+          "mobilization": ["strong"],
+          "governance_window": ["governed"]
+        },
+        "questionContext": "The power holder promised inclusion, the public organized to hold them to it, and years of governance preparation gave that pressure institutional teeth — regulatory frameworks, international agreements, enforcement mechanisms. Promise, pressure, and infrastructure align."
+      },
+      {
+        "when": {
+          "power_promise": ["for_everyone"],
+          "mobilization": ["strong"],
+          "governance_window": ["race"]
+        },
+        "questionContext": "The power holder promised inclusion, and the public organized to hold them to it — but the earlier window for governance preparation went unused, so the pressure is raw popular force without institutional channels. Promise and pressure align; the mechanisms for enforcement are improvised."
+      },
+      {
+        "when": {
           "power_promise": [
             "for_everyone"
           ],
@@ -4790,11 +4862,39 @@
       },
       {
         "when": {
+          "mobilization": ["strong"],
+          "governance_window": ["governed"]
+        },
+        "questionContext": "People mobilized, and governance preparation gave them institutional channels — regulatory bodies to petition, international frameworks to invoke, legal precedent to cite. The fight has structure."
+      },
+      {
+        "when": {
+          "mobilization": ["strong"],
+          "governance_window": ["race"]
+        },
+        "questionContext": "People mobilized — but the window for governance preparation went unused, so the resistance has no institutional channels. The fight is real, but formless."
+      },
+      {
+        "when": {
           "mobilization": [
             "strong"
           ]
         },
         "questionContext": "People mobilized. Institutions pushed back. Whatever the outcome, it wasn't decided by default — it was fought for. The question is whether that collective action was enough to reshape who benefits."
+      },
+      {
+        "when": {
+          "mobilization": ["none"],
+          "governance_window": ["governed"]
+        },
+        "questionContext": "The public accepted the transformation without organizing — even though governance preparation had built the institutions that could have served as channels for accountability. The infrastructure existed. Nobody used it."
+      },
+      {
+        "when": {
+          "mobilization": ["none"],
+          "governance_window": ["race"]
+        },
+        "questionContext": "The public accepted the transformation without organizing. The earlier window for governance preparation went unused too — complacency met complacency."
       },
       {
         "when": {
@@ -4819,6 +4919,20 @@
           ]
         },
         "questionContext": "The resistance failed. The power holder prevailed. But even failed resistance leaves marks — the question is whether those marks constrain the concentration, or whether the power holder hardens in response."
+      },
+      {
+        "when": {
+          "coalition_outcome": ["fragments"],
+          "governance_window": ["governed"]
+        },
+        "questionContext": "The opposition never unified — despite governance infrastructure that could have served as a rallying point. Regulatory bodies, international frameworks, institutional channels — all available, none sufficient to bridge the factions."
+      },
+      {
+        "when": {
+          "coalition_outcome": ["fragments"],
+          "governance_window": ["race"]
+        },
+        "questionContext": "The opposition never unified. The earlier window for governance preparation went unused, so there was nothing institutional to coalesce around — no shared framework even if they'd agreed on what to demand."
       },
       {
         "when": {
@@ -5311,6 +5425,11 @@
         "shortAnswerDesc": "Abundance for all, agency for none.",
         "personalVignette": {
           "_when": [
+            { "if": { "ai_goals": ["alien_coexistence"] }, "text": null },
+            { "if": { "ai_goals": ["alien_extinction"] }, "text": null },
+            { "if": { "ai_goals": ["paperclip"] }, "text": null },
+            { "if": { "ai_goals": ["swarm"] }, "text": null },
+            { "if": { "ai_goals": ["power_seeking"] }, "text": null },
             {
               "if": { "sovereignty": ["lab"] },
               "text": "Your life is extraordinary. Better healthcare than any previous generation, cheaper everything, problems solved before you notice them. You're grateful — everyone is. And somewhere in the back of your mind, you know that everything you have exists because one person decided you should have it. Tomorrow they could decide otherwise."
@@ -5365,6 +5484,11 @@
         "shortAnswerDesc": "Humanity isn't oppressed. It's just irrelevant.",
         "personalVignette": {
           "_when": [
+            { "if": { "ai_goals": ["alien_coexistence"] }, "text": null },
+            { "if": { "ai_goals": ["alien_extinction"] }, "text": null },
+            { "if": { "ai_goals": ["paperclip"] }, "text": null },
+            { "if": { "ai_goals": ["swarm"] }, "text": null },
+            { "if": { "ai_goals": ["power_seeking"] }, "text": null },
             {
               "if": { "sovereignty": ["lab"] },
               "text": "You're not harmed. You're not helped. The platform works, mostly — services are decent, costs are low. But the real resources, the real breakthroughs, the real future is happening somewhere you'll never see, for someone you'll never meet. You exist in the margins of someone else's ambition. You expect the margins will keep getting thinner."
@@ -5419,6 +5543,11 @@
         "shortAnswerDesc": "Loyalty is the price of comfort. Deviation is expensive.",
         "personalVignette": {
           "_when": [
+            { "if": { "ai_goals": ["alien_coexistence"] }, "text": null },
+            { "if": { "ai_goals": ["alien_extinction"] }, "text": null },
+            { "if": { "ai_goals": ["paperclip"] }, "text": null },
+            { "if": { "ai_goals": ["swarm"] }, "text": null },
+            { "if": { "ai_goals": ["power_seeking"] }, "text": null },
             {
               "if": { "sovereignty": ["lab"] },
               "text": "Your life is fine — good, even. The platform works, the services are excellent, the opportunities are real. As long as you play along. You've seen what happens to people who don't: nothing dramatic, just a quiet narrowing. Slower service, fewer options, opportunities that somehow never materialize. The system doesn't punish. It just stops helping."

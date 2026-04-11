@@ -267,13 +267,9 @@ const NODES = [
         {
           capability: ['singularity'],
           automation: ['deep'],
-          _raw: { alignment: ['brittle'], alignment_durability: ['holds'], brittle_resolution: ['escape'] }
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
           alignment: ['failed'],
-          _effNot: { decel_outcome: ['solved', 'parity_solved'] }
+          _effNot: { decel_outcome: ['solved', 'parity_solved'] },
+          _rawNot: { brittle_resolution: ['escape'] }
         },
         {
           capability: ['singularity'],
@@ -284,6 +280,7 @@ const NODES = [
       ],
       derivedFrom: [
         { when: { alignment_durability: 'breaks' }, value: 'escaped' },
+        { when: { brittle_resolution: 'escape' }, value: 'escaped' },
         { when: { inert_stays: 'no' }, whenSet: 'inert_outcome', value: 'escaped' },
         { when: { catch_outcome: 'holds_permanently' }, unless: { collateral_impact: 'civilizational' }, value: 'contained' }
       ],
