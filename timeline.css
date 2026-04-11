@@ -272,7 +272,24 @@ body::before {
 .flip-animating .timeline-event,
 .flip-animating .question-card {
     position: relative; z-index: 2;
-    background: var(--bg);
+}
+@keyframes fade-in-cover {
+    0% { opacity: 0; }
+    45% { opacity: 1; }
+    100% { opacity: 1; }
+}
+.flip-animating .timeline-event::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 25% 50%, var(--bg-glow-1) 0%, transparent 60%),
+        radial-gradient(ellipse at 75% 20%, var(--bg-glow-2) 0%, transparent 60%),
+        var(--bg);
+    background-attachment: fixed;
+    pointer-events: none;
+    z-index: -1;
+    animation: fade-in-cover var(--flip-duration, 1500ms) linear both;
 }
 .flip-animating .timeline-event::after {
     content: '';
@@ -280,6 +297,7 @@ body::before {
     left: 0; right: 0; bottom: -40px; height: 40px;
     background: linear-gradient(to bottom, var(--bg), transparent);
     pointer-events: none;
+    animation: fade-in-cover var(--flip-duration, 1500ms) linear both;
 }
 .tl-pill.pending { opacity: 0.25; cursor: default; font-style: italic; border-style: dotted; }
 

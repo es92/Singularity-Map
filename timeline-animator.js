@@ -380,7 +380,7 @@ class FlipGroup {
         if (opts.fadeChildren) {
             for (const c of opts.fadeChildren) {
                 this._animations.push(c.animate(
-                    [{ opacity: '0' }, { opacity: '1' }],
+                    [{ opacity: '0', offset: 0 }, { opacity: '0', offset: 0.5 }, { opacity: '1', offset: 1 }],
                     animOpts
                 ));
             }
@@ -523,6 +523,7 @@ class TimelineAnimator extends TimelineRenderer {
         // --- 1. Apply end state (no inflation, natural layout) ---
         const savedScrollY = window.scrollY;
         this.containerEl.classList.add('flip-animating');
+        this.containerEl.style.setProperty('--flip-duration', DURATION + 'ms');
         applyEndState();
         if (window.scrollY !== savedScrollY) {
             window.scrollTo({ top: savedScrollY, behavior: 'instant' });
@@ -590,6 +591,7 @@ class TimelineAnimator extends TimelineRenderer {
             )).filter(c => !stripSel || !c.matches(stripSel));
             const dy = flip.slide(el, startCardRect.top, { fadeChildren });
             eventDys.push(dy);
+
 
             if (startLabelInternalOffset != null && stripSel) {
                 const labelEl = el.querySelector(stripSel);
@@ -746,6 +748,7 @@ class TimelineAnimator extends TimelineRenderer {
                 }
 
                 this.containerEl.classList.remove('flip-animating');
+                this.containerEl.style.removeProperty('--flip-duration');
                 this.morphAnimating = false;
                 this._updateScrollPadding();
                 if (onComplete) onComplete();
