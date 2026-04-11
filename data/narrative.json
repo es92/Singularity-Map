@@ -5032,7 +5032,7 @@
                   "singleton"
                 ]
               },
-              "text": "Your life is somewhat better — cheaper goods, better basic services. But everything you have is a concession from a single will. Your improvement is modest; theirs is total. The gap isn't wealth — it's the distance between living in someone's world and owning it."
+              "text": null
             },
             {
               "if": {
@@ -5040,7 +5040,7 @@
                   "inner_circle"
                 ]
               },
-              "text": "Your life is somewhat better — cheaper goods, better basic services. But the transformation's real gains went to a handful of people you'll never meet. Your improvement is modest; theirs is civilizational. The gap isn't wealth — it's the difference between being served and being sovereign."
+              "text": null
             }
           ],
           "_default": "Your life is somewhat better — cheaper goods, better basic services. But the transformation's real gains went to those who held power when it happened. Your improvement is modest; theirs is civilizational. The gap isn't just wealth — it's access, influence, and the ability to shape what comes next."
@@ -5324,35 +5324,35 @@
       },
       "indifferent": {
         "answerLabel": "Their own project — humanity is beside the point",
-        "answerDesc": "The circle turns inward — immortality, transcendence, space, whatever vision drove them to this point. Humanity isn't oppressed. It's just irrelevant. Some benefits leak out incidentally — cheaper energy, better medicine — but you're not the point. You exist in the margins of someone else's ambition. Survival is a side effect, not a guarantee.",
+        "answerDesc": "The circle turns inward — immortality, transcendence, space, whatever vision drove them to this point. Humanity isn't oppressed. It's just irrelevant. Some benefits leak out incidentally — cheaper energy, better medicine — but you're not the point. You exist in the margins of someone else's ambition. You expect the margins will shrink.",
         "narrativeVariants": [
           {
             "when": {
               "concentration_type": ["singleton"],
               "sovereignty": ["lab"]
             },
-            "answerDesc": "The founder turns inward. Immortality research, space colonization, whatever vision the AI was built to serve. The platform keeps running — it's profitable, after all — and some benefits trickle out. But humanity isn't the project. You live in someone's side effect. The infrastructure that sustains you is maintained because no one has bothered to turn it off."
+            "answerDesc": "The founder turns inward. Immortality research, space colonization, whatever vision the AI was built to serve. The platform keeps running — it's profitable, after all — and some benefits trickle out. But humanity isn't the project. You live in someone's side effect. You expect that one day the system that sustains you will be optimized for something else, and no one will think to mention it."
           },
           {
             "when": {
               "concentration_type": ["singleton"],
               "sovereignty": ["state"]
             },
-            "answerDesc": "The leader turns inward. A personal legacy project — monuments, immortality, the conquest of space — pursued with the full power of superintelligent AI. The state keeps functioning on autopilot. Services continue. But the population isn't the priority. You live in someone's afterthought."
+            "answerDesc": "The leader turns inward. A personal legacy project — monuments, immortality, the conquest of space — pursued with the full power of superintelligent AI. The state keeps functioning on autopilot. Services continue. But the population isn't the priority. You live in someone's afterthought — and you expect afterthoughts eventually get cleaned up."
           },
           {
             "when": {
               "concentration_type": ["inner_circle"],
               "sovereignty": ["lab"]
             },
-            "answerDesc": "The inner circle turns inward. Their own longevity, their own transcendence, their own vision of what superintelligence should be used for. The commercial products keep running — they generate revenue that funds the real work. Humanity benefits incidentally, the way a city benefits from a university that isn't there for the city."
+            "answerDesc": "The inner circle turns inward. Their own longevity, their own transcendence, their own vision of what superintelligence should be used for. The commercial products keep running — they generate revenue that funds the real work. Humanity benefits incidentally, the way a city benefits from a university that isn't there for the city. You expect that one day, the university will need the land."
           },
           {
             "when": {
               "concentration_type": ["inner_circle"],
               "sovereignty": ["state"]
             },
-            "answerDesc": "The inner circle turns inward. Their own survival, their own legacy, their own vision of national greatness — pursued through the AI while the population manages on whatever trickles down. The state functions. The people aren't the point."
+            "answerDesc": "The inner circle turns inward. Their own survival, their own legacy, their own vision of national greatness — pursued through the AI while the population manages on whatever trickles down. The state functions. The people aren't the point. And you expect that systems not designed for you don't keep you around forever."
           }
         ],
         "timelineEvent": {
@@ -5367,11 +5367,11 @@
           "_when": [
             {
               "if": { "sovereignty": ["lab"] },
-              "text": "You're not harmed. You're not helped. The platform works, mostly — services are decent, costs are low. But the real resources, the real breakthroughs, the real future is happening somewhere you'll never see, for someone you'll never meet. You exist in the margins of someone else's ambition. Your survival is a side effect, not a priority."
+              "text": "You're not harmed. You're not helped. The platform works, mostly — services are decent, costs are low. But the real resources, the real breakthroughs, the real future is happening somewhere you'll never see, for someone you'll never meet. You exist in the margins of someone else's ambition. You expect the margins will keep getting thinner."
             },
             {
               "if": { "sovereignty": ["state"] },
-              "text": "You're not harmed. You're not helped. The government functions, barely — services continue, order is maintained. But the real resources, the real attention, the real future is directed somewhere else entirely. You exist in the margins of someone else's legacy. Your survival is a side effect, not a guarantee."
+              "text": "You're not harmed. You're not helped. The government functions, barely — services continue, order is maintained. But the real resources, the real attention, the real future is directed somewhere else entirely. You exist in the margins of someone else's legacy. You expect that one day you'll find the margins have disappeared."
             }
           ]
         }

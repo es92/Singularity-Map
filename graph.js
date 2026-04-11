@@ -763,8 +763,8 @@ const NODES = [
       activateWhen: [{ concentration_type: ['singleton', 'inner_circle'] }],
       edges: [
         { id: 'generous', label: 'A golden world' },
-        { id: 'indifferent', label: 'Their own project' },
-        { id: 'extractive', label: 'A tightening grip' }
+        { id: 'extractive', label: 'A tightening grip' },
+        { id: 'indifferent', label: 'Their own project' }
       ] },
     { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, terminal: true, hideAfterEscape: true,
       activateWhen: OUTCOME_ACTIVATE,

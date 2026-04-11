@@ -702,7 +702,7 @@ function runVignetteValidation() {
                         errors.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: missing "if" condition`);
                         continue;
                     }
-                    if (!rule.text) {
+                    if (!rule.text && rule.text !== null) {
                         errors.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: missing "text" field`);
                     }
                     const validConditionKeys = new Set(['profession', 'country_bucket', 'is_ai_geo', ...NODES.map(n => n.id)]);

@@ -1173,6 +1173,7 @@
                 });
             }
 
+            const latePersonalNodes = new Set(['power_use']);
             const benefitNodes = new Set([
                 'plateau_benefit_distribution', 'auto_benefit_distribution', 'benefit_distribution',
             ]);
@@ -1180,7 +1181,8 @@
                 'escape_method', 'war_survivors',
             ]);
             const hasDeath = vignettes.some(v => deathNodes.has(v.nodeId));
-            const reordered = vignettes.filter(v => !benefitNodes.has(v.nodeId));
+            const reordered = vignettes.filter(v => !benefitNodes.has(v.nodeId) && !latePersonalNodes.has(v.nodeId));
+            reordered.push(...vignettes.filter(v => latePersonalNodes.has(v.nodeId)));
             if (!hasDeath) {
                 reordered.push(...vignettes.filter(v => benefitNodes.has(v.nodeId)));
             }
