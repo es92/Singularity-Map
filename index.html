@@ -1751,28 +1751,23 @@
                     const locked = Engine.isNodeLocked(sel, node);
                     if (locked !== null) {
                         if (!Engine.stackHas(stack, node.id)) {
-                            const hasReasons = node.edges.some(v =>
-                                Engine.getEdgeDisabledReason(sel, node, v) !== null
-                            );
-                            if (hasReasons) {
-                                const options = node.edges.map(v => {
-                                    const disabled = Engine.isEdgeDisabled(sel, node, v);
-                                    const reason = Engine.getEdgeDisabledReason(sel, node, v);
-                                    const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, sel) : null;
-                                    return {
-                                        value: v.id, label: v.label, shortLabel: v.shortLabel,
-                                        answerLabel: (variant && variant.answerLabel) || v.answerLabel || v.label,
-                                        answerDesc: (variant && variant.answerDesc) || v.answerDesc || '',
-                                        shortAnswerLabel: (variant && variant.shortAnswerLabel) || v.shortAnswerLabel || null,
-                                        shortAnswerDesc: (variant && variant.shortAnswerDesc) || v.shortAnswerDesc || null,
-                                        nodeId: node.id,
-                                        reachable: !disabled,
-                                        disabled,
-                                        disabledReason: reason,
-                                    };
-                                });
-                                return { node, options, isForced: true, forcedValue: locked };
-                            }
+                            const options = node.edges.map(v => {
+                                const disabled = Engine.isEdgeDisabled(sel, node, v);
+                                const reason = Engine.getEdgeDisabledReason(sel, node, v);
+                                const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, sel) : null;
+                                return {
+                                    value: v.id, label: v.label, shortLabel: v.shortLabel,
+                                    answerLabel: (variant && variant.answerLabel) || v.answerLabel || v.label,
+                                    answerDesc: (variant && variant.answerDesc) || v.answerDesc || '',
+                                    shortAnswerLabel: (variant && variant.shortAnswerLabel) || v.shortAnswerLabel || null,
+                                    shortAnswerDesc: (variant && variant.shortAnswerDesc) || v.shortAnswerDesc || null,
+                                    nodeId: node.id,
+                                    reachable: !disabled,
+                                    disabled,
+                                    disabledReason: reason,
+                                };
+                            });
+                            return { node, options, isForced: true, forcedValue: locked };
                         }
                         continue;
                     }
@@ -1811,6 +1806,8 @@
                     if (!fullQuestions && foundFrontier) break;
 
                     const locked = Engine.isNodeLocked(sel, node);
+                    const inStack = Engine.stackHas(stack, node.id);
+                    if (locked !== null && !inStack) continue;
                     const value = sel[node.id] || locked;
                     const isLockedNode = locked !== null;
 
