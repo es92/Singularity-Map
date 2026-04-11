@@ -5025,6 +5025,22 @@
                 ]
               },
               "text": "Your life is somewhat better — cheaper goods, better basic services. But the transformation's real gains went to those who held power. And even your modest improvement feels empty. The gap isn't just wealth — it's meaning."
+            },
+            {
+              "if": {
+                "concentration_type": [
+                  "singleton"
+                ]
+              },
+              "text": "Your life is somewhat better — cheaper goods, better basic services. But everything you have is a concession from a single will. Your improvement is modest; theirs is total. The gap isn't wealth — it's the distance between living in someone's world and owning it."
+            },
+            {
+              "if": {
+                "concentration_type": [
+                  "inner_circle"
+                ]
+              },
+              "text": "Your life is somewhat better — cheaper goods, better basic services. But the transformation's real gains went to a handful of people you'll never meet. Your improvement is modest; theirs is civilizational. The gap isn't wealth — it's the difference between being served and being sovereign."
             }
           ],
           "_default": "Your life is somewhat better — cheaper goods, better basic services. But the transformation's real gains went to those who held power when it happened. Your improvement is modest; theirs is civilizational. The gap isn't just wealth — it's access, influence, and the ability to shape what comes next."
@@ -5217,6 +5233,206 @@
     },
     "shortQuestionText": "How narrow is the circle of control?",
     "shortQuestionContext": "Power has concentrated. But how many people actually hold it?"
+  },
+  "power_use": {
+    "questionText": "What does the circle do with its power?",
+    "questionContext": "**Absolute power, absolute discretion.** Superintelligent AI can cure every disease, end scarcity, grant immortality — or be turned entirely inward. The technology can do anything. The question is what the people who control it choose to do with it — and whether anyone else gets a say.",
+    "contextWhen": [
+      {
+        "when": {
+          "concentration_type": ["singleton"],
+          "sovereignty": ["lab"]
+        },
+        "questionContext": "**One person holds the most powerful technology in history.** A single founder, a single CEO — the AI answers to them. They could share its gifts with the world: cure disease, end scarcity, grant abundance. Or they could turn it inward — toward their own immortality, their own vision, their own legacy. The question is what one person, accountable to no one, chooses to build."
+      },
+      {
+        "when": {
+          "concentration_type": ["singleton"],
+          "sovereignty": ["state"]
+        },
+        "questionContext": "**One leader holds the most powerful technology in history.** The AI serves a single political will. They could transform their nation — and the world — into a paradise. Or they could focus the technology on their own permanence, their own glory, their own survival. The question is what one person, accountable to no one, chooses to build."
+      },
+      {
+        "when": {
+          "concentration_type": ["inner_circle"],
+          "sovereignty": ["lab"]
+        },
+        "questionContext": "**A handful of people hold the most powerful technology in history.** The founders, the chief scientists, the key engineers — the ones the AI was shaped around. They could share its gifts with the world. Or they could turn it inward — toward their own projects, their own immortality, their own vision of what matters. The question is what a small group, accountable to no one, chooses to build."
+      },
+      {
+        "when": {
+          "concentration_type": ["inner_circle"],
+          "sovereignty": ["state"]
+        },
+        "questionContext": "**A handful of officials hold the most powerful technology in history.** A small inner circle — the ones who hold the real relationship with the AI. They could transform their nation and the world. Or they could focus the technology on their own permanence and privilege. The question is what a small group, accountable to no one, chooses to build."
+      }
+    ],
+    "values": {
+      "generous": {
+        "answerLabel": "A golden world — abundance for all, agency for none",
+        "answerDesc": "Life is genuinely good. Diseases cured, material abundance real, services extraordinary. The circle shares — generously, even. But every gift comes from one source and could be revoked by one decision. You live in someone's utopia. It's comfortable. It's total. And you have no vote on whether it continues.",
+        "narrativeVariants": [
+          {
+            "when": {
+              "concentration_type": ["singleton"],
+              "sovereignty": ["lab"]
+            },
+            "answerDesc": "The founder shares. Diseases cured, abundance real, every consumer product better than anything that came before. Life under their platform is genuinely good — by any material measure, the best in human history. But every gift routes through one person's infrastructure, and the generosity is a choice, not a right. You live in someone's product. It's an extraordinary product."
+          },
+          {
+            "when": {
+              "concentration_type": ["singleton"],
+              "sovereignty": ["state"]
+            },
+            "answerDesc": "The leader shares. Universal healthcare, abundant energy, material comfort beyond anything the state has ever provided. Life under their rule is genuinely good — by any material measure, unprecedented. But every benefit flows from a single political will, and generosity is policy, not law. You live in someone's country. It's a prosperous country."
+          },
+          {
+            "when": {
+              "concentration_type": ["inner_circle"],
+              "sovereignty": ["lab"]
+            },
+            "answerDesc": "The inner circle shares. They fund cures, collapse costs, build infrastructure that genuinely serves billions. Their philanthropy is real — and it's the only game in town. Every hospital, every school, every service runs on systems they control. Life is good. Gratitude is mandatory. The generosity is genuine; so is the dependency."
+          },
+          {
+            "when": {
+              "concentration_type": ["inner_circle"],
+              "sovereignty": ["state"]
+            },
+            "answerDesc": "The inner circle shares. They direct the AI to serve the population — universal services, abundant resources, material comfort. Their governance is effective and their generosity genuine. But every benefit is administered, not earned. The population thrives at the discretion of people they didn't choose and can't replace."
+          }
+        ],
+        "timelineEvent": {
+          "headline": "The circle shares — abundantly, totally",
+          "description": "Those who hold power choose to distribute AI's benefits broadly. Life improves dramatically for everyone. Agency doesn't.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "shortAnswerLabel": "Golden world",
+        "shortAnswerDesc": "Abundance for all, agency for none.",
+        "personalVignette": {
+          "_when": [
+            {
+              "if": { "sovereignty": ["lab"] },
+              "text": "Your life is extraordinary. Better healthcare than any previous generation, cheaper everything, problems solved before you notice them. You're grateful — everyone is. And somewhere in the back of your mind, you know that everything you have exists because one person decided you should have it. Tomorrow they could decide otherwise."
+            },
+            {
+              "if": { "sovereignty": ["state"] },
+              "text": "Your life is extraordinary. Services work, abundance is real, the state provides more than any government in history. You're grateful — everyone is. And somewhere in the back of your mind, you know that everything you have exists because a leader decided you should have it. Tomorrow the policy could change."
+            }
+          ]
+        }
+      },
+      "indifferent": {
+        "answerLabel": "Their own project — humanity is beside the point",
+        "answerDesc": "The circle turns inward — immortality, transcendence, space, whatever vision drove them to this point. Humanity isn't oppressed. It's just irrelevant. Some benefits leak out incidentally — cheaper energy, better medicine — but you're not the point. You exist in the margins of someone else's ambition. Survival is a side effect, not a guarantee.",
+        "narrativeVariants": [
+          {
+            "when": {
+              "concentration_type": ["singleton"],
+              "sovereignty": ["lab"]
+            },
+            "answerDesc": "The founder turns inward. Immortality research, space colonization, whatever vision the AI was built to serve. The platform keeps running — it's profitable, after all — and some benefits trickle out. But humanity isn't the project. You live in someone's side effect. The infrastructure that sustains you is maintained because no one has bothered to turn it off."
+          },
+          {
+            "when": {
+              "concentration_type": ["singleton"],
+              "sovereignty": ["state"]
+            },
+            "answerDesc": "The leader turns inward. A personal legacy project — monuments, immortality, the conquest of space — pursued with the full power of superintelligent AI. The state keeps functioning on autopilot. Services continue. But the population isn't the priority. You live in someone's afterthought."
+          },
+          {
+            "when": {
+              "concentration_type": ["inner_circle"],
+              "sovereignty": ["lab"]
+            },
+            "answerDesc": "The inner circle turns inward. Their own longevity, their own transcendence, their own vision of what superintelligence should be used for. The commercial products keep running — they generate revenue that funds the real work. Humanity benefits incidentally, the way a city benefits from a university that isn't there for the city."
+          },
+          {
+            "when": {
+              "concentration_type": ["inner_circle"],
+              "sovereignty": ["state"]
+            },
+            "answerDesc": "The inner circle turns inward. Their own survival, their own legacy, their own vision of national greatness — pursued through the AI while the population manages on whatever trickles down. The state functions. The people aren't the point."
+          }
+        ],
+        "timelineEvent": {
+          "headline": "The circle turns inward — humanity is beside the point",
+          "description": "Those who hold power pursue their own project. Humanity persists in the margins, sustained by side effects.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "shortAnswerLabel": "Their own project",
+        "shortAnswerDesc": "Humanity isn't oppressed. It's just irrelevant.",
+        "personalVignette": {
+          "_when": [
+            {
+              "if": { "sovereignty": ["lab"] },
+              "text": "You're not harmed. You're not helped. The platform works, mostly — services are decent, costs are low. But the real resources, the real breakthroughs, the real future is happening somewhere you'll never see, for someone you'll never meet. You exist in the margins of someone else's ambition. Your survival is a side effect, not a priority."
+            },
+            {
+              "if": { "sovereignty": ["state"] },
+              "text": "You're not harmed. You're not helped. The government functions, barely — services continue, order is maintained. But the real resources, the real attention, the real future is directed somewhere else entirely. You exist in the margins of someone else's legacy. Your survival is a side effect, not a guarantee."
+            }
+          ]
+        }
+      },
+      "extractive": {
+        "answerLabel": "A tightening grip — loyalty is the price of comfort",
+        "answerDesc": "The circle needs something from you: compliance, data, legitimacy, labor. Life is fine for those who play along — even good. But the system is designed around their needs, and deviation is expensive. Not tyranny exactly. More like being a permanent employee of the only company in the world, where the performance review never ends.",
+        "narrativeVariants": [
+          {
+            "when": {
+              "concentration_type": ["singleton"],
+              "sovereignty": ["lab"]
+            },
+            "answerDesc": "The founder needs your engagement, your data, your participation in the ecosystem. Life on the platform is good — for those who play along. Dissent isn't punished so much as deprioritized. Your services degrade, your access narrows, your life gets quietly harder. Loyalty isn't demanded. It's incentivized, continuously, by the architecture of everything."
+          },
+          {
+            "when": {
+              "concentration_type": ["singleton"],
+              "sovereignty": ["state"]
+            },
+            "answerDesc": "The leader needs your compliance, your labor, your public loyalty. Life under the regime is comfortable — for those who comply. Dissent isn't dramatic. It's a slow withdrawal of access: your healthcare waits longer, your applications stall, your children's schools are further away. The system doesn't punish. It optimizes you out."
+          },
+          {
+            "when": {
+              "concentration_type": ["inner_circle"],
+              "sovereignty": ["lab"]
+            },
+            "answerDesc": "The inner circle needs your data, your engagement, your participation in their economy. The platform rewards loyalty and quietly punishes deviation — not through force, but through access. The best services, the best opportunities, the best healthcare all flow to those who align with the circle's priorities. Everyone else gets the free tier."
+          },
+          {
+            "when": {
+              "concentration_type": ["inner_circle"],
+              "sovereignty": ["state"]
+            },
+            "answerDesc": "The inner circle needs your compliance and your legitimacy. The state functions well for loyalists — good services, real opportunities, material comfort. For everyone else, the system is indifferent at best. Not a gulag. Just a slow, algorithmic sorting of who matters and who doesn't."
+          }
+        ],
+        "timelineEvent": {
+          "headline": "The circle extracts — loyalty is the price of comfort",
+          "description": "Those who hold power need your compliance. Life is good for those who play along. Deviation is expensive.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "shortAnswerLabel": "Tightening grip",
+        "shortAnswerDesc": "Loyalty is the price of comfort. Deviation is expensive.",
+        "personalVignette": {
+          "_when": [
+            {
+              "if": { "sovereignty": ["lab"] },
+              "text": "Your life is fine — good, even. The platform works, the services are excellent, the opportunities are real. As long as you play along. You've seen what happens to people who don't: nothing dramatic, just a quiet narrowing. Slower service, fewer options, opportunities that somehow never materialize. The system doesn't punish. It just stops helping."
+            },
+            {
+              "if": { "sovereignty": ["state"] },
+              "text": "Your life is fine — good, even. Services work, the economy is stable, and the state provides. As long as you comply. You've seen what happens to people who don't: nothing dramatic, just a quiet narrowing. Applications that stall, promotions that pass you by, a healthcare queue that never seems to move. The system doesn't punish. It just stops noticing you."
+            }
+          ]
+        }
+      }
+    },
+    "shortQuestionText": "What does the circle do with its power?",
+    "shortQuestionContext": "Absolute power, absolute discretion. What do they choose?"
   },
   "knowledge_replacement": {
     "questionText": "How fast are human knowledge workers replaced?",

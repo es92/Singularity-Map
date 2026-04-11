@@ -529,6 +529,11 @@
           "state": "The State"
         },
         "concentration_type": "The Circle",
+        "power_use": {
+          "generous": "The Gift",
+          "indifferent": "The Project",
+          "extractive": "The Grip"
+        },
         "physical_automation": "The Physical World",
         "stall_recovery": "The Recovery",
         "automation_recovery": "The Breakthrough",
@@ -587,6 +592,11 @@
           "elites": "Even with good intentions, the hierarchy consolidated around those who held position at the moment of transformation. A broad elite — investors, officials, institutional leaders — captured the gains through familiar mechanisms.",
           "inner_circle": "The hierarchy's real center of gravity is a handful of people no one voted for. The formal institutions that were supposed to distribute the gains answer to an inner circle that shaped the AI's priorities.",
           "singleton": "The hierarchy narrows to a point. One person's vision, amplified through superintelligent AI, defines the structure everyone else lives within. The entire lightcone, tiled in their image."
+        },
+        "power_use": {
+          "generous": "The hierarchy shares — out of principle, not obligation. Life is materially extraordinary. The intent was always to help, and the help is real. But the structure that delivers it answers to no one. A benevolent hierarchy is still a hierarchy, and the generosity that sustains you is a policy choice, not a right.",
+          "indifferent": "The hierarchy turns inward. Those at the top pursue their own vision — legacy, transcendence, the long game — while the population below manages on whatever infrastructure keeps running. The original intent was good. The follow-through was personal.",
+          "extractive": "The hierarchy needs your participation — your compliance, your data, your role in the system. The original intent was shared prosperity. The reality is a structure that rewards loyalty and quietly marginalizes everything else. The grip tightened not through malice but through optimization."
         },
         "physical_automation": {
           "rapid": "The physical world automated rapidly — but the automated economy served its owners. Displaced workers had no leverage; the machines didn't need them. Material comfort rose. Agency collapsed.",
@@ -1331,6 +1341,11 @@
         "stall_recovery": "The Recovery",
         "benefit_distribution": "The Spoils",
         "concentration_type": "The Circle",
+        "power_use": {
+          "generous": "The Gift",
+          "indifferent": "The Project",
+          "extractive": "The Grip"
+        },
         "knowledge_replacement": "Knowledge Work",
         "physical_automation": "The Physical World",
         "mobilization": {
@@ -1417,6 +1432,11 @@
           "elites": "The concentration followed familiar grooves — shareholders, executives, political allies. Thousands of people hold real power. Enough to be stable, few enough to be oppressive. A ruling class, legible to history.",
           "inner_circle": "The formal power structure is a facade. A handful of people — the ones who built the system, who shaped the AI's priorities — hold the real authority. Everyone else, from shareholders to cabinet ministers, follows.",
           "singleton": "One person. The entire apparatus of captured AI answers to a single individual. Not through conspiracy — through the architecture of a system that was always designed around one center of gravity. The entire lightcone, tiled in their image."
+        },
+        "power_use": {
+          "generous": "The captor shares — abundantly, even. Life is materially extraordinary. Diseases cured, scarcity ended, comfort beyond anything history produced. The generosity is genuine. So is the dependency. Every gift can be revoked. Every abundance is administered. The golden world runs on one person's continued goodwill.",
+          "indifferent": "The captor turns inward. Immortality, transcendence, space — whatever the project is, humanity isn't it. The infrastructure keeps running, benefits leak out incidentally, and billions of people persist in the margins of someone else's ambition. Not oppressed. Not helped. Sustained by systems no one is maintaining for their sake.",
+          "extractive": "The captor needs something — compliance, data, engagement, legitimacy. Life is good for those who provide it. For everyone else, a quiet narrowing: slower services, fewer opportunities, a system that doesn't punish deviation so much as optimize it away. The grip tightens not through force but through architecture."
         },
         "knowledge_replacement": {
           "rapid": "AI replaced virtually all routine knowledge work within a year or two. The speed was a feature — rapid automation concentrated productivity gains before anyone could negotiate for a share.",
