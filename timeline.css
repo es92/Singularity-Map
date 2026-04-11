@@ -269,6 +269,18 @@ body::before {
 .tl-pill.disabled { opacity: 0.3; cursor: not-allowed; }
 .flip-animating .tl-pill,
 .flip-animating .answer-card { transition: none !important; }
+.flip-animating .timeline-event,
+.flip-animating .question-card {
+    position: relative; z-index: 2;
+    background: var(--bg);
+}
+.flip-animating .timeline-event::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: -40px; height: 40px;
+    background: linear-gradient(to bottom, var(--bg), transparent);
+    pointer-events: none;
+}
 .tl-pill.pending { opacity: 0.25; cursor: default; font-style: italic; border-style: dotted; }
 
 /* ---- Stage headers ---- */
