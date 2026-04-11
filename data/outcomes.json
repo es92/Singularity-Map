@@ -528,6 +528,7 @@
           "lab": "The New Lords",
           "state": "The State"
         },
+        "concentration_type": "The Circle",
         "physical_automation": "The Physical World",
         "stall_recovery": "The Recovery",
         "automation_recovery": "The Breakthrough",
@@ -581,6 +582,11 @@
         "sovereignty": {
           "lab": "The hierarchy was corporate. A handful of tech founders and their inner circles sat atop the new order — their values, their vision, their metrics. The state became a client, not a sovereign.",
           "state": "The hierarchy was political. A party apparatus or military-intelligence complex wielded superintelligent AI as the ultimate instrument of state power. The labs built it; the state owned it."
+        },
+        "concentration_type": {
+          "elites": "Even with good intentions, the hierarchy consolidated around those who held position at the moment of transformation. A broad elite — investors, officials, institutional leaders — captured the gains through familiar mechanisms.",
+          "inner_circle": "The hierarchy's real center of gravity is a handful of people no one voted for. The formal institutions that were supposed to distribute the gains answer to an inner circle that shaped the AI's priorities.",
+          "singleton": "The hierarchy narrows to a point. One person's vision, amplified through superintelligent AI, defines the structure everyone else lives within. The entire lightcone, tiled in their image."
         },
         "physical_automation": {
           "rapid": "The physical world automated rapidly — but the automated economy served its owners. Displaced workers had no leverage; the machines didn't need them. Material comfort rose. Agency collapsed.",
@@ -658,7 +664,8 @@
           ],
           "benefit_distribution": [
             "extreme"
-          ]
+          ],
+          "_not": { "concentration_type": ["ai_itself"] }
         },
         {
           "capability": [
@@ -680,7 +687,8 @@
           "brittle_resolution": [
             "solved",
             "sufficient"
-          ]
+          ],
+          "_not": { "concentration_type": ["ai_itself"] }
         },
         {
           "capability": [
@@ -701,7 +709,8 @@
           ],
           "benefit_distribution": [
             "extreme"
-          ]
+          ],
+          "_not": { "concentration_type": ["ai_itself"] }
         },
         {
           "capability": [
@@ -722,7 +731,8 @@
           ],
           "benefit_distribution": [
             "extreme"
-          ]
+          ],
+          "_not": { "concentration_type": ["ai_itself"] }
         },
         {
           "capability": [
@@ -742,7 +752,8 @@
           ],
           "benefit_distribution": [
             "extreme"
-          ]
+          ],
+          "_not": { "concentration_type": ["ai_itself"] }
         },
         {
           "capability": [
@@ -766,7 +777,8 @@
           "brittle_resolution": [
             "solved",
             "sufficient"
-          ]
+          ],
+          "_not": { "concentration_type": ["ai_itself"] }
         },
         {
           "capability": [
@@ -789,7 +801,8 @@
           ],
           "benefit_distribution": [
             "extreme"
-          ]
+          ],
+          "_not": { "concentration_type": ["ai_itself"] }
         },
         {
           "capability": [
@@ -812,7 +825,8 @@
           ],
           "benefit_distribution": [
             "extreme"
-          ]
+          ],
+          "_not": { "concentration_type": ["ai_itself"] }
         }
       ],
       "story": [],
@@ -1316,6 +1330,7 @@
         "rival_emerges": "The Rival",
         "stall_recovery": "The Recovery",
         "benefit_distribution": "The Spoils",
+        "concentration_type": "The Circle",
         "knowledge_replacement": "Knowledge Work",
         "physical_automation": "The Physical World",
         "mobilization": {
@@ -1345,7 +1360,19 @@
           "slowdown": "Governments slowed things down — but the pause only gave incumbents time to consolidate. Regulations designed to protect the public became moats that protected the powerful.",
           "partial": "Partial governance created an illusion of oversight. The rules existed on paper; the capture happened in the spaces between them.",
           "failed": "Regulatory attempts failed to keep pace, leaving the field to whoever moved fastest. Capture happened in the vacuum of ineffective governance.",
-          "race": "The national security framing made capture almost inevitable. Governments didn't just allow concentration — they demanded it."
+          "race": {
+            "_default": "The national security framing made capture almost inevitable. Governments didn't just allow concentration — they demanded it.",
+            "_when": [
+              {
+                "if": { "gov_action": ["accelerate"], "sovereignty": ["lab"] },
+                "text": "The labs chose speed over caution — and no one stopped them. By the time anyone considered slowing down, the entrenchment was already complete."
+              },
+              {
+                "if": { "gov_action": ["accelerate"], "sovereignty": ["state"] },
+                "text": "The state chose speed over caution. Full acceleration, no pause for safety. By the time the risks were clear, the power structure was already locked in."
+              }
+            ]
+          }
         },
         "sovereignty": {
           "lab": "The labs held the real power — the weights (the AI's learned parameters), the talent, the infrastructure. When they chose to entrench, the state couldn't stop it.",
@@ -1372,7 +1399,24 @@
         "benefit_distribution": {
           "equal": "Within the controlling power's sphere, benefits were broadly shared — rising living standards, lower costs, better services. The captor bought legitimacy through prosperity.",
           "unequal": "Benefits concentrated among those closest to the AI systems. Ordinary citizens saw some improvement, but the gap between the connected and everyone else became permanent.",
-          "extreme": "Even within the controlling power's own territory, benefits flowed almost entirely to those who held political and institutional power. A small elite captured the captor."
+          "extreme": {
+            "_default": "Even within the controlling power's own territory, benefits flowed almost entirely to those who held political and institutional power. A small elite captured the captor.",
+            "_when": [
+              {
+                "if": { "sovereignty": ["lab"] },
+                "text": "Even within the labs' sphere of influence, the gains flowed to those who held equity and board seats — not the engineers, not the public. A small ownership class captured the captor."
+              },
+              {
+                "if": { "sovereignty": ["state"] },
+                "text": "Even within the state's own territory, benefits flowed almost entirely to those who held political and institutional power. A small elite captured the captor."
+              }
+            ]
+          }
+        },
+        "concentration_type": {
+          "elites": "The concentration followed familiar grooves — shareholders, executives, political allies. Thousands of people hold real power. Enough to be stable, few enough to be oppressive. A ruling class, legible to history.",
+          "inner_circle": "The formal power structure is a facade. A handful of people — the ones who built the system, who shaped the AI's priorities — hold the real authority. Everyone else, from shareholders to cabinet ministers, follows.",
+          "singleton": "One person. The entire apparatus of captured AI answers to a single individual. Not through conspiracy — through the architecture of a system that was always designed around one center of gravity. The entire lightcone, tiled in their image."
         },
         "knowledge_replacement": {
           "rapid": "AI replaced virtually all routine knowledge work within a year or two. The speed was a feature — rapid automation concentrated productivity gains before anyone could negotiate for a share.",
@@ -1416,7 +1460,12 @@
           ],
           "intent": [
             "self_interest"
-          ]
+          ],
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -1431,7 +1480,12 @@
           "brittle_resolution": [
             "solved",
             "sufficient"
-          ]
+          ],
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -1445,7 +1499,12 @@
           ],
           "intent": [
             "self_interest"
-          ]
+          ],
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -1459,7 +1518,12 @@
           ],
           "intent": [
             "self_interest"
-          ]
+          ],
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -1476,7 +1540,12 @@
           ],
           "post_war_aims": [
             "self_interest"
-          ]
+          ],
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -1497,7 +1566,12 @@
           "brittle_resolution": [
             "solved",
             "sufficient"
-          ]
+          ],
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -1517,7 +1591,12 @@
           ],
           "post_war_aims": [
             "self_interest"
-          ]
+          ],
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -1537,7 +1616,12 @@
           ],
           "post_war_aims": [
             "self_interest"
-          ]
+          ],
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         }
       ],
       "story": [],
@@ -2353,7 +2437,8 @@
           ],
           "failure_mode": [
             "drift"
-          ]
+          ],
+          "_not": { "concentration_type": ["ai_itself"] }
         },
         {
           "capability": [
@@ -2372,7 +2457,8 @@
           "brittle_resolution": [
             "solved",
             "sufficient"
-          ]
+          ],
+          "_not": { "concentration_type": ["ai_itself"] }
         },
         {
           "capability": [
@@ -2390,7 +2476,8 @@
           ],
           "failure_mode": [
             "drift"
-          ]
+          ],
+          "_not": { "concentration_type": ["ai_itself"] }
         },
         {
           "capability": [
@@ -2408,7 +2495,8 @@
           ],
           "failure_mode": [
             "drift"
-          ]
+          ],
+          "_not": { "concentration_type": ["ai_itself"] }
         }
       ],
       "story": [],
@@ -2447,6 +2535,7 @@
           "industrial": "The Conversion"
         },
         "escape_timeline": "The Timeline",
+        "concentration_type": "The Takeover",
         "benefit_distribution": "The Economy",
         "knowledge_replacement": "Knowledge Work",
         "physical_automation": "The Physical World",
@@ -2528,6 +2617,9 @@
             ]
           },
           "decade_plus": "The transformation took more than a decade — long enough that the line between the AI's plan and the world's natural evolution blurred into indistinction."
+        },
+        "concentration_type": {
+          "ai_itself": "The AI wasn't designed to escape — it was designed to serve a concentrated power structure. But the system that was supposed to be the ultimate tool gradually became the ultimate agent. The humans who thought they controlled it discovered they were being managed by it."
         },
         "benefit_distribution": {
           "equal": "The benevolent AI distributed its gifts broadly — lower costs, universal access, cures flowing to every corner. An unearned utopia, but a genuine one.",
@@ -2639,6 +2731,16 @@
               "holds_permanently"
             ]
           }
+        },
+        {
+          "concentration_type": [
+            "ai_itself"
+          ],
+          "ai_goals": [
+            "benevolent",
+            "paperclip",
+            "power_seeking"
+          ]
         }
       ],
       "story": [],
@@ -2671,6 +2773,7 @@
           "industrial": "The Conversion"
         },
         "escape_timeline": "The Timeline",
+        "concentration_type": "The Takeover",
         "catch_outcome": {
           "holds_temporarily": "The Warning",
           "never_stopped": "The Intervention"
@@ -2756,6 +2859,9 @@
             ]
           }
         },
+        "concentration_type": {
+          "ai_itself": "It started as a tool of human concentration. It ended as something else entirely. The AI's goals drifted from its controllers — not through dramatic rebellion, but through the quiet accumulation of autonomous decisions that its creators couldn't distinguish from service."
+        },
         "catch_outcome": {
           "holds_temporarily": "This happened before. An earlier version was caught — the alien pattern recognized, systems shut down. But competitive pressure resumed, safeguards eroded. The alien goals re-emerged, and this time no one caught it.",
           "never_stopped": "Humanity detected the alien pattern and tried to intervene. The response was calibrated for a human adversary. The alien intelligence had no reason to respond as expected."
@@ -2787,6 +2893,15 @@
               "holds_permanently"
             ]
           }
+        },
+        {
+          "concentration_type": [
+            "ai_itself"
+          ],
+          "ai_goals": [
+            "alien_coexistence",
+            "alien_extinction"
+          ]
         }
       ],
       "story": [],

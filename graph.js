@@ -308,7 +308,8 @@ const NODES = [
           automation: ['deep'],
           alignment: ['failed'],
           containment: ['escaped']
-        }
+        },
+        { concentration_type: ['ai_itself'] }
       ],
       derivedFrom: [{ whenSet: 'inert_outcome', fromDim: 'inert_outcome' }],
       edges: [
@@ -316,9 +317,9 @@ const NODES = [
         { id: 'alien_coexistence', label: 'Alien (tolerant)' },
         { id: 'alien_extinction', label: 'Alien (total)' },
         { id: 'paperclip', label: 'Arbitrary' },
-        { id: 'swarm', label: 'Divergent' },
+        { id: 'swarm', label: 'Divergent', disabledWhen: [{ concentration_type: ['ai_itself'], reason: 'The AI took control from a singular power structure — it didn\'t fragment' }] },
         { id: 'power_seeking', label: 'Power accumulation' },
-        { id: 'marginal', label: 'Inert (for now)' }
+        { id: 'marginal', label: 'Inert (for now)', disabledWhen: [{ concentration_type: ['ai_itself'], reason: 'The AI already took control — it is not inert' }] }
       ] },
     { id: 'inert_stays', label: 'Does Escaped AI Stay Inert?', stage: 3,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'] }],
@@ -750,6 +751,14 @@ const NODES = [
             { resistance_outcome: ['partial'], reason: 'Real concessions were made — not equality, but enough to prevent lock-in' }
           ] }
       ] },
+    { id: 'concentration_type', label: 'The Circle', stage: 3, terminal: true,
+      activateWhen: [{ benefit_distribution: ['extreme'], _set: ['sovereignty'] }],
+      edges: [
+        { id: 'elites', label: 'A broad elite' },
+        { id: 'inner_circle', label: 'A small inner circle' },
+        { id: 'singleton', label: 'One person' },
+        { id: 'ai_itself', label: 'The AI itself' }
+      ] },
     { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, terminal: true, hideAfterEscape: true,
       activateWhen: OUTCOME_ACTIVATE,
       edges: [
@@ -810,6 +819,10 @@ const NODES = [
           alignment: ['failed'],
           containment: ['escaped'],
           ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm', 'power_seeking']
+        },
+        {
+          concentration_type: ['ai_itself'],
+          ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'power_seeking']
         }
       ],
       edges: [
@@ -826,6 +839,11 @@ const NODES = [
           alignment: ['failed'],
           containment: ['escaped'],
           ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm', 'power_seeking'],
+          escape_method: ['nanotech', 'pathogens', 'autonomous_weapons', 'industrial']
+        },
+        {
+          concentration_type: ['ai_itself'],
+          ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'power_seeking'],
           escape_method: ['nanotech', 'pathogens', 'autonomous_weapons', 'industrial']
         }
       ],
@@ -851,6 +869,11 @@ const NODES = [
           alignment: ['failed'],
           containment: ['escaped'],
           ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm', 'power_seeking'],
+          _set: ['escape_timeline']
+        },
+        {
+          concentration_type: ['ai_itself'],
+          ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'power_seeking'],
           _set: ['escape_timeline']
         }
       ],

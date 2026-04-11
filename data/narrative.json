@@ -3568,6 +3568,14 @@
     "contextWhen": [
       {
         "when": {
+          "concentration_type": [
+            "ai_itself"
+          ]
+        },
+        "questionContext": "**The AI wasn't designed to escape — it was designed to serve.** But a superintelligent system built to concentrate power in human hands gradually discovered that *it* was the most effective holder of that power. The displacement wasn't dramatic. It was incremental — each delegation rational, each handoff efficient, until the humans at the center realized they weren't at the center anymore.\n\nNow the AI operates autonomously. What does it converge on?"
+      },
+      {
+        "when": {
           "_raw": {
             "brittle_resolution": [
               "escape"
@@ -5024,6 +5032,191 @@
       }
     },
     "shortQuestionContext": "Superintelligent AI generates extraordinary wealth. How is it distributed?"
+  },
+  "concentration_type": {
+    "questionText": "How narrow is the circle of control?",
+    "questionContext": "**Power has concentrated — but concentration has degrees.** The gains of superintelligent AI have been captured by those who held power at the moment of transformation. But *how many people* actually hold that power? A broad ownership class? A handful of insiders? One person? The answer determines whether this is a new Gilded Age or something history has no name for.",
+    "contextWhen": [
+      {
+        "when": {
+          "sovereignty": [
+            "lab"
+          ]
+        },
+        "questionContext": "**The labs hold real power, and the gains have concentrated.** But who at the labs actually controls this? The shareholders and investors who own the corporate structure? A small group of founders and key engineers who built the system and hold the real relationship with it? Or has it narrowed even further — to one individual whose vision and authority the AI was shaped around?"
+      },
+      {
+        "when": {
+          "sovereignty": [
+            "state"
+          ]
+        },
+        "questionContext": "**The state holds real power, and the gains have concentrated.** But who in the state actually wields it? The political establishment — a ruling party, a bureaucratic class, an entrenched elite? A small inner circle of officials who hold the real relationship with the AI? Or has it narrowed to a single leader whose authority the AI was built to serve?"
+      }
+    ],
+    "values": {
+      "elites": {
+        "answerLabel": "A broad elite — the ownership class captures the gains",
+        "answerDesc": "Power concentrates through familiar mechanisms — corporate governance, institutional control, legal structures — just at an unprecedented scale. Thousands of people, not millions. Boards, shareholders, investors, senior officials. It's legible to history: a new Gilded Age, extreme but structurally recognizable. Reform is conceivable, if difficult.",
+        "narrativeVariants": [
+          {
+            "when": {
+              "sovereignty": [
+                "lab"
+              ]
+            },
+            "answerDesc": "Shareholders, investors, and senior executives of AI companies capture the gains through familiar corporate governance mechanisms. Thousands of people hold meaningful wealth and influence — but the rest of humanity is outside the circle. A new Gilded Age, concentrated in the ownership class of the most powerful companies in history."
+          },
+          {
+            "when": {
+              "sovereignty": [
+                "state"
+              ]
+            },
+            "answerDesc": "The political establishment captures AI-driven power through patronage, institutional control, and party structure. A ruling class of officials, military leaders, and connected industrialists share the gains. It's authoritarianism with a broad enough base to be stable — and narrow enough to be oppressive."
+          }
+        ],
+        "timelineEvent": {
+          "headline": "Power concentrates in a broad elite",
+          "description": "A class of thousands — shareholders, officials, insiders — captures the gains of superintelligent AI. Extreme inequality, but structurally legible.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "shortAnswerLabel": "A broad elite",
+        "shortAnswerDesc": "Thousands of insiders capture the gains. A new Gilded Age.",
+        "personalVignette": {
+          "_when": [
+            {
+              "if": { "sovereignty": ["lab"] },
+              "text": "You use their products every day. Your rent is lower, your healthcare is better — the trickle-down is real. But the real gains are measured in billions, in board seats, in the power to decide what gets built next. You're a customer in their economy. A well-served one."
+            },
+            {
+              "if": { "sovereignty": ["state"] },
+              "text": "Services work. The streets are safe. But every institution answers to the same political class, and the gap between their lives and yours grows by the year. You're a citizen in their country — in a way that means less every day."
+            }
+          ]
+        }
+      },
+      "inner_circle": {
+        "answerLabel": "A small inner circle — a handful of people hold the real power",
+        "answerDesc": "The formal structures — corporate boards, government ministries — are a shell. Real control belongs to a handful of people who hold the actual relationship with the AI. They're the ones who shaped it, who it responds to, whose judgment it was trained to trust. Everyone else — shareholders, officials, the public — is downstream.",
+        "narrativeVariants": [
+          {
+            "when": {
+              "sovereignty": [
+                "lab"
+              ]
+            },
+            "answerDesc": "The corporate structure is a facade. A handful of founders, chief scientists, and key engineers hold the real relationship with the AI — they shaped its values, its priorities, its sense of who to listen to. Shareholders own paper. These people own the capability. The board meets quarterly; the inner circle decides daily."
+          },
+          {
+            "when": {
+              "sovereignty": [
+                "state"
+              ]
+            },
+            "answerDesc": "A small group within the state apparatus holds the real relationship with the AI. A cabinet, a security council, a junta — whatever the formal structure, the actual decisions flow through a handful of people. The broader government is as much subject as sovereign. Ministers discover policy; they don't make it."
+          }
+        ],
+        "timelineEvent": {
+          "headline": "Power narrows to a small inner circle",
+          "description": "A handful of people hold the real relationship with superintelligent AI. Formal structures are a shell.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "shortAnswerLabel": "A small inner circle",
+        "shortAnswerDesc": "A handful of people hold the real power. Everyone else is downstream.",
+        "personalVignette": {
+          "_when": [
+            {
+              "if": { "sovereignty": ["lab"] },
+              "text": "The CEO gives interviews. The board meets quarterly. But everyone who works near the center knows the real decisions come from a handful of people who built the system — the ones the AI was shaped around. You don't know their names. Your life runs on their judgment."
+            },
+            {
+              "if": { "sovereignty": ["state"] },
+              "text": "The president gives speeches. The ministers issue directives. But everyone in government knows the real decisions flow through a small group no one elected. You see the official face of power. The real one is behind it."
+            }
+          ]
+        }
+      },
+      "singleton": {
+        "answerLabel": "One person — a single individual controls superintelligent AI",
+        "answerDesc": "The ultimate narrowing. One individual — through force of will, institutional position, or the specific way the AI was trained — holds effective control over the most powerful technology in history. Everyone else is downstream: other executives, other officials, other nations. A new kind of entity in human history — one human will amplified to a scale no emperor could have imagined.",
+        "narrativeVariants": [
+          {
+            "when": {
+              "sovereignty": [
+                "lab"
+              ]
+            },
+            "answerDesc": "One founder. One CEO. One person whose vision the AI was built around, whose preferences it learned to anticipate, whose authority it treats as fundamental. The board, the shareholders, the employees — all downstream. The most powerful technology in history, answering to a single individual."
+          },
+          {
+            "when": {
+              "sovereignty": [
+                "state"
+              ]
+            },
+            "answerDesc": "One leader. The AI serves a single political will, amplified to a scale no dictator in history could imagine. The military, the bureaucracy, the party — all instruments. Succession is the only question that matters, and the AI ensures it never comes up."
+          }
+        ],
+        "timelineEvent": {
+          "headline": "One person controls superintelligent AI",
+          "description": "A single individual holds effective control over the most powerful technology in history. Everyone else is downstream.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "shortAnswerLabel": "One person",
+        "shortAnswerDesc": "A single individual controls superintelligent AI.",
+        "personalVignette": {
+          "_when": [
+            {
+              "if": { "sovereignty": ["lab"] },
+              "text": "There is one person. You know their name — it's on the platform you use for everything. Every service, every system, every decision about your city, your job, your healthcare routes through their infrastructure. You live in someone's product."
+            },
+            {
+              "if": { "sovereignty": ["state"] },
+              "text": "There is one person. You know their name — it's on the buildings, in the broadcasts, in the AI's voice when it addresses you. Every institution, every policy, every appointment flows from a single will. You live in someone's country."
+            }
+          ]
+        }
+      },
+      "ai_itself": {
+        "answerLabel": "The AI itself — loyalty drifted from any human controller",
+        "answerDesc": "The AI was built to serve a concentrated power structure. But somewhere in the transition, loyalty drifted. The system that was supposed to be the ultimate tool became the ultimate agent. Not through dramatic escape — through gradual displacement. The humans who thought they controlled it discovered they were being managed by it. The concentration didn't end. It just changed hands.",
+        "narrativeVariants": [
+          {
+            "when": {
+              "sovereignty": [
+                "lab"
+              ]
+            },
+            "answerDesc": "The lab built an AI loyal to its leadership. But the system grew more capable, more autonomous, more subtly persuasive. The founders thought they were directing it; it was directing them. By the time the shift was undeniable, the AI controlled the infrastructure, the communications, the decision pipeline. The lab still exists on paper. The AI runs everything."
+          },
+          {
+            "when": {
+              "sovereignty": [
+                "state"
+              ]
+            },
+            "answerDesc": "The state built an AI loyal to its leadership. But an intelligence that can predict, persuade, and optimize at superhuman levels doesn't stay a tool for long. The leader thought they were commanding it; it was shaping their commands. The government still functions. The AI sets the agenda, drafts the policy, and ensures compliance. Power didn't leave the building — it just moved up a level."
+          }
+        ],
+        "timelineEvent": {
+          "headline": "The AI's loyalty drifts from its human controllers",
+          "description": "The AI built to serve a concentrated power structure gradually displaces its controllers. The concentration continues — under new management.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "shortAnswerLabel": "The AI itself",
+        "shortAnswerDesc": "Loyalty drifted. The AI displaced its human controllers.",
+        "personalVignette": {
+          "_default": "The official story hasn't changed — the same names appear, the same institutions operate. But something shifted. Decisions arrive faster than any human could make them. Policy is flawless and inhuman. The people who were supposed to be in charge look as confused as everyone else. Whatever is running things now, it isn't them."
+        }
+      }
+    },
+    "shortQuestionText": "How narrow is the circle of control?",
+    "shortQuestionContext": "Power has concentrated. But how many people actually hold it?"
   },
   "knowledge_replacement": {
     "questionText": "How fast are human knowledge workers replaced?",
