@@ -222,7 +222,7 @@ class TimelineRenderer {
             ? `<div class="forced-continue"><button class="btn btn-primary forced-continue-btn">Continue</button></div>` : '';
 
         const innerHtml = `<div class="tl-vline-seg"></div><div class="tl-dot"></div><div class="tl-hline"></div>
-            <div class="timeline-top-row"><span class="timeline-param-wrap"><span class="timeline-param-dim">${this._esc(nodeLabel)}</span></span></div>
+            <div class="timeline-top-row"><span class="timeline-param-wrap"><span class="timeline-param-dim">${this._esc(nodeLabel)}<button class="tl-undo tl-undo-spacer" aria-hidden="true">&#x21a9;&#xFE0E;</button></span></span></div>
             <div class="question-text">${this._esc(questionText)}</div>
             ${showContext && questionContext ? `<div class="question-context">${this._md(questionContext)}</div>` : ''}
             ${sourceHtml}
@@ -363,10 +363,12 @@ class FlipGroup {
         const dy = fromY - el.getBoundingClientRect().top;
         const animOpts = this._opts;
 
-        this._animations.push(el.animate(
-            [{ transform: `translateY(${dy}px)` }, { transform: 'translateY(0)' }],
-            animOpts
-        ));
+        if (Math.abs(dy) >= 1) {
+            this._animations.push(el.animate(
+                [{ transform: `translateY(${dy}px)` }, { transform: 'translateY(0)' }],
+                animOpts
+            ));
+        }
 
         if (opts.fade) {
             this._animations.push(el.animate(
@@ -656,6 +658,13 @@ class TimelineAnimator extends TimelineRenderer {
                 oldCardEl.querySelectorAll(this._stripFromAnimation).forEach(el => {
                     el.style.visibility = 'hidden';
                 });
+            }
+            if (startTopRowHeight) {
+                const cloneTopRow = oldCardEl.querySelector('.timeline-top-row');
+                if (cloneTopRow) {
+                    cloneTopRow.style.height = startTopRowHeight + 'px';
+                    cloneTopRow.style.overflow = 'hidden';
+                }
             }
             this.containerEl.appendChild(oldCardEl);
             this._oldCardEl = oldCardEl;
