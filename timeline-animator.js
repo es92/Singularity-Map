@@ -443,11 +443,14 @@ class TimelineAnimator extends TimelineRenderer {
     _captureStartState(card) {
         const outcomeVisible = this.outcomeEl && this.outcomeEl.style.display !== 'none' && this.outcomeEl.innerHTML.trim() !== '';
         const topRow = card.querySelector('.timeline-top-row');
+        const paramDim = card.querySelector('.timeline-param-dim');
+        const cardRect = card.getBoundingClientRect();
         return {
-            startCardRect: card.getBoundingClientRect(),
+            startCardRect: cardRect,
             startCardContent: card.innerHTML,
             startCardClassName: card.className,
             startTopRowHeight: topRow ? topRow.offsetHeight : 0,
+            startLabelInternalOffset: paramDim ? paramDim.getBoundingClientRect().top - cardRect.top : 0,
             startOutcomeTop: this.outcomeEl ? this.outcomeEl.getBoundingClientRect().top : 0,
             startOutcomeVisible: outcomeVisible,
         };
@@ -505,7 +508,7 @@ class TimelineAnimator extends TimelineRenderer {
     // 6. Cleanup: remove old card, done
     // ------------------------------------------------------------------
 
-    _runAnimation({ startCardRect, startCardContent, startCardClassName, startTopRowHeight, startOutcomeTop, startOutcomeVisible, applyEndState, onComplete, fadeFooterIn }) {
+    _runAnimation({ startCardRect, startCardContent, startCardClassName, startTopRowHeight, startLabelInternalOffset, startOutcomeTop, startOutcomeVisible, applyEndState, onComplete, fadeFooterIn }) {
         const DURATION = this.morphDuration;
         const EASING = 'ease-in-out';
 
@@ -587,6 +590,22 @@ class TimelineAnimator extends TimelineRenderer {
             )).filter(c => !stripSel || !c.matches(stripSel));
             const dy = flip.slide(el, startCardRect.top, { fadeChildren });
             eventDys.push(dy);
+
+            if (startLabelInternalOffset != null && stripSel) {
+                const labelEl = el.querySelector(stripSel);
+                if (labelEl) {
+                    const elRect = el.getBoundingClientRect();
+                    const labelRect = labelEl.getBoundingClientRect();
+                    const newOffset = labelRect.top - elRect.top;
+                    const compensation = startLabelInternalOffset - newOffset;
+                    if (Math.abs(compensation) >= 1) {
+                        flip._animations.push(labelEl.animate(
+                            [{ transform: `translateY(${compensation}px)` }, { transform: 'translateY(0)' }],
+                            { duration: DURATION, easing: EASING, fill: 'none' }
+                        ));
+                    }
+                }
+            }
         });
 
         newHeaders.forEach(el => {
