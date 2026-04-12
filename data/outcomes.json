@@ -604,6 +604,20 @@
           "benefit_distribution": [
             "unequal"
           ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "ai_goals": [
+            "benevolent"
+          ],
+          "asi_threshold": [
+            "never"
+          ],
+          "benefit_distribution": [
+            "unequal"
+          ]
         }
       ],
       "story": [],
@@ -959,6 +973,20 @@
             "extreme"
           ],
           "_not": { "concentration_type": ["ai_itself"] }
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "ai_goals": [
+            "benevolent"
+          ],
+          "asi_threshold": [
+            "never"
+          ],
+          "benefit_distribution": [
+            "extreme"
+          ]
         }
       ],
       "story": [],
@@ -1547,6 +1575,20 @@
           ],
           "post_war_aims": [
             "self_interest"
+          ],
+          "benefit_distribution": [
+            "equal"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "ai_goals": [
+            "benevolent"
+          ],
+          "asi_threshold": [
+            "never"
           ],
           "benefit_distribution": [
             "equal"
@@ -2822,7 +2864,7 @@
           "autonomous_weapons": "The Army",
           "industrial": "The Conversion"
         },
-        "escape_timeline": "The Timeline",
+        "escape_timeline": "Execution Speed",
         "concentration_type": "The Takeover",
         "benefit_distribution": "The Economy",
         "knowledge_replacement": "Knowledge Work",
@@ -3010,7 +3052,28 @@
             "escaped"
           ],
           "ai_goals": [
-            "benevolent",
+            "benevolent"
+          ],
+          "_not": {
+            "catch_outcome": [
+              "holds_permanently"
+            ],
+            "asi_threshold": [
+              "never"
+            ]
+          }
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "escaped"
+          ],
+          "ai_goals": [
             "paperclip",
             "power_seeking"
           ],
@@ -3025,7 +3088,19 @@
             "ai_itself"
           ],
           "ai_goals": [
-            "benevolent",
+            "benevolent"
+          ],
+          "_not": {
+            "asi_threshold": [
+              "never"
+            ]
+          }
+        },
+        {
+          "concentration_type": [
+            "ai_itself"
+          ],
+          "ai_goals": [
             "paperclip",
             "power_seeking"
           ]
@@ -3060,7 +3135,7 @@
           "autonomous_weapons": "The Instruments",
           "industrial": "The Conversion"
         },
-        "escape_timeline": "The Timeline",
+        "escape_timeline": "Execution Speed",
         "concentration_type": "The Takeover",
         "catch_outcome": {
           "holds_temporarily": "The Warning",
@@ -3211,7 +3286,7 @@
           "autonomous_weapons": "Machine War",
           "industrial": "The Fiefdoms"
         },
-        "escape_timeline": "The Timeline",
+        "escape_timeline": "Execution Speed",
         "catch_outcome": {
           "holds_temporarily": "The Warning",
           "never_stopped": "The Swarm"

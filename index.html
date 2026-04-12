@@ -249,7 +249,7 @@
             padding: 3rem 2rem 2.5rem;
             text-align: center;
             overflow: hidden;
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
         }
         .outcome-hero-inner {
             position: relative; z-index: 1;
@@ -343,99 +343,61 @@
         .mood-mixed    { background: rgba(255,170,34,0.12); color: var(--mood-mixed);    border: 1px solid rgba(255,170,34,0.25); }
         .mood-stagnant { background: rgba(120,136,170,0.12);color: var(--mood-stagnant); border: 1px solid rgba(120,136,170,0.25); }
 
-        /* ---- Narrative ---- */
-        .outcome-narrative { max-width: 640px; margin: 0 auto 2rem; }
-        .outcome-vignettes { display: flex; flex-direction: column; gap: 1.25rem; }
-        .outcome-vignette {
-            display: flex; gap: 1.5rem; align-items: baseline;
-        }
-        .vignette-title {
-            flex: 0 0 140px; font-size: 0.85rem; font-weight: 600;
-            color: var(--text-dim); text-align: right; line-height: 1.75;
-        }
-        .vignette-year {
-            display: block; font-size: 0.78rem; font-weight: 400;
-            opacity: 0.7; letter-spacing: 0.03em;
-        }
-        .vignette-text {
-            flex: 1; font-size: 0.95rem; line-height: 1.75;
-            color: var(--text-secondary);
-        }
-
-        /* ---- Markdown content in outcome body text ---- */
-        .outcome-summary > :first-child,
-        .vignette-text > :first-child { margin-top: 0; }
-        .outcome-summary > :last-child,
-        .vignette-text > :last-child { margin-bottom: 0; }
-        .outcome-summary p,
-        .vignette-text p { margin: 0.6em 0; }
-        .outcome-summary strong,
-        .vignette-text strong { font-weight: 600; color: var(--text); }
-        .outcome-summary em,
-        .vignette-text em { font-style: italic; }
-        .outcome-summary ul, .outcome-summary ol,
-        .vignette-text ul, .vignette-text ol { margin: 0.5em 0; padding-left: 1.4em; }
-        .outcome-summary li,
-        .vignette-text li { margin: 0.2em 0; }
-        .outcome-summary blockquote,
-        .vignette-text blockquote {
+        /* ---- Outcome summary markdown ---- */
+        .outcome-summary > :first-child { margin-top: 0; }
+        .outcome-summary > :last-child { margin-bottom: 0; }
+        .outcome-summary p { margin: 0.6em 0; }
+        .outcome-summary strong { font-weight: 600; color: var(--text); }
+        .outcome-summary em { font-style: italic; }
+        .outcome-summary ul, .outcome-summary ol { margin: 0.5em 0; padding-left: 1.4em; }
+        .outcome-summary li { margin: 0.2em 0; }
+        .outcome-summary blockquote {
             margin: 0.5em 0; padding: 0.3em 0.8em;
             border-left: 2px solid var(--accent); opacity: 0.85;
         }
-        .outcome-summary a,
-        .vignette-text a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+        .outcome-summary a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
 
-        /* ---- Personal Milestones ---- */
-        .personal-timeline {
-            max-width: 640px; margin: 2rem auto 0;
-            padding-bottom: 1rem;
-        }
-        .personal-timeline .timeline-stage-header { margin-top: 0; }
-        .personal-timeline .timeline-event { padding-top: 1.2rem; }
-        .personal-timeline .timeline-headline { font-size: 0.95rem; }
-        .personal-cta-card {
-            padding: 1.5rem;
-            border: 1px solid var(--border);
-            border-radius: 12px;
+        /* ---- Profession picker ---- */
+        .profession-picker {
+            max-width: 640px; margin: 0 auto;
+            padding: 0 0 0.5rem;
             text-align: center;
-            margin-top: 1rem;
         }
-        .personal-cta-title {
-            font-size: 1.1rem; font-weight: 600;
-            margin-bottom: 0.4rem;
+        .profession-picker .personal-label { text-align: center; }
+        .profession-picker .personal-pills { justify-content: center; }
+        .profession-picker-compact {
+            display: flex; align-items: center; justify-content: center;
+            gap: 0.5rem; padding: 0.75rem 0 0.25rem;
         }
-        .personal-cta-desc {
-            font-size: 0.88rem; color: var(--text-secondary);
-            margin-bottom: 1rem; line-height: 1.5;
+        .profession-selected-label {
+            font-size: 0.82rem; color: var(--text-dim); font-weight: 500;
         }
-        .personal-questions {
-            padding: 1.25rem 0;
+        .profession-edit-link {
+            font-size: 0.78rem; color: var(--accent);
+            background: none; border: none; cursor: pointer;
+            text-decoration: underline; text-underline-offset: 2px;
+            padding: 0;
         }
-        .personal-q { margin-bottom: 1.25rem; }
+
+        /* ---- Merged outcome timeline ---- */
+        .outcome-timeline {
+            max-width: 640px; margin: 0.5rem auto 1rem;
+            padding-bottom: 0;
+        }
+        .outcome-timeline .timeline-event { padding-top: 1.2rem; }
+        .world-dot {
+            background: transparent !important;
+            border: 1.5px solid var(--text-dim) !important;
+        }
+        .world-vignette-heading {
+            font-size: 0.82rem; font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        /* ---- Personal / pill styles ---- */
         .personal-label {
             display: block; font-size: 0.88rem; font-weight: 600;
             margin-bottom: 0.5rem; color: var(--text);
-        }
-        .personal-country-select {
-            width: 100%; padding: 0.6rem 2.2rem 0.6rem 0.85rem;
-            font-size: 0.9rem; border-radius: 20px;
-            border: 1px solid var(--border);
-            background: var(--bg); color: var(--text);
-            appearance: none; -webkit-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 0.85rem center;
-            cursor: pointer;
-            transition: border-color 0.15s ease;
-            line-height: 1.4;
-        }
-        .personal-country-select:hover {
-            border-color: var(--accent);
-        }
-        .personal-country-select:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
         }
         .personal-pills {
             display: flex; flex-wrap: wrap; gap: 0.4rem;
@@ -454,30 +416,6 @@
             background: var(--accent); color: var(--bg);
             border-color: var(--accent); font-weight: 600;
         }
-        .personal-submit {
-            margin-top: 0.75rem;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .personal-submit:disabled {
-            opacity: 0.4; cursor: not-allowed;
-        }
-        .personal-header-row {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0.5rem 0 0.25rem;
-            margin-bottom: 0.25rem;
-        }
-        .personal-context {
-            font-size: 0.82rem; color: var(--text-dim);
-            font-weight: 500;
-        }
-        .personal-edit-link {
-            font-size: 0.78rem; color: var(--accent);
-            background: none; border: none; cursor: pointer;
-            text-decoration: underline; text-underline-offset: 2px;
-            padding: 0;
-        }
         .personal-milestone .timeline-desc > :first-child { margin-top: 0; }
         .personal-milestone .timeline-desc > :last-child { margin-bottom: 0; }
         .personal-milestone .timeline-desc p { margin: 0.6em 0; }
@@ -485,15 +423,16 @@
         .personal-milestone .timeline-desc em { font-style: italic; }
         .personal-vignette-heading {
             font-size: 0.82rem; font-weight: 600;
-            color: var(--text);
-            opacity: 0.8;
         }
-        .personal-vignette-answer {
-            margin-left: 0.5em;
-            font-weight: 400;
-            color: var(--text-dim);
-        }
-        .personal-vignette-answer::before { content: '· '; }
+        .heading-professional { color: var(--accent-2); }
+        .heading-professional .timeline-year { color: var(--accent-2); }
+        .heading-personal { color: var(--text); }
+        .heading-personal .timeline-year { color: var(--text); }
+        .heading-death { color: var(--mood-dystopian); }
+        .heading-death .timeline-year { color: var(--mood-dystopian); }
+        .death-dot { background: var(--mood-dystopian) !important; }
+        .heading-world { color: var(--text-secondary); }
+        .heading-world .timeline-year { color: var(--text-secondary); }
 
         @media (max-width: 600px) {
             .personal-pills { gap: 0.35rem; }
@@ -528,7 +467,7 @@
         .outcome-links a:hover { color: var(--accent); }
         .share-section {
             text-align: center;
-            margin: 2rem 0;
+            margin: 1rem 0;
         }
         .share-label {
             font-size: 0.95rem;
@@ -732,8 +671,8 @@
             .map-toolbar { margin-left: -1rem; margin-right: -1rem; padding-left: 1rem; padding-right: 1rem; }
             .outcome-hero { padding: 2rem 1.25rem; }
             .outcome-hero .outcome-title { font-size: 2rem; }
-            .outcome-vignette { flex-direction: column; gap: 0.25rem; }
-            .vignette-title { text-align: left; flex: none; }
+            .profession-picker .personal-pills { gap: 0.35rem; }
+            .profession-picker .personal-pill { font-size: 0.78rem; padding: 0.3rem 0.6rem; }
         }
     </style>
 </head>
@@ -1154,7 +1093,10 @@
                     }
                 }
             }
-            const hasDeath = vignettes.some(v => deathNodes.has(v.nodeId));
+            for (const v of vignettes) {
+                if (deathNodes.has(v.nodeId)) v.death = true;
+            }
+            const hasDeath = vignettes.some(v => v.death);
             const reordered = vignettes.filter(v => !benefitNodes.has(v.nodeId) && !latePersonalNodes.has(v.nodeId));
             reordered.push(...vignettes.filter(v => latePersonalNodes.has(v.nodeId)));
             if (!hasDeath) {
@@ -1172,28 +1114,6 @@
                 }
             }
             return reordered;
-        }
-
-        function buildPersonalVignettesHtml(vignettes) {
-            if (!vignettes || vignettes.length === 0) return '';
-            let html = '';
-            let lastDateLabel = null;
-            for (let i = 0; i < vignettes.length; i++) {
-                const v = vignettes[i];
-                const dateLabel = v.dateInfo ? (v.dateInfo.rangeLabel || v.dateInfo.label) : null;
-                const showDate = dateLabel && (i === 0 || dateLabel !== lastDateLabel);
-                const yearHtml = showDate ? `<span class="timeline-year">${esc(dateLabel)}</span>` : '';
-                if (dateLabel) lastDateLabel = dateLabel;
-                html += `<div class="timeline-event personal-milestone scroll-reveal">
-                    <div class="tl-vline-seg"></div><div class="tl-dot"></div><div class="tl-hline"></div>
-                    <div class="timeline-top-row">
-                        <span class="personal-vignette-heading">${esc(v.category)}</span>
-                        ${yearHtml}
-                    </div>
-                    <div class="timeline-desc">${md(v.text)}</div>
-                </div>`;
-            }
-            return html;
         }
 
         function adjustPersonalVlines(container) {
@@ -1218,148 +1138,101 @@
             }
         }
 
-        function buildPersonalQuestionsHtml(worldState, existingAnswers) {
+        function buildProfessionPickerHtml() {
             if (!personalData) return '';
             const professions = personalData.professions;
-            const selProf = existingAnswers ? existingAnswers.profession : '';
+            const selProf = personalAnswers ? personalAnswers.profession : '';
 
-            let profPills = '';
-            for (const p of professions) {
-                const active = p.id === selProf ? ' active' : '';
-                profPills += `<button class="personal-pill${active}" data-prof="${esc(p.id)}">${esc(p.label)}</button>`;
-            }
-
-            return `<div class="personal-questions">
-                <div class="personal-q">
-                    <label class="personal-label">What do you do?</label>
-                    <div class="personal-pills personal-prof-pills">${profPills}</div>
-                </div>
-                <button class="btn btn-primary personal-submit" disabled>Show me</button>
-            </div>`;
-        }
-
-        function buildPersonalSectionHtml(stack, worldState, dateMap) {
-            if (!personalData) return '';
-
-            const stageHeader = `<div class="timeline-stage-header"><div class="tl-stage-bg"></div><span class="timeline-stage-label">How It Reaches You</span></div>`;
-
-            if (personalAnswers && personalAnswers.profession) {
-                const vignettes = resolvePersonalVignettes(stack, personalAnswers, dateMap);
-                if (vignettes.length === 0) return '';
-                const vignetteHtml = buildPersonalVignettesHtml(vignettes);
-                const profLabel = personalData.professions.find(p => p.id === personalAnswers.profession)?.label || personalAnswers.profession;
-                return `<div class="personal-timeline timeline">
-                    ${stageHeader}
-                    <div class="personal-header-row">
-                        <span class="personal-context">${esc(profLabel)}</span>
-                        <button class="personal-edit-link" data-action="personal-edit">Edit</button>
-                    </div>
-                    ${vignetteHtml}
+            if (selProf) {
+                const profLabel = personalData.professions.find(p => p.id === selProf)?.label || selProf;
+                return `<div class="profession-picker profession-picker-compact scroll-reveal">
+                    <span class="profession-selected-label">You work in: ${esc(profLabel)}</span>
+                    <button class="profession-edit-link" data-action="profession-expand">Edit</button>
                 </div>`;
             }
 
-            return `<div class="personal-timeline timeline" data-personal-state="cta">
-                ${stageHeader}
-                <div class="personal-cta-card scroll-reveal">
-                    <div class="personal-cta-title">What happens to you?</div>
-                    <div class="personal-cta-desc">See how this future plays out in your life — based on what you do. Nothing is collected or sent anywhere.</div>
-                    <button class="btn btn-primary" data-action="personal-start">Personalize this outcome</button>
-                </div>
+            let profPills = '';
+            for (const p of professions) {
+                profPills += `<button class="personal-pill" data-prof="${esc(p.id)}">${esc(p.label)}</button>`;
+            }
+
+            return `<div class="profession-picker scroll-reveal">
+                <label class="personal-label">What do you do?</label>
+                <div class="personal-pills personal-prof-pills">${profPills}</div>
             </div>`;
         }
 
-        function wirePersonalSection(container, stack, worldState, dateMap, onSave) {
-            if (!container) return;
-            const personalTl = container.querySelector('.personal-timeline');
-            if (personalTl && !personalTl.dataset.personalState) {
-                requestAnimationFrame(() => adjustPersonalVlines(personalTl));
-            }
+        function buildMergedVignettesHtml(resolved, stack, eff, dateMap) {
+            const worldItems = resolved.flavors.map(f => ({
+                type: 'world',
+                nodeId: f.nodeId,
+                heading: f.heading,
+                text: f.text,
+                dateInfo: dateMap[f.nodeId] || null,
+            }));
 
-            function showQuestions(section) {
-                section.dataset.personalState = 'questions';
-                const stageHeader = section.querySelector('.timeline-stage-header').outerHTML;
-                section.innerHTML = stageHeader + buildPersonalQuestionsHtml(worldState, personalAnswers);
-                wirePersonalQuestionHandlers(section, stack, worldState, dateMap, container, onSave);
-            }
-
-            const startBtn = container.querySelector('[data-action="personal-start"]');
-            if (startBtn) {
-                startBtn.addEventListener('click', () => {
-                    const section = container.querySelector('.personal-timeline');
-                    if (section) showQuestions(section);
-                });
-            }
-
-            const editBtn = container.querySelector('[data-action="personal-edit"]');
-            if (editBtn) {
-                editBtn.addEventListener('click', () => {
-                    const section = container.querySelector('.personal-timeline');
-                    if (section) showQuestions(section);
-                });
-            }
-        }
-
-        function wirePersonalQuestionHandlers(section, stack, worldState, dateMap, outcomeContainer, onSave) {
-            const profPills = section.querySelector('.personal-prof-pills');
-            const submitBtn = section.querySelector('.personal-submit');
-            let selectedProf = section.querySelector('.personal-prof-pills .active')?.dataset.prof || '';
-
-            function updateSubmitState() {
-                if (submitBtn) submitBtn.disabled = !selectedProf;
-            }
-
-            if (profPills) {
-                profPills.querySelectorAll('.personal-pill').forEach(pill => {
-                    pill.addEventListener('click', () => {
-                        profPills.querySelectorAll('.personal-pill').forEach(p => p.classList.remove('active'));
-                        pill.classList.add('active');
-                        selectedProf = pill.dataset.prof;
-                        updateSubmitState();
-                    });
-                });
-            }
-
-            if (submitBtn) {
-                submitBtn.addEventListener('click', () => {
-                    const answers = { profession: selectedProf };
-                    savePersonalAnswers(answers);
-                    if (onSave) onSave();
-
-                    const vignettes = resolvePersonalVignettes(stack, answers, dateMap);
-                    const stageHeader = section.querySelector('.timeline-stage-header').outerHTML;
-                    const profLabel = personalData.professions.find(p => p.id === selectedProf)?.label || selectedProf;
-                    section.innerHTML = stageHeader +
-                        `<div class="personal-header-row">
-                            <span class="personal-context">${esc(profLabel)}</span>
-                            <button class="personal-edit-link" data-action="personal-edit">Edit</button>
-                        </div>` +
-                        buildPersonalVignettesHtml(vignettes);
-                    section.dataset.personalState = 'vignettes';
-
-                    setupOutcomeReveals(section);
-                    requestAnimationFrame(() => adjustPersonalVlines(section));
-                    const editBtn = section.querySelector('[data-action="personal-edit"]');
-                    if (editBtn) {
-                        editBtn.addEventListener('click', () => {
-                            section.dataset.personalState = 'questions';
-                            const sh = section.querySelector('.timeline-stage-header').outerHTML;
-                            section.innerHTML = sh + buildPersonalQuestionsHtml(worldState, personalAnswers);
-                            wirePersonalQuestionHandlers(section, stack, worldState, dateMap, outcomeContainer, onSave);
-                        });
+            let personalItems = [];
+            if (personalAnswers && personalAnswers.profession) {
+                personalItems = resolvePersonalVignettes(stack, personalAnswers, dateMap);
+                const endMonths = dateMap._totalMonths || 0;
+                const endFm = formatMonths(endMonths);
+                const endDateInfo = { year: endFm.year, month: endFm.month, label: endFm.month + ' ' + endFm.year, _months: endMonths };
+                const terminalNodes = new Set(['escape_method', 'war_survivors']);
+                for (const v of personalItems) {
+                    if (!v.dateInfo || v.dateInfo._months == null || terminalNodes.has(v.nodeId)) {
+                        v.dateInfo = endDateInfo;
                     }
-                });
+                }
             }
 
-            section.querySelectorAll('.personal-aigeo-pills .personal-pill').forEach(pill => {
-                pill.addEventListener('click', () => {
-                    section.querySelectorAll('.personal-aigeo-pills .personal-pill').forEach(p => p.classList.remove('active'));
-                    pill.classList.add('active');
-                    selectedAiGeo = pill.dataset.aigeo;
-                    updateSubmitState();
-                });
+            const personalNodeIds = new Set(personalItems.map(v => v.nodeId));
+            const filtered = worldItems.filter(w => !personalNodeIds.has(w.nodeId));
+
+            const merged = [
+                ...filtered.filter(w => w.dateInfo && w.dateInfo._months != null),
+                ...personalItems.map(p => ({ ...p, type: 'personal' })),
+            ];
+
+            merged.sort((a, b) => {
+                const am = a.dateInfo && a.dateInfo._months != null ? a.dateInfo._months : Infinity;
+                const bm = b.dateInfo && b.dateInfo._months != null ? b.dateInfo._months : Infinity;
+                return am - bm;
             });
 
-            updateSubmitState();
+            if (merged.length === 0) return '';
+
+            let html = '';
+            let lastDateLabel = null;
+            for (let i = 0; i < merged.length; i++) {
+                const item = merged[i];
+                const dateLabel = item.dateInfo ? item.dateInfo.label : null;
+                const showDate = dateLabel && (i === 0 || dateLabel !== lastDateLabel || item.type === 'personal');
+                const yearHtml = showDate ? `<span class="timeline-year">${esc(dateLabel)}</span>` : '';
+                if (dateLabel) lastDateLabel = dateLabel;
+
+                if (item.type === 'personal') {
+                    const catClass = item.death ? 'heading-death' : (item.category === 'Professional Impact' ? 'heading-professional' : 'heading-personal');
+                    html += `<div class="timeline-event personal-milestone scroll-reveal">
+                        <div class="tl-vline-seg"></div><div class="tl-dot${item.death ? ' death-dot' : ''}"></div><div class="tl-hline"></div>
+                        <div class="timeline-top-row ${catClass}">
+                            <span class="personal-vignette-heading">${esc(item.category)}</span>
+                            ${yearHtml}
+                        </div>
+                        <div class="timeline-desc">${md(item.text)}</div>
+                    </div>`;
+                } else {
+                    html += `<div class="timeline-event world-milestone scroll-reveal">
+                        <div class="tl-vline-seg"></div><div class="tl-dot world-dot"></div><div class="tl-hline"></div>
+                        <div class="timeline-top-row heading-world">
+                            <span class="world-vignette-heading">${esc(item.heading)}</span>
+                            ${yearHtml}
+                        </div>
+                        <div class="timeline-desc">${md(item.text)}</div>
+                    </div>`;
+                }
+            }
+
+            return `<div class="outcome-timeline timeline">${html}</div>`;
         }
 
         // --- Analytics ---
@@ -2210,6 +2083,7 @@
                 }
                 const totalFm = formatMonths(cumulative);
                 map._totalYear = totalFm.year;
+                map._totalMonths = cumulative;
 
                 const sel = Engine.currentState(stack);
                 const agiVal = sel['agi_threshold'];
@@ -2230,7 +2104,7 @@
                         if (takeoffDur) {
                             const months = takeoffStart + takeoffDur * fraction;
                             const fm = formatMonths(months);
-                            map['agi_threshold'] = { year: fm.year, month: fm.month, label: fm.month + ' ' + fm.year };
+                            map['agi_threshold'] = { year: fm.year, month: fm.month, label: fm.month + ' ' + fm.year, _months: months };
                         }
                     }
                 }
@@ -2299,34 +2173,8 @@
                     </div>
                 </div>`;
 
-                const nodeOrder = Engine.displayOrder(stack).map(n => n.id);
-                const vignettes = resolved.flavors.slice().sort((a, b) => {
-                    const ai = nodeOrder.indexOf(a.nodeId);
-                    const bi = nodeOrder.indexOf(b.nodeId);
-                    return (ai === -1 ? Infinity : ai) - (bi === -1 ? Infinity : bi);
-                });
-
-                let vignettesHtml = '';
-                if (vignettes.length > 0) {
-                    vignettesHtml = '<div class="outcome-vignettes">';
-                    for (const v of vignettes) {
-                        const dateInfo = dateMap[v.nodeId];
-                        const yearHtml = dateInfo ? `<span class="vignette-year">${esc(dateInfo.label)}</span>` : '';
-                        vignettesHtml += `<div class="outcome-vignette scroll-reveal">
-                            <div class="vignette-title">${esc(v.heading)}${yearHtml}</div>
-                            <div class="vignette-text">${md(v.text)}</div>
-                        </div>`;
-                    }
-                    vignettesHtml += '</div>';
-                }
-
-                let narrativeHtml = '';
-                if (vignettesHtml) {
-                    narrativeHtml = `<div class="outcome-narrative">${vignettesHtml}</div>`;
-                }
-
-                const cumulativeMonths = timelineDurations.reduce((sum, d) => sum + d.current, 0);
-                const personalHtml = buildPersonalSectionHtml(stack, eff, dateMap);
+                const pickerHtml = buildProfessionPickerHtml();
+                const timelineHtml = buildMergedVignettesHtml(resolved, stack, eff, dateMap);
 
                 const ctaHtml = `<div class="share-section scroll-reveal">
                     <div class="share-label">Share This Future</div>
@@ -2350,7 +2198,7 @@
                     </div>
                 </div>`;
 
-                return heroHtml + narrativeHtml + ctaHtml + personalHtml + footerHtml;
+                return heroHtml + pickerHtml + timelineHtml + ctaHtml + footerHtml;
             }
 
             
@@ -2755,8 +2603,71 @@
                         const eff = Engine.resolvedState(Engine.currentState(stack));
                         const matchedT = templatesList.filter(t => Engine.templateMatches(t, eff));
                         if (matchedT.length > 0) {
-                            const personalDateMap = buildTimelineDateMap();
-                            wirePersonalSection(outcomeZone, stack, eff, personalDateMap, syncHash);
+                            const resolved = resolveTemplate(matchedT[0].id, eff);
+                            const dateMap = buildTimelineDateMap();
+
+                            function rerenderTimeline() {
+                                const tl = outcomeZone.querySelector('.outcome-timeline');
+                                const newHtml = buildMergedVignettesHtml(resolved, stack, eff, dateMap);
+                                if (tl) {
+                                    tl.outerHTML = newHtml;
+                                } else {
+                                    const picker = outcomeZone.querySelector('.profession-picker');
+                                    if (picker) picker.insertAdjacentHTML('afterend', newHtml);
+                                }
+                                const newTl = outcomeZone.querySelector('.outcome-timeline');
+                                if (newTl) {
+                                    setupOutcomeReveals(newTl);
+                                    requestAnimationFrame(() => adjustPersonalVlines(newTl));
+                                }
+                                syncHash();
+                            }
+
+                            function rerenderPicker() {
+                                const oldPicker = outcomeZone.querySelector('.profession-picker');
+                                if (!oldPicker) return;
+                                const newPickerHtml = buildProfessionPickerHtml();
+                                oldPicker.outerHTML = newPickerHtml;
+                                const newPicker = outcomeZone.querySelector('.profession-picker');
+                                if (newPicker) newPicker.classList.add('revealed');
+                                wirePicker();
+                            }
+
+                            function wirePicker() {
+                                outcomeZone.querySelectorAll('.personal-prof-pills .personal-pill').forEach(pill => {
+                                    pill.addEventListener('click', () => {
+                                        savePersonalAnswers({ profession: pill.dataset.prof });
+                                        rerenderPicker();
+                                        rerenderTimeline();
+                                    });
+                                });
+                                const editBtn = outcomeZone.querySelector('[data-action="profession-expand"]');
+                                if (editBtn) {
+                                    editBtn.addEventListener('click', () => {
+                                        const oldPicker = outcomeZone.querySelector('.profession-picker');
+                                        if (!oldPicker) return;
+                                        const professions = personalData.professions;
+                                        const selProf = personalAnswers ? personalAnswers.profession : '';
+                                        let pills = '';
+                                        for (const p of professions) {
+                                            const active = p.id === selProf ? ' active' : '';
+                                            pills += `<button class="personal-pill${active}" data-prof="${esc(p.id)}">${esc(p.label)}</button>`;
+                                        }
+                                        oldPicker.outerHTML = `<div class="profession-picker">
+                                            <label class="personal-label">What do you do?</label>
+                                            <div class="personal-pills personal-prof-pills">${pills}</div>
+                                        </div>`;
+                                        wirePicker();
+                                    });
+                                }
+                            }
+
+                            wirePicker();
+
+                            const outcomeTl = outcomeZone.querySelector('.outcome-timeline');
+                            if (outcomeTl) {
+                                requestAnimationFrame(() => adjustPersonalVlines(outcomeTl));
+                            }
                         }
                     } else {
                         outcomeZone.innerHTML = '';

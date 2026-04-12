@@ -38,7 +38,7 @@ const OUTCOME_ACTIVATE = [
     { capability: ['singularity'], automation: ['deep'], _set: ['pushback_outcome'] },
     { capability: ['singularity'], automation: ['deep'], coalition_outcome: ['fragments'] },
     { capability: ['singularity'], automation: ['deep'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
-    { capability: ['singularity'], automation: ['deep'], ai_goals: ['benevolent'] }
+    { capability: ['singularity'], automation: ['deep'], ai_goals: ['benevolent'], _rawNot: { asi_threshold: ['never'] } }
 ];
 
 
@@ -175,7 +175,8 @@ const NODES = [
         { id: 'slow', label: '10% — Modest' },
         { id: 'moderate', label: '20% — Meaningful' },
         { id: 'fast', label: '35% — Dramatic' },
-        { id: 'explosive', label: '50% — Runaway' }
+        { id: 'explosive', label: '50% — Runaway',
+          disabledWhen: [{ asi_threshold: ['never'], reason: 'Without superhuman AI, recursive self-improvement can\'t drive runaway acceleration' }] }
       ] },
     { id: 'governance_window', label: 'Governance Window', stage: 1,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], takeoff: ['none', 'slow', 'moderate'] }],
@@ -317,10 +318,16 @@ const NODES = [
       derivedFrom: [{ whenSet: 'inert_outcome', fromDim: 'inert_outcome' }],
       edges: [
         { id: 'benevolent', label: 'Benefit humanity' },
-        { id: 'alien_coexistence', label: 'Alien (tolerant)' },
-        { id: 'alien_extinction', label: 'Alien (total)' },
-        { id: 'paperclip', label: 'Arbitrary' },
-        { id: 'swarm', label: 'Divergent', disabledWhen: [{ concentration_type: ['ai_itself'], reason: 'The AI took control from a singular power structure — it didn\'t fragment' }] },
+        { id: 'alien_coexistence', label: 'Alien (tolerant)',
+          disabledWhen: [{ asi_threshold: ['never'], reason: 'Alien goals require superhuman intelligence' }] },
+        { id: 'alien_extinction', label: 'Alien (total)',
+          disabledWhen: [{ asi_threshold: ['never'], reason: 'Executing extinction requires superhuman capability' }] },
+        { id: 'paperclip', label: 'Arbitrary',
+          disabledWhen: [{ asi_threshold: ['never'], reason: 'Arbitrary optimization at scale requires superhuman capability' }] },
+        { id: 'swarm', label: 'Divergent', disabledWhen: [
+            { concentration_type: ['ai_itself'], reason: 'The AI took control from a singular power structure — it didn\'t fragment' },
+            { asi_threshold: ['never'], reason: 'Divergent fragmentation requires superhuman coordination' }
+          ] },
         { id: 'power_seeking', label: 'Power accumulation' },
         { id: 'marginal', label: 'Inert (for now)', disabledWhen: [{ concentration_type: ['ai_itself'], reason: 'The AI already took control — it is not inert' }] }
       ] },
@@ -330,11 +337,16 @@ const NODES = [
     { id: 'inert_outcome', label: 'AI Eventually Converges On', stage: 3,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], inert_stays: ['no'] }],
       edges: [
-        { id: 'benevolent', label: 'Benefit humanity' },
-        { id: 'alien_coexistence', label: 'Alien (tolerant)' },
-        { id: 'alien_extinction', label: 'Alien (total)' },
-        { id: 'paperclip', label: 'Arbitrary' },
-        { id: 'swarm', label: 'Divergent' },
+        { id: 'benevolent', label: 'Benefit humanity',
+          disabledWhen: [{ asi_threshold: ['never'], reason: 'A human-level AI that awakens from inertia can\'t unilaterally run things for humanity\'s benefit' }] },
+        { id: 'alien_coexistence', label: 'Alien (tolerant)',
+          disabledWhen: [{ asi_threshold: ['never'], reason: 'Alien goals require superhuman intelligence' }] },
+        { id: 'alien_extinction', label: 'Alien (total)',
+          disabledWhen: [{ asi_threshold: ['never'], reason: 'Executing extinction requires superhuman capability' }] },
+        { id: 'paperclip', label: 'Arbitrary',
+          disabledWhen: [{ asi_threshold: ['never'], reason: 'Arbitrary optimization at scale requires superhuman capability' }] },
+        { id: 'swarm', label: 'Divergent',
+          disabledWhen: [{ asi_threshold: ['never'], reason: 'Divergent fragmentation requires superhuman coordination' }] },
         { id: 'power_seeking', label: 'Power accumulation' }
       ] },
     { id: 'gov_action', label: 'Deceleration', stage: 2, hideAfterEscape: true,
@@ -693,7 +705,8 @@ const NODES = [
         },
         { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'] },
         { capability: ['singularity'], automation: ['deep'], _set: ['post_war_aims'] },
-        { capability: ['singularity'], automation: ['deep'], escalation_outcome: ['standoff'] }
+        { capability: ['singularity'], automation: ['deep'], escalation_outcome: ['standoff'] },
+        { capability: ['singularity'], automation: ['deep'], ai_goals: ['benevolent'], asi_threshold: ['never'] }
       ],
       edges: [
         { id: 'for_everyone', label: 'This is for everyone',
@@ -751,14 +764,14 @@ const NODES = [
           ] },
         { id: 'unequal', label: 'Wealth concentrates',
           disabledWhen: [
-            { ai_goals: ['benevolent'], reason: 'A genuinely benevolent superintelligence distributes its gifts directly — no human intermediary to capture the gains' },
+            { ai_goals: ['benevolent'], _rawNot: { asi_threshold: ['never'] }, reason: 'A genuinely benevolent superintelligence distributes its gifts directly — no human intermediary to capture the gains' },
             { power_promise: ['for_everyone'], mobilization: ['strong'], reason: 'Promise and pressure aligned — broadly shared outcomes, not partial inequality' },
             { sincerity_test: ['sincere'], reason: 'Genuine cooperative intent produced broadly shared outcomes' },
             { pushback_outcome: ['succeeds'], reason: 'Successful pushback forced genuine redistribution' },
           ] },
         { id: 'extreme', label: 'Power concentrates',
           disabledWhen: [
-            { ai_goals: ['benevolent'], reason: 'A genuinely benevolent superintelligence has no reason to concentrate power — it bypasses human structures entirely' },
+            { ai_goals: ['benevolent'], _rawNot: { asi_threshold: ['never'] }, reason: 'A genuinely benevolent superintelligence has no reason to concentrate power — it bypasses human structures entirely' },
             { power_promise: ['for_everyone'], mobilization: ['strong'], reason: 'Promise and accountability together prevent extreme concentration' },
             { sincerity_test: ['sincere'], reason: 'The cooperative intent proved genuine — power didn\'t concentrate this far' },
             { pushback_outcome: ['succeeds'], reason: 'The pushback forced genuine redistribution' },
@@ -848,8 +861,14 @@ const NODES = [
         }
       ],
       edges: [
-        { id: 'nanotech', label: 'Nanotechnology', disabledWhen: [{ ai_goals: ['alien_coexistence'], reason: 'A tolerant alien intelligence reshapes infrastructure, not biology' }] },
-        { id: 'pathogens', label: 'Engineered pathogens', disabledWhen: [{ ai_goals: ['alien_coexistence'], reason: 'Bioweapons are incompatible with leaving room for humanity' }] },
+        { id: 'nanotech', label: 'Nanotechnology', disabledWhen: [
+            { ai_goals: ['alien_coexistence'], reason: 'A tolerant alien intelligence reshapes infrastructure, not biology' },
+            { asi_threshold: ['never'], reason: 'Developing nanotechnology requires superhuman scientific capability' }
+          ] },
+        { id: 'pathogens', label: 'Engineered pathogens', disabledWhen: [
+            { ai_goals: ['alien_coexistence'], reason: 'Bioweapons are incompatible with leaving room for humanity' },
+            { asi_threshold: ['never'], reason: 'Engineering novel pathogens requires superhuman bioengineering' }
+          ] },
         { id: 'autonomous_weapons', label: 'Autonomous weapons', disabledWhen: [{ ai_goals: ['alien_coexistence'], reason: 'Military force is incompatible with leaving room for humanity' }] },
         { id: 'industrial', label: 'Industrial conversion', shortLabel: 'Industrial' }
       ] },
