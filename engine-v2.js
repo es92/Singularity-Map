@@ -35,17 +35,21 @@ function matchesDerivation(rule, sel) {
 function applyDerivations(derivations, sel, k) {
     for (const rule of derivations) {
         if (!matchesDerivation(rule, sel)) continue;
-        if (rule.fromDim) return sel[rule.fromDim];
+        if (rule.fromDim) return resolvedVal(sel, rule.fromDim);
         if (rule.valueMap) return rule.valueMap[sel[k]] ?? sel[k];
         return rule.value;
     }
     return undefined;
 }
 
+const _computing = new Set();
 function resolvedVal(sel, k) {
+    if (_computing.has(k)) return sel[k];
     const node = NODE_MAP[k];
     if (node && node.derivedFrom) {
+        _computing.add(k);
         const result = applyDerivations(node.derivedFrom, sel, k);
+        _computing.delete(k);
         if (result !== undefined) return result;
     }
     return sel[k];
