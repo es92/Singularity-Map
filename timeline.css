@@ -282,11 +282,7 @@ body::before {
     content: '';
     position: absolute;
     inset: 0;
-    background:
-        radial-gradient(ellipse at 25% 50%, var(--bg-glow-1) 0%, transparent 60%),
-        radial-gradient(ellipse at 75% 20%, var(--bg-glow-2) 0%, transparent 60%),
-        var(--bg);
-    background-attachment: fixed;
+    background: var(--bg);
     pointer-events: none;
     z-index: -1;
     animation: fade-in-cover var(--flip-duration, 1500ms) linear both;
