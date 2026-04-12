@@ -349,7 +349,7 @@ function displayOrder(stack) {
     for (const entry of stack) {
         if (!entry.nodeId) continue;
         const node = NODE_MAP[entry.nodeId];
-        if (!node || node.derived || !isNodeVisible(state, node)) continue;
+        if (!node || node.derived) continue;
         answered.push(node);
         answeredSet.add(entry.nodeId);
     }
@@ -384,14 +384,14 @@ function resolveContextWhen(sel, narr) {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { NODES, NODE_MAP,
-        matchCondition, resolvedVal, isNodeVisible, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
+        matchCondition, resolvedVal, isNodeVisible, isNodeActivatedByRules, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         cleanSelection, resolvedState,
         templateMatches, templatePartialMatch, resolveContextWhen,
         createStack, push, pop, popTo, currentState, stackHas, displayOrder };
 }
 if (typeof window !== 'undefined') {
     window.Engine = { NODES, NODE_MAP,
-        resolvedVal, isNodeVisible, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
+        matchCondition, resolvedVal, isNodeVisible, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         resolvedState,
         templateMatches, templatePartialMatch, resolveContextWhen,
         createStack, push, pop, popTo, currentState, stackHas, displayOrder };

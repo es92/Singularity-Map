@@ -1177,14 +1177,32 @@
             const benefitNodes = new Set([
                 'plateau_benefit_distribution', 'auto_benefit_distribution', 'benefit_distribution',
             ]);
-            const deathNodes = new Set([
-                'escape_method', 'war_survivors',
-            ]);
+            const deathNodes = new Set(['war_survivors']);
+            if (sel.response_success !== 'yes') deathNodes.add('escape_method');
+            if (sel.catch_outcome === 'holds_temporarily') {
+                const endDate = dateMap && dateMap['catch_outcome'];
+                if (endDate) {
+                    for (const v of vignettes) {
+                        if (deathNodes.has(v.nodeId)) v.dateInfo = endDate;
+                    }
+                }
+            }
             const hasDeath = vignettes.some(v => deathNodes.has(v.nodeId));
             const reordered = vignettes.filter(v => !benefitNodes.has(v.nodeId) && !latePersonalNodes.has(v.nodeId));
             reordered.push(...vignettes.filter(v => latePersonalNodes.has(v.nodeId)));
             if (!hasDeath) {
                 reordered.push(...vignettes.filter(v => benefitNodes.has(v.nodeId)));
+            }
+            let maxMonths = -1;
+            for (const v of reordered) {
+                if (v.dateInfo && v.dateInfo._months != null) {
+                    if (v.dateInfo._months < maxMonths) {
+                        const fm = formatMonths(maxMonths);
+                        v.dateInfo = { year: fm.year, month: fm.month, label: fm.month + ' ' + fm.year, _months: maxMonths };
+                    } else {
+                        maxMonths = v.dateInfo._months;
+                    }
+                }
             }
             return reordered;
         }
@@ -1575,35 +1593,214 @@
                 return lockedId ? templatesMap[lockedId] : null;
             }
 
-            function _enumerateDecelExits(s, seen, visited) {
-                const sel = Engine.currentState(s);
-                const decelKey = Object.keys(sel).filter(k => k.startsWith('decel_')).sort().map(k => k + '=' + sel[k]).join('&');
-                if (visited.has(decelKey)) return;
-                visited.add(decelKey);
+            // ─── Forward DFS with effective-value caching ────────────
 
-                for (const node of Engine.displayOrder(s)) {
-                    if (sel[node.id]) continue;
-                    if (!node.id.startsWith('decel_') || node.derived) continue;
-                    const locked = Engine.isNodeLocked(sel, node);
-                    if (locked !== null) {
-                        _enumerateDecelExits(Engine.push(s, node.id, locked), seen, visited);
-                        return;
+            const _derivableKeys = new Set(Engine.NODES.filter(n => n.derivedFrom).map(n => n.id));
+
+            function _computeRelevantDims(template, variantKey) {
+                const NODES = Engine.NODES;
+                const NODE_MAP = Engine.NODE_MAP;
+
+                const branchRelevant = new Set();
+                if (!template.reachable) return { branchRelevant, keyRelevant: [], equivMap: new Map(), rawKeyDims: new Set() };
+
+                for (const cond of template.reachable) {
+                    for (const k of Object.keys(cond)) {
+                        if (k === '_not') { for (const nk of Object.keys(cond._not)) branchRelevant.add(nk); }
+                        else branchRelevant.add(k);
                     }
-                    if (!Engine.isNodeVisible(sel, node)) continue;
-                    for (const e of node.edges) {
-                        if (Engine.isEdgeDisabled(sel, node, e)) continue;
-                        _enumerateDecelExits(Engine.push(s, node.id, e.id), seen, visited);
-                    }
-                    return;
                 }
-                const eff = Engine.resolvedState(sel);
-                const key = (eff.decel_outcome || '') + '|' + (eff.decel_align_progress || '');
-                if (!seen.has(key)) { seen.set(key, s); }
+                if (variantKey && template.primaryDimension) branchRelevant.add(template.primaryDimension);
+
+                let changed = true;
+                while (changed) {
+                    changed = false;
+                    for (const nid of [...branchRelevant]) {
+                        const node = NODE_MAP[nid];
+                        if (!node) continue;
+                        if (node.derivedFrom) for (const r of node.derivedFrom) {
+                            for (const src of [r.when, r.effective, r.unless]) {
+                                if (src) for (const k of Object.keys(src)) { if (!branchRelevant.has(k)) { branchRelevant.add(k); changed = true; } }
+                            }
+                            if (r.fromDim && !branchRelevant.has(r.fromDim)) { branchRelevant.add(r.fromDim); changed = true; }
+                            if (r.whenSet && !branchRelevant.has(r.whenSet)) { branchRelevant.add(r.whenSet); changed = true; }
+                        }
+                        if (node.activateWhen) for (const c of node.activateWhen) {
+                            for (const k of Object.keys(c)) {
+                                if (k === 'reason') continue;
+                                if (k === '_set' || k === '_notSet') { for (const sk of c[k]) { if (!branchRelevant.has(sk)) { branchRelevant.add(sk); changed = true; } } }
+                                else if (k === '_eff' || k === '_effNot' || k === '_raw' || k === '_rawNot') {
+                                    for (const sk of Object.keys(c[k])) { if (!branchRelevant.has(sk)) { branchRelevant.add(sk); changed = true; } }
+                                } else if (k === '_fn' || k === '_fnAnchor') { /* skip */ }
+                                else if (!branchRelevant.has(k)) { branchRelevant.add(k); changed = true; }
+                            }
+                        }
+                        if (node.edges) for (const e of node.edges) {
+                            const conds = [];
+                            if (e.disabledWhen) conds.push(...e.disabledWhen);
+                            if (e.requires) conds.push(...(Array.isArray(e.requires) ? e.requires : [e.requires]));
+                            for (const c of conds) {
+                                for (const k of Object.keys(c)) {
+                                    if (k.startsWith('_') || k === 'reason') continue;
+                                    if (!branchRelevant.has(k)) { branchRelevant.add(k); changed = true; }
+                                }
+                            }
+                        }
+                    }
+                    for (const hc of (window.Graph && window.Graph.SCENARIO && window.Graph.SCENARIO.hideConditions || [])) {
+                        const w = hc.when;
+                        let affectsRelevant = false;
+                        for (const nid of branchRelevant) { const nd = NODE_MAP[nid]; if (nd && nd[hc.flag]) { affectsRelevant = true; break; } }
+                        if (!affectsRelevant) continue;
+                        for (const k of Object.keys(w)) {
+                            if (k === '_set' || k === '_notSet') { for (const sk of w[k]) { if (!branchRelevant.has(sk)) { branchRelevant.add(sk); changed = true; } } }
+                            else if (k === '_raw' || k === '_rawNot' || k === '_eff' || k === '_effNot') {
+                                for (const sk of Object.keys(w[k])) { if (!branchRelevant.has(sk)) { branchRelevant.add(sk); changed = true; } }
+                            } else if (!k.startsWith('_') && k !== 'reason') { if (!branchRelevant.has(k)) { branchRelevant.add(k); changed = true; } }
+                        }
+                    }
+                }
+
+                const subsumed = new Set();
+                for (const nid of branchRelevant) {
+                    const node = NODE_MAP[nid];
+                    if (!node || !node.derivedFrom) continue;
+                    for (const r of node.derivedFrom) {
+                        if (r.when) for (const k of Object.keys(r.when)) subsumed.add(k);
+                        if (r.fromDim) subsumed.add(r.fromDim);
+                        if (r.whenSet) subsumed.add(r.whenSet);
+                        if (r.unless) for (const k of Object.keys(r.unless)) subsumed.add(k);
+                    }
+                }
+                const directlyReferenced = new Set();
+                for (const nid of branchRelevant) {
+                    const node = NODE_MAP[nid];
+                    if (!node) continue;
+                    if (node.activateWhen) for (const c of node.activateWhen) {
+                        for (const k of Object.keys(c)) {
+                            if (k === '_set' || k === '_notSet') { for (const sk of c[k]) directlyReferenced.add(sk); }
+                            else if (k === '_eff' || k === '_effNot' || k === '_raw' || k === '_rawNot') { for (const sk of Object.keys(c[k])) directlyReferenced.add(sk); }
+                            else if (!k.startsWith('_') && k !== 'reason') directlyReferenced.add(k);
+                        }
+                    }
+                    if (node.edges) for (const e of node.edges) {
+                        const conds = [];
+                        if (e.disabledWhen) conds.push(...e.disabledWhen);
+                        if (e.requires) conds.push(...(Array.isArray(e.requires) ? e.requires : [e.requires]));
+                        for (const c of conds) {
+                            for (const k of Object.keys(c)) { if (!k.startsWith('_') && k !== 'reason') directlyReferenced.add(k); }
+                        }
+                    }
+                    if (node.derivedFrom) for (const r of node.derivedFrom) {
+                        if (r.effective) for (const k of Object.keys(r.effective)) directlyReferenced.add(k);
+                    }
+                }
+                for (const hc of (window.Graph && window.Graph.SCENARIO && window.Graph.SCENARIO.hideConditions || [])) {
+                    let affectsRelevant = false;
+                    for (const nid of branchRelevant) { const nd = NODE_MAP[nid]; if (nd && nd[hc.flag]) { affectsRelevant = true; break; } }
+                    if (!affectsRelevant) continue;
+                    const w = hc.when;
+                    for (const k of Object.keys(w)) {
+                        if (k === '_set' || k === '_notSet') { for (const sk of w[k]) directlyReferenced.add(sk); }
+                        else if (k === '_raw' || k === '_rawNot' || k === '_eff' || k === '_effNot') { for (const sk of Object.keys(w[k])) directlyReferenced.add(sk); }
+                        else if (!k.startsWith('_') && k !== 'reason') directlyReferenced.add(k);
+                    }
+                }
+
+                const keyRelevantSet = new Set();
+                for (const nid of branchRelevant) {
+                    if (/^decel_\d+mo_/.test(nid)) continue;
+                    if (subsumed.has(nid) && !directlyReferenced.has(nid)) continue;
+                    keyRelevantSet.add(nid);
+                }
+                for (const cond of template.reachable) {
+                    for (const k of Object.keys(cond)) {
+                        if (k === '_not') { for (const nk of Object.keys(cond._not)) keyRelevantSet.add(nk); }
+                        else keyRelevantSet.add(k);
+                    }
+                }
+                if (variantKey && template.primaryDimension) keyRelevantSet.add(template.primaryDimension);
+                const keyRelevant = [...keyRelevantSet].sort();
+
+                const rawKeyDims = new Set();
+                for (const nid of branchRelevant) {
+                    const node = NODE_MAP[nid];
+                    if (!node) continue;
+                    if (node.activateWhen) for (const c of node.activateWhen) {
+                        if (c._raw) for (const k of Object.keys(c._raw)) { if (_derivableKeys.has(k)) rawKeyDims.add(k); }
+                        if (c._rawNot) for (const k of Object.keys(c._rawNot)) { if (_derivableKeys.has(k)) rawKeyDims.add(k); }
+                    }
+                }
+                for (const hc of (window.Graph && window.Graph.SCENARIO && window.Graph.SCENARIO.hideConditions || [])) {
+                    let affectsRelevant = false;
+                    for (const nid of branchRelevant) { const nd = NODE_MAP[nid]; if (nd && nd[hc.flag]) { affectsRelevant = true; break; } }
+                    if (!affectsRelevant) continue;
+                    const w = hc.when;
+                    if (w._raw) for (const k of Object.keys(w._raw)) { if (_derivableKeys.has(k)) rawKeyDims.add(k); }
+                    if (w._rawNot) for (const k of Object.keys(w._rawNot)) { if (_derivableKeys.has(k)) rawKeyDims.add(k); }
+                }
+
+                const condValueLists = new Map();
+                for (const nid of branchRelevant) {
+                    const node = NODE_MAP[nid];
+                    if (!node) continue;
+                    const collectFromCond = (c) => {
+                        for (const [k, vals] of Object.entries(c)) {
+                            if (k.startsWith('_') || k === 'reason') continue;
+                            if (!keyRelevantSet.has(k)) continue;
+                            const nd = NODE_MAP[k];
+                            if (nd && nd.derivedFrom) continue;
+                            if (rawKeyDims.has(k)) continue;
+                            if (!condValueLists.has(k)) condValueLists.set(k, []);
+                            const key = Array.isArray(vals) ? vals.slice().sort().join(',') : String(vals);
+                            condValueLists.get(k).push(key);
+                        }
+                    };
+                    if (node.activateWhen) for (const c of node.activateWhen) collectFromCond(c);
+                    if (node.edges) for (const e of node.edges) {
+                        if (e.disabledWhen) for (const c of e.disabledWhen) collectFromCond(c);
+                        if (e.requires) for (const c of (Array.isArray(e.requires) ? e.requires : [e.requires])) collectFromCond(c);
+                    }
+                    if (node.derivedFrom) for (const r of node.derivedFrom) {
+                        if (r.when) collectFromCond(r.when);
+                        if (r.effective) collectFromCond(r.effective);
+                    }
+                }
+
+                const equivMap = new Map();
+                for (const [dim, lists] of condValueLists) {
+                    const node = NODE_MAP[dim];
+                    if (!node || !node.edges) continue;
+                    const uniqueLists = [...new Set(lists)];
+                    const valSets = uniqueLists.map(l => new Set(l.split(',')));
+                    const signatureOf = (v) => valSets.map(s => s.has(v) ? '1' : '0').join('');
+                    const signatures = new Map();
+                    for (const e of node.edges) {
+                        const sig = signatureOf(e.id);
+                        if (!signatures.has(sig)) signatures.set(sig, signatures.size);
+                    }
+                    if (signatures.size < node.edges.length) {
+                        const sigMap = {};
+                        for (const e of node.edges) sigMap[e.id] = signatures.get(signatureOf(e.id));
+                        equivMap.set(dim, (v) => sigMap[v] !== undefined ? sigMap[v] : v);
+                    }
+                }
+
+                return { branchRelevant, keyRelevant, equivMap, rawKeyDims };
             }
 
-            const _derivableKeys = new Set();
-            for (const [nid, n] of Object.entries(Engine.NODE_MAP)) {
-                if (n.derivedFrom && n.derivedFrom.length > 0) _derivableKeys.add(nid);
+            function _effectiveKey(sel, eff, keyRelevant, equivMap, rawKeyDims) {
+                let key = '';
+                for (const k of keyRelevant) {
+                    const v = eff[k];
+                    if (!v) continue;
+                    const eq = equivMap.get(k);
+                    key += k + '=' + (eq ? eq(v) : v) + '|';
+                }
+                for (const k of rawKeyDims) {
+                    if (sel[k]) key += k + '.r=' + sel[k] + '|';
+                }
+                return key;
             }
 
             function _couldDeriveTo(nodeId, allowed, sel) {
@@ -1645,82 +1842,221 @@
                 });
             }
 
-            function _getRelevantNodes(template, variantKey) {
-                const rel = new Set();
-                if (!template.reachable) return rel;
-                for (const cond of template.reachable) {
+            // ─── Dependency map for targeted cleanSelection ─────
+            const _cleanDeps = new Map();
+            (function _buildCleanDeps() {
+                const NODES = Engine.NODES;
+                const addDep = (dim, nodeId) => {
+                    if (!_cleanDeps.has(dim)) _cleanDeps.set(dim, []);
+                    const arr = _cleanDeps.get(dim);
+                    if (!arr.includes(nodeId)) arr.push(nodeId);
+                };
+                const extractDims = (cond) => {
+                    const dims = new Set();
+                    if (!cond) return dims;
                     for (const k of Object.keys(cond)) {
-                        if (k === '_not') { for (const nk of Object.keys(cond._not)) rel.add(nk); }
-                        else rel.add(k);
+                        if (k === 'reason') continue;
+                        if (k === '_set' || k === '_notSet') { for (const sk of cond[k]) dims.add(sk); }
+                        else if (k === '_raw' || k === '_rawNot' || k === '_eff' || k === '_effNot') {
+                            for (const sk of Object.keys(cond[k])) dims.add(sk);
+                        } else if (k === '_fn' || k === '_fnAnchor') { /* handled separately */ }
+                        else if (!k.startsWith('_')) dims.add(k);
                     }
-                }
-                if (variantKey && template.primaryDimension) rel.add(template.primaryDimension);
-                let changed = true;
-                while (changed) { changed = false;
-                    for (const nid of [...rel]) {
-                        const node = Engine.NODE_MAP[nid]; if (!node) continue;
-                        if (node.derivedFrom) for (const r of node.derivedFrom) {
-                            if (r.when) for (const tk of Object.keys(r.when)) { if (!rel.has(tk)) { rel.add(tk); changed = true; } }
-                            if (r.effective) for (const ek of Object.keys(r.effective)) { if (!rel.has(ek)) { rel.add(ek); changed = true; } }
-                            if (r.fromDim && !rel.has(r.fromDim)) { rel.add(r.fromDim); changed = true; }
-                            if (r.whenSet && !rel.has(r.whenSet)) { rel.add(r.whenSet); changed = true; }
-                        }
-                        if (node.activateWhen) for (const c of node.activateWhen) {
-                            for (const k of Object.keys(c)) { if (!k.startsWith('_') && !rel.has(k)) { rel.add(k); changed = true; } }
+                    return dims;
+                };
+                for (const node of NODES) {
+                    const deps = new Set();
+                    if (node.activateWhen) for (const c of node.activateWhen) {
+                        for (const d of extractDims(c)) deps.add(d);
+                        if (c._fn === 'allPrecedingAnswered') {
+                            const anchor = c._fnAnchor;
+                            const anchorIdx = anchor ? NODES.findIndex(n => n.id === anchor) : -1;
+                            const nodeIdx = NODES.indexOf(node);
+                            for (let i = anchorIdx + 1; i < nodeIdx; i++) {
+                                const mid = NODES[i];
+                                if (!mid.terminal && !mid.derived) deps.add(mid.id);
+                            }
                         }
                     }
+                    if (node.edges) for (const e of node.edges) {
+                        if (e.disabledWhen) for (const c of e.disabledWhen) for (const d of extractDims(c)) deps.add(d);
+                        if (e.requires) for (const c of (Array.isArray(e.requires) ? e.requires : [e.requires])) for (const d of extractDims(c)) deps.add(d);
+                    }
+                    if (node.derivedFrom) for (const r of node.derivedFrom) {
+                        if (r.when) for (const k of Object.keys(r.when)) deps.add(k);
+                        if (r.effective) for (const k of Object.keys(r.effective)) deps.add(k);
+                        if (r.unless) for (const k of Object.keys(r.unless)) deps.add(k);
+                        if (r.fromDim) deps.add(r.fromDim);
+                        if (r.whenSet) deps.add(r.whenSet);
+                    }
+                    for (const dim of deps) addDep(dim, node.id);
                 }
-                return rel;
-            }
+                const hcRules = (window.Graph && window.Graph.SCENARIO && window.Graph.SCENARIO.hideConditions) || [];
+                for (const hc of hcRules) {
+                    const flaggedNodes = NODES.filter(n => n[hc.flag]).map(n => n.id);
+                    const condDims = extractDims(hc.when);
+                    for (const dim of condDims) for (const nid of flaggedNodes) addDep(dim, nid);
+                }
+            })();
 
-            const _reachCache = new Map();
-            let _reachRelevant = null;
-
-            function _canReach(s, template, variantKey, maxDepth) {
-                if (maxDepth <= 0) return false;
-                const sel = Engine.currentState(s);
-                const cacheKey = Object.keys(sel).sort().map(k => k + '=' + sel[k]).join('&');
-                if (_reachCache.has(cacheKey)) return _reachCache.get(cacheKey);
-
-                const eff = Engine.resolvedState(sel);
-                let result = false;
-
-                if (!_smartPartialMatch(template, eff, sel)) {
-                } else if (Engine.templateMatches(template, eff) && (!variantKey || !template.primaryDimension || eff[template.primaryDimension] === variantKey)) {
-                    result = true;
-                } else {
-                    for (const node of Engine.displayOrder(s)) {
-                        if (sel[node.id]) continue;
+            function _targetedClean(sel, changedDim) {
+                const affected = _cleanDeps.get(changedDim);
+                if (!affected) return;
+                const worklist = [];
+                for (const nid of affected) worklist.push(nid);
+                const inWorklist = new Set(worklist);
+                const derivedCascaded = new Set();
+                let idx = 0;
+                while (idx < worklist.length) {
+                    const nid = worklist[idx++];
+                    inWorklist.delete(nid);
+                    const node = Engine.NODE_MAP[nid];
+                    if (!node) continue;
+                    const oldVal = sel[nid];
+                    if (!Engine.isNodeVisible(sel, node)) {
+                        if (sel[nid] !== undefined && node.activateWhen &&
+                            !node.activateWhen.some(c => Engine.matchCondition(sel, c, node))) {
+                            delete sel[nid];
+                            delete sel._locked[nid];
+                        }
+                    } else {
                         const locked = Engine.isNodeLocked(sel, node);
                         if (locked !== null) {
-                            result = _canReach(Engine.push(s, node.id, locked), template, variantKey, maxDepth - 1);
+                            if (sel[nid] !== locked) sel[nid] = locked;
+                            sel._locked[nid] = true;
+                        } else {
+                            if (sel._locked[nid]) delete sel._locked[nid];
+                            if (sel[nid]) {
+                                const edge = node.edges && node.edges.find(v => v.id === sel[nid]);
+                                if (edge && Engine.isEdgeDisabled(sel, node, edge)) delete sel[nid];
+                            }
+                        }
+                    }
+                    const shouldCascade = sel[nid] !== oldVal ||
+                        (node.derivedFrom && node.derivedFrom.length > 0 && !derivedCascaded.has(nid));
+                    if (shouldCascade) {
+                        if (node.derivedFrom) derivedCascaded.add(nid);
+                        const cascade = _cleanDeps.get(nid);
+                        if (cascade) for (const cid of cascade) {
+                            if (!inWorklist.has(cid)) { worklist.push(cid); inWorklist.add(cid); }
+                        }
+                    }
+                }
+            }
+
+            function _lightPush(sel, nodeId, edgeId) {
+                const newSel = Object.assign({}, sel);
+                newSel._locked = Object.assign({}, sel._locked || {});
+                newSel[nodeId] = edgeId;
+                delete newSel._locked[nodeId];
+                _targetedClean(newSel, nodeId);
+                return newSel;
+            }
+
+            function _fastKey(sel) {
+                let key = '';
+                for (const k of _keyRelevant) {
+                    const v = Engine.resolvedVal(sel, k);
+                    if (!v) continue;
+                    const eq = _equivMap.get(k);
+                    key += k + '=' + (eq ? eq(v) : v) + '|';
+                }
+                for (const k of _rawKeyDims) {
+                    if (sel[k]) key += k + '.r=' + sel[k] + '|';
+                }
+                return key;
+            }
+
+            function _enumerateDecelExits(sel, seen, visited) {
+                const decelKey = Object.keys(sel).filter(k => k.startsWith('decel_')).sort().map(k => k + '=' + sel[k]).join('&');
+                if (visited.has(decelKey)) return;
+                visited.add(decelKey);
+                for (const node of Engine.NODES) {
+                    if (node.derived || sel[node.id]) continue;
+                    if (!node.id.startsWith('decel_')) continue;
+                    if (!Engine.isNodeVisible(sel, node)) continue;
+                    const locked = Engine.isNodeLocked(sel, node);
+                    if (locked !== null) {
+                        _enumerateDecelExits(_lightPush(sel, node.id, locked), seen, visited);
+                        return;
+                    }
+                    for (const e of node.edges) {
+                        if (Engine.isEdgeDisabled(sel, node, e)) continue;
+                        _enumerateDecelExits(_lightPush(sel, node.id, e.id), seen, visited);
+                    }
+                    return;
+                }
+                const decelOutcome = Engine.resolvedVal(sel, 'decel_outcome') || '';
+                const decelAlign = Engine.resolvedVal(sel, 'decel_align_progress') || '';
+                const key = decelOutcome + '|' + decelAlign;
+                if (!seen.has(key)) seen.set(key, sel);
+            }
+
+            let _reachCache, _branchRelevant, _keyRelevant, _equivMap, _rawKeyDims;
+            let _canReachCalls, _deadline, _cacheHits, _cacheMisses;
+            const _REACH_TIMEOUT_MS = 2000;
+
+            function _canReach(sel, template, variantKey, maxDepth) {
+                _canReachCalls++;
+                if (_canReachCalls % 500 === 0 && performance.now() > _deadline) return true;
+                if (maxDepth <= 0) return false;
+                const cacheKey = _fastKey(sel);
+                if (_reachCache.has(cacheKey)) { _cacheHits++; return _reachCache.get(cacheKey); }
+                _cacheMisses++;
+
+                const eff = {};
+                for (const k of _keyRelevant) eff[k] = Engine.resolvedVal(sel, k);
+                for (const k of _rawKeyDims) { if (!eff[k]) eff[k] = Engine.resolvedVal(sel, k); }
+                let result = false;
+                if (!_smartPartialMatch(template, eff, sel)) {
+                } else if (Engine.templateMatches(template, eff) &&
+                           (!variantKey || !template.primaryDimension ||
+                            eff[template.primaryDimension] === variantKey)) {
+                    result = true;
+                } else {
+                    for (const node of Engine.NODES) {
+                        if (node.derived || sel[node.id]) continue;
+                        if (!Engine.isNodeVisible(sel, node)) continue;
+                        const locked = Engine.isNodeLocked(sel, node);
+                        if (locked !== null) {
+                            result = _canReach(_lightPush(sel, node.id, locked), template, variantKey, maxDepth - 1);
                             break;
                         }
-                        if (!Engine.isNodeVisible(sel, node)) continue;
-
-                        if (node.id.startsWith('decel_') && !node.derived) {
+                        if (node.id.startsWith('decel_')) {
                             const exits = new Map();
-                            _enumerateDecelExits(s, exits, new Set());
-                            for (const exitStack of exits.values()) {
-                                if (_canReach(exitStack, template, variantKey, maxDepth - 1)) { result = true; break; }
+                            _enumerateDecelExits(sel, exits, new Set());
+                            for (const exitSel of exits.values()) {
+                                if (_canReach(exitSel, template, variantKey, maxDepth - 1)) { result = true; break; }
                             }
                             break;
                         }
-
-                        if (!_reachRelevant.has(node.id)) {
+                        if (!_branchRelevant.has(node.id)) {
                             const first = node.edges.find(e => !Engine.isEdgeDisabled(sel, node, e));
-                            if (first) result = _canReach(Engine.push(s, node.id, first.id), template, variantKey, maxDepth - 1);
+                            if (first) {
+                                const childCK = cacheKey + '|' + node.id + '=' + first.id;
+                                if (_reachCache.has(childCK)) { result = _reachCache.get(childCK); }
+                                else {
+                                    result = _canReach(_lightPush(sel, node.id, first.id), template, variantKey, maxDepth - 1);
+                                    _reachCache.set(childCK, result);
+                                }
+                            }
                             break;
                         }
-
                         for (const e of node.edges) {
                             if (Engine.isEdgeDisabled(sel, node, e)) continue;
-                            if (_canReach(Engine.push(s, node.id, e.id), template, variantKey, maxDepth - 1)) { result = true; break; }
+                            const childCK = cacheKey + '|' + node.id + '=' + e.id;
+                            if (_reachCache.has(childCK)) {
+                                if (_reachCache.get(childCK)) { result = true; break; }
+                                continue;
+                            }
+                            const childSel = _lightPush(sel, node.id, e.id);
+                            const childResult = _canReach(childSel, template, variantKey, maxDepth - 1);
+                            _reachCache.set(childCK, childResult);
+                            if (childResult) { result = true; break; }
                         }
                         break;
                     }
                 }
-
                 _reachCache.set(cacheKey, result);
                 return result;
             }
@@ -1728,8 +2064,24 @@
             function wouldReachOutcome(nodeId, edgeId) {
                 const t = getLockedTemplate();
                 if (!t) return true;
-                if (!_reachRelevant) _reachRelevant = _getRelevantNodes(t, lockedVariantKey);
-                return _canReach(Engine.push(stack, nodeId, edgeId), t, lockedVariantKey, 40);
+                if (!t.reachable) return true;
+                if (!_keyRelevant) {
+                    const a = _computeRelevantDims(t, lockedVariantKey);
+                    _branchRelevant = a.branchRelevant;
+                    _keyRelevant = a.keyRelevant;
+                    _equivMap = a.equivMap;
+                    _rawKeyDims = a.rawKeyDims;
+                }
+                if (!_reachCache) {
+                    _reachCache = new Map();
+                    _canReachCalls = 0;
+                    _cacheHits = 0;
+                    _cacheMisses = 0;
+                    _deadline = performance.now() + _REACH_TIMEOUT_MS;
+                }
+                const sel = Engine.currentState(stack);
+                const childSel = _lightPush(sel, nodeId, edgeId);
+                return _canReach(childSel, t, lockedVariantKey, 40);
             }
 
             function mutateStack(action, opts) {
@@ -1748,6 +2100,7 @@
             }
 
             function findNextQuestion() {
+                _reachCache = null;
                 const sel = Engine.currentState(stack);
                 for (const node of Engine.displayOrder(stack)) {
                     const locked = Engine.isNodeLocked(sel, node);
@@ -1810,8 +2163,9 @@
                     const locked = Engine.isNodeLocked(sel, node);
                     const inStack = Engine.stackHas(stack, node.id);
                     if (locked !== null && !inStack) continue;
-                    const value = sel[node.id] || locked;
-                    const isLockedNode = locked !== null;
+                    const stackEntry = inStack && stack.find(e => e.nodeId === node.id);
+                    const value = sel[node.id] || locked || (stackEntry && stackEntry.edgeId);
+                    const isLockedNode = locked !== null && !stackEntry;
 
                     if (nextQ && nextQ.isForced && node.id === nextQ.node.id) {
                         if (!fullQuestions) {
@@ -1879,7 +2233,7 @@
                     const nodeId = timelineNodeIds[i];
                     if (nodeId && !map[nodeId]) {
                         const fm = formatMonths(cumulative + d.current);
-                        const entry = { year: fm.year, month: fm.month, label: fm.month + ' ' + fm.year };
+                        const entry = { year: fm.year, month: fm.month, label: fm.month + ' ' + fm.year, _months: cumulative + d.current };
                         if (d.min !== d.max) {
                             entry.rangeLabel = formatRange(cumulative + d.min, cumulative + d.max);
                         }
@@ -2215,11 +2569,7 @@
                 return changes;
             }
 
-            let _skipCacheClear = false;
-
             function update() {
-                if (_skipCacheClear) { _skipCacheClear = false; }
-                else { _reachCache.clear(); _reachRelevant = null; }
                 const sel = Engine.currentState(stack);
 
                 const debugPanel = app.querySelector('.debug-panel');
@@ -2445,44 +2795,7 @@
                                     const idx = parseInt(cardEl.dataset.aidx, 10);
                                     const answer = qResult.answerCards[idx];
                                     if (!answer || answer.disabled) return;
-                                    if (lockedId) {
-                                        cardEl.classList.add('computing');
-                                        const bar = document.createElement('div');
-                                        bar.className = 'compute-bar';
-                                        cardEl.style.position = 'relative';
-                                        cardEl.appendChild(bar);
-                                        const fillAnim = bar.animate(
-                                            [{ transform: 'scaleX(0)' }, { transform: 'scaleX(0.9)' }],
-                                            { duration: 2000, fill: 'forwards', easing: 'linear' }
-                                        );
-                                        requestAnimationFrame(() => requestAnimationFrame(() => {
-                                            const savedStack = stack;
-                                            stack = Engine.push(stack, answer.nodeId, answer.value);
-                                            _reachCache.clear();
-                                            _reachRelevant = null;
-                                            findNextQuestion();
-                                            stack = savedStack;
-
-                                            const currentTime = fillAnim.currentTime || 0;
-                                            const rawScale = Math.min((currentTime / 2000) * 0.9, 0.9);
-                                            const currentScale = Math.max(rawScale, 0.3);
-                                            fillAnim.cancel();
-                                            bar.style.transform = 'scaleX(' + currentScale + ')';
-                                            requestAnimationFrame(() => {
-                                                const finishAnim = bar.animate(
-                                                    [{ transform: 'scaleX(' + currentScale + ')' }, { transform: 'scaleX(1)' }],
-                                                    { duration: 150, fill: 'forwards', easing: 'ease-out' }
-                                                );
-                                                finishAnim.onfinish = () => {
-                                                    bar.style.transform = 'scaleX(1)';
-                                                    _skipCacheClear = true;
-                                                    mutateStack(s => Engine.push(s, answer.nodeId, answer.value));
-                                                };
-                                            });
-                                        }));
-                                    } else {
-                                        mutateStack(s => Engine.push(s, answer.nodeId, answer.value));
-                                    }
+                                    mutateStack(s => Engine.push(s, answer.nodeId, answer.value));
                                 });
                             });
                         }

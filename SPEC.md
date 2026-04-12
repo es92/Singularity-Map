@@ -8,136 +8,110 @@ Singularity Map is an interactive, choose-your-own-adventure experience that gui
 
 ## Core Concepts
 
-### 1. Dimensions
+### Dimensions
 
-The questionnaire collects a set of **dimensions** — the key variables that define an AI future. Each question sets one or more dimension values based on the user's answer.
+The questionnaire collects a set of **dimensions** — the key variables that define an AI future. Each node in the graph represents a dimension, and choosing an edge sets its value.
 
-| Dimension | Values | Source Question(s) |
-|---|---|---|
-| `capability` | `singularity`, `hours`, `days`, `weeks`, `months` | scaling-continues, where-tops-out |
-| `stall_recovery` | `mild`, `substantial`, `never` | stall-recovery |
-| `automation` | `deep` (derived from capability) | — (always `deep` when capability is `singularity`) |
-| `takeoff` | `none`, `slow`, `moderate`, `fast`, `explosive` | rd-acceleration |
-| `open_source` | `near_parity`, `six_months`, `twelve_months`, `twenty_four_months` | open-source-parity |
-| `distribution` | `open`, `lagging`, `concentrated`, `monopoly` | open-source-parity, frontier-concentration (or implicitly set by hard takeoff) |
-| `geo_spread` | `one`, `two`, `several` | geo-spread (or implicitly set by hard takeoff / decel checkpoints) |
-| `sovereignty` | `lab`, `state` | lab-or-state |
-| `governance` | `slowdown`, `race` | government-response, decel checkpoints |
-| `alignment` | `robust`, `brittle`, `bounded`, `failed` | alignment, decel checkpoints |
-| `alignment_durability` | `holds`, `breaks` | alignment-durability |
-| `alignment_tax` | `accepted`, `eroded`, `split` | alignment-tax |
-| `proliferation_control` | `deny_rivals`, `secure_access`, `none` | ai-containment |
-| `proliferation_outcome` | `holds`, `breached` | proliferation-outcome |
-| `enabled_aims` | `human_centered`, `corporate_profit`, `state_security`, `arbitrary` | aligned-ai-aims |
-| `containment` | `contained`, `escaped` | containment-durability (or implicitly set by various paths) |
-| `block_entrants` | `attempt`, `no_attempt` | block-entrants |
-| `block_outcome` | `holds`, `fails` | block-outcome |
-| `new_entrants` | `emerge`, `none` | new-entrants |
-| `rival_dynamics` | `coexistence`, `rivalry`, `escalation` | rival-dynamics |
-| `intent` | `self_interest`, `coexistence`, `rivalry`, `escalation`, `international` | power-dynamics |
-| `failure_mode` | `none`, `whimper`, `disempowerment` | implementation-risk |
-| `knowledge_replacement` | `rapid`, `gradual`, `uneven` | knowledge-replacement |
-| `physical_automation` | `rapid`, `gradual`, `uneven` | physical-automation |
-| `economic_distribution` | `broad`, `concentrated`, `uneven` | plateau-economics |
-| `plateau_knowledge_rate` | `rapid`, `gradual`, `uneven`, `limited` | plateau-knowledge-rate |
-| `plateau_physical_rate` | `gradual`, `uneven`, `limited` | plateau-physical-rate |
-| `automation_distribution` | `broad`, `concentrated`, `uneven` | automation-distribution |
-| `ai_goals` | `benevolent`, `alien_coexistence`, `alien_extinction`, `paperclip`, `swarm`, `marginal` | escaped-ai-goals |
+Not every path sets every dimension — nodes activate conditionally, so only the dimensions relevant to a given branch appear.
 
-Not every path sets every dimension — only the dimensions relevant to that branch.
+### Outcome Templates
 
-### 2. Outcome Templates
-
-Instead of fixed outcomes, the system uses **parameterized templates**. Each template defines:
+The system uses **parameterized templates** (defined in `data/outcomes.json`). Each template defines:
 
 - **ID** — unique identifier (e.g. `"the-flourishing"`)
 - **Primary Dimension** *(optional)* — the dimension that selects the variant
 - **Variants** — a map from dimension values to variant-specific title, mood, and summary
-- **Flavors** *(optional)* — dimension-keyed additional context paragraphs that customize the outcome based on other dimensions (e.g., how open-source distribution flavors a flourishing outcome)
-- **Story** — shared narrative paragraphs (will be parameterized when stories are written)
-- **Timeline** — shared timeline events (will be parameterized when timelines are written)
+- **Flavors** *(optional)* — dimension-keyed additional context paragraphs that customize the outcome based on other dimensions
+- **Reachable** — DNF conditions (array of conjunctive clauses) defining when this outcome is reachable from the current state
 
 Templates without variants (e.g. `the-mosaic`) are standalone outcomes with direct title/mood/summary fields.
 
-**Current templates:** 10 templates → 19 outcome variants.
-
-### 3. Question Tree (Decision Graph)
-
-The questionnaire is a DAG of questions, where each answer either leads to another question or terminates at an outcome template.
-
-Each **question node** consists of:
-
-- **ID** — unique identifier
-- **Text** — the question itself
-- **Context** *(optional)* — background/framing
-- **Source** *(optional)* — citation with label and URL
-- **Dimension** — which dimension this question sets
-- **Answers** — an ordered list of 2–4 choices, each with:
-  - `label` — short answer text
-  - `description` *(optional)* — clarifying detail
-  - `value` *(optional)* — the dimension value this answer sets (for the question's `dimension`)
-  - `sets` *(optional)* — object of dimension→value pairs, for answers that set multiple dimensions (overrides `value`)
-  - `next` — ID of the next question or outcome template
-
-Some answers use `sets` to set multiple dimensions at once (e.g., hard takeoff sets both `takeoff: "hard"` and `distribution: "monopoly"`, skipping the open-source question).
-
-### 4. Data Format
-
-All content lives in **data files** (JSON), separate from the renderer:
-
-```
-data/
-  outcomes.json    — array of outcome templates (with variants and flavors)
-  questions.json   — question DAG (with dimension annotations)
-```
-
-The HTML/JS renderer reads these files, collects dimensions as users answer, resolves templates to specific variants, and renders outcomes with dimension-appropriate flavor text.
-
 ---
 
-## Key Question Axes (Brainstorm)
+## Graph Engine Model
 
-These are the major dimensions / branching factors the question tree should explore:
+The decision graph is defined declaratively in `graph.js` and interpreted by the state machine in `engine.js`.
 
-| Axis | Example Question |
+### State
+
+The state (`sel`) is a flat object mapping dimension IDs to their chosen values: `{ capability: 'singularity', takeoff: 'moderate', ... }`. It also carries `_locked` metadata tracking which dimensions were auto-forced.
+
+**The state fully determines the future.** Given the same `sel`, all derived values, visibility, locking, edge disabling, and template matching produce identical results. There is no hidden state or order-dependence.
+
+### Nodes and Edges
+
+Each node in `graph.js` represents a question (dimension). Each node has:
+
+- **`edges`** — possible answers, each with an `id` (the value set in `sel`)
+- **`activateWhen`** *(optional)* — conditions that must be met for this question to appear
+- **`derivedFrom`** *(optional)* — rules that compute this dimension's value from other dimensions instead of asking the user
+- **`derived: true`** — marks the node as derived (never presented as a question)
+
+Edges can have:
+- **`requires`** — conditions that must be met for this edge to be available
+- **`disabledWhen`** — conditions under which this edge is disabled
+
+### How a Path Progresses
+
+1. The engine presents the first unanswered, visible, non-derived question (determined by `displayOrder`, which follows the node order in `graph.js`)
+2. The user picks an edge → `push()` sets `sel[nodeId] = edgeId`
+3. `cleanSelection()` runs, which can cascade state changes:
+   - **Retract** — if a previously-answered node is no longer activated (`activateWhen` fails), its answer is deleted
+   - **Force** — if a node becomes locked (only one edge remains enabled), its answer is forced to that edge
+   - **Invalidate** — if a previously-chosen edge is now disabled, that answer is deleted
+   - This runs as a fixpoint loop (up to 5 passes) since changes can cascade
+4. Derived dimensions are recomputed from the new state
+5. Repeat from step 1 until the template matches or no unanswered questions remain
+
+### Key Invariants
+
+- **No loops** — each step answers one new question. Once `sel[nodeId]` is set, that node is skipped. The walk is strictly forward (bounded by the number of nodes).
+- **`cleanSelection` can mutate arbitrarily** — answering question X can retract, force, or invalidate answers to other questions. But the resulting state is deterministic given the inputs.
+- **State equivalence** — two states with identical `sel` values will have identical derived values, identical visibility, and identical reachability to any template. This makes state-based caching sound.
+
+### Condition System
+
+Conditions (used in `activateWhen`, `requires`, `disabledWhen`, `derivedFrom`) support:
+
+| Key | Meaning |
 |---|---|
-| **Capability trajectory** | Does AI capability keep doubling at the current projected rate? |
-| **Scaling wall** | If progress slows, where does it stall — reasoning? robotics? generality? |
-| **Open-source parity** | Does open-source keep pace with frontier labs? |
-| **Geopolitical race** | Does China keep pace with (or surpass) the US? |
-| **Alignment / safety** | How well are alignment techniques solved — robust, brittle, bounded, or failed? |
-| **Regulation** | Do governments successfully regulate AI development? |
-| **Economic disruption** | How fast does AI displace jobs — gradual transition or sudden shock? |
-| **Concentration of power** | Does AI consolidate power in a few actors, or distribute it? |
-| **Agency / autonomy** | Do AI agents gain significant real-world autonomy? |
-| **Public trust** | Does public trust in AI increase, hold, or collapse? |
+| `dim: [values]` | Effective (resolved) value of `dim` is in the list |
+| `_raw: { dim: [values] }` | Raw `sel[dim]` value (ignoring derivations) |
+| `_rawNot: { dim: [values] }` | Raw value is NOT in the list |
+| `_eff: { dim: [values] }` | Explicit effective value check |
+| `_effNot: { dim: [values] }` | Effective value is NOT in the list |
+| `_set: [dims]` | All listed dimensions have a value set |
+| `_notSet: [dims]` | All listed dimensions are unset |
+| `_fn: name` | Custom function check (e.g. `allPrecedingAnswered`) |
 
-Not every axis needs its own question — some are implied by combinations. The tree should feel like ~5–10 questions deep on any given path.
+### Global Hide Conditions
+
+`SCENARIO.hideConditions` defines rules that globally hide nodes matching a flag when a condition is met. For example, `hideAfterEscape: true` on a node means it disappears when containment is `escaped`.
+
+### Template Matching
+
+Outcome templates have `reachable` conditions in DNF. A template matches when the effective state satisfies any clause. The locked explore path feature uses DFS reachability to check whether a template *can* be reached from the current state.
 
 ---
 
 ## Renderer (index.html)
 
-The front-end is a single `index.html` file (with inline or co-located CSS/JS) that:
+The front-end is a single `index.html` file (with co-located CSS/JS) that:
 
-1. **Loads** `data/outcomes.json` and `data/questions.json` at startup
-2. **Presents** the questionnaire one question at a time, with smooth transitions
-3. **Tracks** the user's path through the tree
-4. **Renders the outcome** when a leaf node is reached:
-   - Display the story
-   - Display the timeline (visual, scrollable)
-   - Show a summary of the choices that led here
-   - Offer a "Start Over" / "Go Back" option
-5. **Provides a gallery/index view** where users can browse all possible futures (spoiler mode)
+1. **Presents** the questionnaire one question at a time, with smooth transitions
+2. **Tracks** the user's path through the graph via an immutable answer stack
+3. **Renders the outcome** when a template matches — story, timeline, and a summary of choices
+4. **Provides an about/gallery view** where users can browse all possible futures
+5. **Supports locked explore mode** — guided paths that filter choices to reach a specific outcome
 
 ### UI Principles
 
 - Clean, modern, slightly futuristic aesthetic
 - Dark mode by default, light mode toggle
 - Mobile-responsive
-- No build step — vanilla HTML/CSS/JS (or a single-file framework if warranted)
+- No build step — vanilla HTML/CSS/JS
 - Animated transitions between questions
-- Timeline rendered as a vertical or horizontal scrollable strip with event cards
+- Timeline rendered as a vertical scrollable strip with event cards
 
 ### No Server Required
 
@@ -145,53 +119,40 @@ Everything is static. Can be opened as a local file or served from any static ho
 
 ---
 
-## Data Pipeline (How We'll Build Content)
-
-1. **Define axes** — finalize the list of branching dimensions
-2. **Sketch the tree** — map out the question graph on paper / in a diagram
-3. **Write questions** — author each question node with its answers and links
-4. **Enumerate outcomes** — identify every leaf of the tree
-5. **Write outcomes** — author the story + timeline for each future
-6. **Validate** — ensure every answer path terminates at a valid outcome, no orphan nodes, no cycles
-7. **Render** — plug it all into the HTML renderer
-
----
-
 ## File Structure
 
 ```
 Singularity Map/
-├── SPEC.md              ← this file
-├── index.html           ← renderer (reads data/, presents UI)
+├── SPEC.md                  ← this file
+├── README.md                ← project overview and setup
+├── index.html               ← main app (single-page, all UI logic)
+├── graph.js                 ← decision graph — nodes, edges, conditions
+├── engine.js                ← state machine — selection, resolution, display order
+├── timeline-animator.js     ← timeline rendering and animation
+├── timeline.css             ← all styles
+├── validate.js              ← graph integrity checker
+├── profile-locked-paths.js  ← performance profiler for locked explore paths
+├── serve.js                 ← local dev server
 ├── data/
-│   ├── outcomes.json    ← all AI future outcomes
-│   └── questions.json   ← the question DAG
-└── assets/              ← optional images, icons, fonts
+│   ├── outcomes.json        ← outcome templates (with variants, flavors, reachable conditions)
+│   ├── narrative.json       ← question text, answer descriptions, timeline events, vignettes
+│   └── personal.json        ← profession list, country buckets
+├── tests/
+│   ├── evaluate.js          ← LLM-based evaluation — persona simulation, audits
+│   └── personas.json        ← test personas for evaluation
+└── share/                   ← OG share pages and images for each outcome
 ```
 
 ---
 
-## Decisions (Resolved)
+## Design Decisions
 
-- **How many outcomes?** Uncapped. Could be 50+ including all variations. We won't artificially limit this — let the tree's natural branching determine how many futures exist.
-- **Shared sub-paths?** Yes. Multiple question branches can converge on the same outcome (e.g. different reasoning paths both lead to "AI Winter"). The DAG supports this naturally.
-- **Scoring vs. pathing?** Pure pathing. Each answer leads to a specific next question or directly to an outcome. True choose-your-own-adventure style — no scoring, no axis accumulation.
-- **Replayability?** Yes. Track discovered futures in localStorage. Show a progress/collection screen so users can try to find them all.
-- **Sharability?** Yes. Encode the path/outcome in the URL hash so users can share direct links to their result. Outcomes are also directly browsable from a gallery/index view.
-- **Browsable outcomes?** Yes. In addition to the questionnaire path, users can browse all outcomes directly from a gallery view (spoiler mode).
-- **Question depth per path?** Varies. Some paths are short (3–5 questions), some are long (8–12). Depends on how much branching a given trajectory needs.
-- **Answers per question?** 2–4, flexible per question. Some are clean binary splits, others warrant 3 or 4 options.
-- **Tone?** A blend — conversational enough to be accessible, journalistic enough to feel authoritative, with enough precision to not be hand-wavy. Not dry academic, not flippant.
-- **Timeline range?** Flexible per outcome. Some futures resolve by 2030, others play out through 2100. The timeline fits the story.
-- **Story POV?** TBD — will emerge as we write. Questions themselves will be framed as "Do you think that..." style, asking the user for their belief/prediction.
-- **Back button?** Yes. Full back navigation — users can revisit and change any previous answer, which updates the path forward accordingly.
-
----
-
-## Next Steps
-
-1. ✅ Create this spec
-2. Design the question tree structure (axes, branching, depth)
-3. Author the questions and outcomes data files
-4. Build the index.html renderer
-5. Polish and iterate
+- **How many outcomes?** Uncapped — the tree's natural branching determines how many futures exist.
+- **Shared sub-paths?** Yes. Multiple branches can converge on the same outcome. The graph supports this naturally.
+- **Scoring vs. pathing?** Pure pathing. Each answer leads to a specific next state — no scoring, no axis accumulation.
+- **Replayability?** Yes. Discovered futures are tracked in localStorage.
+- **Sharability?** Yes. Path/outcome is encoded in the URL hash for direct links. Outcomes are also browsable from the about page.
+- **Question depth per path?** Varies (3–12 questions depending on the branch).
+- **Answers per question?** 2–7, flexible per question.
+- **Tone?** Conversational enough to be accessible, journalistic enough to feel authoritative.
+- **Back button?** Yes. Full back navigation — users can revisit and change any previous answer, which updates the path forward via `cleanSelection`.

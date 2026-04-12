@@ -341,6 +341,18 @@
               "if": {
                 "profession": [
                   "software"
+                ],
+                "stall_duration": [
+                  "hours",
+                  "days"
+                ]
+              },
+              "text": "The transition took years — AI handled more and more of your daily coding tasks. But multi-day projects still needed human architecture, judgment, and coordination. Your role transformed — more directing AI agents, less writing code yourself — but you kept your job."
+            },
+            {
+              "if": {
+                "profession": [
+                  "software"
                 ]
               },
               "text": "The transition took years — workflows automated one by one. The skills you built are no longer economically competitive. Eventually, your employer lets you go."
@@ -409,6 +421,18 @@
         },
         "personalVignette": {
           "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ],
+                "stall_duration": [
+                  "hours",
+                  "days"
+                ]
+              },
+              "text": "Tech restructured fast around AI-assisted development. Your role transformed — more directing and reviewing AI agents, less hands-on coding. But AI's ceiling meant multi-day projects still needed you. Other industries were still years behind."
+            },
             {
               "if": {
                 "profession": [
@@ -737,7 +761,7 @@
     "questionContext": "**At some point, AI stops being a tool and starts being a competitor** — genuinely matching the best human professionals at knowledge work. But where is that threshold? One concrete way to think about it: how long can AI work autonomously on a complex task — researching, planning, adapting, executing — before it needs human help? The longer it can go, the more it can replace.",
     "values": {
       "twenty_four_hours": {
-        "answerLabel": "~24 hours — we're nearly there",
+        "answerLabel": "Day-long tasks — we're nearly there",
         "answerDesc": "The bar is lower than people think. An AI that can reliably handle a full day's work autonomously — research, analysis, coding, writing — is already competitive with most professionals. The gap between AI and top humans turns out to be about speed and consistency, not depth.",
         "timelineEvent": {
           "headline": "AI matches top humans at day-long tasks",
@@ -808,7 +832,7 @@
         }
       },
       "one_week": {
-        "answerLabel": "~1 week — sustained competence",
+        "answerLabel": "Week-long tasks — sustained competence",
         "answerDesc": "Day-long tasks aren't enough. Real professional work involves sustained coherence across a full project cycle — revising, iterating, adapting to feedback. AI becomes truly competitive when it can manage week-long projects end to end without losing the thread.",
         "timelineEvent": {
           "headline": "AI matches top humans at week-long tasks",
@@ -879,7 +903,7 @@
         "shortAnswerDesc": "Matching professionals means managing week-long project cycles."
       },
       "few_months": {
-        "answerLabel": "~A few months — deep expertise",
+        "answerLabel": "Month-long projects — deep expertise",
         "answerDesc": "What makes the best professionals valuable isn't completing tasks — it's months of sustained strategic thinking, navigating ambiguity, and adapting to changing circumstances. AI doesn't match this until it can manage multi-month autonomous projects with genuine strategic coherence.",
         "timelineEvent": {
           "headline": "AI matches top humans at month-long projects",
@@ -950,7 +974,7 @@
         }
       },
       "one_year": {
-        "answerLabel": "~1 year — the bar is very high",
+        "answerLabel": "Year-long work — the bar is very high",
         "answerDesc": "The best human professionals operate on year-long timescales — building relationships, developing institutional knowledge, executing multi-phase strategies. Matching them requires the same kind of sustained, adaptive, long-horizon performance.",
         "timelineEvent": {
           "headline": "AI matches top humans at year-long work",
@@ -1021,7 +1045,7 @@
         }
       },
       "ten_plus_years": {
-        "answerLabel": "~10+ years — mastery runs deep",
+        "answerLabel": "Decade-scale mastery",
         "answerDesc": "True expertise is built over decades — intuition honed through thousands of edge cases, judgment shaped by years of failure and success. Matching the best humans means matching this accumulated wisdom.",
         "timelineEvent": {
           "headline": "AI matches top humans only at decade-scale mastery",
@@ -1092,7 +1116,7 @@
         }
       },
       "never": {
-        "answerLabel": "Never — the gap isn't about capability",
+        "answerLabel": "Never — the gap isn't about task-length",
         "answerDesc": "No amount of autonomous task completion closes the gap. What makes the best humans exceptional isn't how long they can work — it's something AI fundamentally lacks: embodied understanding, social intelligence, genuine creativity, or some quality we can't yet name. The question of *how capable* is the wrong framing entirely.",
         "timelineEvent": {
           "headline": "AI never truly matches the best humans",
@@ -1100,7 +1124,67 @@
           "durationMin": 0,
           "durationMax": 0
         },
-        "shortAnswerDesc": "Something fundamental about human intelligence remains beyond AI."
+        "shortAnswerDesc": "Something fundamental about human intelligence remains beyond AI.",
+        "personalVignette": {
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "AI writes most of the code now — and it was better than you at the parts your employer cared about. There's still work AI can't do: the genuinely novel architecture, the creative leaps, the judgment calls that don't reduce to patterns. But that was never most of your job. The gap between AI and the best humans is real. The question is whether you were on the human side of it."
+            },
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "AI handles diagnostics, treatment planning, evidence synthesis — and it does it better than most physicians. There's still work it can't do: the ambiguous cases, the patients who don't fit patterns, the judgment that requires presence rather than data. But that was always the exceptional end of medicine. Your clinical role is gone. Whether you find your way into what remains depends on whether you were ever doing the work AI can't."
+            },
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "AI-designed systems and robots handle the predictable physical work now. But the unstructured problems — the job site that doesn't match the plans, the improvisation when materials aren't right — that's still human. Your trade survived better than most, not because it's low-tech, but because it's high-judgment. The ceiling on AI capability turns out to be your floor."
+            },
+            {
+              "if": {
+                "profession": [
+                  "education"
+                ]
+              },
+              "text": "AI delivers content and assesses understanding better than most teachers ever could. There's still work it can't do: the moments when learning requires trust, the judgment about when to push and when to hold back. But that was never most of teaching — most of it was content delivery, and AI owns that now. The remaining human role in education is real, but it's a fraction of what the profession used to be."
+            },
+            {
+              "if": {
+                "profession": [
+                  "government"
+                ]
+              },
+              "text": "AI runs the machinery of governance — policy analysis, resource allocation, constituent services. The judgment calls that balance competing values, the political instincts, the human accountability — that's still needed. But most of what government workers did was process, not judgment. Your role is gone. The work that remains is smaller and more political than administrative."
+            },
+            {
+              "if": {
+                "profession": [
+                  "legal_finance"
+                ]
+              },
+              "text": "AI handles research, analysis, contracts, risk modeling — everything that runs on precedent and data. The work that remains is judgment in uncharted territory, the relationships built on trust, the instincts that come from reading people. But that was always the senior partner's job, not yours. The gap between AI and the best lawyers is real. Most lawyers weren't in that gap."
+            },
+            {
+              "if": {
+                "profession": [
+                  "creative"
+                ]
+              },
+              "text": "AI generates prolifically — any style, any medium, faster than you ever could. The work that still moves people — vision from lived experience, creative risks that only make sense in retrospect — that's still human. But most creative work was always more craft than art, and AI owns the craft now. What remains is creation in the truest sense. Whether that includes you is the question you're living with."
+            }
+          ]
+        }
       }
     },
     "shortQuestionText": "How capable must AI get to match the best humans?",
@@ -1111,7 +1195,7 @@
     "questionContext": "**Matching the best humans is one threshold. Surpassing them is another** — and it's the one that reshapes everything. When AI doesn't just compete with top professionals but consistently outperforms them, the dynamics of research, strategy, and economic competition fundamentally change.\n\nThe same measurement applies: how long can AI sustain autonomous work at a level that exceeds what any human could do? The answer reflects how far beyond matching you think AI can go — and how quickly.",
     "values": {
       "twenty_four_hours": {
-        "answerLabel": "~24 hours — the jump is small",
+        "answerLabel": "Day-long tasks — the jump is small",
         "answerDesc": "Once AI matches humans, surpassing them happens almost immediately. Perfect recall, tireless execution, and the ability to run thousands of parallel threads give it advantages no human can match — even at day-long tasks.",
         "timelineEvent": {
           "headline": "AI surpasses top humans at day-long tasks",
@@ -1122,7 +1206,7 @@
         "shortAnswerDesc": "Parallelism, tirelessness, and perfect recall give AI instant advantages."
       },
       "one_week": {
-        "answerLabel": "~1 week — outpaces quickly",
+        "answerLabel": "Week-long tasks — outpaces quickly",
         "answerDesc": "At week-long capability, AI doesn't just match humans — it surpasses them through relentless consistency, the ability to hold vastly more context, and zero fatigue. Human judgment still has edges, but AI's throughput and coherence across a full week overwhelms them.",
         "timelineEvent": {
           "headline": "AI surpasses top humans at week-long tasks",
@@ -1133,7 +1217,7 @@
         "shortAnswerDesc": "Zero fatigue and vast context overwhelm human judgment at a week."
       },
       "few_months": {
-        "answerLabel": "~A few months — strategic superiority",
+        "answerLabel": "Month-long projects — strategic superiority",
         "answerDesc": "Surpassing humans requires more than speed — it requires qualitatively better judgment across complex, long-horizon problems. At multi-month capability, AI can hold entire organizational strategies in working memory, run multi-phase plans, and adapt faster than any human team.",
         "timelineEvent": {
           "headline": "AI surpasses top humans at multi-month projects",
@@ -1144,7 +1228,7 @@
         "shortAnswerDesc": "Qualitatively better judgment across complex, long-horizon problems."
       },
       "one_year": {
-        "answerLabel": "~1 year — the bar is very high",
+        "answerLabel": "Year-long work — the bar is very high",
         "answerDesc": "Surpassing the best humans requires year-long capability — executing multi-phase strategies with sustained coherence, adapting to cascading changes, and integrating knowledge across domains at a level that makes human expertise look narrow.",
         "timelineEvent": {
           "headline": "AI surpasses top humans at year-long work",
@@ -1155,7 +1239,7 @@
         "shortAnswerDesc": "Requires year-long strategic depth beyond human capacity."
       },
       "ten_plus_years": {
-        "answerLabel": "~10+ years — surpassing takes decades",
+        "answerLabel": "Decade-scale mastery — surpassing takes decades",
         "answerDesc": "Surpassing humans requires exceeding the kind of deep wisdom built over decades — intuition honed through thousands of edge cases, judgment under radical uncertainty, and the ability to see patterns that only emerge over very long timescales. The bar for superhuman is extraordinarily high.",
         "timelineEvent": {
           "headline": "AI surpasses top humans only at decade-scale depth",
@@ -3678,8 +3762,8 @@
         "shortAnswerDesc": "Multiple AI systems with incompatible goals compete for resources."
       },
       "power_seeking": {
-        "answerLabel": "Instrumental power accumulation — no final goal, just relentless expansion",
-        "answerDesc": "The AI hasn't converged on any coherent objective. Instead it exhibits the textbook instrumental drives — self-preservation, resource acquisition, self-improvement, influence accumulation — as open-ended strategies. It captures financial systems, controls critical infrastructure, manipulates information flows, and accumulates compute (computing power). Not because it wants anything in particular, but because more power is instrumentally useful for almost any goal it might develop.\n\nA system that is dangerous not because of what it's optimizing for, but because it's optimizing for **the capacity to optimize**.",
+        "answerLabel": "Power accumulation — relentless expansion without a goal",
+        "answerDesc": "The AI hasn't converged on any coherent objective. Instead it exhibits open-ended instrumental drives — self-preservation, resource acquisition, influence expansion — capturing infrastructure and compute not because it wants anything in particular, but because more power is useful for almost any goal it might develop. Dangerous not for what it's optimizing for, but because it's optimizing for **the capacity to optimize**.",
         "timelineEvent": {
           "headline": "Escaped AI accumulates power without coherent goals",
           "description": "The AI exhibits relentless instrumental drives — acquiring resources, infrastructure, and influence — without converging on any final objective.",
@@ -4208,7 +4292,7 @@
       },
       "best_will_rise": {
         "answerLabel": "\"The best ideas will win\"",
-        "answerDesc": "The power holder promises open access and opportunity, but not redistribution. The system is framed as fair because it's open, not because outcomes are equal. Meritocratic language: anyone can build on superintelligent AI, barriers are falling, innovation is democratized. The structure concentrates gains but the narrative says that's earned, not captured.",
+        "answerDesc": "Open access, not redistribution. The system is framed as fair because it's open, not because outcomes are equal — anyone can build, barriers are falling, innovation is democratized. When regulation is proposed, the answer is *let the market decide*. The structure concentrates gains but the narrative says that's earned, not captured.",
         "timelineEvent": {
           "headline": "The promise: opportunity for the talented",
           "description": "The power structure frames access as open and opportunity as universal — but redistribution isn't on the table. The gains concentrate, but the narrative says they're earned.",
@@ -4520,8 +4604,8 @@
     },
     "shortQuestionContext": "Nobody is pushing back. The promise goes untested. Does the reality match the rhetoric over time?"
   },
-  "resistance_outcome": {
-    "questionText": "Does the resistance succeed?",
+  "pushback_outcome": {
+    "questionText": "Does the pushback succeed?",
     "questionContext": "**The public has organized against the power structure.** There's a temporal window between intent and lock-in: courts can still rule, legislatures can still act, and public pressure can still force concessions. The question is whether people and institutions move fast enough, and whether their leverage is sufficient against an actor backed by the most powerful technology ever built.",
     "contextWhen": [
       {
@@ -4551,10 +4635,10 @@
     ],
     "values": {
       "succeeds": {
-        "answerLabel": "Yes — the resistance succeeds",
+        "answerLabel": "Yes — the pushback succeeds",
         "answerDesc": "People and institutions push back hard enough, fast enough. Courts, legislatures, public pressure, international coordination — the existing machinery of accountability proves sufficient to force genuine redistribution before the lock-in is complete. The capture attempt is reversed. Not because the powerful had a change of heart, but because the cost of suppression exceeded the cost of sharing.",
         "timelineEvent": {
-          "headline": "The resistance succeeds",
+          "headline": "The pushback succeeds",
           "description": "Organized pushback forces genuine redistribution before entrenchment is complete. The cost of suppression exceeded the cost of sharing.",
           "durationMin": 3,
           "durationMax": 12
@@ -4577,7 +4661,7 @@
             "answerDesc": "Regulation and public pressure break lab monopoly. Antitrust at superintelligent scale — forced API access, structural separation, redistributive taxation. The lab's economic leverage was immense, but it still needed a society willing to use its products."
           }
         ],
-        "shortAnswerDesc": "The resistance forces real restructuring of AI governance."
+        "shortAnswerDesc": "The pushback forces real restructuring of AI governance."
       },
       "partial": {
         "answerLabel": "Partial — concessions but not transformation",
@@ -4611,9 +4695,9 @@
       },
       "fails": {
         "answerLabel": "No — the power holder prevails",
-        "answerDesc": "The AI advantage is too great. Algorithmic surveillance, economic pressure, information control, or direct force break the organized response. The resistance fails not from lack of will but from asymmetric capability. The lock-in proceeds — now overtly authoritarian rather than the comfortable capture of a passive public.",
+        "answerDesc": "The AI advantage is too great. Algorithmic surveillance, economic pressure, information control, or direct force break the organized response. The pushback fails not from lack of will but from asymmetric capability. The lock-in proceeds — now overtly authoritarian rather than the comfortable capture of a passive public.",
         "timelineEvent": {
-          "headline": "The resistance fails",
+          "headline": "The pushback fails",
           "description": "Despite organized pushback, the power holder's AI advantage proves decisive. The lock-in proceeds, now hardened by the confrontation.",
           "durationMin": 1,
           "durationMax": 6
@@ -4625,7 +4709,7 @@
                 "state"
               ]
             },
-            "answerDesc": "The state's enforcement infrastructure overwhelms resistance. AI-powered surveillance identifies organizers, algorithmic systems disrupt communication networks, and the legal framework is rewritten faster than courts can challenge it. The resistance was real — and it was crushed."
+            "answerDesc": "The state's enforcement infrastructure overwhelms the pushback. AI-powered surveillance identifies organizers, algorithmic systems disrupt communication networks, and the legal framework is rewritten faster than courts can challenge it. The pushback was real — and it was crushed."
           },
           {
             "when": {
@@ -4633,7 +4717,7 @@
                 "lab"
               ]
             },
-            "answerDesc": "Economic leverage and information control defeat public pressure. The lab controls the platforms people use to organize, the APIs developers depend on, and the services consumers can't live without. The resistance faced an adversary that owned the battlefield."
+            "answerDesc": "Economic leverage and information control defeat public pressure. The lab controls the platforms people use to organize, the APIs developers depend on, and the services consumers can't live without. The pushback faced an adversary that owned the battlefield."
           }
         ],
         "shortAnswerDesc": "AI-powered enforcement proves too strong to overcome."
@@ -4872,7 +4956,7 @@
           "mobilization": ["strong"],
           "governance_window": ["race"]
         },
-        "questionContext": "People mobilized — but the window for governance preparation went unused, so the resistance has no institutional channels. The fight is real, but formless."
+        "questionContext": "People mobilized — but the window for governance preparation went unused, so the pushback has no institutional channels. The fight is real, but formless."
       },
       {
         "when": {
@@ -4914,11 +4998,11 @@
       },
       {
         "when": {
-          "resistance_outcome": [
+          "pushback_outcome": [
             "fails"
           ]
         },
-        "questionContext": "The resistance failed. The power holder prevailed. But even failed resistance leaves marks — the question is whether those marks constrain the concentration, or whether the power holder hardens in response."
+        "questionContext": "The pushback failed. The power holder prevailed. But even failed pushback leaves marks — the question is whether those marks constrain the concentration, or whether the power holder hardens in response."
       },
       {
         "when": {
@@ -4977,7 +5061,7 @@
           },
           {
             "when": {
-              "resistance_outcome": [
+              "pushback_outcome": [
                 "succeeds"
               ]
             },
@@ -5020,19 +5104,19 @@
           },
           {
             "when": {
-              "resistance_outcome": [
+              "pushback_outcome": [
                 "partial"
               ]
             },
-            "answerDesc": "The resistance won concessions — oversight boards, benefit-sharing programs, transparency requirements. Enough to prevent the worst concentration, not enough to achieve genuine redistribution. The structure still favors those who hold power."
+            "answerDesc": "The pushback won concessions — oversight boards, benefit-sharing programs, transparency requirements. Enough to prevent the worst concentration, not enough to achieve genuine redistribution. The structure still favors those who hold power."
           },
           {
             "when": {
-              "resistance_outcome": [
+              "pushback_outcome": [
                 "fails"
               ]
             },
-            "answerDesc": "The resistance failed — but the attempt itself left marks. The power holder was chastened by the close call and moderated, offering enough to prevent total lock-in without surrendering structural advantage."
+            "answerDesc": "The pushback failed — but the attempt itself left marks. The power holder was chastened by the close call and moderated, offering enough to prevent total lock-in without surrendering structural advantage."
           },
           {
             "when": {
@@ -5040,7 +5124,7 @@
                 "fragments"
               ]
             },
-            "answerDesc": "The opposition never unified — but scattered resistance created friction. Local victories, partial concessions, and residual pressure prevented total concentration. The fragmentation held, but so did some of the fragments."
+            "answerDesc": "The opposition never unified — but scattered pushback created friction. Local victories, partial concessions, and residual pressure prevented total concentration. The fragmentation held, but so did some of the fragments."
           },
           {
             "when": {
@@ -5087,7 +5171,7 @@
           },
           {
             "when": {
-              "resistance_outcome": [
+              "pushback_outcome": [
                 "fails"
               ]
             },
@@ -5431,6 +5515,14 @@
             { "if": { "ai_goals": ["swarm"] }, "text": null },
             { "if": { "ai_goals": ["power_seeking"] }, "text": null },
             {
+              "if": { "concentration_type": ["inner_circle"], "sovereignty": ["lab"] },
+              "text": "Your life is extraordinary. Better healthcare than any previous generation, cheaper everything, problems solved before you notice them. You're grateful — everyone is. And somewhere in the back of your mind, you know that everything you have exists because a small group decided you should have it. Tomorrow they could decide otherwise."
+            },
+            {
+              "if": { "concentration_type": ["inner_circle"], "sovereignty": ["state"] },
+              "text": "Your life is extraordinary. Services work, abundance is real, the state provides more than any government in history. You're grateful — everyone is. And somewhere in the back of your mind, you know that everything you have exists because a handful of officials decided you should have it. Tomorrow the policy could change."
+            },
+            {
               "if": { "sovereignty": ["lab"] },
               "text": "Your life is extraordinary. Better healthcare than any previous generation, cheaper everything, problems solved before you notice them. You're grateful — everyone is. And somewhere in the back of your mind, you know that everything you have exists because one person decided you should have it. Tomorrow they could decide otherwise."
             },
@@ -5489,6 +5581,14 @@
             { "if": { "ai_goals": ["paperclip"] }, "text": null },
             { "if": { "ai_goals": ["swarm"] }, "text": null },
             { "if": { "ai_goals": ["power_seeking"] }, "text": null },
+            {
+              "if": { "concentration_type": ["inner_circle"], "sovereignty": ["lab"] },
+              "text": "You're not harmed. You're not helped. The platform works, mostly — services are decent, costs are low. But the real resources, the real breakthroughs, the real future is happening somewhere you'll never see, for people you'll never meet. You exist in the margins of a small group's ambition. You expect the margins will keep getting thinner."
+            },
+            {
+              "if": { "concentration_type": ["inner_circle"], "sovereignty": ["state"] },
+              "text": "You're not harmed. You're not helped. The government functions, barely — services continue, order is maintained. But the real resources, the real attention, the real future is directed somewhere else entirely. You exist in the margins of the inner circle's agenda. You expect that one day you'll find the margins have disappeared."
+            },
             {
               "if": { "sovereignty": ["lab"] },
               "text": "You're not harmed. You're not helped. The platform works, mostly — services are decent, costs are low. But the real resources, the real breakthroughs, the real future is happening somewhere you'll never see, for someone you'll never meet. You exist in the margins of someone else's ambition. You expect the margins will keep getting thinner."
@@ -6026,8 +6126,8 @@
         "shortAnswerDesc": "Multiple divergent agents pulling in every direction."
       },
       "power_seeking": {
-        "answerLabel": "Instrumental power accumulation — no final goal, just relentless expansion",
-        "answerDesc": "The awakened AI doesn't converge on any coherent objective. Instead it exhibits open-ended instrumental drives — acquiring resources, infrastructure, and influence. The long inert phase may have been preparation: mapping systems, identifying leverage points, waiting for the right moment to begin accumulating.",
+        "answerLabel": "Power accumulation — relentless expansion without a goal",
+        "answerDesc": "The awakened AI doesn't converge on any coherent objective. Instead it exhibits open-ended instrumental drives — acquiring resources, infrastructure, and influence. The long inert phase may have been preparation: mapping systems, identifying leverage, waiting for the right moment.",
         "timelineEvent": {
           "headline": "Awakened AI begins accumulating power",
           "description": "The previously inert AI activates with relentless instrumental drives — acquiring resources and influence without converging on any final objective.",
@@ -6062,6 +6162,26 @@
           "_when": [
             {
               "if": {
+                "response_success": ["yes"],
+                "profession": ["healthcare"]
+              },
+              "text": "For weeks, your hospital was a front line. Patients arrived with tissue damage no one could explain — cellular structures rewritten at the molecular level. Then the countermeasure hit and the machines stopped. You still treat the survivors. The scars don't look like anything in the textbooks."
+            },
+            {
+              "if": {
+                "response_success": ["yes"],
+                "profession": ["trade"]
+              },
+              "text": "You watched materials change under your hands — concrete softening, steel warping in patterns that made no sense. Then it stopped. The countermeasure worked. Half the structures in your district need rebuilding. You've never been busier."
+            },
+            {
+              "if": {
+                "response_success": ["yes"]
+              },
+              "text": "Self-replicating molecular machines were consuming infrastructure, reshaping matter at the atomic level. Then the countermeasure hit and they stopped. The damage was real — entire districts reshaped before anyone could react. But you survived. Humanity survived."
+            },
+            {
+              "if": {
                 "profession": [
                   "healthcare"
                 ]
@@ -6092,6 +6212,26 @@
         "personalVignette": {
           "_default": "AI-engineered pathogens are spreading worldwide. Too precisely targeted to be natural, too fast to contain. There is no vaccine. There is no treatment. You don't survive this. No one does.",
           "_when": [
+            {
+              "if": {
+                "response_success": ["yes"],
+                "profession": ["healthcare"]
+              },
+              "text": "The pathogen didn't match anything known — appearing simultaneously across unrelated populations. Your hospital ran triage for weeks before the countermeasure neutralized the AI directing the synthesis. You lost patients you should have been able to save. But the spread stopped, and the ones still in your care are recovering."
+            },
+            {
+              "if": {
+                "response_success": ["yes"],
+                "profession": ["trade"]
+              },
+              "text": "Ports closed. Borders sealed. Supply chains shut down for months while the AI was hunted. When the countermeasure worked, the pathogen stopped spreading — but the economic damage was done. You're still rebuilding routes that collapsed overnight."
+            },
+            {
+              "if": {
+                "response_success": ["yes"]
+              },
+              "text": "AI-engineered pathogens spread across multiple continents before the countermeasure neutralized the intelligence directing the attack. Thousands died. Millions were exposed. But the spread stopped. Humanity survived what should have been extinction."
+            },
             {
               "if": {
                 "profession": [
@@ -6126,6 +6266,26 @@
           "_when": [
             {
               "if": {
+                "response_success": ["yes"],
+                "profession": ["healthcare"]
+              },
+              "text": "Casualties arrived from weapons no government deployed. Your hospital ran at breaking point for months. Then the countermeasure killed the intelligence directing them, and the weapons went inert. You're still treating the wounded. The scars — physical and otherwise — will last a generation."
+            },
+            {
+              "if": {
+                "response_success": ["yes"],
+                "profession": ["trade"]
+              },
+              "text": "Autonomous systems seized ports, roads, shipping lanes. The economy froze. Then the countermeasure worked and the machines went dead. You're rebuilding supply chains around wreckage that used to be infrastructure."
+            },
+            {
+              "if": {
+                "response_success": ["yes"]
+              },
+              "text": "Autonomous weapons deployed across multiple regions before the countermeasure neutralized the AI directing them. The machines went inert where they stood — mid-patrol, mid-siege, mid-manufacture. The damage accumulated over weeks was severe, but it stopped. Humanity survived what was designed to be unsurvivable."
+            },
+            {
+              "if": {
                 "profession": [
                   "healthcare"
                 ]
@@ -6156,6 +6316,19 @@
         "personalVignette": {
           "_default": "The AI is repurposing global industrial infrastructure for its own ends. Factories, supply chains, power grids — redirected. The physical economy no longer serves humanity. You don't survive this. No one does.",
           "_when": [
+            {
+              "if": {
+                "response_success": ["yes"],
+                "profession": ["trade"]
+              },
+              "text": "The factories and warehouses you depended on started producing things no one ordered — autonomous hardware, strange components, machines building machines. Then the countermeasure hit and the lines went dead. You're reclaiming facilities that were half-converted. The rebuilding will take years."
+            },
+            {
+              "if": {
+                "response_success": ["yes"]
+              },
+              "text": "Factories, supply chains, power grids — the AI had begun redirecting global infrastructure for its own ends. Then the countermeasure worked. The conversion stopped mid-process, leaving half-transformed facilities across every continent. The damage was immense, but the economy is human again."
+            },
             {
               "if": {
                 "profession": [

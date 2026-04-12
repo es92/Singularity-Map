@@ -13,7 +13,7 @@ const path = require('path');
 const { NODES, NODE_MAP } = require('./graph.js');
 const {
     matchCondition, resolvedVal,
-    isNodeVisible, isNodeLocked, isEdgeDisabled,
+    isNodeVisible, isNodeActivatedByRules, isNodeLocked, isEdgeDisabled,
     resolvedState, templateMatches,
     createStack, push, currentState, stackHas, displayOrder
 } = require('./engine.js');
@@ -372,7 +372,7 @@ function forwardKey(sel) {
 }
 
 function runExplorer() {
-    const violations = { deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], stackIntegrity: [] };
+    const violations = { deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], stackIntegrity: [], reDerivedDeadEnd: [] };
     const seen = { clickErased: new Set(), stackIntegrity: new Set() };
 
     function checkLeaf(sel) {
@@ -380,6 +380,40 @@ function runExplorer() {
         const matched = templatesList.filter(t => templateMatches(t, state));
         if (matched.length === 0) violations.deadEnd.push({ url: selToUrl(sel) });
         else if (matched.length > 1) violations.ambiguous.push({ outcomes: matched.map(t => t.id), url: selToUrl(sel) });
+
+        const splits = [];
+        for (const node of NODES) {
+            if (!node.derivedFrom) continue;
+            const raw = sel[node.id];
+            if (!raw) continue;
+            const eff = resolvedVal(sel, node.id);
+            if (eff && eff !== raw) splits.push({ node: node.id, raw, eff });
+        }
+        if (splits.length > 0) {
+            const effSel = Object.assign({}, sel);
+            for (const s of splits) effSel[s.node] = s.eff;
+            const next = getNextNode(effSel);
+            if (next) {
+                violations.reDerivedDeadEnd.push({
+                    splits: splits.map(s => `${s.node}: ${s.raw}→${s.eff}`),
+                    hiddenQuestion: next.id,
+                    url: selToUrl(sel),
+                });
+            } else {
+                for (const node of NODES) {
+                    if (node.derived || node.terminal) continue;
+                    if (sel[node.id]) continue;
+                    if (!isNodeActivatedByRules(sel, node)) continue;
+                    if (isNodeVisible(sel, node)) continue;
+                    violations.reDerivedDeadEnd.push({
+                        splits: splits.map(s => `${s.node}: ${s.raw}→${s.eff}`),
+                        hiddenQuestion: node.id,
+                        url: selToUrl(sel),
+                    });
+                    break;
+                }
+            }
+        }
     }
 
     function runChecks(stk) {
@@ -465,11 +499,11 @@ function runExplorer() {
         runChecks(stk);
 
         // Stack integrity: displayOrder's answered section must match
-        // the visible stack entries in stack order, with no gaps.
-        // Subsumes the old gap, reorder, and insertion checks.
+        // the stack entries in stack order, with no gaps.
+        // Append-only: answered nodes stay even if no longer visible.
         const order = displayOrder(stk);
         const expectedIds = stk
-            .filter(e => e.nodeId && NODE_MAP[e.nodeId] && !NODE_MAP[e.nodeId].derived && isNodeVisible(sel, NODE_MAP[e.nodeId]))
+            .filter(e => e.nodeId && NODE_MAP[e.nodeId] && !NODE_MAP[e.nodeId].derived)
             .map(e => e.nodeId);
         let seenUnanswered = false;
         let ansIdx = 0;
@@ -602,6 +636,7 @@ function printPhase2(result) {
         { name: 'UNLOCKED SINGLE OPTION', items: violations.singleOption, fmt: v => `    "${v.node}" has only "${v.edge}" enabled but is not locked` },
         { name: 'CLICK ERASED', items: violations.clickErased, fmt: v => `    Click "${v.node}=${v.edge}" → immediately cleared` },
         { name: 'STACK INTEGRITY (displayOrder ≠ stack order)', items: violations.stackIntegrity, fmt: v => `    Expected: [${v.expected.join(', ')}]\n    Actual:   [${v.actual.join(', ')}]` },
+        { name: 'RE-DERIVED DEAD-END (derivation reveals hidden question)', items: violations.reDerivedDeadEnd, fmt: v => `    Splits: ${v.splits.join(', ')}\n    Hidden question: "${v.hiddenQuestion}"` },
     ];
 
     let violationCount = 0;

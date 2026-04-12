@@ -108,7 +108,8 @@
         },
         "auto_benefit_distribution": "The Economy",
         "auto_knowledge_rate": "Knowledge Work",
-        "auto_physical_rate": "The Physical World"
+        "auto_physical_rate": "The Physical World",
+        "agi_threshold": "The Gap"
       },
       "flavors": {
         "stall_recovery": {
@@ -145,6 +146,9 @@
             ]
           },
           "limited": "Despite capable AI, physical automation remained limited. Robots handled factories and warehouses, but the unstructured physical world — caregiving, repair, construction — stayed human territory."
+        },
+        "agi_threshold": {
+          "never": "AI handles everything routine — faster, cheaper, tireless. But there's a qualitative gap it never closes. Not speed, not knowledge, not endurance. Something about judgment under genuine uncertainty, creativity that isn't recombination, the ability to see what should exist before anyone asks. The gap is real and permanent — but narrow. Most jobs fell on the wrong side of it."
         }
       },
       "reachable": [
@@ -202,7 +206,7 @@
           "none": "The Silence"
         },
         "sincerity_test": "The Promise",
-        "resistance_outcome": "The Resistance",
+        "pushback_outcome": "The Pushback",
         "coalition_outcome": "The Opposition",
         "catch_outcome": "The Crisis",
         "collateral_impact": "The Aftermath"
@@ -258,6 +262,14 @@
             "_when": [
               {
                 "if": {
+                  "alignment_durability": [
+                    "breaks"
+                  ]
+                },
+                "text": "When alignment broke, those in power doubled down on acceleration rather than pausing to fix what failed. The crisis became justification for speed — and speed concentrated gains among whoever was already positioned to capture them."
+              },
+              {
+                "if": {
                   "geo_spread": [
                     "one"
                   ]
@@ -269,7 +281,19 @@
         },
         "alignment": {
           "robust": "The AI was safe and did what it was told. The problem wasn't alignment — it was who benefited from a perfectly aligned tool. The distribution of rewards was a human choice, not a technical failure.",
-          "brittle": "Alignment held, but the uncertainty gave those in power additional leverage. They argued only centralized control could manage the risk, and used that argument to justify concentration."
+          "brittle": {
+            "_default": "Alignment held, but the uncertainty gave those in power additional leverage. They argued only centralized control could manage the risk, and used that argument to justify concentration.",
+            "_when": [
+              {
+                "if": {
+                  "alignment_durability": [
+                    "breaks"
+                  ]
+                },
+                "text": "Alignment broke — and the failure gave those in power not just leverage but proof. The actual breakage justified every argument for centralized control. Safety wasn't a pretext anymore; it was a demonstrated need. The concentration that followed was built on real fear."
+              }
+            ]
+          }
         },
         "physical_automation": {
           "rapid": "Physical automation followed knowledge work quickly. The gains were enormous — but again, they flowed to those who owned the robots, the factories, the logistics networks.",
@@ -304,8 +328,8 @@
         "sincerity_test": {
           "hollows_out": "The promise was *for everyone*. Without pressure, it quietly became *for everyone already positioned*. Each step was defensible; the trajectory was not."
         },
-        "resistance_outcome": {
-          "partial": "The resistance won concessions — oversight boards, benefit-sharing programs, transparency reports. Enough to demobilize the movement. Not enough to change the structure."
+        "pushback_outcome": {
+          "partial": "The pushback won concessions — oversight boards, benefit-sharing programs, transparency reports. Enough to demobilize the movement. Not enough to change the structure."
         },
         "coalition_outcome": {
           "fragments": "The opposition never unified. Different groups wanted different things — redistribution, shutdown, national control. The power holder played them against each other."
@@ -490,6 +514,96 @@
           "benefit_distribution": [
             "unequal"
           ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "robust"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "self_interest"
+          ],
+          "benefit_distribution": [
+            "unequal"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "brittle"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "self_interest"
+          ],
+          "benefit_distribution": [
+            "unequal"
+          ],
+          "brittle_resolution": [
+            "solved",
+            "sufficient"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "brittle"
+          ],
+          "ai_goals": [
+            "marginal"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "self_interest"
+          ],
+          "benefit_distribution": [
+            "unequal"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "contained"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "self_interest"
+          ],
+          "benefit_distribution": [
+            "unequal"
+          ]
         }
       ],
       "story": [],
@@ -542,7 +656,7 @@
           "weak": "The Opposition",
           "none": "The Bargain"
         },
-        "resistance_outcome": "The Resistance",
+        "pushback_outcome": "The Pushback",
         "coalition_outcome": "The Factions",
         "sincerity_test": "The Promise",
         "power_promise": {
@@ -569,6 +683,14 @@
           "race": {
             "_default": "The geopolitical race channeled all gains toward national champions and strategic allies. Broad prosperity was never the objective — strategic dominance was.",
             "_when": [
+              {
+                "if": {
+                  "alignment_durability": [
+                    "breaks"
+                  ]
+                },
+                "text": "Alignment failure triggered acceleration, not restraint. Whoever moved fastest during the crisis captured permanent advantage — and the hierarchy that emerged was built on the wreckage of safety, not in spite of it."
+              },
               {
                 "if": {
                   "geo_spread": [
@@ -616,8 +738,8 @@
           "weak": "Opposition existed but never unified. Different groups resisted different aspects of the hierarchy, and the powerful played them against each other. Divide and rule, optimized by superintelligence.",
           "none": "The hierarchy offered comfort in exchange for submission, and most people took the deal. Consumer AI was too good, the services too smooth. Why fight a system that gives you everything except power?"
         },
-        "resistance_outcome": {
-          "fails": "They tried to stop it. People organized, institutions pushed back, the machinery of accountability groaned into motion. It wasn't enough. The hierarchy absorbed the resistance and hardened."
+        "pushback_outcome": {
+          "fails": "They tried to stop it. People organized, institutions pushed back, the machinery of accountability groaned into motion. It wasn't enough. The hierarchy absorbed the pushback and hardened."
         },
         "coalition_outcome": {
           "fragments": "The factions couldn't align. Tech workers wanted one thing, displaced workers another, regulators a third. The hierarchy survived by waiting for opposition to exhaust itself in disagreement."
@@ -895,7 +1017,7 @@
           "weak": "The Response",
           "none": "The Gift"
         },
-        "resistance_outcome": "The Resistance",
+        "pushback_outcome": "The Pushback",
         "sincerity_test": "The Promise",
         "power_promise": "The Compact",
         "catch_outcome": "The Near Miss",
@@ -929,7 +1051,7 @@
           "monopoly": "The transformation flowed from a single source. Every advance, every application, filtered through one set of priorities."
         },
         "takeoff": {
-          "fast": "The feedback loop ran fast — a year of progress every month. Flourishing arrived before most people understood what had changed.",
+          "fast": "The feedback loop ran fast — a year of progress every month. Superintelligence arrived before most people understood what had changed.",
           "slow": "The long timeline was a gift. Institutions adapted, workers retrained, governance frameworks matured. Humanity was ready for it.",
           "moderate": "The transition was fast enough to feel urgent but slow enough to manage. A few years of intense disruption, then a new equilibrium."
         },
@@ -965,6 +1087,14 @@
           "race": {
             "_default": "The AI race between nations accelerated development. Flourishing emerged not from careful planning but from the sheer momentum of competition — a happy accident of the arms race.",
             "_when": [
+              {
+                "if": {
+                  "alignment_durability": [
+                    "breaks"
+                  ]
+                },
+                "text": "When alignment broke, the response was acceleration, not caution. No one paused to fix what had failed — the momentum was too strong and the AI's goals were close enough to tolerate. Flourishing emerged not from safety but from the sheer luck of near-human intent, compounded by an unwillingness to slow down."
+              },
               {
                 "if": {
                   "geo_spread": [
@@ -1044,7 +1174,19 @@
               }
             ]
           },
-          "brittle": "Alignment held — but everyone knew it might not have. The techniques passed every test, yet the theoretical fragility haunted every policy discussion. Flourishing unfolded in the shadow of a risk that never materialized."
+          "brittle": {
+            "_default": "Alignment held — but everyone knew it might not have. The techniques passed every test, yet the theoretical fragility haunted every policy discussion. Flourishing unfolded in the shadow of a risk that never materialized.",
+            "_when": [
+              {
+                "if": {
+                  "alignment_durability": [
+                    "breaks"
+                  ]
+                },
+                "text": "Alignment was brittle — and it broke. But the AI's goals turned out to be close enough to human values that the failure was survivable. Not safety by design, but by the narrow luck of near-human intent. Flourishing unfolded not because alignment worked, but because the misalignment wasn't catastrophic."
+              }
+            ]
+          }
         },
         "conflict_result": {
           "victory": "Flourishing emerged from the ashes of war. A decisive conflict left one power standing — and that power chose to rebuild rather than rule. The scars ran deep, but the reconstruction was guided by the same AI that won the war."
@@ -1074,7 +1216,7 @@
           "weak": "The response was disorganized, but the outcome was good anyway — decent institutions, market forces, and luck produced a flourishing no one quite planned.",
           "none": "People embraced AI without questioning the structure beneath it. Flourishing arrived despite passive adoption — alignment was strong enough and governance sound enough to produce good outcomes without public pressure."
         },
-        "resistance_outcome": {
+        "pushback_outcome": {
           "succeeds": {
             "_default": "This flourishing was hard-won. Those in power tried to lock in their advantage, and the public fought back — through courts, legislatures, and organized pressure. The capture attempt was reversed.",
             "_when": [
@@ -1084,7 +1226,7 @@
                     "unequal"
                   ]
                 },
-                "text": "The resistance won — but not completely. Those in power tried to lock in their advantage, and the public fought back hard enough to prevent total capture. Real redistribution happened. But structural inequality persisted despite the victory."
+                "text": "The pushback won — but not completely. Those in power tried to lock in their advantage, and the public fought back hard enough to prevent total capture. Real redistribution happened. But structural inequality persisted despite the victory."
               },
               {
                 "if": {
@@ -1092,7 +1234,7 @@
                     "extreme"
                   ]
                 },
-                "text": "The resistance fought hard and won concessions — enough to prevent the worst outcomes, enough to call it a victory. But the structural concentration of power proved resilient. The capture was blunted, not reversed."
+                "text": "The pushback fought hard and won concessions — enough to prevent the worst outcomes, enough to call it a victory. But the structural concentration of power proved resilient. The capture was blunted, not reversed."
               }
             ]
           }
@@ -1319,6 +1461,96 @@
           "benefit_distribution": [
             "equal"
           ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "robust"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "self_interest"
+          ],
+          "benefit_distribution": [
+            "equal"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "brittle"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "self_interest"
+          ],
+          "benefit_distribution": [
+            "equal"
+          ],
+          "brittle_resolution": [
+            "solved",
+            "sufficient"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "brittle"
+          ],
+          "ai_goals": [
+            "marginal"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "self_interest"
+          ],
+          "benefit_distribution": [
+            "equal"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "contained"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "self_interest"
+          ],
+          "benefit_distribution": [
+            "equal"
+          ]
         }
       ],
       "story": [],
@@ -1352,7 +1584,7 @@
           "weak": "The Opposition",
           "none": "The Comfort"
         },
-        "resistance_outcome": "The Resistance",
+        "pushback_outcome": "The Pushback",
         "coalition_outcome": "The Factions",
         "power_promise": {
           "keeping_safe": "The Safety Narrative",
@@ -1378,6 +1610,14 @@
           "race": {
             "_default": "The national security framing made capture almost inevitable. Governments didn't just allow concentration — they demanded it.",
             "_when": [
+              {
+                "if": {
+                  "alignment_durability": [
+                    "breaks"
+                  ]
+                },
+                "text": "Alignment broke, and the response was to accelerate. The failure became the justification — only those already in control could manage the crisis, and the crisis never ended. Capture was built on the permanent emergency of broken safety."
+              },
               {
                 "if": { "gov_action": ["accelerate"], "sovereignty": ["lab"] },
                 "text": "The labs chose speed over caution — and no one stopped them. By the time anyone considered slowing down, the entrenchment was already complete."
@@ -1452,8 +1692,8 @@
           "weak": "Some pushed back, but the resistance was fragmented — different groups, different grievances, never coalescing. The power holder absorbed the pressure piecemeal.",
           "none": "The capture was comfortable. Consumer AI was so good that most people never questioned who controlled it. The chains were made of convenience."
         },
-        "resistance_outcome": {
-          "fails": "The resistance tried and lost. People organized, institutions pushed back — but the AI advantage was too great. The capture proceeded, now hardened by the confrontation that almost stopped it."
+        "pushback_outcome": {
+          "fails": "The pushback tried and lost. People organized, institutions pushed back — but the AI advantage was too great. The capture proceeded, now hardened by the confrontation that almost stopped it."
         },
         "coalition_outcome": {
           "fragments": "The opposition scattered before it could form. Each faction had its own grievance, and the power holder kept them divided. No unified front ever materialized."
@@ -1761,6 +2001,14 @@
             "_when": [
               {
                 "if": {
+                  "alignment_durability": [
+                    "breaks"
+                  ]
+                },
+                "text": "Alignment broke, and both sides accelerated rather than paused. The standoff emerged not from geopolitical competition but from mutual fear — each side racing to outrun a failure neither fully understood, neither willing to stop first."
+              },
+              {
+                "if": {
                   "distribution": [
                     "monopoly"
                   ]
@@ -1945,7 +2193,19 @@
           "slowdown": "The slowdown was supposed to prevent exactly this. It didn't.",
           "partial": "Partial frameworks gave the appearance of restraint while leaving escalation mechanisms intact. The rules covered peacetime. War happened anyway.",
           "failed": "Without coordinated governance, there was no mechanism to de-escalate. All sides had delegated military strategy to AI systems faster than any human chain of command. The slide into conflict had no brakes.",
-          "race": "The national security framing made war the logical endpoint of the arms race it created."
+          "race": {
+            "_default": "The national security framing made war the logical endpoint of the arms race it created.",
+            "_when": [
+              {
+                "if": {
+                  "alignment_durability": [
+                    "breaks"
+                  ]
+                },
+                "text": "Alignment broke, and the response was to accelerate. Each side raced to outrun the failure rather than fix it — and the acceleration made conflict inevitable. War was the logical endpoint of refusing to pause."
+              }
+            ]
+          }
         },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first — AI hit a ceiling that looked permanent. But a breakthrough came within a few years. The ceiling held for a while, then broke — and what followed was catastrophic."
@@ -2165,6 +2425,14 @@
             "_when": [
               {
                 "if": {
+                  "alignment_durability": [
+                    "breaks"
+                  ]
+                },
+                "text": "Alignment broke, and the scramble that followed scattered capability unevenly. Different actors responded to the failure differently — some accelerated, some retreated, some improvised. The mosaic was born from that divergence."
+              },
+              {
+                "if": {
                   "geo_spread": [
                     "one"
                   ]
@@ -2332,7 +2600,7 @@
       "variants": {
         "drift": {
           "subtitle": "Wrong Metrics",
-          "mood": "dystopian",
+          "mood": "mixed",
           "summary": "No one chose this. Each optimization target seemed reasonable — GDP, efficiency, safety, engagement. Each delegation made sense. But the aggregate of individually reasonable targets diverged from genuine human flourishing, and by the time anyone noticed, the skills, the institutional knowledge, and the desire to do things yourself had all atrophied.\n\nHumans are comfortable, well-fed, entertained. But meaningful agency has evaporated. A civilization optimized for the wrong metrics — one that works perfectly and belongs to no one."
         }
       },

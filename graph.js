@@ -11,7 +11,8 @@ const SCENARIO = {
     hideConditions: [
         { flag: 'hideAfterEscape', when: {
           _set: ['ai_goals'],
-          _rawNot: { ai_goals: ['marginal', 'benevolent'] }
+          _rawNot: { ai_goals: ['marginal', 'benevolent'] },
+          _effNot: { containment: ['contained'] }
         } },
         { flag: 'hideOnBrittleEscape', when: {
           alignment_durability: ['breaks'],
@@ -34,9 +35,10 @@ const DECEL_PAIRS = [
 const OUTCOME_ACTIVATE = [
     { capability: ['singularity'], automation: ['deep'], power_promise: ['for_everyone'], mobilization: ['strong'] },
     { capability: ['singularity'], automation: ['deep'], _set: ['sincerity_test'] },
-    { capability: ['singularity'], automation: ['deep'], _set: ['resistance_outcome'] },
+    { capability: ['singularity'], automation: ['deep'], _set: ['pushback_outcome'] },
     { capability: ['singularity'], automation: ['deep'], coalition_outcome: ['fragments'] },
-    { capability: ['singularity'], automation: ['deep'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] }
+    { capability: ['singularity'], automation: ['deep'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
+    { capability: ['singularity'], automation: ['deep'], ai_goals: ['benevolent'] }
 ];
 
 
@@ -95,21 +97,21 @@ const NODES = [
     { id: 'agi_threshold', label: 'Human-Competitive AI', stage: 1,
       activateWhen: [{ capability: ['singularity'] }],
       edges: [
-        { id: 'twenty_four_hours', label: '~24 hours — we\'re nearly there', shortLabel: '~24 hours' },
-        { id: 'one_week', label: '~1 week — sustained competence', shortLabel: '~1 week' },
-        { id: 'few_months', label: '~A few months — deep expertise', shortLabel: '~A few months' },
-        { id: 'one_year', label: '~1 year — the bar is very high', shortLabel: '~1 year' },
-        { id: 'ten_plus_years', label: '~10+ years — mastery runs deep', shortLabel: '~10+ years' },
+        { id: 'twenty_four_hours', label: 'Day-long tasks — we\'re nearly there', shortLabel: 'Day-long tasks' },
+        { id: 'one_week', label: 'Week-long tasks — sustained competence', shortLabel: 'Week-long tasks' },
+        { id: 'few_months', label: 'Month-long projects — deep expertise', shortLabel: 'Month-long projects' },
+        { id: 'one_year', label: 'Year-long work — the bar is very high', shortLabel: 'Year-long work' },
+        { id: 'ten_plus_years', label: 'Decade-scale mastery', shortLabel: 'Decade-scale mastery' },
         { id: 'never', label: 'Never' }
       ] },
     { id: 'asi_threshold', label: 'Superhuman AI', stage: 1,
       activateWhen: [{ capability: ['singularity'], _set: ['agi_threshold'] }],
       edges: [
-        { id: 'twenty_four_hours', label: '~24 hours — the jump is small', shortLabel: '~24 hours', requires: { agi_threshold: ['twenty_four_hours'] } },
-        { id: 'one_week', label: '~1 week — outpaces quickly', shortLabel: '~1 week', requires: { agi_threshold: ['twenty_four_hours', 'one_week'] } },
-        { id: 'few_months', label: '~A few months — strategic superiority', shortLabel: '~A few months', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months'] } },
-        { id: 'one_year', label: '~1 year — the bar is very high', shortLabel: '~1 year', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year'] } },
-        { id: 'ten_plus_years', label: '~10+ years — surpassing takes decades', shortLabel: '~10+ years', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year', 'ten_plus_years'] } },
+        { id: 'twenty_four_hours', label: 'Day-long tasks — the jump is small', shortLabel: 'Day-long tasks', requires: { agi_threshold: ['twenty_four_hours'] } },
+        { id: 'one_week', label: 'Week-long tasks — outpaces quickly', shortLabel: 'Week-long tasks', requires: { agi_threshold: ['twenty_four_hours', 'one_week'] } },
+        { id: 'few_months', label: 'Month-long projects — strategic superiority', shortLabel: 'Month-long projects', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months'] } },
+        { id: 'one_year', label: 'Year-long work — the bar is very high', shortLabel: 'Year-long work', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year'] } },
+        { id: 'ten_plus_years', label: 'Decade-scale mastery — surpassing takes decades', shortLabel: 'Decade-scale mastery', requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year', 'ten_plus_years'] } },
         { id: 'never', label: 'Never — matching is the ceiling', shortLabel: 'Never' }
       ] },
     { id: 'automation', label: 'Knowledge Work', derived: true, forwardKey: true,
@@ -225,19 +227,19 @@ const NODES = [
     { id: 'alignment', label: 'Alignment', stage: 2, forwardKey: true,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
       derivedFrom: [
+        { when: { proliferation_alignment: 'breaks' }, value: 'failed' },
+        { when: { alignment_durability: 'breaks' }, value: 'failed' },
+        { when: { brittle_resolution: 'escape' }, value: 'failed' },
+        { when: { inert_stays: 'no' }, whenSet: 'inert_outcome', value: 'failed' },
         { effective: { decel_outcome: ['solved', 'parity_solved'] }, value: 'robust' },
         { when: { brittle_resolution: 'solved' }, value: 'robust' },
         { when: { brittle_resolution: 'sufficient' }, valueMap: { failed: 'brittle' } },
-        { when: { inert_stays: 'no' }, whenSet: 'inert_outcome', value: 'failed' },
         {
           when: { ai_goals: 'marginal' },
           unless: { brittle_resolution: 'solved' },
           valueMap: { failed: 'brittle' }
         },
-        { when: { alignment_durability: 'breaks' }, value: 'failed' },
-        { when: { brittle_resolution: 'escape' }, value: 'failed' },
         { when: { proliferation_outcome: 'leaks_public' }, unless: { alignment: 'robust' }, value: 'failed' },
-        { when: { proliferation_alignment: 'breaks' }, value: 'failed' },
         { effective: { decel_outcome: ['rival'] }, value: 'brittle' },
         { effective: { decel_outcome: ['escapes'] }, value: 'failed' }
       ],
@@ -251,14 +253,16 @@ const NODES = [
         {
           capability: ['singularity'],
           automation: ['deep'],
-          alignment: ['brittle'],
-          _notSet: ['decel_outcome']
+          _raw: { alignment: ['brittle'] },
+          _notSet: ['decel_outcome'],
+          _effNot: { containment: ['escaped'] }
         },
         {
           capability: ['singularity'],
           automation: ['deep'],
-          alignment: ['brittle'],
-          _eff: { decel_outcome: ['rival'], decel_align_progress: ['brittle'] }
+          _raw: { alignment: ['brittle'] },
+          _eff: { decel_outcome: ['rival'], decel_align_progress: ['brittle'] },
+          _effNot: { containment: ['escaped'] }
         }
       ],
       edges: [ { id: 'holds', label: 'Holds for now' }, { id: 'breaks', label: 'Breaks' } ] },
@@ -268,8 +272,8 @@ const NODES = [
           capability: ['singularity'],
           automation: ['deep'],
           alignment: ['failed'],
-          _effNot: { decel_outcome: ['solved', 'parity_solved'] },
-          _rawNot: { brittle_resolution: ['escape'] }
+          _effNot: { decel_outcome: ['solved', 'parity_solved'], proliferation_outcome: ['leaks_public'] },
+          _rawNot: { brittle_resolution: ['escape'], proliferation_alignment: ['breaks'] }
         },
         {
           capability: ['singularity'],
@@ -281,6 +285,8 @@ const NODES = [
       derivedFrom: [
         { when: { alignment_durability: 'breaks' }, value: 'escaped' },
         { when: { brittle_resolution: 'escape' }, value: 'escaped' },
+        { when: { proliferation_alignment: 'breaks' }, value: 'escaped' },
+        { effective: { proliferation_outcome: ['leaks_public'] }, unless: { alignment: 'robust' }, value: 'escaped' },
         { when: { inert_stays: 'no' }, whenSet: 'inert_outcome', value: 'escaped' },
         { when: { catch_outcome: 'holds_permanently' }, unless: { collateral_impact: 'civilizational' }, value: 'contained' }
       ],
@@ -524,8 +530,11 @@ const NODES = [
         {
           capability: ['singularity'],
           automation: ['deep'],
-          proliferation_control: ['deny_rivals', 'secure_access', 'none']
+          proliferation_control: ['deny_rivals', 'secure_access']
         }
+      ],
+      derivedFrom: [
+        { when: { proliferation_control: 'none' }, value: 'leaks_public' }
       ],
       edges: [
         {
@@ -562,7 +571,7 @@ const NODES = [
       derivedFrom: [
         { when: { escalation_outcome: 'agreement' }, value: 'coexistence' },
         { when: { post_war_aims: 'human_centered' }, value: 'coexistence' },
-        { when: { resistance_outcome: 'succeeds' }, value: 'international' },
+        { when: { pushback_outcome: 'succeeds' }, value: 'international' },
         { whenSet: 'rival_dynamics', fromDim: 'rival_dynamics' }
       ],
       edges: [
@@ -683,8 +692,7 @@ const NODES = [
           _notSet: ['post_war_aims']
         },
         { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'] },
-        { capability: ['singularity'], automation: ['deep'], _set: ['post_war_aims'] },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['escaped'], ai_goals: ['benevolent'] }
+        { capability: ['singularity'], automation: ['deep'], _set: ['post_war_aims'] }
       ],
       edges: [
         { id: 'for_everyone', label: 'This is for everyone' },
@@ -707,13 +715,13 @@ const NODES = [
         { id: 'sincere', label: 'Yes — the promise holds', shortLabel: 'Yes — holds' },
         { id: 'hollows_out', label: 'No — the promise hollows out', shortLabel: 'No — hollows out' }
       ] },
-    { id: 'resistance_outcome', label: 'Public Pushback', stage: 3, hideAfterEscape: true,
+    { id: 'pushback_outcome', label: 'Public Pushback', stage: 3, hideAfterEscape: true,
       activateWhen: [
         { mobilization: ['strong'], power_promise: ['keeping_safe', 'best_will_rise'] },
         { coalition_outcome: ['coalesces'], power_promise: ['keeping_safe', 'best_will_rise'] }
       ],
       edges: [
-        { id: 'succeeds', label: 'Resistance succeeds' },
+        { id: 'succeeds', label: 'Pushback succeeds' },
         { id: 'partial', label: 'Partial concessions' },
         { id: 'fails', label: 'Power prevails' }
       ] },
@@ -729,23 +737,25 @@ const NODES = [
         { id: 'equal', label: 'Shared equally',
           disabledWhen: [
             { sincerity_test: ['hollows_out'], reason: 'The promise of shared prosperity hollowed out without pressure to enforce it' },
-            { resistance_outcome: ['partial'], reason: 'The resistance won concessions but not transformation — the structure still favors those who hold power' },
-            { resistance_outcome: ['fails'], reason: 'The resistance failed — the power holder prevailed and concentration proceeds' },
+            { pushback_outcome: ['partial'], reason: 'The pushback won concessions but not transformation — the structure still favors those who hold power' },
+            { pushback_outcome: ['fails'], reason: 'The pushback failed — the power holder prevailed and concentration proceeds' },
             { coalition_outcome: ['fragments'], reason: 'The opposition never unified, leaving the default power structure intact' },
             { power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'], reason: 'No one contested a promise that was never about sharing' }
           ] },
         { id: 'unequal', label: 'Wealth concentrates',
           disabledWhen: [
+            { ai_goals: ['benevolent'], reason: 'A genuinely benevolent superintelligence distributes its gifts directly — no human intermediary to capture the gains' },
             { power_promise: ['for_everyone'], mobilization: ['strong'], reason: 'Promise and pressure aligned — broadly shared outcomes, not partial inequality' },
             { sincerity_test: ['sincere'], reason: 'Genuine cooperative intent produced broadly shared outcomes' },
-            { resistance_outcome: ['succeeds'], reason: 'Successful resistance forced genuine redistribution' },
+            { pushback_outcome: ['succeeds'], reason: 'Successful pushback forced genuine redistribution' },
           ] },
         { id: 'extreme', label: 'Power concentrates',
           disabledWhen: [
+            { ai_goals: ['benevolent'], reason: 'A genuinely benevolent superintelligence has no reason to concentrate power — it bypasses human structures entirely' },
             { power_promise: ['for_everyone'], mobilization: ['strong'], reason: 'Promise and accountability together prevent extreme concentration' },
             { sincerity_test: ['sincere'], reason: 'The cooperative intent proved genuine — power didn\'t concentrate this far' },
-            { resistance_outcome: ['succeeds'], reason: 'The resistance forced genuine redistribution' },
-            { resistance_outcome: ['partial'], reason: 'Real concessions were made — not equality, but enough to prevent lock-in' }
+            { pushback_outcome: ['succeeds'], reason: 'The pushback forced genuine redistribution' },
+            { pushback_outcome: ['partial'], reason: 'Real concessions were made — not equality, but enough to prevent lock-in' }
           ] }
       ] },
     { id: 'concentration_type', label: 'The Circle', stage: 3, terminal: true,
@@ -797,19 +807,20 @@ const NODES = [
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['for_everyone'], mobilization: ['strong'] },
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['sincerity_test'] },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['resistance_outcome'] },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['pushback_outcome'] },
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], coalition_outcome: ['fragments'] },
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
         { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['for_everyone'], mobilization: ['strong'] },
         { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['sincerity_test'] },
-        { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['resistance_outcome'] },
+        { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['pushback_outcome'] },
         { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], coalition_outcome: ['fragments'] },
         { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
         { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'], containment: ['contained'] }, intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['for_everyone'], mobilization: ['strong'] },
         { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'], containment: ['contained'] }, intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['sincerity_test'] },
-        { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'], containment: ['contained'] }, intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['resistance_outcome'] },
+        { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'], containment: ['contained'] }, intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], _set: ['pushback_outcome'] },
         { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'], containment: ['contained'] }, intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], coalition_outcome: ['fragments'] },
-        { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'], containment: ['contained'] }, intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] }
+        { capability: ['singularity'], automation: ['deep'], _eff: { alignment: ['failed'], containment: ['contained'] }, intent: ['international', 'coexistence'], _notSet: ['post_war_aims'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
+        { capability: ['singularity'], automation: ['deep'], ai_goals: ['benevolent'] }
       ],
       edges: [
         { id: 'none', label: 'Succeeds' },
@@ -921,7 +932,8 @@ const NODES = [
           ] },
         { id: 'severe', label: 'Severe but recoverable', shortLabel: 'Severe',
           disabledWhen: [
-            { response_method: ['emp'], reason: 'EMP damage is worse than severe' }
+            { response_method: ['emp'], reason: 'EMP damage is worse than severe' },
+            { response_method: ['digital_countermeasure'], reason: 'Targeted software can\'t cause severe physical damage' }
           ] },
         { id: 'civilizational', label: 'Civilizational — the response itself crippled modern civilization', shortLabel: 'Civilizational',
           disabledWhen: [
