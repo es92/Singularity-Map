@@ -272,6 +272,11 @@ body::before {
 .flip-animating .timeline-event,
 .flip-animating .question-card {
     position: relative; z-index: 2;
+    will-change: transform, opacity;
+    contain: layout style;
+}
+.flip-animating .timeline-stage-header {
+    will-change: transform, opacity;
 }
 @keyframes fade-in-cover {
     0% { opacity: 0; }
@@ -318,7 +323,6 @@ body::before {
         radial-gradient(ellipse at 25% 50%, var(--bg-glow-1) 0%, transparent 60%),
         radial-gradient(ellipse at 75% 20%, var(--bg-glow-2) 0%, transparent 60%),
         var(--bg);
-    background-attachment: fixed;
 }
 .timeline-stage-label {
     font-weight: 600; font-size: 0.88rem; color: var(--text);

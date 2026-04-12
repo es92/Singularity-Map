@@ -696,7 +696,10 @@ class TimelineAnimator extends TimelineRenderer {
         const refTop = newCardDy !== null ? newCardRect.top
                      : (outcomeDy !== null ? endOutcomeRect.top : null);
 
+        if (oldCardEl) oldCardEl.style.willChange = 'transform, opacity';
+
         let startTime = 0;
+        let lastMaskClip = -1;
         const tick = (now) => {
             if (!startTime) startTime = now;
             const elapsed = now - startTime;
@@ -715,13 +718,17 @@ class TimelineAnimator extends TimelineRenderer {
                     const dy = refVisualTop - startCardRect.height - startCardRect.top;
                     oldCardEl.style.transform = `translateY(${dy}px)`;
                     const clipTop = Math.max(0, -dy) + (startTopRowHeight || 0);
-                    if (clipTop > 0.5) {
-                        const fade = `linear-gradient(to bottom, transparent ${clipTop}px, black ${clipTop + 40}px)`;
-                        oldCardEl.style.webkitMaskImage = fade;
-                        oldCardEl.style.maskImage = fade;
-                    } else {
-                        oldCardEl.style.webkitMaskImage = '';
-                        oldCardEl.style.maskImage = '';
+                    const roundedClip = Math.round(clipTop);
+                    if (roundedClip !== lastMaskClip) {
+                        lastMaskClip = roundedClip;
+                        if (roundedClip > 0) {
+                            const fade = `linear-gradient(to bottom, transparent ${roundedClip}px, black ${roundedClip + 40}px)`;
+                            oldCardEl.style.webkitMaskImage = fade;
+                            oldCardEl.style.maskImage = fade;
+                        } else {
+                            oldCardEl.style.webkitMaskImage = '';
+                            oldCardEl.style.maskImage = '';
+                        }
                     }
                 }
             }
@@ -731,7 +738,7 @@ class TimelineAnimator extends TimelineRenderer {
             } else {
                 // --- 6. Cleanup ---
                 this._scrollRafId = null;
-                if (oldCardEl) { oldCardEl.remove(); this._oldCardEl = null; }
+                if (oldCardEl) { oldCardEl.style.willChange = ''; oldCardEl.remove(); this._oldCardEl = null; }
                 this._currentFlip = null;
 
                 const footer = this.containerEl.querySelector('.map-actions');
