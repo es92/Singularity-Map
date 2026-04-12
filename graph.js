@@ -692,12 +692,19 @@ const NODES = [
           _notSet: ['post_war_aims']
         },
         { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'] },
-        { capability: ['singularity'], automation: ['deep'], _set: ['post_war_aims'] }
+        { capability: ['singularity'], automation: ['deep'], _set: ['post_war_aims'] },
+        { capability: ['singularity'], automation: ['deep'], escalation_outcome: ['standoff'] }
       ],
       edges: [
-        { id: 'for_everyone', label: 'This is for everyone' },
+        { id: 'for_everyone', label: 'This is for everyone',
+          disabledWhen: [
+            { escalation_outcome: ['standoff'], reason: 'In a standoff between rival AI powers, the framing is security — not sharing' }
+          ] },
         { id: 'keeping_safe', label: 'We\'re keeping you safe' },
-        { id: 'best_will_rise', label: 'The best ideas will win', shortLabel: 'Best ideas win' }
+        { id: 'best_will_rise', label: 'The best ideas will win', shortLabel: 'Best ideas win',
+          disabledWhen: [
+            { escalation_outcome: ['standoff'], reason: 'In a standoff between rival AI powers, the framing is security — not meritocracy' }
+          ] }
       ] },
     { id: 'mobilization', label: 'Mobilization', stage: 3, hideAfterEscape: true,
       activateWhen: [{ _set: ['power_promise'] }],
