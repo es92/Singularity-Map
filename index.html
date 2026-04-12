@@ -385,10 +385,6 @@
             padding-bottom: 0;
         }
         .outcome-timeline .timeline-event { padding-top: 1.2rem; }
-        .world-dot {
-            background: transparent !important;
-            border: 1.5px solid var(--text-dim) !important;
-        }
         .world-vignette-heading {
             font-size: 0.82rem; font-weight: 600;
             color: var(--text-secondary);
@@ -430,7 +426,10 @@
         .heading-personal .timeline-year { color: var(--text); }
         .heading-death { color: var(--mood-dystopian); }
         .heading-death .timeline-year { color: var(--mood-dystopian); }
-        .death-dot { background: var(--mood-dystopian) !important; }
+        .dot-professional { background: var(--accent-2) !important; box-shadow: 0 0 8px rgba(124,92,255,0.3) !important; }
+        .dot-personal { background: var(--accent) !important; box-shadow: 0 0 8px var(--accent-glow) !important; }
+        .dot-death { background: var(--mood-dystopian) !important; box-shadow: 0 0 8px rgba(255,51,102,0.3) !important; }
+        .dot-world { background: var(--text-secondary) !important; box-shadow: none !important; }
         .heading-world { color: var(--text-secondary); }
         .heading-world .timeline-year { color: var(--text-secondary); }
 
@@ -1212,8 +1211,9 @@
 
                 if (item.type === 'personal') {
                     const catClass = item.death ? 'heading-death' : (item.category === 'Professional Impact' ? 'heading-professional' : 'heading-personal');
+                    const dotClass = item.death ? 'dot-death' : (item.category === 'Professional Impact' ? 'dot-professional' : 'dot-personal');
                     html += `<div class="timeline-event personal-milestone scroll-reveal">
-                        <div class="tl-vline-seg"></div><div class="tl-dot${item.death ? ' death-dot' : ''}"></div><div class="tl-hline"></div>
+                        <div class="tl-vline-seg"></div><div class="tl-dot ${dotClass}"></div><div class="tl-hline"></div>
                         <div class="timeline-top-row ${catClass}">
                             <span class="personal-vignette-heading">${esc(item.category)}</span>
                             ${yearHtml}
@@ -1222,7 +1222,7 @@
                     </div>`;
                 } else {
                     html += `<div class="timeline-event world-milestone scroll-reveal">
-                        <div class="tl-vline-seg"></div><div class="tl-dot world-dot"></div><div class="tl-hline"></div>
+                        <div class="tl-vline-seg"></div><div class="tl-dot dot-world"></div><div class="tl-hline"></div>
                         <div class="timeline-top-row heading-world">
                             <span class="world-vignette-heading">${esc(item.heading)}</span>
                             ${yearHtml}
