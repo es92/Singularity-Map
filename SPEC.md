@@ -48,8 +48,6 @@ Each node in `graph.js` represents a question (dimension). Each node has:
 - **`deriveWhen`** *(optional)* — rules that compute this dimension's value from other dimensions instead of asking the user
 - **`derived: true`** — marks the node as purely derived (never presented as a question, invisible to the priority system)
 - **`priority`** *(optional, default 0)* — controls question ordering; nodes with higher priority are deferred until all lower-priority visible questions are answered (replaces the old `terminal` flag; `priority: 2` = terminal)
-- **`snapshotAs`** *(optional)* — when present, `cleanSelection` copies the user's raw answer into a separate state key (e.g., `alignment` with `snapshotAs: 'alignment_0'` saves the original choice before derivation can change it)
-
 Edges can have:
 - **`requires`** — conditions that must be met for this edge to be available
 - **`disabledWhen`** — conditions under which this edge is disabled

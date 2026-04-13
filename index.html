@@ -1418,8 +1418,6 @@
 
             // ─── Forward DFS with effective-value caching ────────────
 
-            const _snapshotDims = new Set(Engine.NODES.filter(n => n.snapshotAs).map(n => n.id));
-
             function _keysFromCond(c) {
                 const keys = [];
                 for (const k of Object.keys(c)) {
@@ -1518,7 +1516,7 @@
                 if (variantKey && template.primaryDimension) keyRelevantSet.add(template.primaryDimension);
                 const keyRelevant = [...keyRelevantSet].sort();
 
-                const rawKeyDims = new Set(NODES.filter(n => n.snapshotAs).map(n => n.id));
+                const rawKeyDims = new Set();
 
                 const condValueLists = new Map();
                 for (const nid of branchRelevant) {
@@ -1576,10 +1574,6 @@
                     if (!v) continue;
                     const eq = equivMap.get(k);
                     key += k + '=' + (eq ? eq(v) : v) + '|';
-                }
-                for (const k of rawKeyDims) {
-                    const snapKey = Engine.NODE_MAP[k] && Engine.NODE_MAP[k].snapshotAs;
-                    if (snapKey && sel[snapKey]) key += snapKey + '=' + sel[snapKey] + '|';
                 }
                 return key;
             }
@@ -1735,10 +1729,6 @@
                     if (!v) continue;
                     const eq = _equivMap.get(k);
                     key += k + '=' + (eq ? eq(v) : v) + '|';
-                }
-                for (const k of _rawKeyDims) {
-                    const snapKey = Engine.NODE_MAP[k] && Engine.NODE_MAP[k].snapshotAs;
-                    if (snapKey && sel[snapKey]) key += snapKey + '=' + sel[snapKey] + '|';
                 }
                 return key;
             }

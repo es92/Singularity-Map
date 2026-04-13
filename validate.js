@@ -38,9 +38,6 @@ function runStaticAnalysis() {
     const errors = [];
 
     const metaNodes = new Set(NODES.map(d => d.id));
-    for (const node of NODES) {
-        if (node.snapshotAs) metaNodes.add(node.snapshotAs);
-    }
 
     // 1. Node structure validation
     for (const node of NODES) {

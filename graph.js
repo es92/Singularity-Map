@@ -197,7 +197,7 @@ const NODES = [
       deriveWhen: [
         { match: { decel_outcome: ['rival', 'parity_solved', 'parity_failed'] }, value: 'two' },
         { match: { proliferation_outcome: ['leaks_rivals'] }, value: 'two' },
-        { match: { proliferation_outcome: ['leaks_public'], proliferation_control: ['deny_rivals', 'secure_access'] }, value: 'several' }
+        { match: { proliferation_outcome: ['leaks_public'] }, value: 'several' }
       ],
       edges: [
         { id: 'one', label: 'One country' },
@@ -214,7 +214,7 @@ const NODES = [
         }
       ],
       edges: [ { id: 'lab', label: 'The labs' }, { id: 'state', label: 'The state' } ] },
-    { id: 'alignment', label: 'Alignment', stage: 2, forwardKey: true, snapshotAs: 'alignment_0',
+    { id: 'alignment', label: 'Alignment', stage: 2, forwardKey: true,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
       deriveWhen: [
         { match: { proliferation_alignment: ['breaks'] }, value: 'failed' },
@@ -228,7 +228,7 @@ const NODES = [
           match: { ai_goals: ['marginal'], brittle_resolution: { not: ['solved'] } },
           valueMap: { failed: 'brittle' }
         },
-        { match: { proliferation_outcome: ['leaks_public'], proliferation_control: ['deny_rivals', 'secure_access'], alignment: { not: ['robust'] } }, value: 'failed' },
+        { match: { proliferation_outcome: ['leaks_public'], alignment: { not: ['robust'] } }, value: 'failed' },
         { match: { decel_outcome: ['rival'] }, value: 'brittle' },
         { match: { decel_outcome: ['escapes'] }, value: 'failed' }
       ],
@@ -242,14 +242,14 @@ const NODES = [
         {
           capability: ['singularity'],
           automation: ['deep'],
-          alignment_0: ['brittle'],
+          alignment: ['brittle'],
           decel_outcome: false,
           containment: { not: ['escaped'] }
         },
         {
           capability: ['singularity'],
           automation: ['deep'],
-          alignment_0: ['brittle'],
+          alignment: ['brittle'],
           decel_outcome: ['rival'], decel_align_progress: ['brittle'],
           containment: { not: ['escaped'] }
         }
@@ -282,7 +282,7 @@ const NODES = [
         { match: { alignment_durability: ['breaks'] }, value: 'escaped' },
         { match: { brittle_resolution: ['escape'] }, value: 'escaped' },
         { match: { proliferation_alignment: ['breaks'] }, value: 'escaped' },
-        { match: { proliferation_outcome: ['leaks_public'], alignment_0: { not: ['robust'] } }, value: 'escaped' },
+        { match: { proliferation_outcome: ['leaks_public'], alignment: { not: ['robust'] } }, value: 'escaped' },
         { match: { inert_stays: ['no'], inert_outcome: true }, value: 'escaped' },
         { match: { catch_outcome: ['holds_permanently'], collateral_impact: { not: ['civilizational'] } }, value: 'contained' }
       ],

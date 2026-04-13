@@ -205,12 +205,6 @@ function cleanSelection(sel) {
         }
         if (!changed) break;
     }
-    for (const node of NODES) {
-        if (node.snapshotAs) {
-            if (sel[node.id] !== undefined) sel[node.snapshotAs] = sel[node.id];
-            else delete sel[node.snapshotAs];
-        }
-    }
     return sel;
 }
 
