@@ -726,6 +726,13 @@ const NODES = [
           intent: ['international', 'coexistence'],
           post_war_aims: false
         },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          ai_goals: ['marginal'], inert_stays: ['yes'],
+          intent: ['international', 'coexistence'],
+          post_war_aims: false
+        },
         { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'] },
         { capability: ['singularity'], automation: ['deep'], post_war_aims: true },
         { capability: ['singularity'], automation: ['deep'], escalation_outcome: ['standoff'] },
@@ -869,6 +876,11 @@ const NODES = [
         { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['contained'], intent: ['international', 'coexistence'], post_war_aims: false, pushback_outcome: true },
         { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['contained'], intent: ['international', 'coexistence'], post_war_aims: false, coalition_outcome: ['fragments'] },
         { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['contained'], intent: ['international', 'coexistence'], post_war_aims: false, power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
+        { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'], inert_stays: ['yes'], intent: ['international', 'coexistence'], post_war_aims: false, power_promise: ['for_everyone'], mobilization: ['strong'] },
+        { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'], inert_stays: ['yes'], intent: ['international', 'coexistence'], post_war_aims: false, sincerity_test: true },
+        { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'], inert_stays: ['yes'], intent: ['international', 'coexistence'], post_war_aims: false, pushback_outcome: true },
+        { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'], inert_stays: ['yes'], intent: ['international', 'coexistence'], post_war_aims: false, coalition_outcome: ['fragments'] },
+        { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'], inert_stays: ['yes'], intent: ['international', 'coexistence'], post_war_aims: false, power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
         { capability: ['singularity'], automation: ['deep'], ai_goals: ['benevolent'] }
       ],
       edges: [

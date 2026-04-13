@@ -618,6 +618,27 @@
           "benefit_distribution": [
             "unequal"
           ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "ai_goals": [
+            "marginal"
+          ],
+          "inert_stays": [
+            "yes"
+          ],
+          "intent": [
+            "international",
+            "coexistence"
+          ],
+          "failure_mode": [
+            "none"
+          ],
+          "benefit_distribution": [
+            "unequal"
+          ]
         }
       ],
       "story": [],
@@ -811,7 +832,11 @@
           "benefit_distribution": [
             "extreme"
           ],
-          "_not": { "concentration_type": ["ai_itself"] }
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -834,7 +859,11 @@
             "solved",
             "sufficient"
           ],
-          "_not": { "concentration_type": ["ai_itself"] }
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -856,7 +885,11 @@
           "benefit_distribution": [
             "extreme"
           ],
-          "_not": { "concentration_type": ["ai_itself"] }
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -878,7 +911,11 @@
           "benefit_distribution": [
             "extreme"
           ],
-          "_not": { "concentration_type": ["ai_itself"] }
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -899,7 +936,11 @@
           "benefit_distribution": [
             "extreme"
           ],
-          "_not": { "concentration_type": ["ai_itself"] }
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -924,7 +965,11 @@
             "solved",
             "sufficient"
           ],
-          "_not": { "concentration_type": ["ai_itself"] }
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -948,7 +993,11 @@
           "benefit_distribution": [
             "extreme"
           ],
-          "_not": { "concentration_type": ["ai_itself"] }
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -972,7 +1021,11 @@
           "benefit_distribution": [
             "extreme"
           ],
-          "_not": { "concentration_type": ["ai_itself"] }
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -987,6 +1040,32 @@
           "benefit_distribution": [
             "extreme"
           ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "ai_goals": [
+            "marginal"
+          ],
+          "inert_stays": [
+            "yes"
+          ],
+          "intent": [
+            "international",
+            "coexistence"
+          ],
+          "failure_mode": [
+            "none"
+          ],
+          "benefit_distribution": [
+            "extreme"
+          ],
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         }
       ],
       "story": [],
@@ -1593,6 +1672,26 @@
           "benefit_distribution": [
             "equal"
           ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "ai_goals": [
+            "marginal"
+          ],
+          "inert_stays": [
+            "yes"
+          ],
+          "intent": [
+            "international"
+          ],
+          "failure_mode": [
+            "none"
+          ],
+          "benefit_distribution": [
+            "equal"
+          ]
         }
       ],
       "story": [],
@@ -1661,11 +1760,25 @@
                 "text": "Alignment broke, and the response was to accelerate. The failure became the justification — only those already in control could manage the crisis, and the crisis never ended. Capture was built on the permanent emergency of broken safety."
               },
               {
-                "if": { "gov_action": ["accelerate"], "sovereignty": ["lab"] },
+                "if": {
+                  "gov_action": [
+                    "accelerate"
+                  ],
+                  "sovereignty": [
+                    "lab"
+                  ]
+                },
                 "text": "The labs chose speed over caution — and no one stopped them. By the time anyone considered slowing down, the entrenchment was already complete."
               },
               {
-                "if": { "gov_action": ["accelerate"], "sovereignty": ["state"] },
+                "if": {
+                  "gov_action": [
+                    "accelerate"
+                  ],
+                  "sovereignty": [
+                    "state"
+                  ]
+                },
                 "text": "The state chose speed over caution. Full acceleration, no pause for safety. By the time the risks were clear, the power structure was already locked in."
               }
             ]
@@ -1700,11 +1813,19 @@
             "_default": "Even within the controlling power's own territory, benefits flowed almost entirely to those who held political and institutional power. A small elite captured the captor.",
             "_when": [
               {
-                "if": { "sovereignty": ["lab"] },
+                "if": {
+                  "sovereignty": [
+                    "lab"
+                  ]
+                },
                 "text": "Even within the labs' sphere of influence, the gains flowed to those who held equity and board seats — not the engineers, not the public. A small ownership class captured the captor."
               },
               {
-                "if": { "sovereignty": ["state"] },
+                "if": {
+                  "sovereignty": [
+                    "state"
+                  ]
+                },
                 "text": "Even within the state's own territory, benefits flowed almost entirely to those who held political and institutional power. A small elite captured the captor."
               }
             ]
@@ -2630,6 +2751,27 @@
             "equal",
             "unequal"
           ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "ai_goals": [
+            "marginal"
+          ],
+          "inert_stays": [
+            "yes"
+          ],
+          "intent": [
+            "coexistence"
+          ],
+          "failure_mode": [
+            "none"
+          ],
+          "benefit_distribution": [
+            "equal",
+            "unequal"
+          ]
         }
       ],
       "story": [],
@@ -2768,7 +2910,11 @@
           "failure_mode": [
             "drift"
           ],
-          "_not": { "concentration_type": ["ai_itself"] }
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -2788,7 +2934,11 @@
             "solved",
             "sufficient"
           ],
-          "_not": { "concentration_type": ["ai_itself"] }
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -2807,7 +2957,11 @@
           "failure_mode": [
             "drift"
           ],
-          "_not": { "concentration_type": ["ai_itself"] }
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -2826,7 +2980,34 @@
           "failure_mode": [
             "drift"
           ],
-          "_not": { "concentration_type": ["ai_itself"] }
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "ai_goals": [
+            "marginal"
+          ],
+          "inert_stays": [
+            "yes"
+          ],
+          "intent": [
+            "international",
+            "coexistence"
+          ],
+          "failure_mode": [
+            "drift"
+          ],
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         }
       ],
       "story": [],

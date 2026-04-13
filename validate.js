@@ -348,19 +348,6 @@ function runExplorer() {
                     hiddenQuestion: next.id,
                     url: selToUrl(sel),
                 });
-            } else {
-                for (const node of NODES) {
-                    if (node.derived || (node.priority || 0) >= 2) continue;
-                    if (sel[node.id]) continue;
-                    if (!isNodeActivatedByRules(sel, node)) continue;
-                    if (isNodeVisible(sel, node)) continue;
-                    violations.reDerivedDeadEnd.push({
-                        splits: splits.map(s => `${s.node}: ${s.raw}→${s.eff}`),
-                        hiddenQuestion: node.id,
-                        url: selToUrl(sel),
-                    });
-                    break;
-                }
             }
         }
     }
