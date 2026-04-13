@@ -53,7 +53,7 @@ function forwardKey(engine, sel) {
         if (state[k]) parts.push(`E:${k}=${state[k]}`);
     }
     for (const node of engine.NODES) {
-        if (!node.derivedFrom) continue;
+        if (!node.derivedFrom && !node.deriveWhen) continue;
         const raw = sel[node.id];
         const eff = state[node.id];
         if (raw && eff && raw !== eff) {
