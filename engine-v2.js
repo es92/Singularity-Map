@@ -21,7 +21,11 @@ function matchesDerivation(rule, sel) {
     if (rule.effective) {
         for (const [key, val] of Object.entries(rule.effective)) {
             const eff = resolvedVal(sel, key);
-            if (Array.isArray(val) ? !val.includes(eff) : eff !== val) return false;
+            if (val === true)  { if (!eff) return false; }
+            else if (val === false) { if (eff) return false; }
+            else if (val && typeof val === 'object' && !Array.isArray(val) && val.not) {
+                if (eff && val.not.includes(eff)) return false;
+            } else if (Array.isArray(val) ? !val.includes(eff) : eff !== val) return false;
         }
     }
     if (rule.unless) {
@@ -248,6 +252,12 @@ function cleanSelection(sel) {
             }
         }
         if (!changed) break;
+    }
+    for (const node of NODES) {
+        if (node.snapshotAs) {
+            if (sel[node.id] !== undefined) sel[node.snapshotAs] = sel[node.id];
+            else delete sel[node.snapshotAs];
+        }
     }
     return sel;
 }

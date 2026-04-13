@@ -78,24 +78,33 @@ function forwardKey(engine, sel) {
 function compareState(sel) {
     const diffs = [];
 
+    const v2sel = {...sel, _locked: {...(sel._locked || {})}};
+    // Sync snapshotAs without full cleanSelection
+    for (const node of v2.NODES) {
+        if (node.snapshotAs) {
+            if (v2sel[node.id] !== undefined) v2sel[node.snapshotAs] = v2sel[node.id];
+            else delete v2sel[node.snapshotAs];
+        }
+    }
+
     for (const v1node of v1.NODES) {
         const v2node = v2.NODE_MAP[v1node.id];
         if (!v2node) continue;
 
         const vis1 = v1.isNodeVisible(sel, v1node);
-        const vis2 = v2.isNodeVisible(sel, v2node);
+        const vis2 = v2.isNodeVisible(v2sel, v2node);
         if (vis1 !== vis2) {
             diffs.push({ type: 'visibility', node: v1node.id, v1: vis1, v2: vis2 });
         }
 
         const lock1 = v1.isNodeLocked(sel, v1node);
-        const lock2 = v2.isNodeLocked(sel, v2node);
+        const lock2 = v2.isNodeLocked(v2sel, v2node);
         if (lock1 !== lock2) {
             diffs.push({ type: 'locked', node: v1node.id, v1: lock1, v2: lock2 });
         }
 
         const rv1 = v1.resolvedVal(sel, v1node.id);
-        const rv2 = v2.resolvedVal(sel, v2node.id);
+        const rv2 = v2.resolvedVal(v2sel, v2node.id);
         if (rv1 !== rv2) {
             diffs.push({ type: 'resolvedVal', node: v1node.id, v1: rv1, v2: rv2 });
         }
@@ -104,7 +113,7 @@ function compareState(sel) {
             for (const edge of v1node.edges) {
                 const dis1 = v1.isEdgeDisabled(sel, v1node, edge);
                 const v2edge = v2node.edges && v2node.edges.find(e => e.id === edge.id);
-                const dis2 = v2edge ? v2.isEdgeDisabled(sel, v2node, v2edge) : true;
+                const dis2 = v2edge ? v2.isEdgeDisabled(v2sel, v2node, v2edge) : true;
                 if (dis1 !== dis2) {
                     diffs.push({ type: 'edgeDisabled', node: v1node.id, edge: edge.id, v1: dis1, v2: dis2 });
                 }
