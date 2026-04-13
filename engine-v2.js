@@ -123,7 +123,11 @@ function matchCondition(sel, cond, node) {
         const v = resolvedVal(sel, k);
         if (allowed === true)  { if (v == null) return false; continue; }
         if (allowed === false) { if (v != null) return false; continue; }
-        if (allowed && allowed.not) { if (v && allowed.not.includes(v)) return false; continue; }
+        if (allowed && allowed.not) {
+            if (allowed.required && v == null) return false;
+            if (v && allowed.not.includes(v)) return false;
+            continue;
+        }
         if (!v || !allowed.includes(v)) return false;
     }
     if (cond._fn && !CUSTOM_CHECKS[cond._fn](sel, node, cond)) return false;

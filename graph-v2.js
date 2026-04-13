@@ -10,13 +10,14 @@ const SCENARIO = {
     storageKey: 'singularity-map-discovered',
     hideConditions: [
         { flag: 'hideAfterEscape', when: {
-          _set: ['ai_goals'],
-          _rawNot: { ai_goals: ['marginal', 'benevolent'] },
+          ai_goals: { not: ['marginal', 'benevolent'], required: true },
+          inert_outcome: false,
           containment: { not: ['contained'] }
         } },
         { flag: 'hideOnBrittleEscape', when: {
           alignment_durability: ['breaks'],
-          _rawNot: { ai_goals: ['marginal'] }
+          ai_goals: { not: ['marginal'] },
+          inert_outcome: false
         } },
     ],
 };
@@ -253,14 +254,14 @@ const NODES = [
         {
           capability: ['singularity'],
           automation: ['deep'],
-          _raw: { alignment: ['brittle'] },
+          alignment_0: ['brittle'],
           decel_outcome: false,
           containment: { not: ['escaped'] }
         },
         {
           capability: ['singularity'],
           automation: ['deep'],
-          _raw: { alignment: ['brittle'] },
+          alignment_0: ['brittle'],
           decel_outcome: ['rival'], decel_align_progress: ['brittle'],
           containment: { not: ['escaped'] }
         }
@@ -278,7 +279,13 @@ const NODES = [
         {
           capability: ['singularity'],
           automation: ['deep'],
-          _raw: { ai_goals: ['marginal'] },
+          ai_goals: ['marginal'],
+          decel_outcome: { not: ['solved', 'parity_solved'] }
+        },
+        {
+          capability: ['singularity'],
+          automation: ['deep'],
+          inert_outcome: true,
           decel_outcome: { not: ['solved', 'parity_solved'] }
         }
       ],
@@ -577,7 +584,8 @@ const NODES = [
           automation: ['deep'],
           alignment: ['failed'], containment: ['contained']
         },
-        { capability: ['singularity'], automation: ['deep'], _raw: { ai_goals: ['marginal'] } }
+        { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'] },
+        { capability: ['singularity'], automation: ['deep'], inert_outcome: true }
       ],
       derivedFrom: [
         { effective: { escalation_outcome: ['agreement'] }, value: 'coexistence' },
