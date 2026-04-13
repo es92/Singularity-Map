@@ -34,7 +34,7 @@ The decision graph is defined declaratively in `graph.js` and interpreted by the
 
 ### State
 
-The state (`sel`) is a flat object mapping dimension IDs to their chosen values: `{ capability: 'singularity', takeoff: 'moderate', ... }`. It also carries `_locked` metadata tracking which dimensions were auto-forced.
+The state (`sel`) is a flat object mapping dimension IDs to their chosen values: `{ capability: 'singularity', takeoff: 'moderate', ... }`.
 
 **The state fully determines the future.** Given the same `sel`, all derived values, visibility, locking, edge disabling, and template matching produce identical results. There is no hidden state or order-dependence.
 

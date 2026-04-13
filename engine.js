@@ -95,12 +95,7 @@ function isNodeActivated(sel, node) {
 }
 
 function isNodeVisible(sel, node) {
-    if (sel[node.id]) {
-        if (sel._locked && sel._locked[node.id]) {
-            return isNodeActivated(sel, node);
-        }
-        return true;
-    }
+    if (sel[node.id]) return true;
     return isNodeActivated(sel, node);
 }
 
@@ -171,30 +166,27 @@ function getEdgeDisabledReason(sel, node, edge) {
 // ════════════════════════════════════════════════════════
 
 function cleanSelection(sel) {
-    if (!sel._locked) sel._locked = {};
+    const autoForced = new Set();
     for (let pass = 0; pass < 5; pass++) {
         let changed = false;
         for (const node of NODES) {
-            if (!isNodeVisible(sel, node)) {
-                if (sel[node.id] !== undefined && !isNodeActivatedByRules(sel, node)) {
-                    delete sel[node.id];
-                    delete sel._locked[node.id];
-                    changed = true;
-                }
+            if (autoForced.has(node.id) && !isNodeActivated(sel, node)) {
+                delete sel[node.id];
+                autoForced.delete(node.id);
+                changed = true;
                 continue;
             }
+            if (!isNodeVisible(sel, node)) continue;
             const locked = isNodeLocked(sel, node);
             if (locked !== null) {
                 if (sel[node.id] !== locked) {
                     sel[node.id] = locked;
                     changed = true;
                 }
-                sel._locked[node.id] = true;
+                autoForced.add(node.id);
                 continue;
             }
-            if (sel._locked[node.id]) {
-                delete sel._locked[node.id];
-            }
+            autoForced.delete(node.id);
             if (sel[node.id]) {
                 const edge = node.edges && node.edges.find(v => v.id === sel[node.id]);
                 if (edge && isEdgeDisabled(sel, node, edge)) {
@@ -278,9 +270,8 @@ function push(stack, nodeId, edgeId) {
     const base = existingIdx > 0 ? stack.slice(0, existingIdx) : stack;
 
     const prev = base[base.length - 1].state;
-    const next = { ...prev, _locked: { ...(prev._locked || {}) } };
+    const next = { ...prev };
     next[nodeId] = edgeId;
-    delete next._locked[nodeId];
     cleanSelection(next);
     return [...base, { nodeId, edgeId, state: next }];
 }

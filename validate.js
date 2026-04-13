@@ -270,12 +270,12 @@ function runStaticAnalysis() {
 // ════════════════════════════════════════════════════════
 
 function selToUrl(sel) {
-    const params = Object.entries(sel).filter(([k, v]) => v != null && k !== '_locked').map(([k, v]) => `${k}=${v}`).join('&');
+    const params = Object.entries(sel).filter(([k, v]) => v != null).map(([k, v]) => `${k}=${v}`).join('&');
     return `http://localhost:3000/#/explore${params ? '?' + params : ''}`;
 }
 
 function selKey(sel) {
-    return Object.entries(sel).filter(([k, v]) => v != null && k !== '_locked').sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('&');
+    return Object.entries(sel).filter(([k, v]) => v != null).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('&');
 }
 
 function getNextNode(sel) {

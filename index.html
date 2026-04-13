@@ -1686,20 +1686,10 @@
                         if (sel[nid] !== undefined && node.activateWhen &&
                             !node.activateWhen.some(c => Engine.matchCondition(sel, c, node))) {
                             delete sel[nid];
-                            delete sel._locked[nid];
                         }
-                    } else {
-                        const locked = Engine.isNodeLocked(sel, node);
-                        if (locked !== null) {
-                            if (sel[nid] !== locked) sel[nid] = locked;
-                            sel._locked[nid] = true;
-                        } else {
-                            if (sel._locked[nid]) delete sel._locked[nid];
-                            if (sel[nid]) {
-                                const edge = node.edges && node.edges.find(v => v.id === sel[nid]);
-                                if (edge && Engine.isEdgeDisabled(sel, node, edge)) delete sel[nid];
-                            }
-                        }
+                    } else if (sel[nid]) {
+                        const edge = node.edges && node.edges.find(v => v.id === sel[nid]);
+                        if (edge && Engine.isEdgeDisabled(sel, node, edge)) delete sel[nid];
                     }
                     const shouldCascade = sel[nid] !== oldVal ||
                         (node.deriveWhen && node.deriveWhen.length > 0 && !derivedCascaded.has(nid));
@@ -1715,9 +1705,7 @@
 
             function _lightPush(sel, nodeId, edgeId) {
                 const newSel = Object.assign({}, sel);
-                newSel._locked = Object.assign({}, sel._locked || {});
                 newSel[nodeId] = edgeId;
-                delete newSel._locked[nodeId];
                 _targetedClean(newSel, nodeId);
                 return newSel;
             }
@@ -2165,12 +2153,8 @@
             }
 
             function getHiddenState(s) {
-                const locked = (s && s._locked) || {};
                 const eff = Engine.resolvedState(s);
                 const hidden = {};
-                for (const [k, v] of Object.entries(locked)) {
-                    if (v && s[k]) hidden[k] = { value: s[k], eff: eff[k] || s[k] };
-                }
                 for (const node of NODES) {
                     if (!node.deriveWhen) continue;
                     const raw = s[node.id];
@@ -2257,10 +2241,8 @@
                             if (node.derived || (node.priority || 0) >= 2) continue;
                             if (!sel[node.id]) continue;
                             const effVal = eff[node.id];
-                            const isLocked = sel._locked && sel._locked[node.id];
                             let line = node.label + ' (' + node.id + ') = ' + sel[node.id];
                             if (effVal && effVal !== sel[node.id]) line += ' → eff=' + effVal;
-                            if (isLocked) line += ' [auto]';
                             answered.push(line);
                         }
                         if (answered.length) {

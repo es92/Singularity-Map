@@ -316,17 +316,14 @@ async function simulatePath(persona, mode, { deterministic = false } = {}) {
     const loggedNodes = new Set();
 
     for (let pass = 0; pass < 500; pass++) {
-        const prevSel = Engine.currentState(stack);
-        const prevLocked = prevSel._locked ? { ...prevSel._locked } : {};
-
         const sel = Engine.currentState(stack);
         let acted = false;
 
         for (const node of NODES) {
             if (node.derived) continue;
             if (!Engine.isNodeVisible(sel, node)) continue;
-            if (!sel._locked || !sel._locked[node.id]) continue;
-            if (prevLocked[node.id]) continue;
+            if (Engine.isNodeLocked(sel, node) === null) continue;
+            if (!sel[node.id]) continue;
             if (loggedNodes.has(node.id)) continue;
 
             loggedNodes.add(node.id);
@@ -336,9 +333,7 @@ async function simulatePath(persona, mode, { deterministic = false } = {}) {
                 const reason = Engine.getEdgeDisabledReason(sel, node, edge);
                 if (reason) disabledReasons.push({ id: edge.id, label: getAnswerLabel(node.id, edge.id, sel), reason });
             }
-
             log.push({ id: node.id, label: node.label, val, prob: 1.0, source: 'auto', disabledReasons });
-
             if (disabledReasons.length > 0) {
                 let ctx = `- ${getQuestionText(node.id)}: ${getAnswerLabel(node.id, val, sel)} [only option — previous choices ruled out the rest]`;
                 for (const d of disabledReasons) {
