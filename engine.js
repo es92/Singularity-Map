@@ -12,22 +12,14 @@ const { SCENARIO, NODES, NODE_MAP } = (typeof module !== 'undefined' && module.e
 // ════════════════════════════════════════════════════════
 
 function matchesDerivation(rule, sel) {
-    if (rule.when) {
-        for (const [key, val] of Object.entries(rule.when)) {
-            if (sel[key] !== val) return false;
-        }
-    }
-    if (rule.whenSet && !sel[rule.whenSet]) return false;
-    if (rule.effective) {
-        for (const [key, val] of Object.entries(rule.effective)) {
-            const eff = resolvedVal(sel, key);
-            if (Array.isArray(val) ? !val.includes(eff) : eff !== val) return false;
-        }
-    }
-    if (rule.unless) {
-        for (const [key, val] of Object.entries(rule.unless)) {
-            if (sel[key] === val) return false;
-        }
+    if (!rule.match) return true;
+    for (const [key, val] of Object.entries(rule.match)) {
+        const eff = resolvedVal(sel, key);
+        if (val === true)  { if (!eff) return false; }
+        else if (val === false) { if (eff) return false; }
+        else if (val && typeof val === 'object' && !Array.isArray(val) && val.not) {
+            if (eff && val.not.includes(eff)) return false;
+        } else if (Array.isArray(val) ? !val.includes(eff) : eff !== val) return false;
     }
     return true;
 }
@@ -35,17 +27,21 @@ function matchesDerivation(rule, sel) {
 function applyDerivations(derivations, sel, k) {
     for (const rule of derivations) {
         if (!matchesDerivation(rule, sel)) continue;
-        if (rule.fromDim) return sel[rule.fromDim];
+        if (rule.fromState) return resolvedVal(sel, rule.fromState);
         if (rule.valueMap) return rule.valueMap[sel[k]] ?? sel[k];
         return rule.value;
     }
     return undefined;
 }
 
+const _computing = new Set();
 function resolvedVal(sel, k) {
+    if (_computing.has(k)) return sel[k];
     const node = NODE_MAP[k];
-    if (node && node.derivedFrom) {
-        const result = applyDerivations(node.derivedFrom, sel, k);
+    if (node && node.deriveWhen) {
+        _computing.add(k);
+        const result = applyDerivations(node.deriveWhen, sel, k);
+        _computing.delete(k);
         if (result !== undefined) return result;
     }
     return sel[k];
@@ -55,78 +51,45 @@ function resolvedVal(sel, k) {
 // Activation engine (generic isNodeVisible)
 // ════════════════════════════════════════════════════════
 
-const HIDE_FLAG_RULES = (SCENARIO && SCENARIO.hideConditions || []).map(hc => ({
-    nodes: new Set(NODES.filter(d => d[hc.flag]).map(d => d.id)),
-    when: hc.when,
-}));
-
-
-const CUSTOM_CHECKS = {
-    allPrecedingAnswered(sel, node, cond) {
-        const brIdx = NODES.indexOf(node);
-        const anchor = cond && cond._fnAnchor;
-        const adIdx = anchor ? NODES.findIndex(d => d.id === anchor) : 0;
-        for (let i = adIdx + 1; i < brIdx; i++) {
-            const mid = NODES[i];
-            if (mid.terminal || mid.derived) continue;
-            if (!isNodeVisible(sel, mid)) continue;
-            if (isNodeLocked(sel, mid) !== null) continue;
-            if (!sel[mid.id]) return false;
-        }
-        return true;
-    },
-};
-
-function matchCondition(sel, cond, node) {
-    if (cond._notSet) {
-        for (const k of cond._notSet) {
-            if (resolvedVal(sel, k) != null) return false;
-        }
-    }
-    if (cond._set) {
-        for (const k of cond._set) {
-            if (!sel[k]) return false;
-        }
-    }
-    if (cond._raw) {
-        for (const [k, allowed] of Object.entries(cond._raw)) {
-            if (!sel[k] || !allowed.includes(sel[k])) return false;
-        }
-    }
-    if (cond._rawNot) {
-        for (const [k, excluded] of Object.entries(cond._rawNot)) {
-            if (sel[k] && excluded.includes(sel[k])) return false;
-        }
-    }
-    if (cond._eff) {
-        for (const [k, allowed] of Object.entries(cond._eff)) {
-            const v = resolvedVal(sel, k);
-            if (!v || !allowed.includes(v)) return false;
-        }
-    }
-    if (cond._effNot) {
-        for (const [k, excluded] of Object.entries(cond._effNot)) {
-            const v = resolvedVal(sel, k);
-            if (v && excluded.includes(v)) return false;
-        }
-    }
+function matchCondition(sel, cond) {
     for (const [k, allowed] of Object.entries(cond)) {
-        if (k.startsWith('_') || k === 'reason') continue;
+        if (k === 'reason') continue;
         const v = resolvedVal(sel, k);
+        if (allowed === true)  { if (v == null) return false; continue; }
+        if (allowed === false) { if (v != null) return false; continue; }
+        if (allowed && allowed.not) {
+            if (allowed.required && v == null) return false;
+            if (v && allowed.not.includes(v)) return false;
+            continue;
+        }
         if (!v || !allowed.includes(v)) return false;
     }
-    if (cond._fn && !CUSTOM_CHECKS[cond._fn](sel, node, cond)) return false;
     return true;
 }
 
 function isNodeActivatedByRules(sel, node) {
     if (!node.activateWhen) return true;
-    return node.activateWhen.some(c => matchCondition(sel, c, node));
+    if (!node.activateWhen.some(c => matchCondition(sel, c))) return false;
+    const pri = node.priority || 0;
+    if (pri > 0) {
+        const nodeIdx = NODES.indexOf(node);
+        for (let i = 0; i < nodeIdx; i++) {
+            const mid = NODES[i];
+            if ((mid.priority || 0) >= pri) continue;
+            if (mid.derived) continue;
+            if (!isNodeVisible(sel, mid)) continue;
+            if (isNodeLocked(sel, mid) !== null) continue;
+            if (!sel[mid.id]) return false;
+        }
+    }
+    return true;
 }
 
 function isNodeActivated(sel, node) {
-    for (const rule of HIDE_FLAG_RULES) {
-        if (rule.nodes.has(node.id) && matchCondition(sel, rule.when, {})) return false;
+    if (node.hideWhen) {
+        for (const cond of node.hideWhen) {
+            if (matchCondition(sel, cond)) return false;
+        }
     }
     return isNodeActivatedByRules(sel, node);
 }
@@ -172,23 +135,23 @@ function isNodeLocked(sel, node) {
 function isEdgeDisabled(sel, node, edge) {
     if (edge.disabledWhen) {
         for (const cond of edge.disabledWhen) {
-            if (matchCondition(sel, cond, {})) return true;
+            if (matchCondition(sel, cond)) return true;
         }
     }
     if (!edge.requires) return false;
     const condSets = Array.isArray(edge.requires) ? edge.requires : [edge.requires];
-    return !condSets.some(cond => matchCondition(sel, cond, {}));
+    return !condSets.some(cond => matchCondition(sel, cond));
 }
 
 function getEdgeDisabledReason(sel, node, edge) {
     if (edge.disabledWhen) {
         for (const cond of edge.disabledWhen) {
-            if (matchCondition(sel, cond, {})) return cond.reason || null;
+            if (matchCondition(sel, cond)) return cond.reason || null;
         }
     }
     if (!edge.requires) return null;
     const condSets = Array.isArray(edge.requires) ? edge.requires : [edge.requires];
-    if (condSets.some(cond => matchCondition(sel, cond, {}))) return null;
+    if (condSets.some(cond => matchCondition(sel, cond))) return null;
     for (const cond of condSets) {
         for (const key of Object.keys(cond)) {
             if (key.startsWith('_')) continue;
@@ -242,6 +205,12 @@ function cleanSelection(sel) {
         }
         if (!changed) break;
     }
+    for (const node of NODES) {
+        if (node.snapshotAs) {
+            if (sel[node.id] !== undefined) sel[node.snapshotAs] = sel[node.id];
+            else delete sel[node.snapshotAs];
+        }
+    }
     return sel;
 }
 
@@ -250,8 +219,8 @@ function resolvedState(sel) {
     const d = {};
     for (const node of NODES) {
         if (!isNodeVisible(sel, node)) {
-            if (node.derivedFrom) {
-                const derived = applyDerivations(node.derivedFrom, sel, node.id);
+            if (node.deriveWhen) {
+                const derived = applyDerivations(node.deriveWhen, sel, node.id);
                 if (derived !== undefined) d[node.id] = derived;
             }
             continue;
@@ -372,7 +341,7 @@ function displayOrder(stack) {
 function resolveContextWhen(sel, narr) {
     if (narr && narr.contextWhen) {
         for (const entry of narr.contextWhen) {
-            if (matchCondition(sel, entry.when, {})) return entry.questionContext;
+            if (matchCondition(sel, entry.when)) return entry.questionContext;
         }
     }
     return (narr && narr.questionContext) || '';

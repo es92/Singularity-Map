@@ -38,6 +38,9 @@ function runStaticAnalysis() {
     const errors = [];
 
     const metaNodes = new Set(NODES.map(d => d.id));
+    for (const node of NODES) {
+        if (node.snapshotAs) metaNodes.add(node.snapshotAs);
+    }
 
     // 1. Node structure validation
     for (const node of NODES) {
@@ -47,8 +50,8 @@ function runStaticAnalysis() {
         }
         if (node.activateWhen) {
             for (const cond of node.activateWhen) {
-                for (const [k] of Object.entries(cond)) {
-                    if (k.startsWith('_')) continue;
+                for (const k of Object.keys(cond)) {
+                    if (k === 'reason') continue;
                     if (!metaNodes.has(k)) {
                         errors.push(`[structure] Node "${node.id}" activateWhen references unknown node "${k}"`);
                     }
@@ -60,75 +63,59 @@ function runStaticAnalysis() {
     // Helper: validate keys/edges in a matchCondition-style condition object
     function validateCondition(cond, nodeId, label) {
         for (const [k, vals] of Object.entries(cond)) {
-            if (k.startsWith('_') || k === 'reason') continue;
+            if (k === 'reason') continue;
             if (!metaNodes.has(k)) {
                 errors.push(`[${label}] Node "${nodeId}" references unknown node "${k}"`);
-            } else {
-                const validIds = new Set(NODE_MAP[k].edges.map(v => v.id));
-                const arr = Array.isArray(vals) ? vals : [vals];
-                for (const v of arr) {
-                    if (!validIds.has(v)) errors.push(`[${label}] Node "${nodeId}" references unknown edge "${k}=${v}"`);
-                }
+                continue;
             }
-        }
-        for (const sk of ['_raw', '_eff', '_rawNot', '_effNot']) {
-            if (!cond[sk]) continue;
-            for (const [k, vals] of Object.entries(cond[sk])) {
-                if (!metaNodes.has(k)) {
-                    errors.push(`[${label}] Node "${nodeId}" references unknown node "${k}" in ${sk}`);
-                } else {
-                    const validIds = new Set(NODE_MAP[k].edges.map(v => v.id));
-                    const arr = Array.isArray(vals) ? vals : [vals];
-                    for (const v of arr) {
-                        if (!validIds.has(v)) errors.push(`[${label}] Node "${nodeId}" references unknown edge "${k}=${v}" in ${sk}`);
-                    }
+            if (vals === true || vals === false) continue;
+            const refNode = NODE_MAP[k];
+            if (!refNode || !refNode.edges) continue;
+            if (vals && typeof vals === 'object' && !Array.isArray(vals) && vals.not) {
+                const validIds = new Set(refNode.edges.map(v => v.id));
+                for (const v of vals.not) {
+                    if (!validIds.has(v)) errors.push(`[${label}] Node "${nodeId}" references unknown edge "${k}=${v}" in not`);
                 }
+                continue;
             }
-        }
-        for (const sk of ['_set', '_notSet']) {
-            if (!cond[sk]) continue;
-            for (const k of cond[sk]) {
-                if (!metaNodes.has(k)) errors.push(`[${label}] Node "${nodeId}" references unknown node "${k}" in ${sk}`);
+            const validIds = new Set(refNode.edges.map(v => v.id));
+            const arr = Array.isArray(vals) ? vals : [vals];
+            for (const v of arr) {
+                if (!validIds.has(v)) errors.push(`[${label}] Node "${nodeId}" references unknown edge "${k}=${v}"`);
             }
         }
     }
 
-    // Helper: validate keys/edges in a matchesDerivation-style rule
+    // Helper: validate keys/edges in a deriveWhen rule
     function validateDerivation(rule, node) {
         const nodeId = node.id;
         const ownEdges = node.edges ? new Set(node.edges.map(v => v.id)) : new Set();
-        for (const rk of ['when', 'unless']) {
-            if (!rule[rk]) continue;
-            for (const [k, val] of Object.entries(rule[rk])) {
+        if (rule.match) {
+            for (const [k, val] of Object.entries(rule.match)) {
+                if (k === 'reason') continue;
                 if (!metaNodes.has(k)) {
-                    errors.push(`[derivations] Node "${nodeId}" references unknown node "${k}" in ${rk}`);
-                } else {
-                    const validIds = new Set(NODE_MAP[k].edges.map(v => v.id));
-                    const vals = Array.isArray(val) ? val : [val];
-                    for (const v of vals) {
-                        if (!validIds.has(v)) errors.push(`[derivations] Node "${nodeId}" references unreachable edge "${k}=${v}" in ${rk} (dead rule)`);
+                    errors.push(`[derivations] Node "${nodeId}" references unknown node "${k}" in match`);
+                    continue;
+                }
+                if (val === true || val === false) continue;
+                const refNode = NODE_MAP[k];
+                if (!refNode || !refNode.edges) continue;
+                if (val && typeof val === 'object' && !Array.isArray(val) && val.not) {
+                    const validIds = new Set(refNode.edges.map(v => v.id));
+                    for (const v of val.not) {
+                        if (!validIds.has(v)) errors.push(`[derivations] Node "${nodeId}" references unknown edge "${k}=${v}" in match.not`);
                     }
+                    continue;
+                }
+                const validIds = new Set(refNode.edges.map(v => v.id));
+                const vals = Array.isArray(val) ? val : [val];
+                for (const v of vals) {
+                    if (!validIds.has(v)) errors.push(`[derivations] Node "${nodeId}" references unknown edge "${k}=${v}" in match`);
                 }
             }
         }
-        if (rule.effective) {
-            for (const [k, val] of Object.entries(rule.effective)) {
-                if (!metaNodes.has(k)) {
-                    errors.push(`[derivations] Node "${nodeId}" references unknown node "${k}" in effective`);
-                } else {
-                    const validIds = new Set(NODE_MAP[k].edges.map(v => v.id));
-                    const vals = Array.isArray(val) ? val : [val];
-                    for (const v of vals) {
-                        if (!validIds.has(v)) errors.push(`[derivations] Node "${nodeId}" references unknown edge "${k}=${v}" in effective`);
-                    }
-                }
-            }
-        }
-        if (rule.whenSet && !metaNodes.has(rule.whenSet)) {
-            errors.push(`[derivations] Node "${nodeId}" references unknown node "${rule.whenSet}" in whenSet`);
-        }
-        if (rule.fromDim && !metaNodes.has(rule.fromDim)) {
-            errors.push(`[derivations] Node "${nodeId}" references unknown node "${rule.fromDim}" in fromDim`);
+        if (rule.fromState && !metaNodes.has(rule.fromState)) {
+            errors.push(`[derivations] Node "${nodeId}" references unknown node "${rule.fromState}" in fromState`);
         }
         if (rule.value !== undefined && !ownEdges.has(rule.value)) {
             errors.push(`[derivations] Node "${nodeId}" derivation produces unknown edge "${rule.value}"`);
@@ -178,10 +165,10 @@ function runStaticAnalysis() {
         }
     }
 
-    // 2e. derivedFrom validation
+    // 2e. deriveWhen validation
     for (const node of NODES) {
-        if (!node.derivedFrom) continue;
-        for (const rule of node.derivedFrom) {
+        if (!node.deriveWhen) continue;
+        for (const rule of node.deriveWhen) {
             validateDerivation(rule, node);
         }
     }
@@ -214,42 +201,17 @@ function runStaticAnalysis() {
         }
     }
 
-    // 2h. _notSet referencing derivable nodes (raw/effective asymmetry lint)
-    // _set checks raw, _notSet checks effective — flag when _notSet targets a non-derived node with derivedFrom
-    // Derived nodes are excluded: they only exist through derivations, so effective IS the only value.
-    const derivableNodes = new Set(NODES.filter(d => d.derivedFrom && !d.derived).map(d => d.id));
-    for (const node of NODES) {
-        const condSources = [];
-        if (node.activateWhen) for (const c of node.activateWhen) condSources.push(['activateWhen', c]);
-        if (node.edges) {
-            for (const v of node.edges) {
-                if (v.disabledWhen) for (const c of v.disabledWhen) condSources.push([`disabledWhen(${v.id})`, c]);
-                if (v.requires) {
-                    const rs = Array.isArray(v.requires) ? v.requires : [v.requires];
-                    for (const c of rs) condSources.push([`requires(${v.id})`, c]);
-                }
-            }
-        }
-        for (const [source, cond] of condSources) {
-            if (!cond._notSet) continue;
-            for (const k of cond._notSet) {
-                if (derivableNodes.has(k)) {
-                    errors.push(`[raw-eff] Node "${node.id}" ${source} uses _notSet on "${k}" which has derivedFrom (checks effective, not raw)`);
-                }
-            }
-        }
-    }
-
     // 3. Derivation dependency / circular detection
     const derivationDeps = {};
     for (const node of NODES) {
-        if (!node.derivedFrom) continue;
+        if (!node.deriveWhen) continue;
         const deps = new Set();
-        for (const rule of node.derivedFrom) {
-            if (rule.when) Object.keys(rule.when).forEach(k => deps.add(k));
-            if (rule.unless) Object.keys(rule.unless).forEach(k => deps.add(k));
-            if (rule.effective) Object.keys(rule.effective).forEach(k => deps.add('effective:' + k));
-            if (rule.whenSet) deps.add(rule.whenSet);
+        for (const rule of node.deriveWhen) {
+            if (rule.match) {
+                for (const k of Object.keys(rule.match)) {
+                    if (k !== 'reason') deps.add('effective:' + k);
+                }
+            }
         }
         derivationDeps[node.id] = deps;
     }
@@ -259,17 +221,16 @@ function runStaticAnalysis() {
         const deps = new Set();
         if (node.activateWhen) {
             for (const cond of node.activateWhen) {
-                for (const [k] of Object.entries(cond)) {
-                    if (k.startsWith('_')) continue;
+                for (const k of Object.keys(cond)) {
+                    if (k === 'reason') continue;
                     deps.add('effective:' + k);
                 }
-                if (cond._raw) for (const k of Object.keys(cond._raw)) deps.add('raw:' + k);
-                if (cond._eff) for (const k of Object.keys(cond._eff)) deps.add('effective:' + k);
             }
         }
         visibilityDeps[node.id] = deps;
     }
 
+    const circularWarnings = [];
     for (const [nodeId, oDeps] of Object.entries(derivationDeps)) {
         for (const dep of oDeps) {
             if (!dep.startsWith('effective:')) continue;
@@ -277,7 +238,7 @@ function runStaticAnalysis() {
             const vDeps = visibilityDeps[depNode];
             if (!vDeps) continue;
             if (vDeps.has('effective:' + nodeId)) {
-                errors.push(`[circular] resolvedVal("${nodeId}") depends on resolvedVal("${depNode}"), and isNodeVisible("${depNode}") depends on resolvedVal("${nodeId}")`);
+                circularWarnings.push(`[circular] resolvedVal("${nodeId}") depends on resolvedVal("${depNode}"), and isNodeVisible("${depNode}") depends on resolvedVal("${nodeId}") (handled by cycle guard)`);
             }
         }
     }
@@ -304,7 +265,7 @@ function runStaticAnalysis() {
         }
     }
 
-    return { errors, derivationDeps };
+    return { errors, circularWarnings, derivationDeps };
 }
 
 // ════════════════════════════════════════════════════════
@@ -321,17 +282,8 @@ function selKey(sel) {
 }
 
 function getNextNode(sel) {
-    // First pass: non-terminal questions (matches index.html behavior)
     for (const node of NODES) {
-        if (node.terminal || node.derived) continue;
-        if (!isNodeVisible(sel, node)) continue;
-        if (isNodeLocked(sel, node) !== null) continue;
-        if (sel[node.id]) continue;
-        return node;
-    }
-    // Second pass: terminal questions (shown alongside outcome in index.html)
-    for (const node of NODES) {
-        if (!node.terminal || node.derived) continue;
+        if (node.derived) continue;
         if (!isNodeVisible(sel, node)) continue;
         if (isNodeLocked(sel, node) !== null) continue;
         if (sel[node.id]) continue;
@@ -353,7 +305,7 @@ function forwardKey(sel) {
         if (state[k]) parts.push(`E:${k}=${state[k]}`);
     }
     for (const node of NODES) {
-        if (!node.derivedFrom) continue;
+        if (!node.deriveWhen) continue;
         const raw = sel[node.id];
         const eff = state[node.id];
         if (raw && eff && raw !== eff) {
@@ -361,7 +313,7 @@ function forwardKey(sel) {
         }
     }
     for (const node of NODES) {
-        if (node.terminal || node.derived) continue;
+        if (node.derived || (node.priority || 0) >= 2) continue;
         if (!isNodeVisible(sel, node)) continue;
         if (isNodeLocked(sel, node) !== null) continue;
         if (sel[node.id]) continue;
@@ -383,7 +335,7 @@ function runExplorer() {
 
         const splits = [];
         for (const node of NODES) {
-            if (!node.derivedFrom) continue;
+            if (!node.deriveWhen) continue;
             const raw = sel[node.id];
             if (!raw) continue;
             const eff = resolvedVal(sel, node.id);
@@ -401,7 +353,7 @@ function runExplorer() {
                 });
             } else {
                 for (const node of NODES) {
-                    if (node.derived || node.terminal) continue;
+                    if (node.derived || (node.priority || 0) >= 2) continue;
                     if (sel[node.id]) continue;
                     if (!isNodeActivatedByRules(sel, node)) continue;
                     if (isNodeVisible(sel, node)) continue;
@@ -429,11 +381,11 @@ function runExplorer() {
             if (ena.length === 0) {
                 const reasons = [];
                 for (const v of node.edges) {
-                    if (v.disabledWhen && v.disabledWhen.some(c => matchCondition(sel, c, {}))) {
+                    if (v.disabledWhen && v.disabledWhen.some(c => matchCondition(sel, c))) {
                         reasons.push(`"${v.id}" disabled by disabledWhen`);
                     } else if (v.requires) {
                         const rs = Array.isArray(v.requires) ? v.requires : [v.requires];
-                        if (!rs.some(c => matchCondition(sel, c, {}))) reasons.push(`"${v.id}" blocked by requires`);
+                        if (!rs.some(c => matchCondition(sel, c))) reasons.push(`"${v.id}" blocked by requires`);
                     }
                 }
                 violations.stuck.push({ node: node.id, url: selToUrl(sel), mechanism: reasons.join('; ') });
@@ -490,7 +442,7 @@ function runExplorer() {
                 if (isNodeLocked(sel, node) !== null) autoLocked.add(key);
                 else userSelected.add(key);
             }
-            if (node.derivedFrom) {
+            if (node.deriveWhen) {
                 const eff = resolvedVal(sel, node.id);
                 if (eff) autoLocked.add(`${node.id}=${eff}`);
             }
@@ -587,7 +539,7 @@ function samplePaths(n) {
 
         const steps = [];
         for (const node of NODES) {
-            if (node.terminal || node.derived) continue;
+            if (node.derived || (node.priority || 0) >= 2) continue;
             if (!isNodeVisible(sel, node)) continue;
             const locked = isNodeLocked(sel, node);
             if (locked !== null) {
@@ -617,12 +569,16 @@ function samplePaths(n) {
 // ════════════════════════════════════════════════════════
 
 function printPhase1(result) {
-    const { errors } = result;
+    const { errors, circularWarnings } = result;
     if (errors.length) {
         console.log(`  ERRORS (${errors.length}):`);
         for (const e of errors) console.log('    ✗ ' + e);
     } else {
         console.log('  ✓ All static checks passed');
+    }
+    if (circularWarnings.length) {
+        console.log(`  WARNINGS (${circularWarnings.length}):`);
+        for (const w of circularWarnings) console.log('    ⚠ ' + w);
     }
 }
 
@@ -672,7 +628,7 @@ function printPhase3(coverage) {
             if (node.derived) {
                 totalDerived++;
                 if (!reached) unreachedDerived.push(entry);
-            } else if (node.terminal) {
+            } else if ((node.priority || 0) >= 2) {
                 totalTerminal++;
                 if (!reached) unreachedTerminal.push(entry);
             } else {
@@ -865,7 +821,7 @@ if (arg === 'sample') {
 
 console.log('Singularity Map — Validation Report');
 console.log('═'.repeat(50));
-console.log(`${NODES.filter(d => !d.derived && !d.terminal).length} non-derived nodes, ${templatesList.length} outcomes, ${NODES.length} total nodes\n`);
+console.log(`${NODES.filter(d => !d.derived && (d.priority || 0) < 2).length} non-derived nodes, ${templatesList.length} outcomes, ${NODES.length} total nodes\n`);
 
 // Phase 1
 const t0 = Date.now();

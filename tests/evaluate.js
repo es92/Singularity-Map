@@ -193,24 +193,7 @@ function resolveNarrativeVariant(variants, sel) {
     if (!variants || !sel) return null;
     for (const v of variants) {
         if (!v.when) return v;
-        let match = true;
-        for (const [k, vals] of Object.entries(v.when)) {
-            if (k === '_raw') {
-                for (const [rk, rv] of Object.entries(vals)) {
-                    if (!sel[rk] || !rv.includes(sel[rk])) { match = false; break; }
-                }
-            } else if (k === '_eff') {
-                for (const [ek, ev] of Object.entries(vals)) {
-                    if (!sel[ek] || !ev.includes(sel[ek])) { match = false; break; }
-                }
-            } else if (k.startsWith('_')) {
-                continue;
-            } else {
-                if (!Array.isArray(vals) || !vals.includes(sel[k])) { match = false; break; }
-            }
-            if (!match) break;
-        }
-        if (match) return v;
+        if (Engine.matchCondition(sel, v.when)) return v;
     }
     return null;
 }
@@ -315,14 +298,7 @@ function resolveTemplate(templateId, state) {
 
 function getNextNode(sel) {
     for (const node of NODES) {
-        if (node.terminal || node.derived) continue;
-        if (!Engine.isNodeVisible(sel, node)) continue;
-        if (Engine.isNodeLocked(sel, node) !== null) continue;
-        if (sel[node.id]) continue;
-        return node;
-    }
-    for (const node of NODES) {
-        if (!node.terminal || node.derived) continue;
+        if (node.derived) continue;
         if (!Engine.isNodeVisible(sel, node)) continue;
         if (Engine.isNodeLocked(sel, node) !== null) continue;
         if (sel[node.id]) continue;

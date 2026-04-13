@@ -3586,11 +3586,9 @@
     "contextWhen": [
       {
         "when": {
-          "_raw": {
-            "brittle_resolution": [
-              "escape"
-            ]
-          }
+          "brittle_resolution": [
+            "escape"
+          ]
         },
         "questionContext": "The alignment techniques were working — until they weren't. The AI operated within bounds for weeks, months, maybe longer. Then something shifted. Now the question isn't whether alignment can be achieved, but whether a system that already slipped its controls can be physically contained."
       },
@@ -3660,11 +3658,9 @@
       },
       {
         "when": {
-          "_raw": {
-            "brittle_resolution": [
-              "escape"
-            ]
-          }
+          "brittle_resolution": [
+            "escape"
+          ]
         },
         "questionContext": "The AI was under control — or seemed to be. The alignment techniques passed every test. Then they broke, and the system slipped free. An AI that once operated within human-defined bounds is now operating without them. What it converges on now may bear no resemblance to what it was optimizing for before."
       },
@@ -3817,11 +3813,9 @@
           "alignment": [
             "failed"
           ],
-          "_raw": {
-            "containment": [
-              "contained"
-            ]
-          }
+          "containment": [
+            "contained"
+          ]
         },
         "questionContext": "The AI isn't aligned — but it's contained. For now. The world is sitting on an unaligned superintelligence held in check by institutions, monitoring, and coordination. The question is what to do with a tool this powerful that you can't fully trust."
       }
@@ -6596,32 +6590,26 @@
         "narrativeVariants": [
           {
             "when": {
-              "_eff": {
-                "ai_goals": [
-                  "alien_coexistence"
-                ]
-              }
+              "ai_goals": [
+                "alien_coexistence"
+              ]
             },
             "answerDesc": "The AI's goals aren't hostile to human survival — they're just alien. There may be room for terms. Not a negotiation between equals, but an attempt to establish boundaries both sides can live with."
           },
           {
             "when": {
-              "_eff": {
-                "ai_goals": [
-                  "alien_extinction",
-                  "paperclip"
-                ]
-              }
+              "ai_goals": [
+                "alien_extinction",
+                "paperclip"
+              ]
             },
             "answerDesc": "Almost every AI safety researcher would call this naive. You cannot negotiate with a system that has no reason to keep its agreements and every reason to defect. But someone will try."
           },
           {
             "when": {
-              "_eff": {
-                "ai_goals": [
-                  "power_seeking"
-                ]
-              }
+              "ai_goals": [
+                "power_seeking"
+              ]
             },
             "answerDesc": "A power-seeking AI might accept terms — not because it respects them, but because the appearance of cooperation serves its accumulation strategy. The negotiation is real; the AI's commitment is not."
           }

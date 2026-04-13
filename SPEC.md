@@ -44,8 +44,11 @@ Each node in `graph.js` represents a question (dimension). Each node has:
 
 - **`edges`** — possible answers, each with an `id` (the value set in `sel`)
 - **`activateWhen`** *(optional)* — conditions that must be met for this question to appear
-- **`derivedFrom`** *(optional)* — rules that compute this dimension's value from other dimensions instead of asking the user
-- **`derived: true`** — marks the node as derived (never presented as a question)
+- **`hideWhen`** *(optional)* — conditions that hide this node even if `activateWhen` passes (replaces the old global `hideConditions` + per-node flags)
+- **`deriveWhen`** *(optional)* — rules that compute this dimension's value from other dimensions instead of asking the user
+- **`derived: true`** — marks the node as purely derived (never presented as a question, invisible to the priority system)
+- **`priority`** *(optional, default 0)* — controls question ordering; nodes with higher priority are deferred until all lower-priority visible questions are answered (replaces the old `terminal` flag; `priority: 2` = terminal)
+- **`snapshotAs`** *(optional)* — when present, `cleanSelection` copies the user's raw answer into a separate state key (e.g., `alignment` with `snapshotAs: 'alignment_0'` saves the original choice before derivation can change it)
 
 Edges can have:
 - **`requires`** — conditions that must be met for this edge to be available
@@ -71,22 +74,29 @@ Edges can have:
 
 ### Condition System
 
-Conditions (used in `activateWhen`, `requires`, `disabledWhen`, `derivedFrom`) support:
+All conditions (`activateWhen`, `requires`, `disabledWhen`, `hideWhen`) use a unified grammar based on effective (resolved) values:
 
-| Key | Meaning |
+| Syntax | Meaning |
 |---|---|
-| `dim: [values]` | Effective (resolved) value of `dim` is in the list |
-| `_raw: { dim: [values] }` | Raw `sel[dim]` value (ignoring derivations) |
-| `_rawNot: { dim: [values] }` | Raw value is NOT in the list |
-| `_eff: { dim: [values] }` | Explicit effective value check |
-| `_effNot: { dim: [values] }` | Effective value is NOT in the list |
-| `_set: [dims]` | All listed dimensions have a value set |
-| `_notSet: [dims]` | All listed dimensions are unset |
-| `_fn: name` | Custom function check (e.g. `allPrecedingAnswered`) |
+| `dim: ['val1', 'val2']` | Effective value of `dim` is one of the listed values |
+| `dim: true` | Effective value of `dim` is set (non-null) |
+| `dim: false` | Effective value of `dim` is NOT set (null/undefined) |
+| `dim: { not: ['val1'] }` | Effective value is NOT one of the listed values (undefined passes) |
+| `dim: { not: ['val1'], required: true }` | Same as above, but must also be set (undefined fails) |
+| `reason: '...'` | Annotation for UI display; skipped by logic |
 
-### Global Hide Conditions
+### Derivation Rules (`deriveWhen`)
 
-`SCENARIO.hideConditions` defines rules that globally hide nodes matching a flag when a condition is met. For example, `hideAfterEscape: true` on a node means it disappears when containment is `escaped`.
+Each rule in a node's `deriveWhen` array has:
+
+| Property | Meaning |
+|---|---|
+| `match` | Condition object (same unified grammar as above) — all keys must match for the rule to fire |
+| `value` | The derived value to assign if the rule fires |
+| `fromState` | Copy the effective value from this other dimension (instead of a fixed `value`) |
+| `valueMap` | Map input values to output values (instead of a fixed `value`) |
+
+Rules are evaluated in order; the first matching rule wins.
 
 ### Template Matching
 

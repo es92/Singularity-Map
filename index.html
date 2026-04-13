@@ -734,24 +734,7 @@
             if (!variants || !sel) return null;
             for (const v of variants) {
                 if (!v.when) return v;
-                let match = true;
-                for (const [k, vals] of Object.entries(v.when)) {
-                    if (k === '_raw') {
-                        for (const [rk, rv] of Object.entries(vals)) {
-                            if (!sel[rk] || !rv.includes(sel[rk])) { match = false; break; }
-                        }
-                    } else if (k === '_eff') {
-                        for (const [ek, ev] of Object.entries(vals)) {
-                            if (!sel[ek] || !ev.includes(sel[ek])) { match = false; break; }
-                        }
-                    } else if (k.startsWith('_')) {
-                        continue;
-                    } else {
-                        if (!Array.isArray(vals) || !vals.includes(sel[k])) { match = false; break; }
-                    }
-                    if (!match) break;
-                }
-                if (match) return v;
+                if (Engine.matchCondition(sel, v.when)) return v;
             }
             return null;
         }
@@ -1435,7 +1418,16 @@
 
             // ─── Forward DFS with effective-value caching ────────────
 
-            const _derivableKeys = new Set(Engine.NODES.filter(n => n.derivedFrom).map(n => n.id));
+            const _snapshotDims = new Set(Engine.NODES.filter(n => n.snapshotAs).map(n => n.id));
+
+            function _keysFromCond(c) {
+                const keys = [];
+                for (const k of Object.keys(c)) {
+                    if (k === 'reason') continue;
+                    keys.push(k);
+                }
+                return keys;
+            }
 
             function _computeRelevantDims(template, variantKey) {
                 const NODES = Engine.NODES;
@@ -1458,45 +1450,23 @@
                     for (const nid of [...branchRelevant]) {
                         const node = NODE_MAP[nid];
                         if (!node) continue;
-                        if (node.derivedFrom) for (const r of node.derivedFrom) {
-                            for (const src of [r.when, r.effective, r.unless]) {
-                                if (src) for (const k of Object.keys(src)) { if (!branchRelevant.has(k)) { branchRelevant.add(k); changed = true; } }
-                            }
-                            if (r.fromDim && !branchRelevant.has(r.fromDim)) { branchRelevant.add(r.fromDim); changed = true; }
-                            if (r.whenSet && !branchRelevant.has(r.whenSet)) { branchRelevant.add(r.whenSet); changed = true; }
+                        if (node.deriveWhen) for (const r of node.deriveWhen) {
+                            if (r.match) for (const k of _keysFromCond(r.match)) { if (!branchRelevant.has(k)) { branchRelevant.add(k); changed = true; } }
+                            if (r.fromState && !branchRelevant.has(r.fromState)) { branchRelevant.add(r.fromState); changed = true; }
                         }
                         if (node.activateWhen) for (const c of node.activateWhen) {
-                            for (const k of Object.keys(c)) {
-                                if (k === 'reason') continue;
-                                if (k === '_set' || k === '_notSet') { for (const sk of c[k]) { if (!branchRelevant.has(sk)) { branchRelevant.add(sk); changed = true; } } }
-                                else if (k === '_eff' || k === '_effNot' || k === '_raw' || k === '_rawNot') {
-                                    for (const sk of Object.keys(c[k])) { if (!branchRelevant.has(sk)) { branchRelevant.add(sk); changed = true; } }
-                                } else if (k === '_fn' || k === '_fnAnchor') { /* skip */ }
-                                else if (!branchRelevant.has(k)) { branchRelevant.add(k); changed = true; }
-                            }
+                            for (const k of _keysFromCond(c)) { if (!branchRelevant.has(k)) { branchRelevant.add(k); changed = true; } }
+                        }
+                        if (node.hideWhen) for (const c of node.hideWhen) {
+                            for (const k of _keysFromCond(c)) { if (!branchRelevant.has(k)) { branchRelevant.add(k); changed = true; } }
                         }
                         if (node.edges) for (const e of node.edges) {
                             const conds = [];
                             if (e.disabledWhen) conds.push(...e.disabledWhen);
                             if (e.requires) conds.push(...(Array.isArray(e.requires) ? e.requires : [e.requires]));
                             for (const c of conds) {
-                                for (const k of Object.keys(c)) {
-                                    if (k.startsWith('_') || k === 'reason') continue;
-                                    if (!branchRelevant.has(k)) { branchRelevant.add(k); changed = true; }
-                                }
+                                for (const k of _keysFromCond(c)) { if (!branchRelevant.has(k)) { branchRelevant.add(k); changed = true; } }
                             }
-                        }
-                    }
-                    for (const hc of (window.Graph && window.Graph.SCENARIO && window.Graph.SCENARIO.hideConditions || [])) {
-                        const w = hc.when;
-                        let affectsRelevant = false;
-                        for (const nid of branchRelevant) { const nd = NODE_MAP[nid]; if (nd && nd[hc.flag]) { affectsRelevant = true; break; } }
-                        if (!affectsRelevant) continue;
-                        for (const k of Object.keys(w)) {
-                            if (k === '_set' || k === '_notSet') { for (const sk of w[k]) { if (!branchRelevant.has(sk)) { branchRelevant.add(sk); changed = true; } } }
-                            else if (k === '_raw' || k === '_rawNot' || k === '_eff' || k === '_effNot') {
-                                for (const sk of Object.keys(w[k])) { if (!branchRelevant.has(sk)) { branchRelevant.add(sk); changed = true; } }
-                            } else if (!k.startsWith('_') && k !== 'reason') { if (!branchRelevant.has(k)) { branchRelevant.add(k); changed = true; } }
                         }
                     }
                 }
@@ -1504,12 +1474,10 @@
                 const subsumed = new Set();
                 for (const nid of branchRelevant) {
                     const node = NODE_MAP[nid];
-                    if (!node || !node.derivedFrom) continue;
-                    for (const r of node.derivedFrom) {
-                        if (r.when) for (const k of Object.keys(r.when)) subsumed.add(k);
-                        if (r.fromDim) subsumed.add(r.fromDim);
-                        if (r.whenSet) subsumed.add(r.whenSet);
-                        if (r.unless) for (const k of Object.keys(r.unless)) subsumed.add(k);
+                    if (!node || !node.deriveWhen) continue;
+                    for (const r of node.deriveWhen) {
+                        if (r.match) for (const k of _keysFromCond(r.match)) subsumed.add(k);
+                        if (r.fromState) subsumed.add(r.fromState);
                     }
                 }
                 const directlyReferenced = new Set();
@@ -1517,33 +1485,21 @@
                     const node = NODE_MAP[nid];
                     if (!node) continue;
                     if (node.activateWhen) for (const c of node.activateWhen) {
-                        for (const k of Object.keys(c)) {
-                            if (k === '_set' || k === '_notSet') { for (const sk of c[k]) directlyReferenced.add(sk); }
-                            else if (k === '_eff' || k === '_effNot' || k === '_raw' || k === '_rawNot') { for (const sk of Object.keys(c[k])) directlyReferenced.add(sk); }
-                            else if (!k.startsWith('_') && k !== 'reason') directlyReferenced.add(k);
-                        }
+                        for (const k of _keysFromCond(c)) directlyReferenced.add(k);
+                    }
+                    if (node.hideWhen) for (const c of node.hideWhen) {
+                        for (const k of _keysFromCond(c)) directlyReferenced.add(k);
                     }
                     if (node.edges) for (const e of node.edges) {
                         const conds = [];
                         if (e.disabledWhen) conds.push(...e.disabledWhen);
                         if (e.requires) conds.push(...(Array.isArray(e.requires) ? e.requires : [e.requires]));
                         for (const c of conds) {
-                            for (const k of Object.keys(c)) { if (!k.startsWith('_') && k !== 'reason') directlyReferenced.add(k); }
+                            for (const k of _keysFromCond(c)) directlyReferenced.add(k);
                         }
                     }
-                    if (node.derivedFrom) for (const r of node.derivedFrom) {
-                        if (r.effective) for (const k of Object.keys(r.effective)) directlyReferenced.add(k);
-                    }
-                }
-                for (const hc of (window.Graph && window.Graph.SCENARIO && window.Graph.SCENARIO.hideConditions || [])) {
-                    let affectsRelevant = false;
-                    for (const nid of branchRelevant) { const nd = NODE_MAP[nid]; if (nd && nd[hc.flag]) { affectsRelevant = true; break; } }
-                    if (!affectsRelevant) continue;
-                    const w = hc.when;
-                    for (const k of Object.keys(w)) {
-                        if (k === '_set' || k === '_notSet') { for (const sk of w[k]) directlyReferenced.add(sk); }
-                        else if (k === '_raw' || k === '_rawNot' || k === '_eff' || k === '_effNot') { for (const sk of Object.keys(w[k])) directlyReferenced.add(sk); }
-                        else if (!k.startsWith('_') && k !== 'reason') directlyReferenced.add(k);
+                    if (node.deriveWhen) for (const r of node.deriveWhen) {
+                        if (r.match) for (const k of _keysFromCond(r.match)) directlyReferenced.add(k);
                     }
                 }
 
@@ -1562,23 +1518,7 @@
                 if (variantKey && template.primaryDimension) keyRelevantSet.add(template.primaryDimension);
                 const keyRelevant = [...keyRelevantSet].sort();
 
-                const rawKeyDims = new Set();
-                for (const nid of branchRelevant) {
-                    const node = NODE_MAP[nid];
-                    if (!node) continue;
-                    if (node.activateWhen) for (const c of node.activateWhen) {
-                        if (c._raw) for (const k of Object.keys(c._raw)) { if (_derivableKeys.has(k)) rawKeyDims.add(k); }
-                        if (c._rawNot) for (const k of Object.keys(c._rawNot)) { if (_derivableKeys.has(k)) rawKeyDims.add(k); }
-                    }
-                }
-                for (const hc of (window.Graph && window.Graph.SCENARIO && window.Graph.SCENARIO.hideConditions || [])) {
-                    let affectsRelevant = false;
-                    for (const nid of branchRelevant) { const nd = NODE_MAP[nid]; if (nd && nd[hc.flag]) { affectsRelevant = true; break; } }
-                    if (!affectsRelevant) continue;
-                    const w = hc.when;
-                    if (w._raw) for (const k of Object.keys(w._raw)) { if (_derivableKeys.has(k)) rawKeyDims.add(k); }
-                    if (w._rawNot) for (const k of Object.keys(w._rawNot)) { if (_derivableKeys.has(k)) rawKeyDims.add(k); }
-                }
+                const rawKeyDims = new Set(NODES.filter(n => n.snapshotAs).map(n => n.id));
 
                 const condValueLists = new Map();
                 for (const nid of branchRelevant) {
@@ -1586,10 +1526,10 @@
                     if (!node) continue;
                     const collectFromCond = (c) => {
                         for (const [k, vals] of Object.entries(c)) {
-                            if (k.startsWith('_') || k === 'reason') continue;
+                            if (k === 'reason') continue;
                             if (!keyRelevantSet.has(k)) continue;
                             const nd = NODE_MAP[k];
-                            if (nd && nd.derivedFrom) continue;
+                            if (nd && nd.deriveWhen) continue;
                             if (rawKeyDims.has(k)) continue;
                             if (!condValueLists.has(k)) condValueLists.set(k, []);
                             const key = Array.isArray(vals) ? vals.slice().sort().join(',') : String(vals);
@@ -1597,13 +1537,13 @@
                         }
                     };
                     if (node.activateWhen) for (const c of node.activateWhen) collectFromCond(c);
+                    if (node.hideWhen) for (const c of node.hideWhen) collectFromCond(c);
                     if (node.edges) for (const e of node.edges) {
                         if (e.disabledWhen) for (const c of e.disabledWhen) collectFromCond(c);
                         if (e.requires) for (const c of (Array.isArray(e.requires) ? e.requires : [e.requires])) collectFromCond(c);
                     }
-                    if (node.derivedFrom) for (const r of node.derivedFrom) {
-                        if (r.when) collectFromCond(r.when);
-                        if (r.effective) collectFromCond(r.effective);
+                    if (node.deriveWhen) for (const r of node.deriveWhen) {
+                        if (r.match) collectFromCond(r.match);
                     }
                 }
 
@@ -1638,20 +1578,27 @@
                     key += k + '=' + (eq ? eq(v) : v) + '|';
                 }
                 for (const k of rawKeyDims) {
-                    if (sel[k]) key += k + '.r=' + sel[k] + '|';
+                    const snapKey = Engine.NODE_MAP[k] && Engine.NODE_MAP[k].snapshotAs;
+                    if (snapKey && sel[snapKey]) key += snapKey + '=' + sel[snapKey] + '|';
                 }
                 return key;
             }
 
             function _couldDeriveTo(nodeId, allowed, sel) {
                 const node = Engine.NODE_MAP[nodeId];
-                if (!node || !node.derivedFrom) return false;
-                return node.derivedFrom.some(rule => {
+                if (!node || !node.deriveWhen) return false;
+                return node.deriveWhen.some(rule => {
                     if (rule.value && allowed.includes(rule.value)) {
-                        if (!rule.when) return true;
-                        return Object.entries(rule.when).every(([tk, tv]) => !sel[tk] || sel[tk] === tv);
+                        if (!rule.match) return true;
+                        return Object.entries(rule.match).every(([tk, tv]) => {
+                            if (tk === 'reason') return true;
+                            const eff = Engine.resolvedVal(sel, tk);
+                            if (!eff) return true;
+                            if (Array.isArray(tv)) return tv.includes(eff);
+                            return true;
+                        });
                     }
-                    if (rule.fromDim) return !sel[rule.fromDim] || allowed.includes(sel[rule.fromDim]);
+                    if (rule.fromState) return !sel[rule.fromState] || allowed.includes(sel[rule.fromState]);
                     if (rule.valueMap) return Object.values(rule.valueMap).some(v => allowed.includes(v));
                     return false;
                 });
@@ -1696,11 +1643,7 @@
                     if (!cond) return dims;
                     for (const k of Object.keys(cond)) {
                         if (k === 'reason') continue;
-                        if (k === '_set' || k === '_notSet') { for (const sk of cond[k]) dims.add(sk); }
-                        else if (k === '_raw' || k === '_rawNot' || k === '_eff' || k === '_effNot') {
-                            for (const sk of Object.keys(cond[k])) dims.add(sk);
-                        } else if (k === '_fn' || k === '_fnAnchor') { /* handled separately */ }
-                        else if (!k.startsWith('_')) dims.add(k);
+                        dims.add(k);
                     }
                     return dims;
                 };
@@ -1708,34 +1651,26 @@
                     const deps = new Set();
                     if (node.activateWhen) for (const c of node.activateWhen) {
                         for (const d of extractDims(c)) deps.add(d);
-                        if (c._fn === 'allPrecedingAnswered') {
-                            const anchor = c._fnAnchor;
-                            const anchorIdx = anchor ? NODES.findIndex(n => n.id === anchor) : -1;
-                            const nodeIdx = NODES.indexOf(node);
-                            for (let i = anchorIdx + 1; i < nodeIdx; i++) {
-                                const mid = NODES[i];
-                                if (!mid.terminal && !mid.derived) deps.add(mid.id);
-                            }
+                    }
+                    if (node.hideWhen) for (const c of node.hideWhen) {
+                        for (const d of extractDims(c)) deps.add(d);
+                    }
+                    if (node.priority && node.priority > 0) {
+                        const nodeIdx = NODES.indexOf(node);
+                        for (let i = 0; i < nodeIdx; i++) {
+                            const mid = NODES[i];
+                            if (!mid.derived && (mid.priority || 0) < node.priority) deps.add(mid.id);
                         }
                     }
                     if (node.edges) for (const e of node.edges) {
                         if (e.disabledWhen) for (const c of e.disabledWhen) for (const d of extractDims(c)) deps.add(d);
                         if (e.requires) for (const c of (Array.isArray(e.requires) ? e.requires : [e.requires])) for (const d of extractDims(c)) deps.add(d);
                     }
-                    if (node.derivedFrom) for (const r of node.derivedFrom) {
-                        if (r.when) for (const k of Object.keys(r.when)) deps.add(k);
-                        if (r.effective) for (const k of Object.keys(r.effective)) deps.add(k);
-                        if (r.unless) for (const k of Object.keys(r.unless)) deps.add(k);
-                        if (r.fromDim) deps.add(r.fromDim);
-                        if (r.whenSet) deps.add(r.whenSet);
+                    if (node.deriveWhen) for (const r of node.deriveWhen) {
+                        if (r.match) for (const k of Object.keys(r.match)) { if (k !== 'reason') deps.add(k); }
+                        if (r.fromState) deps.add(r.fromState);
                     }
                     for (const dim of deps) addDep(dim, node.id);
-                }
-                const hcRules = (window.Graph && window.Graph.SCENARIO && window.Graph.SCENARIO.hideConditions) || [];
-                for (const hc of hcRules) {
-                    const flaggedNodes = NODES.filter(n => n[hc.flag]).map(n => n.id);
-                    const condDims = extractDims(hc.when);
-                    for (const dim of condDims) for (const nid of flaggedNodes) addDep(dim, nid);
                 }
             })();
 
@@ -1773,9 +1708,9 @@
                         }
                     }
                     const shouldCascade = sel[nid] !== oldVal ||
-                        (node.derivedFrom && node.derivedFrom.length > 0 && !derivedCascaded.has(nid));
+                        (node.deriveWhen && node.deriveWhen.length > 0 && !derivedCascaded.has(nid));
                     if (shouldCascade) {
-                        if (node.derivedFrom) derivedCascaded.add(nid);
+                        if (node.deriveWhen) derivedCascaded.add(nid);
                         const cascade = _cleanDeps.get(nid);
                         if (cascade) for (const cid of cascade) {
                             if (!inWorklist.has(cid)) { worklist.push(cid); inWorklist.add(cid); }
@@ -1802,7 +1737,8 @@
                     key += k + '=' + (eq ? eq(v) : v) + '|';
                 }
                 for (const k of _rawKeyDims) {
-                    if (sel[k]) key += k + '.r=' + sel[k] + '|';
+                    const snapKey = Engine.NODE_MAP[k] && Engine.NODE_MAP[k].snapshotAs;
+                    if (snapKey && sel[snapKey]) key += snapKey + '=' + sel[snapKey] + '|';
                 }
                 return key;
             }
@@ -2246,7 +2182,7 @@
                     if (v && s[k]) hidden[k] = { value: s[k], eff: eff[k] || s[k] };
                 }
                 for (const node of NODES) {
-                    if (!node.derivedFrom) continue;
+                    if (!node.deriveWhen) continue;
                     const raw = s[node.id];
                     const effVal = eff[node.id];
                     if (effVal && raw !== effVal) {
@@ -2261,7 +2197,7 @@
             function getVisibleNodes(s) {
                 const vis = new Set();
                 for (const node of NODES) {
-                    if (node.terminal || node.derived) continue;
+                    if (node.derived || (node.priority || 0) >= 2) continue;
                     if (Engine.isNodeVisible(s, node)) vis.add(node.id);
                 }
                 return vis;
@@ -2328,7 +2264,7 @@
                         console.group('%c[Debug] State after update', 'color: #8b5cf6; font-weight: bold');
                         const answered = [];
                         for (const node of NODES) {
-                            if (node.terminal || node.derived) continue;
+                            if (node.derived || (node.priority || 0) >= 2) continue;
                             if (!sel[node.id]) continue;
                             const effVal = eff[node.id];
                             const isLocked = sel._locked && sel._locked[node.id];
@@ -2343,7 +2279,7 @@
                         }
                         const upcoming = [];
                         for (const node of NODES) {
-                            if (node.terminal || node.derived) continue;
+                            if (node.derived || (node.priority || 0) >= 2) continue;
                             if (!Engine.isNodeVisible(sel, node)) continue;
                             if (sel[node.id]) continue;
                             const locked = Engine.isNodeLocked(sel, node);
@@ -2378,7 +2314,7 @@
 
                         const visNodes = [];
                         for (const node of NODES) {
-                            if (node.terminal || node.derived) continue;
+                            if (node.derived || (node.priority || 0) >= 2) continue;
                             if (!Engine.isNodeVisible(sel, node)) continue;
                             const locked = Engine.isNodeLocked(sel, node);
                             const isAnswered = !!sel[node.id];
