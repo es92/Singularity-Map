@@ -12,8 +12,8 @@ const { SCENARIO, NODES, NODE_MAP } = (typeof module !== 'undefined' && module.e
 // ════════════════════════════════════════════════════════
 
 function matchesDerivation(rule, sel) {
-    if (!rule.effective) return true;
-    for (const [key, val] of Object.entries(rule.effective)) {
+    if (!rule.match) return true;
+    for (const [key, val] of Object.entries(rule.match)) {
         const eff = resolvedVal(sel, key);
         if (val === true)  { if (!eff) return false; }
         else if (val === false) { if (eff) return false; }
@@ -27,7 +27,7 @@ function matchesDerivation(rule, sel) {
 function applyDerivations(derivations, sel, k) {
     for (const rule of derivations) {
         if (!matchesDerivation(rule, sel)) continue;
-        if (rule.fromDim) return resolvedVal(sel, rule.fromDim);
+        if (rule.fromState) return resolvedVal(sel, rule.fromState);
         if (rule.valueMap) return rule.valueMap[sel[k]] ?? sel[k];
         return rule.value;
     }
@@ -38,9 +38,9 @@ const _computing = new Set();
 function resolvedVal(sel, k) {
     if (_computing.has(k)) return sel[k];
     const node = NODE_MAP[k];
-    if (node && node.derivedFrom) {
+    if (node && node.deriveWhen) {
         _computing.add(k);
-        const result = applyDerivations(node.derivedFrom, sel, k);
+        const result = applyDerivations(node.deriveWhen, sel, k);
         _computing.delete(k);
         if (result !== undefined) return result;
     }
@@ -50,12 +50,6 @@ function resolvedVal(sel, k) {
 // ════════════════════════════════════════════════════════
 // Activation engine (generic isNodeVisible)
 // ════════════════════════════════════════════════════════
-
-const HIDE_FLAG_RULES = (SCENARIO && SCENARIO.hideConditions || []).map(hc => ({
-    nodes: new Set(NODES.filter(d => d[hc.flag]).map(d => d.id)),
-    when: hc.when,
-}));
-
 
 function matchCondition(sel, cond) {
     for (const [k, allowed] of Object.entries(cond)) {
@@ -92,8 +86,10 @@ function isNodeActivatedByRules(sel, node) {
 }
 
 function isNodeActivated(sel, node) {
-    for (const rule of HIDE_FLAG_RULES) {
-        if (rule.nodes.has(node.id) && matchCondition(sel, rule.when)) return false;
+    if (node.hideWhen) {
+        for (const cond of node.hideWhen) {
+            if (matchCondition(sel, cond)) return false;
+        }
     }
     return isNodeActivatedByRules(sel, node);
 }
@@ -223,8 +219,8 @@ function resolvedState(sel) {
     const d = {};
     for (const node of NODES) {
         if (!isNodeVisible(sel, node)) {
-            if (node.derivedFrom) {
-                const derived = applyDerivations(node.derivedFrom, sel, node.id);
+            if (node.deriveWhen) {
+                const derived = applyDerivations(node.deriveWhen, sel, node.id);
                 if (derived !== undefined) d[node.id] = derived;
             }
             continue;

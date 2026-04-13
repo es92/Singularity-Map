@@ -8,18 +8,6 @@ const SCENARIO = {
     title: 'Singularity Map',
     description: 'Navigate the branching futures of artificial intelligence.',
     storageKey: 'singularity-map-discovered',
-    hideConditions: [
-        { flag: 'hideAfterEscape', when: {
-          ai_goals: { not: ['marginal', 'benevolent'], required: true },
-          inert_outcome: false,
-          containment: { not: ['contained'] }
-        } },
-        { flag: 'hideOnBrittleEscape', when: {
-          alignment_durability: ['breaks'],
-          ai_goals: { not: ['marginal'] },
-          inert_outcome: false
-        } },
-    ],
 };
 
 const DECEL_PAIRS = [
@@ -45,7 +33,7 @@ const OUTCOME_ACTIVATE = [
 
 const NODES = [
     { id: 'capability', label: 'AI Scaling', stage: 1, forwardKey: true,
-      derivedFrom: [{ effective: { stall_recovery: ['mild'] }, value: 'singularity' }],
+      deriveWhen: [{ match: { stall_recovery: ['mild'] }, value: 'singularity' }],
       edges: [
         { id: 'singularity', label: 'Trend continues' },
         { id: 'stalls', label: 'Stalls' }
@@ -116,10 +104,10 @@ const NODES = [
         { id: 'never', label: 'Never — matching is the ceiling', shortLabel: 'Never' }
       ] },
     { id: 'automation', label: 'Knowledge Work', derived: true, forwardKey: true,
-      derivedFrom: [
-        { effective: { automation_recovery: ['mild'] }, value: 'deep' },
-        { effective: { agi_threshold: ['never'] }, value: 'shallow' },
-        { effective: { capability: ['singularity'] }, value: 'deep' }
+      deriveWhen: [
+        { match: { automation_recovery: ['mild'] }, value: 'deep' },
+        { match: { agi_threshold: ['never'] }, value: 'shallow' },
+        { match: { capability: ['singularity'] }, value: 'deep' }
       ],
       edges: [{ id: 'deep' }, { id: 'shallow' }] },
     { id: 'automation_recovery', label: 'Deep Automation Recovery?', stage: 1,
@@ -206,10 +194,10 @@ const NODES = [
           open_source: ['six_months', 'twelve_months', 'twenty_four_months']
         }
       ],
-      derivedFrom: [
-        { effective: { decel_outcome: ['rival', 'parity_solved', 'parity_failed'] }, value: 'two' },
-        { effective: { proliferation_outcome: ['leaks_rivals'] }, value: 'two' },
-        { effective: { proliferation_outcome: ['leaks_public'], proliferation_control: ['deny_rivals', 'secure_access'] }, value: 'several' }
+      deriveWhen: [
+        { match: { decel_outcome: ['rival', 'parity_solved', 'parity_failed'] }, value: 'two' },
+        { match: { proliferation_outcome: ['leaks_rivals'] }, value: 'two' },
+        { match: { proliferation_outcome: ['leaks_public'], proliferation_control: ['deny_rivals', 'secure_access'] }, value: 'several' }
       ],
       edges: [
         { id: 'one', label: 'One country' },
@@ -228,21 +216,21 @@ const NODES = [
       edges: [ { id: 'lab', label: 'The labs' }, { id: 'state', label: 'The state' } ] },
     { id: 'alignment', label: 'Alignment', stage: 2, forwardKey: true, snapshotAs: 'alignment_0',
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
-      derivedFrom: [
-        { effective: { proliferation_alignment: ['breaks'] }, value: 'failed' },
-        { effective: { alignment_durability: ['breaks'] }, value: 'failed' },
-        { effective: { brittle_resolution: ['escape'] }, value: 'failed' },
-        { effective: { inert_stays: ['no'], inert_outcome: true }, value: 'failed' },
-        { effective: { decel_outcome: ['solved', 'parity_solved'] }, value: 'robust' },
-        { effective: { brittle_resolution: ['solved'] }, value: 'robust' },
-        { effective: { brittle_resolution: ['sufficient'] }, valueMap: { failed: 'brittle' } },
+      deriveWhen: [
+        { match: { proliferation_alignment: ['breaks'] }, value: 'failed' },
+        { match: { alignment_durability: ['breaks'] }, value: 'failed' },
+        { match: { brittle_resolution: ['escape'] }, value: 'failed' },
+        { match: { inert_stays: ['no'], inert_outcome: true }, value: 'failed' },
+        { match: { decel_outcome: ['solved', 'parity_solved'] }, value: 'robust' },
+        { match: { brittle_resolution: ['solved'] }, value: 'robust' },
+        { match: { brittle_resolution: ['sufficient'] }, valueMap: { failed: 'brittle' } },
         {
-          effective: { ai_goals: ['marginal'], brittle_resolution: { not: ['solved'] } },
+          match: { ai_goals: ['marginal'], brittle_resolution: { not: ['solved'] } },
           valueMap: { failed: 'brittle' }
         },
-        { effective: { proliferation_outcome: ['leaks_public'], proliferation_control: ['deny_rivals', 'secure_access'], alignment: { not: ['robust'] } }, value: 'failed' },
-        { effective: { decel_outcome: ['rival'] }, value: 'brittle' },
-        { effective: { decel_outcome: ['escapes'] }, value: 'failed' }
+        { match: { proliferation_outcome: ['leaks_public'], proliferation_control: ['deny_rivals', 'secure_access'], alignment: { not: ['robust'] } }, value: 'failed' },
+        { match: { decel_outcome: ['rival'] }, value: 'brittle' },
+        { match: { decel_outcome: ['escapes'] }, value: 'failed' }
       ],
       edges: [
         { id: 'robust', label: 'Robust' },
@@ -267,7 +255,8 @@ const NODES = [
         }
       ],
       edges: [ { id: 'holds', label: 'Holds for now' }, { id: 'breaks', label: 'Breaks' } ] },
-    { id: 'containment', label: 'Containment', stage: 2, forwardKey: true, hideOnBrittleEscape: true,
+    { id: 'containment', label: 'Containment', stage: 2, forwardKey: true,
+      hideWhen: [{ alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_outcome: false }],
       activateWhen: [
         {
           capability: ['singularity'],
@@ -289,13 +278,13 @@ const NODES = [
           decel_outcome: { not: ['solved', 'parity_solved'] }
         }
       ],
-      derivedFrom: [
-        { effective: { alignment_durability: ['breaks'] }, value: 'escaped' },
-        { effective: { brittle_resolution: ['escape'] }, value: 'escaped' },
-        { effective: { proliferation_alignment: ['breaks'] }, value: 'escaped' },
-        { effective: { proliferation_outcome: ['leaks_public'], alignment_0: { not: ['robust'] } }, value: 'escaped' },
-        { effective: { inert_stays: ['no'], inert_outcome: true }, value: 'escaped' },
-        { effective: { catch_outcome: ['holds_permanently'], collateral_impact: { not: ['civilizational'] } }, value: 'contained' }
+      deriveWhen: [
+        { match: { alignment_durability: ['breaks'] }, value: 'escaped' },
+        { match: { brittle_resolution: ['escape'] }, value: 'escaped' },
+        { match: { proliferation_alignment: ['breaks'] }, value: 'escaped' },
+        { match: { proliferation_outcome: ['leaks_public'], alignment_0: { not: ['robust'] } }, value: 'escaped' },
+        { match: { inert_stays: ['no'], inert_outcome: true }, value: 'escaped' },
+        { match: { catch_outcome: ['holds_permanently'], collateral_impact: { not: ['civilizational'] } }, value: 'contained' }
       ],
       edges: [
         {
@@ -321,7 +310,7 @@ const NODES = [
         },
         { concentration_type: ['ai_itself'] }
       ],
-      derivedFrom: [{ effective: { inert_outcome: true }, fromDim: 'inert_outcome' }],
+      deriveWhen: [{ match: { inert_outcome: true }, fromState: 'inert_outcome' }],
       edges: [
         { id: 'benevolent', label: 'Benefit humanity' },
         { id: 'alien_coexistence', label: 'Alien (tolerant)',
@@ -355,9 +344,10 @@ const NODES = [
           disabledWhen: [{ asi_threshold: ['never'], reason: 'Divergent fragmentation requires superhuman coordination' }] },
         { id: 'power_seeking', label: 'Power accumulation' }
       ] },
-    { id: 'gov_action', label: 'Deceleration', stage: 2, hideAfterEscape: true,
+    { id: 'gov_action', label: 'Deceleration', stage: 2,
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], geo_spread: ['one'] }],
-      derivedFrom: [{ effective: { alignment_durability: ['breaks'] }, value: 'accelerate' }],
+      deriveWhen: [{ match: { alignment_durability: ['breaks'] }, value: 'accelerate' }],
       edges: [
         { id: 'decelerate', label: 'Decelerate', disabledWhen: [{ alignment: ['robust'], reason: 'Alignment is solved — there is no case for slowing down' }, { takeoff: ['explosive'], reason: 'Moving too fast for any government to intervene' }] },
         { id: 'accelerate', label: 'Accelerate' }
@@ -530,7 +520,11 @@ const NODES = [
         }
       ],
       edges: [ { id: 'rival', label: 'Rival reaches parity' } ] },
-    { id: 'proliferation_control', label: 'Proliferation Control', stage: 2, hideAfterEscape: true, hideOnBrittleEscape: true,
+    { id: 'proliferation_control', label: 'Proliferation Control', stage: 2,
+      hideWhen: [
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_outcome: false }
+      ],
       activateWhen: [
         {
           capability: ['singularity'],
@@ -543,7 +537,11 @@ const NODES = [
         { id: 'secure_access', label: 'Secure access', disabledWhen: [{ distribution: ['open'], reason: 'The technology is already openly distributed' }] },
         { id: 'none', label: 'Open access' }
       ] },
-    { id: 'proliferation_outcome', label: 'Control Outcome', stage: 2, hideAfterEscape: true, hideOnBrittleEscape: true,
+    { id: 'proliferation_outcome', label: 'Control Outcome', stage: 2,
+      hideWhen: [
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_outcome: false }
+      ],
       activateWhen: [
         {
           capability: ['singularity'],
@@ -551,8 +549,8 @@ const NODES = [
           proliferation_control: ['deny_rivals', 'secure_access']
         }
       ],
-      derivedFrom: [
-        { effective: { proliferation_control: ['none'] }, value: 'leaks_public' }
+      deriveWhen: [
+        { match: { proliferation_control: ['none'] }, value: 'leaks_public' }
       ],
       edges: [
         {
@@ -576,7 +574,8 @@ const NODES = [
         { id: 'holds', label: 'Alignment is intrinsic', shortLabel: 'Intrinsic' },
         { id: 'breaks', label: 'Someone cracks it' }
       ] },
-    { id: 'intent', label: 'Intent', stage: 2, forwardKey: true, hideAfterEscape: true,
+    { id: 'intent', label: 'Intent', stage: 2, forwardKey: true,
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], proliferation_control: true },
         {
@@ -587,11 +586,11 @@ const NODES = [
         { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'] },
         { capability: ['singularity'], automation: ['deep'], inert_outcome: true }
       ],
-      derivedFrom: [
-        { effective: { escalation_outcome: ['agreement'] }, value: 'coexistence' },
-        { effective: { post_war_aims: ['human_centered'] }, value: 'coexistence' },
-        { effective: { pushback_outcome: ['succeeds'] }, value: 'international' },
-        { effective: { rival_dynamics: true }, fromDim: 'rival_dynamics' }
+      deriveWhen: [
+        { match: { escalation_outcome: ['agreement'] }, value: 'coexistence' },
+        { match: { post_war_aims: ['human_centered'] }, value: 'coexistence' },
+        { match: { pushback_outcome: ['succeeds'] }, value: 'international' },
+        { match: { rival_dynamics: true }, fromState: 'rival_dynamics' }
       ],
       edges: [
         {
@@ -640,7 +639,11 @@ const NODES = [
         },
         { id: 'international', label: 'International' }
       ] },
-    { id: 'block_entrants', label: 'Block New Entrants?', stage: 2, hideAfterEscape: true, hideOnBrittleEscape: true,
+    { id: 'block_entrants', label: 'Block New Entrants?', stage: 2,
+      hideWhen: [
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_outcome: false }
+      ],
       activateWhen: [
         {
           capability: ['singularity'],
@@ -652,13 +655,25 @@ const NODES = [
         }
       ],
       edges: [ { id: 'attempt', label: 'Attempt to block' }, { id: 'no_attempt', label: 'No attempt' } ] },
-    { id: 'block_outcome', label: 'Blocking Outcome', stage: 2, hideAfterEscape: true, hideOnBrittleEscape: true,
+    { id: 'block_outcome', label: 'Blocking Outcome', stage: 2,
+      hideWhen: [
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_outcome: false }
+      ],
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], block_entrants: ['attempt'] }],
       edges: [ { id: 'holds', label: 'Holds' }, { id: 'fails', label: 'Fails' } ] },
-    { id: 'new_entrants', label: 'New Entrants?', stage: 2, hideAfterEscape: true, hideOnBrittleEscape: true,
+    { id: 'new_entrants', label: 'New Entrants?', stage: 2,
+      hideWhen: [
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_outcome: false }
+      ],
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], block_entrants: ['no_attempt'] }],
       edges: [ { id: 'emerge', label: 'Emerge' }, { id: 'none', label: 'None' } ] },
-    { id: 'rival_dynamics', label: 'Rival Dynamics', stage: 2, hideAfterEscape: true, hideOnBrittleEscape: true,
+    { id: 'rival_dynamics', label: 'Rival Dynamics', stage: 2,
+      hideWhen: [
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_outcome: false }
+      ],
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], block_outcome: ['fails'] },
         { capability: ['singularity'], automation: ['deep'], new_entrants: ['emerge'] }
@@ -687,7 +702,8 @@ const NODES = [
     { id: 'post_war_aims', label: 'Victor\'s Aims', stage: 3,
       activateWhen: [{ conflict_result: ['victory'] }],
       edges: [ { id: 'human_centered', label: 'Rebuild for humanity' }, { id: 'self_interest', label: 'Consolidate power' } ] },
-    { id: 'power_promise', label: 'The Promise', stage: 3, hideAfterEscape: true,
+    { id: 'power_promise', label: 'The Promise', stage: 3,
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
       activateWhen: [
         {
           capability: ['singularity'],
@@ -726,14 +742,16 @@ const NODES = [
             { escalation_outcome: ['standoff'], reason: 'In a standoff between rival AI powers, the framing is security — not meritocracy' }
           ] }
       ] },
-    { id: 'mobilization', label: 'Mobilization', stage: 3, hideAfterEscape: true,
+    { id: 'mobilization', label: 'Mobilization', stage: 3,
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
       activateWhen: [{ power_promise: true }],
       edges: [
         { id: 'strong', label: 'Strong mobilization' },
         { id: 'weak', label: 'Weak or fragmented' },
         { id: 'none', label: 'No meaningful mobilization', shortLabel: 'No mobilization' }
       ] },
-    { id: 'sincerity_test', label: 'Sincerity Test', stage: 3, hideAfterEscape: true,
+    { id: 'sincerity_test', label: 'Sincerity Test', stage: 3,
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
       activateWhen: [
         { power_promise: ['for_everyone'], mobilization: ['none'] },
         { power_promise: ['for_everyone'], coalition_outcome: ['coalesces'] }
@@ -742,7 +760,8 @@ const NODES = [
         { id: 'sincere', label: 'Yes — the promise holds', shortLabel: 'Yes — holds' },
         { id: 'hollows_out', label: 'No — the promise hollows out', shortLabel: 'No — hollows out' }
       ] },
-    { id: 'pushback_outcome', label: 'Public Pushback', stage: 3, hideAfterEscape: true,
+    { id: 'pushback_outcome', label: 'Public Pushback', stage: 3,
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
       activateWhen: [
         { mobilization: ['strong'], power_promise: ['keeping_safe', 'best_will_rise'] },
         { coalition_outcome: ['coalesces'], power_promise: ['keeping_safe', 'best_will_rise'] }
@@ -752,7 +771,8 @@ const NODES = [
         { id: 'partial', label: 'Partial concessions' },
         { id: 'fails', label: 'Power prevails' }
       ] },
-    { id: 'coalition_outcome', label: 'Coalition Problem', stage: 3, hideAfterEscape: true,
+    { id: 'coalition_outcome', label: 'Coalition Problem', stage: 3,
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
       activateWhen: [{ mobilization: ['weak'] }],
       edges: [
         { id: 'coalesces', label: 'Coalition forms' },
@@ -800,21 +820,24 @@ const NODES = [
         { id: 'extractive', label: 'A tightening grip' },
         { id: 'indifferent', label: 'Their own project' }
       ] },
-    { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, terminal: true, hideAfterEscape: true,
+    { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, terminal: true,
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
       activateWhen: OUTCOME_ACTIVATE,
       edges: [
         { id: 'rapid', label: 'Rapid (1–2 yrs)' },
         { id: 'gradual', label: 'Gradual (3–10 yrs)' },
         { id: 'uneven', label: 'Uneven (1–20 yrs)' }
       ] },
-    { id: 'physical_automation', label: 'Physical Automation', stage: 3, terminal: true, hideAfterEscape: true,
+    { id: 'physical_automation', label: 'Physical Automation', stage: 3, terminal: true,
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
       activateWhen: OUTCOME_ACTIVATE,
       edges: [
         { id: 'rapid', label: 'Rapid (2–5 yrs)' },
         { id: 'gradual', label: 'Gradual (5–20 yrs)' },
         { id: 'uneven', label: 'Uneven (2–20+ yrs)' }
       ] },
-    { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3, hideAfterEscape: true, priority: 1,
+    { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3, priority: 1,
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
       activateWhen: [
         {
           capability: ['singularity'],
@@ -828,7 +851,8 @@ const NODES = [
         { id: 'sufficient', label: 'Brittle alignment holds', shortLabel: 'Brittle holds' },
         { id: 'escape', label: 'AI eventually escapes', shortLabel: 'Escapes' }
       ] },
-    { id: 'failure_mode', label: 'Delivery', stage: 3, forwardKey: true, hideAfterEscape: true,
+    { id: 'failure_mode', label: 'Delivery', stage: 3, forwardKey: true,
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], post_war_aims: false, power_promise: ['for_everyone'], mobilization: ['strong'] },
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], post_war_aims: false, sincerity_test: true },
@@ -987,31 +1011,31 @@ const NODES = [
       ] },
     { id: 'decel_outcome', label: 'Deceleration Outcome', derived: true,
       activateWhen: [{ gov_action: ['decelerate'] }],
-      derivedFrom: [],
+      deriveWhen: [],
       edges: [{ id: 'solved' }, { id: 'abandon' }, { id: 'rival' }, { id: 'parity_solved' }, { id: 'parity_failed' }, { id: 'escapes' }] },
     { id: 'decel_align_progress', label: 'Decel Alignment Progress', derived: true,
       activateWhen: [{ gov_action: ['decelerate'] }],
-      derivedFrom: [],
+      deriveWhen: [],
       edges: [{ id: 'robust' }, { id: 'brittle' }, { id: 'unsolved' }] },
     { id: 'governance', label: 'Governance', derived: true, forwardKey: true,
-      derivedFrom: [
-        { effective: { gov_action: ['accelerate'] }, value: 'race' },
-        { effective: { decel_outcome: ['abandon'] }, value: 'race' },
-        { effective: { gov_action: ['decelerate'] }, value: 'slowdown' },
-        { effective: { governance_window: ['governed'] }, value: 'governed' },
-        { effective: { governance_window: ['partial'] }, value: 'partial' },
-        { effective: { governance_window: ['race'] }, value: 'race' },
+      deriveWhen: [
+        { match: { gov_action: ['accelerate'] }, value: 'race' },
+        { match: { decel_outcome: ['abandon'] }, value: 'race' },
+        { match: { gov_action: ['decelerate'] }, value: 'slowdown' },
+        { match: { governance_window: ['governed'] }, value: 'governed' },
+        { match: { governance_window: ['partial'] }, value: 'partial' },
+        { match: { governance_window: ['race'] }, value: 'race' },
       ],
       edges: [{ id: 'race' }, { id: 'slowdown' }, { id: 'governed' }, { id: 'partial' }] },
     { id: 'rival_emerges', label: 'Rival Emerges', derived: true,
-      derivedFrom: [
-        { effective: { decel_outcome: ['parity_solved', 'parity_failed', 'rival'] }, value: 'yes' },
+      deriveWhen: [
+        { match: { decel_outcome: ['parity_solved', 'parity_failed', 'rival'] }, value: 'yes' },
       ],
       edges: [{ id: 'yes' }] },
     { id: 'ruin_type', label: 'Ruin Cause', derived: true,
-      derivedFrom: [
-        { effective: { catch_outcome: ['holds_permanently'], collateral_impact: ['civilizational'] }, value: 'self_inflicted' },
-        { effective: { conflict_result: ['destruction'] }, value: 'war' }
+      deriveWhen: [
+        { match: { catch_outcome: ['holds_permanently'], collateral_impact: ['civilizational'] }, value: 'self_inflicted' },
+        { match: { conflict_result: ['destruction'] }, value: 'war' }
       ],
       edges: [{ id: 'war' }, { id: 'self_inflicted' }] }
 ];
@@ -1023,15 +1047,15 @@ for (const d of NODES) NODE_MAP[d.id] = d;
 for (const [pKey, aKey] of DECEL_PAIRS) {
     const vals = new Set(NODE_MAP[aKey].edges.map(v => v.id));
     const has = v => vals.has(v);
-    if (has('escapes'))    NODE_MAP['decel_outcome'].derivedFrom.push({ effective: { [aKey]: ['escapes'] }, value: 'escapes' });
-    if (has('accelerate')) NODE_MAP['decel_outcome'].derivedFrom.push({ effective: { [aKey]: ['accelerate'], [pKey]: ['robust'] }, value: 'solved' });
-    if (has('accelerate')) NODE_MAP['decel_outcome'].derivedFrom.push({ effective: { [aKey]: ['accelerate'] }, value: 'abandon' });
-    if (has('rival'))      NODE_MAP['decel_outcome'].derivedFrom.push({ effective: { [aKey]: ['rival'], [pKey]: ['robust'] }, value: 'parity_solved' });
-    if (has('rival'))      NODE_MAP['decel_outcome'].derivedFrom.push({ effective: { [aKey]: ['rival'], [pKey]: ['unsolved'] }, value: 'parity_failed' });
-    if (has('rival'))      NODE_MAP['decel_outcome'].derivedFrom.push({ effective: { [aKey]: ['rival'] }, value: 'rival' });
-    if (has('escapes'))    NODE_MAP['decel_align_progress'].derivedFrom.push({ effective: { [aKey]: ['escapes'] }, fromDim: pKey });
-    if (has('accelerate')) NODE_MAP['decel_align_progress'].derivedFrom.push({ effective: { [aKey]: ['accelerate'] }, fromDim: pKey });
-    if (has('rival'))      NODE_MAP['decel_align_progress'].derivedFrom.push({ effective: { [aKey]: ['rival'] }, fromDim: pKey });
+    if (has('escapes'))    NODE_MAP['decel_outcome'].deriveWhen.push({ match: { [aKey]: ['escapes'] }, value: 'escapes' });
+    if (has('accelerate')) NODE_MAP['decel_outcome'].deriveWhen.push({ match: { [aKey]: ['accelerate'], [pKey]: ['robust'] }, value: 'solved' });
+    if (has('accelerate')) NODE_MAP['decel_outcome'].deriveWhen.push({ match: { [aKey]: ['accelerate'] }, value: 'abandon' });
+    if (has('rival'))      NODE_MAP['decel_outcome'].deriveWhen.push({ match: { [aKey]: ['rival'], [pKey]: ['robust'] }, value: 'parity_solved' });
+    if (has('rival'))      NODE_MAP['decel_outcome'].deriveWhen.push({ match: { [aKey]: ['rival'], [pKey]: ['unsolved'] }, value: 'parity_failed' });
+    if (has('rival'))      NODE_MAP['decel_outcome'].deriveWhen.push({ match: { [aKey]: ['rival'] }, value: 'rival' });
+    if (has('escapes'))    NODE_MAP['decel_align_progress'].deriveWhen.push({ match: { [aKey]: ['escapes'] }, fromState: pKey });
+    if (has('accelerate')) NODE_MAP['decel_align_progress'].deriveWhen.push({ match: { [aKey]: ['accelerate'] }, fromState: pKey });
+    if (has('rival'))      NODE_MAP['decel_align_progress'].deriveWhen.push({ match: { [aKey]: ['rival'] }, fromState: pKey });
 }
 
 if (typeof module !== 'undefined' && module.exports) {
