@@ -814,15 +814,13 @@ const NODES = [
         { id: 'gradual', label: 'Gradual (5–20 yrs)' },
         { id: 'uneven', label: 'Uneven (2–20+ yrs)' }
       ] },
-    { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3, hideAfterEscape: true,
+    { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3, hideAfterEscape: true, priority: 1,
       activateWhen: [
         {
           capability: ['singularity'],
           automation: ['deep'],
           alignment: ['brittle'],
-          alignment_durability: ['holds'],
-          _fn: 'allPrecedingAnswered',
-          _fnAnchor: 'alignment_durability'
+          alignment_durability: ['holds']
         }
       ],
       edges: [

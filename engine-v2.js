@@ -136,7 +136,20 @@ function matchCondition(sel, cond, node) {
 
 function isNodeActivatedByRules(sel, node) {
     if (!node.activateWhen) return true;
-    return node.activateWhen.some(c => matchCondition(sel, c, node));
+    if (!node.activateWhen.some(c => matchCondition(sel, c, node))) return false;
+    const pri = node.priority || 0;
+    if (pri > 0) {
+        const nodeIdx = NODES.indexOf(node);
+        for (let i = 0; i < nodeIdx; i++) {
+            const mid = NODES[i];
+            if ((mid.priority || 0) >= pri) continue;
+            if (mid.terminal || mid.derived) continue;
+            if (!isNodeVisible(sel, mid)) continue;
+            if (isNodeLocked(sel, mid) !== null) continue;
+            if (!sel[mid.id]) return false;
+        }
+    }
+    return true;
 }
 
 function isNodeActivated(sel, node) {
