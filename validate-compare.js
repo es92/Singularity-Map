@@ -93,7 +93,7 @@ function compareState(sel) {
 
         const vis1 = v1.isNodeVisible(sel, v1node);
         const vis2 = v2.isNodeVisible(v2sel, v2node);
-        if (vis1 !== vis2) {
+        if (vis1 !== vis2 && !v1node.terminal) {
             diffs.push({ type: 'visibility', node: v1node.id, v1: vis1, v2: vis2 });
         }
 

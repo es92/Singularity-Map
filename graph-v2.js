@@ -53,14 +53,14 @@ const NODES = [
         { id: 'substantial', label: 'Years/decades' },
         { id: 'never', label: 'Never' }
       ] },
-    { id: 'plateau_benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
+    { id: 'plateau_benefit_distribution', label: 'Who Benefits?', stage: 3, priority: 2,
       activateWhen: [{ capability: ['stalls'], stall_recovery: ['substantial', 'never'] }],
       edges: [
         { id: 'equal', label: 'Shared equally' },
         { id: 'unequal', label: 'Wealth concentrates' },
         { id: 'extreme', label: 'Power concentrates' }
       ] },
-    { id: 'plateau_knowledge_rate', label: 'Knowledge Work', stage: 3, terminal: true,
+    { id: 'plateau_knowledge_rate', label: 'Knowledge Work', stage: 3, priority: 2,
       activateWhen: [{ capability: ['stalls'], stall_recovery: ['substantial', 'never'] }],
       edges: [
         { id: 'rapid', label: 'Rapid (2–5 yrs)', requires: { stall_duration: ['weeks', 'months'] } },
@@ -72,7 +72,7 @@ const NODES = [
         { id: 'uneven', label: 'Uneven (2–20+ yrs)' },
         { id: 'limited', label: 'Limited', requires: { stall_duration: ['hours', 'days'] } }
       ] },
-    { id: 'plateau_physical_rate', label: 'Physical Automation', stage: 3, terminal: true,
+    { id: 'plateau_physical_rate', label: 'Physical Automation', stage: 3, priority: 2,
       activateWhen: [{ capability: ['stalls'], stall_recovery: ['substantial', 'never'] }],
       edges: [
         {
@@ -117,7 +117,7 @@ const NODES = [
         { id: 'substantial', label: 'Years/decades' },
         { id: 'never', label: 'Never' }
       ] },
-    { id: 'auto_benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
+    { id: 'auto_benefit_distribution', label: 'Who Benefits?', stage: 3, priority: 2,
       activateWhen: [
         {
           capability: ['singularity'],
@@ -130,7 +130,7 @@ const NODES = [
         { id: 'unequal', label: 'Wealth concentrates' },
         { id: 'extreme', label: 'Power concentrates' }
       ] },
-    { id: 'auto_knowledge_rate', label: 'Knowledge Work', stage: 3, terminal: true,
+    { id: 'auto_knowledge_rate', label: 'Knowledge Work', stage: 3, priority: 2,
       activateWhen: [
         {
           capability: ['singularity'],
@@ -143,7 +143,7 @@ const NODES = [
         { id: 'gradual', label: 'Gradual (5–15 yrs)' },
         { id: 'uneven', label: 'Uneven (2–20+ yrs)' }
       ] },
-    { id: 'auto_physical_rate', label: 'Physical Automation', stage: 3, terminal: true,
+    { id: 'auto_physical_rate', label: 'Physical Automation', stage: 3, priority: 2,
       activateWhen: [
         {
           capability: ['singularity'],
@@ -778,7 +778,7 @@ const NODES = [
         { id: 'coalesces', label: 'Coalition forms' },
         { id: 'fragments', label: 'Fragmentation holds' }
       ] },
-    { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3, terminal: true,
+    { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3, priority: 2,
       activateWhen: OUTCOME_ACTIVATE,
       edges: [
         { id: 'equal', label: 'Shared equally',
@@ -805,7 +805,7 @@ const NODES = [
             { pushback_outcome: ['partial'], reason: 'Real concessions were made — not equality, but enough to prevent lock-in' }
           ] }
       ] },
-    { id: 'concentration_type', label: 'The Circle', stage: 3, terminal: true,
+    { id: 'concentration_type', label: 'The Circle', stage: 3, priority: 2,
       activateWhen: [{ benefit_distribution: ['extreme'], sovereignty: true }],
       edges: [
         { id: 'elites', label: 'A broad elite' },
@@ -813,14 +813,14 @@ const NODES = [
         { id: 'singleton', label: 'One person' },
         { id: 'ai_itself', label: 'The AI itself' }
       ] },
-    { id: 'power_use', label: 'The Wielding', stage: 3, terminal: true,
+    { id: 'power_use', label: 'The Wielding', stage: 3, priority: 2,
       activateWhen: [{ concentration_type: ['singleton', 'inner_circle'] }],
       edges: [
         { id: 'generous', label: 'A golden world' },
         { id: 'extractive', label: 'A tightening grip' },
         { id: 'indifferent', label: 'Their own project' }
       ] },
-    { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, terminal: true,
+    { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, priority: 2,
       hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
       activateWhen: OUTCOME_ACTIVATE,
       edges: [
@@ -828,7 +828,7 @@ const NODES = [
         { id: 'gradual', label: 'Gradual (3–10 yrs)' },
         { id: 'uneven', label: 'Uneven (1–20 yrs)' }
       ] },
-    { id: 'physical_automation', label: 'Physical Automation', stage: 3, terminal: true,
+    { id: 'physical_automation', label: 'Physical Automation', stage: 3, priority: 2,
       hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
       activateWhen: OUTCOME_ACTIVATE,
       edges: [

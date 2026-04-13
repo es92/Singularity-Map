@@ -76,7 +76,7 @@ function isNodeActivatedByRules(sel, node) {
         for (let i = 0; i < nodeIdx; i++) {
             const mid = NODES[i];
             if ((mid.priority || 0) >= pri) continue;
-            if (mid.terminal || mid.derived) continue;
+            if (mid.derived) continue;
             if (!isNodeVisible(sel, mid)) continue;
             if (isNodeLocked(sel, mid) !== null) continue;
             if (!sel[mid.id]) return false;
