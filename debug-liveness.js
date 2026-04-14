@@ -259,6 +259,26 @@ for (const node of NODES) {
     }
 }
 
+function isDerivedUnsettled(sel, dim) {
+    const node = NODE_MAP[dim];
+    if (!node || !node.deriveWhen) return false;
+    const currentVal = resolvedVal(sel, dim);
+    const inputs = new Set();
+    for (const rule of node.deriveWhen) {
+        if (rule.match) for (const k of Object.keys(rule.match)) {
+            if (k !== 'reason') inputs.add(k);
+        }
+        if (rule.fromState) inputs.add(rule.fromState);
+    }
+    for (const k of inputs) {
+        if (sel[k] !== undefined) continue;
+        for (const v of (classReps[k] || [])) {
+            if (resolvedVal({ ...sel, [k]: v }, dim) !== currentVal) return true;
+        }
+    }
+    return false;
+}
+
 function canNodeBecomeVisible(sel, node) {
     if (isNodeVisible(sel, node)) return true;
     if (!node.activateWhen) return true;
@@ -268,11 +288,16 @@ function canNodeBecomeVisible(sel, node) {
             if (k === 'reason' || k.startsWith('_')) continue;
             const current = resolvedVal(sel, k);
             if (current === undefined) continue;
-            if (Array.isArray(v)) { if (!v.includes(current)) { blocked = true; break; } }
-            else if (v && v.not) { if (v.not.includes(current)) { blocked = true; break; } }
-            else if (v === true) { if (!current) { blocked = true; break; } }
-            else if (v === false) { if (current) { blocked = true; break; } }
-            else { if (current !== v) { blocked = true; break; } }
+            let matches;
+            if (Array.isArray(v)) matches = v.includes(current);
+            else if (v && v.not) matches = !v.not.includes(current);
+            else if (v === true) matches = !!current;
+            else if (v === false) matches = !current;
+            else matches = current === v;
+            if (!matches) {
+                if (isDerivedUnsettled(sel, k)) continue;
+                blocked = true; break;
+            }
         }
         if (!blocked) return true;
     }
@@ -306,9 +331,6 @@ function isIrrelevant(sel, dim, seen) {
     }
 
     for (const derivedDim of (derivedReaders[dim] || [])) {
-        // If the derived dim is in the dedup key (has edges) and dim is already
-        // answered, then dim's effect on derivedDim is permanently baked into
-        // derivedDim's resolved value — the key already captures this information.
         if (dimsInKey.has(derivedDim) && sel[dim] !== undefined) continue;
 
         if (!couldAffect(sel, dim, derivedDim)) continue;
@@ -322,11 +344,8 @@ function isIrrelevant(sel, dim, seen) {
 // Mini-search: class-only (the working 29-terminal version)
 // ═══════════════════════════════════════════════
 
-const miniDims = new Set(['capability','stall_duration','stall_recovery',
-    'plateau_benefit_distribution','plateau_knowledge_rate','plateau_physical_rate',
-    'agi_threshold','asi_threshold','automation_recovery',
-    'auto_benefit_distribution','auto_knowledge_rate','auto_physical_rate',
-    'takeoff','governance_window','open_source']);
+const boundaryNodes = new Set(['ai_goals','decel_2mo_progress','benefit_distribution']);
+const miniDims = new Set(NODES.filter(n => n.edges && !boundaryNodes.has(n.id)).map(n => n.id));
 
 const dimOrder = NODES.filter(n => n.edges).map(n => n.id);
 dimsInKey = new Set(dimOrder);
@@ -341,46 +360,144 @@ function classKey(sel) {
     return p.join(',');
 }
 
-const visited = new Set();
-let stateCount = 0;
-const terminals = [];
+function runDfs(keyFn, label) {
+    const visited = new Set();
+    let stateCount = 0;
+    const terminals = [];
 
-function dfs(stk) {
-    const sel = currentState(stk);
-    const key = irrKey(sel);
-    const answered = Object.keys(sel).filter(k => sel[k]);
-    const keyParts = key.split(',');
-    const showIdxs = ['capability','agi_threshold','asi_threshold','automation','takeoff','open_source']
-        .map(d => dimOrder.indexOf(d));
-    const shortKey = showIdxs.map(i => `${dimOrder[i].slice(0,4)}=${keyParts[i]}`).join(' ');
-    if (visited.has(key)) {
-        if (stateCount < 8) console.log(`  PRUNED(d=${answered.length}): ${shortKey}`);
-        return;
+    function dfs(stk) {
+        const sel = currentState(stk);
+        const key = keyFn(sel);
+        if (visited.has(key)) return;
+        visited.add(key);
+        stateCount++;
+
+        let nextNode = null, bestP = -Infinity;
+        for (const n of NODES) {
+            if (n.derived) continue; if (sel[n.id]) continue;
+            if (!isNodeVisible(sel, n)) continue;
+            if (!n.edges || n.edges.length === 0) continue;
+            const p = n.priority || 0; if (p > bestP) { bestP = p; nextNode = n; }
+        }
+        if (!nextNode) { terminals.push({ sel: { ...sel }, key, type: 'leaf', boundaryNode: null }); return; }
+        if (!miniDims.has(nextNode.id)) { terminals.push({ sel: { ...sel }, key, type: 'boundary', boundaryNode: nextNode.id }); return; }
+        if (stateCount > 500000) { console.log('OVERFLOW at ' + stateCount); process.exit(1); }
+
+        const enabled = nextNode.edges.filter(e => !isEdgeDisabled(sel, nextNode, e));
+        if (enabled.length === 1) { dfs(push(stk, nextNode.id, enabled[0].id, { autoForce: false })); return; }
+        for (const edge of enabled) dfs(push(stk, nextNode.id, edge.id, { autoForce: false }));
     }
-    if (stateCount < 20) console.log(`  NEW #${stateCount}(d=${answered.length}): ${shortKey}`);
-    visited.add(key);
-    stateCount++;
 
-    let nextNode = null, bestP = -Infinity;
-    for (const n of NODES) {
-        if (n.derived) continue; if (sel[n.id]) continue;
-        if (!isNodeVisible(sel, n)) continue;
-        if (!n.edges || n.edges.length === 0) continue;
-        const p = n.priority || 0; if (p > bestP) { bestP = p; nextNode = n; }
-    }
-    if (!nextNode) { terminals.push({ sel: { ...sel }, key, type: 'leaf', boundaryNode: null }); return; }
-    if (!miniDims.has(nextNode.id)) { terminals.push({ sel: { ...sel }, key, type: 'boundary', boundaryNode: nextNode.id }); return; }
-    if (stateCount > 200000) { console.log('OVERFLOW'); process.exit(1); }
-
-    const enabled = nextNode.edges.filter(e => !isEdgeDisabled(sel, nextNode, e));
-    if (enabled.length === 1) { dfs(push(stk, nextNode.id, enabled[0].id, { autoForce: false })); return; }
-    for (const edge of enabled) dfs(push(stk, nextNode.id, edge.id, { autoForce: false }));
+    const t0 = Date.now();
+    dfs(createStack());
+    const elapsed = Date.now() - t0;
+    console.log(`\n=== ${label} ===`);
+    console.log(`Visited: ${stateCount}, Raw Terminals: ${terminals.length}, Time: ${(elapsed/1000).toFixed(1)}s`);
+    return terminals;
 }
 
-dfs(createStack());
+// Run both strategies
+const classTerminals = runDfs(classKey, 'classKey DFS');
+const irrTerminals = runDfs(irrKey, 'irrKey DFS');
 
-console.log(`\n=== Mini Search: class-only ===`);
-console.log(`Visited: ${stateCount}, Terminals: ${terminals.length}`);
+// Collapse both with fullIrrKey
+function collapseTerminals(terms) {
+    const m = new Map();
+    for (const t of terms) {
+        const fk = fullIrrKey(t.sel);
+        if (!m.has(fk)) m.set(fk, t);
+    }
+    return m;
+}
+
+const classCollapsed = collapseTerminals(classTerminals);
+const irrCollapsed = collapseTerminals(irrTerminals);
+
+console.log(`\nclassKey collapsed: ${classCollapsed.size}`);
+console.log(`irrKey collapsed:   ${irrCollapsed.size}`);
+
+// Find keys in classKey set but NOT in irrKey set
+const missingKeys = [];
+for (const [fk, t] of classCollapsed) {
+    if (!irrCollapsed.has(fk)) missingKeys.push({ fk, t });
+}
+const extraKeys = [];
+for (const [fk, t] of irrCollapsed) {
+    if (!classCollapsed.has(fk)) extraKeys.push({ fk, t });
+}
+
+console.log(`\nMissing from irrKey (in classKey but not irrKey): ${missingKeys.length}`);
+console.log(`Extra in irrKey (in irrKey but not classKey):      ${extraKeys.length}`);
+
+if (missingKeys.length > 0) {
+    console.log(`\n=== MISSING TERMINALS (analysis) ===`);
+    console.log(`dimOrder: ${dimOrder.join(', ')}\n`);
+
+    // Find which positions differ between fullIrrKey and irrKey across ALL missing terminals
+    const diffPositions = {};
+    for (const { fk, t } of missingKeys) {
+        const s = t.sel;
+        const ik = irrKey(s);
+        const fkParts = fk.split(',');
+        const ikParts = ik.split(',');
+        for (let i = 0; i < fkParts.length; i++) {
+            if (fkParts[i] !== ikParts[i]) {
+                const dim = dimOrder[i];
+                if (!diffPositions[dim]) diffPositions[dim] = { pos: i, count: 0, fkVals: new Set(), ikVals: new Set() };
+                diffPositions[dim].count++;
+                diffPositions[dim].fkVals.add(fkParts[i]);
+                diffPositions[dim].ikVals.add(ikParts[i]);
+            }
+        }
+    }
+    console.log(`Dims that differ between fullIrrKey and irrKey at terminal states:`);
+    for (const [dim, info] of Object.entries(diffPositions).sort((a, b) => b[1].count - a[1].count)) {
+        console.log(`  pos ${info.pos} ${dim}: ${info.count}x  fullIrrKey=${[...info.fkVals]} irrKey=${[...info.ikVals]}`);
+        const node = NODE_MAP[dim];
+        console.log(`    derived=${!!node?.derived}  activateWhen=${JSON.stringify(node?.activateWhen)}`);
+    }
+
+    // Now find which dims are wildcarded by irrKey (but not fullIrrKey) at intermediate states
+    // causing the merge. Compare classKey to irrKey at the same terminals.
+    console.log(`\nDims wildcarded in irrKey but not in classKey at terminal states:`);
+    const irrWildcardDims = {};
+    for (const { fk, t } of missingKeys) {
+        const s = t.sel;
+        const ck = classKey(s);
+        const ik = irrKey(s);
+        const ckParts = ck.split(',');
+        const ikParts = ik.split(',');
+        for (let i = 0; i < ckParts.length; i++) {
+            if (ikParts[i] === '*' && ckParts[i] !== '*') {
+                const dim = dimOrder[i];
+                if (!irrWildcardDims[dim]) irrWildcardDims[dim] = { pos: i, count: 0, ckVals: new Set() };
+                irrWildcardDims[dim].count++;
+                irrWildcardDims[dim].ckVals.add(ckParts[i]);
+            }
+        }
+    }
+    for (const [dim, info] of Object.entries(irrWildcardDims).sort((a, b) => b[1].count - a[1].count)) {
+        console.log(`  pos ${info.pos} ${dim}: ${info.count}x classKeyVals=${[...info.ckVals]}`);
+    }
+
+    // Show first 5 missing with selection details
+    console.log(`\nFirst 5 missing terminals (selection detail):`);
+    for (const { fk, t } of missingKeys.slice(0, 5)) {
+        const s = t.sel;
+        const answered = Object.entries(s).filter(([k, v]) => v !== undefined && NODE_MAP[k]?.edges);
+        console.log(`  answered: ${answered.map(([k, v]) => `${k}=${v}`).join(', ')}`);
+        console.log(`  type: ${t.type}${t.boundaryNode ? ':'+t.boundaryNode : ''}`);
+        // Show which dims are irrelevant at this terminal
+        const irrDims = dimOrder.filter(d => isIrrelevant(s, d, null));
+        const irrAnswered = irrDims.filter(d => resolvedVal(s, d) !== undefined);
+        const irrUnanswered = irrDims.filter(d => resolvedVal(s, d) === undefined);
+        console.log(`  irr+answered: ${irrAnswered.join(', ')}`);
+        console.log(`  irr+unanswered: ${irrUnanswered.join(', ')}`);
+    }
+}
+
+const terminals = classTerminals;
+const stateCount = classTerminals.length;
 
 console.log(`\n=== TERMINAL TABLE (I = irrelevant) ===\n`);
 const hdr = '#'.padEnd(4) + 'cap'.padEnd(12) + 'stall_dur'.padEnd(12) + 'stall_rec'.padEnd(14) +
