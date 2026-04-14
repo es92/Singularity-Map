@@ -1,20 +1,15 @@
 const { NODES, NODE_MAP } = require('./graph.js');
 const { resolvedVal, isNodeVisible, isEdgeDisabled, cleanSelection, createStack, push, currentState } = require('./engine.js');
 
-let pushCleanChanges = 0, pushTruncations = 0, pushTotal = 0;
 function dfsPush(stk, nodeId, edgeId) {
-    pushTotal++;
     const existingIdx = stk.findIndex(e => e.nodeId === nodeId);
-    if (existingIdx > 0) pushTruncations++;
-    const base = existingIdx > 0 ? stk.slice(0, existingIdx) : stk;
-    const prev = base[base.length - 1].state;
-    const next = { ...prev };
-    next[nodeId] = edgeId;
-    const snap = Object.keys(next).filter(k => next[k] !== undefined).sort().join(',');
-    cleanSelection(next, { autoForce: false });
-    const snap2 = Object.keys(next).filter(k => next[k] !== undefined).sort().join(',');
-    if (snap !== snap2) pushCleanChanges++;
-    return [...base, { nodeId, edgeId, state: next }];
+    if (existingIdx <= 0 && safePushDims.has(nodeId)) {
+        const prev = stk[stk.length - 1].state;
+        const next = Object.assign({}, prev);
+        next[nodeId] = edgeId;
+        return [...stk, { nodeId, edgeId, state: next }];
+    }
+    return push(stk, nodeId, edgeId, { autoForce: false });
 }
 
 // ═══════════════════════════════════════════════
@@ -275,7 +270,20 @@ for (const node of NODES) {
     }
 }
 
-function isDerivedUnsettled(sel, dim) {
+function isDerivedUnsettled(sel, dim, ck) {
+    if (ck) {
+        const sc = getCache(ck);
+        const cached = sc.du.get(dim);
+        if (cached !== undefined) { cacheHits++; return cached; }
+        cacheMisses++;
+        const result = _isDerivedUnsettled(sel, dim);
+        sc.du.set(dim, result);
+        return result;
+    }
+    return _isDerivedUnsettled(sel, dim);
+}
+
+function _isDerivedUnsettled(sel, dim) {
     const node = NODE_MAP[dim];
     if (!node || !node.deriveWhen) return false;
     const currentVal = resolvedVal(sel, dim);
@@ -289,7 +297,10 @@ function isDerivedUnsettled(sel, dim) {
     for (const k of inputs) {
         if (sel[k] !== undefined) continue;
         for (const v of (classReps[k] || [])) {
-            if (resolvedVal({ ...sel, [k]: v }, dim) !== currentVal) return true;
+            sel[k] = v;
+            const testVal = resolvedVal(sel, dim);
+            delete sel[k];
+            if (testVal !== currentVal) return true;
         }
     }
     return false;
@@ -302,7 +313,7 @@ let cacheHits = 0, cacheMisses = 0;
 function getCache(ck) {
     let sc = stateCache.get(ck);
     if (!sc) {
-        sc = { irr: new Map(), vis: new Map(), edge: new Map(), cnbv: new Map() };
+        sc = { irr: new Map(), vis: new Map(), edge: new Map(), cnbv: new Map(), du: new Map(), ca: new Map() };
         stateCache.set(ck, sc);
     }
     return sc;
@@ -365,7 +376,7 @@ function canNodeBecomeVisible(sel, node, ck) {
                 else if (v === false) matches = !current;
                 else matches = current === v;
                 if (!matches) {
-                    if (isDerivedUnsettled(sel, k)) continue;
+                    if (isDerivedUnsettled(sel, k, ck)) continue;
                     blocked = true; break;
                 }
             }
@@ -381,18 +392,39 @@ function canNodeBecomeVisible(sel, node, ck) {
     }
 }
 
-function couldAffect(sel, dim, derivedDim) {
+function couldAffect(sel, dim, derivedDim, ck) {
+    if (ck) {
+        const sc = getCache(ck);
+        let caByDim = sc.ca.get(dim);
+        if (!caByDim) { caByDim = new Map(); sc.ca.set(dim, caByDim); }
+        const cached = caByDim.get(derivedDim);
+        if (cached !== undefined) { cacheHits++; return cached; }
+        cacheMisses++;
+        const result = _couldAffect(sel, dim, derivedDim);
+        caByDim.set(derivedDim, result);
+        return result;
+    }
+    return _couldAffect(sel, dim, derivedDim);
+}
+
+function _couldAffect(sel, dim, derivedDim) {
     const reps = classReps[dim] || [undefined];
     const results = new Set();
-    if (sel[dim] === undefined) {
+    const saved = sel[dim];
+    const hadKey = saved !== undefined;
+    if (!hadKey) {
         results.add(resolvedVal(sel, derivedDim));
     }
     for (const v of reps) {
-        const testSel = { ...sel, [dim]: v };
-        results.add(resolvedVal(testSel, derivedDim));
-        if (results.size > 1) break;
+        sel[dim] = v;
+        results.add(resolvedVal(sel, derivedDim));
+        if (results.size > 1) {
+            if (hadKey) sel[dim] = saved; else delete sel[dim];
+            return true;
+        }
     }
-    return results.size > 1;
+    if (hadKey) sel[dim] = saved; else delete sel[dim];
+    return false;
 }
 
 let dimsInKey;
@@ -420,7 +452,7 @@ function isIrrelevant(sel, dim, seen, ck) {
     if (result) {
         for (const derivedDim of (derivedReaders[dim] || [])) {
             if (dimsInKey.has(derivedDim) && sel[dim] !== undefined) continue;
-            if (!couldAffect(sel, dim, derivedDim)) continue;
+            if (!couldAffect(sel, dim, derivedDim, ck)) continue;
             if (!isIrrelevant(sel, derivedDim, seen, ck)) { result = false; break; }
         }
     }
@@ -431,10 +463,35 @@ function isIrrelevant(sel, dim, seen, ck) {
 // Expanded search (boundary at ai_goals, decel_2mo_progress, benefit_distribution)
 // ═══════════════════════════════════════════════
 
-const boundaryNodes = new Set(['power_promise']);
+const boundaryNodes = new Set();
 const miniDims = new Set(NODES.filter(n => n.edges && !boundaryNodes.has(n.id)).map(n => n.id));
 
 const dimOrder = NODES.filter(n => n.edges).map(n => n.id);
+
+const edgeConditionDeps = new Set();
+for (const node of NODES) {
+    if (!node.edges) continue;
+    for (const edge of node.edges) {
+        const refs = [];
+        if (edge.disabledWhen) for (const cond of edge.disabledWhen) refs.push(...Object.keys(cond).filter(k => k !== 'reason'));
+        if (edge.requires) {
+            const condSets = Array.isArray(edge.requires) ? edge.requires : [edge.requires];
+            for (const cond of condSets) refs.push(...Object.keys(cond).filter(k => k !== 'reason' && !k.startsWith('_')));
+        }
+        for (const k of refs) {
+            edgeConditionDeps.add(k);
+            const kNode = NODE_MAP[k];
+            if (kNode && kNode.deriveWhen) {
+                for (const rule of kNode.deriveWhen) {
+                    if (rule.match) for (const mk of Object.keys(rule.match)) { if (mk !== 'reason') edgeConditionDeps.add(mk); }
+                    if (rule.fromState) edgeConditionDeps.add(rule.fromState);
+                }
+            }
+        }
+    }
+}
+const safePushDims = new Set(dimOrder.filter(d => !edgeConditionDeps.has(d)));
+console.log(`Safe push dims (skip cleanSelection): ${safePushDims.size}/${dimOrder.length} — ${[...safePushDims].join(', ')}`);
 dimsInKey = new Set(dimOrder);
 const derivedDimSet = new Set(NODES.filter(n => n.derived || n.deriveWhen).map(n => n.id));
 
@@ -851,7 +908,6 @@ console.log(`\n=== Cache stats ===`);
 console.log(`Unique classKeys: ${stateCache.size}, Total inner entries: ${totalInnerEntries}`);
 console.log(`Hits: ${cacheHits}, Misses: ${cacheMisses}, Rate: ${(100*cacheHits/(cacheHits+cacheMisses||1)).toFixed(1)}%`);
 console.log(`irrKey cache: hits=${irrKeyCacheHits}, misses=${irrKeyCacheMisses}`);
-console.log(`push stats: total=${pushTotal}, truncations=${pushTruncations}, cleanChanges=${pushCleanChanges}`);
 console.log(`superKey cache: hits=${superKeyCacheHits}, misses=${superKeyCacheMisses}, entries=${superKeyCache.size}`);
 
 printTypeCounts(irrTerminals, 'irrKey');

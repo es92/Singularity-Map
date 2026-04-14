@@ -165,7 +165,7 @@ function getEdgeDisabledReason(sel, node, edge) {
 // State management
 // ════════════════════════════════════════════════════════
 
-function cleanSelection(sel) {
+function cleanSelection(sel, { autoForce = true } = {}) {
     const autoForced = new Set();
     for (let pass = 0; pass < 5; pass++) {
         let changed = false;
@@ -177,16 +177,18 @@ function cleanSelection(sel) {
                 continue;
             }
             if (!isNodeVisible(sel, node)) continue;
-            const locked = isNodeLocked(sel, node);
-            if (locked !== null) {
-                if (sel[node.id] !== locked) {
-                    sel[node.id] = locked;
-                    changed = true;
+            if (autoForce) {
+                const locked = isNodeLocked(sel, node);
+                if (locked !== null) {
+                    if (sel[node.id] !== locked) {
+                        sel[node.id] = locked;
+                        changed = true;
+                    }
+                    autoForced.add(node.id);
+                    continue;
                 }
-                autoForced.add(node.id);
-                continue;
+                autoForced.delete(node.id);
             }
-            autoForced.delete(node.id);
             if (sel[node.id]) {
                 const edge = node.edges && node.edges.find(v => v.id === sel[node.id]);
                 if (edge && isEdgeDisabled(sel, node, edge)) {
@@ -265,14 +267,14 @@ function createStack() {
     return [{ nodeId: null, edgeId: null, state }];
 }
 
-function push(stack, nodeId, edgeId) {
+function push(stack, nodeId, edgeId, { autoForce = true } = {}) {
     const existingIdx = stack.findIndex(e => e.nodeId === nodeId);
     const base = existingIdx > 0 ? stack.slice(0, existingIdx) : stack;
 
     const prev = base[base.length - 1].state;
     const next = { ...prev };
     next[nodeId] = edgeId;
-    cleanSelection(next);
+    cleanSelection(next, { autoForce });
     return [...base, { nodeId, edgeId, state: next }];
 }
 

@@ -310,7 +310,7 @@ function forwardKey(sel) {
         }
     }
     for (const node of NODES) {
-        if (node.derived || (node.priority || 0) >= 2) continue;
+        if (node.derived) continue;
         if (!isNodeVisible(sel, node)) continue;
         if (isNodeLocked(sel, node) !== null) continue;
         if (sel[node.id]) continue;
@@ -404,16 +404,9 @@ function runExplorer() {
         const stk = worklist.pop();
         const sel = currentState(stk);
 
-        const raw = selKey(sel);
-        const isNewRaw = !rawVisited.has(raw);
-        if (isNewRaw) rawVisited.add(raw);
-
-        const fk = forwardKey(sel);
-        if (visited.has(fk)) {
-            if (isNewRaw) dedupSaved++;
-            continue;
-        }
-        visited.add(fk);
+        const sk = selKey(sel);
+        if (visited.has(sk)) continue;
+        visited.add(sk);
         totalStates++;
 
         if (totalStates % 1000 === 0) {
@@ -492,8 +485,9 @@ function samplePaths(n) {
         const stk = worklist.pop();
         const sel = currentState(stk);
         const fk = forwardKey(sel);
-        if (visited.has(fk)) continue;
-        visited.add(fk);
+        const sk = selKey(sel);
+        if (visited.has(sk)) continue;
+        visited.add(sk);
 
         const next = getNextNode(sel);
         if (next) {
