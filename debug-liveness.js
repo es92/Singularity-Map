@@ -279,29 +279,42 @@ function isDerivedUnsettled(sel, dim) {
     return false;
 }
 
+const _visStack = new Set();
 function canNodeBecomeVisible(sel, node) {
     if (isNodeVisible(sel, node)) return true;
     if (!node.activateWhen) return true;
-    for (const cond of node.activateWhen) {
-        let blocked = false;
-        for (const [k, v] of Object.entries(cond)) {
-            if (k === 'reason' || k.startsWith('_')) continue;
-            const current = resolvedVal(sel, k);
-            if (current === undefined) continue;
-            let matches;
-            if (Array.isArray(v)) matches = v.includes(current);
-            else if (v && v.not) matches = !v.not.includes(current);
-            else if (v === true) matches = !!current;
-            else if (v === false) matches = !current;
-            else matches = current === v;
-            if (!matches) {
-                if (isDerivedUnsettled(sel, k)) continue;
-                blocked = true; break;
+    if (_visStack.has(node.id)) return false;
+    _visStack.add(node.id);
+    try {
+        for (const cond of node.activateWhen) {
+            let blocked = false;
+            for (const [k, v] of Object.entries(cond)) {
+                if (k === 'reason' || k.startsWith('_')) continue;
+                const current = resolvedVal(sel, k);
+                if (current === undefined) {
+                    const kNode = NODE_MAP[k];
+                    if (kNode && !canNodeBecomeVisible(sel, kNode)) {
+                        blocked = true; break;
+                    }
+                    continue;
+                }
+                let matches;
+                if (Array.isArray(v)) matches = v.includes(current);
+                else if (v && v.not) matches = !v.not.includes(current);
+                else if (v === true) matches = !!current;
+                else if (v === false) matches = !current;
+                else matches = current === v;
+                if (!matches) {
+                    if (isDerivedUnsettled(sel, k)) continue;
+                    blocked = true; break;
+                }
             }
+            if (!blocked) { return true; }
         }
-        if (!blocked) return true;
+        return false;
+    } finally {
+        _visStack.delete(node.id);
     }
-    return false;
 }
 
 // Could changing dim's value change derivedDim's resolved value?
@@ -341,10 +354,10 @@ function isIrrelevant(sel, dim, seen) {
 }
 
 // ═══════════════════════════════════════════════
-// Mini-search: class-only (the working 29-terminal version)
+// Expanded search (boundary at ai_goals, decel_2mo_progress, benefit_distribution)
 // ═══════════════════════════════════════════════
 
-const boundaryNodes = new Set(['ai_goals','decel_2mo_progress','benefit_distribution']);
+const boundaryNodes = new Set(['ai_goals','benefit_distribution','power_promise','proliferation_control']);
 const miniDims = new Set(NODES.filter(n => n.edges && !boundaryNodes.has(n.id)).map(n => n.id));
 
 const dimOrder = NODES.filter(n => n.edges).map(n => n.id);
@@ -396,165 +409,12 @@ function runDfs(keyFn, label) {
     return terminals;
 }
 
-// Run both strategies
-const classTerminals = runDfs(classKey, 'classKey DFS');
-const irrTerminals = runDfs(irrKey, 'irrKey DFS');
-
-// Collapse both with fullIrrKey
-function collapseTerminals(terms) {
-    const m = new Map();
-    for (const t of terms) {
-        const fk = fullIrrKey(t.sel);
-        if (!m.has(fk)) m.set(fk, t);
-    }
-    return m;
-}
-
-const classCollapsed = collapseTerminals(classTerminals);
-const irrCollapsed = collapseTerminals(irrTerminals);
-
-console.log(`\nclassKey collapsed: ${classCollapsed.size}`);
-console.log(`irrKey collapsed:   ${irrCollapsed.size}`);
-
-// Find keys in classKey set but NOT in irrKey set
-const missingKeys = [];
-for (const [fk, t] of classCollapsed) {
-    if (!irrCollapsed.has(fk)) missingKeys.push({ fk, t });
-}
-const extraKeys = [];
-for (const [fk, t] of irrCollapsed) {
-    if (!classCollapsed.has(fk)) extraKeys.push({ fk, t });
-}
-
-console.log(`\nMissing from irrKey (in classKey but not irrKey): ${missingKeys.length}`);
-console.log(`Extra in irrKey (in irrKey but not classKey):      ${extraKeys.length}`);
-
-if (missingKeys.length > 0) {
-    console.log(`\n=== MISSING TERMINALS (analysis) ===`);
-    console.log(`dimOrder: ${dimOrder.join(', ')}\n`);
-
-    // Find which positions differ between fullIrrKey and irrKey across ALL missing terminals
-    const diffPositions = {};
-    for (const { fk, t } of missingKeys) {
-        const s = t.sel;
-        const ik = irrKey(s);
-        const fkParts = fk.split(',');
-        const ikParts = ik.split(',');
-        for (let i = 0; i < fkParts.length; i++) {
-            if (fkParts[i] !== ikParts[i]) {
-                const dim = dimOrder[i];
-                if (!diffPositions[dim]) diffPositions[dim] = { pos: i, count: 0, fkVals: new Set(), ikVals: new Set() };
-                diffPositions[dim].count++;
-                diffPositions[dim].fkVals.add(fkParts[i]);
-                diffPositions[dim].ikVals.add(ikParts[i]);
-            }
-        }
-    }
-    console.log(`Dims that differ between fullIrrKey and irrKey at terminal states:`);
-    for (const [dim, info] of Object.entries(diffPositions).sort((a, b) => b[1].count - a[1].count)) {
-        console.log(`  pos ${info.pos} ${dim}: ${info.count}x  fullIrrKey=${[...info.fkVals]} irrKey=${[...info.ikVals]}`);
-        const node = NODE_MAP[dim];
-        console.log(`    derived=${!!node?.derived}  activateWhen=${JSON.stringify(node?.activateWhen)}`);
-    }
-
-    // Now find which dims are wildcarded by irrKey (but not fullIrrKey) at intermediate states
-    // causing the merge. Compare classKey to irrKey at the same terminals.
-    console.log(`\nDims wildcarded in irrKey but not in classKey at terminal states:`);
-    const irrWildcardDims = {};
-    for (const { fk, t } of missingKeys) {
-        const s = t.sel;
-        const ck = classKey(s);
-        const ik = irrKey(s);
-        const ckParts = ck.split(',');
-        const ikParts = ik.split(',');
-        for (let i = 0; i < ckParts.length; i++) {
-            if (ikParts[i] === '*' && ckParts[i] !== '*') {
-                const dim = dimOrder[i];
-                if (!irrWildcardDims[dim]) irrWildcardDims[dim] = { pos: i, count: 0, ckVals: new Set() };
-                irrWildcardDims[dim].count++;
-                irrWildcardDims[dim].ckVals.add(ckParts[i]);
-            }
-        }
-    }
-    for (const [dim, info] of Object.entries(irrWildcardDims).sort((a, b) => b[1].count - a[1].count)) {
-        console.log(`  pos ${info.pos} ${dim}: ${info.count}x classKeyVals=${[...info.ckVals]}`);
-    }
-
-    // Show first 5 missing with selection details
-    console.log(`\nFirst 5 missing terminals (selection detail):`);
-    for (const { fk, t } of missingKeys.slice(0, 5)) {
-        const s = t.sel;
-        const answered = Object.entries(s).filter(([k, v]) => v !== undefined && NODE_MAP[k]?.edges);
-        console.log(`  answered: ${answered.map(([k, v]) => `${k}=${v}`).join(', ')}`);
-        console.log(`  type: ${t.type}${t.boundaryNode ? ':'+t.boundaryNode : ''}`);
-        // Show which dims are irrelevant at this terminal
-        const irrDims = dimOrder.filter(d => isIrrelevant(s, d, null));
-        const irrAnswered = irrDims.filter(d => resolvedVal(s, d) !== undefined);
-        const irrUnanswered = irrDims.filter(d => resolvedVal(s, d) === undefined);
-        console.log(`  irr+answered: ${irrAnswered.join(', ')}`);
-        console.log(`  irr+unanswered: ${irrUnanswered.join(', ')}`);
-    }
-}
-
-const terminals = classTerminals;
-const stateCount = classTerminals.length;
-
-console.log(`\n=== TERMINAL TABLE (I = irrelevant) ===\n`);
-const hdr = '#'.padEnd(4) + 'cap'.padEnd(12) + 'stall_dur'.padEnd(12) + 'stall_rec'.padEnd(14) +
-    'agi'.padEnd(14) + 'asi'.padEnd(14) + 'auto_rec'.padEnd(14) + 'takeoff'.padEnd(14) +
-    'open_src'.padEnd(14) + 'type';
-console.log(hdr);
-console.log('-'.repeat(hdr.length));
-const sorted = [...terminals].sort((a, b) => a.key.localeCompare(b.key));
-let num = 0;
-for (const t of sorted) {
-    num++;
-    const s = t.sel;
-
-    const getC = (dim, val) => val && classes[dim] ? classes[dim].get(val) : undefined;
-    const cap = resolvedVal(s, 'capability');
-    const capLabel = cap === 'singularity' ? 'sing' : (cap === 'stalls' ? 'stall' : (cap || 'U'));
-    const sdLabel = s.stall_duration ? 'all' : undefined;
-    const srLabel = s.stall_recovery ? (getC('stall_recovery', s.stall_recovery) === 0 ? 'mild' : 'sub+') : undefined;
-    const agiLabel = s.agi_threshold ? (getC('agi_threshold', s.agi_threshold) === 0 ? 'yes' : 'never') : undefined;
-    const asiR = resolvedVal(s, 'asi_threshold');
-    const asiLabel = asiR ? (getC('asi_threshold', asiR) === 0 ? 'yes' : 'never') : undefined;
-    const arecLabel = s.automation_recovery ? (getC('automation_recovery', s.automation_recovery) === 0 ? 'mild' : 'sub+') : undefined;
-    const tkLabel = s.takeoff ? (getC('takeoff', s.takeoff) === 0 ? 'norm' : 'boom') : undefined;
-    const osLabel = s.open_source || undefined;
-
-    const fmtDim = (dim, label) => {
-        const irr = isIrrelevant(s, dim, null);
-        if (!label) return irr ? '(U,I)' : 'U';
-        return irr ? `(${label},I)` : label;
-    };
-
-    console.log(
-        String(num).padEnd(4) +
-        fmtDim('capability', capLabel).padEnd(12) +
-        fmtDim('stall_duration', sdLabel).padEnd(12) +
-        fmtDim('stall_recovery', srLabel).padEnd(14) +
-        fmtDim('agi_threshold', agiLabel).padEnd(14) +
-        fmtDim('asi_threshold', asiLabel).padEnd(14) +
-        fmtDim('automation_recovery', arecLabel).padEnd(14) +
-        fmtDim('takeoff', tkLabel).padEnd(14) +
-        fmtDim('open_source', osLabel).padEnd(14) +
-        t.type + (t.boundaryNode ? ':' + t.boundaryNode : '')
-    );
-}
-
-// ═══════════════════════════════════════════════
-// Collapse: irrelevance-aware dedup
-// ═══════════════════════════════════════════════
-
 function irrKey(sel) {
     const p = [];
     for (const dim of dimOrder) {
         const v = resolvedVal(sel, dim);
         if (isIrrelevant(sel, dim, null)) {
             const node = NODE_MAP[dim];
-            // Wildcard if: answered, or derived, or node not visible (will never be chosen)
-            // Keep as U if: unanswered + visible (still in DFS expansion path)
             if (v !== undefined || !node || node.derived || !isNodeVisible(sel, node)) {
                 p.push('*'); continue;
             }
@@ -576,36 +436,356 @@ function fullIrrKey(sel) {
     return p.join(',');
 }
 
-const uniqueByIrr = new Map();
-for (const t of sorted) {
-    const ik = fullIrrKey(t.sel);
-    if (!uniqueByIrr.has(ik)) uniqueByIrr.set(ik, t);
+// Run irrKey only
+const irrTerminals = runDfs(irrKey, 'irrKey DFS');
+
+// Collapse with fullIrrKey
+function collapseTerminals(terms) {
+    const m = new Map();
+    for (const t of terms) {
+        const fk = fullIrrKey(t.sel);
+        if (!m.has(fk)) m.set(fk, t);
+    }
+    return m;
 }
 
-console.log(`\n=== COLLAPSED (irrelevance-aware): ${uniqueByIrr.size} unique terminals ===\n`);
+const irrCollapsed = collapseTerminals(irrTerminals);
+console.log(`irrKey collapsed (fullIrrKey dedup): ${irrCollapsed.size}`);
 
-const showDims = ['capability','stall_duration','stall_recovery','agi_threshold','asi_threshold',
-    'automation','automation_recovery','takeoff','open_source'];
-const colW = [4, 8, 10, 10, 8, 8, 8, 10, 8, 16];
-const hdr2 = '#'.padEnd(colW[0]) + showDims.map((d, i) => d.replace(/_/g,'_').slice(0,colW[i+1]-1).padEnd(colW[i+1])).join('');
-console.log(hdr2);
-console.log('-'.repeat(hdr2.length));
+// Count terminal types
+const typeCounts = {};
+for (const t of irrTerminals) {
+    const k = t.type + (t.boundaryNode ? ':'+t.boundaryNode : '');
+    typeCounts[k] = (typeCounts[k] || 0) + 1;
+}
+console.log(`\nTerminal types:`);
+for (const [k, c] of Object.entries(typeCounts).sort((a, b) => b[1] - a[1])) {
+    console.log(`  ${k}: ${c}`);
+}
 
-let uNum = 0;
-for (const [ik, t] of uniqueByIrr) {
-    uNum++;
-    const s = t.sel;
+// Analyze decel dim relevance at benefit_distribution terminals
+const bdTerms = irrTerminals.filter(t => t.boundaryNode === 'benefit_distribution');
+const decelDims = ['decel_2mo_progress','decel_2mo_action','decel_4mo_progress'];
+const decelAnalysis = {};
+for (const dd of decelDims) {
+    let answered = 0, answeredIrr = 0, answeredRel = 0, unanswered = 0;
+    for (const t of bdTerms) {
+        const v = resolvedVal(t.sel, dd);
+        if (v !== undefined) {
+            answered++;
+            if (isIrrelevant(t.sel, dd, null)) answeredIrr++;
+            else answeredRel++;
+        } else {
+            unanswered++;
+        }
+    }
+    decelAnalysis[dd] = { answered, answeredIrr, answeredRel, unanswered };
+}
+console.log(`\n=== Decel dim relevance at benefit_distribution terminals (${bdTerms.length} total) ===`);
+for (const [dd, a] of Object.entries(decelAnalysis)) {
+    console.log(`  ${dd}: answered=${a.answered} (irr=${a.answeredIrr}, RELEVANT=${a.answeredRel}), unanswered=${a.unanswered}`);
+}
+
+// What reads decel dims? Show direct readers
+console.log(`\nDirect readers of decel dims:`);
+for (const dd of decelDims) {
+    const readers = (directReaders[dd] || []).map(n => n.id);
+    const derivedR = (derivedReaders[dd] || []);
+    console.log(`  ${dd}: direct=[${readers.join(',')}] derived=[${derivedR.join(',')}]`);
+}
+
+// How many unique benefit_distribution terminals if we forcibly wildcard decel dims?
+const bdKeysWithDecel = new Set();
+const bdKeysWithoutDecel = new Set();
+for (const t of bdTerms) {
+    bdKeysWithDecel.add(fullIrrKey(t.sel));
+    // Force-wildcard decel dims
+    const parts = fullIrrKey(t.sel).split(',');
+    for (const dd of decelDims) {
+        const idx = dimOrder.indexOf(dd);
+        if (idx >= 0) parts[idx] = '*';
+    }
+    bdKeysWithoutDecel.add(parts.join(','));
+}
+console.log(`\nbenefit_dist unique keys: ${bdKeysWithDecel.size}`);
+console.log(`benefit_dist if force-wildcard decel dims: ${bdKeysWithoutDecel.size}`);
+console.log(`Savings from wildcarding decel: ${bdKeysWithDecel.size - bdKeysWithoutDecel.size}`);
+
+// Check: are decel dims collapsing at each boundary?
+const allDecelDims = dimOrder.filter(d => d.startsWith('decel_') || d === 'gov_action');
+const allDecelPlusOutcome = [...allDecelDims, 'decel_outcome', 'decel_align_progress'];
+console.log(`\nDecel dims in key: ${allDecelDims.join(', ')}`);
+
+for (const bnd of ['proliferation_control','power_promise','ai_goals','benefit_distribution']) {
+    const bndTerms = irrTerminals.filter(t => t.boundaryNode === bnd);
+    if (bndTerms.length === 0) continue;
+
+    const rawKeys = new Set(bndTerms.map(t => fullIrrKey(t.sel)));
+    
+    // Force-wildcard all decel intermediate dims
+    const collapsedKeys = new Set();
+    for (const t of bndTerms) {
+        const parts = fullIrrKey(t.sel).split(',');
+        for (const dd of allDecelDims) {
+            const idx = dimOrder.indexOf(dd);
+            if (idx >= 0) parts[idx] = '*';
+        }
+        collapsedKeys.add(parts.join(','));
+    }
+    
+    // Force-wildcard decel dims + outcome
+    const collapsedAll = new Set();
+    for (const t of bndTerms) {
+        const parts = fullIrrKey(t.sel).split(',');
+        for (const dd of allDecelPlusOutcome) {
+            const idx = dimOrder.indexOf(dd);
+            if (idx >= 0) parts[idx] = '*';
+        }
+        collapsedAll.add(parts.join(','));
+    }
+
+    // Check which decel dims are relevant
+    const relevantDecel = {};
+    for (const dd of allDecelPlusOutcome) {
+        let rel = 0;
+        for (const t of bndTerms) {
+            if (resolvedVal(t.sel, dd) !== undefined && !isIrrelevant(t.sel, dd, null)) rel++;
+        }
+        if (rel > 0) relevantDecel[dd] = rel;
+    }
+    
+    console.log(`\n  boundary:${bnd} (${bndTerms.length} terminals):`);
+    console.log(`    unique fullIrrKeys: ${rawKeys.size}`);
+    console.log(`    if force-wildcard decel intermediates: ${collapsedKeys.size}`);
+    console.log(`    if force-wildcard decel + outcome: ${collapsedAll.size}`);
+    if (Object.keys(relevantDecel).length > 0) {
+        console.log(`    RELEVANT decel dims: ${Object.entries(relevantDecel).map(([k,v]) => `${k}=${v}`).join(', ')}`);
+    } else {
+        console.log(`    all decel dims irrelevant`);
+    }
+}
+
+// DEBUG: why are decel dims NOT irrelevant at prolif_control terminals?
+const prolifTerms = irrTerminals.filter(t => t.boundaryNode === 'proliferation_control');
+const decelAnsweredProlif = prolifTerms.filter(t => t.sel['decel_2mo_progress'] !== undefined);
+console.log(`\n=== DEBUG: decel irrelevance at proliferation_control ===`);
+console.log(`prolif terminals with decel answered: ${decelAnsweredProlif.length} / ${prolifTerms.length}`);
+
+// For ALL prolif terminals with decel answered, find which decel dims are NOT irrelevant
+const allDecelCheck = ['decel_2mo_progress','decel_2mo_action','decel_4mo_progress','decel_4mo_action','decel_6mo_progress','decel_6mo_action'];
+const decelRelevanceCounts = {};
+for (const dd of allDecelCheck) decelRelevanceCounts[dd] = { answered: 0, irr: 0, rel: 0 };
+
+for (const t of decelAnsweredProlif) {
+    for (const dd of allDecelCheck) {
+        if (t.sel[dd] === undefined) continue;
+        decelRelevanceCounts[dd].answered++;
+        if (isIrrelevant(t.sel, dd, null)) decelRelevanceCounts[dd].irr++;
+        else decelRelevanceCounts[dd].rel++;
+    }
+}
+console.log(`\nPer-dim relevance at prolif terminals (${decelAnsweredProlif.length} with decel):`);
+for (const [dd, c] of Object.entries(decelRelevanceCounts)) {
+    if (c.answered > 0) console.log(`  ${dd}: answered=${c.answered}, irr=${c.irr}, RELEVANT=${c.rel}`);
+}
+
+// Find a terminal where a decel dim IS relevant and trace it
+const relTerminal = decelAnsweredProlif.find(t => {
+    for (const dd of allDecelCheck) {
+        if (t.sel[dd] !== undefined && !isIrrelevant(t.sel, dd, null)) return true;
+    }
+    return false;
+});
+
+if (relTerminal) {
+    const s = relTerminal.sel;
+    console.log(`\nSample terminal where decel IS relevant:`);
+    const answered = Object.entries(s).filter(([k,v]) => v !== undefined);
+    for (const [k,v] of answered) console.log(`  ${k} = ${v}`);
+
+    for (const dd of allDecelCheck) {
+        if (s[dd] === undefined) continue;
+        const irr = isIrrelevant(s, dd, null);
+        if (irr) { console.log(`\n  ${dd}: irrelevant (ok)`); continue; }
+        console.log(`\n--- ${dd} = ${s[dd]}: NOT irrelevant ---`);
+        for (const node of (directReaders[dd] || [])) {
+            const ans = !!s[node.id];
+            const canVis = canNodeBecomeVisible(s, node);
+            console.log(`  directReader ${node.id}: answered=${ans}, canBecomeVisible=${canVis}`);
+            if (!ans && canVis) {
+                console.log(`    ^ BLOCKING: ${node.id} is unanswered + could become visible`);
+                console.log(`    activateWhen: ${JSON.stringify(node.activateWhen)}`);
+                // Check each condition
+                if (node.activateWhen) for (let ci = 0; ci < node.activateWhen.length; ci++) {
+                    const cond = node.activateWhen[ci];
+                    let blocked = false;
+                    for (const [k, v] of Object.entries(cond)) {
+                        if (k === 'reason' || k.startsWith('_')) continue;
+                        const cur = resolvedVal(s, k);
+                        if (cur === undefined) continue;
+                        let matches;
+                        if (Array.isArray(v)) matches = v.includes(cur);
+                        else if (v && v.not) matches = !v.not.includes(cur);
+                        else if (v === true) matches = !!cur;
+                        else if (v === false) matches = !cur;
+                        else matches = cur === v;
+                        if (!matches) {
+                            const unsettled = isDerivedUnsettled(s, k);
+                            console.log(`    cond[${ci}].${k}: cur=${cur}, need=${JSON.stringify(v)}, match=${matches}, unsettled=${unsettled}`);
+                            if (!unsettled) { blocked = true; break; }
+                            console.log(`    ^ unsettled, treating as could-match`);
+                        }
+                    }
+                    console.log(`    cond[${ci}] blocked=${blocked}`);
+                }
+            }
+        }
+        for (const derivedDim of (derivedReaders[dd] || [])) {
+            const affects = couldAffect(s, dd, derivedDim);
+            const inKey = dimsInKey.has(derivedDim);
+            const bakedIn = inKey && s[dd] !== undefined;
+            console.log(`  derivedReader ${derivedDim}: affects=${affects}, bakedIn=${bakedIn}`);
+        }
+    }
+} else {
+    console.log(`\nAll answered decel dims are irrelevant — issue is with UNANSWERED decel dims`);
+    const sample = decelAnsweredProlif[0];
+    if (sample) {
+        const s = sample.sel;
+        const fk = fullIrrKey(s);
+        const parts = fk.split(',');
+        console.log(`\nSample terminal (exited at 2mo, decel_2mo_action=${s.decel_2mo_action}):`);
+        
+        // Check unanswered decel dims
+        for (const dd of ['decel_4mo_progress','decel_4mo_action','decel_6mo_progress','decel_6mo_action']) {
+            const idx = dimOrder.indexOf(dd);
+            const irr = isIrrelevant(s, dd, null);
+            console.log(`\n  ${dd} (pos ${idx}): val=${s[dd]||'unanswered'}, fullIrrKey=${parts[idx]}, irr=${irr}`);
+            
+            if (!irr) {
+                // Trace WHY it's not irrelevant
+                for (const node of (directReaders[dd] || [])) {
+                    const ans = !!s[node.id];
+                    const canVis = canNodeBecomeVisible(s, node);
+                    console.log(`    directReader: ${node.id} — answered=${ans}, canBecomeVisible=${canVis}`);
+                    if (!ans && canVis) {
+                        console.log(`    ^ BLOCKING irrelevance!`);
+                        // Show the activateWhen and why canNodeBecomeVisible thinks it could activate
+                        if (node.activateWhen) for (let ci = 0; ci < node.activateWhen.length; ci++) {
+                            const cond = node.activateWhen[ci];
+                            let condBlocked = false;
+                            const condParts = [];
+                            for (const [k, v] of Object.entries(cond)) {
+                                if (k === 'reason' || k.startsWith('_')) continue;
+                                const cur = resolvedVal(s, k);
+                                if (cur === undefined) {
+                                    // This is the key: unanswered dim treated as "could match"
+                                    // But can this dim's node ever become visible?
+                                    const dimNode = NODE_MAP[k];
+                                    const dimCanVis = dimNode ? canNodeBecomeVisible(s, dimNode) : 'no_node';
+                                    condParts.push(`${k}=UNDEF(need ${JSON.stringify(v)}) nodeCanVis=${dimCanVis}`);
+                                    continue;
+                                }
+                                let matches;
+                                if (Array.isArray(v)) matches = v.includes(cur);
+                                else if (v && v.not) matches = !v.not.includes(cur);
+                                else matches = cur === v;
+                                if (!matches) { condBlocked = true; }
+                                condParts.push(`${k}=${cur}(need ${JSON.stringify(v)}) ${matches?'✓':'✗'}`);
+                            }
+                            console.log(`      cond[${ci}]: blocked=${condBlocked} — ${condParts.join(', ')}`);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Also check decel_outcome
+        for (const dd of ['decel_outcome','decel_align_progress']) {
+            const idx = dimOrder.indexOf(dd);
+            if (idx >= 0) {
+                const irr = isIrrelevant(s, dd, null);
+                console.log(`\n  ${dd} (pos ${idx}): fullIrrKey=${parts[idx]}, irr=${irr}`);
+            }
+        }
+    }
+}
+
+// Deeper analysis: what's driving the benefit_distribution growth?
+const decelOutIdx = dimOrder.indexOf('decel_outcome');
+const decelAlignIdx = dimOrder.indexOf('decel_align_progress');
+const decelOutValues = {};
+for (const t of bdTerms) {
+    const dout = resolvedVal(t.sel, 'decel_outcome');
+    const dalign = resolvedVal(t.sel, 'decel_align_progress');
+    const label = `decel_out=${dout||'U'}, decel_align=${dalign||'U'}`;
+    if (!decelOutValues[label]) decelOutValues[label] = 0;
+    decelOutValues[label]++;
+}
+console.log(`\nDecel outcome breakdown at benefit_distribution:`);
+for (const [k, c] of Object.entries(decelOutValues).sort((a, b) => b[1] - a[1])) {
+    console.log(`  ${k}: ${c}`);
+}
+
+// Are decel_outcome / decel_align_progress irrelevant at BD terminals?
+let doutIrr = 0, doutRel = 0, dalignIrr = 0, dalignRel = 0;
+for (const t of bdTerms) {
+    const dout = resolvedVal(t.sel, 'decel_outcome');
+    if (dout !== undefined) {
+        if (isIrrelevant(t.sel, 'decel_outcome', null)) doutIrr++; else doutRel++;
+    }
+    const da = resolvedVal(t.sel, 'decel_align_progress');
+    if (da !== undefined) {
+        if (isIrrelevant(t.sel, 'decel_align_progress', null)) dalignIrr++; else dalignRel++;
+    }
+}
+console.log(`\ndecel_outcome relevance: irr=${doutIrr}, RELEVANT=${doutRel}`);
+console.log(`decel_align_progress relevance: irr=${dalignIrr}, RELEVANT=${dalignRel}`);
+
+// Force-wildcard decel_outcome + decel_align_progress too
+const bdKeysNoDecelOut = new Set();
+for (const t of bdTerms) {
+    const parts = fullIrrKey(t.sel).split(',');
+    for (const dd of [...decelDims, 'decel_outcome', 'decel_align_progress']) {
+        const idx = dimOrder.indexOf(dd);
+        if (idx >= 0) parts[idx] = '*';
+    }
+    bdKeysNoDecelOut.add(parts.join(','));
+}
+console.log(`\nbenefit_dist if force-wildcard ALL decel dims + outcome: ${bdKeysNoDecelOut.size} (was ${bdKeysWithDecel.size})`);
+
+// Sample 20 benefit_distribution terminals
+const step = Math.max(1, Math.floor(bdTerms.length / 20));
+const sample = [];
+for (let i = 0; i < bdTerms.length && sample.length < 20; i += step) sample.push(bdTerms[i]);
+
+console.log(`\n=== SAMPLE benefit_distribution terminals (${sample.length} of ${bdTerms.length}) ===\n`);
+
+// Show only non-irrelevant, non-U dims for each terminal
+for (let i = 0; i < sample.length; i++) {
+    const s = sample[i].sel;
     const parts = [];
-    for (const dim of showDims) {
+    const irrParts = [];
+    for (const dim of dimOrder) {
         const v = resolvedVal(s, dim);
         const irr = isIrrelevant(s, dim, null);
-        const cls = v && classes[dim] ? classes[dim].get(v) : undefined;
-        let label;
-        if (v === undefined) label = irr ? '*' : 'U';
-        else if (irr) label = '*';
-        else label = `c${cls}`;
-        parts.push(label);
+        if (irr) {
+            if (v !== undefined) irrParts.push(dim.replace(/_.*/g, m => m.slice(0,4)));
+            continue;
+        }
+        if (v === undefined) continue;
+        const cls = classes[dim] ? classes[dim].get(v) : '?';
+        const short = dim.replace('_threshold','').replace('_recovery','_rec')
+            .replace('_distribution','_dist').replace('_outcome','_out')
+            .replace('_control','_ctrl').replace('_entrants','_ent')
+            .replace('_dynamics','_dyn').replace('_survivors','_surv')
+            .replace('_promise','_prom').replace('_result','_res')
+            .replace('proliferation','prolif').replace('escalation','escal')
+            .replace('mobilization','mobil').replace('pushback','push')
+            .replace('coalition','coal').replace('governance','gov')
+            .replace('sincerity','sinc').replace('alignment','align');
+        parts.push(`${short}=${v}(c${cls})`);
     }
-    console.log(String(uNum).padEnd(colW[0]) + parts.map((p, i) => p.padEnd(colW[i+1])).join('') +
-        t.type + (t.boundaryNode ? ':' + t.boundaryNode : ''));
+    console.log(`${String(i+1).padStart(2)}. ${parts.join(', ')}`);
+    if (irrParts.length > 0) console.log(`    irr+answered: ${irrParts.join(', ')}`);
 }
