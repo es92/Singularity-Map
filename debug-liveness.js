@@ -505,86 +505,6 @@ function classKey(sel) {
     return p.join(',');
 }
 
-function runDfs(keyFn, label) {
-    const visited = new Set();
-    let stateCount = 0;
-    const terminals = [];
-    let tPush = 0, tKey = 0, tPick = 0;
-
-    function dfs(stk) {
-        let t0p = performance.now();
-        const sel = currentState(stk);
-        const ck = classKey(sel);
-        const key = keyFn(sel, ck);
-        tKey += performance.now() - t0p;
-        if (visited.has(key)) return;
-        visited.add(key);
-        stateCount++;
-
-        t0p = performance.now();
-        let nextNode = null, bestP = -Infinity;
-        for (const n of NODES) {
-            if (n.derived) continue; if (sel[n.id]) continue;
-            if (!cachedIsNodeVisible(ck, sel, n)) continue;
-            if (!n.edges || n.edges.length === 0) continue;
-            const p = n.priority || 0; if (p > bestP) { bestP = p; nextNode = n; }
-        }
-        tPick += performance.now() - t0p;
-        if (!nextNode) { terminals.push({ sel: { ...sel }, key, type: 'leaf', boundaryNode: null }); return; }
-        if (!miniDims.has(nextNode.id)) { terminals.push({ sel: { ...sel }, key, type: 'boundary', boundaryNode: nextNode.id }); return; }
-        if (stateCount > 500000) { console.log('OVERFLOW at ' + stateCount); process.exit(1); }
-
-        const enabled = nextNode.edges.filter(e => !cachedIsEdgeDisabled(ck, sel, nextNode, e));
-        t0p = performance.now();
-        if (enabled.length === 1) { const s = dfsPush(stk, nextNode.id, enabled[0].id); tPush += performance.now() - t0p; dfs(s); return; }
-        for (const edge of enabled) { const t1 = performance.now(); const s = dfsPush(stk, nextNode.id, edge.id); tPush += performance.now() - t1; dfs(s); }
-    }
-
-    const t0 = Date.now();
-    dfs(createStack());
-    const elapsed = Date.now() - t0;
-    console.log(`\n=== ${label} ===`);
-    console.log(`Visited: ${stateCount}, Raw Terminals: ${terminals.length}, Time: ${(elapsed/1000).toFixed(1)}s`);
-    console.log(`  push: ${(tPush/1000).toFixed(1)}s, key: ${(tKey/1000).toFixed(1)}s, pick: ${(tPick/1000).toFixed(1)}s`);
-    return terminals;
-}
-
-const irrKeyCache = new Map();
-let irrKeyCacheHits = 0, irrKeyCacheMisses = 0;
-
-function irrKey(sel, ck) {
-    if (!ck) ck = classKey(sel);
-    const cached = irrKeyCache.get(ck);
-    if (cached !== undefined) { irrKeyCacheHits++; return cached; }
-    irrKeyCacheMisses++;
-    const p = [];
-    for (const dim of dimOrder) {
-        const v = derivedDimSet.has(dim) ? resolvedVal(sel, dim) : sel[dim];
-        const node = NODE_MAP[dim];
-        const canWildcard = v !== undefined || !node || node.derived || !cachedIsNodeVisible(ck, sel, node);
-        if (canWildcard && cachedIsIrrelevant(ck, sel, dim)) {
-            p.push('*'); continue;
-        }
-        if (v === undefined) p.push('U');
-        else p.push(String(classes[dim]?.get(v) ?? 0));
-    }
-    const result = p.join(',');
-    irrKeyCache.set(ck, result);
-    return result;
-}
-
-function fullIrrKey(sel, ck) {
-    if (!ck) ck = classKey(sel);
-    const p = [];
-    for (const dim of dimOrder) {
-        if (cachedIsIrrelevant(ck, sel, dim)) { p.push('*'); continue; }
-        const v = derivedDimSet.has(dim) ? resolvedVal(sel, dim) : sel[dim];
-        if (v === undefined) p.push('U');
-        else p.push(String(classes[dim]?.get(v) ?? 0));
-    }
-    return p.join(',');
-}
-
 // ═══════════════════════════════════════════════
 // Superposition DFS
 // ═══════════════════════════════════════════════
@@ -793,101 +713,7 @@ function runSuperDfs(label) {
     return terminals;
 }
 
-// Run both and compare (skip baseline for speed with SKIP_BASELINE=1)
-const irrTerminals = process.env.SKIP_BASELINE ? [] : runDfs(irrKey, 'irrKey DFS (baseline)');
 const superTerminals = runSuperDfs('Superposition DFS');
-
-function collapseTerminals(terms) {
-    const m = new Map();
-    for (const t of terms) {
-        const fk = fullIrrKey(t.sel);
-        if (!m.has(fk)) m.set(fk, t);
-    }
-    return m;
-}
-
-function superFullIrrKey(sel, superSet) {
-    const ck = classKey(sel);
-    const p = [];
-    for (const dim of dimOrder) {
-        if (superSet && superSet.has(dim)) { p.push('*'); continue; }
-        if (cachedIsIrrelevant(ck, sel, dim)) { p.push('*'); continue; }
-        const v = derivedDimSet.has(dim) ? resolvedVal(sel, dim) : sel[dim];
-        if (v === undefined) p.push('U');
-        else p.push(String(classes[dim]?.get(v) ?? 0));
-    }
-    return p.join(',');
-}
-
-function collapseSuperTerminals(terms) {
-    const m = new Map();
-    for (const t of terms) {
-        const fk = superFullIrrKey(t.sel, t.superSet);
-        if (!m.has(fk)) m.set(fk, t);
-    }
-    return m;
-}
-
-const irrCollapsed = collapseTerminals(irrTerminals);
-const superCollapsed = collapseSuperTerminals(superTerminals);
-console.log(`\nirrKey collapsed:  ${irrCollapsed.size}`);
-console.log(`super collapsed:  ${superCollapsed.size}`);
-
-const missingKeys = [...irrCollapsed.keys()].filter(k => !superCollapsed.has(k));
-const extraKeys = [...superCollapsed.keys()].filter(k => !irrCollapsed.has(k));
-console.log(`Missing from super: ${missingKeys.length}, Extra in super: ${extraKeys.length}`);
-
-const normalizeKey = k => k.replace(/U/g, '*');
-const irrNorm = new Set([...irrCollapsed.keys()].map(normalizeKey));
-const superNorm = new Set([...superCollapsed.keys()].map(normalizeKey));
-const normMissing = [...irrNorm].filter(k => !superNorm.has(k));
-const normExtra = [...superNorm].filter(k => !irrNorm.has(k));
-console.log(`After normalizing U→*: missing=${normMissing.length}, extra=${normExtra.length}, irr=${irrNorm.size}, super=${superNorm.size}`);
-for (const k of normMissing) {
-    const parts = k.split(',');
-    const nonStar = [];
-    for (let i = 0; i < dimOrder.length; i++) {
-        if (parts[i] !== '*') nonStar.push(`${dimOrder[i]}=${parts[i]}`);
-    }
-    console.log(`  norm-missing: ${nonStar.join(', ')}`);
-}
-for (const k of normExtra) {
-    const parts = k.split(',');
-    const nonStar = [];
-    for (let i = 0; i < dimOrder.length; i++) {
-        if (parts[i] !== '*') nonStar.push(`${dimOrder[i]}=${parts[i]}`);
-    }
-    console.log(`  norm-extra: ${nonStar.join(', ')}`);
-}
-
-if (missingKeys.length > 0 && missingKeys.length <= 10) {
-    console.log(`\nMissing terminal keys:`);
-    for (const k of missingKeys) {
-        const t = irrCollapsed.get(k);
-        const parts = k.split(',');
-        const nonStar = [];
-        for (let i = 0; i < dimOrder.length; i++) {
-            if (parts[i] !== '*' && parts[i] !== 'U') nonStar.push(`${dimOrder[i]}=c${parts[i]}`);
-            else if (parts[i] === 'U') nonStar.push(`${dimOrder[i]}=U`);
-        }
-        console.log(`  boundary:${t.boundaryNode || 'leaf'} — ${nonStar.join(', ')}`);
-    }
-}
-if (extraKeys.length > 0) {
-    console.log(`\nExtra terminal keys (first 5):`);
-    for (const k of extraKeys.slice(0, 5)) {
-        const t = superCollapsed.get(k);
-        const parts = k.split(',');
-        const nonStar = [];
-        for (let i = 0; i < dimOrder.length; i++) {
-            if (parts[i] !== '*' && parts[i] !== 'U') nonStar.push(`${dimOrder[i]}=c${parts[i]}`);
-            else if (parts[i] === 'U') nonStar.push(`${dimOrder[i]}=U`);
-        }
-        console.log(`  boundary:${t.boundaryNode || 'leaf'}`);
-        console.log(`    superSet: [${[...t.superSet].join(', ')}]`);
-        console.log(`    ${nonStar.join(', ')}`);
-    }
-}
 
 function printTypeCounts(terms, label) {
     const tc = {};
@@ -907,10 +733,8 @@ for (const sc of stateCache.values()) {
 console.log(`\n=== Cache stats ===`);
 console.log(`Unique classKeys: ${stateCache.size}, Total inner entries: ${totalInnerEntries}`);
 console.log(`Hits: ${cacheHits}, Misses: ${cacheMisses}, Rate: ${(100*cacheHits/(cacheHits+cacheMisses||1)).toFixed(1)}%`);
-console.log(`irrKey cache: hits=${irrKeyCacheHits}, misses=${irrKeyCacheMisses}`);
 console.log(`superKey cache: hits=${superKeyCacheHits}, misses=${superKeyCacheMisses}, entries=${superKeyCache.size}`);
 
-printTypeCounts(irrTerminals, 'irrKey');
 printTypeCounts(superTerminals, 'super');
 
 // Sample ai_goals terminals from super DFS
