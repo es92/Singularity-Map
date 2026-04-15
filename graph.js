@@ -27,7 +27,7 @@ const OUTCOME_ACTIVATE = [
     { capability: ['singularity'], automation: ['deep'], pushback_outcome: true },
     { capability: ['singularity'], automation: ['deep'], coalition_outcome: ['fragments'] },
     { capability: ['singularity'], automation: ['deep'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
-    { capability: ['singularity'], automation: ['deep'], ai_goals: ['benevolent'], asi_threshold: { not: ['never'] } }
+    { capability: ['singularity'], automation: ['deep'], ai_goals: ['benevolent'] }
 ];
 
 
@@ -787,6 +787,7 @@ const NODES = [
       ] },
     { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3, priority: 2,
       activateWhen: OUTCOME_ACTIVATE,
+      deriveWhen: [{ match: { ai_goals: ['benevolent'] }, value: 'equal' }],
       edges: [
         { id: 'equal', label: 'Shared equally',
           disabledWhen: [
