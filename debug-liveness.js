@@ -310,12 +310,16 @@ function _isDerivedUnsettled(sel, dim) {
 const stateCache = new Map();
 let cacheHits = 0, cacheMisses = 0;
 
+let _lastCk = null, _lastSc = null;
 function getCache(ck) {
+    if (ck === _lastCk) return _lastSc;
     let sc = stateCache.get(ck);
     if (!sc) {
         sc = { irr: new Map(), vis: new Map(), edge: new Map(), cnbv: new Map(), du: new Map(), ca: new Map() };
         stateCache.set(ck, sc);
     }
+    _lastCk = ck;
+    _lastSc = sc;
     return sc;
 }
 
@@ -505,6 +509,38 @@ function classKey(sel) {
     return p.join(',');
 }
 
+const _ckParts = new Array(dimOrder.length);
+const _skParts = new Array(dimOrder.length);
+
+const irrVectorCache = new Map();
+
+function classAndSuperKey(sel, superSet) {
+    for (let i = 0; i < dimOrder.length; i++) {
+        const dim = dimOrder[i];
+        const v = derivedDimSet.has(dim) ? resolvedVal(sel, dim) : sel[dim];
+        _ckParts[i] = v === undefined ? 'U' : String(classes[dim]?.get(v) ?? 0);
+    }
+    const ck = _ckParts.join(',');
+
+    let irrVec = irrVectorCache.get(ck);
+    if (!irrVec) {
+        irrVec = new Uint8Array(dimOrder.length);
+        for (let i = 0; i < dimOrder.length; i++) {
+            const dim = dimOrder[i];
+            const v = derivedDimSet.has(dim) ? resolvedVal(sel, dim) : sel[dim];
+            const node = NODE_MAP[dim];
+            const canWildcard = v !== undefined || !node || node.derived || !cachedIsNodeVisible(ck, sel, node);
+            if (canWildcard && cachedIsIrrelevant(ck, sel, dim)) irrVec[i] = 1;
+        }
+        irrVectorCache.set(ck, irrVec);
+    }
+
+    for (let i = 0; i < dimOrder.length; i++) {
+        _skParts[i] = (superSet.has(dimOrder[i]) || irrVec[i]) ? '*' : _ckParts[i];
+    }
+    return { ck, sk: _skParts.join(',') };
+}
+
 // ═══════════════════════════════════════════════
 // Superposition DFS
 // ═══════════════════════════════════════════════
@@ -532,14 +568,16 @@ function needsCollapse(sel, superDim, nextNode, ck) {
 
     const baseNextId = nextNode.id;
     const baseEdges = enabledEdgeIds(sel, nextNode, ck).join(',');
+    const saved = sel[superDim];
 
     for (const rep of reps) {
-        const testSel = { ...sel, [superDim]: rep };
-        const tck = classKey(testSel);
-        const tn = pickNextNode(testSel, tck);
-        if (tn?.id !== baseNextId) return true;
-        if (tn && enabledEdgeIds(testSel, nextNode, tck).join(',') !== baseEdges) return true;
+        sel[superDim] = rep;
+        const tck = classKey(sel);
+        const tn = pickNextNode(sel, tck);
+        if (tn?.id !== baseNextId) { sel[superDim] = saved; return true; }
+        if (tn && enabledEdgeIds(sel, nextNode, tck).join(',') !== baseEdges) { sel[superDim] = saved; return true; }
     }
+    sel[superDim] = saved;
     return false;
 }
 
@@ -574,37 +612,12 @@ function canSuperimpose(sel, node, ck) {
 
     const baseFP = stateFingerprint(sel, ck);
     for (const rep of enabledReps) {
-        const testSel = { ...sel, [node.id]: rep };
-        if (stateFingerprint(testSel, classKey(testSel)) !== baseFP) return false;
+        sel[node.id] = rep;
+        const tck = classKey(sel);
+        if (stateFingerprint(sel, tck) !== baseFP) { delete sel[node.id]; return false; }
     }
+    delete sel[node.id];
     return true;
-}
-
-const superKeyCache = new Map();
-let superKeyCacheHits = 0, superKeyCacheMisses = 0;
-
-function superSetKey(superSet) {
-    if (superSet.size === 0) return '';
-    const parts = [];
-    for (const d of superSet) parts.push(d);
-    return parts.sort().join(',');
-}
-
-function superKey(sel, superSet, ck) {
-    if (!ck) ck = classKey(sel);
-    const p = [];
-    for (const dim of dimOrder) {
-        if (superSet.has(dim)) { p.push('*'); continue; }
-        const v = derivedDimSet.has(dim) ? resolvedVal(sel, dim) : sel[dim];
-        const node = NODE_MAP[dim];
-        const canWildcard = v !== undefined || !node || node.derived || !cachedIsNodeVisible(ck, sel, node);
-        if (canWildcard && cachedIsIrrelevant(ck, sel, dim)) {
-            p.push('*'); continue;
-        }
-        if (v === undefined) p.push('U');
-        else p.push(String(classes[dim]?.get(v) ?? 0));
-    }
-    return p.join(',');
 }
 
 function runSuperDfs(label) {
@@ -613,16 +626,13 @@ function runSuperDfs(label) {
     const superDimCounts = {};
     const terminals = [];
 
-    let tPush = 0, tCk = 0, tSk = 0, tPick = 0, tCollapse = 0;
+    let tPush = 0, tCk = 0, tPick = 0, tCollapse = 0;
 
     function dfs(stk, superSet) {
         const sel = currentState(stk);
         let t0p = performance.now();
-        const ck = classKey(sel);
+        const { ck, sk: key } = classAndSuperKey(sel, superSet);
         tCk += performance.now() - t0p;
-        t0p = performance.now();
-        const key = superKey(sel, superSet, ck);
-        tSk += performance.now() - t0p;
         if (visited.has(key)) return;
         visited.add(key);
         stateCount++;
@@ -704,7 +714,7 @@ function runSuperDfs(label) {
     const elapsed = Date.now() - t0;
     console.log(`\n=== ${label} ===`);
     console.log(`Visited: ${stateCount}, Raw Terminals: ${terminals.length}, Time: ${(elapsed/1000).toFixed(1)}s`);
-    console.log(`  push: ${(tPush/1000).toFixed(1)}s, classKey: ${(tCk/1000).toFixed(1)}s, superKey: ${(tSk/1000).toFixed(1)}s, pick: ${(tPick/1000).toFixed(1)}s, collapse: ${(tCollapse/1000).toFixed(1)}s`);
+    console.log(`  push: ${(tPush/1000).toFixed(1)}s, key: ${(tCk/1000).toFixed(1)}s, pick: ${(tPick/1000).toFixed(1)}s, collapse: ${(tCollapse/1000).toFixed(1)}s`);
     console.log(`Superimposed: ${superimposed}, Collapses: ${collapses}`);
     console.log(`Dims superimposed:`);
     for (const [dim, cnt] of Object.entries(superDimCounts).sort((a,b) => b[1]-a[1])) {
@@ -733,7 +743,7 @@ for (const sc of stateCache.values()) {
 console.log(`\n=== Cache stats ===`);
 console.log(`Unique classKeys: ${stateCache.size}, Total inner entries: ${totalInnerEntries}`);
 console.log(`Hits: ${cacheHits}, Misses: ${cacheMisses}, Rate: ${(100*cacheHits/(cacheHits+cacheMisses||1)).toFixed(1)}%`);
-console.log(`superKey cache: hits=${superKeyCacheHits}, misses=${superKeyCacheMisses}, entries=${superKeyCache.size}`);
+console.log(`irrVector cache: ${irrVectorCache.size} unique classKeys`);
 
 printTypeCounts(superTerminals, 'super');
 
