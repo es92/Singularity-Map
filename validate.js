@@ -1,176 +1,130 @@
 #!/usr/bin/env node
-// Unified validation for the Singularity Map decision tree
-// Phase 1: Static analysis (routing, reachability, consistency, derivations, requires)
-// Phase 2: Explorer simulation (DFS over all reachable states, invariant checks)
+// validate2.js — Graph validator using equivalence-class superposition DFS
+//
+// Phase 1: Static analysis (structure, references, dead edges, circular deps)
+// Phase 2: DFS traversal with per-state invariant checks
+// Phase 3: Personal vignette validation
 //
 // Usage:
-//   node validate.js          — run both phases
-//   node validate.js --quick  — phase 1 only (fast)
-//   node validate.js sample 5 — sample 5 random leaf paths
+//   node validate2.js          — run all phases
+//   node validate2.js --quick  — phase 1 only
 
 const fs = require('fs');
 const path = require('path');
 const { NODES, NODE_MAP } = require('./graph.js');
 const {
-    matchCondition, resolvedVal,
+    matchCondition, resolvedVal, resolvedState: engineResolvedState,
     isNodeVisible, isNodeActivatedByRules, isNodeLocked, isEdgeDisabled,
-    resolvedState, templateMatches,
+    templateMatches,
     createStack, push, currentState, stackHas, displayOrder
 } = require('./engine.js');
-const { resolvePersonalVignettes, resolvePersonalVignetteText, getCountryBucket } = require('./milestone-utils.js');
+const { walk, resolvedState, dimOrder, classes, derivedDimSet } = require('./graph-walker.js');
+const { resolvePersonalVignetteText, getCountryBucket } = require('./milestone-utils.js');
 
 const outcomes = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/outcomes.json'), 'utf8'));
 const narrative = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/narrative.json'), 'utf8'));
 const personalData = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/personal.json'), 'utf8'));
-const templatesList = outcomes.templates;
-
-const oMap = {};
-for (const t of templatesList) oMap[t.id] = t;
-
+const templates = outcomes.templates;
 
 // ════════════════════════════════════════════════════════
-// Phase 1 — Static Analysis
+// Phase 1 — Static Analysis (ported from validate.js)
 // ════════════════════════════════════════════════════════
 
 function runStaticAnalysis() {
-    // NOTE: All issues should be errors, not warnings. Warnings tend to get ignored and
-    // can mask legitimate problems. If something is worth detecting, it's worth failing on.
     const errors = [];
-
     const metaNodes = new Set(NODES.map(d => d.id));
 
-    // 1. Node structure validation
-    for (const node of NODES) {
-        if (!node.id) errors.push(`[structure] Node missing id`);
-        if (!node.edges || node.edges.length === 0) {
-            errors.push(`[structure] Node "${node.id}" has no edges`);
-        }
-        if (node.activateWhen) {
-            for (const cond of node.activateWhen) {
-                for (const k of Object.keys(cond)) {
-                    if (k === 'reason') continue;
-                    if (!metaNodes.has(k)) {
-                        errors.push(`[structure] Node "${node.id}" activateWhen references unknown node "${k}"`);
-                    }
-                }
-            }
-        }
-    }
-
-    // Helper: validate keys/edges in a matchCondition-style condition object
     function validateCondition(cond, nodeId, label) {
         for (const [k, vals] of Object.entries(cond)) {
-            if (k === 'reason') continue;
+            if (k === 'reason' || k.startsWith('_')) continue;
             if (!metaNodes.has(k)) {
-                errors.push(`[${label}] Node "${nodeId}" references unknown node "${k}"`);
+                errors.push(`[${label}] "${nodeId}" references unknown node "${k}"`);
                 continue;
             }
             if (vals === true || vals === false) continue;
             const refNode = NODE_MAP[k];
             if (!refNode || !refNode.edges) continue;
+            const validIds = new Set(refNode.edges.map(v => v.id));
             if (vals && typeof vals === 'object' && !Array.isArray(vals) && vals.not) {
-                const validIds = new Set(refNode.edges.map(v => v.id));
                 for (const v of vals.not) {
-                    if (!validIds.has(v)) errors.push(`[${label}] Node "${nodeId}" references unknown edge "${k}=${v}" in not`);
+                    if (!validIds.has(v)) errors.push(`[${label}] "${nodeId}" references unknown edge "${k}=${v}" in not`);
                 }
                 continue;
             }
-            const validIds = new Set(refNode.edges.map(v => v.id));
             const arr = Array.isArray(vals) ? vals : [vals];
             for (const v of arr) {
-                if (!validIds.has(v)) errors.push(`[${label}] Node "${nodeId}" references unknown edge "${k}=${v}"`);
+                if (!validIds.has(v)) errors.push(`[${label}] "${nodeId}" references unknown edge "${k}=${v}"`);
             }
         }
     }
 
-    // Helper: validate keys/edges in a deriveWhen rule
-    function validateDerivation(rule, node) {
-        const nodeId = node.id;
-        const ownEdges = node.edges ? new Set(node.edges.map(v => v.id)) : new Set();
-        if (rule.match) {
-            for (const [k, val] of Object.entries(rule.match)) {
-                if (k === 'reason') continue;
-                if (!metaNodes.has(k)) {
-                    errors.push(`[derivations] Node "${nodeId}" references unknown node "${k}" in match`);
-                    continue;
-                }
-                if (val === true || val === false) continue;
-                const refNode = NODE_MAP[k];
-                if (!refNode || !refNode.edges) continue;
-                if (val && typeof val === 'object' && !Array.isArray(val) && val.not) {
-                    const validIds = new Set(refNode.edges.map(v => v.id));
-                    for (const v of val.not) {
-                        if (!validIds.has(v)) errors.push(`[derivations] Node "${nodeId}" references unknown edge "${k}=${v}" in match.not`);
-                    }
-                    continue;
-                }
-                const validIds = new Set(refNode.edges.map(v => v.id));
-                const vals = Array.isArray(val) ? val : [val];
-                for (const v of vals) {
-                    if (!validIds.has(v)) errors.push(`[derivations] Node "${nodeId}" references unknown edge "${k}=${v}" in match`);
-                }
-            }
+    // 1. Node structure
+    for (const node of NODES) {
+        if (!node.id) errors.push(`[structure] Node missing id`);
+        if (!node.edges || node.edges.length === 0) errors.push(`[structure] "${node.id}" has no edges`);
+        if (node.activateWhen) {
+            for (const cond of node.activateWhen) validateCondition(cond, node.id, 'activateWhen');
         }
-        if (rule.fromState && !metaNodes.has(rule.fromState)) {
-            errors.push(`[derivations] Node "${nodeId}" references unknown node "${rule.fromState}" in fromState`);
-        }
-        if (rule.value !== undefined && !ownEdges.has(rule.value)) {
-            errors.push(`[derivations] Node "${nodeId}" derivation produces unknown edge "${rule.value}"`);
-        }
-        if (rule.valueMap) {
-            for (const [from, to] of Object.entries(rule.valueMap)) {
-                if (!ownEdges.has(from)) errors.push(`[derivations] Node "${nodeId}" valueMap references unknown input "${from}"`);
-                if (!ownEdges.has(to)) errors.push(`[derivations] Node "${nodeId}" valueMap references unknown output "${to}"`);
-            }
+        if (node.hideWhen) {
+            for (const cond of node.hideWhen) validateCondition(cond, node.id, 'hideWhen');
         }
     }
 
-    // 2. Requires validation on node edges
+    // 2. Requires and disabledWhen validation
     for (const node of NODES) {
         if (!node.edges) continue;
         for (const v of node.edges) {
-            if (!v.requires) continue;
-            const condSets = Array.isArray(v.requires) ? v.requires : [v.requires];
-            for (const conds of condSets) {
-                for (const [dk, vals] of Object.entries(conds)) {
-                    if (dk.startsWith('_')) continue;
-                    if (!metaNodes.has(dk)) {
-                        errors.push(`[requires] Node "${node.id}" edge "${v.id}" requires unknown node "${dk}"`);
-                    }
-                    if (NODE_MAP[dk]) {
-                        const validIds = new Set(NODE_MAP[dk].edges.map(vv => vv.id));
-                        const arr = Array.isArray(vals) ? vals : [vals];
-                        for (const vv of arr) {
-                            if (!validIds.has(vv)) {
-                                errors.push(`[requires] Node "${node.id}" edge "${v.id}" requires unknown edge "${dk}=${vv}"`);
-                            }
-                        }
-                    }
-                }
+            if (v.requires) {
+                const condSets = Array.isArray(v.requires) ? v.requires : [v.requires];
+                for (const cond of condSets) validateCondition(cond, `${node.id}.${v.id}`, 'requires');
+            }
+            if (v.disabledWhen) {
+                for (const cond of v.disabledWhen) validateCondition(cond, `${node.id}.${v.id}`, 'disabledWhen');
             }
         }
     }
 
-    // 2d. disabledWhen validation (on edges)
-    for (const node of NODES) {
-        if (!node.edges) continue;
-        for (const v of node.edges) {
-            if (!v.disabledWhen) continue;
-            for (const cond of v.disabledWhen) {
-                validateCondition(cond, `${node.id}.${v.id}`, 'disabledWhen');
-            }
-        }
-    }
-
-    // 2e. deriveWhen validation
+    // 3. deriveWhen validation
     for (const node of NODES) {
         if (!node.deriveWhen) continue;
+        const ownEdges = node.edges ? new Set(node.edges.map(v => v.id)) : new Set();
         for (const rule of node.deriveWhen) {
-            validateDerivation(rule, node);
+            if (rule.match) {
+                for (const [k, val] of Object.entries(rule.match)) {
+                    if (k === 'reason') continue;
+                    if (!metaNodes.has(k)) { errors.push(`[derivations] "${node.id}" references unknown node "${k}" in match`); continue; }
+                    if (val === true || val === false) continue;
+                    const refNode = NODE_MAP[k];
+                    if (!refNode || !refNode.edges) continue;
+                    const validIds = new Set(refNode.edges.map(v => v.id));
+                    if (val && typeof val === 'object' && !Array.isArray(val) && val.not) {
+                        for (const v of val.not) {
+                            if (!validIds.has(v)) errors.push(`[derivations] "${node.id}" unknown edge "${k}=${v}" in match.not`);
+                        }
+                        continue;
+                    }
+                    const vals = Array.isArray(val) ? val : [val];
+                    for (const v of vals) {
+                        if (!validIds.has(v)) errors.push(`[derivations] "${node.id}" unknown edge "${k}=${v}" in match`);
+                    }
+                }
+            }
+            if (rule.fromState && !metaNodes.has(rule.fromState)) {
+                errors.push(`[derivations] "${node.id}" unknown node "${rule.fromState}" in fromState`);
+            }
+            if (rule.value !== undefined && !ownEdges.has(rule.value)) {
+                errors.push(`[derivations] "${node.id}" produces unknown edge "${rule.value}"`);
+            }
+            if (rule.valueMap) {
+                for (const [from, to] of Object.entries(rule.valueMap)) {
+                    if (!ownEdges.has(from)) errors.push(`[derivations] "${node.id}" valueMap unknown input "${from}"`);
+                    if (!ownEdges.has(to)) errors.push(`[derivations] "${node.id}" valueMap unknown output "${to}"`);
+                }
+            }
         }
     }
 
-    // 2g. Dead edge detection: requires contradicted by disabledWhen
+    // 4. Dead edge detection: requires contradicted by disabledWhen
     for (const node of NODES) {
         if (!node.edges) continue;
         for (const edge of node.edges) {
@@ -193,12 +147,29 @@ function runStaticAnalysis() {
                 if (!blocked) { allBlocked = false; break; }
             }
             if (allBlocked) {
-                errors.push(`[dead-edge] Node "${node.id}" edge "${edge.id}": every requires clause is contradicted by disabledWhen`);
+                errors.push(`[dead-edge] "${node.id}" edge "${edge.id}": every requires contradicted by disabledWhen`);
             }
         }
     }
 
-    // 3. Derivation dependency / circular detection
+    // 5. Outcome template references
+    for (const t of templates) {
+        if (!t.reachable) continue;
+        for (const cond of (Array.isArray(t.reachable) ? t.reachable : [t.reachable])) {
+            for (const [dk, dv] of Object.entries(cond)) {
+                if (dk === '_not') {
+                    for (const nk of Object.keys(dv)) {
+                        if (!metaNodes.has(nk)) errors.push(`[outcome] "${t.id}" references unknown node "${nk}" in _not`);
+                    }
+                    continue;
+                }
+                if (!metaNodes.has(dk)) errors.push(`[outcome] "${t.id}" references unknown node "${dk}"`);
+            }
+        }
+    }
+
+    // 6. Circular dependency detection (derivation <-> visibility)
+    const circularWarnings = [];
     const derivationDeps = {};
     for (const node of NODES) {
         if (!node.deriveWhen) continue;
@@ -206,130 +177,153 @@ function runStaticAnalysis() {
         for (const rule of node.deriveWhen) {
             if (rule.match) {
                 for (const k of Object.keys(rule.match)) {
-                    if (k !== 'reason') deps.add('effective:' + k);
+                    if (k !== 'reason') deps.add(k);
                 }
             }
         }
         derivationDeps[node.id] = deps;
     }
-
     const visibilityDeps = {};
     for (const node of NODES) {
         const deps = new Set();
         if (node.activateWhen) {
             for (const cond of node.activateWhen) {
                 for (const k of Object.keys(cond)) {
-                    if (k === 'reason') continue;
-                    deps.add('effective:' + k);
+                    if (k === 'reason' || k.startsWith('_')) continue;
+                    deps.add(k);
                 }
             }
         }
         visibilityDeps[node.id] = deps;
     }
-
-    const circularWarnings = [];
-    for (const [nodeId, oDeps] of Object.entries(derivationDeps)) {
-        for (const dep of oDeps) {
-            if (!dep.startsWith('effective:')) continue;
-            const depNode = dep.slice('effective:'.length);
-            const vDeps = visibilityDeps[depNode];
-            if (!vDeps) continue;
-            if (vDeps.has('effective:' + nodeId)) {
-                circularWarnings.push(`[circular] resolvedVal("${nodeId}") depends on resolvedVal("${depNode}"), and isNodeVisible("${depNode}") depends on resolvedVal("${nodeId}") (handled by cycle guard)`);
+    for (const [nodeId, dDeps] of Object.entries(derivationDeps)) {
+        for (const dep of dDeps) {
+            const vDeps = visibilityDeps[dep];
+            if (vDeps && vDeps.has(nodeId)) {
+                circularWarnings.push(`[circular] resolvedVal("${nodeId}") depends on "${dep}", whose visibility depends on resolvedVal("${nodeId}")`);
             }
         }
     }
 
-    // 4. Outcome template node references
-    for (const t of templatesList) {
-        if (t.reachable) {
-            const condList = Array.isArray(t.reachable) ? t.reachable : [t.reachable];
-            for (const cond of condList) {
-                for (const [dk, dv] of Object.entries(cond)) {
-                    if (dk === '_not') {
-                        for (const [nk] of Object.entries(dv)) {
-                            if (!metaNodes.has(nk)) {
-                                errors.push(`[outcome] Template "${t.id}" reachable _not references unknown node "${nk}"`);
-                            }
-                        }
-                        continue;
-                    }
-                    if (!metaNodes.has(dk)) {
-                        errors.push(`[outcome] Template "${t.id}" reachable references unknown node "${dk}"`);
-                    }
+    return { errors, circularWarnings };
+}
+
+function selToUrl(sel) {
+    const params = Object.entries(sel).filter(([, v]) => v != null).map(([k, v]) => `${k}=${v}`).join('&');
+    return `http://localhost:3000/#/explore${params ? '?' + params : ''}`;
+}
+
+// ════════════════════════════════════════════════════════
+// Phase 2 — DFS Traversal with Invariant Checks
+// ════════════════════════════════════════════════════════
+
+function runTraversal() {
+    const violations = {
+        deadEnd: [],
+        reDerivedDeadEnd: [],
+        ambiguous: [],
+        stuck: [],
+        singleOption: [],
+        clickErased: new Map(),
+        stackIntegrity: [],
+    };
+    const seenStackKeys = new Set();
+    const edgesReached = new Set();
+
+    function onVisit(sel, stk, { ck, nextNode, enabled }) {
+        for (const node of NODES) {
+            if (sel[node.id]) {
+                edgesReached.add(`${node.id}=${sel[node.id]}`);
+            }
+            if (node.deriveWhen) {
+                const eff = resolvedVal(sel, node.id);
+                if (eff) edgesReached.add(`${node.id}=${eff}`);
+            }
+        }
+
+        // Stack integrity: displayOrder's answered section must match stack order
+        const order = displayOrder(stk);
+        const expectedIds = stk
+            .filter(e => e.nodeId && NODE_MAP[e.nodeId] && !NODE_MAP[e.nodeId].derived)
+            .map(e => e.nodeId);
+        let seenUnanswered = false, ansIdx = 0, integrityBroken = false;
+        for (const node of order) {
+            const onStack = stackHas(stk, node.id);
+            if (onStack) {
+                if (seenUnanswered || expectedIds[ansIdx] !== node.id) {
+                    integrityBroken = true;
+                    break;
+                }
+                ansIdx++;
+            } else {
+                seenUnanswered = true;
+            }
+        }
+        if (integrityBroken) {
+            const sk = Object.entries(sel).filter(([,v]) => v != null).sort(([a],[b]) => a.localeCompare(b)).map(([k,v]) => `${k}=${v}`).join('&');
+            if (!seenStackKeys.has(sk)) {
+                seenStackKeys.add(sk);
+                violations.stackIntegrity.push({
+                    expected: expectedIds,
+                    actual: order.filter(n => stackHas(stk, n.id)).map(n => n.id),
+                    sel: { ...sel },
+                    url: selToUrl(sel),
+                });
+            }
+        }
+
+        if (!nextNode) return;
+
+        for (const n of NODES) {
+            if (n.derived) continue;
+            if (sel[n.id]) continue;
+            if (!isNodeVisible(sel, n)) continue;
+            if (isNodeLocked(sel, n) !== null) continue;
+            if (!n.edges || n.edges.length === 0) continue;
+            const ena = n.edges.filter(e => !isEdgeDisabled(sel, n, e));
+            if (ena.length === 0) {
+                violations.stuck.push({ node: n.id, sel: { ...sel }, url: selToUrl(sel) });
+            }
+        }
+
+        if (nextNode && enabled.length === 1 && isNodeLocked(sel, nextNode) === null) {
+            violations.singleOption.push({ node: nextNode.id, edge: enabled[0].id, url: selToUrl(sel) });
+        }
+
+        if (nextNode) {
+            for (const edge of enabled) {
+                const vk = `${nextNode.id}:${edge.id}`;
+                if (violations.clickErased.has(vk)) continue;
+                const testState = currentState(push(stk, nextNode.id, edge.id));
+                if (!testState[nextNode.id]) {
+                    violations.clickErased.set(vk, { node: nextNode.id, edge: edge.id, url: selToUrl(sel) });
                 }
             }
         }
     }
 
-    return { errors, circularWarnings, derivationDeps };
-}
-
-// ════════════════════════════════════════════════════════
-// Phase 2 — Explorer Simulation
-// ════════════════════════════════════════════════════════
-
-function selToUrl(sel) {
-    const params = Object.entries(sel).filter(([k, v]) => v != null).map(([k, v]) => `${k}=${v}`).join('&');
-    return `http://localhost:3000/#/explore${params ? '?' + params : ''}`;
-}
-
-function selKey(sel) {
-    return Object.entries(sel).filter(([k, v]) => v != null).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('&');
-}
-
-function getNextNode(sel) {
-    for (const node of NODES) {
-        if (node.derived) continue;
-        if (!isNodeVisible(sel, node)) continue;
-        if (isNodeLocked(sel, node) !== null) continue;
-        if (sel[node.id]) continue;
-        return node;
+    function onPush(sel, nodeId, edgeId) {
+        edgesReached.add(`${nodeId}=${edgeId}`);
     }
-    return null;
-}
 
-function getEnabledEdges(sel, node) {
-    return node.edges.filter(v => !isEdgeDisabled(sel, node, v));
-}
-
-const FORWARD_KEY_NODES = NODES.filter(d => d.forwardKey).map(d => d.id);
-
-function forwardKey(sel) {
-    const parts = [];
-    const state = resolvedState(sel);
-    for (const k of FORWARD_KEY_NODES) {
-        if (state[k]) parts.push(`E:${k}=${state[k]}`);
-    }
-    for (const node of NODES) {
-        if (!node.deriveWhen) continue;
-        const raw = sel[node.id];
-        const eff = state[node.id];
-        if (raw && eff && raw !== eff) {
-            parts.push(`R:${node.id}=${raw}`);
-        }
-    }
-    for (const node of NODES) {
-        if (node.derived) continue;
-        if (!isNodeVisible(sel, node)) continue;
-        if (isNodeLocked(sel, node) !== null) continue;
-        if (sel[node.id]) continue;
-        const enabled = getEnabledEdges(sel, node).map(v => v.id);
-        parts.push(`${node.id}?${enabled.join(',')}`);
-    }
-    return parts.join('|');
-}
-
-function runExplorer() {
-    const violations = { deadEnd: [], ambiguous: [], stuck: [], singleOption: [], clickErased: [], stackIntegrity: [], reDerivedDeadEnd: [] };
-    const seen = { clickErased: new Set(), stackIntegrity: new Set() };
-
-    function checkLeaf(sel) {
+    function isTerminal(sel) {
         const state = resolvedState(sel);
-        const matched = templatesList.filter(t => templateMatches(t, state));
-        if (matched.length === 0) violations.deadEnd.push({ url: selToUrl(sel) });
-        else if (matched.length > 1) violations.ambiguous.push({ outcomes: matched.map(t => t.id), url: selToUrl(sel) });
+        const matched = templates.filter(t => templateMatches(t, state));
+        if (matched.length > 1) {
+            violations.ambiguous.push({ outcomes: matched.map(t => t.id), sel: { ...sel }, url: selToUrl(sel) });
+        }
+        return matched.length > 0;
+    }
 
+    const result = walk({ isTerminal, onVisit, onPush });
+
+    for (const de of result.deadEnds) {
+        violations.deadEnd.push({ ...de, url: selToUrl(de.sel) });
+    }
+
+    // Re-derived dead end: at dead ends, check if overriding derivations reveals hidden questions
+    for (const de of result.deadEnds) {
+        const sel = de.sel;
         const splits = [];
         for (const node of NODES) {
             if (!node.deriveWhen) continue;
@@ -341,324 +335,45 @@ function runExplorer() {
         if (splits.length > 0) {
             const effSel = Object.assign({}, sel);
             for (const s of splits) effSel[s.node] = s.eff;
-            const next = getNextNode(effSel);
+            let next = null;
+            for (const node of NODES) {
+                if (node.derived) continue;
+                if (!isNodeVisible(effSel, node)) continue;
+                if (isNodeLocked(effSel, node) !== null) continue;
+                if (effSel[node.id]) continue;
+                next = node;
+                break;
+            }
             if (next) {
                 violations.reDerivedDeadEnd.push({
                     splits: splits.map(s => `${s.node}: ${s.raw}→${s.eff}`),
                     hiddenQuestion: next.id,
+                    sel: { ...sel },
                     url: selToUrl(sel),
                 });
             }
         }
     }
 
-    function runChecks(stk) {
-        const sel = currentState(stk);
-        const N = NODES.length;
-        for (let i = 0; i < N; i++) {
-            const node = NODES[i];
-            if (node.derived) continue;
-            if (!isNodeVisible(sel, node)) continue;
-            if (isNodeLocked(sel, node) !== null) continue;
-            if (sel[node.id]) continue;
-            const ena = getEnabledEdges(sel, node);
-            if (ena.length === 0) {
-                const reasons = [];
-                for (const v of node.edges) {
-                    if (v.disabledWhen && v.disabledWhen.some(c => matchCondition(sel, c))) {
-                        reasons.push(`"${v.id}" disabled by disabledWhen`);
-                    } else if (v.requires) {
-                        const rs = Array.isArray(v.requires) ? v.requires : [v.requires];
-                        if (!rs.some(c => matchCondition(sel, c))) reasons.push(`"${v.id}" blocked by requires`);
-                    }
-                }
-                violations.stuck.push({ node: node.id, url: selToUrl(sel), mechanism: reasons.join('; ') });
-            }
-            if (ena.length === 1 && node === getNextNode(sel)) violations.singleOption.push({ node: node.id, edge: ena[0].id, url: selToUrl(sel) });
-
-            for (const edge of ena) {
-                if (sel[node.id] === edge.id) continue;
-                const testState = currentState(push(stk, node.id, edge.id));
-                if (!testState[node.id]) {
-                    const vk = `${node.id}:${edge.id}`;
-                    if (!seen.clickErased.has(vk)) {
-                        seen.clickErased.add(vk);
-                        violations.clickErased.push({ node: node.id, edge: edge.id, url: selToUrl(sel) });
-                    }
-                }
-            }
-        }
-    }
-
-    // DFS with forward-key deduplication + edge coverage tracking
-    let totalStates = 0;
-    let totalLeaves = 0;
-    const visited = new Set();
-    const rawVisited = new Set();
-    const worklist = [createStack()];
-    let dedupSaved = 0;
-    const userSelected = new Set();
-    const autoLocked = new Set();
-
-    while (worklist.length > 0) {
-        const stk = worklist.pop();
-        const sel = currentState(stk);
-
-        const sk = selKey(sel);
-        if (visited.has(sk)) continue;
-        visited.add(sk);
-        totalStates++;
-
-        if (totalStates % 1000 === 0) {
-            process.stdout.write(`\r  ${totalStates.toLocaleString()} states...`);
-        }
-
-        for (const node of NODES) {
-            if (sel[node.id]) {
-                const key = `${node.id}=${sel[node.id]}`;
-                if (isNodeLocked(sel, node) !== null) autoLocked.add(key);
-                else userSelected.add(key);
-            }
-            if (node.deriveWhen) {
-                const eff = resolvedVal(sel, node.id);
-                if (eff) autoLocked.add(`${node.id}=${eff}`);
-            }
-        }
-
-        runChecks(stk);
-
-        // Stack integrity: displayOrder's answered section must match
-        // the stack entries in stack order, with no gaps.
-        // Append-only: answered nodes stay even if no longer visible.
-        const order = displayOrder(stk);
-        const expectedIds = stk
-            .filter(e => e.nodeId && NODE_MAP[e.nodeId] && !NODE_MAP[e.nodeId].derived)
-            .map(e => e.nodeId);
-        let seenUnanswered = false;
-        let ansIdx = 0;
-        for (const node of order) {
-            const onStack = stackHas(stk, node.id);
-            if (onStack) {
-                if (seenUnanswered || expectedIds[ansIdx] !== node.id) {
-                    const vk = selKey(sel);
-                    if (!seen.stackIntegrity.has(vk)) {
-                        seen.stackIntegrity.add(vk);
-                        violations.stackIntegrity.push({
-                            expected: expectedIds,
-                            actual: order.filter(n => stackHas(stk, n.id)).map(n => n.id),
-                            url: selToUrl(sel),
-                        });
-                    }
-                    break;
-                }
-                ansIdx++;
-            } else {
-                seenUnanswered = true;
-            }
-        }
-
-        const next = getNextNode(sel);
-        if (next) {
-            for (const edge of getEnabledEdges(sel, next)) {
-                worklist.push(push(stk, next.id, edge.id));
-            }
-        } else {
-            totalLeaves++;
-            checkLeaf(sel);
-        }
-    }
-
-    const coverage = { userSelected, autoLocked };
-    return { violations, totalStates, totalLeaves, dedupSaved, rawUnique: rawVisited.size, coverage };
+    return { violations, edgesReached, ...result };
 }
 
 // ════════════════════════════════════════════════════════
-// Sample Paths Mode
+// Phase 3 — Personal Vignette Validation
 // ════════════════════════════════════════════════════════
 
-function samplePaths(n) {
-    const leaves = [];
-    const visited = new Set();
-    const worklist = [createStack()];
-
-    while (worklist.length > 0) {
-        const stk = worklist.pop();
-        const sel = currentState(stk);
-        const fk = forwardKey(sel);
-        const sk = selKey(sel);
-        if (visited.has(sk)) continue;
-        visited.add(sk);
-
-        const next = getNextNode(sel);
-        if (next) {
-            for (const edge of getEnabledEdges(sel, next)) {
-                worklist.push(push(stk, next.id, edge.id));
-            }
-        } else {
-            leaves.push(sel);
-        }
-    }
-
-    const step = Math.max(1, Math.floor(leaves.length / n));
-    const picked = [];
-    for (let i = 0; i < leaves.length && picked.length < n; i += step) {
-        picked.push(leaves[i]);
-    }
-
-    console.log(`Sampled ${picked.length} of ${leaves.length} total leaf states:\n`);
-
-    for (let p = 0; p < picked.length; p++) {
-        const sel = picked[p];
-        const state = resolvedState(sel);
-        const matched = templatesList.filter(t => templateMatches(t, state));
-        const outcome = matched.length === 1 ? matched[0] : null;
-
-        console.log(`━━━ Path ${p + 1} ━━━`);
-
-        const steps = [];
-        for (const node of NODES) {
-            if (node.derived || (node.priority || 0) >= 2) continue;
-            if (!isNodeVisible(sel, node)) continue;
-            const locked = isNodeLocked(sel, node);
-            if (locked !== null) {
-                const edge = node.edges.find(v => v.id === locked);
-                steps.push(`  ${node.label}: ${edge ? edge.label : locked} [locked]`);
-            } else if (sel[node.id]) {
-                const edge = node.edges.find(v => v.id === sel[node.id]);
-                steps.push(`  ${node.label}: ${edge ? edge.label : sel[node.id]}`);
-            }
-        }
-        console.log(steps.join('\n'));
-
-        if (outcome) {
-            console.log(`  → Outcome: ${outcome.title} (${outcome.id})`);
-        } else if (matched.length === 0) {
-            console.log(`  → DEAD END (no outcome)`);
-        } else {
-            console.log(`  → AMBIGUOUS: ${matched.map(t => t.id).join(', ')}`);
-        }
-
-        console.log(`  ${selToUrl(sel)}\n`);
-    }
-}
-
-// ════════════════════════════════════════════════════════
-// Report & Main
-// ════════════════════════════════════════════════════════
-
-function printPhase1(result) {
-    const { errors, circularWarnings } = result;
-    if (errors.length) {
-        console.log(`  ERRORS (${errors.length}):`);
-        for (const e of errors) console.log('    ✗ ' + e);
-    } else {
-        console.log('  ✓ All static checks passed');
-    }
-    if (circularWarnings.length) {
-        console.log(`  WARNINGS (${circularWarnings.length}):`);
-        for (const w of circularWarnings) console.log('    ⚠ ' + w);
-    }
-}
-
-function printPhase2(result) {
-    const { violations, totalStates, totalLeaves } = result;
-
-    const cats = [
-        { name: 'DEAD-END LEAF (no outcome)', items: violations.deadEnd, fmt: v => `    No outcome matches at leaf` },
-        { name: 'AMBIGUOUS LEAF (multiple outcomes)', items: violations.ambiguous, fmt: v => `    ${v.outcomes.length} outcomes: [${v.outcomes.join(', ')}]` },
-        { name: 'STUCK NODE (visible, 0 enabled edges)', items: violations.stuck, fmt: v => `    "${v.node}" is visible but has no selectable edges${v.mechanism ? '\n      Because: ' + v.mechanism : ''}` },
-        { name: 'UNLOCKED SINGLE OPTION', items: violations.singleOption, fmt: v => `    "${v.node}" has only "${v.edge}" enabled but is not locked` },
-        { name: 'CLICK ERASED', items: violations.clickErased, fmt: v => `    Click "${v.node}=${v.edge}" → immediately cleared` },
-        { name: 'STACK INTEGRITY (displayOrder ≠ stack order)', items: violations.stackIntegrity, fmt: v => `    Expected: [${v.expected.join(', ')}]\n    Actual:   [${v.actual.join(', ')}]` },
-        { name: 'RE-DERIVED DEAD-END (derivation reveals hidden question)', items: violations.reDerivedDeadEnd, fmt: v => `    Splits: ${v.splits.join(', ')}\n    Hidden question: "${v.hiddenQuestion}"` },
-    ];
-
-    let violationCount = 0;
-    for (const cat of cats) {
-        if (cat.items.length === 0) continue;
-        violationCount += cat.items.length;
-        console.log(`  ━━━ ${cat.name} (${cat.items.length}) ━━━`);
-        for (const v of cat.items) {
-            console.log(cat.fmt(v));
-            console.log(`    ${v.url}\n`);
-        }
-    }
-
-
-    if (violationCount === 0) {
-        console.log('  ✓ No violations found');
-    }
-
-    return violationCount;
-}
-
-function printPhase3(coverage) {
-    const { userSelected, autoLocked } = coverage;
-    const allReached = new Set([...userSelected, ...autoLocked]);
-    let totalChoice = 0, totalTerminal = 0, totalDerived = 0;
-    const unreachedChoice = [], unreachedTerminal = [], unreachedDerived = [];
-    for (const node of NODES) {
-        if (!node.edges) continue;
-        for (const edge of node.edges) {
-            const key = `${node.id}=${edge.id}`;
-            const reached = allReached.has(key);
-            const entry = { node: node.id, edge: edge.id, hasRequires: !!edge.requires };
-            if (node.derived) {
-                totalDerived++;
-                if (!reached) unreachedDerived.push(entry);
-            } else if ((node.priority || 0) >= 2) {
-                totalTerminal++;
-                if (!reached) unreachedTerminal.push(entry);
-            } else {
-                totalChoice++;
-                if (!reached) unreachedChoice.push(entry);
-            }
-        }
-    }
-    const fmt = (reached, total) => {
-        const pct = total ? ((reached / total) * 100).toFixed(1) : '100.0';
-        return `${reached}/${total} (${pct}%)`;
-    };
-    console.log(`  Choice nodes:   ${fmt(totalChoice - unreachedChoice.length, totalChoice)} edges reached`);
-    console.log(`  Terminal nodes:  ${fmt(totalTerminal - unreachedTerminal.length, totalTerminal)} edges reached (not explored by DFS)`);
-    console.log(`  Derived nodes:   ${fmt(totalDerived - unreachedDerived.length, totalDerived)} edges reached via derivations`);
-    const lockedOnly = [...autoLocked].filter(k => !userSelected.has(k)).sort();
-    if (lockedOnly.length) {
-        console.log(`  ${lockedOnly.length} edges reached only via auto-lock/derivation (never user-selectable):`);
-        for (const k of lockedOnly) console.log(`    ${k}`);
-    }
-    if (unreachedChoice.length) {
-        console.log(`  Unreached choice edges (${unreachedChoice.length}):`);
-        for (const u of unreachedChoice) {
-            const tag = u.hasRequires ? '(has requires)' : '(no requires — forward-key dedup?)';
-            console.log(`    "${u.node}" → "${u.edge}" ${tag}`);
-        }
-    }
-    if (unreachedDerived.length) {
-        console.log(`  Unreached derived edges (${unreachedDerived.length}):`);
-        for (const u of unreachedDerived) console.log(`    "${u.node}" → "${u.edge}"`);
-    }
-    if (!unreachedChoice.length && !unreachedDerived.length) {
-        console.log('  ✓ All choice + derived edges reached');
-    }
-}
-
-// ════════════════════════════════════════════════════════
-// Phase 4 — Milestone Validation
-// ════════════════════════════════════════════════════════
+const TEST_PERSONAS = [
+    { profession: 'software', country: 'United States', is_ai_geo: 'yes' },
+    { profession: 'healthcare', country: 'Germany', is_ai_geo: 'no' },
+    { profession: 'trade', country: 'Nigeria', is_ai_geo: 'no' },
+    { profession: 'government', country: 'China', is_ai_geo: 'yes' },
+];
 
 function runVignetteValidation() {
     const errors = [];
     const warnings = [];
 
-    const TEST_PERSONAS = [
-        { profession: 'software', country: 'United States', is_ai_geo: 'yes' },
-        { profession: 'healthcare', country: 'Germany', is_ai_geo: 'no' },
-        { profession: 'trade', country: 'Nigeria', is_ai_geo: 'no' },
-        { profession: 'government', country: 'China', is_ai_geo: 'yes' },
-    ];
-
-    // --- Check 1: personalVignette _when condition validation ---
+    // _when condition validation
     for (const [nodeId, node] of Object.entries(narrative)) {
         if (!node.values) continue;
         for (const [edgeId, edge] of Object.entries(node.values)) {
@@ -667,21 +382,12 @@ function runVignetteValidation() {
             if (pv._when) {
                 for (let i = 0; i < pv._when.length; i++) {
                     const rule = pv._when[i];
-                    if (!rule.if) {
-                        errors.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: missing "if" condition`);
-                        continue;
-                    }
-                    if (!rule.text && rule.text !== null) {
-                        errors.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: missing "text" field`);
-                    }
-                    const validConditionKeys = new Set(['profession', 'country_bucket', 'is_ai_geo', ...NODES.map(n => n.id)]);
+                    if (!rule.if) { errors.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: missing "if" condition`); continue; }
+                    if (!rule.text && rule.text !== null) errors.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: missing "text" field`);
+                    const validKeys = new Set(['profession', 'country_bucket', 'is_ai_geo', ...NODES.map(n => n.id)]);
                     for (const [k, vals] of Object.entries(rule.if)) {
-                        if (!validConditionKeys.has(k)) {
-                            warnings.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: condition key "${k}" is not a known dimension`);
-                        }
-                        if (!Array.isArray(vals)) {
-                            errors.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: condition "${k}" must be an array`);
-                        }
+                        if (!validKeys.has(k)) warnings.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: condition key "${k}" is not a known dimension`);
+                        if (!Array.isArray(vals)) errors.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: condition "${k}" must be an array`);
                     }
                 }
             }
@@ -691,11 +397,9 @@ function runVignetteValidation() {
         }
     }
 
-    // --- Check 2: Resolution completeness across personas ---
-    let totalVignettes = 0;
-    let withWhen = 0;
+    // Resolution completeness across test personas
+    let totalVignettes = 0, withWhen = 0;
     const nullResolutions = [];
-
     for (const [nodeId, node] of Object.entries(narrative)) {
         if (!node.values) continue;
         for (const [edgeId, edge] of Object.entries(node.values)) {
@@ -703,53 +407,17 @@ function runVignetteValidation() {
             if (!pv) continue;
             totalVignettes++;
             if (pv._when && pv._when.length > 0) withWhen++;
-
             for (const persona of TEST_PERSONAS) {
                 const bucket = getCountryBucket(persona.country, personalData);
-                const ctx = {
-                    profession: persona.profession,
-                    country_bucket: bucket,
-                    is_ai_geo: persona.is_ai_geo,
-                };
+                const ctx = { profession: persona.profession, country_bucket: bucket, is_ai_geo: persona.is_ai_geo };
                 const text = resolvePersonalVignetteText(pv, ctx);
-                if (!text) {
-                    nullResolutions.push({
-                        node: nodeId,
-                        edge: edgeId,
-                        persona: `${persona.profession} in ${persona.country}`,
-                    });
-                }
+                if (!text) nullResolutions.push({ node: nodeId, edge: edgeId, persona: `${persona.profession} in ${persona.country}` });
             }
         }
     }
+    for (const nr of nullResolutions) warnings.push(`[vignettes] ${nr.node}.${nr.edge}: resolves to null for ${nr.persona}`);
 
-    for (const nr of nullResolutions) {
-        warnings.push(`[vignettes] ${nr.node}.${nr.edge}: resolves to null for ${nr.persona}`);
-    }
-
-    // --- Check 3: Coverage — which nodes have personalVignettes ---
-    const nodesWithVignettes = new Set();
-    const nodesWithoutVignettes = new Set();
-    for (const node of NODES) {
-        if (node.derived) continue;
-        if (!node.edges) continue;
-        let hasAny = false;
-        for (const edge of node.edges) {
-            const narr = narrative[node.id];
-            const narrEdge = narr && narr.values && narr.values[edge.id];
-            if (narrEdge && narrEdge.personalVignette) {
-                hasAny = true;
-                break;
-            }
-        }
-        if (hasAny) {
-            nodesWithVignettes.add(node.id);
-        } else {
-            nodesWithoutVignettes.add(node.id);
-        }
-    }
-
-    // --- Check 4: Token validation — {country} and {profession} are valid ---
+    // Token validation
     for (const [nodeId, node] of Object.entries(narrative)) {
         if (!node.values) continue;
         for (const [edgeId, edge] of Object.entries(node.values)) {
@@ -770,16 +438,117 @@ function runVignetteValidation() {
         }
     }
 
+    // Coverage
+    const nodesWithVignettes = new Set();
+    const nodesWithoutVignettes = new Set();
+    for (const node of NODES) {
+        if (node.derived) continue;
+        if (!node.edges) continue;
+        let hasAny = false;
+        for (const edge of node.edges) {
+            const narr = narrative[node.id];
+            if (narr && narr.values && narr.values[edge.id] && narr.values[edge.id].personalVignette) { hasAny = true; break; }
+        }
+        (hasAny ? nodesWithVignettes : nodesWithoutVignettes).add(node.id);
+    }
+
     return { errors, warnings, totalVignettes, withWhen, nodesWithVignettes, nodesWithoutVignettes };
 }
 
-function printPhase4(result) {
-    if (result.errors.length === 0 && result.warnings.length === 0) {
-        console.log('  ✓ All vignette structural checks passed');
-    }
-    for (const e of result.errors) console.log(`  ✗ ${e}`);
-    for (const w of result.warnings) console.log(`  ⚠ ${w}`);
+// ════════════════════════════════════════════════════════
+// Reporting
+// ════════════════════════════════════════════════════════
 
+function printPhase1({ errors, circularWarnings }) {
+    if (errors.length === 0) {
+        console.log('  OK — All static checks passed');
+    } else {
+        console.log(`  ${errors.length} error(s):`);
+        for (const e of errors) console.log('    ' + e);
+    }
+    if (circularWarnings.length > 0) {
+        console.log(`  ${circularWarnings.length} circular dependency warning(s):`);
+        for (const w of circularWarnings) console.log('    ' + w);
+    }
+}
+
+function printPhase2(result) {
+    const { violations, edgesReached, visited, terminals, deadEnds, elapsed } = result;
+
+    const cats = [
+        { name: 'Dead ends (no outcome)', items: violations.deadEnd },
+        { name: 'Re-derived dead ends (derivation reveals question)', items: violations.reDerivedDeadEnd },
+        { name: 'Ambiguous (multiple outcomes)', items: violations.ambiguous },
+        { name: 'Stuck nodes (visible, 0 enabled edges)', items: violations.stuck },
+        { name: 'Single option (not locked)', items: violations.singleOption },
+        { name: 'Click erased', items: [...violations.clickErased.values()] },
+        { name: 'Stack integrity (displayOrder != stack order)', items: violations.stackIntegrity },
+    ];
+
+    let total = 0;
+    for (const cat of cats) {
+        if (cat.items.length === 0) continue;
+        total += cat.items.length;
+        console.log(`\n  ${cat.name}: ${cat.items.length}`);
+        const shown = cat.items.slice(0, 5);
+        for (const item of shown) {
+            if (item.hiddenQuestion) {
+                console.log(`    splits: ${item.splits.join(', ')} → hidden: ${item.hiddenQuestion}`);
+            } else if (item.expected) {
+                console.log(`    expected: [${item.expected.join(', ')}]`);
+                console.log(`    actual:   [${item.actual.join(', ')}]`);
+            } else if (item.node && item.edge) {
+                console.log(`    ${item.node} -> ${item.edge}`);
+            } else if (item.outcomes) {
+                console.log(`    outcomes: ${item.outcomes.join(', ')}`);
+            } else if (item.sel) {
+                const rs = resolvedState(item.sel);
+                const parts = [];
+                for (const dim of dimOrder) {
+                    const v = rs[dim];
+                    if (v === undefined) continue;
+                    if (item.superSet && item.superSet.has(dim)) { parts.push(`${dim}=*`); continue; }
+                    parts.push(`${dim}=${v}`);
+                }
+                console.log(`    ${parts.join(', ').substring(0, 120)}...`);
+            }
+            if (item.url) console.log(`    ${item.url}`);
+        }
+        if (cat.items.length > 5) console.log(`    ... and ${cat.items.length - 5} more`);
+    }
+
+    // Edge coverage
+    let totalEdges = 0, reached = 0;
+    const unreached = [];
+    for (const node of NODES) {
+        if (!node.edges) continue;
+        for (const edge of node.edges) {
+            totalEdges++;
+            if (edgesReached.has(`${node.id}=${edge.id}`)) reached++;
+            else unreached.push({ node: node.id, edge: edge.id, derived: !!node.derived });
+        }
+    }
+    console.log(`\n  Edge coverage: ${reached}/${totalEdges} (${(100*reached/totalEdges).toFixed(1)}%)`);
+    const unreachedChoice = unreached.filter(u => !u.derived);
+    if (unreachedChoice.length > 0 && unreachedChoice.length <= 20) {
+        console.log(`  Unreached non-derived edges (${unreachedChoice.length}):`);
+        for (const u of unreachedChoice) console.log(`    ${u.node} -> ${u.edge}`);
+    } else if (unreachedChoice.length > 20) {
+        console.log(`  Unreached non-derived edges: ${unreachedChoice.length} (too many to list)`);
+    }
+
+    if (total === 0) {
+        console.log('\n  OK — No violations found');
+    }
+    return total;
+}
+
+function printPhase3(result) {
+    if (result.errors.length === 0 && result.warnings.length === 0) {
+        console.log('  OK — All vignette checks passed');
+    }
+    for (const e of result.errors) console.log(`  ERROR: ${e}`);
+    for (const w of result.warnings) console.log(`  WARN: ${w}`);
     console.log(`\n  Personal vignettes: ${result.totalVignettes} total (${result.withWhen} customized)`);
     console.log(`  Nodes with vignettes: ${result.nodesWithVignettes.size} / ${result.nodesWithVignettes.size + result.nodesWithoutVignettes.size}`);
     if (result.nodesWithoutVignettes.size > 0 && result.nodesWithoutVignettes.size <= 30) {
@@ -787,25 +556,20 @@ function printPhase4(result) {
     }
 }
 
-// --- Main ---
-const arg = process.argv[2];
+// ════════════════════════════════════════════════════════
+// Main
+// ════════════════════════════════════════════════════════
 
-if (arg === 'sample') {
-    const n = parseInt(process.argv[3]) || 5;
-    console.log('Singularity Map — Path Sampler\n');
-    samplePaths(n);
-    process.exit(0);
-}
+const arg = process.argv[2];
 
 console.log('Singularity Map — Validation Report');
 console.log('═'.repeat(50));
-console.log(`${NODES.filter(d => !d.derived && (d.priority || 0) < 2).length} non-derived nodes, ${templatesList.length} outcomes, ${NODES.length} total nodes\n`);
+console.log(`${NODES.length} nodes, ${templates.length} outcome templates\n`);
 
 // Phase 1
 const t0 = Date.now();
 const phase1 = runStaticAnalysis();
-const phase1ms = Date.now() - t0;
-console.log(`Phase 1: Static Analysis (${phase1ms}ms)`);
+console.log(`Phase 1: Static Analysis (${Date.now() - t0}ms)`);
 printPhase1(phase1);
 console.log();
 
@@ -814,32 +578,24 @@ if (arg === '--quick') {
 }
 
 // Phase 2
-const t1 = Date.now();
-const phase2 = runExplorer();
-const phase2ms = ((Date.now() - t1) / 1000).toFixed(1);
-console.log(`Phase 2: Explorer Simulation (${phase2ms}s, ${phase2.totalStates} states, ${phase2.totalLeaves} leaves)`);
+console.log('Phase 2: DFS Traversal');
+const phase2 = runTraversal();
+console.log(`  ${phase2.visited} states, ${phase2.terminals.length} terminals, ${(phase2.elapsed/1000).toFixed(1)}s`);
 const violationCount = printPhase2(phase2);
 console.log();
 
-// Phase 3 — Coverage
-console.log('Phase 3: Edge Coverage');
-printPhase3(phase2.coverage);
-console.log();
-
-// Phase 4 — Personal Vignette Validation
-const t4 = Date.now();
-const phase4 = runVignetteValidation();
-const phase4ms = Date.now() - t4;
-console.log(`Phase 4: Personal Vignette Validation (${phase4ms}ms)`);
-printPhase4(phase4);
+// Phase 3
+const t3 = Date.now();
+const phase3 = runVignetteValidation();
+console.log(`Phase 3: Personal Vignette Validation (${Date.now() - t3}ms)`);
+printPhase3(phase3);
 console.log();
 
 // Summary
-const totalIssues = phase1.errors.length + violationCount + phase4.errors.length;
+const totalIssues = phase1.errors.length + violationCount + phase3.errors.length;
 if (totalIssues === 0) {
-    console.log('✓ All checks passed!');
+    console.log('All checks passed!');
 } else {
-    console.log(`${phase1.errors.length + phase4.errors.length} error(s), ${violationCount} violation(s)`);
+    console.log(`${phase1.errors.length} static error(s), ${violationCount} DFS violation(s), ${phase3.errors.length} vignette error(s)`);
 }
-
-process.exit(phase1.errors.length || violationCount || phase4.errors.length ? 1 : 0);
+process.exit(totalIssues ? 1 : 0);
