@@ -281,7 +281,8 @@ function _buildDerivTables() {
         };
     }
 
-    // Chain tables for decel_outcome and decel_align_progress
+    // Chain tables for decel_outcome and decel_align_progress (production graph only)
+    if (!NODE_MAP['decel_outcome'] || !NODE_MAP['decel_align_progress']) return;
     const steps = [
         ['decel_2mo_action', 'decel_2mo_progress'],
         ['decel_4mo_action', 'decel_4mo_progress'],

@@ -1,0 +1,73 @@
+{
+  "nodes": [
+    {
+      "id": "mode", "label": "Mode",
+      "edges": [
+        { "id": "fast", "label": "Fast" },
+        { "id": "slow", "label": "Slow" }
+      ]
+    },
+    {
+      "id": "flavor", "label": "Flavor (irrelevant — never referenced)",
+      "edges": [
+        { "id": "vanilla", "label": "Vanilla" },
+        { "id": "chocolate", "label": "Chocolate" }
+      ]
+    },
+    {
+      "id": "approach", "label": "Approach (4 edges, 2 classes)",
+      "edges": [
+        { "id": "alpha", "label": "Alpha" },
+        { "id": "beta", "label": "Beta" },
+        { "id": "gamma", "label": "Gamma" },
+        { "id": "delta", "label": "Delta" }
+      ]
+    },
+    {
+      "id": "intensity", "label": "Intensity (depends on mode)",
+      "edges": [
+        { "id": "low", "label": "Low" },
+        { "id": "high", "label": "High", "disabledWhen": [{ "mode": ["slow"] }] }
+      ]
+    },
+    {
+      "id": "stage", "label": "Stage (depends on approach class)",
+      "edges": [
+        { "id": "early", "label": "Early", "disabledWhen": [{ "approach": ["gamma", "delta"] }] },
+        { "id": "late", "label": "Late" }
+      ]
+    },
+    {
+      "id": "cap", "label": "Derived capability",
+      "derived": true,
+      "deriveWhen": [
+        { "match": { "mode": ["fast"], "intensity": ["high"] }, "value": "super" },
+        { "match": { "mode": ["fast"] }, "value": "strong" },
+        { "match": {}, "value": "normal" }
+      ],
+      "edges": [
+        { "id": "super", "label": "Super" },
+        { "id": "strong", "label": "Strong" },
+        { "id": "normal", "label": "Normal" }
+      ]
+    },
+    {
+      "id": "outcome_node", "label": "Outcome path",
+      "activateWhen": [{ "cap": ["super", "strong"] }],
+      "edges": [
+        { "id": "victory", "label": "Victory", "disabledWhen": [{ "cap": { "not": ["super"] } }] },
+        { "id": "draw", "label": "Draw" }
+      ]
+    }
+  ],
+  "outcomes": {
+    "templates": [
+      {
+        "id": "result",
+        "reachable": [{ "mode": ["fast"] }],
+        "primaryDimension": "approach",
+        "variants": { "alpha": {}, "beta": {}, "gamma": {}, "delta": {} }
+      }
+    ]
+  }
+}

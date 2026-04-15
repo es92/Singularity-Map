@@ -11,42 +11,54 @@ const { pipeline } = require('stream/promises');
 const { templateMatches } = require('./engine.js');
 const { computeReachability, resolvedState } = require('./graph-walker.js');
 
+function buildMatchersAndCompute(templates, opts = {}) {
+    const primaryDims = new Set();
+    const entries = [];
+    for (const t of templates) {
+        const variants = t.variants && typeof t.variants === 'object' ? Object.keys(t.variants) : null;
+        if (variants && variants.length > 0 && t.primaryDimension) {
+            primaryDims.add(t.primaryDimension);
+            for (const vk of variants) {
+                entries.push({
+                    id: t.id + '--' + vk,
+                    matcher: (sel) => {
+                        const state = resolvedState(sel);
+                        return templateMatches(t, state) && state[t.primaryDimension] === vk;
+                    },
+                });
+            }
+        } else {
+            entries.push({
+                id: t.id,
+                matcher: (sel) => templateMatches(t, resolvedState(sel)),
+            });
+        }
+    }
+
+    if (entries.length > 31) throw new Error(`${entries.length} matchers exceeds 31-bit bitmask limit`);
+
+    const matchers = entries.map(e => e.matcher);
+    const quiet = opts.quiet || false;
+    if (!quiet) {
+        console.log(`Single walk with ${matchers.length} variant-aware matchers...`);
+        console.log(`Primary dimensions (no class merge): ${[...primaryDims].join(', ')}`);
+    }
+
+    const result = computeReachability({ matchers, noClassMergeDims: primaryDims, quiet });
+    return { ...result, entries, primaryDims };
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { buildMatchersAndCompute };
+}
+
+if (require.main === module) {
+
 const outcomes = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'outcomes.json'), 'utf8'));
 const outDir = path.join(__dirname, 'data', 'reach');
 if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
-const templates = outcomes.templates;
-
-const primaryDims = new Set();
-const entries = [];
-for (const t of templates) {
-    const variants = t.variants && typeof t.variants === 'object' ? Object.keys(t.variants) : null;
-    if (variants && variants.length > 0 && t.primaryDimension) {
-        primaryDims.add(t.primaryDimension);
-        for (const vk of variants) {
-            entries.push({
-                id: t.id + '--' + vk,
-                matcher: (sel) => {
-                    const state = resolvedState(sel);
-                    return templateMatches(t, state) && state[t.primaryDimension] === vk;
-                },
-            });
-        }
-    } else {
-        entries.push({
-            id: t.id,
-            matcher: (sel) => templateMatches(t, resolvedState(sel)),
-        });
-    }
-}
-
-if (entries.length > 31) throw new Error(`${entries.length} matchers exceeds 31-bit bitmask limit`);
-
-const matchers = entries.map(e => e.matcher);
-console.log(`Single walk with ${matchers.length} variant-aware matchers...`);
-console.log(`Primary dimensions (no class merge): ${[...primaryDims].join(', ')}`);
-
-const { reachMap } = computeReachability({ matchers, noClassMergeDims: primaryDims });
+const { reachMap, entries } = buildMatchersAndCompute(outcomes.templates);
 
 console.log(`\nWriting ${entries.length} files (reachable irrKeys only)...`);
 
@@ -84,3 +96,5 @@ Promise.all(writes).then(() => {
     console.log(`  Raw total: ${(totalRaw / 1024).toFixed(0)}KB`);
     console.log(`  Gzipped total: ${(totalGz / 1024).toFixed(0)}KB`);
 });
+
+}

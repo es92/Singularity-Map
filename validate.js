@@ -21,16 +21,22 @@ const {
 const { walk, resolvedState, dimOrder, classes, derivedDimSet } = require('./graph-walker.js');
 const { resolvePersonalVignetteText, getCountryBucket } = require('./milestone-utils.js');
 
-const outcomes = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/outcomes.json'), 'utf8'));
-const narrative = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/narrative.json'), 'utf8'));
-const personalData = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/personal.json'), 'utf8'));
-const templates = outcomes.templates;
+let _outcomes, _narrative, _personalData, _defaultTemplates;
+function _loadData() {
+    if (!_outcomes) {
+        _outcomes = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/outcomes.json'), 'utf8'));
+        _narrative = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/narrative.json'), 'utf8'));
+        _personalData = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/personal.json'), 'utf8'));
+        _defaultTemplates = _outcomes.templates;
+    }
+}
 
 // ════════════════════════════════════════════════════════
 // Phase 1 — Static Analysis (ported from validate.js)
 // ════════════════════════════════════════════════════════
 
-function runStaticAnalysis() {
+function runStaticAnalysis(templates) {
+    if (!templates) { _loadData(); templates = _defaultTemplates; }
     const errors = [];
     const metaNodes = new Set(NODES.map(d => d.id));
 
@@ -180,7 +186,9 @@ function selToUrl(sel) {
 // Phase 2 — DFS Traversal with Invariant Checks
 // ════════════════════════════════════════════════════════
 
-function runTraversal() {
+function runTraversal(templates, opts = {}) {
+    if (!templates) { _loadData(); templates = _defaultTemplates; }
+    const quiet = opts.quiet || false;
     const violations = {
         deadEnd: [],
         reDerivedDeadEnd: [],
@@ -278,7 +286,7 @@ function runTraversal() {
         return matched.length > 0;
     }
 
-    const result = walk({ isTerminal, onVisit, onPush });
+    const result = walk({ isTerminal, onVisit, onPush, quiet });
 
     for (const de of result.deadEnds) {
         violations.deadEnd.push({ ...de, url: selToUrl(de.sel) });
@@ -333,6 +341,8 @@ const TEST_PERSONAS = [
 ];
 
 function runVignetteValidation() {
+    _loadData();
+    const narrative = _narrative, personalData = _personalData;
     const errors = [];
     const warnings = [];
 
@@ -515,9 +525,21 @@ function printPhase3(result) {
 }
 
 // ════════════════════════════════════════════════════════
+// Exports
+// ════════════════════════════════════════════════════════
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { runStaticAnalysis, runTraversal, runVignetteValidation };
+}
+
+// ════════════════════════════════════════════════════════
 // Main
 // ════════════════════════════════════════════════════════
 
+if (require.main === module) {
+
+_loadData();
+const templates = _defaultTemplates;
 const arg = process.argv[2];
 
 console.log('Singularity Map — Validation Report');
@@ -526,7 +548,7 @@ console.log(`${NODES.length} nodes, ${templates.length} outcome templates\n`);
 
 // Phase 1
 const t0 = Date.now();
-const phase1 = runStaticAnalysis();
+const phase1 = runStaticAnalysis(templates);
 console.log(`Phase 1: Static Analysis (${Date.now() - t0}ms)`);
 printPhase1(phase1);
 console.log();
@@ -537,7 +559,7 @@ if (arg === '--quick') {
 
 // Phase 2
 console.log('Phase 2: DFS Traversal');
-const phase2 = runTraversal();
+const phase2 = runTraversal(templates);
 console.log(`  ${phase2.visited} states, ${phase2.terminals.length} terminals, ${(phase2.elapsed/1000).toFixed(1)}s`);
 const violationCount = printPhase2(phase2);
 console.log();
@@ -557,3 +579,5 @@ if (totalIssues === 0) {
     console.log(`${phase1.errors.length} static error(s), ${violationCount} DFS violation(s), ${phase3.errors.length} vignette error(s)`);
 }
 process.exit(totalIssues ? 1 : 0);
+
+}

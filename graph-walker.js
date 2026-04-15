@@ -865,23 +865,21 @@ function computeReachability(opts = {}) {
         setRvCache(_activeRvMap);
         const { ck, sk: key } = classAndSuperKey(sel, superSet);
 
-        if (visited.has(key)) {
-            setRvCache(null);
-            return skReach.get(key) || 0;
-        }
-        visited.add(key);
-        stateCount++;
-
         const nextNode = pickNextNode(sel, ck);
         const enabled = nextNode ? nextNode.edges.filter(e => !cachedIsEdgeDisabled(ck, sel, nextNode, e)) : [];
         setRvCache(null);
 
         if (!nextNode || enabled.length === 0) {
             const mask = checkTerminals(sel);
-            skReach.set(key, mask);
             recordReach(sel, superSet, 0);
             return mask;
         }
+
+        if (visited.has(key)) {
+            return skReach.get(key) || 0;
+        }
+        visited.add(key);
+        stateCount++;
 
         for (const superDim of superSet) {
             if (needsCollapse(sel, superDim, nextNode, ck)) {

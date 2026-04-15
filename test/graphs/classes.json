@@ -1,0 +1,35 @@
+{
+  "nodes": [
+    {
+      "id": "A", "label": "Dimension A (4 edges, collapse to 1 class in simple graphs)",
+      "edges": [
+        { "id": "a1", "label": "A1" },
+        { "id": "a2", "label": "A2" },
+        { "id": "a3", "label": "A3" },
+        { "id": "a4", "label": "A4" }
+      ]
+    },
+    {
+      "id": "B", "label": "Dimension B",
+      "edges": [
+        { "id": "b1", "label": "B1", "disabledWhen": [{ "A": ["a1", "a2"] }] },
+        { "id": "b2", "label": "B2" }
+      ]
+    },
+    {
+      "id": "C", "label": "Dimension C",
+      "edges": [
+        { "id": "c1", "label": "C1" },
+        { "id": "c2", "label": "C2" }
+      ]
+    }
+  ],
+  "outcomes": {
+    "templates": [
+      {
+        "id": "any-terminal",
+        "reachable": [{}]
+      }
+    ]
+  }
+}
