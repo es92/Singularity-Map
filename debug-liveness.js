@@ -1,5 +1,9 @@
 const { NODES, NODE_MAP } = require('./graph.js');
-const { resolvedVal, isNodeVisible, isEdgeDisabled, cleanSelection, createStack, push, currentState } = require('./engine.js');
+const { resolvedVal, setRvCache, isNodeVisible, isEdgeDisabled, cleanSelection, createStack, push, currentState } = require('./engine.js');
+
+let _activeRvMap = null;
+function pauseRvCache() { setRvCache(null); }
+function resumeRvCache() { setRvCache(_activeRvMap); }
 
 function dfsPush(stk, nodeId, edgeId) {
     const existingIdx = stk.findIndex(e => e.nodeId === nodeId);
@@ -286,6 +290,7 @@ function isDerivedUnsettled(sel, dim, ck) {
 function _isDerivedUnsettled(sel, dim) {
     const node = NODE_MAP[dim];
     if (!node || !node.deriveWhen) return false;
+    pauseRvCache();
     const currentVal = resolvedVal(sel, dim);
     const inputs = new Set();
     for (const rule of node.deriveWhen) {
@@ -300,9 +305,10 @@ function _isDerivedUnsettled(sel, dim) {
             sel[k] = v;
             const testVal = resolvedVal(sel, dim);
             delete sel[k];
-            if (testVal !== currentVal) return true;
+            if (testVal !== currentVal) { resumeRvCache(); return true; }
         }
     }
+    resumeRvCache();
     return false;
 }
 
@@ -416,6 +422,7 @@ function _couldAffect(sel, dim, derivedDim) {
     const results = new Set();
     const saved = sel[dim];
     const hadKey = saved !== undefined;
+    pauseRvCache();
     if (!hadKey) {
         results.add(resolvedVal(sel, derivedDim));
     }
@@ -424,10 +431,12 @@ function _couldAffect(sel, dim, derivedDim) {
         results.add(resolvedVal(sel, derivedDim));
         if (results.size > 1) {
             if (hadKey) sel[dim] = saved; else delete sel[dim];
+            resumeRvCache();
             return true;
         }
     }
     if (hadKey) sel[dim] = saved; else delete sel[dim];
+    resumeRvCache();
     return false;
 }
 
@@ -627,19 +636,23 @@ function runSuperDfs(label) {
     const terminals = [];
 
     let tPush = 0, tCk = 0, tPick = 0, tCollapse = 0;
+    _activeRvMap = new Map();
 
     function dfs(stk, superSet) {
         const sel = currentState(stk);
+        _activeRvMap.clear();
+        setRvCache(_activeRvMap);
         let t0p = performance.now();
         const { ck, sk: key } = classAndSuperKey(sel, superSet);
         tCk += performance.now() - t0p;
-        if (visited.has(key)) return;
+        if (visited.has(key)) { setRvCache(null); return; }
         visited.add(key);
         stateCount++;
 
         t0p = performance.now();
         const nextNode = pickNextNode(sel, ck);
         tPick += performance.now() - t0p;
+        setRvCache(null);
         if (!nextNode) {
             terminals.push({ sel: { ...sel }, key, type: 'leaf', boundaryNode: null, superSet: new Set(superSet) });
             return;

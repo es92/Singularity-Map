@@ -11,15 +11,70 @@ const { SCENARIO, NODES, NODE_MAP } = (typeof module !== 'undefined' && module.e
 // Derivation engine (declarative)
 // ════════════════════════════════════════════════════════
 
+// Pre-compilation: type tags for match entries
+const _MT = 0, _MF = 1, _MN = 2, _MA = 3, _ME = 4;
+// Pre-compilation: type tags for condition entries
+const _CT = 0, _CF = 1, _CN = 2, _CR = 3, _CI = 4;
+
+function _precompile() {
+    const compileRule = (rule) => {
+        if (!rule.match) { rule._mk = null; return; }
+        const keys = [], types = [], vals = [];
+        for (const k of Object.keys(rule.match)) {
+            const v = rule.match[k];
+            keys.push(k);
+            if (v === true) { types.push(_MT); vals.push(null); }
+            else if (v === false) { types.push(_MF); vals.push(null); }
+            else if (v && typeof v === 'object' && !Array.isArray(v) && v.not) { types.push(_MN); vals.push(v.not); }
+            else if (Array.isArray(v)) { types.push(_MA); vals.push(v); }
+            else { types.push(_ME); vals.push(v); }
+        }
+        rule._mk = keys; rule._mt = types; rule._mv = vals;
+    };
+    const compileCond = (cond) => {
+        const keys = [], types = [], vals = [];
+        for (const k of Object.keys(cond)) {
+            if (k === 'reason' || k.startsWith('_')) continue;
+            const v = cond[k];
+            keys.push(k);
+            if (v === true) { types.push(_CT); vals.push(null); }
+            else if (v === false) { types.push(_CF); vals.push(null); }
+            else if (v && typeof v === 'object' && !Array.isArray(v) && v.not) {
+                types.push(v.required ? _CR : _CN);
+                vals.push(v.not);
+            }
+            else { types.push(_CI); vals.push(Array.isArray(v) ? v : [v]); }
+        }
+        cond._ck = keys; cond._ct = types; cond._cv = vals;
+    };
+    for (const node of NODES) {
+        if (node.deriveWhen) for (const rule of node.deriveWhen) compileRule(rule);
+        if (node.activateWhen) for (const c of node.activateWhen) compileCond(c);
+        if (node.hideWhen) for (const c of node.hideWhen) compileCond(c);
+        if (node.edges) for (const e of node.edges) {
+            if (e.disabledWhen) for (const c of e.disabledWhen) compileCond(c);
+            if (e.requires) {
+                const cs = Array.isArray(e.requires) ? e.requires : [e.requires];
+                for (const c of cs) compileCond(c);
+            }
+        }
+    }
+}
+_precompile();
+
 function matchesDerivation(rule, sel) {
-    if (!rule.match) return true;
-    for (const [key, val] of Object.entries(rule.match)) {
-        const eff = resolvedVal(sel, key);
-        if (val === true)  { if (!eff) return false; }
-        else if (val === false) { if (eff) return false; }
-        else if (val && typeof val === 'object' && !Array.isArray(val) && val.not) {
-            if (eff && val.not.includes(eff)) return false;
-        } else if (Array.isArray(val) ? !val.includes(eff) : eff !== val) return false;
+    const keys = rule._mk;
+    if (!keys) return true;
+    const types = rule._mt, vals = rule._mv;
+    for (let i = 0; i < keys.length; i++) {
+        const eff = resolvedVal(sel, keys[i]);
+        switch (types[i]) {
+            case _MT: if (!eff) return false; break;
+            case _MF: if (eff) return false; break;
+            case _MN: if (eff && vals[i].includes(eff)) return false; break;
+            case _MA: if (!vals[i].includes(eff)) return false; break;
+            case _ME: if (eff !== vals[i]) return false; break;
+        }
     }
     return true;
 }
@@ -34,15 +89,25 @@ function applyDerivations(derivations, sel, k) {
     return undefined;
 }
 
-const _computing = new Set();
+const _computing = Object.create(null);
+let _rvCache = null;
+function setRvCache(cache) { _rvCache = cache; }
+
 function resolvedVal(sel, k) {
-    if (_computing.has(k)) return sel[k];
+    if (_computing[k]) return sel[k];
     const node = NODE_MAP[k];
     if (node && node.deriveWhen) {
-        _computing.add(k);
+        if (_rvCache) {
+            const c = _rvCache.get(k);
+            if (c !== undefined) return c;
+        }
+        _computing[k] = true;
         const result = applyDerivations(node.deriveWhen, sel, k);
-        _computing.delete(k);
-        if (result !== undefined) return result;
+        _computing[k] = false;
+        if (result !== undefined) {
+            if (_rvCache) _rvCache.set(k, result);
+            return result;
+        }
     }
     return sel[k];
 }
@@ -52,17 +117,32 @@ function resolvedVal(sel, k) {
 // ════════════════════════════════════════════════════════
 
 function matchCondition(sel, cond) {
-    for (const [k, allowed] of Object.entries(cond)) {
-        if (k === 'reason') continue;
-        const v = resolvedVal(sel, k);
-        if (allowed === true)  { if (v == null) return false; continue; }
-        if (allowed === false) { if (v != null) return false; continue; }
-        if (allowed && allowed.not) {
-            if (allowed.required && v == null) return false;
-            if (v && allowed.not.includes(v)) return false;
-            continue;
+    const keys = cond._ck;
+    if (!keys) {
+        for (const [k, allowed] of Object.entries(cond)) {
+            if (k === 'reason') continue;
+            const v = resolvedVal(sel, k);
+            if (allowed === true)  { if (v == null) return false; continue; }
+            if (allowed === false) { if (v != null) return false; continue; }
+            if (allowed && allowed.not) {
+                if (allowed.required && v == null) return false;
+                if (v && allowed.not.includes(v)) return false;
+                continue;
+            }
+            if (!v || !allowed.includes(v)) return false;
         }
-        if (!v || !allowed.includes(v)) return false;
+        return true;
+    }
+    const types = cond._ct, vals = cond._cv;
+    for (let i = 0; i < keys.length; i++) {
+        const v = resolvedVal(sel, keys[i]);
+        switch (types[i]) {
+            case _CT: if (v == null) return false; break;
+            case _CF: if (v != null) return false; break;
+            case _CN: if (v && vals[i].includes(v)) return false; break;
+            case _CR: if (v == null || vals[i].includes(v)) return false; break;
+            case _CI: if (!v || !vals[i].includes(v)) return false; break;
+        }
     }
     return true;
 }
@@ -340,7 +420,7 @@ function resolveContextWhen(sel, narr) {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { NODES, NODE_MAP,
-        matchCondition, resolvedVal, isNodeVisible, isNodeActivatedByRules, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
+        matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeActivatedByRules, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         cleanSelection, resolvedState,
         templateMatches, templatePartialMatch, resolveContextWhen,
         createStack, push, pop, popTo, currentState, stackHas, displayOrder };
