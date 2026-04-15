@@ -7,3 +7,9 @@ tests/audit-report.json
 .claude
 .DS_Store
 .cursor
+research/*.pdf
+research/*.aux
+research/*.log
+research/*.toc
+research/*.out
+research/*.synctex.gz
