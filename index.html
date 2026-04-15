@@ -705,6 +705,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="graph.js"></script>
     <script src="engine.js"></script>
+    <script src="graph-walker.js"></script>
     <script src="timeline-animator.js"></script>
     <script>
     (function () {
@@ -1416,426 +1417,62 @@
                 return lockedId ? templatesMap[lockedId] : null;
             }
 
-            // ─── Forward DFS with effective-value caching ────────────
+            // ─── Precomputed reachability lookup ────────────
+            let _reachSet = null;
+            let _reachSetId = '';
+            let _reachLoading = false;
 
-            function _keysFromCond(c) {
-                const keys = [];
-                for (const k of Object.keys(c)) {
-                    if (k === 'reason') continue;
-                    keys.push(k);
-                }
-                return keys;
-            }
-
-            function _computeRelevantDims(template, variantKey) {
-                const NODES = Engine.NODES;
-                const NODE_MAP = Engine.NODE_MAP;
-
-                const branchRelevant = new Set();
-                if (!template.reachable) return { branchRelevant, keyRelevant: [], equivMap: new Map(), rawKeyDims: new Set() };
-
-                for (const cond of template.reachable) {
-                    for (const k of Object.keys(cond)) {
-                        if (k === '_not') { for (const nk of Object.keys(cond._not)) branchRelevant.add(nk); }
-                        else branchRelevant.add(k);
-                    }
-                }
-                if (variantKey && template.primaryDimension) branchRelevant.add(template.primaryDimension);
-
-                let changed = true;
-                while (changed) {
-                    changed = false;
-                    for (const nid of [...branchRelevant]) {
-                        const node = NODE_MAP[nid];
-                        if (!node) continue;
-                        if (node.deriveWhen) for (const r of node.deriveWhen) {
-                            if (r.match) for (const k of _keysFromCond(r.match)) { if (!branchRelevant.has(k)) { branchRelevant.add(k); changed = true; } }
-                            if (r.fromState && !branchRelevant.has(r.fromState)) { branchRelevant.add(r.fromState); changed = true; }
+            function _loadReachMap(templateId) {
+                if (_reachSetId === templateId && (_reachSet || _reachLoading)) return;
+                _reachSetId = templateId;
+                _reachSet = null;
+                if (!templateId) return;
+                _reachLoading = true;
+                fetch('data/reach/' + encodeURIComponent(templateId) + '.json')
+                    .then(r => r.json())
+                    .then(arr => {
+                        if (_reachSetId === templateId) {
+                            _reachSet = new Set(arr);
+                            _reachLoading = false;
+                            update();
                         }
-                        if (node.activateWhen) for (const c of node.activateWhen) {
-                            for (const k of _keysFromCond(c)) { if (!branchRelevant.has(k)) { branchRelevant.add(k); changed = true; } }
-                        }
-                        if (node.hideWhen) for (const c of node.hideWhen) {
-                            for (const k of _keysFromCond(c)) { if (!branchRelevant.has(k)) { branchRelevant.add(k); changed = true; } }
-                        }
-                        if (node.edges) for (const e of node.edges) {
-                            const conds = [];
-                            if (e.disabledWhen) conds.push(...e.disabledWhen);
-                            if (e.requires) conds.push(...(Array.isArray(e.requires) ? e.requires : [e.requires]));
-                            for (const c of conds) {
-                                for (const k of _keysFromCond(c)) { if (!branchRelevant.has(k)) { branchRelevant.add(k); changed = true; } }
-                            }
-                        }
-                    }
-                }
-
-                const subsumed = new Set();
-                for (const nid of branchRelevant) {
-                    const node = NODE_MAP[nid];
-                    if (!node || !node.deriveWhen) continue;
-                    for (const r of node.deriveWhen) {
-                        if (r.match) for (const k of _keysFromCond(r.match)) subsumed.add(k);
-                        if (r.fromState) subsumed.add(r.fromState);
-                    }
-                }
-                const directlyReferenced = new Set();
-                for (const nid of branchRelevant) {
-                    const node = NODE_MAP[nid];
-                    if (!node) continue;
-                    if (node.activateWhen) for (const c of node.activateWhen) {
-                        for (const k of _keysFromCond(c)) directlyReferenced.add(k);
-                    }
-                    if (node.hideWhen) for (const c of node.hideWhen) {
-                        for (const k of _keysFromCond(c)) directlyReferenced.add(k);
-                    }
-                    if (node.edges) for (const e of node.edges) {
-                        const conds = [];
-                        if (e.disabledWhen) conds.push(...e.disabledWhen);
-                        if (e.requires) conds.push(...(Array.isArray(e.requires) ? e.requires : [e.requires]));
-                        for (const c of conds) {
-                            for (const k of _keysFromCond(c)) directlyReferenced.add(k);
-                        }
-                    }
-                    if (node.deriveWhen) for (const r of node.deriveWhen) {
-                        if (r.match) for (const k of _keysFromCond(r.match)) directlyReferenced.add(k);
-                    }
-                }
-
-                const keyRelevantSet = new Set();
-                for (const nid of branchRelevant) {
-                    if (/^decel_\d+mo_/.test(nid)) continue;
-                    if (subsumed.has(nid) && !directlyReferenced.has(nid)) continue;
-                    keyRelevantSet.add(nid);
-                }
-                for (const cond of template.reachable) {
-                    for (const k of Object.keys(cond)) {
-                        if (k === '_not') { for (const nk of Object.keys(cond._not)) keyRelevantSet.add(nk); }
-                        else keyRelevantSet.add(k);
-                    }
-                }
-                if (variantKey && template.primaryDimension) keyRelevantSet.add(template.primaryDimension);
-                const keyRelevant = [...keyRelevantSet].sort();
-
-                const rawKeyDims = new Set();
-
-                const condValueLists = new Map();
-                for (const nid of branchRelevant) {
-                    const node = NODE_MAP[nid];
-                    if (!node) continue;
-                    const collectFromCond = (c) => {
-                        for (const [k, vals] of Object.entries(c)) {
-                            if (k === 'reason') continue;
-                            if (!keyRelevantSet.has(k)) continue;
-                            const nd = NODE_MAP[k];
-                            if (nd && nd.deriveWhen) continue;
-                            if (rawKeyDims.has(k)) continue;
-                            if (!condValueLists.has(k)) condValueLists.set(k, []);
-                            const key = Array.isArray(vals) ? vals.slice().sort().join(',') : String(vals);
-                            condValueLists.get(k).push(key);
-                        }
-                    };
-                    if (node.activateWhen) for (const c of node.activateWhen) collectFromCond(c);
-                    if (node.hideWhen) for (const c of node.hideWhen) collectFromCond(c);
-                    if (node.edges) for (const e of node.edges) {
-                        if (e.disabledWhen) for (const c of e.disabledWhen) collectFromCond(c);
-                        if (e.requires) for (const c of (Array.isArray(e.requires) ? e.requires : [e.requires])) collectFromCond(c);
-                    }
-                    if (node.deriveWhen) for (const r of node.deriveWhen) {
-                        if (r.match) collectFromCond(r.match);
-                    }
-                }
-
-                const equivMap = new Map();
-                for (const [dim, lists] of condValueLists) {
-                    const node = NODE_MAP[dim];
-                    if (!node || !node.edges) continue;
-                    const uniqueLists = [...new Set(lists)];
-                    const valSets = uniqueLists.map(l => new Set(l.split(',')));
-                    const signatureOf = (v) => valSets.map(s => s.has(v) ? '1' : '0').join('');
-                    const signatures = new Map();
-                    for (const e of node.edges) {
-                        const sig = signatureOf(e.id);
-                        if (!signatures.has(sig)) signatures.set(sig, signatures.size);
-                    }
-                    if (signatures.size < node.edges.length) {
-                        const sigMap = {};
-                        for (const e of node.edges) sigMap[e.id] = signatures.get(signatureOf(e.id));
-                        equivMap.set(dim, (v) => sigMap[v] !== undefined ? sigMap[v] : v);
-                    }
-                }
-
-                return { branchRelevant, keyRelevant, equivMap, rawKeyDims };
-            }
-
-            function _effectiveKey(sel, eff, keyRelevant, equivMap, rawKeyDims) {
-                let key = '';
-                for (const k of keyRelevant) {
-                    const v = eff[k];
-                    if (!v) continue;
-                    const eq = equivMap.get(k);
-                    key += k + '=' + (eq ? eq(v) : v) + '|';
-                }
-                return key;
-            }
-
-            function _couldDeriveTo(nodeId, allowed, sel) {
-                const node = Engine.NODE_MAP[nodeId];
-                if (!node || !node.deriveWhen) return false;
-                return node.deriveWhen.some(rule => {
-                    if (rule.value && allowed.includes(rule.value)) {
-                        if (!rule.match) return true;
-                        return Object.entries(rule.match).every(([tk, tv]) => {
-                            if (tk === 'reason') return true;
-                            const eff = Engine.resolvedVal(sel, tk);
-                            if (!eff) return true;
-                            if (Array.isArray(tv)) return tv.includes(eff);
-                            return true;
-                        });
-                    }
-                    if (rule.fromState) return !sel[rule.fromState] || allowed.includes(sel[rule.fromState]);
-                    if (rule.valueMap) return Object.values(rule.valueMap).some(v => allowed.includes(v));
-                    return false;
-                });
-            }
-
-            function _smartPartialMatch(template, eff, sel) {
-                if (!template.reachable) return true;
-                return template.reachable.some(cond => {
-                    for (const [k, allowed] of Object.entries(cond)) {
-                        if (k === '_not') continue;
-                        if (!eff[k]) continue;
-                        if (allowed.includes(eff[k])) continue;
-                        if (_derivableKeys.has(k) && _couldDeriveTo(k, allowed, sel)) continue;
-                        return false;
-                    }
-                    if (cond._not) {
-                        for (const [k, excluded] of Object.entries(cond._not)) {
-                            if (!eff[k]) continue;
-                            if (!excluded.includes(eff[k])) continue;
-                            if (_derivableKeys.has(k)) {
-                                const ne = (Engine.NODE_MAP[k].edges || []).map(e => e.id).filter(v => !excluded.includes(v));
-                                if (_couldDeriveTo(k, ne, sel)) continue;
-                            }
-                            return false;
-                        }
-                    }
-                    return true;
-                });
-            }
-
-            // ─── Dependency map for targeted cleanSelection ─────
-            const _cleanDeps = new Map();
-            (function _buildCleanDeps() {
-                const NODES = Engine.NODES;
-                const addDep = (dim, nodeId) => {
-                    if (!_cleanDeps.has(dim)) _cleanDeps.set(dim, []);
-                    const arr = _cleanDeps.get(dim);
-                    if (!arr.includes(nodeId)) arr.push(nodeId);
-                };
-                const extractDims = (cond) => {
-                    const dims = new Set();
-                    if (!cond) return dims;
-                    for (const k of Object.keys(cond)) {
-                        if (k === 'reason') continue;
-                        dims.add(k);
-                    }
-                    return dims;
-                };
-                for (const node of NODES) {
-                    const deps = new Set();
-                    if (node.activateWhen) for (const c of node.activateWhen) {
-                        for (const d of extractDims(c)) deps.add(d);
-                    }
-                    if (node.hideWhen) for (const c of node.hideWhen) {
-                        for (const d of extractDims(c)) deps.add(d);
-                    }
-                    if (node.priority && node.priority > 0) {
-                        const nodeIdx = NODES.indexOf(node);
-                        for (let i = 0; i < nodeIdx; i++) {
-                            const mid = NODES[i];
-                            if (!mid.derived && (mid.priority || 0) < node.priority) deps.add(mid.id);
-                        }
-                    }
-                    if (node.edges) for (const e of node.edges) {
-                        if (e.disabledWhen) for (const c of e.disabledWhen) for (const d of extractDims(c)) deps.add(d);
-                        if (e.requires) for (const c of (Array.isArray(e.requires) ? e.requires : [e.requires])) for (const d of extractDims(c)) deps.add(d);
-                    }
-                    if (node.deriveWhen) for (const r of node.deriveWhen) {
-                        if (r.match) for (const k of Object.keys(r.match)) { if (k !== 'reason') deps.add(k); }
-                        if (r.fromState) deps.add(r.fromState);
-                    }
-                    for (const dim of deps) addDep(dim, node.id);
-                }
-            })();
-
-            function _targetedClean(sel, changedDim) {
-                const affected = _cleanDeps.get(changedDim);
-                if (!affected) return;
-                const worklist = [];
-                for (const nid of affected) worklist.push(nid);
-                const inWorklist = new Set(worklist);
-                const derivedCascaded = new Set();
-                let idx = 0;
-                while (idx < worklist.length) {
-                    const nid = worklist[idx++];
-                    inWorklist.delete(nid);
-                    const node = Engine.NODE_MAP[nid];
-                    if (!node) continue;
-                    const oldVal = sel[nid];
-                    if (!Engine.isNodeVisible(sel, node)) {
-                        if (sel[nid] !== undefined && node.activateWhen &&
-                            !node.activateWhen.some(c => Engine.matchCondition(sel, c, node))) {
-                            delete sel[nid];
-                        }
-                    } else if (sel[nid]) {
-                        const edge = node.edges && node.edges.find(v => v.id === sel[nid]);
-                        if (edge && Engine.isEdgeDisabled(sel, node, edge)) delete sel[nid];
-                    }
-                    const shouldCascade = sel[nid] !== oldVal ||
-                        (node.deriveWhen && node.deriveWhen.length > 0 && !derivedCascaded.has(nid));
-                    if (shouldCascade) {
-                        if (node.deriveWhen) derivedCascaded.add(nid);
-                        const cascade = _cleanDeps.get(nid);
-                        if (cascade) for (const cid of cascade) {
-                            if (!inWorklist.has(cid)) { worklist.push(cid); inWorklist.add(cid); }
-                        }
-                    }
-                }
+                    })
+                    .catch(e => {
+                        console.warn('Failed to load reachability map for', templateId, e);
+                        _reachLoading = false;
+                    });
             }
 
             function _lightPush(sel, nodeId, edgeId) {
-                const newSel = Object.assign({}, sel);
-                newSel[nodeId] = edgeId;
-                _targetedClean(newSel, nodeId);
-                return newSel;
+                const next = Object.assign({}, sel);
+                next[nodeId] = edgeId;
+                if (!GraphWalker.safePushDims.has(nodeId)) {
+                    Engine.cleanSelection(next, { autoForce: false });
+                }
+                return next;
             }
 
-            function _fastKey(sel) {
-                let key = '';
-                for (const k of _keyRelevant) {
-                    const v = Engine.resolvedVal(sel, k);
-                    if (!v) continue;
-                    const eq = _equivMap.get(k);
-                    key += k + '=' + (eq ? eq(v) : v) + '|';
+            let _cachedRawSel = null;
+            let _cachedRawStack = null;
+            function _getRawSel(stk) {
+                if (_cachedRawStack === stk) return _cachedRawSel;
+                const sel = {};
+                for (let i = 1; i < stk.length; i++) {
+                    sel[stk[i].nodeId] = stk[i].edgeId;
                 }
-                return key;
-            }
-
-            function _enumerateDecelExits(sel, seen, visited) {
-                const decelKey = Object.keys(sel).filter(k => k.startsWith('decel_')).sort().map(k => k + '=' + sel[k]).join('&');
-                if (visited.has(decelKey)) return;
-                visited.add(decelKey);
-                for (const node of Engine.NODES) {
-                    if (node.derived || sel[node.id]) continue;
-                    if (!node.id.startsWith('decel_')) continue;
-                    if (!Engine.isNodeVisible(sel, node)) continue;
-                    const locked = Engine.isNodeLocked(sel, node);
-                    if (locked !== null) {
-                        _enumerateDecelExits(_lightPush(sel, node.id, locked), seen, visited);
-                        return;
-                    }
-                    for (const e of node.edges) {
-                        if (Engine.isEdgeDisabled(sel, node, e)) continue;
-                        _enumerateDecelExits(_lightPush(sel, node.id, e.id), seen, visited);
-                    }
-                    return;
-                }
-                const decelOutcome = Engine.resolvedVal(sel, 'decel_outcome') || '';
-                const decelAlign = Engine.resolvedVal(sel, 'decel_align_progress') || '';
-                const key = decelOutcome + '|' + decelAlign;
-                if (!seen.has(key)) seen.set(key, sel);
-            }
-
-            let _reachCache, _branchRelevant, _keyRelevant, _equivMap, _rawKeyDims;
-            let _canReachCalls, _deadline, _cacheHits, _cacheMisses;
-            const _REACH_TIMEOUT_MS = 2000;
-
-            function _canReach(sel, template, variantKey, maxDepth) {
-                _canReachCalls++;
-                if (_canReachCalls % 500 === 0 && performance.now() > _deadline) return true;
-                if (maxDepth <= 0) return false;
-                const cacheKey = _fastKey(sel);
-                if (_reachCache.has(cacheKey)) { _cacheHits++; return _reachCache.get(cacheKey); }
-                _cacheMisses++;
-
-                const eff = {};
-                for (const k of _keyRelevant) eff[k] = Engine.resolvedVal(sel, k);
-                for (const k of _rawKeyDims) { if (!eff[k]) eff[k] = Engine.resolvedVal(sel, k); }
-                let result = false;
-                if (!_smartPartialMatch(template, eff, sel)) {
-                } else if (Engine.templateMatches(template, eff) &&
-                           (!variantKey || !template.primaryDimension ||
-                            eff[template.primaryDimension] === variantKey)) {
-                    result = true;
-                } else {
-                    for (const node of Engine.NODES) {
-                        if (node.derived || sel[node.id]) continue;
-                        if (!Engine.isNodeVisible(sel, node)) continue;
-                        const locked = Engine.isNodeLocked(sel, node);
-                        if (locked !== null) {
-                            result = _canReach(_lightPush(sel, node.id, locked), template, variantKey, maxDepth - 1);
-                            break;
-                        }
-                        if (node.id.startsWith('decel_')) {
-                            const exits = new Map();
-                            _enumerateDecelExits(sel, exits, new Set());
-                            for (const exitSel of exits.values()) {
-                                if (_canReach(exitSel, template, variantKey, maxDepth - 1)) { result = true; break; }
-                            }
-                            break;
-                        }
-                        if (!_branchRelevant.has(node.id)) {
-                            const first = node.edges.find(e => !Engine.isEdgeDisabled(sel, node, e));
-                            if (first) {
-                                const childCK = cacheKey + '|' + node.id + '=' + first.id;
-                                if (_reachCache.has(childCK)) { result = _reachCache.get(childCK); }
-                                else {
-                                    result = _canReach(_lightPush(sel, node.id, first.id), template, variantKey, maxDepth - 1);
-                                    _reachCache.set(childCK, result);
-                                }
-                            }
-                            break;
-                        }
-                        for (const e of node.edges) {
-                            if (Engine.isEdgeDisabled(sel, node, e)) continue;
-                            const childCK = cacheKey + '|' + node.id + '=' + e.id;
-                            if (_reachCache.has(childCK)) {
-                                if (_reachCache.get(childCK)) { result = true; break; }
-                                continue;
-                            }
-                            const childSel = _lightPush(sel, node.id, e.id);
-                            const childResult = _canReach(childSel, template, variantKey, maxDepth - 1);
-                            _reachCache.set(childCK, childResult);
-                            if (childResult) { result = true; break; }
-                        }
-                        break;
-                    }
-                }
-                _reachCache.set(cacheKey, result);
-                return result;
+                Engine.cleanSelection(sel, { autoForce: false });
+                _cachedRawSel = sel;
+                _cachedRawStack = stk;
+                return sel;
             }
 
             function wouldReachOutcome(nodeId, edgeId) {
-                const t = getLockedTemplate();
-                if (!t) return true;
-                if (!t.reachable) return true;
-                if (!_keyRelevant) {
-                    const a = _computeRelevantDims(t, lockedVariantKey);
-                    _branchRelevant = a.branchRelevant;
-                    _keyRelevant = a.keyRelevant;
-                    _equivMap = a.equivMap;
-                    _rawKeyDims = a.rawKeyDims;
-                }
-                if (!_reachCache) {
-                    _reachCache = new Map();
-                    _canReachCalls = 0;
-                    _cacheHits = 0;
-                    _cacheMisses = 0;
-                    _deadline = performance.now() + _REACH_TIMEOUT_MS;
-                }
-                const sel = Engine.currentState(stack);
+                if (!_reachSet) return true;
+                if (!lockedId) return true;
+                const sel = _getRawSel(stack);
                 const childSel = _lightPush(sel, nodeId, edgeId);
-                return _canReach(childSel, t, lockedVariantKey, 40);
+                const ik = GraphWalker.irrKey(childSel);
+                return _reachSet.has(ik);
             }
 
             function mutateStack(action, opts) {
@@ -1854,7 +1491,7 @@
             }
 
             function findNextQuestion() {
-                _reachCache = null;
+                if (lockedId) _loadReachMap(lockedVariantKey ? lockedId + '--' + lockedVariantKey : lockedId);
                 const sel = Engine.currentState(stack);
                 for (const node of Engine.displayOrder(stack)) {
                     const locked = Engine.isNodeLocked(sel, node);
@@ -2661,6 +2298,8 @@
                 unlockBtn.addEventListener('click', () => {
                     lockedId = '';
                     lockedVariantKey = '';
+                    _reachSet = null;
+                    _reachSetId = '';
                     const pill = app.querySelector('.locked-outcome-pill');
                     if (pill) pill.remove();
                     update();

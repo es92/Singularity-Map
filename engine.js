@@ -699,8 +699,8 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 if (typeof window !== 'undefined') {
     window.Engine = { NODES, NODE_MAP,
-        matchCondition, resolvedVal, isNodeVisible, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
-        resolvedState,
+        matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
+        cleanSelection, resolvedState,
         templateMatches, templatePartialMatch, resolveContextWhen,
         createStack, push, pop, popTo, currentState, stackHas, displayOrder };
 }

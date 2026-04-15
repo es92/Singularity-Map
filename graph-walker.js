@@ -1,9 +1,15 @@
 // graph-walker.js — Reusable equivalence-class graph traverser
 // Extracts the core DFS infrastructure from debug-liveness.js into a module.
 
-const { NODES, NODE_MAP } = require('./graph.js');
+(function() {
+
+const { NODES, NODE_MAP } = (typeof module !== 'undefined' && module.exports)
+    ? require('./graph.js') : window.Graph;
+
+const _eng = (typeof module !== 'undefined' && module.exports)
+    ? require('./engine.js') : window.Engine;
 const { resolvedVal, setRvCache, isNodeVisible, isEdgeDisabled,
-        cleanSelection, createStack, push, currentState } = require('./engine.js');
+        cleanSelection, createStack, push, currentState } = _eng;
 
 // ═══════════════════════════════════════════════
 // Equivalence Classes
@@ -746,13 +752,212 @@ function walk(opts = {}) {
     return { visited: stateCount, terminals, deadEnds, elapsed };
 }
 
-module.exports = {
-    walk,
-    classes, classReps, dimOrder, derivedDimSet, derivedNodes,
-    classKey, classAndSuperKey,
+/**
+ * Compute reachability for multiple outcomes in a single walk.
+ * Uses the same superposition DFS as walk() but propagates a bitmask of
+ * which outcomes are reachable from each state. One bit per outcome (max 31).
+ *
+ * When expanding superimposed dims, ALL raw edge values are tried and
+ * terminals are rechecked per variant (since template matching depends on
+ * raw values that equivalence classes intentionally collapse).
+ *
+ * @param {Object} opts
+ * @param {Function[]} opts.matchers - Array of (sel) => bool functions, one per outcome.
+ * @param {Set<string>} [opts.noClassMergeDims] - Dimensions to explore all enabled edges (not class reps).
+ * @param {boolean} [opts.quiet]
+ * @returns {{ reachMap: Map<string,number>, visited: number, elapsed: number }}
+ */
+function computeReachability(opts = {}) {
+    const matchers = opts.matchers || [];
+    const noMerge = opts.noClassMergeDims || new Set();
+    const quiet = opts.quiet || false;
+    if (matchers.length > 31) throw new Error('Max 31 outcomes (bitmask limit)');
+
+    const visited = new Set();
+    const skReach = new Map();
+    const reachMap = new Map();
+    let stateCount = 0;
+
+    const _emptySet = new Set();
+    _activeRvMap = new Map();
+
+    function checkTerminals(sel) {
+        let mask = 0;
+        for (let i = 0; i < matchers.length; i++) {
+            if (matchers[i](sel)) mask |= (1 << i);
+        }
+        return mask;
+    }
+
+    function irrKey(sel) {
+        return classAndSuperKey(sel, _emptySet).sk;
+    }
+
+    function expandSuper(sel, superDims, childMask) {
+        if (superDims.length === 0) {
+            _rrRvMap.clear();
+            const ik = irrKey(sel);
+            reachMap.set(ik, (reachMap.get(ik) || 0) | checkTerminals(sel) | childMask);
+            return;
+        }
+        const dim = superDims[0];
+        const rest = superDims.slice(1);
+        const saved = sel[dim];
+        const node = NODE_MAP[dim];
+        const values = node && node.edges ? node.edges.map(e => e.id) : (classReps[dim] || []);
+        for (const v of values) {
+            sel[dim] = v;
+            expandSuper(sel, rest, childMask);
+        }
+        sel[dim] = saved;
+    }
+
+    const _rrRvMap = new Map();
+
+    function expandVariants(sel, dims, idx, childMask) {
+        if (idx >= dims.length) {
+            _rrRvMap.clear();
+            const ik = irrKey(sel);
+            reachMap.set(ik, (reachMap.get(ik) || 0) | checkTerminals(sel) | childMask);
+            return;
+        }
+        const dim = dims[idx];
+        const saved = sel[dim];
+        const currentClass = classes[dim]?.get(saved);
+        const node = NODE_MAP[dim];
+        if (!node || !node.edges) {
+            expandVariants(sel, dims, idx + 1, childMask);
+            return;
+        }
+        for (const e of node.edges) {
+            if (classes[dim]?.get(e.id) !== currentClass) continue;
+            if (e.id !== saved && isEdgeDisabled(sel, node, e)) continue;
+            sel[dim] = e.id;
+            expandVariants(sel, dims, idx + 1, childMask);
+        }
+        sel[dim] = saved;
+    }
+
+    function recordReach(sel, superSet, childMask) {
+        _rrRvMap.clear();
+        setRvCache(_rrRvMap);
+        const ik = irrKey(sel);
+        const finalMask = (reachMap.get(ik) || 0) | checkTerminals(sel) | childMask;
+        reachMap.set(ik, finalMask);
+        if (superSet.size > 0) {
+            const temp = Object.assign({}, sel);
+            expandSuper(temp, [...superSet], childMask);
+        }
+        const varDims = [];
+        for (const d of noMerge) {
+            if (sel[d] !== undefined) varDims.push(d);
+        }
+        if (varDims.length > 0) {
+            const temp = Object.assign({}, sel);
+            expandVariants(temp, varDims, 0, childMask);
+        }
+        setRvCache(null);
+    }
+
+    function dfs(stk, superSet) {
+        const sel = currentState(stk);
+        _activeRvMap.clear();
+        setRvCache(_activeRvMap);
+        const { ck, sk: key } = classAndSuperKey(sel, superSet);
+
+        if (visited.has(key)) {
+            setRvCache(null);
+            return skReach.get(key) || 0;
+        }
+        visited.add(key);
+        stateCount++;
+
+        const nextNode = pickNextNode(sel, ck);
+        const enabled = nextNode ? nextNode.edges.filter(e => !cachedIsEdgeDisabled(ck, sel, nextNode, e)) : [];
+        setRvCache(null);
+
+        if (!nextNode || enabled.length === 0) {
+            const mask = checkTerminals(sel);
+            skReach.set(key, mask);
+            recordReach(sel, superSet, 0);
+            return mask;
+        }
+
+        for (const superDim of superSet) {
+            if (needsCollapse(sel, superDim, nextNode, ck)) {
+                const newSuper = new Set(superSet);
+                newSuper.delete(superDim);
+                let childMask = 0;
+                for (const rep of classReps[superDim]) {
+                    childMask |= dfs(dfsPush(stk, superDim, rep), newSuper);
+                }
+                const mask = checkTerminals(sel) | childMask;
+                skReach.set(key, mask);
+                recordReach(sel, superSet, childMask);
+                return mask;
+            }
+        }
+
+        const seenClasses = new Set();
+        const classEdges = [];
+        for (const e of enabled) {
+            const c = classes[nextNode.id]?.get(e.id);
+            if (!seenClasses.has(c)) { seenClasses.add(c); classEdges.push(e); }
+        }
+
+        let childMask = 0;
+        if (classEdges.length <= 1) {
+            childMask = dfs(dfsPush(stk, nextNode.id, enabled[0].id), superSet);
+        } else if (canSuperimpose(sel, nextNode, ck)) {
+            const newSuper = new Set(superSet);
+            newSuper.add(nextNode.id);
+            childMask = dfs(dfsPush(stk, nextNode.id, classEdges[0].id), newSuper);
+        } else {
+            for (const edge of classEdges) {
+                childMask |= dfs(dfsPush(stk, nextNode.id, edge.id), superSet);
+            }
+        }
+
+        const mask = checkTerminals(sel) | childMask;
+        skReach.set(key, mask);
+        recordReach(sel, superSet, childMask);
+        return mask;
+    }
+
+    const t0 = Date.now();
+    dfs(createStack(), new Set());
+    const elapsed = Date.now() - t0;
+
+    if (!quiet) {
+        console.log(`Reachability: ${stateCount} states, ${reachMap.size} irrKeys, ${(elapsed/1000).toFixed(1)}s`);
+    }
+
+    return { reachMap, visited: stateCount, elapsed };
+}
+
+function irrKeyPublic(sel) {
+    setRvCache(new Map());
+    const result = classAndSuperKey(sel, new Set()).sk;
+    setRvCache(null);
+    return result;
+}
+
+const _exports = {
+    walk, computeReachability,
+    classes, classReps, dimOrder, derivedDimSet, derivedNodes, safePushDims,
+    classKey, classAndSuperKey, irrKey: irrKeyPublic,
     resolvedState,
     cachedIsNodeVisible, cachedIsEdgeDisabled, cachedIsIrrelevant,
     pickNextNode, enabledEdgeIds,
     stateCache, irrVectorCache,
     getCacheStats() { return { hits: cacheHits, misses: cacheMisses, classKeys: stateCache.size }; },
 };
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = _exports;
+}
+if (typeof window !== 'undefined') {
+    window.GraphWalker = _exports;
+}
+
+})();
