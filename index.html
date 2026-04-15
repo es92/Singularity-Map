@@ -1553,23 +1553,24 @@
 
                     const locked = Engine.isNodeLocked(sel, node);
                     const inStack = Engine.stackHas(stack, node.id);
-                    if (locked !== null && !inStack) continue;
-                    const stackEntry = inStack && stack.find(e => e.nodeId === node.id);
-                    const value = sel[node.id] || locked || (stackEntry && stackEntry.edgeId);
-                    const isLockedNode = locked !== null && !stackEntry;
 
                     if (nextQ && nextQ.isForced && node.id === nextQ.node.id) {
                         if (!fullQuestions) {
                             foundFrontier = true;
-                            const siblings = nextQ.options.map(o => ({
-                                value: o.value, label: o.label, shortLabel: o.shortLabel,
-                                nodeId: o.nodeId, reachable: o.reachable,
-                                disabled: o.disabled,
-                            }));
+                            const forcedOpt = nextQ.options.find(o => o.value === nextQ.forcedValue);
+                            const siblings = forcedOpt ? [{
+                                value: forcedOpt.value, label: forcedOpt.label, shortLabel: forcedOpt.shortLabel,
+                                nodeId: forcedOpt.nodeId, reachable: true, disabled: false,
+                            }] : [];
                             events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: node.stage, year: '', paramLabel: '', nodeLabel: node.label, nodeId: node.id, selectedValue: null, siblings, isFrontier: true });
                         }
                         continue;
                     }
+
+                    if (locked !== null && !inStack) continue;
+                    const stackEntry = inStack && stack.find(e => e.nodeId === node.id);
+                    const value = sel[node.id] || locked || (stackEntry && stackEntry.edgeId);
+                    const isLockedNode = locked !== null && !stackEntry;
 
                     if (!value) {
                         if (!fullQuestions && nextQ && nextQ.node.id === node.id) {
