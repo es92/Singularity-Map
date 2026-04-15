@@ -778,13 +778,19 @@ class representatives of $d$, removing $d$ from $\Sigma$.
 \begin{algorithmic}[1]
 \Procedure{SuperDFS}{$\sel, \Sigma$}
   \State $\mathit{key} \gets \mathsf{superKey}(\sel, \Sigma)$
-  \If{$\mathit{key} \in \mathit{visited}$}
-    \Return cached mask
-  \EndIf
-  \If{$\mathrm{Terminal}(\sel)$}
+  \State $d^* \gets \mathsf{next}(\sel)$
+  \State $E^* \gets \{e \in \Edg{d^*} : \Dis_{d^*,e}(\sel)=0\}$
+    if $d^* \neq \bot$, else $\emptyset$
+  \If{$d^* = \bot$ or $E^* = \emptyset$}
+    \Comment{Terminal or dead end --- always compute fresh}
+    \State \Call{RecordReach}{$\sel, \Sigma, 0$}
     \State \Return $M(\sel)$
   \EndIf
-  \State $d^* \gets \mathsf{next}(\sel)$; \textbf{if} $d^*=\bot$ \textbf{return} $0$
+  \If{$\mathit{key} \in \mathit{visited}$}
+    \Comment{Non-terminal memoization}
+    \State \Return cached mask for $\mathit{key}$
+  \EndIf
+  \State $\mathit{visited} \gets \mathit{visited} \cup \{\mathit{key}\}$
   \ForAll{$d \in \Sigma$}
     \If{$\mathrm{NeedsCollapse}(d, \sel, d^*)$}
       \State $\mathit{mask} \gets 0$
@@ -793,23 +799,27 @@ class representatives of $d$, removing $d$ from $\Sigma$.
         \State $\mathit{mask} \gets \mathit{mask} \mathbin{|}
                \Call{SuperDFS}{\sel', \Sigma \setminus \{d\}}$
       \EndFor
-      \State \Return $\mathit{mask}$
+      \State \Call{RecordReach}{$\sel, \Sigma, \mathit{mask}$}
+      \State \Return $M(\sel) \mathbin{|} \mathit{mask}$
     \EndIf
   \EndFor
-  \State Deduplicate enabled edges of $d^*$ to one per class
+  \State Deduplicate $E^*$ to one edge per class
   \If{only one class is enabled}
-    \State \Return $\Call{SuperDFS}{\cleannf(\sel[d^* \mapsto e]),\;\Sigma}$
+    \State $\mathit{child} \gets \Call{SuperDFS}{\cleannf(\sel[d^* \mapsto e]),\;\Sigma}$
   \ElsIf{$d^*$ is superimposable at $\sel$}
-    \State \Return $\Call{SuperDFS}{\cleannf(\sel[d^* \mapsto \Rep_{d^*}(C_1)]),\;
+    \State $\mathit{child} \gets \Call{SuperDFS}{\cleannf(\sel[d^* \mapsto \Rep_{d^*}(C_1)]),\;
            \Sigma \cup \{d^*\}}$
   \Else
-    \State $\mathit{mask} \gets 0$
+    \State $\mathit{child} \gets 0$
     \ForAll{class representatives $r$ of enabled edges of $d^*$}
-      \State $\mathit{mask} \gets \mathit{mask} \mathbin{|}
+      \State $\mathit{child} \gets \mathit{child} \mathbin{|}
              \Call{SuperDFS}{\cleannf(\sel[d^* \mapsto r]),\;\Sigma}$
     \EndFor
-    \State \Return $\mathit{mask}$
   \EndIf
+  \State $\mathit{mask} \gets M(\sel) \mathbin{|} \mathit{child}$
+  \State cache $\mathit{mask}$ for $\mathit{key}$
+  \State \Call{RecordReach}{$\sel, \Sigma, \mathit{child}$}
+  \State \Return $\mathit{mask}$
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
@@ -824,6 +834,74 @@ Superposition with deferred collapse produces the same reachability
 answers, detects the same dead ends, and triggers the same validation
 violations as the class-merged DFS without superposition.
 \end{theorem}
+
+\begin{remark}[Terminal Memoization Caveat]\label{rem:termmemo}
+The super key $\mathsf{superKey}(\sel,\Sigma)$ wildcards both
+superimposed and irrelevant dimensions. At terminal states (no remaining
+visible unanswered dimensions), \emph{every} dimension satisfies the
+irrelevance criterion---there are no future decisions to affect---so the
+super key collapses to the all-wildcard string $(**\cdots*)$ regardless of
+the actual state values.
+
+However, different terminal states can match different outcome predicates
+$O_k$. If the DFS memoizes by super key \emph{before} checking terminality,
+the first terminal visited caches its outcome mask under the all-wildcard
+key, and all subsequent terminals return that cached mask instead of
+evaluating $M(\sel)$ against their own state. This produces both false
+positives (outcomes attributed to unreachable terminals) and false
+negatives (outcomes from later terminals never recorded).
+
+The corrected algorithm (Algorithm~\ref{alg:superdfs}) checks terminality
+\emph{before} consulting the memoization cache, ensuring each terminal
+always computes its mask fresh. Non-terminal states still benefit from
+super key memoization, since their reachability depends on subgraph
+structure (captured by the super key) rather than on the specific state
+values.
+\end{remark}
+
+%--------------------------------------------------------------------------
+\subsection{Reachability Recording}\label{sec:recordreach}
+%--------------------------------------------------------------------------
+
+The DFS does not simply return masks up the call stack; it also writes
+into a persistent map $\mathsf{ReachMap}$ keyed by irrelevance keys.
+Multiple DFS paths may map to the same $\ik$, and their masks are
+OR-accumulated.
+
+\begin{definition}[RecordReach]\label{def:recordreach}
+Given state $\sel$, superposition set $\Sigma$, and child mask
+$\mathit{cm}$ (the OR of masks returned by recursive calls), the
+\textsf{RecordReach} procedure performs three steps:
+\begin{enumerate}[label=(\roman*)]
+  \item \textbf{Direct recording.}
+    Compute $\ik(\sel)$ and set
+    \[
+      \mathsf{ReachMap}(\ik(\sel)) \;\gets\;
+      \mathsf{ReachMap}(\ik(\sel)) \;\mathbin{|}\;
+      M(\sel) \;\mathbin{|}\; \mathit{cm}.
+    \]
+  \item \textbf{Superposition expansion.}
+    If $\Sigma \neq \emptyset$, enumerate
+    $\prod_{d \in \Sigma} \Edg{d}$ (all raw edge values for each
+    superimposed dimension). For each assignment, temporarily override
+    $\sel$, recompute $\ik$, and OR-accumulate
+    $M(\sel') \mathbin{|} \mathit{cm}$ into the corresponding entry.
+  \item \textbf{Variant expansion.}
+    For each primary dimension $d \in \mathcal{P}$ where
+    $\sel(d) \neq \bot$, enumerate all same-class, non-disabled edges.
+    For each combination, recompute $\ik$ and OR-accumulate
+    $M(\sel') \mathbin{|} \mathit{cm}$.
+\end{enumerate}
+\end{definition}
+
+\begin{remark}[OR-Accumulation Semantics]
+The $\mathsf{ReachMap}$ is monotonically increasing: each write can only
+set additional bits, never clear them. This is correct because the map
+stores the union of all outcomes reachable from any state that projects to
+a given $\ik$. The OR-accumulation means the DFS need not track which
+specific path contributed which bits---the final map entry is the union
+over all contributing paths.
+\end{remark}
 
 %--------------------------------------------------------------------------
 \subsection{Variant Expansion (\texttt{noClassMergeDims})}
@@ -971,6 +1049,51 @@ $\mathsf{\_getRawSel}$ strips auto-forced dimensions, ensuring the
 irrelevance key matches the DFS's key space.
 \end{lemma}
 
+\begin{lemma}[Terminal Memoization Soundness]\label{lem:termmemo}
+Let $\sel_1, \sel_2$ be two terminal states with
+$\mathsf{superKey}(\sel_1,\Sigma_1) = \mathsf{superKey}(\sel_2,\Sigma_2)$.
+In general, $M(\sel_1) \neq M(\sel_2)$: the outcome masks may differ
+because the outcome predicates $O_k$ evaluate against the actual resolved
+state, not the super key. Therefore, memoizing $M(\sel)$ by super key at
+terminal states is unsound.
+
+At non-terminal states, the returned mask is
+$M(\sel) \mathbin{|} \mathit{childMask}$, where
+$\mathit{childMask}$ depends on the subgraph structure. Two non-terminal
+states with the same super key have identical subgraph structure (by the
+fingerprint and irrelevance invariants), so $\mathit{childMask}$ is the
+same. Although $M(\sel_1)$ and $M(\sel_2)$ may also differ, the
+\textsf{RecordReach} procedure writes the correct per-state mask into
+$\mathsf{ReachMap}$ regardless of which cached $\mathit{childMask}$ is
+used. Therefore, super key memoization at non-terminal states is sound
+for reachability recording, provided terminals are always computed fresh.
+\end{lemma}
+
+\begin{remark}[Derivation-Induced Path Crossovers]\label{rem:crossover}
+A \texttt{deriveWhen} rule on dimension $d_1$ that references dimension
+$d_2$ (where $d_2$ appears later in the ordering and is conditionally
+activated by $d_1$) can create \textbf{path crossovers}: a choice of
+$d_2$ changes the resolved value of $d_1$, which in turn changes the
+visibility of downstream dimensions, effectively routing the state from
+one ``branch'' of the graph into another.
+
+For example, if $d_1 = \mathsf{capability}$ has edge values
+$\{\mathsf{singularity}, \mathsf{stalls}\}$ and
+\texttt{deriveWhen} rule ``if $d_2 = \mathsf{stall\_recovery}$ is
+$\mathsf{mild}$, then $d_1$ resolves to $\mathsf{singularity}$'', then
+the user can select $d_1 = \mathsf{stalls}$ but later selecting
+$d_2 = \mathsf{mild}$ causes $d_1$ to resolve to $\mathsf{singularity}$,
+activating entirely different downstream dimensions.
+
+This crossover is correctly handled by the class computation (R1), which
+gives $d_2$ distinct classes for values that produce different derivation
+outcomes, and by the fingerprint check (R3), which prevents superposition
+when different class representatives produce different visible-node sets.
+The terminal memoization bug (Remark~\ref{rem:termmemo}) was the only
+mechanism by which crossover effects leaked incorrectly, and is resolved
+by the corrected algorithm ordering.
+\end{remark}
+
 \begin{lemma}[Safe Push Optimization]\label{lem:safepush}
 A dimension $d$ is a \textbf{safe push dimension} if $d$ does not appear
 (directly or via derivation chains) in any edge-local condition
@@ -987,6 +1110,89 @@ elsewhere. Thus clean selection finds nothing to change.
 
 
 %==========================================================================
+\section{Empirical Validation}\label{sec:empirical}
+%==========================================================================
+
+To supplement formal verification, a test harness compares the optimized
+traversal against a brute-force baseline DFS on a suite of small graphs.
+The harness (\texttt{test/run.js}) works as follows:
+
+\begin{enumerate}
+  \item \textbf{Module injection.} Each test graph is a JSON file
+    defining nodes, edges, conditions, and outcomes. The harness injects
+    it into the engine and walker via Node.js module cache replacement,
+    reusing the production code paths exactly.
+  \item \textbf{Baseline DFS.} A brute-force recursive DFS explores every
+    enabled edge at every visible non-derived dimension, with no class
+    merging, irrelevance, or superposition. It records the outcome mask
+    $M(\sel)$ at each visited state.
+  \item \textbf{Optimized computation.} The production
+    \textsf{computeReachability} function (Algorithm~\ref{alg:superdfs}
+    with \textsf{RecordReach}) runs on the same graph and outcomes.
+  \item \textbf{Comparison.} Baseline states are aggregated by
+    $\ik$---all baseline masks sharing the same irrelevance key are
+    OR-combined. Then:
+    \begin{itemize}
+      \item \textbf{No false positives:} every bit in
+        $\mathsf{ReachMap}(\ik)$ must appear in the baseline aggregate
+        at $\ik$.
+      \item \textbf{No false negatives:} every bit in the baseline
+        aggregate must appear in $\mathsf{ReachMap}(\ik)$ (with a
+        documented exception for \texttt{noClassMergeDims} that are
+        unset in the selector).
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Test Graphs}
+
+\begin{center}
+\begin{tabular}{lrrrl}
+\textbf{Graph} & \textbf{Dims} & \textbf{Baseline} & \textbf{irrKeys}
+  & \textbf{Primary target} \\
+\hline
+\texttt{trivial}       & 3  & 15     & 4  & Sanity check \\
+\texttt{classes}        & 3  & 23     & 4  & R1: equivalence classes \\
+\texttt{irrelevance}    & 3  & 19     & 4  & R2: irrelevance wildcarding \\
+\texttt{superposition}  & 4  & 36     & 5  & R3: superposition \\
+\texttt{variants}       & 3  & 22     & 4  & R4: variant expansion \\
+\texttt{kitchen-sink}   & 7  & 119    & 7  & Combined features \\
+\texttt{derive-crossover} & 5  & 11   & 5  & \texttt{deriveWhen} crossover \\
+\texttt{production-subgraph} & 16 & 6700 & 12
+  & Real graph (capability $\to$ open\_source) \\
+\end{tabular}
+\end{center}
+
+The \texttt{derive-crossover} graph is the minimal reproducer for the
+terminal memoization bug (Remark~\ref{rem:termmemo}): 5 dimensions, 10
+edges, with a \texttt{deriveWhen} rule that creates a path crossover.
+Before the fix (moving the terminal check before memoization), it
+produced both false positives and false negatives. After the fix, all
+8 graphs pass.
+
+The \texttt{production-subgraph} graph contains the first 16 dimensions
+of the production Singularity Map (up to and including
+\texttt{open\_source}), with all real \texttt{activateWhen},
+\texttt{disabledWhen}, \texttt{requires}, and \texttt{deriveWhen}
+conditions preserved. Its 6700 baseline states compress to 12 irrelevance
+keys, and the optimized--baseline comparison passes with zero
+discrepancies.
+
+\subsection{Limitations}
+
+On small graphs, the iterative class computation often collapses to a
+single equivalence class per dimension (insufficient structural depth to
+sustain multi-class behavior). This makes the R1 and R3 tests pass
+trivially. The \texttt{production-subgraph} provides meaningful
+multi-class testing: \texttt{capability} (2 classes),
+\texttt{stall\_recovery} (2 classes).
+
+The baseline DFS does not scale to the full production graph
+(${\sim}200\text{k}+$ states) within reasonable time, so the full graph
+is validated only by the \textsf{walk} procedure's internal invariant
+checks, not by baseline comparison.
+
+
+%==========================================================================
 \section{Summary of Claims for Verification}\label{sec:summary}
 %==========================================================================
 
@@ -1000,9 +1206,10 @@ and every validation invariant defined in Section~\ref{sec:validate}.}
 \end{quote}
 
 \noindent
-This decomposes into the four reduction theorems (R1--R4) and six
+This decomposes into the four reduction theorems (R1--R4) and seven
 supporting lemmas listed below. The validation invariants define what
-``same results'' means concretely.
+``same results'' means concretely. Section~\ref{sec:empirical} provides
+empirical evidence via baseline-vs-optimized comparison on 8~test graphs.
 
 \bigskip
 
@@ -1040,6 +1247,9 @@ supporting lemmas listed below. The validation invariants define what
 \ref{lem:super-collapse}
   & Lemma
   & Superposition of fingerprint-identical branches is safe. \\
+\ref{lem:termmemo}
+  & Lemma
+  & Super key memoization is sound only at non-terminals. \\
 \ref{lem:autoforce}
   & Lemma
   & Client raw-selection reconstruction matches DFS keys. \\
