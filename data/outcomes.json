@@ -520,6 +520,29 @@
             "singularity"
           ],
           "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "escaped"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "human_centered"
+          ],
+          "benefit_distribution": [
+            "unequal"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
             "robust"
           ],
           "escalation_outcome": [
@@ -591,6 +614,29 @@
           ],
           "containment": [
             "contained"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "self_interest"
+          ],
+          "benefit_distribution": [
+            "unequal"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "escaped"
           ],
           "escalation_outcome": [
             "conflict"
@@ -1008,6 +1054,34 @@
           ],
           "containment": [
             "contained"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "human_centered"
+          ],
+          "benefit_distribution": [
+            "extreme"
+          ],
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "escaped"
           ],
           "escalation_outcome": [
             "conflict"
@@ -1574,6 +1648,29 @@
             "singularity"
           ],
           "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "escaped"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "human_centered"
+          ],
+          "benefit_distribution": [
+            "equal"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
             "robust"
           ],
           "escalation_outcome": [
@@ -1645,6 +1742,29 @@
           ],
           "containment": [
             "contained"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "self_interest"
+          ],
+          "benefit_distribution": [
+            "equal"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "escaped"
           ],
           "escalation_outcome": [
             "conflict"
@@ -1964,6 +2084,9 @@
           "post_war_aims": [
             "self_interest"
           ],
+          "benefit_distribution": [
+            "extreme"
+          ],
           "_not": {
             "concentration_type": [
               "ai_itself"
@@ -1985,6 +2108,9 @@
           ],
           "post_war_aims": [
             "self_interest"
+          ],
+          "benefit_distribution": [
+            "extreme"
           ],
           "brittle_resolution": [
             "solved",
@@ -2015,6 +2141,9 @@
           "post_war_aims": [
             "self_interest"
           ],
+          "benefit_distribution": [
+            "extreme"
+          ],
           "_not": {
             "concentration_type": [
               "ai_itself"
@@ -2039,6 +2168,37 @@
           ],
           "post_war_aims": [
             "self_interest"
+          ],
+          "benefit_distribution": [
+            "extreme"
+          ],
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "escaped"
+          ],
+          "escalation_outcome": [
+            "conflict"
+          ],
+          "conflict_result": [
+            "victory"
+          ],
+          "post_war_aims": [
+            "self_interest"
+          ],
+          "benefit_distribution": [
+            "extreme"
           ],
           "_not": {
             "concentration_type": [
