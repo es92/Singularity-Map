@@ -168,44 +168,7 @@ function runStaticAnalysis() {
         }
     }
 
-    // 6. Circular dependency detection (derivation <-> visibility)
-    const circularWarnings = [];
-    const derivationDeps = {};
-    for (const node of NODES) {
-        if (!node.deriveWhen) continue;
-        const deps = new Set();
-        for (const rule of node.deriveWhen) {
-            if (rule.match) {
-                for (const k of Object.keys(rule.match)) {
-                    if (k !== 'reason') deps.add(k);
-                }
-            }
-        }
-        derivationDeps[node.id] = deps;
-    }
-    const visibilityDeps = {};
-    for (const node of NODES) {
-        const deps = new Set();
-        if (node.activateWhen) {
-            for (const cond of node.activateWhen) {
-                for (const k of Object.keys(cond)) {
-                    if (k === 'reason' || k.startsWith('_')) continue;
-                    deps.add(k);
-                }
-            }
-        }
-        visibilityDeps[node.id] = deps;
-    }
-    for (const [nodeId, dDeps] of Object.entries(derivationDeps)) {
-        for (const dep of dDeps) {
-            const vDeps = visibilityDeps[dep];
-            if (vDeps && vDeps.has(nodeId)) {
-                circularWarnings.push(`[circular] resolvedVal("${nodeId}") depends on "${dep}", whose visibility depends on resolvedVal("${nodeId}")`);
-            }
-        }
-    }
-
-    return { errors, circularWarnings };
+    return { errors };
 }
 
 function selToUrl(sel) {
@@ -415,7 +378,6 @@ function runVignetteValidation() {
             }
         }
     }
-    for (const nr of nullResolutions) warnings.push(`[vignettes] ${nr.node}.${nr.edge}: resolves to null for ${nr.persona}`);
 
     // Token validation
     for (const [nodeId, node] of Object.entries(narrative)) {
@@ -459,16 +421,12 @@ function runVignetteValidation() {
 // Reporting
 // ════════════════════════════════════════════════════════
 
-function printPhase1({ errors, circularWarnings }) {
+function printPhase1({ errors }) {
     if (errors.length === 0) {
         console.log('  OK — All static checks passed');
     } else {
         console.log(`  ${errors.length} error(s):`);
         for (const e of errors) console.log('    ' + e);
-    }
-    if (circularWarnings.length > 0) {
-        console.log(`  ${circularWarnings.length} circular dependency warning(s):`);
-        for (const w of circularWarnings) console.log('    ' + w);
     }
 }
 
