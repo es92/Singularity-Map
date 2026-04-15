@@ -1,0 +1,45 @@
+{
+  "nodes": [
+    {
+      "id": "mode",
+      "edges": [
+        { "id": "safe" },
+        { "id": "risky" }
+      ]
+    },
+    {
+      "id": "hazard",
+      "derived": true,
+      "deriveWhen": [
+        { "match": { "mode": ["risky"] }, "value": "high" },
+        { "match": { "mode": ["safe"] }, "value": "low" }
+      ],
+      "edges": [
+        { "id": "high" },
+        { "id": "low" }
+      ]
+    },
+    {
+      "id": "action",
+      "edges": [
+        { "id": "careful" },
+        { "id": "bold", "disabledWhen": [{ "hazard": ["high"] }] }
+      ]
+    },
+    {
+      "id": "result",
+      "activateWhen": [{ "action": ["bold"] }],
+      "edges": [
+        { "id": "win" },
+        { "id": "lose" }
+      ]
+    }
+  ],
+  "outcomes": {
+    "templates": [
+      { "id": "any", "reachable": [{}] },
+      { "id": "won", "reachable": [{ "result": ["win"] }] },
+      { "id": "careful-end", "reachable": [{ "action": ["careful"] }] }
+    ]
+  }
+}

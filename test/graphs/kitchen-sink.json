@@ -67,6 +67,12 @@
         "reachable": [{ "mode": ["fast"] }],
         "primaryDimension": "approach",
         "variants": { "alpha": {}, "beta": {}, "gamma": {}, "delta": {} }
+      },
+      {
+        "id": "slow-result",
+        "reachable": [{ "mode": ["slow"] }],
+        "primaryDimension": "approach",
+        "variants": { "alpha": {}, "beta": {}, "gamma": {}, "delta": {} }
       }
     ]
   }

@@ -47,10 +47,11 @@ function buildRefIndex() {
         };
         addConds(node.activateWhen, 'act');
         addConds(node.hideWhen, 'hide');
-        if (node.deriveWhen) for (const rule of node.deriveWhen) {
+        if (node.deriveWhen) for (let ri = 0; ri < node.deriveWhen.length; ri++) {
+            const rule = node.deriveWhen[ri];
             if (rule.match) for (const [k, v] of Object.entries(rule.match)) {
                 if (k === 'reason') continue;
-                addRef(k, { ...parseVal(v), targetDim: node.id, ctx: `${node.id}.derive`, category: 'cond' });
+                addRef(k, { ...parseVal(v), targetDim: node.id, ctx: `${node.id}.derive${ri}`, category: 'cond' });
             }
             if (rule.fromState) {
                 if (!fromStateDeps[rule.fromState]) fromStateDeps[rule.fromState] = new Set();
@@ -116,7 +117,8 @@ function computeClasses() {
             for (const v of allValues) {
                 const sigParts = [];
                 for (const ref of condRefList) {
-                    if (classCount(ref.targetDim) <= 1) { sigParts.push('*'); continue; }
+                    const isVisRef = /\.act\d|\.hide\d/.test(ref.ctx);
+                    if (!isVisRef && classCount(ref.targetDim) <= 1) { sigParts.push('*'); continue; }
                     if (ref.type === 'bool') sigParts.push(`cond:${ref.ctx}:bool:${ref.val}`);
                     else if (ref.type === 'not') sigParts.push(`cond:${ref.ctx}:not:${ref.notValues.includes(v) ? 1 : 0}`);
                     else if (ref.type === 'match') sigParts.push(`cond:${ref.ctx}:${ref.values.includes(v) ? 1 : 0}`);
@@ -164,12 +166,20 @@ function computeClasses() {
         if (!changed) break;
     }
 
-    // Transitive irrelevance
+    // Transitive irrelevance — merge classes when no reader distinguishes them.
+    // Exception: dims referenced by activateWhen/hideWhen control node visibility,
+    // which is always structural even if the target node has 1 class.
     const dimReadBy = {};
+    const visibilityDeps = new Set();
     for (const node of NODES) {
         const allRefs = new Set();
-        if (node.activateWhen) for (const c of node.activateWhen) for (const r of extractCondRefs(c)) allRefs.add(r);
-        if (node.hideWhen) for (const c of node.hideWhen) for (const r of extractCondRefs(c)) allRefs.add(r);
+        if (!node.derived && node.edges && node.edges.length > 0) {
+            if (node.activateWhen) for (const c of node.activateWhen) for (const r of extractCondRefs(c)) { allRefs.add(r); visibilityDeps.add(r); }
+            if (node.hideWhen) for (const c of node.hideWhen) for (const r of extractCondRefs(c)) { allRefs.add(r); visibilityDeps.add(r); }
+        } else {
+            if (node.activateWhen) for (const c of node.activateWhen) for (const r of extractCondRefs(c)) allRefs.add(r);
+            if (node.hideWhen) for (const c of node.hideWhen) for (const r of extractCondRefs(c)) allRefs.add(r);
+        }
         if (node.deriveWhen) for (const rule of node.deriveWhen) {
             if (rule.match) for (const r of extractCondRefs(rule.match)) allRefs.add(r);
             if (rule.fromState) allRefs.add(rule.fromState);
@@ -188,6 +198,7 @@ function computeClasses() {
         for (const node of NODES) {
             if (!classes[node.id]) continue;
             if (new Set(classes[node.id].values()).size <= 1) continue;
+            if (visibilityDeps.has(node.id)) continue;
             const readers = dimReadBy[node.id] || new Set();
             if ([...readers].every(r => !classes[r] || new Set(classes[r].values()).size <= 1)) {
                 for (const v of classes[node.id].keys()) classes[node.id].set(v, 0);
@@ -876,7 +887,9 @@ function computeReachability(opts = {}) {
         }
 
         if (visited.has(key)) {
-            return skReach.get(key) || 0;
+            const cached = skReach.get(key);
+            if (cached) recordReach(sel, superSet, cached.childMask);
+            return cached ? cached.mask : 0;
         }
         visited.add(key);
         stateCount++;
@@ -890,7 +903,7 @@ function computeReachability(opts = {}) {
                     childMask |= dfs(dfsPush(stk, superDim, rep), newSuper);
                 }
                 const mask = checkTerminals(sel) | childMask;
-                skReach.set(key, mask);
+                skReach.set(key, { mask, childMask });
                 recordReach(sel, superSet, childMask);
                 return mask;
             }
@@ -917,7 +930,7 @@ function computeReachability(opts = {}) {
         }
 
         const mask = checkTerminals(sel) | childMask;
-        skReach.set(key, mask);
+        skReach.set(key, { mask, childMask });
         recordReach(sel, superSet, childMask);
         return mask;
     }
