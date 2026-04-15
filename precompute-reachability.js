@@ -37,6 +37,15 @@ function buildMatchersAndCompute(templates, opts = {}) {
 
     if (entries.length > 31) throw new Error(`${entries.length} matchers exceeds 31-bit bitmask limit`);
 
+    const outcomeDims = new Set();
+    for (const t of templates) {
+        for (const cond of (t.reachable || [])) {
+            for (const k of Object.keys(cond)) {
+                if (k !== '_not') outcomeDims.add(k);
+            }
+        }
+    }
+
     const matchers = entries.map(e => e.matcher);
     const quiet = opts.quiet || false;
     if (!quiet) {
@@ -44,7 +53,7 @@ function buildMatchersAndCompute(templates, opts = {}) {
         console.log(`Primary dimensions (no class merge): ${[...primaryDims].join(', ')}`);
     }
 
-    const result = computeReachability({ matchers, noClassMergeDims: primaryDims, quiet });
+    const result = computeReachability({ matchers, noClassMergeDims: primaryDims, outcomeDims, quiet });
     return { ...result, entries, primaryDims };
 }
 

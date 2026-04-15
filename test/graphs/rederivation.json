@@ -1,0 +1,59 @@
+{
+  "nodes": [
+    {
+      "id": "approach",
+      "deriveWhen": [{ "match": { "recovery": ["quick"] }, "value": "aggressive" }],
+      "edges": [
+        { "id": "aggressive" },
+        { "id": "conservative" }
+      ]
+    },
+    {
+      "id": "setback",
+      "activateWhen": [{ "approach": ["conservative"] }],
+      "edges": [
+        { "id": "minor" },
+        { "id": "severe" }
+      ]
+    },
+    {
+      "id": "recovery",
+      "activateWhen": [{ "approach": ["conservative"] }],
+      "edges": [
+        { "id": "quick" },
+        { "id": "slow" }
+      ]
+    },
+    {
+      "id": "execute",
+      "activateWhen": [{ "approach": ["aggressive"] }],
+      "edges": [
+        { "id": "fast" },
+        { "id": "measured" }
+      ]
+    },
+    {
+      "id": "result",
+      "edges": [
+        { "id": "success" },
+        { "id": "failure", "disabledWhen": [{ "setback": ["minor"] }] }
+      ]
+    },
+    {
+      "id": "aftermath",
+      "activateWhen": [{ "result": ["failure"] }],
+      "edges": [
+        { "id": "retry" },
+        { "id": "abandon" }
+      ]
+    }
+  ],
+  "outcomes": {
+    "templates": [
+      { "id": "any", "reachable": [{}] },
+      { "id": "fast-win", "reachable": [{ "execute": ["fast"], "result": ["success"] }] },
+      { "id": "conservative-end", "reachable": [{ "recovery": ["slow"], "result": ["success", "failure"] }] },
+      { "id": "retry-path", "reachable": [{ "result": ["failure"], "aftermath": ["retry"] }] }
+    ]
+  }
+}

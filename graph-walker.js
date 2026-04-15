@@ -469,13 +469,22 @@ function canNodeBecomeVisible(sel, node, ck) {
     }
 }
 
+const _irrComputing = new Set();
+
 function cachedIsIrrelevant(ck, sel, dim) {
     const sc = getCache(ck);
     const cached = sc.irr.get(dim);
     if (cached !== undefined) { cacheHits++; return cached; }
+
+    const guard = ck + '\0' + dim;
+    if (_irrComputing.has(guard)) return true;
+    _irrComputing.add(guard);
+
     cacheMisses++;
     const result = isIrrelevant(sel, dim, null, ck);
     sc.irr.set(dim, result);
+
+    _irrComputing.delete(guard);
     return result;
 }
 
@@ -491,8 +500,8 @@ function isIrrelevant(sel, dim, seen, ck) {
     }
     if (result) {
         for (const derivedDim of (derivedReaders[dim] || [])) {
-            if (dimsInKey.has(derivedDim) && sel[dim] !== undefined) continue;
             if (!couldAffect(sel, dim, derivedDim, ck)) continue;
+            if (dimsInKey.has(derivedDim) && sel[dim] !== undefined) continue;
             if (!isIrrelevant(sel, derivedDim, seen, ck)) { result = false; break; }
         }
     }
@@ -775,12 +784,14 @@ function walk(opts = {}) {
  * @param {Object} opts
  * @param {Function[]} opts.matchers - Array of (sel) => bool functions, one per outcome.
  * @param {Set<string>} [opts.noClassMergeDims] - Dimensions to explore all enabled edges (not class reps).
+ * @param {Set<string>} [opts.outcomeDims] - Dimensions referenced by outcome templates (never wildcarded in memoization key).
  * @param {boolean} [opts.quiet]
  * @returns {{ reachMap: Map<string,number>, visited: number, elapsed: number }}
  */
 function computeReachability(opts = {}) {
     const matchers = opts.matchers || [];
     const noMerge = opts.noClassMergeDims || new Set();
+    const outcomeDims = opts.outcomeDims || new Set();
     const quiet = opts.quiet || false;
     if (matchers.length > 31) throw new Error('Max 31 outcomes (bitmask limit)');
 
@@ -808,19 +819,22 @@ function computeReachability(opts = {}) {
         if (superDims.length === 0) {
             _rrRvMap.clear();
             const ik = irrKey(sel);
-            reachMap.set(ik, (reachMap.get(ik) || 0) | checkTerminals(sel) | childMask);
-            return;
+            const m = checkTerminals(sel) | childMask;
+            reachMap.set(ik, (reachMap.get(ik) || 0) | m);
+            return m;
         }
         const dim = superDims[0];
         const rest = superDims.slice(1);
         const saved = sel[dim];
         const node = NODE_MAP[dim];
         const values = node && node.edges ? node.edges.map(e => e.id) : (classReps[dim] || []);
+        let combined = 0;
         for (const v of values) {
             sel[dim] = v;
-            expandSuper(sel, rest, childMask);
+            combined |= expandSuper(sel, rest, childMask);
         }
         sel[dim] = saved;
+        return combined;
     }
 
     const _rrRvMap = new Map();
@@ -853,11 +867,11 @@ function computeReachability(opts = {}) {
         _rrRvMap.clear();
         setRvCache(_rrRvMap);
         const ik = irrKey(sel);
-        const finalMask = (reachMap.get(ik) || 0) | checkTerminals(sel) | childMask;
-        reachMap.set(ik, finalMask);
+        let fullMask = checkTerminals(sel) | childMask;
+        reachMap.set(ik, (reachMap.get(ik) || 0) | fullMask);
         if (superSet.size > 0) {
             const temp = Object.assign({}, sel);
-            expandSuper(temp, [...superSet], childMask);
+            fullMask |= expandSuper(temp, [...superSet], childMask);
         }
         const varDims = [];
         for (const d of noMerge) {
@@ -868,22 +882,33 @@ function computeReachability(opts = {}) {
             expandVariants(temp, varDims, 0, childMask);
         }
         setRvCache(null);
+        return fullMask;
+    }
+
+    function memoKey(ck, rawKey, sel) {
+        if (outcomeDims.size === 0) return rawKey;
+        const buf = new Uint8Array(dimOrder.length);
+        for (let i = 0; i < dimOrder.length; i++) {
+            const c = rawKey.charCodeAt(i);
+            buf[i] = (c === 42 && sel[dimOrder[i]] && outcomeDims.has(dimOrder[i]))
+                ? ck.charCodeAt(i) : c;
+        }
+        return String.fromCharCode.apply(null, buf);
     }
 
     function dfs(stk, superSet) {
         const sel = currentState(stk);
         _activeRvMap.clear();
         setRvCache(_activeRvMap);
-        const { ck, sk: key } = classAndSuperKey(sel, superSet);
+        const { ck, sk: rawKey } = classAndSuperKey(sel, superSet);
+        const key = memoKey(ck, rawKey, sel);
 
         const nextNode = pickNextNode(sel, ck);
         const enabled = nextNode ? nextNode.edges.filter(e => !cachedIsEdgeDisabled(ck, sel, nextNode, e)) : [];
         setRvCache(null);
 
         if (!nextNode || enabled.length === 0) {
-            const mask = checkTerminals(sel);
-            recordReach(sel, superSet, 0);
-            return mask;
+            return recordReach(sel, superSet, 0);
         }
 
         if (visited.has(key)) {
@@ -902,9 +927,8 @@ function computeReachability(opts = {}) {
                 for (const rep of classReps[superDim]) {
                     childMask |= dfs(dfsPush(stk, superDim, rep), newSuper);
                 }
-                const mask = checkTerminals(sel) | childMask;
-                skReach.set(key, { mask, childMask });
-                recordReach(sel, superSet, childMask);
+                const mask = recordReach(sel, superSet, childMask);
+                skReach.set(key, { mask, childMask: mask });
                 return mask;
             }
         }
@@ -918,7 +942,9 @@ function computeReachability(opts = {}) {
 
         let childMask = 0;
         if (classEdges.length <= 1) {
-            childMask = dfs(dfsPush(stk, nextNode.id, enabled[0].id), superSet);
+            const needsExpand = enabled.length > 1;
+            const sub = needsExpand ? new Set([...superSet, nextNode.id]) : superSet;
+            childMask = dfs(dfsPush(stk, nextNode.id, enabled[0].id), sub);
         } else if (canSuperimpose(sel, nextNode, ck)) {
             const newSuper = new Set(superSet);
             newSuper.add(nextNode.id);
@@ -929,9 +955,8 @@ function computeReachability(opts = {}) {
             }
         }
 
-        const mask = checkTerminals(sel) | childMask;
-        skReach.set(key, { mask, childMask });
-        recordReach(sel, superSet, childMask);
+        const mask = recordReach(sel, superSet, childMask);
+        skReach.set(key, { mask, childMask: mask });
         return mask;
     }
 

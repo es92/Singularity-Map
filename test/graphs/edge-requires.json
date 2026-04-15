@@ -1,0 +1,42 @@
+{
+  "nodes": [
+    {
+      "id": "tier",
+      "edges": [
+        { "id": "basic" },
+        { "id": "premium" },
+        { "id": "elite" }
+      ]
+    },
+    {
+      "id": "feature",
+      "edges": [
+        { "id": "standard" },
+        { "id": "advanced", "requires": { "tier": ["premium", "elite"] } },
+        { "id": "exclusive", "requires": { "tier": ["elite"] } }
+      ]
+    },
+    {
+      "id": "support",
+      "edges": [
+        { "id": "community" },
+        { "id": "priority", "requires": { "tier": ["premium", "elite"] } }
+      ]
+    },
+    {
+      "id": "bonus",
+      "activateWhen": [{ "feature": ["exclusive"] }],
+      "edges": [
+        { "id": "b1" },
+        { "id": "b2" }
+      ]
+    }
+  ],
+  "outcomes": {
+    "templates": [
+      { "id": "any", "reachable": [{}] },
+      { "id": "elite-full", "reachable": [{ "tier": ["elite"], "feature": ["exclusive"], "bonus": ["b1", "b2"] }] },
+      { "id": "basic-only", "reachable": [{ "tier": ["basic"], "feature": ["standard"] }] }
+    ]
+  }
+}

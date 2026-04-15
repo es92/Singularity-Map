@@ -1,0 +1,61 @@
+{
+  "nodes": [
+    {
+      "id": "weather",
+      "edges": [
+        { "id": "sunny" },
+        { "id": "rainy" },
+        { "id": "stormy" }
+      ]
+    },
+    {
+      "id": "gear",
+      "edges": [
+        { "id": "light" },
+        { "id": "heavy" }
+      ]
+    },
+    {
+      "id": "shelter",
+      "activateWhen": [
+        { "weather": ["stormy"] },
+        { "weather": ["rainy"], "gear": ["light"] }
+      ],
+      "edges": [
+        { "id": "tent" },
+        { "id": "cabin" }
+      ]
+    },
+    {
+      "id": "activity",
+      "edges": [
+        { "id": "hike" },
+        { "id": "swim", "disabledWhen": [{ "weather": ["stormy"] }] },
+        { "id": "camp" }
+      ]
+    },
+    {
+      "id": "rating",
+      "activateWhen": [{ "activity": ["hike", "swim"] }],
+      "edges": [
+        { "id": "great" },
+        { "id": "ok" }
+      ]
+    },
+    {
+      "id": "poolside",
+      "activateWhen": [{ "activity": ["swim"] }],
+      "edges": [
+        { "id": "lounge" },
+        { "id": "dive" }
+      ]
+    }
+  ],
+  "outcomes": {
+    "templates": [
+      { "id": "any", "reachable": [{}] },
+      { "id": "storm-cabin", "reachable": [{ "weather": ["stormy"], "shelter": ["cabin"] }] },
+      { "id": "sunny-swim", "reachable": [{ "weather": ["sunny"], "activity": ["swim"] }] }
+    ]
+  }
+}

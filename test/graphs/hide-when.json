@@ -1,0 +1,42 @@
+{
+  "nodes": [
+    {
+      "id": "trigger",
+      "edges": [
+        { "id": "alpha" },
+        { "id": "beta" }
+      ]
+    },
+    {
+      "id": "secret",
+      "hideWhen": [{ "trigger": ["beta"] }],
+      "activateWhen": [{ "trigger": ["alpha"] }],
+      "edges": [
+        { "id": "s1" },
+        { "id": "s2" }
+      ]
+    },
+    {
+      "id": "gate",
+      "edges": [
+        { "id": "open" },
+        { "id": "shut", "disabledWhen": [{ "secret": ["s1"] }] }
+      ]
+    },
+    {
+      "id": "prize",
+      "activateWhen": [{ "gate": ["open"] }],
+      "edges": [
+        { "id": "gold" },
+        { "id": "silver" }
+      ]
+    }
+  ],
+  "outcomes": {
+    "templates": [
+      { "id": "any", "reachable": [{}] },
+      { "id": "gold-prize", "reachable": [{ "prize": ["gold"] }] },
+      { "id": "secret-revealed", "reachable": [{ "secret": ["s2"] }] }
+    ]
+  }
+}
