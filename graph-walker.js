@@ -470,6 +470,10 @@ function canNodeBecomeVisible(sel, node, ck) {
 }
 
 const _irrComputing = new Set();
+let _irrDepth = 0;
+let _irrMaxDepth = 0;
+let _irrCycleHits = 0;
+const IRR_DEPTH_WARN = 80;
 
 function cachedIsIrrelevant(ck, sel, dim) {
     const sc = getCache(ck);
@@ -477,15 +481,35 @@ function cachedIsIrrelevant(ck, sel, dim) {
     if (cached !== undefined) { cacheHits++; return cached; }
 
     const guard = ck + '\0' + dim;
-    if (_irrComputing.has(guard)) return true;
+    if (_irrComputing.has(guard)) {
+        _irrCycleHits++;
+        if (_irrCycleHits === 1) {
+            console.warn(`[graph-walker] isIrrelevant cycle detected: dim="${dim}" ck="${ck.substring(0, 20)}…"`);
+        }
+        return true;
+    }
     _irrComputing.add(guard);
+    _irrDepth++;
+    if (_irrDepth > _irrMaxDepth) _irrMaxDepth = _irrDepth;
+    if (_irrDepth === IRR_DEPTH_WARN) {
+        console.warn(`[graph-walker] isIrrelevant depth reached ${IRR_DEPTH_WARN} (dim="${dim}")`);
+    }
 
     cacheMisses++;
     const result = isIrrelevant(sel, dim, null, ck);
     sc.irr.set(dim, result);
 
+    _irrDepth--;
     _irrComputing.delete(guard);
     return result;
+}
+
+function getIrrelevanceStats() {
+    return { maxDepth: _irrMaxDepth, cycleHits: _irrCycleHits };
+}
+function resetIrrelevanceStats() {
+    _irrMaxDepth = 0;
+    _irrCycleHits = 0;
 }
 
 function isIrrelevant(sel, dim, seen, ck) {
@@ -987,6 +1011,7 @@ const _exports = {
     pickNextNode, enabledEdgeIds,
     stateCache, irrVectorCache,
     getCacheStats() { return { hits: cacheHits, misses: cacheMisses, classKeys: stateCache.size }; },
+    getIrrelevanceStats, resetIrrelevanceStats,
 };
 
 if (typeof module !== 'undefined' && module.exports) {
