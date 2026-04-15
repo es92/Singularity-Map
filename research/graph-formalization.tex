@@ -1,0 +1,1084 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{mathtools}
+
+% ── theorem environments ──
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+
+% ── notation shortcuts ──
+\newcommand{\St}{\mathcal{S}}          % state space
+\newcommand{\Dim}{\mathcal{D}}         % dimension set
+\newcommand{\Edg}[1]{E(#1)}            % edge set of dimension d
+\newcommand{\sel}{\sigma}              % a state / selection
+\newcommand{\clean}{\mathsf{C}}        % clean operator
+\newcommand{\cleannf}{\mathsf{C}_{\neg f}} % clean without autoForce
+\newcommand{\res}[2]{\rho(#1,#2)}      % resolvedVal
+\newcommand{\ik}{\mathsf{irrKey}}      % irrelevance key
+\newcommand{\ck}{\kappa}               % class key
+\newcommand{\Reach}{\mathrm{Reach}}    % reachability predicate
+\newcommand{\Vis}{\mathrm{Vis}}        % visible predicate
+\newcommand{\Act}{\mathrm{Act}}        % activated predicate
+\newcommand{\Dis}{\mathrm{Dis}}        % disabled predicate
+\newcommand{\Irr}{\mathrm{Irr}}        % irrelevance predicate
+\newcommand{\fp}{\mathrm{fp}}          % fingerprint
+\newcommand{\Rep}{\mathrm{Rep}}        % class representative
+\newcommand{\wildcard}{*}
+
+\title{Decision Graph Formalization\\[4pt]
+       \large Structure, Algorithms, and Reduction Theorems}
+\author{Singularity Map Project}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We formalize the decision graph underlying the Singularity Map as a
+mathematical structure, define the algorithms computed over it
+(reachability, dead-end detection, validation), and state four
+\emph{reduction theorems} used by the graph walker.
+
+The central question is: \textbf{do the reductions change the results?}
+The baseline algorithm is a full depth-first search that branches on every
+enabled edge at every dimension. The production implementation applies a
+chain of four reductions---equivalence-class merging, irrelevance
+wildcarding, superposition with deferred collapse, and variant
+expansion---that dramatically shrink the search space. Each reduction
+theorem asserts that the reduced traversal produces \emph{exactly the same
+answers} for every algorithm (reachability, dead-end detection, edge
+coverage, and all validation invariants) as the baseline DFS.
+
+This document is intended as input for formal or semi-formal verification
+of these reduction theorems.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+%==========================================================================
+\section{Graph Structure}\label{sec:structure}
+%==========================================================================
+
+%--------------------------------------------------------------------------
+\subsection{Decision Graph}
+%--------------------------------------------------------------------------
+
+\begin{definition}[Decision Graph]\label{def:graph}
+A \emph{decision graph} is a tuple
+$G = (\Dim,\, E,\, \mathcal{A},\, \mathcal{H},\, \mathcal{W},\,
+      \mathcal{R},\, \mathcal{O})$
+where:
+\begin{enumerate}[label=(\roman*)]
+  \item $\Dim = \{d_1,\dots,d_n\}$ is a finite ordered set of
+        \textbf{dimensions}.
+  \item For each $d \in \Dim$, $\Edg{d} = \{e_1,\dots,e_{m_d}\}$ is a
+        nonempty finite set of \textbf{edges} (possible values).
+  \item $\mathcal{A}$ assigns to each dimension $d$ an
+        \textbf{activation predicate}
+        $\Act_d : \St \to \{0,1\}$.
+  \item $\mathcal{H}$ assigns to each dimension $d$ a
+        \textbf{hide predicate} $H_d : \St \to \{0,1\}$.
+  \item $\mathcal{W}$ assigns to each dimension--edge pair $(d,e)$ a
+        \textbf{disable predicate}
+        $\Dis_{d,e} : \St \to \{0,1\}$.
+  \item $\mathcal{R}$ assigns to each dimension $d$ a
+        \textbf{derivation rule}
+        $R_d : \St \to \Edg{d} \cup \{\bot\}$.
+  \item $\mathcal{O} = \{O_1,\dots,O_K\}$ is a set of
+        \textbf{outcome predicates} $O_k : \St \to \{0,1\}$.
+\end{enumerate}
+\end{definition}
+
+%--------------------------------------------------------------------------
+\subsection{States}
+%--------------------------------------------------------------------------
+
+\begin{definition}[State]\label{def:state}
+A \textbf{state} (or \emph{selection}) is a partial function
+\[
+  \sel : \Dim \rightharpoonup \textstyle\bigcup_{d\in\Dim} \Edg{d}
+  \qquad\text{with}\quad
+  \sel(d) \in \Edg{d} \cup \{\bot\}
+  \;\;\forall\, d \in \Dim,
+\]
+where $\sel(d) = \bot$ means dimension $d$ is \emph{unanswered}.
+The set of all states is $\St$.
+\end{definition}
+
+%--------------------------------------------------------------------------
+\subsection{Visibility and Activation}
+%--------------------------------------------------------------------------
+
+\begin{definition}[Visibility]\label{def:vis}
+A dimension $d$ is \textbf{visible} in state $\sel$ iff it is activated
+and not hidden:
+\[
+  \Vis(d,\sel) \;\iff\; \Act_d(\sel) = 1 \;\wedge\; H_d(\sel) = 0.
+\]
+Activation and hiding are evaluated using the \emph{resolved} values of
+$\sel$ (Definition~\ref{def:resolved}).
+\end{definition}
+
+%--------------------------------------------------------------------------
+\subsection{Resolved Values (Derivation)}
+%--------------------------------------------------------------------------
+
+\begin{definition}[Resolved Value]\label{def:resolved}
+The \textbf{resolved value} of dimension $d$ in state $\sel$ is
+\[
+  \res{\sel}{d} \;=\;
+  \begin{cases}
+    R_d(\sel) & \text{if } R_d(\sel) \neq \bot,\\
+    \sel(d)   & \text{otherwise}.
+  \end{cases}
+\]
+The derivation rule $R_d$ may reference $\res{\sel}{d'}$ for other
+dimensions $d'$; cycles are broken by returning the raw value $\sel(d)$
+when a dimension is encountered while already being computed.
+\end{definition}
+
+%--------------------------------------------------------------------------
+\subsection{Condition Matching}\label{sec:conditions}
+%--------------------------------------------------------------------------
+
+Activation, hiding, and disabling predicates are defined by
+\emph{conditions}---conjunctions of per-dimension constraints. A single
+condition $\varphi$ is a partial function mapping dimensions to
+\emph{constraint types}:
+
+\begin{definition}[Condition Types]\label{def:condtypes}
+Each constraint on dimension $d$ in condition $\varphi$ takes one of five
+forms:
+\begin{center}
+\begin{tabular}{lll}
+\textbf{Tag} & \textbf{Notation} & \textbf{Matches $\sel$ iff} \\
+\hline
+Presence  & $\varphi(d) = \mathsf{true}$   & $\res{\sel}{d} \neq \bot$ \\
+Absence   & $\varphi(d) = \mathsf{false}$  & $\res{\sel}{d} = \bot$ \\
+Inclusion & $\varphi(d) = V \subseteq \Edg{d}$ & $\res{\sel}{d} \in V$ \\
+Exclusion & $\varphi(d) = \neg V$            & $\res{\sel}{d} \neq \bot \;\Rightarrow\; \res{\sel}{d} \notin V$ \\
+Required-exclusion & $\varphi(d) = \neg^! V$ & $\res{\sel}{d} \neq \bot \;\wedge\; \res{\sel}{d} \notin V$ \\
+\end{tabular}
+\end{center}
+A condition $\varphi$ \textbf{matches} state $\sel$ iff every constraint
+in $\varphi$ is satisfied.
+\end{definition}
+
+\begin{definition}[Predicates from Conditions]\label{def:pred}
+\begin{itemize}
+  \item $\Act_d(\sel) = 1$ iff $d$ has no activation conditions, or at
+        least one activation condition matches $\sel$.
+  \item $H_d(\sel) = 1$ iff some hide condition of $d$ matches $\sel$.
+  \item $\Dis_{d,e}(\sel) = 1$ iff some \texttt{disabledWhen} condition
+        of edge $e$ matches $\sel$, \emph{or} edge $e$ has a
+        \texttt{requires} clause and no requirement condition matches.
+\end{itemize}
+\end{definition}
+
+\begin{remark}[Direct Optimization]\label{rem:direct}
+When every dimension referenced by a compiled condition is
+\emph{non-derived} (has no derivation rule), the condition is flagged
+\texttt{\_direct} and matched using raw state values $\sel(d)$
+instead of $\res{\sel}{d}$, avoiding derivation computation. This is a
+pure optimization; correctness follows because
+$\res{\sel}{d} = \sel(d)$ when $R_d \equiv \bot$.
+\end{remark}
+
+%--------------------------------------------------------------------------
+\subsection{Locking and the Clean Operator}\label{sec:clean}
+%--------------------------------------------------------------------------
+
+\begin{definition}[Locked Dimension]\label{def:locked}
+A visible, non-derived dimension $d$ is \textbf{locked} in state $\sel$
+if exactly one edge of $d$ is enabled:
+$|\{e \in \Edg{d} : \Dis_{d,e}(\sel)=0\}| = 1$. The unique enabled edge
+is $\ell_d(\sel)$.
+\end{definition}
+
+\begin{definition}[Clean Operator]\label{def:clean}
+The \textbf{clean operator} $\clean : \St \to \St$ is the limit of the
+iteration $\sel^{(0)} = \sel$,
+\[
+  \sel^{(i+1)}(d) =
+  \begin{cases}
+    \ell_d(\sel^{(i)})
+      & \text{if } d \text{ is locked in } \sel^{(i)}
+        \text{ and autoForce is active},\\
+    \bot
+      & \text{if } \sel^{(i)}(d) \neq \bot \text{ and }
+        \Dis_{d,\sel^{(i)}(d)}(\sel^{(i)}) = 1,\\
+    \bot
+      & \text{if } d \text{ was auto-forced and is no longer visible
+              and hidden},\\
+    \sel^{(i)}(d) & \text{otherwise},
+  \end{cases}
+\]
+run for at most $P$ passes (currently $P=5$) or until a fixpoint is
+reached.
+
+We write $\cleannf$ for the variant with autoForce disabled (no locking
+step), which only removes disabled choices.
+\end{definition}
+
+\begin{lemma}[Termination]\label{lem:clean-term}
+$\clean(\sel)$ terminates in at most $P \cdot |\Dim|$ steps, since each
+pass inspects every dimension once and terminates early when no change
+occurs.
+\end{lemma}
+
+%--------------------------------------------------------------------------
+\subsection{Transitions and Plays}\label{sec:transitions}
+%--------------------------------------------------------------------------
+
+\begin{definition}[Transition]\label{def:trans}
+From state $\sel$, choosing dimension $d$ with edge $e$ (where
+$\Vis(d,\sel)=1$, $\sel(d)=\bot$, and $\Dis_{d,e}(\sel)=0$) yields
+successor state:
+\[
+  \sel' = \clean(\sel[d \mapsto e])
+\]
+where $\sel[d \mapsto e]$ denotes $\sel$ with $\sel(d) \coloneqq e$.
+\end{definition}
+
+\begin{definition}[Play and Terminal]\label{def:play}
+A \textbf{play} is a sequence of transitions
+$\sel_0 \to \sel_1 \to \cdots \to \sel_T$ starting from the initial state
+$\sel_0 = \clean(\lambda d.\,\bot)$.
+
+State $\sel$ is \textbf{terminal} if no dimension is both visible and
+unanswered:
+\[
+  \mathrm{Terminal}(\sel) \;\iff\;
+  \nexists\, d \in \Dim :\;
+  \Vis(d,\sel) = 1 \;\wedge\; \sel(d) = \bot.
+\]
+
+State $\sel$ is a \textbf{dead end} if some dimension is visible and
+unanswered but every edge of that dimension is disabled.
+\end{definition}
+
+%--------------------------------------------------------------------------
+\subsection{Outcome Matching}\label{sec:outcomes}
+%--------------------------------------------------------------------------
+
+\begin{definition}[Outcome Predicate]\label{def:outcome}
+Each outcome $O_k$ is defined by a disjunction of \emph{reachable
+conditions} over the \emph{resolved state}
+$\hat\sel(d) = \res{\sel}{d}$:
+\[
+  O_k(\sel) = 1 \;\iff\;
+  \exists\, \text{condition } c \in \mathcal{C}_k :\;
+    \forall\,(d,V) \in c,\; \hat\sel(d) \in V
+    \;\wedge\;
+    \forall\,(d,V) \in c.\text{\_not},\; \hat\sel(d) \notin V.
+\]
+Some outcomes have a \textbf{primary dimension} $p_k$, producing
+\emph{variants} $O_{k,v}$ that additionally require
+$\hat\sel(p_k) = v$.
+\end{definition}
+
+
+%==========================================================================
+\section{Algorithms}\label{sec:algorithms}
+%==========================================================================
+
+%--------------------------------------------------------------------------
+\subsection{Baseline DFS}\label{sec:baseline}
+%--------------------------------------------------------------------------
+
+\begin{definition}[Next-Dimension Selection]\label{def:next}
+Given state $\sel$, define $\mathsf{next}(\sel)$ as the first dimension
+in the fixed ordering $d_1,\dots,d_n$ such that $\Vis(d,\sel)=1$ and
+$\sel(d)=\bot$, respecting priority-based activation rules that may block
+lower-priority dimensions when a higher-priority one is active but
+unanswered. If no such dimension exists, $\mathsf{next}(\sel) = \bot$.
+\end{definition}
+
+\begin{algorithm}[H]
+\caption{Baseline DFS for Reachability}\label{alg:baseline}
+\begin{algorithmic}[1]
+\Procedure{BaselineDFS}{$\sel$}
+  \If{$\mathrm{Terminal}(\sel)$}
+    \State \Return $M(\sel) \gets \sum_{k:\,O_k(\sel)=1} 2^k$
+  \EndIf
+  \State $d \gets \mathsf{next}(\sel)$
+  \If{$d = \bot$} \Return $0$ \Comment{dead end}
+  \EndIf
+  \State $\mathit{mask} \gets 0$
+  \ForAll{$e \in \Edg{d}$ with $\Dis_{d,e}(\sel)=0$}
+    \State $\sel' \gets \cleannf(\sel[d \mapsto e])$
+    \State $\mathit{mask} \gets \mathit{mask} \mathbin{|} \Call{BaselineDFS}{\sel'}$
+  \EndFor
+  \State \Return $\mathit{mask}$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{definition}[Reachability]\label{def:reach}
+Outcome $k$ is \textbf{reachable} from state $\sel$ iff:
+\[
+  \Reach(\sel,k) \;\iff\;
+  \text{bit } k \text{ is set in }
+  \textsf{BaselineDFS}(\sel).
+\]
+Equivalently, there exists a play from $\sel$ reaching a terminal $\sel_T$
+with $O_k(\sel_T) = 1$.
+\end{definition}
+
+%--------------------------------------------------------------------------
+\subsection{Reachability Precomputation}\label{sec:precomp}
+%--------------------------------------------------------------------------
+
+In practice, the DFS is run once from $\sel_0$ with all $K$ outcome
+matchers simultaneously. The result is a map
+\[
+  \mathsf{ReachMap} : \text{Key} \to \{0,\dots,2^K-1\}
+\]
+keyed by $\ik(\sel)$ (Definition~\ref{def:irrkey} below), storing the
+OR-combined bitmask of reachable outcomes from any state mapping to that
+key. Separate files are written per outcome (or variant): outcome $k$'s
+file contains the set $\{\ik(\sel) : \text{bit } k \text{ set in }
+\mathsf{ReachMap}(\ik(\sel))\}$.
+
+%--------------------------------------------------------------------------
+\subsection{Client-Side Lookup}\label{sec:client}
+%--------------------------------------------------------------------------
+
+At runtime, given the user's current explicit choice stack and a candidate
+move $(d,e)$:
+
+\begin{enumerate}
+  \item Reconstruct a \emph{raw} state $\sel_{\mathrm{raw}}$ from
+        explicit stack entries only (excluding auto-forced values).
+  \item Apply $\cleannf(\sel_{\mathrm{raw}}[d \mapsto e])$ to get the
+        hypothetical next state $\sel'$.
+  \item Compute $\ik(\sel')$ and check membership in the preloaded
+        $\mathsf{ReachSet}_k$.
+\end{enumerate}
+
+The use of $\cleannf$ (no auto-force) on both the server DFS and the
+client lookup ensures key agreement.
+
+%--------------------------------------------------------------------------
+\subsection{Graph Walk}\label{sec:walk}
+%--------------------------------------------------------------------------
+
+The \textsf{walk} procedure traverses the full state space using the
+superposition DFS (Algorithm~\ref{alg:superdfs}) and classifies every
+leaf.
+
+\begin{definition}[Walk Leaf Classification]\label{def:leafclass}
+A leaf reached by the walk is classified as one of:
+\begin{enumerate}[label=(\roman*)]
+  \item \textbf{Terminal} --- $\mathrm{isTerminal}(\sel) = 1$
+        (at least one outcome matched).
+  \item \textbf{Dead end} --- $\mathsf{next}(\sel) = \bot$
+        (unanswered visible dimensions may exist but no outcome matched),
+        or $\mathsf{next}(\sel) = d$ but every edge of $d$ is disabled.
+  \item \textbf{Boundary} --- $\mathsf{next}(\sel) = d$ and $d$ belongs
+        to a specified \emph{exclude} set (the walk stops before entering
+        those dimensions).
+\end{enumerate}
+\end{definition}
+
+The walk also collects \textbf{edge coverage}: the set
+$\{(d,e) : \exists\,\text{visited } \sel \text{ with } \sel(d)=e\}$,
+including values produced by derivation.
+
+%--------------------------------------------------------------------------
+\subsection{Validation Algorithms}\label{sec:validate}
+%--------------------------------------------------------------------------
+
+The validator runs three phases over the graph. Phase~1 is purely static;
+Phase~2 piggybacks on the \textsf{walk} DFS; Phase~3 concerns narrative
+content and is omitted here (it is domain-specific and does not interact
+with graph structure).
+
+\subsubsection{Phase 1: Static Analysis}\label{sec:static}
+
+These checks inspect the graph definition without traversal.
+
+\begin{definition}[Reference Integrity]\label{def:refint}
+For every condition $\varphi$ appearing in any \texttt{activateWhen},
+\texttt{hideWhen}, \texttt{disabledWhen}, \texttt{requires}, or
+\texttt{deriveWhen} rule: every dimension $d$ referenced by $\varphi$
+must exist ($d \in \Dim$), and every value referenced must be a valid
+edge ($v \in \Edg{d}$). The same holds for derivation outputs
+(\texttt{value}, \texttt{valueMap}, \texttt{fromState}) and outcome
+template conditions.
+\end{definition}
+
+\begin{definition}[Dead Edge Detection]\label{def:deaded}
+An edge $e$ of dimension $d$ is \textbf{statically dead} if $e$ has
+both a \texttt{requires} clause and a \texttt{disabledWhen} clause, and
+for every requirement condition $r$ in \texttt{requires}, there exists a
+disable condition $w$ in \texttt{disabledWhen} such that $w$ is
+\emph{logically implied} by $r$:
+\[
+  \forall\, r \in \mathsf{requires}(e),\;
+  \exists\, w \in \mathsf{disabledWhen}(e) :\;
+  \forall\, (d_w, V_w) \in w,\;\;
+    d_w \in \mathrm{dom}(r) \;\wedge\;
+    r(d_w) \subseteq V_w.
+\]
+Such an edge can never be enabled: whenever its requirements are met, a
+disable condition is also triggered.
+\end{definition}
+
+\subsubsection{Phase 2: DFS Invariant Checks}\label{sec:dfsinvariants}
+
+At every state $\sel$ visited during the walk, the following invariants
+are checked.
+
+\begin{definition}[Dead End]\label{def:deadend}
+A \textbf{dead end} is a non-terminal leaf: $\mathsf{next}(\sel) = \bot$
+and no outcome predicate matches, \emph{or} $\mathsf{next}(\sel) = d$
+with $\Edg{d}$ nonempty but
+$\forall\, e \in \Edg{d}:\;\Dis_{d,e}(\sel)=1$.
+A well-formed graph should have zero dead ends.
+\end{definition}
+
+\begin{definition}[Re-Derived Dead End]\label{def:rederived}
+At a dead end $\sel$, a \textbf{re-derived dead end} occurs when some
+dimension $d$ has a raw value $\sel(d)$ different from its resolved value
+$\res{\sel}{d}$, and replacing raw values with resolved values reveals a
+new visible unanswered dimension. This indicates a derivation rule that
+hides a question that should be reachable.
+\end{definition}
+
+\begin{definition}[Stuck Node]\label{def:stuck}
+A \textbf{stuck node} at state $\sel$ is a visible, non-derived,
+non-locked, unanswered dimension $d$ for which every edge is disabled:
+\[
+  \Vis(d,\sel) = 1 \;\wedge\;
+  \sel(d) = \bot \;\wedge\;
+  \forall\, e \in \Edg{d}:\; \Dis_{d,e}(\sel) = 1.
+\]
+Unlike a dead end (which concerns only $\mathsf{next}(\sel)$), a stuck
+node can exist at any dimension, even if a different dimension is next.
+\end{definition}
+
+\begin{definition}[Ambiguous Outcome]\label{def:ambig}
+A state $\sel$ is \textbf{ambiguous} if it matches more than one outcome
+template: $|\{k : O_k(\sel) = 1\}| > 1$. Well-formed outcomes should
+be mutually exclusive at terminals.
+\end{definition}
+
+\begin{definition}[Single-Option Node]\label{def:singleopt}
+A \textbf{single-option node} at state $\sel$ is a visible, unanswered,
+\emph{non-locked} dimension $d$ where exactly one edge is enabled but
+$d$ is not detected as locked by the engine. This is a UI concern: the
+user sees a ``choice'' with only one option.
+\end{definition}
+
+\begin{definition}[Click-Erased Edge]\label{def:clickerased}
+Edge $e$ of dimension $d$ is \textbf{click-erased} at state $\sel$ if
+pushing $(d,e)$ onto the stack and applying $\clean$ (with autoForce)
+results in a state where $d$ is no longer set:
+\[
+  \clean(\sel[d \mapsto e])(d) = \bot.
+\]
+This means the user's click is immediately undone by the auto-force /
+clean logic, which is a UX anomaly.
+\end{definition}
+
+\begin{definition}[Stack Integrity]\label{def:stackint}
+At state $\sel$ with stack $\mathit{stk}$, the \textbf{stack integrity}
+invariant holds iff the answered dimensions in \textsf{displayOrder}
+appear in the same relative order as the non-derived entries in
+$\mathit{stk}$. Violation indicates a dimension ordering inconsistency
+between the engine's display logic and the traversal path.
+\end{definition}
+
+\subsubsection{Phase 2: Edge Coverage}\label{sec:coverage}
+
+After the walk, \textbf{edge coverage} is the fraction of
+$(d,e) \in \Dim \times E$ pairs that appear in at least one visited
+state (including derived values). Unreached non-derived edges indicate
+potential dead content or over-constrained activation rules.
+
+\begin{definition}[Edge Coverage]\label{def:edgecov}
+\[
+  \mathrm{Coverage} =
+  \frac{|\{(d,e) : \exists\,\text{visited } \sel,\;
+         \sel(d) = e \text{ or } \res{\sel}{d} = e\}|}
+       {|\{(d,e) : d \in \Dim,\; e \in \Edg{d}\}|}.
+\]
+\end{definition}
+
+
+%==========================================================================
+\section{Reductions}\label{sec:reductions}
+%==========================================================================
+
+The baseline DFS (Algorithm~\ref{alg:baseline}) is correct by
+construction but explores up to $\prod_{d} |\Edg{d}|$ states---far too
+many for practical use. The production traversal applies a chain of four
+\textbf{reductions} that shrink the search space while (we claim)
+preserving all results.
+
+The reduction chain is:
+\[
+  \underbrace{\textsf{BaselineDFS}}_{\text{Section~\ref{sec:baseline}}}
+  \;\xrightarrow{\text{R1}}\;
+  \underbrace{\textsf{ClassDFS}}_{\text{\S\ref{sec:classes}}}
+  \;\xrightarrow{\text{R2}}\;
+  \underbrace{\textsf{ClassDFS} + \ik\text{-memo}}_{\text{\S\ref{sec:irrelevance}}}
+  \;\xrightarrow{\text{R3}}\;
+  \underbrace{\textsf{SuperDFS}}_{\text{\S\ref{sec:superposition}}}
+  \;\xrightarrow{\text{R4}}\;
+  \underbrace{\textsf{SuperDFS} + \text{Expand}}_{\text{\S\ref{sec:variants}}}
+\]
+
+\medskip
+\noindent
+\textbf{What ``preserves all results'' means.}
+Let $\mathcal{A}$ denote the set of algorithms from
+Section~\ref{sec:algorithms}: reachability (Def.~\ref{def:reach}),
+dead-end detection (Def.~\ref{def:deadend}), edge coverage
+(Def.~\ref{def:edgecov}), and the validation invariants of
+Section~\ref{sec:validate} (stuck nodes, ambiguous outcomes, etc.).
+For each reduction $\textsf{X} \xrightarrow{\text{R}} \textsf{Y}$ we
+want to show:
+\[
+  \forall\, A \in \mathcal{A},\;
+  \forall\, \sel \in \St :\;
+  A_{\textsf{X}}(\sel) = A_{\textsf{Y}}(\sel).
+\]
+That is, the reduced traversal reports the same reachability bitmasks,
+detects the same dead ends, visits the same edge-coverage set (up to
+equivalence class), and triggers the same validation violations as the
+baseline.
+
+\medskip
+\noindent
+Each subsection below defines one reduction step and states the
+corresponding theorem. Proofs are the target of formal verification.
+
+%--------------------------------------------------------------------------
+\subsection{Equivalence Classes}\label{sec:classes}
+%--------------------------------------------------------------------------
+
+\begin{definition}[Behavioral Equivalence]\label{def:equiv}
+For dimension $d$, edges $e_1, e_2 \in \Edg{d}$ are
+\textbf{behaviorally equivalent}, written $e_1 \sim_d e_2$, if for every
+state $\sel$ with $\sel(d) \in \{e_1, e_2\}$, replacing $\sel(d)$ from
+$e_1$ to $e_2$ (or vice versa) does not change:
+\begin{enumerate}[label=(\alph*)]
+  \item $\Vis(d',\sel)$ for any $d' \neq d$,
+  \item $\Dis_{d',e'}(\sel)$ for any $(d',e')$ with $d' \neq d$,
+  \item $\res{\sel}{d'}$ for any derived dimension $d'$.
+\end{enumerate}
+\end{definition}
+
+This is an equivalence relation. It partitions $\Edg{d}$ into
+\textbf{equivalence classes} $[e]_d$.
+
+\begin{definition}[Class Key]\label{def:classkey}
+The \textbf{class key} of state $\sel$ is:
+\[
+  \ck(\sel) = \bigl(c_1,\dots,c_n\bigr)
+  \quad\text{where}\quad
+  c_i =
+  \begin{cases}
+    [\res{\sel}{d_i}]_{d_i}
+      & \text{if } d_i \text{ is derived},\\
+    [\sel(d_i)]_{d_i}
+      & \text{if } \sel(d_i) \neq \bot,\\
+    \mathsf{U}
+      & \text{if } \sel(d_i) = \bot.
+  \end{cases}
+\]
+\end{definition}
+
+\begin{definition}[Class Representative]\label{def:rep}
+For each class $[e]_d$, fix a canonical \textbf{representative}
+$\Rep_d([e]_d) \in [e]_d$.
+\end{definition}
+
+\begin{algorithm}[H]
+\caption{Class-Merged DFS}\label{alg:classdfs}
+\begin{algorithmic}[1]
+\Procedure{ClassDFS}{$\sel$}
+  \If{$\mathrm{Terminal}(\sel)$}
+    \State \Return $M(\sel)$
+  \EndIf
+  \State $d \gets \mathsf{next}(\sel)$; \textbf{if} $d=\bot$ \textbf{return} $0$
+  \State $\mathit{mask} \gets 0$
+  \State $\mathit{seen} \gets \emptyset$
+  \ForAll{$e \in \Edg{d}$ with $\Dis_{d,e}(\sel)=0$}
+    \If{$[e]_d \notin \mathit{seen}$}
+      \State $\mathit{seen} \gets \mathit{seen} \cup \{[e]_d\}$
+      \State $\sel' \gets \cleannf(\sel[d \mapsto \Rep_d([e]_d)])$
+      \State $\mathit{mask} \gets \mathit{mask} \mathbin{|} \Call{ClassDFS}{\sel'}$
+    \EndIf
+  \EndFor
+  \State \Return $\mathit{mask}$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{theorem}[Reduction R1: Equivalence Class Correctness]\label{thm:class}
+For all states $\sel$ and outcomes $k$:
+\[
+  \Reach_{\textsf{Baseline}}(\sel,k) = \Reach_{\textsf{ClassDFS}}(\sel,k).
+\]
+More broadly, the class-merged DFS detects the same dead ends (by class
+key), reports the same validation violations, and covers the same edges
+(up to within-class equivalence) as the baseline. Exploring only class
+representatives at each branching point does not change any algorithm
+result.
+\end{theorem}
+
+\begin{remark}[Computation]
+Equivalence classes are computed by iterative signature-based clustering.
+For each dimension $d$ and edge $e$, a \emph{signature} string encodes how
+$e$ interacts with every condition, edge constraint, and derivation rule
+in the graph. Edges with identical signatures are placed in the same
+class. The process iterates (up to 20 rounds) until stable, then applies a
+transitive collapse: if every ``reader'' of dimension $d$ has been
+collapsed to a single class, dimension $d$ itself is collapsed.
+\end{remark}
+
+%--------------------------------------------------------------------------
+\subsection{Irrelevance Wildcarding}\label{sec:irrelevance}
+%--------------------------------------------------------------------------
+
+\begin{definition}[Irrelevance]\label{def:irr}
+Dimension $d$ is \textbf{irrelevant} at state $\sel$ (with class key
+$\ck(\sel)$) if neither of the following holds:
+\begin{enumerate}[label=(\alph*)]
+  \item \textbf{Direct reader dependency:} There exists a non-derived
+        dimension $d'$ that references $d$ in its activation, hiding, or
+        edge conditions, $d'$ is unanswered ($\sel(d')=\bot$), and $d'$
+        could become visible from $\sel$.
+  \item \textbf{Derived reader dependency:} There exists a derived
+        dimension $d'$ that reads $d$ via its derivation rule, changing
+        $d$'s value within its class would change $\res{\sel}{d'}$, and
+        $d'$ is itself \emph{not} irrelevant (recursive check, with
+        cycles broken by treating revisited dimensions as irrelevant).
+\end{enumerate}
+We write $\Irr(d,\sel)$ when $d$ is irrelevant at $\sel$.
+\end{definition}
+
+\begin{definition}[Irrelevance Key]\label{def:irrkey}
+The \textbf{irrelevance key} of state $\sel$ is:
+\[
+  \ik(\sel) = \bigl(k_1,\dots,k_n\bigr)
+  \quad\text{where}\quad
+  k_i =
+  \begin{cases}
+    \wildcard & \text{if } \Irr(d_i,\sel)
+                \text{ and } d_i \text{ can be wildcarded},\\
+    c_i       & \text{otherwise (class id from } \ck(\sel)\text{)}.
+  \end{cases}
+\]
+A dimension can be wildcarded if: its value is defined, or it has no node,
+or it is derived, or it is not currently visible.
+\end{definition}
+
+\begin{theorem}[Reduction R2: Irrelevance Correctness]\label{thm:irr}
+For all states $\sel_1, \sel_2$ and outcomes $k$:
+\[
+  \ik(\sel_1) = \ik(\sel_2)
+  \;\Longrightarrow\;
+  \Reach(\sel_1,k) = \Reach(\sel_2,k).
+\]
+Consequently, memoizing by $\ik$ instead of by full state is safe: the DFS
+can skip a state whose $\ik$ has already been visited, and all algorithms
+(reachability, dead-end detection, validation) produce the same results.
+\end{theorem}
+
+\begin{remark}
+Irrelevance enables aggressive memoization: the DFS stores results keyed
+by $\ik(\sel)$ rather than the full state, collapsing the effective state
+space. In the Singularity Map, this reduces ${\sim}285\text{k}$ visited
+states to ${\sim}239\text{k}$ distinct irrelevance keys.
+\end{remark}
+
+%--------------------------------------------------------------------------
+\subsection{Superposition}\label{sec:superposition}
+%--------------------------------------------------------------------------
+
+\begin{definition}[State Fingerprint]\label{def:fingerprint}
+The \textbf{fingerprint} of state $\sel$ (at class key $\ck(\sel)$)
+is:
+\[
+  \fp(\sel) = \bigl\langle\,
+    (d', \{[e']_{d'} : e' \in \Edg{d'},\;\Dis_{d',e'}(\sel)=0\})
+    \;\big|\;
+    d' \in \Dim,\;\Vis(d',\sel)=1,\;\sel(d')=\bot,\;
+    \Edg{d'} \neq \emptyset
+  \,\bigr\rangle
+\]
+ordered by dimension ordering.
+\end{definition}
+
+\begin{definition}[Superimposability]\label{def:super}
+At state $\sel$ with next dimension $d = \mathsf{next}(\sel)$, let
+$C_1,\dots,C_m$ be the distinct equivalence classes among enabled edges
+of $d$. Dimension $d$ is \textbf{superimposable} at $\sel$ if $m \geq 2$
+and:
+\[
+  \forall\, i,j \in \{1,\dots,m\}:\;
+  \fp\!\bigl(\sel[d \mapsto \Rep_d(C_i)]\bigr)
+  = \fp\!\bigl(\sel[d \mapsto \Rep_d(C_j)]\bigr).
+\]
+\end{definition}
+
+\begin{definition}[Superposition Set]\label{def:superset}
+During the DFS, a set $\Sigma \subseteq \Dim$ tracks which dimensions
+have been \emph{superimposed} (deferred). When $d$ is superimposable, the
+DFS explores a single representative and adds $d$ to $\Sigma$,
+rather than branching over all class representatives.
+\end{definition}
+
+\begin{definition}[Super Key]\label{def:superkey}
+The \textbf{super key} generalizes the irrelevance key by additionally
+wildcarding superimposed dimensions:
+\[
+  \mathsf{superKey}(\sel,\Sigma) = \bigl(k_1,\dots,k_n\bigr)
+  \quad\text{where}\quad
+  k_i =
+  \begin{cases}
+    \wildcard & \text{if } d_i \in \Sigma \text{ or }
+                \Irr(d_i,\sel),\\
+    c_i       & \text{otherwise}.
+  \end{cases}
+\]
+Note that $\ik(\sel) = \mathsf{superKey}(\sel, \emptyset)$.
+\end{definition}
+
+\begin{definition}[Collapse]\label{def:collapse}
+A superimposed dimension $d \in \Sigma$ must be \textbf{collapsed} at
+state $\sel$ with next dimension $d^*$ if setting $\sel(d)$ to different
+class representatives of $d$ would change either:
+\begin{enumerate}[label=(\alph*)]
+  \item $\mathsf{next}(\sel)$, or
+  \item the set of enabled edges (by class) of $d^*$.
+\end{enumerate}
+Collapse replaces the single-path exploration with branching over all
+class representatives of $d$, removing $d$ from $\Sigma$.
+\end{definition}
+
+\begin{algorithm}[H]
+\caption{Superposition DFS}\label{alg:superdfs}
+\begin{algorithmic}[1]
+\Procedure{SuperDFS}{$\sel, \Sigma$}
+  \State $\mathit{key} \gets \mathsf{superKey}(\sel, \Sigma)$
+  \If{$\mathit{key} \in \mathit{visited}$}
+    \Return cached mask
+  \EndIf
+  \If{$\mathrm{Terminal}(\sel)$}
+    \State \Return $M(\sel)$
+  \EndIf
+  \State $d^* \gets \mathsf{next}(\sel)$; \textbf{if} $d^*=\bot$ \textbf{return} $0$
+  \ForAll{$d \in \Sigma$}
+    \If{$\mathrm{NeedsCollapse}(d, \sel, d^*)$}
+      \State $\mathit{mask} \gets 0$
+      \ForAll{$r \in \Rep_d$} \Comment{branch on class reps of $d$}
+        \State $\sel' \gets \cleannf(\sel[d \mapsto r])$
+        \State $\mathit{mask} \gets \mathit{mask} \mathbin{|}
+               \Call{SuperDFS}{\sel', \Sigma \setminus \{d\}}$
+      \EndFor
+      \State \Return $\mathit{mask}$
+    \EndIf
+  \EndFor
+  \State Deduplicate enabled edges of $d^*$ to one per class
+  \If{only one class is enabled}
+    \State \Return $\Call{SuperDFS}{\cleannf(\sel[d^* \mapsto e]),\;\Sigma}$
+  \ElsIf{$d^*$ is superimposable at $\sel$}
+    \State \Return $\Call{SuperDFS}{\cleannf(\sel[d^* \mapsto \Rep_{d^*}(C_1)]),\;
+           \Sigma \cup \{d^*\}}$
+  \Else
+    \State $\mathit{mask} \gets 0$
+    \ForAll{class representatives $r$ of enabled edges of $d^*$}
+      \State $\mathit{mask} \gets \mathit{mask} \mathbin{|}
+             \Call{SuperDFS}{\cleannf(\sel[d^* \mapsto r]),\;\Sigma}$
+    \EndFor
+    \State \Return $\mathit{mask}$
+  \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{theorem}[Reduction R3: Superposition Correctness]\label{thm:super}
+For all states $\sel$ and outcomes $k$:
+\[
+  \Reach_{\textsf{ClassDFS}}(\sel,k)
+  = \Reach_{\textsf{SuperDFS}}(\sel,\emptyset,k).
+\]
+Superposition with deferred collapse produces the same reachability
+answers, detects the same dead ends, and triggers the same validation
+violations as the class-merged DFS without superposition.
+\end{theorem}
+
+%--------------------------------------------------------------------------
+\subsection{Variant Expansion (\texttt{noClassMergeDims})}
+\label{sec:variants}
+%--------------------------------------------------------------------------
+
+Equivalence class merging can lose information when outcome predicates
+distinguish individual edge values within a class.
+
+\begin{definition}[Primary Dimension]\label{def:primary}
+A dimension $d$ is a \textbf{primary dimension} if some outcome variant
+$O_{k,v}$ requires $\hat\sel(d) = v$, where $v$ and $v'$ with $v \neq v'$
+may belong to the same equivalence class $[v]_d = [v']_d$.
+\end{definition}
+
+\begin{definition}[Variant Expansion]\label{def:expand}
+For a set $\mathcal{P} \subseteq \Dim$ of primary dimensions, after the
+DFS records a state $\sel$ with reachability mask $m$, the
+\textbf{variant expansion} enumerates the Cartesian product:
+\[
+  \prod_{d \in \mathcal{P},\;\sel(d)\neq\bot}
+  \{e \in \Edg{d} : [e]_d = [\sel(d)]_d
+   \;\wedge\; \Dis_{d,e}(\sel)=0\}
+\]
+For each assignment in the product, $\ik$ is recomputed and the
+reachability mask (including fresh $M(\cdot)$ checks) is OR-accumulated
+into $\mathsf{ReachMap}$.
+\end{definition}
+
+\begin{theorem}[Reduction R4: Variant Expansion Correctness]\label{thm:variant}
+Let $\textsf{ClassDFS}_\mathcal{P}$ denote the class-merged DFS that does
+\emph{not} merge classes on dimensions in $\mathcal{P}$ (i.e., branches
+on all enabled edges, not just representatives, for $d \in \mathcal{P}$).
+Then for all states $\sel$ and outcomes $k$:
+\[
+  \Reach_{\textsf{ClassDFS}_\mathcal{P}}(\sel,k)
+  = \Reach_{\textsf{SuperDFS}+\text{Expand}_\mathcal{P}}(\sel,k).
+\]
+Variant expansion at recording time produces the same per-edge
+reachability answers as not merging those dimensions during traversal.
+This is needed because outcome predicates can distinguish individual edge
+values that the class-merged DFS would otherwise conflate.
+\end{theorem}
+
+%--------------------------------------------------------------------------
+\subsection{Superposition Expansion}\label{sec:superexpand}
+%--------------------------------------------------------------------------
+
+Similarly, superimposed dimensions must be expanded when recording
+reachability, since outcome predicates may depend on the deferred value.
+
+\begin{definition}[Superposition Expansion]\label{def:superexpand}
+When recording reachability for state $\sel$ with superposition set
+$\Sigma$, enumerate all combinations of raw edge values for each
+$d \in \Sigma$:
+\[
+  \prod_{d \in \Sigma} \Edg{d}
+\]
+For each combination, recompute $\ik$ and OR-accumulate
+$M(\cdot)$ and child masks into $\mathsf{ReachMap}$.
+\end{definition}
+
+\begin{remark}
+Superposition expansion iterates over \emph{all} raw edge values (not
+just class representatives or enabled edges), because the DFS deferred
+$d$'s choice entirely---any value could have been chosen at the original
+branching point.
+\end{remark}
+
+
+%==========================================================================
+\section{Supporting Lemmas}\label{sec:lemmas}
+%==========================================================================
+
+The reduction theorems in Section~\ref{sec:reductions} each depend on
+supporting lemmas that establish the structural properties making the
+reductions safe. Together with the theorems, these form the full set of
+claims to verify: if these hold, the production traversal is guaranteed to
+produce the same results as the baseline DFS for every algorithm.
+
+\begin{lemma}[Clean Termination]\label{lem:term}
+The clean operator $\clean(\sel)$ reaches a fixpoint in at most
+$P \cdot |\Dim|$ individual dimension inspections, where $P = 5$.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+Each pass iterates over $|\Dim|$ dimensions. A pass that makes no change
+terminates the loop. Each change either deletes a value or forces a locked
+value; since forcing can trigger at most one deletion cascade per
+dimension, and there are finitely many dimensions, the iteration
+converges.
+\end{proof}
+
+\begin{lemma}[Class Congruence]\label{lem:congruence}
+The equivalence class partition $\sim_d$ is a congruence with respect to
+the activation, hiding, and disabling predicates: for all $d' \neq d$ and
+all $e_1 \sim_d e_2$,
+\[
+  \Act_{d'}(\sel[d \mapsto e_1]) = \Act_{d'}(\sel[d \mapsto e_2]),\quad
+  H_{d'}(\sel[d \mapsto e_1]) = H_{d'}(\sel[d \mapsto e_2]),
+\]
+\[
+  \Dis_{d',e'}(\sel[d \mapsto e_1]) = \Dis_{d',e'}(\sel[d \mapsto e_2])
+  \quad \forall\, e' \in \Edg{d'},
+\]
+\[
+  \res{\sel[d \mapsto e_1]}{d'} = \res{\sel[d \mapsto e_2]}{d'}
+  \quad \forall\, \text{derived } d'.
+\]
+\end{lemma}
+
+\begin{lemma}[Irrelevance Well-Definedness]\label{lem:irr-wd}
+$\Irr(d,\sel)$ depends only on $\ck(\sel)$ and whether $\sel(d) \neq
+\bot$, not on the specific value of $\sel(d)$ within its class. Hence
+$\ik(\sel)$ is well-defined: two states with the same class key produce
+the same irrelevance vector.
+\end{lemma}
+
+\begin{lemma}[Superposition--Collapse Equivalence]\label{lem:super-collapse}
+Let $d$ be superimposable at $\sel$ with enabled class set
+$\{C_1,\dots,C_m\}$. Then for any outcome $k$:
+\[
+  \bigvee_{i=1}^{m}
+  \Reach\bigl(\cleannf(\sel[d \mapsto \Rep_d(C_i)]),\, k\bigr)
+  \;=\;
+  \Reach\bigl(\cleannf(\sel[d \mapsto \Rep_d(C_1)]),\, k\bigr).
+\]
+If $d$ is superimposable, exploring a single representative suffices
+because the fingerprint identity guarantees all branches encounter
+identical subproblems.
+\end{lemma}
+
+\begin{lemma}[AutoForce Agreement]\label{lem:autoforce}
+Let $\sel_{\text{full}} = \clean(\sel_0[d_1\mapsto e_1]\cdots[d_t\mapsto e_t])$
+be the state produced by the browser's $\mathsf{push}$ (with autoForce),
+and let $\sel_{\text{raw}}$ be the state reconstructed from only the
+explicit entries $(d_1,e_1),\dots,(d_t,e_t)$ with $\cleannf$ applied.
+Then:
+\[
+  \ik(\sel_{\text{raw}}) = \ik(\sel_{\text{DFS}})
+\]
+where $\sel_{\text{DFS}}$ is the corresponding state visited by the
+server-side DFS (which also uses $\cleannf$). The browser's
+$\mathsf{\_getRawSel}$ strips auto-forced dimensions, ensuring the
+irrelevance key matches the DFS's key space.
+\end{lemma}
+
+\begin{lemma}[Safe Push Optimization]\label{lem:safepush}
+A dimension $d$ is a \textbf{safe push dimension} if $d$ does not appear
+(directly or via derivation chains) in any edge-local condition
+(\texttt{disabledWhen} or \texttt{requires}) of any other dimension.
+For safe push dimensions, $\cleannf(\sel[d\mapsto e]) = \sel[d\mapsto e]$
+--- clean selection has no effect, so it can be skipped.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+If $d$ does not affect any edge disabling predicate, assigning $d$ cannot
+invalidate any existing choice and cannot enable or disable edges
+elsewhere. Thus clean selection finds nothing to change.
+\end{proof}
+
+
+%==========================================================================
+\section{Summary of Claims for Verification}\label{sec:summary}
+%==========================================================================
+
+The central verification goal is:
+
+\begin{quote}
+\emph{The production traversal (SuperDFS + variant/superposition
+expansion + $\ik$-memoization) produces exactly the same results as the
+baseline DFS for every algorithm defined in Section~\ref{sec:algorithms}
+and every validation invariant defined in Section~\ref{sec:validate}.}
+\end{quote}
+
+\noindent
+This decomposes into the four reduction theorems (R1--R4) and six
+supporting lemmas listed below. The validation invariants define what
+``same results'' means concretely.
+
+\bigskip
+
+\begin{center}
+\begin{tabular}{llp{7.5cm}}
+\textbf{Ref} & \textbf{Type} & \textbf{Statement} \\
+\hline
+\multicolumn{3}{l}{\emph{Reduction theorems
+  (does the reduced DFS match the baseline?)}} \\[2pt]
+\ref{thm:class}
+  & Thm (R1)
+  & Class-merged DFS preserves all algorithm results. \\
+\ref{thm:irr}
+  & Thm (R2)
+  & $\ik$-memoization preserves all algorithm results. \\
+\ref{thm:super}
+  & Thm (R3)
+  & Superposition DFS preserves all algorithm results. \\
+\ref{thm:variant}
+  & Thm (R4)
+  & Variant expansion restores per-edge reachability. \\[4pt]
+\hline
+\\[-6pt]
+\multicolumn{3}{l}{\emph{Supporting lemmas
+  (structural properties that make the reductions safe)}} \\[2pt]
+\ref{lem:clean-term}
+  & Lemma
+  & Clean selection terminates in $O(P \cdot |\Dim|)$. \\
+\ref{lem:congruence}
+  & Lemma
+  & Equivalence classes form a congruence over predicates. \\
+\ref{lem:irr-wd}
+  & Lemma
+  & Irrelevance key is well-defined (depends only on class key). \\
+\ref{lem:super-collapse}
+  & Lemma
+  & Superposition of fingerprint-identical branches is safe. \\
+\ref{lem:autoforce}
+  & Lemma
+  & Client raw-selection reconstruction matches DFS keys. \\
+\ref{lem:safepush}
+  & Lemma
+  & Safe push dimensions can skip clean selection. \\[4pt]
+\hline
+\\[-6pt]
+\multicolumn{3}{l}{\emph{Algorithms and validation invariants
+  (what ``same results'' means)}} \\[2pt]
+\ref{def:reach}
+  & Defn
+  & Reachability: $\exists$ play from $\sel$ to terminal matching $O_k$. \\
+\ref{def:deadend}
+  & Defn
+  & Dead ends: no outcome, no enabled next edge. \\
+\ref{def:edgecov}
+  & Defn
+  & Edge coverage: fraction of $(d,e)$ pairs visited. \\
+\ref{def:deaded}
+  & Defn
+  & Statically dead edges are never enabled. \\
+\ref{def:rederived}
+  & Defn
+  & Re-derived dead ends: derivation hides a question. \\
+\ref{def:stuck}
+  & Defn
+  & Stuck nodes: visible dimension with all edges disabled. \\
+\ref{def:ambig}
+  & Defn
+  & Ambiguous outcomes: multiple templates match one state. \\
+\ref{def:clickerased}
+  & Defn
+  & Click-erased: autoForce undoes the user's choice. \\
+\ref{def:stackint}
+  & Defn
+  & Stack integrity: display order matches stack order. \\
+\end{tabular}
+\end{center}
+
+
+\end{document}
