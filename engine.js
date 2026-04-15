@@ -518,9 +518,14 @@ function cleanSelection(sel, { autoForce = true } = {}) {
         let changed = false;
         for (const node of NODES) {
             if (autoForced.has(node.id) && !isNodeActivated(sel, node)) {
-                delete sel[node.id];
+                const hidden = node.hideWhen && node.hideWhen.some(c => matchCondition(sel, c));
+                if (hidden) {
+                    delete sel[node.id];
+                    autoForced.delete(node.id);
+                    changed = true;
+                    continue;
+                }
                 autoForced.delete(node.id);
-                changed = true;
                 continue;
             }
             if (!isNodeVisible(sel, node)) continue;
