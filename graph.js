@@ -735,8 +735,7 @@ const NODES = [
         },
         { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'] },
         { capability: ['singularity'], automation: ['deep'], post_war_aims: true },
-        { capability: ['singularity'], automation: ['deep'], escalation_outcome: ['standoff'] },
-        { capability: ['singularity'], automation: ['deep'], ai_goals: ['benevolent'], asi_threshold: ['never'] }
+        { capability: ['singularity'], automation: ['deep'], escalation_outcome: ['standoff'] }
       ],
       edges: [
         { id: 'for_everyone', label: 'This is for everyone',
