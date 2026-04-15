@@ -508,18 +508,17 @@ console.log(`Safe push dims (skip cleanSelection): ${safePushDims.size}/${dimOrd
 dimsInKey = new Set(dimOrder);
 const derivedDimSet = new Set(NODES.filter(n => n.derived || n.deriveWhen).map(n => n.id));
 
-function classKey(sel) {
-    const p = [];
-    for (const dim of dimOrder) {
-        const v = derivedDimSet.has(dim) ? resolvedVal(sel, dim) : sel[dim];
-        if (v === undefined) p.push('U');
-        else p.push(String(classes[dim]?.get(v) ?? 0));
-    }
-    return p.join(',');
-}
+const _ckBuf = new Uint8Array(dimOrder.length);
+const _skBuf = new Uint8Array(dimOrder.length);
 
-const _ckParts = new Array(dimOrder.length);
-const _skParts = new Array(dimOrder.length);
+function classKey(sel) {
+    for (let i = 0; i < dimOrder.length; i++) {
+        const dim = dimOrder[i];
+        const v = derivedDimSet.has(dim) ? resolvedVal(sel, dim) : sel[dim];
+        _ckBuf[i] = v === undefined ? 85 : 48 + (classes[dim]?.get(v) ?? 0);
+    }
+    return String.fromCharCode.apply(null, _ckBuf);
+}
 
 const irrVectorCache = new Map();
 
@@ -527,9 +526,9 @@ function classAndSuperKey(sel, superSet) {
     for (let i = 0; i < dimOrder.length; i++) {
         const dim = dimOrder[i];
         const v = derivedDimSet.has(dim) ? resolvedVal(sel, dim) : sel[dim];
-        _ckParts[i] = v === undefined ? 'U' : String(classes[dim]?.get(v) ?? 0);
+        _ckBuf[i] = v === undefined ? 85 : 48 + (classes[dim]?.get(v) ?? 0);
     }
-    const ck = _ckParts.join(',');
+    const ck = String.fromCharCode.apply(null, _ckBuf);
 
     let irrVec = irrVectorCache.get(ck);
     if (!irrVec) {
@@ -545,9 +544,9 @@ function classAndSuperKey(sel, superSet) {
     }
 
     for (let i = 0; i < dimOrder.length; i++) {
-        _skParts[i] = (superSet.has(dimOrder[i]) || irrVec[i]) ? '*' : _ckParts[i];
+        _skBuf[i] = (superSet.has(dimOrder[i]) || irrVec[i]) ? 42 : _ckBuf[i];
     }
-    return { ck, sk: _skParts.join(',') };
+    return { ck, sk: String.fromCharCode.apply(null, _skBuf) };
 }
 
 // ═══════════════════════════════════════════════
