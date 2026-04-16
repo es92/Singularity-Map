@@ -1,0 +1,17 @@
+{
+  "nodes": [
+    { "id": "A", "edges": [{ "id": "ab" }] },
+    { "id": "B", "edges": [{ "id": "bc" }, { "id": "bd" }] },
+    { "id": "C", "activateWhen": [{ "B": ["bc"] }], "edges": [{ "id": "ce" }] },
+    { "id": "D", "activateWhen": [{ "B": ["bd"] }], "edges": [{ "id": "de" }] },
+    { "id": "E", "edges": [{ "id": "ef" }, { "id": "eg" }] },
+    { "id": "F", "activateWhen": [{ "E": ["ef"] }], "edges": [{ "id": "f_end" }] },
+    { "id": "G", "activateWhen": [{ "E": ["eg"] }], "edges": [{ "id": "g_end" }] }
+  ],
+  "outcomes": {
+    "templates": [
+      { "id": "outcome1", "reachable": [{ "F": ["f_end"] }] },
+      { "id": "outcome2", "reachable": [{ "G": ["g_end"] }] }
+    ]
+  }
+}

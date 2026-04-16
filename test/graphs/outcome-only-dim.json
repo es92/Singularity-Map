@@ -1,0 +1,54 @@
+{
+  "nodes": [
+    {
+      "id": "branch", "label": "Main branch",
+      "edges": [
+        { "id": "left", "label": "Left" },
+        { "id": "right", "label": "Right" }
+      ]
+    },
+    {
+      "id": "flavor", "label": "Flavor (structurally irrelevant, outcome-critical)",
+      "edges": [
+        { "id": "sweet", "label": "Sweet" },
+        { "id": "sour", "label": "Sour" }
+      ]
+    },
+    {
+      "id": "gated", "label": "Gated dim (activateWhen + outcome-ref)",
+      "activateWhen": [{ "branch": ["left"] }],
+      "edges": [
+        { "id": "yes", "label": "Yes" },
+        { "id": "no", "label": "No" }
+      ]
+    },
+    {
+      "id": "style", "label": "Style (only affects outcome when gated is yes)",
+      "activateWhen": [{ "gated": ["yes"] }],
+      "edges": [
+        { "id": "bold", "label": "Bold" },
+        { "id": "subtle", "label": "Subtle" }
+      ]
+    }
+  ],
+  "outcomes": {
+    "templates": [
+      {
+        "id": "sweet-left",
+        "reachable": [{ "branch": ["left"], "flavor": ["sweet"] }]
+      },
+      {
+        "id": "sour-left",
+        "reachable": [{ "branch": ["left"], "flavor": ["sour"] }]
+      },
+      {
+        "id": "right-path",
+        "reachable": [{ "branch": ["right"] }]
+      },
+      {
+        "id": "bold-bonus",
+        "reachable": [{ "branch": ["left"], "gated": ["yes"], "style": ["bold"] }]
+      }
+    ]
+  }
+}
