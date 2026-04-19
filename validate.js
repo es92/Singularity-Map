@@ -18,7 +18,7 @@ const {
     templateMatches,
     createStack, push, currentState, stackHas, displayOrder
 } = require('./engine.js');
-const { walk, resolvedState, dimOrder, classes, derivedDimSet } = require('./graph-walker.js');
+const { walk, resolvedState, dimOrder, classes, derivedDimSet, setTemplates } = require('./graph-walker.js');
 const { resolvePersonalVignetteText, getCountryBucket } = require('./milestone-utils.js');
 
 let _outcomes, _narrative, _personalData, _defaultTemplates;
@@ -188,6 +188,7 @@ function selToUrl(sel) {
 
 function runTraversal(templates, opts = {}) {
     if (!templates) { _loadData(); templates = _defaultTemplates; }
+    setTemplates(templates);
     const quiet = opts.quiet || false;
     const violations = {
         deadEnd: [],
