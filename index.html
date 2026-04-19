@@ -1473,6 +1473,18 @@
                 if (!lockedId) return true;
                 const sel = _getRawSel(stack);
                 const childSel = _lightPush(sel, nodeId, edgeId);
+                // If the child state already matches the locked outcome, we're
+                // in post-terminal territory: the precompute used isTerminal
+                // pruning, so `reachSet` has no entries past the first match.
+                // But template matches are monotonic in the dims they read, so
+                // any further extension still satisfies them — answer yes.
+                const tmpl = templatesMap[lockedId];
+                if (tmpl) {
+                    const eff = Engine.resolvedState(childSel);
+                    const variantOk = !lockedVariantKey || !tmpl.primaryDimension
+                        || eff[tmpl.primaryDimension] === lockedVariantKey;
+                    if (variantOk && Engine.templateMatches(tmpl, eff)) return true;
+                }
                 const ik = GraphWalker.irrKey(childSel);
                 return _reachSet.has(ik);
             }
