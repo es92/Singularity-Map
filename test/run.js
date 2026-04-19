@@ -174,6 +174,12 @@ function fmtMask(mask, entries) {
     return bits.join('+') || '(none)';
 }
 
+function fmtSel(sel, NODES) {
+    const parts = [];
+    for (const n of NODES) if (sel[n.id] !== undefined) parts.push(`${n.id}=${sel[n.id]}`);
+    return parts.length ? parts.join(' ') : '(root)';
+}
+
 // ═══════════════════════════════════════════════════════
 // Run one test
 // ═══════════════════════════════════════════════════════
@@ -206,69 +212,57 @@ function runTest(name, graphData) {
     const matcherEntries = buildMatchers(Engine, Walker, templates);
     const baseline = baselineDFS(Engine, Walker, NODES, matcherEntries.map(e => e.matcher));
 
-    // 5. Compare reachability
-    // Aggregate baseline masks per irrKey (OR of all states at that key).
-    // The optimized reachMap aggregates similarly via recordReach/expandVariants.
+    // 5. Per-state reachability invariant (the one the browser depends on).
     //
-    // Known acceptable difference: at irrKeys where noClassMergeDims are UNSET,
-    // the optimized may undercount (DFS only propagates class-rep matches; the
-    // expandVariants only fires when the dim IS set). This is safe because the
-    // client always simulates a choice before lookup.
+    //    For every reachable state `sel`:
+    //        optimized.reachMap[irrKey(sel)] === trueReachSet(sel)
+    //
+    //    This is strictly stronger than the previous "aggregated-by-irrKey"
+    //    comparison: if two states s1, s2 with DIFFERENT true reach-sets
+    //    collapse to the same irrKey, the stored mask = s1 | s2 violates this
+    //    invariant for both (each sees extra bits from the other). The old
+    //    aggregated check would OR them on the baseline side too and miss the
+    //    collision; the browser's per-state query cannot.
+    //
+    //    Missing irrKeys are treated as failures here: the browser's
+    //    wouldReachOutcome reads `_reachSet.has(ik)` — an absent key returns
+    //    false (fail-closed), which is incorrect if the true mask is non-zero.
 
-    const noClassMergeDims = new Set();
-    for (const t of templates) {
-        if (t.variants && typeof t.variants === 'object'
-            && Object.keys(t.variants).length > 0 && t.primaryDimension) {
-            noClassMergeDims.add(t.primaryDimension);
-        }
-    }
-
-    const blByIK = new Map();
-    for (const [key, mask] of baseline.visited) {
-        const ik = Walker.irrKey(selFromKey(key));
-        blByIK.set(ik, (blByIK.get(ik) || 0) | mask);
-    }
-
-    // 5a. No false positives: every optimized bit should be in baseline
-    let fpCount = 0;
-    for (const [ik, optMask] of optimized.reachMap) {
-        const blMask = blByIK.get(ik);
-        if (blMask === undefined) {
-            if (fpCount < 3) errors.push(`[phantom] irrKey=${ik} in optimized but not baseline`);
-            fpCount++;
-            continue;
-        }
-        const extra = optMask & ~blMask;
-        if (extra !== 0) {
-            if (fpCount < 3) errors.push(`[false-pos] irrKey=${ik}: optimized has extra bits ${fmtMask(extra, matcherEntries)}`);
-            fpCount++;
-        }
-    }
-    if (fpCount > 3) errors.push(`... and ${fpCount - 3} more false-positive issues`);
-
-    // 5b. No false negatives: every baseline bit should be in optimized
-    //     (except at irrKeys where noClassMergeDims are unset — known undercount)
-    //     Missing irrKeys (not in optimized at all) are tolerated — they arise from
-    //     memoization when deriveWhen crossovers create superKey collisions. The
-    //     client fails open (treats missing as reachable).
-    let fnCount = 0, missingCount = 0;
-    for (const [ik, blMask] of blByIK) {
+    let stateFP = 0, stateFN = 0, stateMissing = 0;
+    const stateMismatches = [];
+    for (const [key, trueMask] of baseline.visited) {
+        const sel = selFromKey(key);
+        const ik = Walker.irrKey(sel);
         const optMask = optimized.reachMap.get(ik);
         if (optMask === undefined) {
-            missingCount++;
+            if (trueMask !== 0) {
+                stateMissing++;
+                if (stateMismatches.length < 5) stateMismatches.push(
+                    `[state-missing] ${fmtSel(sel, NODES)} ik=${ik} truth=${fmtMask(trueMask, matcherEntries)} (optimized map has no entry)`
+                );
+            }
             continue;
         }
-        const missing = blMask & ~optMask;
+        const extra   = optMask  & ~trueMask;   // phantom reach bits from colliding states
+        const missing = trueMask & ~optMask;    // undercounted by optimizer
+        if (extra !== 0) {
+            stateFP++;
+            if (stateMismatches.length < 5) stateMismatches.push(
+                `[state-fp] ${fmtSel(sel, NODES)} ik=${ik} truth=${fmtMask(trueMask, matcherEntries)} opt has extra ${fmtMask(extra, matcherEntries)}`
+            );
+        }
         if (missing !== 0) {
-            const sel = selFromKey([...baseline.visited.keys()].find(k => Walker.irrKey(selFromKey(k)) === ik) || '');
-            const ncmUnset = [...noClassMergeDims].some(d => sel[d] === undefined);
-            if (ncmUnset) continue;
-            if (fnCount < 5) errors.push(`[false-neg] irrKey=${ik}: baseline has ${fmtMask(missing, matcherEntries)} missing from optimized`);
-            fnCount++;
+            stateFN++;
+            if (stateMismatches.length < 5) stateMismatches.push(
+                `[state-fn] ${fmtSel(sel, NODES)} ik=${ik} truth=${fmtMask(trueMask, matcherEntries)} opt missing ${fmtMask(missing, matcherEntries)}`
+            );
         }
     }
-    if (fnCount > 5) errors.push(`... and ${fnCount - 5} more false-negative issues`);
-    if (missingCount > 0) console.log(`  (${missingCount} irrKeys in baseline only — memoization gap, fail-open)`);
+    for (const m of stateMismatches) errors.push(m);
+    const totalStateIssues = stateFP + stateFN + stateMissing;
+    if (totalStateIssues > stateMismatches.length) {
+        errors.push(`... and ${totalStateIssues - stateMismatches.length} more per-state issues (FP=${stateFP} FN=${stateFN} missing=${stateMissing})`);
+    }
 
     return {
         name, errors,
@@ -276,6 +270,7 @@ function runTest(name, graphData) {
             baselineStates: baseline.visited.size,
             baselineDeadEnds: baseline.deadEnds.length,
             optimizedIrrKeys: optimized.reachMap.size,
+            stateFP, stateFN, stateMissing,
             walkStates: phase2.visited,
             walkDeadEnds: phase2.deadEnds.length,
         },
@@ -303,6 +298,7 @@ for (const file of files) {
         const { errors, stats } = runTest(name, graphData);
         console.log(`  Baseline: ${stats.baselineStates} states, ${stats.baselineDeadEnds} dead ends`);
         console.log(`  Optimized: ${stats.optimizedIrrKeys} irrKeys, walk ${stats.walkStates} states, ${stats.walkDeadEnds} dead ends`);
+        console.log(`  Per-state: FP=${stats.stateFP} FN=${stats.stateFN} missing=${stats.stateMissing}`);
 
         if (errors.length === 0) {
             console.log('  PASS');
