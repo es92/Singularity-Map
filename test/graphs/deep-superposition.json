@@ -42,9 +42,9 @@
   ],
   "outcomes": {
     "templates": [
-      { "id": "any", "reachable": [{}] },
       { "id": "scenic-win", "reachable": [{ "path": ["scenic"], "conclusion": ["win"] }] },
-      { "id": "direct-draw", "reachable": [{ "path": ["direct"], "conclusion": ["draw"] }] }
+      { "id": "direct-draw", "reachable": [{ "path": ["direct"], "conclusion": ["draw"] }] },
+      { "id": "scenic-draw", "reachable": [{ "path": ["scenic"], "conclusion": ["draw"] }] }
     ]
   }
 }

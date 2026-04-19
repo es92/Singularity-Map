@@ -53,9 +53,11 @@
   ],
   "outcomes": {
     "templates": [
-      { "id": "any", "reachable": [{}] },
       { "id": "storm-cabin", "reachable": [{ "weather": ["stormy"], "shelter": ["cabin"] }] },
-      { "id": "sunny-swim", "reachable": [{ "weather": ["sunny"], "activity": ["swim"] }] }
+      { "id": "sunny-swim", "reachable": [{ "weather": ["sunny"], "activity": ["swim"] }] },
+      { "id": "went-hike", "reachable": [{ "activity": ["hike"] }] },
+      { "id": "went-camp", "reachable": [{ "activity": ["camp"] }] },
+      { "id": "rainy-swim", "reachable": [{ "weather": ["rainy"], "activity": ["swim"] }] }
     ]
   }
 }

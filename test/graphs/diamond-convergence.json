@@ -37,9 +37,9 @@
   ],
   "outcomes": {
     "templates": [
-      { "id": "any", "reachable": [{}] },
       { "id": "hot-finish", "reachable": [{ "signal": ["hot"], "final": ["f1", "f2"] }] },
-      { "id": "cold-bad", "reachable": [{ "signal": ["cold"], "qualifier": ["bad"] }] }
+      { "id": "cold-bad", "reachable": [{ "signal": ["cold"], "qualifier": ["bad"] }] },
+      { "id": "hot-bad", "reachable": [{ "signal": ["hot"], "qualifier": ["bad"] }] }
     ]
   }
 }

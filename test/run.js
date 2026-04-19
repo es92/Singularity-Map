@@ -91,19 +91,27 @@ function baselineDFS(Engine, Walker, NODES, matchers) {
         visited.set(key, 0);
 
         const termMask = checkMatchers(sel);
-        const nextNode = pickNext(sel);
-
-        if (!nextNode) {
-            if (termMask === 0) deadEnds.push({ sel: { ...sel }, key });
+        // Mirror walk()'s isTerminal semantics: once any outcome matches, stop
+        // descending. States "past" a terminal are not part of the user-reachable
+        // state space we want to validate against.
+        if (termMask !== 0) {
             visited.set(key, termMask);
             return termMask;
         }
 
+        const nextNode = pickNext(sel);
+
+        if (!nextNode) {
+            deadEnds.push({ sel: { ...sel }, key });
+            visited.set(key, 0);
+            return 0;
+        }
+
         const enabled = nextNode.edges.filter(e => !isEdgeDisabled(sel, nextNode, e));
         if (enabled.length === 0) {
-            if (termMask === 0) deadEnds.push({ sel: { ...sel }, key });
-            visited.set(key, termMask);
-            return termMask;
+            deadEnds.push({ sel: { ...sel }, key });
+            visited.set(key, 0);
+            return 0;
         }
 
         let childMask = 0;

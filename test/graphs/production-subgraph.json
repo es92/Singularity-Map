@@ -557,12 +557,6 @@
   "outcomes": {
     "templates": [
       {
-        "id": "any",
-        "reachable": [
-          {}
-        ]
-      },
-      {
         "id": "deep-open",
         "reachable": [
           {
@@ -583,6 +577,23 @@
               "substantial",
               "never"
             ]
+          }
+        ]
+      },
+      {
+        "id": "singularity-auto",
+        "reachable": [
+          {
+            "capability": ["singularity"],
+            "automation_recovery": ["substantial", "never"]
+          }
+        ]
+      },
+      {
+        "id": "stalls-recovered",
+        "reachable": [
+          {
+            "stall_recovery": ["mild"]
           }
         ]
       }

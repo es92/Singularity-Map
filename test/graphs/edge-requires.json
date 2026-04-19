@@ -34,9 +34,12 @@
   ],
   "outcomes": {
     "templates": [
-      { "id": "any", "reachable": [{}] },
       { "id": "elite-full", "reachable": [{ "tier": ["elite"], "feature": ["exclusive"], "bonus": ["b1", "b2"] }] },
-      { "id": "basic-only", "reachable": [{ "tier": ["basic"], "feature": ["standard"] }] }
+      { "id": "basic-only", "reachable": [{ "tier": ["basic"], "feature": ["standard"] }] },
+      { "id": "premium-standard", "reachable": [{ "tier": ["premium"], "feature": ["standard"] }] },
+      { "id": "premium-advanced", "reachable": [{ "tier": ["premium"], "feature": ["advanced"] }] },
+      { "id": "elite-standard", "reachable": [{ "tier": ["elite"], "feature": ["standard"] }] },
+      { "id": "elite-advanced", "reachable": [{ "tier": ["elite"], "feature": ["advanced"] }] }
     ]
   }
 }

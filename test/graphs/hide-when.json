@@ -34,9 +34,10 @@
   ],
   "outcomes": {
     "templates": [
-      { "id": "any", "reachable": [{}] },
       { "id": "gold-prize", "reachable": [{ "prize": ["gold"] }] },
-      { "id": "secret-revealed", "reachable": [{ "secret": ["s2"] }] }
+      { "id": "secret-revealed", "reachable": [{ "secret": ["s2"] }] },
+      { "id": "silver-prize", "reachable": [{ "prize": ["silver"] }] },
+      { "id": "gate-shut", "reachable": [{ "gate": ["shut"] }] }
     ]
   }
 }

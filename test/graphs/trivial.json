@@ -24,10 +24,7 @@
   ],
   "outcomes": {
     "templates": [
-      {
-        "id": "universal",
-        "reachable": [{}]
-      }
+      { "id": "done", "reachable": [{ "C": ["c1", "c2"] }] }
     ]
   }
 }

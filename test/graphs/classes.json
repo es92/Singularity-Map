@@ -26,10 +26,7 @@
   ],
   "outcomes": {
     "templates": [
-      {
-        "id": "any-terminal",
-        "reachable": [{}]
-      }
+      { "id": "done", "reachable": [{ "C": ["c1", "c2"] }] }
     ]
   }
 }

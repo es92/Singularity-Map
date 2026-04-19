@@ -808,6 +808,8 @@ function walk(opts = {}) {
     const isTerminal = opts.isTerminal || (() => false);
     const onVisit = opts.onVisit || null;
     const onPush = opts.onPush || null;
+    const onDescent = opts.onDescent || null;
+    const onFinish = opts.onFinish || null;
     const excludeDims = opts.excludeDims || new Set();
     const quiet = opts.quiet || false;
 
@@ -823,82 +825,87 @@ function walk(opts = {}) {
         return dfsPush(stk, nodeId, edgeId);
     }
 
-    function dfs(stk, superSet) {
+    function dfs(stk, superSet, parentKey) {
         const sel = currentState(stk);
         _activeRvMap.clear();
         setRvCache(_activeRvMap);
         const { ck, sk: key } = classAndSuperKey(sel, superSet);
+        if (onDescent && parentKey !== null) onDescent(parentKey, key);
         if (visited.has(key)) { setRvCache(null); return; }
         visited.add(key);
         stateCount++;
 
-        if (isTerminal(sel)) {
-            earlyTerminations++;
-            if (onVisit) onVisit(sel, stk, { ck, nextNode: null, enabled: [] });
-            terminals.push({ sel: { ...sel }, key, type: 'terminal', superSet: new Set(superSet) });
-            setRvCache(null);
-            return;
-        }
-
-        const nextNode = pickNextNode(sel, ck);
-        const enabled = nextNode ? nextNode.edges.filter(e => !cachedIsEdgeDisabled(ck, sel, nextNode, e)) : [];
-        if (onVisit) onVisit(sel, stk, { ck, nextNode, enabled });
-        setRvCache(null);
-
-        if (!nextNode) {
-            deadEnds.push({ sel: { ...sel }, key, superSet: new Set(superSet) });
-            terminals.push({ sel: { ...sel }, key, type: 'dead_end', superSet: new Set(superSet) });
-            return;
-        }
-        if (excludeDims.has(nextNode.id)) {
-            terminals.push({ sel: { ...sel }, key, type: 'boundary', boundaryNode: nextNode.id, superSet: new Set(superSet) });
-            return;
-        }
-
-        for (const superDim of superSet) {
-            if (needsCollapse(sel, superDim, nextNode, ck)) {
-                collapses++;
-                const newSuper = new Set(superSet);
-                newSuper.delete(superDim);
-                for (const rep of classReps[superDim]) {
-                    dfs(doPush(stk, superDim, rep), newSuper);
-                }
+        try {
+            if (isTerminal(sel)) {
+                earlyTerminations++;
+                if (onVisit) onVisit(sel, stk, { ck, key, superSet, nextNode: null, enabled: [] });
+                terminals.push({ sel: { ...sel }, key, type: 'terminal', superSet: new Set(superSet) });
+                setRvCache(null);
                 return;
             }
-        }
 
-        if (enabled.length === 0) {
-            deadEnds.push({ sel: { ...sel }, key, superSet: new Set(superSet) });
-            terminals.push({ sel: { ...sel }, key, type: 'dead_end', superSet: new Set(superSet) });
-            return;
-        }
-        const seenClasses = new Set();
-        const classEdges = [];
-        for (const e of enabled) {
-            const c = classes[nextNode.id]?.get(e.id);
-            if (!seenClasses.has(c)) { seenClasses.add(c); classEdges.push(e); }
-        }
+            const nextNode = pickNextNode(sel, ck);
+            const enabled = nextNode ? nextNode.edges.filter(e => !cachedIsEdgeDisabled(ck, sel, nextNode, e)) : [];
+            if (onVisit) onVisit(sel, stk, { ck, key, superSet, nextNode, enabled });
+            setRvCache(null);
 
-        if (classEdges.length <= 1) {
-            dfs(doPush(stk, nextNode.id, enabled[0].id), superSet);
-            return;
-        }
+            if (!nextNode) {
+                deadEnds.push({ sel: { ...sel }, key, superSet: new Set(superSet) });
+                terminals.push({ sel: { ...sel }, key, type: 'dead_end', superSet: new Set(superSet) });
+                return;
+            }
+            if (excludeDims.has(nextNode.id)) {
+                terminals.push({ sel: { ...sel }, key, type: 'boundary', boundaryNode: nextNode.id, superSet: new Set(superSet) });
+                return;
+            }
 
-        if (canSuperimpose(sel, nextNode, ck)) {
-            superimposed++;
-            const newSuper = new Set(superSet);
-            newSuper.add(nextNode.id);
-            dfs(doPush(stk, nextNode.id, classEdges[0].id), newSuper);
-            return;
-        }
+            for (const superDim of superSet) {
+                if (needsCollapse(sel, superDim, nextNode, ck)) {
+                    collapses++;
+                    const newSuper = new Set(superSet);
+                    newSuper.delete(superDim);
+                    for (const rep of classReps[superDim]) {
+                        dfs(doPush(stk, superDim, rep), newSuper, key);
+                    }
+                    return;
+                }
+            }
 
-        for (const edge of classEdges) {
-            dfs(doPush(stk, nextNode.id, edge.id), superSet);
+            if (enabled.length === 0) {
+                deadEnds.push({ sel: { ...sel }, key, superSet: new Set(superSet) });
+                terminals.push({ sel: { ...sel }, key, type: 'dead_end', superSet: new Set(superSet) });
+                return;
+            }
+            const seenClasses = new Set();
+            const classEdges = [];
+            for (const e of enabled) {
+                const c = classes[nextNode.id]?.get(e.id);
+                if (!seenClasses.has(c)) { seenClasses.add(c); classEdges.push(e); }
+            }
+
+            if (classEdges.length <= 1) {
+                dfs(doPush(stk, nextNode.id, enabled[0].id), superSet, key);
+                return;
+            }
+
+            if (canSuperimpose(sel, nextNode, ck)) {
+                superimposed++;
+                const newSuper = new Set(superSet);
+                newSuper.add(nextNode.id);
+                dfs(doPush(stk, nextNode.id, classEdges[0].id), newSuper, key);
+                return;
+            }
+
+            for (const edge of classEdges) {
+                dfs(doPush(stk, nextNode.id, edge.id), superSet, key);
+            }
+        } finally {
+            if (onFinish) onFinish(key);
         }
     }
 
     const t0 = Date.now();
-    dfs(createStack(), new Set());
+    dfs(createStack(), new Set(), null);
     const elapsed = Date.now() - t0;
 
     if (!quiet) {
@@ -911,202 +918,147 @@ function walk(opts = {}) {
 }
 
 /**
- * Compute reachability for multiple outcomes in a single walk.
- * Uses the same superposition DFS as walk() but propagates a bitmask of
- * which outcomes are reachable from each state. One bit per outcome (max 31).
+ * Compute reachability for multiple outcomes by reusing walk()'s DFS exactly,
+ * then doing a single backward sweep over the recorded edge graph to propagate
+ * outcome bitmasks from terminals up to every visited state.
  *
- * When expanding superimposed dims, ALL raw edge values are tried and
- * terminals are rechecked per variant (since template matching depends on
- * raw values that equivalence classes intentionally collapse).
+ * Relies on setTemplates() having been called beforehand so that class
+ * refinement keeps outcome-discriminating dimensions (including primary
+ * variant dims) in distinct classes — irrKey alone is then sufficient; no
+ * post-hoc expansion is needed.
  *
  * @param {Object} opts
  * @param {Function[]} opts.matchers - Array of (sel) => bool functions, one per outcome.
- * @param {Set<string>} [opts.noClassMergeDims] - Dimensions to explore all enabled edges (not class reps).
- * @param {Set<string>} [opts.outcomeDims] - Dimensions referenced by outcome templates (never wildcarded in memoization key).
  * @param {boolean} [opts.quiet]
  * @returns {{ reachMap: Map<string,number>, visited: number, elapsed: number }}
  */
 function computeReachability(opts = {}) {
     const matchers = opts.matchers || [];
-    const noMerge = opts.noClassMergeDims || new Set();
-    const outcomeDims = opts.outcomeDims || new Set();
     const quiet = opts.quiet || false;
     if (matchers.length > 31) throw new Error('Max 31 outcomes (bitmask limit)');
 
-    const visited = new Set();
-    const skReach = new Map();
-    const reachMap = new Map();
-    let stateCount = 0;
-
     const _emptySet = new Set();
-    _activeRvMap = new Map();
-
-    function checkTerminals(sel) {
-        let mask = 0;
-        for (let i = 0; i < matchers.length; i++) {
-            if (matchers[i](sel)) mask |= (1 << i);
-        }
-        return mask;
-    }
-
     function irrKey(sel) {
         return classAndSuperKey(sel, _emptySet).sk;
     }
 
-    function expandSuper(sel, superDims, childMask) {
-        if (superDims.length === 0) {
-            _rrRvMap.clear();
-            const ik = irrKey(sel);
-            const m = checkTerminals(sel) | childMask;
-            reachMap.set(ik, (reachMap.get(ik) || 0) | m);
-            return m;
-        }
-        const dim = superDims[0];
-        const rest = superDims.slice(1);
-        const saved = sel[dim];
-        const node = NODE_MAP[dim];
-        const values = node && node.edges ? node.edges.map(e => e.id) : (classReps[dim] || []);
-        let combined = 0;
-        for (const v of values) {
-            sel[dim] = v;
-            combined |= expandSuper(sel, rest, childMask);
-        }
-        sel[dim] = saved;
-        return combined;
-    }
+    // Forward pass: walk() with hooks to record edges, sel-per-key, and
+    // post-order finish sequence. isTerminal mirrors validate.js semantics:
+    // stop DFS as soon as any outcome matches.
+    const children = new Map();     // parentKey -> Set<childKey>
+    const selByKey = new Map();     // key -> sel snapshot
+    const finishOrder = [];         // DFS post-order: children precede parents
 
-    const _rrRvMap = new Map();
-
-    function expandVariants(sel, dims, idx, childMask) {
-        if (idx >= dims.length) {
-            _rrRvMap.clear();
-            const ik = irrKey(sel);
-            reachMap.set(ik, (reachMap.get(ik) || 0) | checkTerminals(sel) | childMask);
-            return;
+    const isTerminal = (sel) => {
+        for (let i = 0; i < matchers.length; i++) {
+            if (matchers[i](sel)) return true;
         }
-        const dim = dims[idx];
-        const saved = sel[dim];
-        const currentClass = classes[dim]?.get(saved);
-        const node = NODE_MAP[dim];
-        if (!node || !node.edges) {
-            expandVariants(sel, dims, idx + 1, childMask);
-            return;
-        }
-        for (const e of node.edges) {
-            if (classes[dim]?.get(e.id) !== currentClass) continue;
-            if (e.id !== saved && isEdgeDisabled(sel, node, e)) continue;
-            sel[dim] = e.id;
-            expandVariants(sel, dims, idx + 1, childMask);
-        }
-        sel[dim] = saved;
-    }
-
-    function recordReach(sel, superSet, childMask) {
-        _rrRvMap.clear();
-        setRvCache(_rrRvMap);
-        const ik = irrKey(sel);
-        let fullMask = checkTerminals(sel) | childMask;
-        reachMap.set(ik, (reachMap.get(ik) || 0) | fullMask);
-        if (superSet.size > 0) {
-            const temp = Object.assign({}, sel);
-            fullMask |= expandSuper(temp, [...superSet], childMask);
-        }
-        const varDims = [];
-        for (const d of noMerge) {
-            if (sel[d] !== undefined) varDims.push(d);
-        }
-        if (varDims.length > 0) {
-            const temp = Object.assign({}, sel);
-            expandVariants(temp, varDims, 0, childMask);
-        }
-        setRvCache(null);
-        return fullMask;
-    }
-
-    function memoKey(ck, rawKey, sel) {
-        if (outcomeDims.size === 0) return rawKey;
-        const buf = new Uint8Array(dimOrder.length);
-        for (let i = 0; i < dimOrder.length; i++) {
-            const c = rawKey.charCodeAt(i);
-            buf[i] = (c === 42 && sel[dimOrder[i]] && outcomeDims.has(dimOrder[i]))
-                ? ck.charCodeAt(i) : c;
-        }
-        return String.fromCharCode.apply(null, buf);
-    }
-
-    function dfs(stk, superSet) {
-        const sel = currentState(stk);
-        _activeRvMap.clear();
-        setRvCache(_activeRvMap);
-        const { ck, sk: rawKey } = classAndSuperKey(sel, superSet);
-        const key = memoKey(ck, rawKey, sel);
-
-        const nextNode = pickNextNode(sel, ck);
-        const enabled = nextNode ? nextNode.edges.filter(e => !cachedIsEdgeDisabled(ck, sel, nextNode, e)) : [];
-        setRvCache(null);
-
-        if (!nextNode || enabled.length === 0) {
-            return recordReach(sel, superSet, 0);
-        }
-
-        if (visited.has(key)) {
-            const cached = skReach.get(key);
-            if (cached) recordReach(sel, superSet, cached.childMask);
-            return cached ? cached.mask : 0;
-        }
-        visited.add(key);
-        stateCount++;
-
-        for (const superDim of superSet) {
-            if (needsCollapse(sel, superDim, nextNode, ck)) {
-                const newSuper = new Set(superSet);
-                newSuper.delete(superDim);
-                let childMask = 0;
-                for (const rep of classReps[superDim]) {
-                    childMask |= dfs(dfsPush(stk, superDim, rep), newSuper);
-                }
-                const mask = recordReach(sel, superSet, childMask);
-                skReach.set(key, { mask, childMask: mask });
-                return mask;
-            }
-        }
-
-        const seenClasses = new Set();
-        const classEdges = [];
-        for (const e of enabled) {
-            const c = classes[nextNode.id]?.get(e.id);
-            if (!seenClasses.has(c)) { seenClasses.add(c); classEdges.push(e); }
-        }
-
-        let childMask = 0;
-        if (classEdges.length <= 1) {
-            const needsExpand = enabled.length > 1;
-            const sub = needsExpand ? new Set([...superSet, nextNode.id]) : superSet;
-            childMask = dfs(dfsPush(stk, nextNode.id, enabled[0].id), sub);
-        } else if (canSuperimpose(sel, nextNode, ck)) {
-            const newSuper = new Set(superSet);
-            newSuper.add(nextNode.id);
-            childMask = dfs(dfsPush(stk, nextNode.id, classEdges[0].id), newSuper);
-        } else {
-            for (const edge of classEdges) {
-                childMask |= dfs(dfsPush(stk, nextNode.id, edge.id), superSet);
-            }
-        }
-
-        const mask = recordReach(sel, superSet, childMask);
-        skReach.set(key, { mask, childMask: mask });
-        return mask;
-    }
+        return false;
+    };
 
     const t0 = Date.now();
-    dfs(createStack(), new Set());
-    const elapsed = Date.now() - t0;
-
+    const result = walk({
+        isTerminal,
+        onDescent(parentKey, childKey) {
+            let set = children.get(parentKey);
+            if (!set) { set = new Set(); children.set(parentKey, set); }
+            set.add(childKey);
+        },
+        onVisit(sel, _stk, ctx) {
+            const ss = (ctx.superSet && ctx.superSet.size > 0) ? new Set(ctx.superSet) : null;
+            selByKey.set(ctx.key, { sel: { ...sel }, superSet: ss });
+        },
+        onFinish(key) {
+            finishOrder.push(key);
+        },
+        quiet: true,
+    });
+    const fwElapsed = Date.now() - t0;
     if (!quiet) {
-        console.log(`Reachability: ${stateCount} states, ${reachMap.size} irrKeys, ${(elapsed/1000).toFixed(1)}s`);
+        console.log(`Forward (walk): ${result.visited} states, ${result.terminals.length} terminals, ${(fwElapsed/1000).toFixed(1)}s`);
     }
 
-    return { reachMap, visited: stateCount, elapsed };
+    // Compute the outcome bitmask for each terminal state.
+    const terminalMask = new Map();
+    for (const t of result.terminals) {
+        if (t.type !== 'terminal') continue;
+        let m = 0;
+        for (let i = 0; i < matchers.length; i++) {
+            if (matchers[i](t.sel)) m |= (1 << i);
+        }
+        if (m) terminalMask.set(t.key, m);
+    }
+
+    // Backward pass: DFS post-order guarantees children have been labeled
+    // before their parents. One linear sweep labels every state.
+    const t1 = Date.now();
+    const masks = new Map();
+    const reachMap = new Map();
+    const _rvMap = new Map();
+
+    for (let i = 0; i < finishOrder.length; i++) {
+        const key = finishOrder[i];
+        let m = terminalMask.get(key) || 0;
+        const kids = children.get(key);
+        if (kids) {
+            for (const c of kids) m |= masks.get(c) || 0;
+        }
+        masks.set(key, m);
+
+        const entry = selByKey.get(key);
+        if (!entry) continue;
+        const { sel, superSet } = entry;
+
+        _rvMap.clear();
+        setRvCache(_rvMap);
+
+        // Without compression, one write per state. With compression, broadcast
+        // the mask to each class rep of each compressed dim so the browser's
+        // concrete-state irrKey lookup hits an entry for every value the walker
+        // deemed equivalent here.
+        let superDims = null;
+        if (superSet) {
+            superDims = [];
+            for (const d of superSet) {
+                const reps = classReps[d];
+                if (reps && reps.length > 1) superDims.push({ dim: d, reps });
+            }
+        }
+
+        if (!superDims || superDims.length === 0) {
+            const ik = irrKey(sel);
+            reachMap.set(ik, (reachMap.get(ik) || 0) | m);
+        } else {
+            const saved = {};
+            for (const { dim } of superDims) saved[dim] = sel[dim];
+            (function recurse(i) {
+                if (i === superDims.length) {
+                    _rvMap.clear();
+                    const ik = irrKey(sel);
+                    reachMap.set(ik, (reachMap.get(ik) || 0) | m);
+                    return;
+                }
+                const { dim, reps } = superDims[i];
+                for (const rep of reps) {
+                    sel[dim] = rep;
+                    recurse(i + 1);
+                }
+            })(0);
+            for (const { dim } of superDims) sel[dim] = saved[dim];
+        }
+
+        setRvCache(null);
+    }
+
+    const bwElapsed = Date.now() - t1;
+    const elapsed = fwElapsed + bwElapsed;
+
+    if (!quiet) {
+        console.log(`Backward: ${finishOrder.length} states, ${(bwElapsed/1000).toFixed(1)}s`);
+        console.log(`Reachability: ${result.visited} states, ${reachMap.size} irrKeys, total ${(elapsed/1000).toFixed(1)}s`);
+    }
+
+    return { reachMap, visited: result.visited, elapsed };
 }
 
 function irrKeyPublic(sel) {

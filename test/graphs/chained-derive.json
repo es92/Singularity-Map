@@ -49,10 +49,10 @@
   ],
   "outcomes": {
     "templates": [
-      { "id": "any", "reachable": [{}] },
       { "id": "finished", "reachable": [{ "finish": ["f1", "f2"] }] },
       { "id": "alt-done", "reachable": [{ "alt": ["x1", "x2"] }] },
-      { "id": "intense", "reachable": [{ "intensity": ["high"] }] }
+      { "id": "intense", "reachable": [{ "intensity": ["high"] }] },
+      { "id": "alpha-low", "reachable": [{ "choice": ["alpha"], "level": ["L1"] }] }
     ]
   }
 }

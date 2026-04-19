@@ -49,7 +49,6 @@
   ],
   "outcomes": {
     "templates": [
-      { "id": "any", "reachable": [{}] },
       { "id": "reached-goal", "reachable": [{ "goal": ["g1", "g2"] }] },
       { "id": "stuck", "reachable": [{ "fix": ["no"] }] }
     ]

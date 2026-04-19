@@ -37,9 +37,9 @@
   ],
   "outcomes": {
     "templates": [
-      { "id": "any", "reachable": [{}] },
       { "id": "won", "reachable": [{ "result": ["win"] }] },
-      { "id": "careful-end", "reachable": [{ "action": ["careful"] }] }
+      { "id": "careful-end", "reachable": [{ "action": ["careful"] }] },
+      { "id": "lost", "reachable": [{ "result": ["lose"] }] }
     ]
   }
 }

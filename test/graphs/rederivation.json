@@ -50,10 +50,11 @@
   ],
   "outcomes": {
     "templates": [
-      { "id": "any", "reachable": [{}] },
       { "id": "fast-win", "reachable": [{ "execute": ["fast"], "result": ["success"] }] },
       { "id": "conservative-end", "reachable": [{ "recovery": ["slow"], "result": ["success", "failure"] }] },
-      { "id": "retry-path", "reachable": [{ "result": ["failure"], "aftermath": ["retry"] }] }
+      { "id": "retry-path", "reachable": [{ "result": ["failure"], "aftermath": ["retry"] }] },
+      { "id": "abandoned", "reachable": [{ "aftermath": ["abandon"] }] },
+      { "id": "measured-success", "reachable": [{ "execute": ["measured"], "result": ["success"] }] }
     ]
   }
 }
