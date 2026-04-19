@@ -303,6 +303,116 @@ function resumeRvCache() { setRvCache(_activeRvMap); }
 const stateCache = new Map();
 let cacheHits = 0, cacheMisses = 0;
 
+// ═══════════════════════════════════════════════
+// Template awareness for irrelevance + class refinement
+// ═══════════════════════════════════════════════
+// Templates are a third kind of dim-reader (alongside directReaders for
+// navigators and derivedReaders for deriveWhen). Without them, two effects
+// cause irrKey to collapse outcome-distinct states:
+//   (1) isIrrelevant wildcards the dim in the super-key.
+//   (2) computeClasses merges values with no navigator-reader into one class,
+//       so even a preserved dim char can't distinguish e.g. red from blue.
+// setTemplates fixes both: it indexes template-readers for (1), and refines
+// `classes[dim]` using per-value template signatures for (2).
+
+let _outcomeReadersByDim = {};
+let _baseClasses = null;
+let _baseClassReps = null;
+
+function _captureBaseClasses() {
+    if (_baseClasses) return;
+    _baseClasses = {};
+    for (const dim of Object.keys(classes)) _baseClasses[dim] = new Map(classes[dim]);
+    _baseClassReps = {};
+    for (const dim of Object.keys(classReps)) _baseClassReps[dim] = [...classReps[dim]];
+}
+
+function _restoreBaseClasses() {
+    for (const dim of Object.keys(_baseClasses)) {
+        const cm = classes[dim];
+        cm.clear();
+        for (const [k, v] of _baseClasses[dim]) cm.set(k, v);
+    }
+    for (const dim of Object.keys(_baseClassReps)) {
+        classReps[dim].length = 0;
+        for (const v of _baseClassReps[dim]) classReps[dim].push(v);
+    }
+}
+
+function _templateValueSig(t, dim, v) {
+    const parts = [];
+    for (let i = 0; i < (t.reachable || []).length; i++) {
+        const c = t.reachable[i];
+        let pos = '-';
+        if (c[dim]) pos = c[dim].includes(v) ? 'y' : 'n';
+        let neg = '-';
+        if (c._not && c._not[dim]) neg = c._not[dim].includes(v) ? 'y' : 'n';
+        parts.push(`${i}:${pos}:${neg}`);
+    }
+    if (t.primaryDimension === dim && t.variants) {
+        parts.push(`var:${Object.prototype.hasOwnProperty.call(t.variants, v) ? v : '-'}`);
+    }
+    return parts.join('|');
+}
+
+function setTemplates(templates) {
+    _captureBaseClasses();
+    _restoreBaseClasses();
+
+    _outcomeReadersByDim = {};
+    for (const t of (templates || [])) {
+        const reads = new Set();
+        for (const cond of (t.reachable || [])) {
+            for (const k of Object.keys(cond)) {
+                if (k === '_not' || k.startsWith('_')) continue;
+                reads.add(k);
+            }
+            if (cond._not) for (const k of Object.keys(cond._not)) reads.add(k);
+        }
+        if (t.primaryDimension && t.variants && Object.keys(t.variants).length > 0) {
+            reads.add(t.primaryDimension);
+        }
+        for (const d of reads) {
+            (_outcomeReadersByDim[d] ||= []).push(t);
+        }
+    }
+
+    for (const [dim, readers] of Object.entries(_outcomeReadersByDim)) {
+        const cm = classes[dim];
+        if (!cm) continue;
+        const node = NODE_MAP[dim];
+        if (!node || !node.edges) continue;
+
+        const sigByValue = new Map();
+        for (const e of node.edges) {
+            const v = e.id;
+            const parts = [String(cm.get(v) ?? 0)];
+            for (const t of readers) parts.push(`${t.id}:${_templateValueSig(t, dim, v)}`);
+            sigByValue.set(v, parts.join('||'));
+        }
+
+        const sigToId = new Map();
+        let nextId = 0;
+        for (const e of node.edges) {
+            const sig = sigByValue.get(e.id);
+            if (!sigToId.has(sig)) sigToId.set(sig, nextId++);
+            cm.set(e.id, sigToId.get(sig));
+        }
+
+        const seen = new Set();
+        classReps[dim].length = 0;
+        for (const e of node.edges) {
+            const c = cm.get(e.id);
+            if (!seen.has(c)) { seen.add(c); classReps[dim].push(e.id); }
+        }
+    }
+
+    irrVectorCache.clear();
+    stateCache.clear();
+    _lastCk = null;
+    _lastSc = null;
+}
+
 let _lastCk = null, _lastSc = null;
 function getCache(ck) {
     if (ck === _lastCk) return _lastSc;
@@ -512,6 +622,17 @@ function isIrrelevant(sel, dim, seen, ck) {
             if (!isIrrelevant(sel, derivedDim, seen, ck)) { result = false; break; }
         }
     }
+    // Templates are also readers: if any template reading this dim could still
+    // match, wildcarding the dim would collapse outcome-distinct states.
+    if (result) {
+        const templateReaders = _outcomeReadersByDim[dim];
+        if (templateReaders && templateReaders.length > 0) {
+            const state = resolvedState(sel);
+            for (const t of templateReaders) {
+                if (_eng.templatePartialMatch(t, state)) { result = false; break; }
+            }
+        }
+    }
     return result;
 }
 
@@ -613,6 +734,16 @@ function needsCollapse(sel, superDim, nextNode, ck) {
 function canSuperimpose(sel, node, ck) {
     const reps = classReps[node.id];
     if (!reps || reps.length <= 1) return false;
+    // Templates are downstream readers too. If any template could still match
+    // and reads this dim, its reachable bits may differ per value, so
+    // superposition (which OR-aggregates across values) would leak outcomes
+    // onto each value's irrKey. Refuse.
+    if (_outcomeReadersByDim[node.id]) {
+        const state = resolvedState(sel);
+        for (const t of _outcomeReadersByDim[node.id]) {
+            if (_eng.templatePartialMatch(t, state)) return false;
+        }
+    }
     const enabled = node.edges.filter(e => !(ck ? cachedIsEdgeDisabled(ck, sel, node, e) : isEdgeDisabled(sel, node, e)));
     const enabledClassSet = new Set();
     for (const e of enabled) enabledClassSet.add(classes[node.id]?.get(e.id));
@@ -990,6 +1121,7 @@ const _exports = {
     classes, classReps, dimOrder, derivedDimSet, derivedNodes, safePushDims,
     classKey, classAndSuperKey, irrKey: irrKeyPublic,
     resolvedState,
+    setTemplates,
     cachedIsNodeVisible, cachedIsEdgeDisabled, cachedIsIrrelevant,
     pickNextNode, enabledEdgeIds,
     stateCache, irrVectorCache,

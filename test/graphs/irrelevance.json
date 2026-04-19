@@ -28,6 +28,10 @@
       {
         "id": "goal",
         "reachable": [{ "A": ["a1"] }]
+      },
+      {
+        "id": "fallback",
+        "reachable": [{ "A": ["a2"] }]
       }
     ]
   }

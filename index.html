@@ -801,6 +801,8 @@
             templatesList = oData.templates;
             for (const t of templatesList) templatesMap[t.id] = t;
 
+            GraphWalker.setTemplates(templatesList);
+
         }
 
         // --- Node helpers ---

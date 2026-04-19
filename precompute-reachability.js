@@ -9,7 +9,7 @@ const { createGzip } = require('zlib');
 const { pipeline } = require('stream/promises');
 
 const { templateMatches } = require('./engine.js');
-const { computeReachability, resolvedState } = require('./graph-walker.js');
+const { computeReachability, resolvedState, setTemplates } = require('./graph-walker.js');
 
 function buildMatchersAndCompute(templates, opts = {}) {
     const primaryDims = new Set();
@@ -53,6 +53,7 @@ function buildMatchersAndCompute(templates, opts = {}) {
         console.log(`Primary dimensions (no class merge): ${[...primaryDims].join(', ')}`);
     }
 
+    setTemplates(templates);
     const result = computeReachability({ matchers, noClassMergeDims: primaryDims, outcomeDims, quiet });
     return { ...result, entries, primaryDims };
 }

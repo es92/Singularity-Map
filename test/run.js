@@ -188,6 +188,7 @@ function runTest(name, graphData) {
     const templates = graphData.outcomes.templates;
     const mods = clearAndInject(graphData);
     const { Engine, Walker, runStaticAnalysis, runTraversal, buildMatchersAndCompute, NODES } = mods;
+    Walker.setTemplates(templates);
 
     const errors = [];
 
