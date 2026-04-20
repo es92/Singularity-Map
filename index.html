@@ -525,6 +525,94 @@
             opacity: 0.9;
         }
         .share-native svg { stroke: var(--pill-active-text); }
+        /* ---- Rating section (Tier 1: end-of-path likelihood) ---- */
+        .rating-section {
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 2rem 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+        .rating-inner {
+            display: flex; flex-direction: column; gap: 0.5rem;
+            align-items: center;
+        }
+        .rating-prompt {
+            font-size: 0.95rem; font-weight: 500; color: var(--text-secondary);
+        }
+        .rating-slider-wrap {
+            display: flex; align-items: center; gap: 0.75rem;
+            width: 100%; max-width: 360px;
+            padding: 0.2rem 0 0.1rem;
+        }
+        .rating-slider {
+            flex: 1; -webkit-appearance: none; appearance: none;
+            height: 4px; border-radius: 2px;
+            background: var(--border); outline: none; cursor: pointer;
+            margin: 0;
+        }
+        .rating-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 18px; height: 18px; border-radius: 50%;
+            background: var(--accent); cursor: ew-resize;
+            box-shadow: 0 0 0 2px var(--bg), 0 0 8px var(--accent-glow);
+            border: none;
+        }
+        .rating-slider::-moz-range-thumb {
+            width: 18px; height: 18px; border-radius: 50%;
+            background: var(--accent); cursor: ew-resize; border: none;
+            box-shadow: 0 0 0 2px var(--bg), 0 0 8px var(--accent-glow);
+        }
+        .rating-value {
+            font-size: 0.92rem; font-weight: 700; color: var(--accent);
+            min-width: 2.75rem; text-align: right;
+        }
+        .rating-submit {
+            margin-top: 0.4rem;
+            font-size: 0.85rem; padding: 0.45rem 1.1rem;
+        }
+        .rating-submit:disabled {
+            opacity: 0.4; cursor: not-allowed;
+        }
+        .rating-rated .rating-result {
+            display: flex; flex-direction: column; gap: 0.5rem;
+            width: 100%; max-width: 360px;
+        }
+        .rating-result-head {
+            display: flex; justify-content: center; align-items: baseline;
+            gap: 2rem; font-size: 0.9rem; color: var(--text-secondary);
+            flex-wrap: wrap;
+        }
+        .rating-result-head strong { color: var(--accent); font-weight: 700; }
+        .rating-result-head > *:empty { display: none; }
+        .rating-histogram {
+            display: flex; align-items: flex-end; gap: 3px;
+            height: 36px;
+        }
+        .rating-histogram:empty { display: none; }
+        .rating-hist-bar {
+            flex: 1; background: var(--border); border-radius: 2px 2px 0 0;
+            min-height: 2px; transition: height 0.3s ease, background 0.15s ease;
+        }
+        .rating-hist-bar.active {
+            background: var(--accent); box-shadow: 0 0 8px var(--accent-glow);
+        }
+        .rating-result-footnote {
+            font-size: 0.78rem; color: var(--text-dim); line-height: 1.5;
+        }
+        .rating-change {
+            background: none; border: none; padding: 0;
+            margin-top: 0.25rem;
+            font-size: 0.8rem; color: var(--text-dim);
+            cursor: pointer; text-decoration: underline;
+            text-underline-offset: 2px;
+            transition: color 0.15s var(--ease);
+        }
+        .rating-change:hover { color: var(--accent); }
+        @media (max-width: 580px) {
+            .rating-section { padding-top: 1.5rem; }
+            .rating-result-head { flex-direction: column; align-items: center; gap: 0.15rem; }
+        }
         .map-actions {
             display: flex; gap: 0.5rem; flex-wrap: wrap;
             margin-top: auto; padding-top: 1rem; padding-bottom: 1rem;
@@ -1290,6 +1378,84 @@
                 }),
             }).catch(() => {});
         }
+        function logRating(outcomeProbability) {
+            if (!Number.isFinite(outcomeProbability)) return;
+            fetch(LOGGER_URL + '/rate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    journey_id: journeyId || uuid(),
+                    session_id: getSessionId(),
+                    outcome_probability: outcomeProbability,
+                }),
+            }).catch(() => {});
+        }
+        async function fetchOutcomeStats(outcomeId, variantKey) {
+            const mockN = getMockRatingCount();
+            if (mockN != null) return mockStatsForCount(mockN);
+            try {
+                const qs = variantKey ? '?variant_id=' + encodeURIComponent(variantKey) : '';
+                const res = await fetch(LOGGER_URL + '/stats/outcome/' + encodeURIComponent(outcomeId) + qs);
+                if (!res.ok) return null;
+                return await res.json();
+            } catch (_) {
+                return null;
+            }
+        }
+        function getMockRatingCount() {
+            try {
+                const usp = new URLSearchParams(location.search);
+                const q = parseInt(usp.get('mockRatingStats'), 10);
+                if (Number.isFinite(q) && q > 0) return q;
+            } catch (_) {}
+            if (Number.isFinite(window.__mockRatingStats)) return window.__mockRatingStats;
+            return null;
+        }
+        function mockStatsForCount(n) {
+            const weights = [0.04, 0.08, 0.14, 0.20, 0.18, 0.14, 0.10, 0.07, 0.03, 0.02];
+            const histogram = new Array(10).fill(0);
+            let remaining = n;
+            for (let i = 0; i < 10; i++) {
+                const take = Math.min(remaining, Math.round(n * weights[i]));
+                histogram[i] = take;
+                remaining -= take;
+            }
+            let spillover = 3;
+            while (remaining > 0) { histogram[spillover]++; remaining--; }
+            const total = histogram.reduce((a, b) => a + b, 0);
+            let sum = 0, cum = 0, median = 50;
+            for (let i = 0; i < 10; i++) sum += histogram[i] * (i * 10 + 5);
+            for (let i = 0; i < 10; i++) {
+                cum += histogram[i];
+                if (cum >= total / 2) { median = i * 10 + 5; break; }
+            }
+            return {
+                count: total,
+                mean: total > 0 ? sum / total : 0,
+                median,
+                p25: 15, p75: 55,
+                histogram,
+            };
+        }
+        function outcomeRatingKey(outcomeId, variantKey) {
+            if (!outcomeId) return null;
+            return 'sm_outcome_rating_' + outcomeId + (variantKey ? '__' + variantKey : '');
+        }
+        function getStoredOutcomeRating(outcomeId, variantKey) {
+            const key = outcomeRatingKey(outcomeId, variantKey);
+            if (!key) return null;
+            try {
+                const v = localStorage.getItem(key);
+                if (v == null) return null;
+                const n = parseInt(v, 10);
+                return Number.isFinite(n) ? n : null;
+            } catch (_) { return null; }
+        }
+        function setStoredOutcomeRating(outcomeId, variantKey, p) {
+            const key = outcomeRatingKey(outcomeId, variantKey);
+            if (!key) return;
+            try { localStorage.setItem(key, String(p)); } catch (_) {}
+        }
 
         function siteFooterHtml() {
             return `<div class="site-footer">
@@ -1709,6 +1875,18 @@
                         title = resolved.subtitle ? resolved.title + ': ' + resolved.subtitle : resolved.title;
                         const slug = resolved.variantKey ? matched[0].id + '--' + resolved.variantKey : matched[0].id;
                         url = location.origin + location.pathname + 'share/' + slug + '.html';
+
+                        const params = [];
+                        if (personalAnswers && personalAnswers.profession) {
+                            params.push('pp=' + encodeURIComponent(personalAnswers.profession));
+                        }
+                        for (const entry of stack) {
+                            if (!entry.nodeId) continue;
+                            if (entry.state[entry.nodeId]) {
+                                params.push(encodeURIComponent(entry.nodeId) + '=' + encodeURIComponent(entry.edgeId));
+                            }
+                        }
+                        if (params.length > 0) url += '?' + params.join('&');
                     }
                 }
                 const text = title
@@ -1772,7 +1950,173 @@
                     </div>
                 </div>`;
 
-                return heroHtml + pickerHtml + timelineHtml + ctaHtml + footerHtml;
+                const ratingHtml = buildRatingSectionHtml(t.id, resolved.variantKey);
+
+                return heroHtml + pickerHtml + timelineHtml + ctaHtml + ratingHtml + footerHtml;
+            }
+
+            function wireRatingSection(root) {
+                const section = root.querySelector('.rating-section');
+                if (!section) return;
+                if (section.classList.contains('rating-rated')) {
+                    wireRatedView(section);
+                } else {
+                    wireFormView(section);
+                }
+            }
+
+            function wireFormView(section) {
+                const slider = section.querySelector('.rating-slider');
+                const valueNum = section.querySelector('.rating-value-num');
+                const submitBtn = section.querySelector('.rating-submit');
+                if (!slider || !valueNum || !submitBtn) return;
+                const startsEnabled = submitBtn.dataset.ready === '1';
+                let touched = startsEnabled;
+                submitBtn.disabled = !startsEnabled;
+                const onInput = () => {
+                    valueNum.textContent = slider.value;
+                    if (!touched) { touched = true; submitBtn.disabled = false; }
+                };
+                slider.addEventListener('input', onInput);
+                slider.addEventListener('change', onInput);
+                submitBtn.addEventListener('click', () => {
+                    const p = parseInt(slider.value, 10);
+                    if (!Number.isFinite(p)) return;
+                    submitBtn.disabled = true;
+                    logRating(p);
+                    setStoredOutcomeRating(section.dataset.outcomeId, section.dataset.variantKey, p);
+                    transitionToRatedView(section, p);
+                });
+            }
+
+            function wireRatedView(section) {
+                const userRating = parseInt(section.dataset.userRating, 10);
+                if (Number.isFinite(userRating)) populateCrowdTile(section, userRating);
+                const changeBtn = section.querySelector('.rating-change');
+                if (changeBtn) {
+                    changeBtn.addEventListener('click', () => {
+                        const cur = parseInt(section.dataset.userRating, 10);
+                        morphToFormView(section, Number.isFinite(cur) ? cur : 50);
+                    });
+                }
+            }
+
+            function transitionToRatedView(section, p) {
+                section.classList.add('rating-rated');
+                section.dataset.userRating = String(p);
+                const inner = section.querySelector('.rating-inner');
+                if (!inner) return;
+                inner.innerHTML =
+                    '<div class="rating-prompt">How likely is this future?</div>' +
+                    '<div class="rating-result">' +
+                        '<div class="rating-result-head">' +
+                            '<span class="rating-result-you">You: <strong>' + p + '%</strong></span>' +
+                            '<span class="rating-result-crowd"></span>' +
+                        '</div>' +
+                        '<div class="rating-histogram" aria-hidden="true"></div>' +
+                        '<div class="rating-result-footnote">Loading crowd data&hellip;</div>' +
+                    '</div>' +
+                    '<button class="rating-change" type="button">Change my rating</button>';
+                wireRatedView(section);
+            }
+
+            function morphToFormView(section, initialValue) {
+                section.classList.remove('rating-rated');
+                delete section.dataset.userRating;
+                const inner = section.querySelector('.rating-inner');
+                if (!inner) return;
+                inner.innerHTML =
+                    '<div class="rating-prompt">How likely is this future?</div>' +
+                    '<div class="rating-slider-wrap">' +
+                        '<input type="range" min="0" max="100" value="' + initialValue + '" class="rating-slider" aria-label="Probability this scenario happens" />' +
+                        '<div class="rating-value"><span class="rating-value-num">' + initialValue + '</span>%</div>' +
+                    '</div>' +
+                    '<button class="btn btn-primary rating-submit" data-ready="1">Submit</button>';
+                wireFormView(section);
+            }
+
+            async function populateCrowdTile(section, userRating) {
+                const outcomeId = section.dataset.outcomeId;
+                const variantKey = section.dataset.variantKey || null;
+                const crowdEl = section.querySelector('.rating-result-crowd');
+                const histEl = section.querySelector('.rating-histogram');
+                const footEl = section.querySelector('.rating-result-footnote');
+                const stats = await fetchOutcomeStats(outcomeId, variantKey);
+                const minThreshold = getMockRatingCount() != null ? 0 : 20;
+                if (!stats || stats.pending || !stats.count || stats.count < minThreshold) {
+                    if (crowdEl) crowdEl.textContent = '';
+                    if (histEl) histEl.innerHTML = '';
+                    if (footEl) {
+                        const n = (stats && stats.count) || 0;
+                        footEl.textContent = n <= 1
+                            ? 'You\u2019re the first to rate this future. Crowd data will appear here once more people have answered.'
+                            : 'Crowd data will appear here once more people have rated this future (' + n + ' so far).';
+                    }
+                    return;
+                }
+                if (crowdEl) crowdEl.innerHTML = 'Crowd median: <strong>' + Math.round(stats.median) + '%</strong>';
+                if (histEl && Array.isArray(stats.histogram)) {
+                    const max = Math.max(1, ...stats.histogram);
+                    const userBucket = Math.min(9, Math.max(0, Math.floor(userRating / 10)));
+                    histEl.innerHTML = stats.histogram.map((n, i) => {
+                        const h = Math.max(2, Math.round((n / max) * 100));
+                        const active = i === userBucket ? ' active' : '';
+                        return '<div class="rating-hist-bar' + active + '" style="height:' + h + '%" title="' + (i * 10) + '–' + (i * 10 + 9) + '%: ' + n + '"></div>';
+                    }).join('');
+                }
+                if (footEl) {
+                    const pct = computePercentile(stats.histogram, userRating);
+                    const suffix = pct != null ? ' · you\u2019re in the ' + ordinalSuffix(pct) + ' percentile' : '';
+                    footEl.textContent = stats.count + ' respondents' + suffix;
+                }
+            }
+
+            function computePercentile(histogram, val) {
+                if (!Array.isArray(histogram)) return null;
+                const total = histogram.reduce((a, b) => a + b, 0);
+                if (!total) return null;
+                const bucket = Math.min(9, Math.max(0, Math.floor(val / 10)));
+                let below = 0;
+                for (let i = 0; i < bucket; i++) below += histogram[i];
+                const pct = Math.round(((below + (histogram[bucket] || 0) / 2) / total) * 100);
+                return Math.max(1, Math.min(99, pct));
+            }
+
+            function ordinalSuffix(n) {
+                const s = ['th', 'st', 'nd', 'rd'];
+                const v = n % 100;
+                return n + (s[(v - 20) % 10] || s[v] || s[0]);
+            }
+
+            function buildRatingSectionHtml(outcomeId, variantKey) {
+                const prior = getStoredOutcomeRating(outcomeId, variantKey);
+                const variantAttr = variantKey ? esc(variantKey) : '';
+                if (prior == null) {
+                    return `<div class="rating-section scroll-reveal" data-outcome-id="${esc(outcomeId)}" data-variant-key="${variantAttr}">
+                        <div class="rating-inner">
+                            <div class="rating-prompt">How likely is this future?</div>
+                            <div class="rating-slider-wrap">
+                                <input type="range" min="0" max="100" value="50" class="rating-slider" aria-label="Probability this scenario happens" />
+                                <div class="rating-value"><span class="rating-value-num">50</span>%</div>
+                            </div>
+                            <button class="btn btn-primary rating-submit" disabled>Submit</button>
+                        </div>
+                    </div>`;
+                }
+                return `<div class="rating-section rating-rated scroll-reveal" data-outcome-id="${esc(outcomeId)}" data-variant-key="${variantAttr}" data-user-rating="${prior}">
+                    <div class="rating-inner">
+                        <div class="rating-prompt">How likely is this future?</div>
+                        <div class="rating-result">
+                            <div class="rating-result-head">
+                                <span class="rating-result-you">You: <strong>${prior}%</strong></span>
+                                <span class="rating-result-crowd"></span>
+                            </div>
+                            <div class="rating-histogram" aria-hidden="true"></div>
+                            <div class="rating-result-footnote">Loading crowd data&hellip;</div>
+                        </div>
+                        <button class="rating-change" type="button">Change my rating</button>
+                    </div>
+                </div>`;
             }
 
             
@@ -2168,6 +2512,7 @@
                                 window.scrollTo({ top: 0, behavior: 'smooth' });
                             });
                         }
+                        wireRatingSection(outcomeZone);
                         const eff = Engine.resolvedState(Engine.currentState(stack));
                         const matchedT = templatesList.filter(t => Engine.templateMatches(t, eff));
                         if (matchedT.length > 0) {

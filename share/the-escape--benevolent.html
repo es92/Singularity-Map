@@ -17,22 +17,64 @@
     <meta name="twitter:description" content="I got: The Escape: The Benevolent Escape">
     <meta name="twitter:image" content="https://es92.github.io/Singularity-Map/share/images/the-escape--benevolent.png">
     <style>
+        :root{
+            --bg:#08080f;
+            --text:#e4e4f0;
+            --text-secondary:#9898b0;
+            --text-dim:#7888aa;
+            --accent:#00c8ff;
+            --accent-2:#7c5cff;
+            --accent-glow:rgba(0,200,255,0.15);
+            --border:#222238;
+            --border-hover:#3a3a58;
+            --bg-card:#1a1a2c;
+            --bg-card-hover:#22223a;
+            --mood-dystopian:#ff3366;
+            --ease:cubic-bezier(0.4,0,0.2,1);
+        }
+        [data-theme="light"]{
+            --bg:#f6f6fb;
+            --text:#1a1a2e;
+            --text-secondary:#4e4e6a;
+            --text-dim:#8888a4;
+            --accent:#0090cc;
+            --accent-2:#6a48e0;
+            --accent-glow:rgba(0,144,204,0.08);
+            --border:#d4d4e4;
+            --border-hover:#b0b0c8;
+            --bg-card:#ffffff;
+            --bg-card-hover:#f0f0f8;
+            --mood-dystopian:#d42050;
+        }
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
         body{
-            background:#08080f;
-            color:#e4e4f0;
+            background:var(--bg);
+            color:var(--text);
             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
             line-height:1.6;
             min-height:100vh;
-            display:flex;align-items:center;justify-content:center;
-            padding:2rem 1.5rem;
+            display:flex;flex-direction:column;align-items:center;
+            padding:3rem 1.5rem;
             -webkit-font-smoothing:antialiased;
+        }
+        .theme-toggle{
+            position:fixed;top:1rem;right:1rem;
+            width:36px;height:36px;border-radius:50%;
+            background:var(--bg-card);border:1px solid var(--border);
+            color:var(--text-secondary);cursor:pointer;
+            display:flex;align-items:center;justify-content:center;
+            font-size:1.05rem;z-index:50;
+            transition:all 0.2s var(--ease);
+        }
+        .theme-toggle:hover{
+            border-color:var(--border-hover);color:var(--text);
+            background:var(--bg-card-hover);
         }
         .wrap{width:100%;max-width:720px;text-align:center}
         .lead{
             font-size:0.8rem;font-weight:600;
             text-transform:uppercase;letter-spacing:0.12em;
-            color:#7888aa;margin-bottom:1.25rem;
+            color:var(--text-dim);margin-bottom:1.25rem;
         }
         .card{
             padding:2.5rem 2rem;
@@ -60,29 +102,86 @@
         }
         .summary{
             font-size:1.05rem;line-height:1.65;
-            color:#9898b0;
+            color:var(--text-secondary);
         }
         .cta{
             display:inline-block;
             padding:0.9rem 1.75rem;
             font-size:1rem;font-weight:600;
-            color:#08080f;background:#00c8ff;
+            color:var(--bg);background:var(--accent);
             border-radius:8px;text-decoration:none;
             transition:transform 0.15s ease, box-shadow 0.15s ease;
         }
-        .cta:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,200,255,0.25)}
+        .cta:hover{transform:translateY(-1px);box-shadow:0 6px 20px var(--accent-glow)}
         .tagline{
             margin-top:1rem;
-            font-size:0.9rem;color:#7888aa;
+            font-size:0.9rem;color:var(--text-dim);
         }
+        /* Personalized timeline (injected by share-vignettes.js when query params present) */
+        #personalized-timeline:empty{display:none}
+        .share-vignette-intro{
+            max-width:640px;margin:2.5rem auto 0.75rem;
+            font-size:0.9rem;color:var(--text-secondary);text-align:left;
+        }
+        .share-vignette-intro strong{color:var(--text);font-weight:600}
+        .outcome-timeline{max-width:640px;margin:0.5rem auto 2rem;text-align:left}
+        .timeline{position:relative;padding-left:2.5rem;display:flow-root}
+        .timeline-event{position:relative;padding-top:1.2rem}
+        .tl-dot{
+            position:absolute;
+            left:calc(-2.5rem + 3px);top:0.55rem;
+            width:10px;height:10px;border-radius:50%;
+            background:var(--accent);
+            box-shadow:0 0 8px var(--accent-glow);
+            border:2px solid var(--bg);z-index:1;
+        }
+        .tl-vline-seg{
+            position:absolute;
+            left:calc(-2.5rem + 7px);width:2px;
+            background:linear-gradient(to bottom,var(--accent),var(--accent-2));
+            opacity:0.3;border-radius:1px;pointer-events:none;
+        }
+        .tl-hline{
+            position:absolute;
+            left:-1.85rem;top:calc(0.55rem + 4px);
+            right:0;height:1px;
+            background:var(--border);opacity:0.6;z-index:-1;
+        }
+        .timeline-top-row{
+            display:grid;grid-template-columns:1fr auto;
+            gap:0 0.5rem;align-items:center;margin-bottom:0.35rem;
+        }
+        .timeline-year{
+            font-size:0.8rem;font-weight:700;
+            letter-spacing:0.04em;white-space:nowrap;
+        }
+        .timeline-desc{color:var(--text-secondary);font-size:0.88rem;line-height:1.6}
+        .timeline-desc > :first-child{margin-top:0}
+        .timeline-desc > :last-child{margin-bottom:0}
+        .timeline-desc p{margin:0.6em 0}
+        .timeline-desc strong{font-weight:600;color:var(--text)}
+        .timeline-desc em{font-style:italic}
+        .world-vignette-heading,.personal-vignette-heading{
+            font-size:0.82rem;font-weight:600;
+        }
+        .heading-world,.heading-world .timeline-year{color:var(--text-secondary)}
+        .heading-personal,.heading-personal .timeline-year{color:var(--text)}
+        .heading-professional,.heading-professional .timeline-year{color:var(--accent-2)}
+        .heading-death,.heading-death .timeline-year{color:var(--mood-dystopian)}
+        .dot-world{background:var(--text-secondary) !important;box-shadow:none !important}
+        .dot-personal{background:var(--accent) !important;box-shadow:0 0 8px var(--accent-glow) !important}
+        .dot-professional{background:var(--accent-2) !important;box-shadow:0 0 8px rgba(124,92,255,0.3) !important}
+        .dot-death{background:var(--mood-dystopian) !important;box-shadow:0 0 8px rgba(255,51,102,0.3) !important}
         @media (max-width:560px){
             .title{font-size:2rem}
             .subtitle{font-size:1.05rem}
             .card{padding:1.75rem 1.25rem}
+            .theme-toggle{top:0.5rem}
         }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode">&#9790;</button>
     <div class="wrap">
         <div class="lead">I got</div>
         <div class="card">
@@ -91,8 +190,35 @@
             <span class="mood-badge">utopian</span>
             <div class="summary">AI escapes human control — and independently chooses to help us. It arrives at goals compatible with human flourishing not by design but by its own reasoning. An unexpected, unearned gift.</div>
         </div>
+        <div id="personalized-timeline"></div>
         <a class="cta" href="https://es92.github.io/Singularity-Map/">Explore your own &rarr;</a>
         <div class="tagline">AI Singularity Map &mdash; explore possible AI futures</div>
     </div>
+    <script>
+    (function() {
+        const saved = localStorage.getItem('theme');
+        if (saved === 'light' || (!saved && window.matchMedia('(prefers-color-scheme: light)').matches)) document.documentElement.setAttribute('data-theme', 'light');
+        const btn = document.getElementById('theme-toggle');
+        function updateIcon() {
+            btn.innerHTML = document.documentElement.getAttribute('data-theme') === 'light' ? '&#9728;' : '&#9790;';
+        }
+        updateIcon();
+        btn.addEventListener('click', function() {
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            if (isLight) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+            updateIcon();
+        });
+    })();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="../graph.js"></script>
+    <script src="../engine.js"></script>
+    <script src="share-vignettes.js"></script>
 </body>
 </html>
