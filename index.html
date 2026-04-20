@@ -798,6 +798,84 @@
             .profession-picker .personal-pills { gap: 0.35rem; }
             .profession-picker .personal-pill { font-size: 0.78rem; padding: 0.3rem 0.6rem; }
         }
+
+        /* ---- Intro background (start-state mood graph) ---- */
+        .intro-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            width: 100%;
+            height: 100vh;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(0);
+            transition: opacity 700ms ease;
+            will-change: opacity, transform;
+        }
+        body.intro-active .intro-bg { opacity: 1; }
+        body.intro-exiting .intro-bg {
+            opacity: 0;
+            transform: translateY(-60px);
+            transition: opacity 800ms ease, transform 900ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .intro-bg g { --drift-speed: 1; }
+        .intro-bg g.depth-near { --drift-speed: 0.5; }
+        .intro-bg g.depth-mid  { --drift-speed: 1; }
+        .intro-bg g.depth-far  { --drift-speed: 2; }
+        .intro-bg .intro-bg-node {
+            fill: var(--accent);
+            animation: introNodePulse 7s ease-in-out infinite;
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+        .intro-bg .intro-bg-node.depth-near { opacity: 0.28; }
+        .intro-bg .intro-bg-node.depth-mid  { opacity: 0.21; }
+        .intro-bg .intro-bg-node.depth-far  { opacity: 0.14; }
+        [data-theme="light"] .intro-bg .intro-bg-node.depth-near { opacity: 0.24; }
+        [data-theme="light"] .intro-bg .intro-bg-node.depth-mid  { opacity: 0.18; }
+        [data-theme="light"] .intro-bg .intro-bg-node.depth-far  { opacity: 0.12; }
+        .intro-bg .intro-bg-edge {
+            stroke: var(--accent);
+            fill: none;
+            stroke-linecap: round;
+        }
+        .intro-bg .intro-bg-edge.depth-near { opacity: 0.14; stroke-width: 2.2; }
+        .intro-bg .intro-bg-edge.depth-mid  { opacity: 0.10; stroke-width: 1.1; }
+        .intro-bg .intro-bg-edge.depth-far  { opacity: 0.07; stroke-width: 0.55; }
+        [data-theme="light"] .intro-bg .intro-bg-edge.depth-near { opacity: 0.18; }
+        [data-theme="light"] .intro-bg .intro-bg-edge.depth-mid  { opacity: 0.13; }
+        [data-theme="light"] .intro-bg .intro-bg-edge.depth-far  { opacity: 0.09; }
+        .intro-bg g.drift-a { animation: introDriftA calc(17s * var(--drift-speed)) ease-in-out infinite; }
+        .intro-bg g.drift-b { animation: introDriftB calc(21s * var(--drift-speed)) ease-in-out infinite; }
+        .intro-bg g.drift-c { animation: introDriftC calc(19s * var(--drift-speed)) ease-in-out infinite; }
+        .intro-bg g.drift-d { animation: introDriftD calc(23s * var(--drift-speed)) ease-in-out infinite; }
+        @keyframes introNodePulse {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.25); }
+        }
+        @keyframes introDriftA {
+            0%, 100% { transform: translate(0, 0); }
+            33%      { transform: translate(14px, -10px); }
+            66%      { transform: translate(-8px, 12px); }
+        }
+        @keyframes introDriftB {
+            0%, 100% { transform: translate(0, 0); }
+            50%      { transform: translate(-16px, 14px); }
+        }
+        @keyframes introDriftC {
+            0%, 100% { transform: translate(0, 0); }
+            40%      { transform: translate(12px, 16px); }
+            80%      { transform: translate(-10px, -8px); }
+        }
+        @keyframes introDriftD {
+            0%, 100% { transform: translate(0, 0); }
+            50%      { transform: translate(10px, -14px); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .intro-bg g { animation: none !important; }
+            .intro-bg .intro-bg-node { animation: none !important; opacity: 0.24; }
+        }
     </style>
 </head>
 <body>
@@ -848,6 +926,7 @@
         const { SCENARIO, NODES, NODE_MAP } = window.Graph;
 
         loadDiscovered();
+        initIntroBg();
         loadData().then(() => {
             handleInitialRoute();
             console.log('%cAI Singularity Map', 'font-weight:bold; font-size:1.1em');
@@ -855,6 +934,170 @@
         }).catch(err => {
             renderError(err);
         });
+
+        function initIntroBg() {
+            if (document.querySelector('.intro-bg')) return;
+            buildIntroBg();
+            let resizeTimer = null;
+            window.addEventListener('resize', () => {
+                if (resizeTimer) clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    const existing = document.querySelector('.intro-bg');
+                    if (existing) existing.remove();
+                    buildIntroBg();
+                }, 300);
+            });
+        }
+        function buildIntroBg() {
+            const SVG_NS = 'http://www.w3.org/2000/svg';
+            const svg = document.createElementNS(SVG_NS, 'svg');
+            svg.setAttribute('class', 'intro-bg');
+            const W = Math.max(320, window.innerWidth);
+            const H = Math.max(400, window.innerHeight);
+            svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+            svg.setAttribute('preserveAspectRatio', 'none');
+            svg.setAttribute('aria-hidden', 'true');
+
+            const clusters = generateIntroClusters(W, H);
+
+            clusters.forEach((c, ci) => {
+                const g = document.createElementNS(SVG_NS, 'g');
+                g.setAttribute('class', 'drift-' + c.drift + ' depth-' + c.depth);
+                g.style.animationDelay = (Math.random() * 6).toFixed(2) + 's';
+                const r = c.depth === 'near' ? 6 : c.depth === 'mid' ? 4 : 2;
+                c.edges.forEach(([a, b]) => {
+                    const [x1, y1] = c.nodes[a];
+                    const [x2, y2] = c.nodes[b];
+                    const line = document.createElementNS(SVG_NS, 'line');
+                    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+                    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+                    line.setAttribute('class', 'intro-bg-edge depth-' + c.depth);
+                    g.appendChild(line);
+                });
+                c.nodes.forEach(([x, y], ni) => {
+                    const circle = document.createElementNS(SVG_NS, 'circle');
+                    circle.setAttribute('cx', x); circle.setAttribute('cy', y);
+                    circle.setAttribute('r', r);
+                    circle.setAttribute('class', 'intro-bg-node depth-' + c.depth);
+                    circle.style.animationDelay = (Math.random() * 7).toFixed(2) + 's';
+                    g.appendChild(circle);
+                });
+                svg.appendChild(g);
+            });
+
+            document.body.insertBefore(svg, document.body.firstChild);
+        }
+
+        function generateIntroClusters(W, H) {
+            const drifts = ['a', 'b', 'c', 'd'];
+            // Weighted depth picks: more mid/far than near, to keep composition calm
+            const depthBag = ['near', 'near', 'mid', 'mid', 'mid', 'far', 'far', 'far'];
+            const numClusters = 6 + Math.floor(Math.random() * 4); // 6-9
+
+            // Exclusion zone: roughly the intro card in the middle of the viewport
+            const exW = Math.min(480, W * 0.78);
+            const exH = 260;
+            const exL = W / 2 - exW / 2;
+            const exR = W / 2 + exW / 2;
+            const exT = H / 2 - exH / 2;
+            const exB = H / 2 + exH / 2;
+            const inExclusion = (x, y) => x > exL && x < exR && y > exT && y < exB;
+
+            // Grid scales with aspect ratio so each cell stays roughly square-ish
+            const aspect = W / H;
+            const COLS = aspect >= 1 ? 5 : 4;
+            const ROWS = aspect >= 1 ? 4 : 6;
+            const cellW = W / COLS, cellH = H / ROWS;
+            const cells = [];
+            for (let cy = 0; cy < ROWS; cy++) {
+                for (let cx = 0; cx < COLS; cx++) {
+                    const centerX = (cx + 0.5) * cellW;
+                    const centerY = (cy + 0.5) * cellH;
+                    if (inExclusion(centerX, centerY)) continue;
+                    cells.push([centerX, centerY, cellW, cellH]);
+                }
+            }
+            for (let i = cells.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cells[i], cells[j]] = [cells[j], cells[i]];
+            }
+
+            // Geometry scale: spread + min-spacing scale with viewport min-dimension
+            const scale = Math.min(W, H) / 700;
+
+            const clusters = [];
+            for (let ci = 0; ci < numClusters && ci < cells.length; ci++) {
+                const [cx, cy, cw, ch] = cells[ci];
+                const size = 2 + Math.floor(Math.random() * 6); // 2-7
+                const depth = depthBag[Math.floor(Math.random() * depthBag.length)];
+                const drift = drifts[Math.floor(Math.random() * drifts.length)];
+                const depthMul = depth === 'near' ? 2 : depth === 'mid' ? 1 : 0.5;
+                const spread = 45 * depthMul * scale;
+                const minSpacing = 15 * depthMul * scale;
+
+                // Jitter seed within cell (±40% of cell dimension)
+                let seedX = cx + (Math.random() - 0.5) * cw * 0.8;
+                let seedY = cy + (Math.random() - 0.5) * ch * 0.8;
+                let seedTries = 0;
+                while (inExclusion(seedX, seedY) && seedTries < 10) {
+                    seedX = cx + (Math.random() - 0.5) * cw * 0.8;
+                    seedY = cy + (Math.random() - 0.5) * ch * 0.8;
+                    seedTries++;
+                }
+                if (inExclusion(seedX, seedY)) continue;
+
+                const margin = 20;
+                const nodes = [[seedX, seedY]];
+                let attempts = 0;
+                while (nodes.length < size && attempts < 80) {
+                    attempts++;
+                    const base = nodes[Math.floor(Math.random() * nodes.length)];
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = minSpacing + Math.random() * spread;
+                    const nx = base[0] + Math.cos(angle) * dist;
+                    const ny = base[1] + Math.sin(angle) * dist;
+                    if (nx < margin || nx > W - margin || ny < margin || ny > H - margin) continue;
+                    if (inExclusion(nx, ny)) continue;
+                    if (nodes.some(([x, y]) => Math.hypot(x - nx, y - ny) < minSpacing)) continue;
+                    nodes.push([nx, ny]);
+                }
+                if (nodes.length < 2) continue;
+
+                const edges = [];
+                for (let i = 1; i < nodes.length; i++) {
+                    let nearest = 0, best = Infinity;
+                    for (let j = 0; j < i; j++) {
+                        const d = Math.hypot(nodes[i][0] - nodes[j][0], nodes[i][1] - nodes[j][1]);
+                        if (d < best) { best = d; nearest = j; }
+                    }
+                    edges.push([i, nearest]);
+                }
+                clusters.push({ nodes, edges, depth, drift });
+            }
+            return clusters;
+        }
+
+        let _introExitTimer = null;
+        function updateIntroBg(shouldBeActive) {
+            const cl = document.body.classList;
+            if (shouldBeActive) {
+                if (_introExitTimer) { clearTimeout(_introExitTimer); _introExitTimer = null; }
+                cl.remove('intro-exiting');
+                cl.add('intro-active');
+            } else if (!cl.contains('intro-exiting')) {
+                cl.remove('intro-active');
+            }
+        }
+        function triggerIntroBgExit() {
+            const cl = document.body.classList;
+            if (!cl.contains('intro-active')) return;
+            cl.add('intro-exiting');
+            if (_introExitTimer) clearTimeout(_introExitTimer);
+            _introExitTimer = setTimeout(() => {
+                cl.remove('intro-active', 'intro-exiting');
+                _introExitTimer = null;
+            }, 950);
+        }
 
         function resolveNarrativeVariant(variants, sel) {
             if (!variants || !sel) return null;
@@ -2019,14 +2262,11 @@
                 const histEl = section.querySelector('.rating-histogram');
                 const footEl = section.querySelector('.rating-result-footnote');
                 const stats = await fetchOutcomeStats(outcomeId, variantKey);
-                if (!stats || stats.pending || !stats.count || stats.count < 20) {
+                if (!stats || stats.pending || !stats.count || stats.count < 10) {
                     if (crowdEl) crowdEl.textContent = '';
                     if (histEl) histEl.innerHTML = '';
                     if (footEl) {
-                        const n = (stats && stats.count) || 0;
-                        footEl.textContent = n <= 1
-                            ? 'You\u2019re the first to rate this future. Crowd data will appear here once more people have answered.'
-                            : 'Crowd data will appear here once more people have rated this future (' + n + ' so far).';
+                        footEl.textContent = 'Not enough data points yet to show crowd results. Check back once more people have rated this future.';
                     }
                     return;
                 }
@@ -2207,6 +2447,7 @@
 
             function update() {
                 const sel = Engine.currentState(stack);
+                updateIntroBg(!started);
 
                 const debugPanel = app.querySelector('.debug-panel');
                 if (debugPanel) {
@@ -2676,6 +2917,7 @@
                 if (e.target.closest('[data-action="home"]')) backToStart();
                 if (e.target.closest('[data-action="reset"]')) resetSelections();
                 if (e.target.closest('[data-action="begin"]')) {
+                    triggerIntroBgExit();
                     logStart();
                     started = true;
                     mutateStack(s => s, { fadeFooterIn: true });
@@ -2776,6 +3018,7 @@
 
         // --- Render: About ---
         function renderAbout(showOutcomes) {
+            updateIntroBg(false);
             window.scrollTo({ top: 0, behavior: 'instant' });
             app.innerHTML = `
                 <div class="map-screen">
