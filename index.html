@@ -1480,20 +1480,12 @@
             function wouldReachOutcome(nodeId, edgeId) {
                 if (!_reachSet) return true;
                 if (!lockedId) return true;
+                // Under "outcomes are terminal" (SPEC.md), findNextQuestion
+                // never offers an edge from a state where any template already
+                // matches, so the reach-set lookup on the post-click state is
+                // sufficient — no template-match short-circuit is needed.
                 const sel = Engine.currentState(stack);
                 const childSel = _lightPush(sel, nodeId, edgeId);
-                // If the child state already matches the locked outcome, we're
-                // in post-terminal territory: the precompute used isTerminal
-                // pruning, so `reachSet` has no entries past the first match.
-                // But template matches are monotonic in the dims they read, so
-                // any further extension still satisfies them — answer yes.
-                const tmpl = templatesMap[lockedId];
-                if (tmpl) {
-                    const eff = Engine.resolvedState(childSel);
-                    const variantOk = !lockedVariantKey || !tmpl.primaryDimension
-                        || eff[tmpl.primaryDimension] === lockedVariantKey;
-                    if (variantOk && Engine.templateMatches(tmpl, eff)) return true;
-                }
                 const ik = GraphWalker.irrKey(childSel);
                 return _reachSet.has(ik);
             }
@@ -1516,6 +1508,13 @@
             function findNextQuestion() {
                 if (lockedId) _loadReachMap(lockedVariantKey ? lockedId + '--' + lockedVariantKey : lockedId);
                 const sel = Engine.currentState(stack);
+                // Outcomes are terminal (SPEC.md): once any template matches,
+                // the path is complete and we stop asking questions. The render
+                // layer reads nextQ==null as "show the matched outcome".
+                const eff = Engine.resolvedState(sel);
+                for (const t of templatesList) {
+                    if (Engine.templateMatches(t, eff)) return null;
+                }
                 for (const node of Engine.displayOrder(stack)) {
                     const locked = Engine.isNodeLocked(sel, node);
                     if (locked !== null) {

@@ -101,6 +101,15 @@ Rules are evaluated in order; the first matching rule wins.
 
 Outcome templates have `reachable` conditions in DNF. A template matches when the effective state satisfies any clause. The locked explore path feature uses DFS reachability to check whether a template *can* be reached from the current state.
 
+### Outcomes are terminal
+
+A state where any outcome template matches is **terminal**: the UI presents that outcome and no further questions are offered. A user's path is the prefix of clicks up to and including the first matching state; any later state that would also satisfy a template is out of scope, both for navigation and for reach-set computation.
+
+Two consequences follow:
+
+1. **Reach-map shape.** The precompute (`graph-walker.js`) stops DFS at the first template match, so `reach/<outcome>.json` contains irrKeys only for states that are *not yet* terminal. The UI predicate `reachSet.has(irrKey(postClickState))` is correct because the browser never asks a question from a terminal state.
+2. **Authoring invariant.** If every path to outcome `B` transits a state where some other outcome `A` also matches, the user can never reach `B` — `A` terminates the path first. The existing `violations.ambiguous` check (no two templates match the same state) is strictly required for this invariant to hold; authors should treat it as a hard rule.
+
 ---
 
 ## Renderer (index.html)

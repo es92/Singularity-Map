@@ -94,6 +94,9 @@ function baselineDFS(Engine, Walker, NODES, matchers) {
         }
         return null;
     }
+    // Outcomes are terminal (SPEC.md): once any template matches the current
+    // state, navigation ends. Mirror that here so the sim's "truth" matches
+    // the walker's isTerminal pruning and the browser's halt-on-match UI.
     function dfs(stk) {
         const sel = currentState(stk);
         const key = stateKey(sel);
@@ -101,6 +104,7 @@ function baselineDFS(Engine, Walker, NODES, matchers) {
         const entry = { sel: { ...sel }, stack: stk, mask: 0 };
         states.set(key, entry);
         const self = checkMatchers(sel);
+        if (self !== 0) { entry.mask = self; return self; }
         const next = pickNext(sel);
         if (!next) { entry.mask = self; return self; }
         const enabled = next.edges.filter(e => !isEdgeDisabled(sel, next, e));
@@ -173,8 +177,15 @@ function buildEntriesFromTemplates(Engine, Walker, templates) {
 
 // Core simulation: for a given (Engine, Walker, NODES, reachMap, entries),
 // enumerate baseline states, walk to each real decision point, and for every
-// enabled edge check whether `lightPush → reachSet.has` agrees with the baseline
-// ground truth (mask from Engine.push). Returns a summary.
+// enabled edge check whether the browser's wouldReachOutcome predicate agrees
+// with the baseline ground truth (mask from Engine.push). Returns a summary.
+//
+// Under "outcomes are terminal" (SPEC.md), the browser never asks a question
+// from a state where any template already matches (findNextQuestion returns
+// null there), so the UI predicate is simply:
+//     reachSet.has(irrKey(lightPush(sel, node, edge))).
+// The sim's baseline (above) mirrors that by halting at isTerminal — so the
+// walker, validate.js, and the sim all share one "truth".
 function runBrowserSim({ Engine, Walker, NODES, reachMap, entries, lockedIds, sampleMismatches = 5 }) {
     const allIds = entries.map(e => e.id);
     const toCheck = lockedIds && lockedIds.length ? lockedIds : allIds;
