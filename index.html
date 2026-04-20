@@ -1427,7 +1427,7 @@
             let fullQuestions = flags.fullQuestions !== false;
             let shortQuestions = flags.shortQuestions !== undefined
                 ? flags.shortQuestions
-                : window.matchMedia('(max-width: 580px)').matches;
+                : true;
             let expandTimeline = flags.expandTimeline !== false;
             let customDurations = flags.customDurations === true;
             let debugMode = flags.debugMode === true;
