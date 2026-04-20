@@ -194,17 +194,41 @@ function fmtSel(sel, NODES) {
 // Run one test
 // ═══════════════════════════════════════════════════════
 
+// Category keys (also defines column order in the summary).
+const CATEGORIES = [
+    'static',
+    'walk',
+    'reach-fp',
+    'reach-fn',
+    'reach-missing',
+    'sim-fp',
+    'sim-fn',
+];
+
+const CATEGORY_LABELS = {
+    'static':        'Static analysis',
+    'walk':          'Optimized walk',
+    'reach-fp':      'Reachability FP',
+    'reach-fn':      'Reachability FN',
+    'reach-missing': 'Reachability missing',
+    'sim-fp':        'BrowserSim FP',
+    'sim-fn':        'BrowserSim FN',
+};
+
 function runTest(name, graphData) {
     const templates = graphData.outcomes.templates;
     const mods = clearAndInject(graphData);
     const { Engine, Walker, runStaticAnalysis, runTraversal, buildMatchersAndCompute, NODES } = mods;
     Walker.setTemplates(templates);
 
-    const errors = [];
+    // Errors grouped by category; each category's failure is independent.
+    const byCat = Object.create(null);
+    for (const k of CATEGORIES) byCat[k] = [];
+    const pushCat = (cat, msg) => byCat[cat].push(msg);
 
     // 1. Static analysis
     const phase1 = runStaticAnalysis(templates);
-    for (const e of phase1.errors) errors.push(`[static] ${e}`);
+    for (const e of phase1.errors) pushCat('static', `[static] ${e}`);
 
     // 2. Optimized walk (from validate.js)
     const phase2 = runTraversal(templates, { quiet: true });
@@ -212,7 +236,7 @@ function runTest(name, graphData) {
         if (type === 'singleOption') continue;
         const items = list instanceof Map ? [...list.values()] : list;
         for (const v of items) {
-            errors.push(`[walk:${type}] ${JSON.stringify(v).substring(0, 200)}`);
+            pushCat('walk', `[walk:${type}] ${JSON.stringify(v).substring(0, 200)}`);
         }
     }
 
@@ -240,7 +264,7 @@ function runTest(name, graphData) {
     //    false (fail-closed), which is incorrect if the true mask is non-zero.
 
     let stateFP = 0, stateFN = 0, stateMissing = 0;
-    const stateMismatches = [];
+    const fpSamples = [], fnSamples = [], missingSamples = [];
     for (const [key, trueMask] of baseline.visited) {
         const sel = selFromKey(key);
         const ik = Walker.irrKey(sel);
@@ -248,7 +272,7 @@ function runTest(name, graphData) {
         if (optMask === undefined) {
             if (trueMask !== 0) {
                 stateMissing++;
-                if (stateMismatches.length < 5) stateMismatches.push(
+                if (missingSamples.length < 5) missingSamples.push(
                     `[state-missing] ${fmtSel(sel, NODES)} ik=${ik} truth=${fmtMask(trueMask, matcherEntries)} (optimized map has no entry)`
                 );
             }
@@ -258,22 +282,23 @@ function runTest(name, graphData) {
         const missing = trueMask & ~optMask;    // undercounted by optimizer
         if (extra !== 0) {
             stateFP++;
-            if (stateMismatches.length < 5) stateMismatches.push(
+            if (fpSamples.length < 5) fpSamples.push(
                 `[state-fp] ${fmtSel(sel, NODES)} ik=${ik} truth=${fmtMask(trueMask, matcherEntries)} opt has extra ${fmtMask(extra, matcherEntries)}`
             );
         }
         if (missing !== 0) {
             stateFN++;
-            if (stateMismatches.length < 5) stateMismatches.push(
+            if (fnSamples.length < 5) fnSamples.push(
                 `[state-fn] ${fmtSel(sel, NODES)} ik=${ik} truth=${fmtMask(trueMask, matcherEntries)} opt missing ${fmtMask(missing, matcherEntries)}`
             );
         }
     }
-    for (const m of stateMismatches) errors.push(m);
-    const totalStateIssues = stateFP + stateFN + stateMissing;
-    if (totalStateIssues > stateMismatches.length) {
-        errors.push(`... and ${totalStateIssues - stateMismatches.length} more reachability issues (false positives=${stateFP}, false negatives=${stateFN}, missing=${stateMissing})`);
-    }
+    for (const m of fpSamples)      pushCat('reach-fp', m);
+    for (const m of fnSamples)      pushCat('reach-fn', m);
+    for (const m of missingSamples) pushCat('reach-missing', m);
+    if (stateFP      > fpSamples.length)      pushCat('reach-fp',      `... and ${stateFP      - fpSamples.length} more reach FP cases`);
+    if (stateFN      > fnSamples.length)      pushCat('reach-fn',      `... and ${stateFN      - fnSamples.length} more reach FN cases`);
+    if (stateMissing > missingSamples.length) pushCat('reach-missing', `... and ${stateMissing - missingSamples.length} more reach missing cases`);
 
     // 6. Browser-sim invariant: the browser's wouldReachOutcome uses lightPush
     //    + reachSet.has. This must agree with the actual post-click state's
@@ -286,19 +311,26 @@ function runTest(name, graphData) {
         reachMap: optimized.reachMap,
         entries: optimized.entries,
     });
-    const simMessages = [];
+    const simFpMsgs = [], simFnMsgs = [];
     for (const o of sim.perOutcome) {
-        if (o.edgeFP || o.edgeFN) {
-            for (const m of o.mismatches) simMessages.push(`[browser-sim:${o.id}] ${m.trim()}`);
+        if (!o.edgeFP && !o.edgeFN) continue;
+        for (const m of o.mismatches) {
+            const line = `[browser-sim:${o.id}] ${m.trim()}`;
+            if (line.includes(' FP:'))      simFpMsgs.push(line);
+            else if (line.includes(' FN:')) simFnMsgs.push(line);
         }
     }
-    for (const m of simMessages.slice(0, 5)) errors.push(m);
-    if (simMessages.length > 5) {
-        errors.push(`... and ${simMessages.length - 5} more browser-sim mismatches`);
-    }
+    for (const m of simFpMsgs.slice(0, 5)) pushCat('sim-fp', m);
+    for (const m of simFnMsgs.slice(0, 5)) pushCat('sim-fn', m);
+    if (simFpMsgs.length > 5) pushCat('sim-fp', `... and ${simFpMsgs.length - 5} more BrowserSim FP mismatches`);
+    if (simFnMsgs.length > 5) pushCat('sim-fn', `... and ${simFnMsgs.length - 5} more BrowserSim FN mismatches`);
+
+    // Per-category pass/fail status.
+    const status = Object.create(null);
+    for (const k of CATEGORIES) status[k] = byCat[k].length === 0 ? 'pass' : 'fail';
 
     return {
-        name, errors,
+        name, byCat, status,
         stats: {
             baselineStates: baseline.visited.size,
             baselineDeadEnds: baseline.deadEnds.length,
@@ -319,39 +351,85 @@ function runTest(name, graphData) {
 
 const graphsDir = path.join(__dirname, 'graphs');
 const filter = process.argv[2];
+const verbose = process.argv.includes('--verbose') || process.argv.includes('-v');
 const files = fs.readdirSync(graphsDir).filter(f => f.endsWith('.json')).sort();
 
-let passed = 0, failed = 0;
+const results = [];
+const errorTests = [];
 
 for (const file of files) {
     const name = path.basename(file, '.json');
     if (filter && name !== filter) continue;
 
     const graphData = JSON.parse(fs.readFileSync(path.join(graphsDir, file), 'utf8'));
-    process.stdout.write(`\n${'═'.repeat(50)}\nTEST: ${name}\n${'─'.repeat(50)}\n`);
 
     try {
-        const { errors, stats } = runTest(name, graphData);
-        console.log(`  Baseline: ${stats.baselineStates} states, ${stats.baselineDeadEnds} dead ends`);
-        console.log(`  Optimized: ${stats.optimizedIrrKeys} irrKeys, walk ${stats.walkStates} states, ${stats.walkDeadEnds} dead ends`);
-        console.log(`  Reachability: false positives=${stats.stateFP}, false negatives=${stats.stateFN}, missing=${stats.stateMissing}`);
-        console.log(`  BrowserSim: ${stats.simOutcomes} outcomes, ${stats.simDecisions} decisions, ${stats.simChecked} edges checked, FP=${stats.simFP} FN=${stats.simFN}`);
+        const r = runTest(name, graphData);
+        results.push(r);
 
-        if (errors.length === 0) {
-            console.log('  PASS');
-            passed++;
+        if (verbose) {
+            const { stats, byCat, status } = r;
+            process.stdout.write(`\n${'═'.repeat(50)}\nTEST: ${name}\n${'─'.repeat(50)}\n`);
+            console.log(`  Baseline: ${stats.baselineStates} states, ${stats.baselineDeadEnds} dead ends`);
+            console.log(`  Optimized: ${stats.optimizedIrrKeys} irrKeys, walk ${stats.walkStates} states, ${stats.walkDeadEnds} dead ends`);
+            console.log(`  Reachability: false positives=${stats.stateFP}, false negatives=${stats.stateFN}, missing=${stats.stateMissing}`);
+            console.log(`  BrowserSim: ${stats.simOutcomes} outcomes, ${stats.simDecisions} decisions, ${stats.simChecked} edges checked, FP=${stats.simFP} FN=${stats.simFN}`);
+            const failedCats = CATEGORIES.filter(c => status[c] === 'fail');
+            if (failedCats.length === 0) {
+                console.log('  PASS');
+            } else {
+                console.log(`  FAIL (${failedCats.map(c => CATEGORY_LABELS[c]).join(', ')})`);
+                for (const c of failedCats) {
+                    for (const e of byCat[c]) console.log(`    ${e}`);
+                }
+            }
         } else {
-            console.log('  FAIL');
-            for (const e of errors) console.log(`    ${e}`);
-            failed++;
+            const flags = CATEGORIES.map(c => {
+                if (r.status[c] === 'pass') return '.';
+                return 'F';
+            }).join('');
+            console.log(`  ${flags}  ${name}`);
         }
     } catch (err) {
-        console.log(`  ERROR: ${err.message}`);
-        console.log(`  ${err.stack.split('\n').slice(1, 4).join('\n  ')}`);
-        failed++;
+        errorTests.push({ name, error: err });
+        console.log(`  ERROR  ${name}: ${err.message}`);
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// Summary: per-category aggregate across all tests.
+// ─────────────────────────────────────────────────────────────────────
+
+const total = results.length;
 console.log(`\n${'═'.repeat(50)}`);
-console.log(`Results: ${passed} passed, ${failed} failed`);
-process.exit(failed ? 1 : 0);
+console.log(`Summary (${total} test${total === 1 ? '' : 's'})`);
+console.log('─'.repeat(50));
+
+const labelWidth = Math.max(...CATEGORIES.map(c => CATEGORY_LABELS[c].length));
+let anyFail = errorTests.length > 0;
+
+for (const cat of CATEGORIES) {
+    const failing = results.filter(r => r.status[cat] === 'fail');
+    const passing = total - failing.length;
+    const label = CATEGORY_LABELS[cat].padEnd(labelWidth);
+    const countCol = `${passing}/${total}`.padEnd(7);
+    if (failing.length === 0) {
+        console.log(`  ${label}  ${countCol}  PASS`);
+    } else {
+        anyFail = true;
+        const names = failing.map(r => r.name).join(', ');
+        console.log(`  ${label}  ${countCol}  FAIL — ${names}`);
+    }
+}
+
+if (errorTests.length > 0) {
+    console.log('');
+    console.log(`  Tests that errored: ${errorTests.map(t => t.name).join(', ')}`);
+}
+
+if (!verbose && anyFail) {
+    console.log('');
+    console.log(`  (run with --verbose to see per-test details and sample failures)`);
+}
+
+process.exit(anyFail ? 1 : 0);
