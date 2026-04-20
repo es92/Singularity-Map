@@ -119,7 +119,7 @@ function baselineDFS(Engine, Walker, NODES, matchers) {
         let childMask = 0;
         for (const edge of enabled) {
             edgeCoverage.add(nextNode.id + ':' + edge.id);
-            childMask |= dfs(push(stk, nextNode.id, edge.id, { autoForce: false }));
+            childMask |= dfs(push(stk, nextNode.id, edge.id));
         }
 
         const mask = termMask | childMask;
@@ -276,9 +276,8 @@ function runTest(name, graphData) {
     }
 
     // 6. Browser-sim invariant: the browser's wouldReachOutcome uses lightPush
-    //    (autoForce:false) + reachSet.has. This must agree with the actual
-    //    post-click state's reach-set membership (Engine.push with autoForce:true,
-    //    then descend in the baseline).
+    //    + reachSet.has. This must agree with the actual post-click state's
+    //    reach-set membership (Engine.push, then descend in the baseline).
     //      FP = lightReach && !truthReach → UI green-lights a dead end.
     //      FN = !lightReach && truthReach  → UI hides a valid path.
     //    Both are invariant violations; both fail the test.

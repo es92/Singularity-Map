@@ -120,7 +120,7 @@ function baselineDFS(Engine, Walker, NODES, matcherEntries) {
         const enabled = next.edges.filter(e => !isEdgeDisabled(sel, next, e));
         let childMask = 0;
         for (const edge of enabled) {
-            childMask |= dfs(push(stk, next.id, edge.id, { autoForce: false }));
+            childMask |= dfs(push(stk, next.id, edge.id));
         }
 
         entry.mask = termMask | childMask;

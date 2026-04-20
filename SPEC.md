@@ -58,9 +58,10 @@ Edges can have:
 2. The user picks an edge → `push()` sets `sel[nodeId] = edgeId`
 3. `cleanSelection()` runs, which can cascade state changes:
    - **Retract** — if a previously-answered node is no longer activated (`activateWhen` fails), its answer is deleted
-   - **Force** — if a node becomes locked (only one edge remains enabled), its answer is forced to that edge
    - **Invalidate** — if a previously-chosen edge is now disabled, that answer is deleted
    - This runs as a fixpoint loop (up to 5 passes) since changes can cascade
+
+   Note: when a node becomes **locked** (only one edge remains enabled), `cleanSelection` does *not* write that value into `sel` automatically. Instead, the UI detects locks via `Engine.isNodeLocked` and presents the node as a single-option "Continue" screen; the user commits it through the normal push flow like any other answer. Downstream code that needs the effective value (template matching, visibility in the resolved state) consults `resolvedState`/`isNodeLocked` directly.
 4. Derived dimensions are recomputed from the new state
 5. Repeat from step 1 until the template matches or no unanswered questions remain
 

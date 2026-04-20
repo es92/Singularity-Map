@@ -1472,29 +1472,15 @@
                 const next = Object.assign({}, sel);
                 next[nodeId] = edgeId;
                 if (!GraphWalker.safePushDims.has(nodeId)) {
-                    Engine.cleanSelection(next, { autoForce: false });
+                    Engine.cleanSelection(next);
                 }
                 return next;
-            }
-
-            let _cachedRawSel = null;
-            let _cachedRawStack = null;
-            function _getRawSel(stk) {
-                if (_cachedRawStack === stk) return _cachedRawSel;
-                const sel = {};
-                for (let i = 1; i < stk.length; i++) {
-                    sel[stk[i].nodeId] = stk[i].edgeId;
-                }
-                Engine.cleanSelection(sel, { autoForce: false });
-                _cachedRawSel = sel;
-                _cachedRawStack = stk;
-                return sel;
             }
 
             function wouldReachOutcome(nodeId, edgeId) {
                 if (!_reachSet) return true;
                 if (!lockedId) return true;
-                const sel = _getRawSel(stack);
+                const sel = Engine.currentState(stack);
                 const childSel = _lightPush(sel, nodeId, edgeId);
                 // If the child state already matches the locked outcome, we're
                 // in post-terminal territory: the precompute used isTerminal

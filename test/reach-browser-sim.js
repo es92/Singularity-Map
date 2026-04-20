@@ -64,7 +64,7 @@ function lightPush(Engine, Walker, sel, nodeId, edgeId) {
     const next = Object.assign({}, sel);
     next[nodeId] = edgeId;
     if (!Walker.safePushDims.has(nodeId)) {
-        Engine.cleanSelection(next, { autoForce: false });
+        Engine.cleanSelection(next);
     }
     return next;
 }
@@ -105,8 +105,6 @@ function baselineDFS(Engine, Walker, NODES, matchers) {
         if (!next) { entry.mask = self; return self; }
         const enabled = next.edges.filter(e => !isEdgeDisabled(sel, next, e));
         let child = 0;
-        // Use autoForce=true so stacks mirror the browser's real flow
-        // (createStack and push auto-commit forced single-option moves).
         for (const e of enabled) child |= dfs(push(stk, next.id, e.id));
         entry.mask = self | child;
         return entry.mask;
@@ -176,7 +174,7 @@ function buildEntriesFromTemplates(Engine, Walker, templates) {
 // Core simulation: for a given (Engine, Walker, NODES, reachMap, entries),
 // enumerate baseline states, walk to each real decision point, and for every
 // enabled edge check whether `lightPush → reachSet.has` agrees with the baseline
-// ground truth (mask from Engine.push(autoForce:true)). Returns a summary.
+// ground truth (mask from Engine.push). Returns a summary.
 function runBrowserSim({ Engine, Walker, NODES, reachMap, entries, lockedIds, sampleMismatches = 5 }) {
     const allIds = entries.map(e => e.id);
     const toCheck = lockedIds && lockedIds.length ? lockedIds : allIds;

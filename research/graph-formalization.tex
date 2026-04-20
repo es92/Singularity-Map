@@ -23,7 +23,6 @@
 \newcommand{\Edg}[1]{E(#1)}            % edge set of dimension d
 \newcommand{\sel}{\sigma}              % a state / selection
 \newcommand{\clean}{\mathsf{C}}        % clean operator
-\newcommand{\cleannf}{\mathsf{C}_{\neg f}} % clean without autoForce
 \newcommand{\res}[2]{\rho(#1,#2)}      % resolvedVal
 \newcommand{\ik}{\mathsf{irrKey}}      % irrelevance key
 \newcommand{\ck}{\kappa}               % class key
@@ -213,23 +212,20 @@ iteration $\sel^{(0)} = \sel$,
 \[
   \sel^{(i+1)}(d) =
   \begin{cases}
-    \ell_d(\sel^{(i)})
-      & \text{if } d \text{ is locked in } \sel^{(i)}
-        \text{ and autoForce is active},\\
     \bot
       & \text{if } \sel^{(i)}(d) \neq \bot \text{ and }
         \Dis_{d,\sel^{(i)}(d)}(\sel^{(i)}) = 1,\\
-    \bot
-      & \text{if } d \text{ was auto-forced and is no longer visible
-              and hidden},\\
     \sel^{(i)}(d) & \text{otherwise},
   \end{cases}
 \]
 run for at most $P$ passes (currently $P=5$) or until a fixpoint is
 reached.
 
-We write $\cleannf$ for the variant with autoForce disabled (no locking
-step), which only removes disabled choices.
+$\clean$ only removes disabled choices; it never writes new values.
+Locked dimensions (where only one edge is enabled) are \emph{not}
+auto-committed into $\sel$ — they are detected on demand via $\ell_d$
+and surfaced to the user as a single-option confirmation step, which
+the user commits through the normal push flow.
 \end{definition}
 
 \begin{lemma}[Termination]\label{lem:clean-term}
@@ -318,7 +314,7 @@ unanswered. If no such dimension exists, $\mathsf{next}(\sel) = \bot$.
   \EndIf
   \State $\mathit{mask} \gets 0$
   \ForAll{$e \in \Edg{d}$ with $\Dis_{d,e}(\sel)=0$}
-    \State $\sel' \gets \cleannf(\sel[d \mapsto e])$
+    \State $\sel' \gets \clean(\sel[d \mapsto e])$
     \State $\mathit{mask} \gets \mathit{mask} \mathbin{|} \Call{BaselineDFS}{\sel'}$
   \EndFor
   \State \Return $\mathit{mask}$
@@ -356,20 +352,20 @@ file contains the set $\{\ik(\sel) : \text{bit } k \text{ set in }
 \subsection{Client-Side Lookup}\label{sec:client}
 %--------------------------------------------------------------------------
 
-At runtime, given the user's current explicit choice stack and a candidate
+At runtime, given the user's current choice stack and a candidate
 move $(d,e)$:
 
 \begin{enumerate}
-  \item Reconstruct a \emph{raw} state $\sel_{\mathrm{raw}}$ from
-        explicit stack entries only (excluding auto-forced values).
-  \item Apply $\cleannf(\sel_{\mathrm{raw}}[d \mapsto e])$ to get the
-        hypothetical next state $\sel'$.
+  \item Take the current committed state $\sel$ from the stack.
+  \item Apply $\clean(\sel[d \mapsto e])$ to get the hypothetical next
+        state $\sel'$.
   \item Compute $\ik(\sel')$ and check membership in the preloaded
         $\mathsf{ReachSet}_k$.
 \end{enumerate}
 
-The use of $\cleannf$ (no auto-force) on both the server DFS and the
-client lookup ensures key agreement.
+Because $\clean$ never auto-commits locked values, the committed client
+state and the server-side DFS state inhabit the same key space, so
+$\ik$ agreement is immediate.
 
 %--------------------------------------------------------------------------
 \subsection{Graph Walk}\label{sec:walk}
@@ -481,17 +477,6 @@ A \textbf{single-option node} at state $\sel$ is a visible, unanswered,
 \emph{non-locked} dimension $d$ where exactly one edge is enabled but
 $d$ is not detected as locked by the engine. This is a UI concern: the
 user sees a ``choice'' with only one option.
-\end{definition}
-
-\begin{definition}[Click-Erased Edge]\label{def:clickerased}
-Edge $e$ of dimension $d$ is \textbf{click-erased} at state $\sel$ if
-pushing $(d,e)$ onto the stack and applying $\clean$ (with autoForce)
-results in a state where $d$ is no longer set:
-\[
-  \clean(\sel[d \mapsto e])(d) = \bot.
-\]
-This means the user's click is immediately undone by the auto-force /
-clean logic, which is a UX anomaly.
 \end{definition}
 
 \begin{definition}[Stack Integrity]\label{def:stackint}
@@ -621,7 +606,7 @@ $\Rep_d([e]_d) \in [e]_d$.
   \ForAll{$e \in \Edg{d}$ with $\Dis_{d,e}(\sel)=0$}
     \If{$[e]_d \notin \mathit{seen}$}
       \State $\mathit{seen} \gets \mathit{seen} \cup \{[e]_d\}$
-      \State $\sel' \gets \cleannf(\sel[d \mapsto \Rep_d([e]_d)])$
+      \State $\sel' \gets \clean(\sel[d \mapsto \Rep_d([e]_d)])$
       \State $\mathit{mask} \gets \mathit{mask} \mathbin{|} \Call{ClassDFS}{\sel'}$
     \EndIf
   \EndFor
@@ -795,7 +780,7 @@ class representatives of $d$, removing $d$ from $\Sigma$.
     \If{$\mathrm{NeedsCollapse}(d, \sel, d^*)$}
       \State $\mathit{mask} \gets 0$
       \ForAll{$r \in \Rep_d$} \Comment{branch on class reps of $d$}
-        \State $\sel' \gets \cleannf(\sel[d \mapsto r])$
+        \State $\sel' \gets \clean(\sel[d \mapsto r])$
         \State $\mathit{mask} \gets \mathit{mask} \mathbin{|}
                \Call{SuperDFS}{\sel', \Sigma \setminus \{d\}}$
       \EndFor
@@ -805,15 +790,15 @@ class representatives of $d$, removing $d$ from $\Sigma$.
   \EndFor
   \State Deduplicate $E^*$ to one edge per class
   \If{only one class is enabled}
-    \State $\mathit{child} \gets \Call{SuperDFS}{\cleannf(\sel[d^* \mapsto e]),\;\Sigma}$
+    \State $\mathit{child} \gets \Call{SuperDFS}{\clean(\sel[d^* \mapsto e]),\;\Sigma}$
   \ElsIf{$d^*$ is superimposable at $\sel$}
-    \State $\mathit{child} \gets \Call{SuperDFS}{\cleannf(\sel[d^* \mapsto \Rep_{d^*}(C_1)]),\;
+    \State $\mathit{child} \gets \Call{SuperDFS}{\clean(\sel[d^* \mapsto \Rep_{d^*}(C_1)]),\;
            \Sigma \cup \{d^*\}}$
   \Else
     \State $\mathit{child} \gets 0$
     \ForAll{class representatives $r$ of enabled edges of $d^*$}
       \State $\mathit{child} \gets \mathit{child} \mathbin{|}
-             \Call{SuperDFS}{\cleannf(\sel[d^* \mapsto r]),\;\Sigma}$
+             \Call{SuperDFS}{\clean(\sel[d^* \mapsto r]),\;\Sigma}$
     \EndFor
   \EndIf
   \State $\mathit{mask} \gets M(\sel) \mathbin{|} \mathit{child}$
@@ -989,9 +974,8 @@ $P \cdot |\Dim|$ individual dimension inspections, where $P = 5$.
 
 \begin{proof}[Proof sketch]
 Each pass iterates over $|\Dim|$ dimensions. A pass that makes no change
-terminates the loop. Each change either deletes a value or forces a locked
-value; since forcing can trigger at most one deletion cascade per
-dimension, and there are finitely many dimensions, the iteration
+terminates the loop. Each change deletes a value; since there are
+finitely many dimensions and deletions are monotone, the iteration
 converges.
 \end{proof}
 
@@ -1025,28 +1009,13 @@ Let $d$ be superimposable at $\sel$ with enabled class set
 $\{C_1,\dots,C_m\}$. Then for any outcome $k$:
 \[
   \bigvee_{i=1}^{m}
-  \Reach\bigl(\cleannf(\sel[d \mapsto \Rep_d(C_i)]),\, k\bigr)
+  \Reach\bigl(\clean(\sel[d \mapsto \Rep_d(C_i)]),\, k\bigr)
   \;=\;
-  \Reach\bigl(\cleannf(\sel[d \mapsto \Rep_d(C_1)]),\, k\bigr).
+  \Reach\bigl(\clean(\sel[d \mapsto \Rep_d(C_1)]),\, k\bigr).
 \]
 If $d$ is superimposable, exploring a single representative suffices
 because the fingerprint identity guarantees all branches encounter
 identical subproblems.
-\end{lemma}
-
-\begin{lemma}[AutoForce Agreement]\label{lem:autoforce}
-Let $\sel_{\text{full}} = \clean(\sel_0[d_1\mapsto e_1]\cdots[d_t\mapsto e_t])$
-be the state produced by the browser's $\mathsf{push}$ (with autoForce),
-and let $\sel_{\text{raw}}$ be the state reconstructed from only the
-explicit entries $(d_1,e_1),\dots,(d_t,e_t)$ with $\cleannf$ applied.
-Then:
-\[
-  \ik(\sel_{\text{raw}}) = \ik(\sel_{\text{DFS}})
-\]
-where $\sel_{\text{DFS}}$ is the corresponding state visited by the
-server-side DFS (which also uses $\cleannf$). The browser's
-$\mathsf{\_getRawSel}$ strips auto-forced dimensions, ensuring the
-irrelevance key matches the DFS's key space.
 \end{lemma}
 
 \begin{lemma}[Terminal Memoization Soundness]\label{lem:termmemo}
@@ -1098,7 +1067,7 @@ by the corrected algorithm ordering.
 A dimension $d$ is a \textbf{safe push dimension} if $d$ does not appear
 (directly or via derivation chains) in any edge-local condition
 (\texttt{disabledWhen} or \texttt{requires}) of any other dimension.
-For safe push dimensions, $\cleannf(\sel[d\mapsto e]) = \sel[d\mapsto e]$
+For safe push dimensions, $\clean(\sel[d\mapsto e]) = \sel[d\mapsto e]$
 --- clean selection has no effect, so it can be skipped.
 \end{lemma}
 
@@ -1250,9 +1219,6 @@ empirical evidence via baseline-vs-optimized comparison on 8~test graphs.
 \ref{lem:termmemo}
   & Lemma
   & Super key memoization is sound only at non-terminals. \\
-\ref{lem:autoforce}
-  & Lemma
-  & Client raw-selection reconstruction matches DFS keys. \\
 \ref{lem:safepush}
   & Lemma
   & Safe push dimensions can skip clean selection. \\[4pt]
@@ -1281,9 +1247,6 @@ empirical evidence via baseline-vs-optimized comparison on 8~test graphs.
 \ref{def:ambig}
   & Defn
   & Ambiguous outcomes: multiple templates match one state. \\
-\ref{def:clickerased}
-  & Defn
-  & Click-erased: autoForce undoes the user's choice. \\
 \ref{def:stackint}
   & Defn
   & Stack integrity: display order matches stack order. \\

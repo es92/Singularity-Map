@@ -337,8 +337,8 @@ function runTraversal(templates, opts = {}) {
 //
 // Audits the consistency between what the browser's `wouldReachOutcome`
 // advertises (via `reachSet.has(irrKey(lightPush(sel, n, e)))`) and the
-// state the user actually lands in after `Engine.push` (autoForce:true,
-// which is how the UI commits a click).
+// state the user actually lands in after `Engine.push` (which is how the
+// UI commits a click).
 //
 // For every reach set in data/reach/*.json:
 //   FP (dead-end): lightKey ∈ reachSet but commitKey ∉ reachSet
@@ -376,7 +376,7 @@ function runReachInvariantCheck(templates, opts = {}) {
         const next = Object.assign({}, sel);
         next[nodeId] = edgeId;
         if (!safePushDims.has(nodeId)) {
-            cleanSelection(next, { autoForce: false });
+            cleanSelection(next);
         }
         return next;
     }

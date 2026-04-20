@@ -513,35 +513,11 @@ function getEdgeDisabledReason(sel, node, edge) {
 // State management
 // ════════════════════════════════════════════════════════
 
-function cleanSelection(sel, { autoForce = true } = {}) {
-    const autoForced = new Set();
+function cleanSelection(sel) {
     for (let pass = 0; pass < 5; pass++) {
         let changed = false;
         for (const node of NODES) {
-            if (autoForced.has(node.id) && !isNodeActivated(sel, node)) {
-                const hidden = node.hideWhen && node.hideWhen.some(c => matchCondition(sel, c));
-                if (hidden) {
-                    delete sel[node.id];
-                    autoForced.delete(node.id);
-                    changed = true;
-                    continue;
-                }
-                autoForced.delete(node.id);
-                continue;
-            }
             if (!isNodeVisible(sel, node)) continue;
-            if (autoForce) {
-                const locked = isNodeLocked(sel, node);
-                if (locked !== null) {
-                    if (sel[node.id] !== locked) {
-                        sel[node.id] = locked;
-                        changed = true;
-                    }
-                    autoForced.add(node.id);
-                    continue;
-                }
-                autoForced.delete(node.id);
-            }
             if (sel[node.id]) {
                 const edge = node.edges && node.edges.find(v => v.id === sel[node.id]);
                 if (edge && isEdgeDisabled(sel, node, edge)) {
@@ -620,14 +596,14 @@ function createStack() {
     return [{ nodeId: null, edgeId: null, state }];
 }
 
-function push(stack, nodeId, edgeId, { autoForce = true } = {}) {
+function push(stack, nodeId, edgeId) {
     const existingIdx = stack.findIndex(e => e.nodeId === nodeId);
     const base = existingIdx > 0 ? stack.slice(0, existingIdx) : stack;
 
     const prev = base[base.length - 1].state;
     const next = { ...prev };
     next[nodeId] = edgeId;
-    cleanSelection(next, { autoForce });
+    cleanSelection(next);
     return [...base, { nodeId, edgeId, state: next }];
 }
 

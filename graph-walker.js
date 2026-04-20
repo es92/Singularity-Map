@@ -693,7 +693,7 @@ function dfsPush(stk, nodeId, edgeId) {
         next[nodeId] = edgeId;
         return [...stk, { nodeId, edgeId, state: next }];
     }
-    return push(stk, nodeId, edgeId, { autoForce: false });
+    return push(stk, nodeId, edgeId);
 }
 
 function pickNextNode(sel, ck) {
