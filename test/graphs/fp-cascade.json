@@ -1,0 +1,58 @@
+{
+  "_comment": "Reproduces the dead-end FP from the production graph: commit auto-forces cascaded dims that change a prior dim's class-wildcard status, so lightKey matches reachSet but commitKey (after autoforce) does not. Here: picking source=parity forces dist=open and control=open_access, which derives align=failed → reaches 'alien'. But the walker's class analysis wildcards 'source' when dist/control are unset, causing sels with source=lag/far (which CANNOT reach alien) to share an irrKey with sels that can. Browser lightPush from source=lag hits that wildcarded key, reports reachable; the actual committed state cannot reach alien.",
+  "nodes": [
+    { "id": "top", "edges": [{ "id": "sing" }, { "id": "stall" }] },
+    {
+      "id": "pace",
+      "activateWhen": [{ "top": ["sing"] }],
+      "edges": [{ "id": "slow" }, { "id": "fast" }, { "id": "explosive" }]
+    },
+    {
+      "id": "source",
+      "activateWhen": [{ "top": ["sing"] }],
+      "edges": [
+        { "id": "parity", "disabledWhen": [{ "pace": ["explosive"] }] },
+        { "id": "lag", "disabledWhen": [{ "pace": ["explosive"] }] },
+        { "id": "far" }
+      ]
+    },
+    {
+      "id": "dist",
+      "activateWhen": [{ "top": ["sing"] }],
+      "edges": [
+        { "id": "open", "requires": { "source": ["parity"] } },
+        { "id": "closed", "disabledWhen": [{ "source": ["parity"] }] }
+      ]
+    },
+    {
+      "id": "control",
+      "activateWhen": [{ "top": ["sing"] }],
+      "edges": [
+        { "id": "deny", "disabledWhen": [{ "dist": ["open"] }] },
+        { "id": "open_access" }
+      ]
+    },
+    {
+      "id": "align",
+      "derived": true,
+      "deriveWhen": [
+        { "match": { "dist": ["open"], "control": ["open_access"] }, "value": "failed" },
+        { "match": { "top": ["sing"] }, "value": "robust" }
+      ],
+      "edges": [{ "id": "failed" }, { "id": "robust" }]
+    },
+    {
+      "id": "kind",
+      "activateWhen": [{ "top": ["sing"] }],
+      "edges": [{ "id": "coex" }, { "id": "other" }]
+    }
+  ],
+  "outcomes": {
+    "templates": [
+      {
+        "id": "alien",
+        "reachable": [{ "top": ["sing"], "align": ["failed"], "kind": ["coex"] }]
+      }
+    ]
+  }
+}
