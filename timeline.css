@@ -481,6 +481,12 @@ body::before {
         margin: 0.4rem -1.2rem -0.75rem;
         padding: 0.35rem 1.2rem;
     }
+    .tl-vline, .tl-vline-seg, .qz-vline { display: none; }
+    #app { padding: 2rem 1rem 4rem; }
+    .timeline, .question-zone, .map-outcomes-zone { padding-left: 0; }
+    .tl-dot { left: calc(-1rem + 3px); }
+    .tl-hline { left: -0.5rem; }
+    .timeline-stage-header { margin-left: 0; }
 }
 .forced-continue {
     margin-top: 0.25rem; margin-bottom: 0.5rem;
