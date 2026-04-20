@@ -743,7 +743,7 @@ const NODES = [
             { escalation_outcome: ['standoff'], reason: 'In a standoff between rival AI powers, the framing is security — not sharing' }
           ] },
         { id: 'keeping_safe', label: 'We\'re keeping you safe' },
-        { id: 'best_will_rise', label: 'The best ideas will win', shortLabel: 'Best ideas win',
+        { id: 'best_will_rise', label: 'The market will decide', shortLabel: 'Market decides',
           disabledWhen: [
             { escalation_outcome: ['standoff'], reason: 'In a standoff between rival AI powers, the framing is security — not meritocracy' }
           ] }

@@ -4285,7 +4285,7 @@
         "shortAnswerDesc": "Security and stability as the justification for control."
       },
       "best_will_rise": {
-        "answerLabel": "\"The best ideas will win\"",
+        "answerLabel": "\"The market will decide\"",
         "answerDesc": "Open access, not redistribution. The system is framed as fair because it's open, not because outcomes are equal — anyone can build, barriers are falling, innovation is democratized. When regulation is proposed, the answer is *let the market decide*. The structure concentrates gains but the narrative says that's earned, not captured.",
         "timelineEvent": {
           "headline": "The promise: opportunity for the talented",
@@ -5122,6 +5122,14 @@
           },
           {
             "when": {
+              "power_promise": [
+                "best_will_rise"
+              ]
+            },
+            "answerDesc": "Letting the market decide sounded fair in the abstract. But post-singularity, the inputs humans used to bring — labor, time, expertise — counted for less. So what 'the market' mostly decided was how to distribute the gains among those who already held capital and compute. Inequality followed, not from any decision, but from the absence of anything else to weigh against existing position."
+          },
+          {
+            "when": {
               "intent": [
                 "self_interest"
               ]
@@ -5190,6 +5198,14 @@
               ]
             },
             "answerDesc": "Nobody contested a promise that was never about sharing. The power holder claimed security or meritocracy — not inclusion — and the public accepted the bargain without testing it. The concentration was the default, and nobody organized to change the default."
+          },
+          {
+            "when": {
+              "power_promise": [
+                "best_will_rise"
+              ]
+            },
+            "answerDesc": "The argument was that open competition would sort this out. But after the singularity, the inputs humans could still bring to any market — labor, time, attention — shrank toward zero. 'The market' became, in practice, a way of allocating among those who already held capital and compute. Left on its own, it concentrated everything there. Not through a decision — through the absence of anything to weigh against it."
           },
           {
             "when": {
