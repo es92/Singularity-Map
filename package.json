@@ -2,6 +2,8 @@
   "name": "singularity-map",
   "private": true,
   "scripts": {
+    "test": "node test/run.js",
+    "validate": "node validate.js",
     "precompute-reach": "node precompute-reachability.js"
   },
   "dependencies": {

@@ -270,7 +270,7 @@ function runTest(name, graphData) {
     for (const m of stateMismatches) errors.push(m);
     const totalStateIssues = stateFP + stateFN + stateMissing;
     if (totalStateIssues > stateMismatches.length) {
-        errors.push(`... and ${totalStateIssues - stateMismatches.length} more per-state issues (FP=${stateFP} FN=${stateFN} missing=${stateMissing})`);
+        errors.push(`... and ${totalStateIssues - stateMismatches.length} more reachability issues (false positives=${stateFP}, false negatives=${stateFN}, missing=${stateMissing})`);
     }
 
     return {
@@ -307,7 +307,7 @@ for (const file of files) {
         const { errors, stats } = runTest(name, graphData);
         console.log(`  Baseline: ${stats.baselineStates} states, ${stats.baselineDeadEnds} dead ends`);
         console.log(`  Optimized: ${stats.optimizedIrrKeys} irrKeys, walk ${stats.walkStates} states, ${stats.walkDeadEnds} dead ends`);
-        console.log(`  Per-state: FP=${stats.stateFP} FN=${stats.stateFN} missing=${stats.stateMissing}`);
+        console.log(`  Reachability: false positives=${stats.stateFP}, false negatives=${stats.stateFN}, missing=${stats.stateMissing}`);
 
         if (errors.length === 0) {
             console.log('  PASS');
