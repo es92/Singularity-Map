@@ -17,15 +17,82 @@
     <meta name="twitter:description" content="I got: The Plateau: The Long Plateau">
     <meta name="twitter:image" content="https://es92.github.io/Singularity-Map/share/images/the-plateau--months.png">
     <style>
-        body{background:#08080f;color:#e4e4f0;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem}
-        a{color:#00c8ff}
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        body{
+            background:#08080f;
+            color:#e4e4f0;
+            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+            line-height:1.6;
+            min-height:100vh;
+            display:flex;align-items:center;justify-content:center;
+            padding:2rem 1.5rem;
+            -webkit-font-smoothing:antialiased;
+        }
+        .wrap{width:100%;max-width:720px;text-align:center}
+        .lead{
+            font-size:0.8rem;font-weight:600;
+            text-transform:uppercase;letter-spacing:0.12em;
+            color:#7888aa;margin-bottom:1.25rem;
+        }
+        .card{
+            padding:2.5rem 2rem;
+            background:radial-gradient(ellipse at 30% 0%, rgba(255,170,34,0.12) 0%, transparent 50%), radial-gradient(ellipse at 70% 0%, rgba(0,200,255,0.08) 0%, transparent 50%);
+            border:1px solid rgba(255,170,34,0.25);
+            border-radius:12px;
+            margin-bottom:2rem;
+        }
+        .title{
+            font-size:2.75rem;font-weight:700;
+            letter-spacing:-0.03em;line-height:1.1;
+            margin-bottom:0.5rem;
+        }
+        .subtitle{
+            font-size:1.2rem;font-weight:400;
+            font-style:italic;margin-bottom:1rem;opacity:0.8;
+        }
+        .mood-badge{
+            display:inline-block;
+            padding:0.22rem 0.7rem;border-radius:20px;
+            font-size:0.72rem;font-weight:600;
+            text-transform:uppercase;letter-spacing:0.06em;
+            background:rgba(255,170,34,0.12);color:#ffaa22;border:1px solid rgba(255,170,34,0.25);
+            margin-bottom:1.25rem;
+        }
+        .summary{
+            font-size:1.05rem;line-height:1.65;
+            color:#9898b0;
+        }
+        .cta{
+            display:inline-block;
+            padding:0.9rem 1.75rem;
+            font-size:1rem;font-weight:600;
+            color:#08080f;background:#00c8ff;
+            border-radius:8px;text-decoration:none;
+            transition:transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .cta:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,200,255,0.25)}
+        .tagline{
+            margin-top:1rem;
+            font-size:0.9rem;color:#7888aa;
+        }
+        @media (max-width:560px){
+            .title{font-size:2rem}
+            .subtitle{font-size:1.05rem}
+            .card{padding:1.75rem 1.25rem}
+        }
     </style>
 </head>
 <body>
-    <div>
-        <h1>The Plateau: The Long Plateau</h1>
-        <p style="margin-top:1rem">Redirecting to <a href="https://es92.github.io/Singularity-Map/">AI Singularity Map</a>...</p>
+    <div class="wrap">
+        <div class="lead">I got</div>
+        <div class="card">
+            <h1 class="title">The Plateau</h1>
+            <div class="subtitle">The Long Plateau</div>
+            <span class="mood-badge">mixed</span>
+            <div class="summary">AI reaches month-level autonomy — near-AGI (artificial general intelligence) capability that automates most knowledge work. Then it hits a hard ceiling. The most powerful tool ever built, but not a new form of intelligence.</div>
+        </div>
+        <a class="cta" href="https://es92.github.io/Singularity-Map/">Explore your own &rarr;</a>
+        <div class="tagline">AI Singularity Map &mdash; explore possible AI futures</div>
     </div>
-    <script>location.href="https://es92.github.io/Singularity-Map/";</script>
 </body>
 </html>

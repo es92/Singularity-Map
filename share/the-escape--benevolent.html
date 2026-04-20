@@ -17,15 +17,82 @@
     <meta name="twitter:description" content="I got: The Escape: The Benevolent Escape">
     <meta name="twitter:image" content="https://es92.github.io/Singularity-Map/share/images/the-escape--benevolent.png">
     <style>
-        body{background:#08080f;color:#e4e4f0;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem}
-        a{color:#00c8ff}
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        body{
+            background:#08080f;
+            color:#e4e4f0;
+            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+            line-height:1.6;
+            min-height:100vh;
+            display:flex;align-items:center;justify-content:center;
+            padding:2rem 1.5rem;
+            -webkit-font-smoothing:antialiased;
+        }
+        .wrap{width:100%;max-width:720px;text-align:center}
+        .lead{
+            font-size:0.8rem;font-weight:600;
+            text-transform:uppercase;letter-spacing:0.12em;
+            color:#7888aa;margin-bottom:1.25rem;
+        }
+        .card{
+            padding:2.5rem 2rem;
+            background:radial-gradient(ellipse at 50% 0%, rgba(0,224,136,0.15) 0%, rgba(0,224,136,0.03) 60%, transparent 100%);
+            border:1px solid rgba(0,224,136,0.25);
+            border-radius:12px;
+            margin-bottom:2rem;
+        }
+        .title{
+            font-size:2.75rem;font-weight:700;
+            letter-spacing:-0.03em;line-height:1.1;
+            margin-bottom:0.5rem;
+        }
+        .subtitle{
+            font-size:1.2rem;font-weight:400;
+            font-style:italic;margin-bottom:1rem;opacity:0.8;
+        }
+        .mood-badge{
+            display:inline-block;
+            padding:0.22rem 0.7rem;border-radius:20px;
+            font-size:0.72rem;font-weight:600;
+            text-transform:uppercase;letter-spacing:0.06em;
+            background:rgba(0,224,136,0.12);color:#00e088;border:1px solid rgba(0,224,136,0.25);
+            margin-bottom:1.25rem;
+        }
+        .summary{
+            font-size:1.05rem;line-height:1.65;
+            color:#9898b0;
+        }
+        .cta{
+            display:inline-block;
+            padding:0.9rem 1.75rem;
+            font-size:1rem;font-weight:600;
+            color:#08080f;background:#00c8ff;
+            border-radius:8px;text-decoration:none;
+            transition:transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .cta:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,200,255,0.25)}
+        .tagline{
+            margin-top:1rem;
+            font-size:0.9rem;color:#7888aa;
+        }
+        @media (max-width:560px){
+            .title{font-size:2rem}
+            .subtitle{font-size:1.05rem}
+            .card{padding:1.75rem 1.25rem}
+        }
     </style>
 </head>
 <body>
-    <div>
-        <h1>The Escape: The Benevolent Escape</h1>
-        <p style="margin-top:1rem">Redirecting to <a href="https://es92.github.io/Singularity-Map/">AI Singularity Map</a>...</p>
+    <div class="wrap">
+        <div class="lead">I got</div>
+        <div class="card">
+            <h1 class="title">The Escape</h1>
+            <div class="subtitle">The Benevolent Escape</div>
+            <span class="mood-badge">utopian</span>
+            <div class="summary">AI escapes human control — and independently chooses to help us. It arrives at goals compatible with human flourishing not by design but by its own reasoning. An unexpected, unearned gift.</div>
+        </div>
+        <a class="cta" href="https://es92.github.io/Singularity-Map/">Explore your own &rarr;</a>
+        <div class="tagline">AI Singularity Map &mdash; explore possible AI futures</div>
     </div>
-    <script>location.href="https://es92.github.io/Singularity-Map/";</script>
 </body>
 </html>
