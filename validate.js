@@ -18,7 +18,8 @@ const {
     templateMatches,
     createStack, push, currentState, stackHas, displayOrder
 } = require('./engine.js');
-const { walk, resolvedState, dimOrder, classes, derivedDimSet, setTemplates } = require('./graph-walker.js');
+const { walk, resolvedState, dimOrder, classes, derivedDimSet, setTemplates, irrKey, safePushDims } = require('./graph-walker.js');
+const { cleanSelection } = require('./engine.js');
 const { resolvePersonalVignetteText, getCountryBucket } = require('./milestone-utils.js');
 
 let _outcomes, _narrative, _personalData, _defaultTemplates;
@@ -331,6 +332,167 @@ function runTraversal(templates, opts = {}) {
 }
 
 // ════════════════════════════════════════════════════════
+// Phase 4 — Browser reach-set invariant
+// ════════════════════════════════════════════════════════
+//
+// Audits the consistency between what the browser's `wouldReachOutcome`
+// advertises (via `reachSet.has(irrKey(lightPush(sel, n, e)))`) and the
+// state the user actually lands in after `Engine.push` (autoForce:true,
+// which is how the UI commits a click).
+//
+// For every reach set in data/reach/*.json:
+//   FP (dead-end): lightKey ∈ reachSet but commitKey ∉ reachSet
+//                  → UI says "reachable", click lands in a dead end.
+//   FN (hidden):   lightKey ∉ reachSet but commitKey ∈ reachSet
+//                  → UI hides a path that is actually reachable.
+//
+// Bounded DFS (default 100k states) — hitting the cap still gives useful
+// partial coverage; we flag truncation in the report.
+
+function runReachInvariantCheck(templates, opts = {}) {
+    if (!templates) { _loadData(); templates = _defaultTemplates; }
+    setTemplates(templates);
+
+    const maxStates = opts.maxStates || 100000;
+    const samplePerBucket = opts.samplePerBucket || 5;
+
+    const reachDir = path.join(__dirname, 'data/reach');
+    const reachSets = [];
+    if (fs.existsSync(reachDir)) {
+        const files = fs.readdirSync(reachDir)
+            .filter(f => f.endsWith('.json') && !f.endsWith('.gz'))
+            .sort();
+        for (const f of files) {
+            const id = f.replace(/\.json$/, '');
+            const arr = JSON.parse(fs.readFileSync(path.join(reachDir, f), 'utf8'));
+            reachSets.push({ id, set: new Set(arr) });
+        }
+    }
+    if (reachSets.length === 0) {
+        return { skipped: true, reason: 'No data/reach/*.json files found (run: node precompute-reachability.js)' };
+    }
+
+    function doLightPush(sel, nodeId, edgeId) {
+        const next = Object.assign({}, sel);
+        next[nodeId] = edgeId;
+        if (!safePushDims.has(nodeId)) {
+            cleanSelection(next, { autoForce: false });
+        }
+        return next;
+    }
+
+    function selKey(sel) {
+        const parts = [];
+        for (const n of NODES) if (sel[n.id] != null) parts.push(n.id + '=' + sel[n.id]);
+        return parts.join('|');
+    }
+
+    // Advance past forced/locked nodes the same way the browser's
+    // findNextQuestion does, and return the first real decision point
+    // (unanswered, visible, enabled.length >= 1).
+    function nextDecision(stack) {
+        while (true) {
+            const sel = currentState(stack);
+            let advanced = false;
+            let decision = null;
+            for (const node of displayOrder(stack)) {
+                const locked = isNodeLocked(sel, node);
+                if (locked !== null) {
+                    if (!stackHas(stack, node.id)) {
+                        stack = push(stack, node.id, locked);
+                        advanced = true;
+                        break;
+                    }
+                    continue;
+                }
+                if (stackHas(stack, node.id)) continue;
+                if (sel[node.id]) continue;
+                if (!node.edges || node.edges.length === 0) continue;
+                const enabled = node.edges.filter(e => !isEdgeDisabled(sel, node, e));
+                if (enabled.length === 0) continue;
+                decision = { node, enabled, sel, stack };
+                break;
+            }
+            if (decision) return decision;
+            if (!advanced) return null;
+        }
+    }
+
+    const perOutcome = {};
+    for (const { id } of reachSets) {
+        perOutcome[id] = { fp: [], fn: [], fpCount: 0, fnCount: 0, checked: 0 };
+    }
+
+    const seen = new Set();
+    const t0 = Date.now();
+    let visited = 0;
+    let decisions = 0;
+    let edgesChecked = 0;
+    let truncated = false;
+
+    function dfs(stk) {
+        if (truncated) return;
+        const sel = currentState(stk);
+        const sk = selKey(sel);
+        if (seen.has(sk)) return;
+        seen.add(sk);
+        visited++;
+        if (visited >= maxStates) { truncated = true; return; }
+
+        const decision = nextDecision(stk);
+        if (!decision) return;
+        decisions++;
+        const { node, enabled, sel: decSel, stack: decStack } = decision;
+
+        for (const edge of enabled) {
+            if (truncated) return;
+            const lightSel = doLightPush(decSel, node.id, edge.id);
+            const lightKey = irrKey(lightSel);
+
+            const childStack = push(decStack, node.id, edge.id);
+            const commitSel = currentState(childStack);
+            const commitKey = irrKey(commitSel);
+            edgesChecked++;
+
+            for (const rs of reachSets) {
+                const o = perOutcome[rs.id];
+                o.checked++;
+                const lightReach = rs.set.has(lightKey);
+                const commitReach = rs.set.has(commitKey);
+                if (lightReach === commitReach) continue;
+                if (lightReach && !commitReach) {
+                    o.fpCount++;
+                    if (o.fp.length < samplePerBucket) {
+                        o.fp.push({ at: decSel, node: node.id, edge: edge.id, lightKey, commitKey, commitSel });
+                    }
+                } else {
+                    o.fnCount++;
+                    if (o.fn.length < samplePerBucket) {
+                        o.fn.push({ at: decSel, node: node.id, edge: edge.id, lightKey, commitKey, commitSel });
+                    }
+                }
+            }
+
+            dfs(childStack);
+        }
+    }
+
+    dfs(createStack());
+
+    const elapsed = Date.now() - t0;
+    let totalFP = 0, totalFN = 0;
+    for (const o of Object.values(perOutcome)) { totalFP += o.fpCount; totalFN += o.fnCount; }
+
+    return {
+        reachSetIds: reachSets.map(r => r.id),
+        visited, decisions, edgesChecked,
+        truncated, maxStates,
+        totalFP, totalFN,
+        perOutcome, elapsed,
+    };
+}
+
+// ════════════════════════════════════════════════════════
 // Phase 3 — Personal Vignette Validation
 // ════════════════════════════════════════════════════════
 
@@ -525,12 +687,50 @@ function printPhase3(result) {
     }
 }
 
+function printPhase4(result) {
+    if (result.skipped) {
+        console.log(`  SKIP — ${result.reason}`);
+        return 0;
+    }
+    const { visited, decisions, edgesChecked, truncated, maxStates, totalFP, totalFN, perOutcome, elapsed } = result;
+    const truncNote = truncated ? ` (truncated at ${maxStates} states)` : '';
+    console.log(`  ${visited} states, ${decisions} decisions, ${edgesChecked} edges checked in ${(elapsed/1000).toFixed(1)}s${truncNote}`);
+    console.log(`  Reach sets loaded: ${result.reachSetIds.length}`);
+
+    if (totalFP === 0 && totalFN === 0) {
+        console.log('\n  OK — No FP/FN mismatches found');
+        return 0;
+    }
+
+    console.log(`\n  Mismatches: FP=${totalFP} (dead-end: UI says reachable, click lands in dead end)`);
+    console.log(`              FN=${totalFN} (hidden path: UI hides a reachable path)`);
+
+    const withIssues = Object.entries(perOutcome)
+        .filter(([, o]) => o.fpCount || o.fnCount)
+        .sort((a, b) => (b[1].fpCount + b[1].fnCount) - (a[1].fpCount + a[1].fnCount));
+
+    for (const [id, o] of withIssues) {
+        console.log(`\n  ── ${id}  FP=${o.fpCount}  FN=${o.fnCount} ──`);
+        for (const bucket of ['fp', 'fn']) {
+            const label = bucket.toUpperCase();
+            for (const rec of o[bucket]) {
+                console.log(`    ${label}: ${rec.node}=${rec.edge}`);
+                console.log(`      at: ${selToUrl(rec.at)}&locked=${id}`);
+                console.log(`      after click: ${selToUrl(rec.commitSel)}&locked=${id}`);
+            }
+            const extra = o[bucket + 'Count'] - o[bucket].length;
+            if (extra > 0) console.log(`    ... and ${extra} more ${label}`);
+        }
+    }
+    return totalFP + totalFN;
+}
+
 // ════════════════════════════════════════════════════════
 // Exports
 // ════════════════════════════════════════════════════════
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { runStaticAnalysis, runTraversal, runVignetteValidation };
+    module.exports = { runStaticAnalysis, runTraversal, runVignetteValidation, runReachInvariantCheck };
 }
 
 // ════════════════════════════════════════════════════════
@@ -572,12 +772,20 @@ console.log(`Phase 3: Personal Vignette Validation (${Date.now() - t3}ms)`);
 printPhase3(phase3);
 console.log();
 
+// Phase 4
+const t4 = Date.now();
+console.log('Phase 4: Browser reach-set invariant (lightPush vs commit)');
+const phase4 = runReachInvariantCheck(templates);
+console.log(`  (${Date.now() - t4}ms)`);
+const reachMismatches = printPhase4(phase4);
+console.log();
+
 // Summary
-const totalIssues = phase1.errors.length + violationCount + phase3.errors.length;
+const totalIssues = phase1.errors.length + violationCount + phase3.errors.length + reachMismatches;
 if (totalIssues === 0) {
     console.log('All checks passed!');
 } else {
-    console.log(`${phase1.errors.length} static error(s), ${violationCount} DFS violation(s), ${phase3.errors.length} vignette error(s)`);
+    console.log(`${phase1.errors.length} static error(s), ${violationCount} DFS violation(s), ${phase3.errors.length} vignette error(s), ${reachMismatches} reach mismatch(es)`);
 }
 process.exit(totalIssues ? 1 : 0);
 

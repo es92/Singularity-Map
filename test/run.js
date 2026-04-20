@@ -7,6 +7,8 @@ const Module = require('module');
 
 const ROOT = path.resolve(__dirname, '..');
 
+const { runBrowserSim } = require('./reach-browser-sim.js');
+
 const modKeys = ['graph', 'engine', 'walker', 'validate', 'precompute'];
 const modFiles = {
     graph:      'graph.js',
@@ -273,6 +275,29 @@ function runTest(name, graphData) {
         errors.push(`... and ${totalStateIssues - stateMismatches.length} more reachability issues (false positives=${stateFP}, false negatives=${stateFN}, missing=${stateMissing})`);
     }
 
+    // 6. Browser-sim invariant: the browser's wouldReachOutcome uses lightPush
+    //    (autoForce:false) + reachSet.has. This must agree with the actual
+    //    post-click state's reach-set membership (Engine.push with autoForce:true,
+    //    then descend in the baseline).
+    //      FP = lightReach && !truthReach → UI green-lights a dead end.
+    //      FN = !lightReach && truthReach  → UI hides a valid path.
+    //    Both are invariant violations; both fail the test.
+    const sim = runBrowserSim({
+        Engine, Walker, NODES,
+        reachMap: optimized.reachMap,
+        entries: optimized.entries,
+    });
+    const simMessages = [];
+    for (const o of sim.perOutcome) {
+        if (o.edgeFP || o.edgeFN) {
+            for (const m of o.mismatches) simMessages.push(`[browser-sim:${o.id}] ${m.trim()}`);
+        }
+    }
+    for (const m of simMessages.slice(0, 5)) errors.push(m);
+    if (simMessages.length > 5) {
+        errors.push(`... and ${simMessages.length - 5} more browser-sim mismatches`);
+    }
+
     return {
         name, errors,
         stats: {
@@ -282,6 +307,9 @@ function runTest(name, graphData) {
             stateFP, stateFN, stateMissing,
             walkStates: phase2.visited,
             walkDeadEnds: phase2.deadEnds.length,
+            simFP: sim.totalFP, simFN: sim.totalFN,
+            simDecisions: sim.totalDecisions, simChecked: sim.totalChecked,
+            simOutcomes: sim.entries.length,
         },
     };
 }
@@ -308,6 +336,7 @@ for (const file of files) {
         console.log(`  Baseline: ${stats.baselineStates} states, ${stats.baselineDeadEnds} dead ends`);
         console.log(`  Optimized: ${stats.optimizedIrrKeys} irrKeys, walk ${stats.walkStates} states, ${stats.walkDeadEnds} dead ends`);
         console.log(`  Reachability: false positives=${stats.stateFP}, false negatives=${stats.stateFN}, missing=${stats.stateMissing}`);
+        console.log(`  BrowserSim: ${stats.simOutcomes} outcomes, ${stats.simDecisions} decisions, ${stats.simChecked} edges checked, FP=${stats.simFP} FN=${stats.simFN}`);
 
         if (errors.length === 0) {
             console.log('  PASS');

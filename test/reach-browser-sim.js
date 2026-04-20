@@ -13,8 +13,11 @@
 //         truth_says_reachable    = outcome reachable from childSel in DFS
 //      and reports mismatches.
 //
-// Usage: node test/reach-browser-sim.js [graphName] [lockedOutcomeId]
-// Example: node test/reach-browser-sim.js convergence-basic outcome1
+// Usage (CLI):     node test/reach-browser-sim.js [graphName] [lockedOutcomeId]
+//                  node test/reach-browser-sim.js --all
+// Usage (module):  const { runBrowserSim } = require('./reach-browser-sim.js');
+//                  const res = runBrowserSim({ Engine, Walker, NODES, templates,
+//                                              reachMap, entries, quiet: true });
 
 'use strict';
 
@@ -127,7 +130,6 @@ function nextDecisionNode(Engine, stack) {
             const locked = Engine.isNodeLocked(sel, node);
             if (locked !== null) {
                 if (!Engine.stackHas(stack, node.id)) {
-                    // Forced single-edge → auto-commit like the UI does.
                     stack = Engine.push(stack, node.id, locked);
                     advanced = true;
                     break;
@@ -146,34 +148,10 @@ function nextDecisionNode(Engine, stack) {
     }
 }
 
-// ── main ──────────────────────────────────────────────────────────
-const graphName = process.argv[2] || 'convergence-basic';
-const lockedId  = process.argv[3] || null;
-
-if (graphName === '--all') {
-    const dir = path.join(__dirname, 'graphs');
-    const files = fs.readdirSync(dir).filter(f => f.endsWith('.json')).sort();
-    let anyFail = false;
-    for (const f of files) {
-        const name = path.basename(f, '.json');
-        const { spawnSync } = require('child_process');
-        const r = spawnSync(process.execPath, [__filename, name], { encoding: 'utf8' });
-        process.stdout.write(r.stdout);
-        if (r.status !== 0) anyFail = true;
-    }
-    process.exit(anyFail ? 1 : 0);
-}
-
-const graphPath = path.join(__dirname, 'graphs', graphName + '.json');
-const graphData = JSON.parse(fs.readFileSync(graphPath, 'utf8'));
-const templates = graphData.outcomes.templates;
-
-const { Engine, Walker, precompute, NODES } = clearAndInject(graphData);
-
-// Build matcher list the same way the precompute does.
-const buildEntries = (tmpls) => {
+// Build variant-aware matcher entries the same way precompute does.
+function buildEntriesFromTemplates(Engine, Walker, templates) {
     const entries = [];
-    for (const t of tmpls) {
+    for (const t of templates) {
         const vs = (t.variants && typeof t.variants === 'object') ? Object.keys(t.variants) : null;
         if (vs && vs.length > 0 && t.primaryDimension) {
             for (const vk of vs) {
@@ -193,86 +171,146 @@ const buildEntries = (tmpls) => {
         }
     }
     return entries;
-};
-const entries = buildEntries(templates);
-
-// (1) Real precompute
-const pre = precompute.buildMatchersAndCompute(templates, { quiet: true });
-const allIds = pre.entries.map(e => e.id);
-
-// If no locked id was specified, test all outcomes against baseline.
-const toCheck = lockedId ? [lockedId] : allIds;
-for (const id of toCheck) if (!allIds.includes(id)) {
-    console.error(`Unknown outcome: ${id}. Options: ${allIds.join(', ')}`);
-    process.exit(1);
 }
 
-// (2) Baseline DFS
-const baselineStates = baselineDFS(Engine, Walker, NODES, entries.map(e => e.matcher));
-
-function fmtSel(sel) {
-    const parts = [];
-    for (const n of NODES) if (sel[n.id] !== undefined) parts.push(`${n.id}=${sel[n.id]}`);
-    return parts.length ? parts.join(' ') : '(root)';
-}
-
-console.log(`\n═══ ${graphName} ═══`);
-console.log(`entries:           ${allIds.length} [${allIds.join(', ')}]`);
-console.log(`baseline states:   ${baselineStates.size}`);
-console.log(`reachMap irrKeys:  ${pre.reachMap.size}`);
-
-let anyFail = false;
-
-for (const id of toCheck) {
-    const idx = allIds.indexOf(id);
-    const bit = 1 << idx;
-    const reachSet = new Set();
-    for (const [ik, mask] of pre.reachMap) if (mask & bit) reachSet.add(ik);
-
-    console.log(`\n─ lock=${id}  (reach-set size=${reachSet.size}) ─`);
-
-    // Mirror the browser's actual wouldReachOutcome call-sites: only at real
-    // decision points (multi-edge, non-forced) surfaced by findNextQuestion.
-    let edgeFP = 0, edgeFN = 0, edgeChecked = 0, decisions = 0;
-    const edgeMismatches = [];
-
-    for (const { stack: startStack } of baselineStates.values()) {
-        const next = nextDecisionNode(Engine, startStack);
-        if (!next) continue;
-        const sel = next.sel;
-        decisions++;
-        for (const edge of next.enabled) {
-            // The browser does a LIGHT push (no autoForce) and looks up that
-            // sel's irrKey. We mirror that for the browser side.
-            const childLight = lightPush(Engine, Walker, sel, next.node.id, edge.id);
-            const ik = Walker.irrKey(childLight);
-            const browserReach = reachSet.has(ik);
-
-            // Ground truth: after the browser's autoForce commit, can the
-            // outcome be reached from that stack? Walk the baseline by
-            // committing this edge with autoForce and looking up the
-            // resulting state in the baseline map.
-            const childStack = Engine.push(next.stack, next.node.id, edge.id);
-            const childSel = Engine.currentState(childStack);
-            const childKey = NODES.map(n => n.id + '=' + (childSel[n.id] || '*')).join('|');
-            const truth = baselineStates.get(childKey);
-            const truthReach = truth ? ((truth.mask & bit) !== 0) : false;
-
-            edgeChecked++;
-            if (browserReach && !truthReach) {
-                edgeFP++;
-                if (edgeMismatches.length < 5) edgeMismatches.push(
-                    `  FP: at [${fmtSel(sel)}]  pick ${next.node.id}=${edge.id}  ik=${ik}`);
-            } else if (!browserReach && truthReach) {
-                edgeFN++;
-                if (edgeMismatches.length < 5) edgeMismatches.push(
-                    `  FN: at [${fmtSel(sel)}]  pick ${next.node.id}=${edge.id}  ik=${ik}`);
-            }
+// Core simulation: for a given (Engine, Walker, NODES, reachMap, entries),
+// enumerate baseline states, walk to each real decision point, and for every
+// enabled edge check whether `lightPush → reachSet.has` agrees with the baseline
+// ground truth (mask from Engine.push(autoForce:true)). Returns a summary.
+function runBrowserSim({ Engine, Walker, NODES, reachMap, entries, lockedIds, sampleMismatches = 5 }) {
+    const allIds = entries.map(e => e.id);
+    const toCheck = lockedIds && lockedIds.length ? lockedIds : allIds;
+    for (const id of toCheck) {
+        if (!allIds.includes(id)) {
+            throw new Error(`Unknown outcome: ${id}. Options: ${allIds.join(', ')}`);
         }
     }
-    console.log(`  decisions:      ${decisions}  edges-checked=${edgeChecked}  FP=${edgeFP}  FN=${edgeFN}`);
-    for (const m of edgeMismatches) console.log(m);
-    if (edgeFP || edgeFN) anyFail = true;
+
+    const baselineStates = baselineDFS(Engine, Walker, NODES, entries.map(e => e.matcher));
+
+    function fmtSel(sel) {
+        const parts = [];
+        for (const n of NODES) if (sel[n.id] !== undefined) parts.push(`${n.id}=${sel[n.id]}`);
+        return parts.length ? parts.join(' ') : '(root)';
+    }
+
+    const perOutcome = [];
+    let totalFP = 0, totalFN = 0, totalChecked = 0, totalDecisions = 0;
+
+    for (const id of toCheck) {
+        const idx = allIds.indexOf(id);
+        const bit = 1 << idx;
+        const reachSet = new Set();
+        for (const [ik, mask] of reachMap) if (mask & bit) reachSet.add(ik);
+
+        let edgeFP = 0, edgeFN = 0, edgeChecked = 0, decisions = 0;
+        const mismatches = [];
+
+        for (const { stack: startStack } of baselineStates.values()) {
+            const next = nextDecisionNode(Engine, startStack);
+            if (!next) continue;
+            const sel = next.sel;
+            decisions++;
+            for (const edge of next.enabled) {
+                const childLight = lightPush(Engine, Walker, sel, next.node.id, edge.id);
+                const ik = Walker.irrKey(childLight);
+                const browserReach = reachSet.has(ik);
+
+                const childStack = Engine.push(next.stack, next.node.id, edge.id);
+                const childSel = Engine.currentState(childStack);
+                const childKey = NODES.map(n => n.id + '=' + (childSel[n.id] || '*')).join('|');
+                const truth = baselineStates.get(childKey);
+                const truthReach = truth ? ((truth.mask & bit) !== 0) : false;
+
+                edgeChecked++;
+                if (browserReach && !truthReach) {
+                    edgeFP++;
+                    if (mismatches.length < sampleMismatches) mismatches.push(
+                        `  FP: at [${fmtSel(sel)}]  pick ${next.node.id}=${edge.id}  ik=${ik}`);
+                } else if (!browserReach && truthReach) {
+                    edgeFN++;
+                    if (mismatches.length < sampleMismatches) mismatches.push(
+                        `  FN: at [${fmtSel(sel)}]  pick ${next.node.id}=${edge.id}  ik=${ik}`);
+                }
+            }
+        }
+        perOutcome.push({ id, reachSetSize: null, decisions, edgeChecked, edgeFP, edgeFN, mismatches });
+        totalFP += edgeFP;
+        totalFN += edgeFN;
+        totalChecked += edgeChecked;
+        totalDecisions += decisions;
+    }
+
+    return {
+        baselineStates: baselineStates.size,
+        reachMapSize: reachMap.size,
+        entries: allIds,
+        perOutcome,
+        totalFP, totalFN, totalChecked, totalDecisions,
+    };
 }
 
-process.exit(anyFail ? 1 : 0);
+// ─── CLI entrypoint (original behavior) ────────────────────────────
+function runCli(graphName, lockedId) {
+    const graphPath = path.join(__dirname, 'graphs', graphName + '.json');
+    const graphData = JSON.parse(fs.readFileSync(graphPath, 'utf8'));
+    const templates = graphData.outcomes.templates;
+
+    const { Engine, Walker, precompute, NODES } = clearAndInject(graphData);
+    const entries = buildEntriesFromTemplates(Engine, Walker, templates);
+    const pre = precompute.buildMatchersAndCompute(templates, { quiet: true });
+
+    const result = runBrowserSim({
+        Engine, Walker, NODES,
+        reachMap: pre.reachMap,
+        entries: pre.entries,
+        lockedIds: lockedId ? [lockedId] : null,
+    });
+
+    console.log(`\n═══ ${graphName} ═══`);
+    console.log(`entries:           ${result.entries.length} [${result.entries.join(', ')}]`);
+    console.log(`baseline states:   ${result.baselineStates}`);
+    console.log(`reachMap irrKeys:  ${result.reachMapSize}`);
+
+    let anyFail = false;
+    for (const o of result.perOutcome) {
+        const reachSet = new Set();
+        const idx = result.entries.indexOf(o.id);
+        const bit = 1 << idx;
+        for (const [ik, mask] of pre.reachMap) if (mask & bit) reachSet.add(ik);
+        console.log(`\n─ lock=${o.id}  (reach-set size=${reachSet.size}) ─`);
+        console.log(`  decisions:      ${o.decisions}  edges-checked=${o.edgeChecked}  FP=${o.edgeFP}  FN=${o.edgeFN}`);
+        for (const m of o.mismatches) console.log(m);
+        if (o.edgeFP || o.edgeFN) anyFail = true;
+    }
+    return anyFail ? 1 : 0;
+}
+
+module.exports = {
+    clearAndInject,
+    buildEntriesFromTemplates,
+    runBrowserSim,
+    lightPush,
+    nextDecisionNode,
+};
+
+if (require.main === module) {
+    const graphName = process.argv[2] || 'convergence-basic';
+    const lockedId  = process.argv[3] || null;
+
+    if (graphName === '--all') {
+        const dir = path.join(__dirname, 'graphs');
+        const files = fs.readdirSync(dir).filter(f => f.endsWith('.json')).sort();
+        let anyFail = false;
+        for (const f of files) {
+            const name = path.basename(f, '.json');
+            const { spawnSync } = require('child_process');
+            const r = spawnSync(process.execPath, [__filename, name], { encoding: 'utf8' });
+            process.stdout.write(r.stdout);
+            if (r.status !== 0) anyFail = true;
+        }
+        process.exit(anyFail ? 1 : 0);
+    }
+
+    process.exit(runCli(graphName, lockedId));
+}
