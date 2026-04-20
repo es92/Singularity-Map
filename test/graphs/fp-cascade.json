@@ -52,6 +52,18 @@
       {
         "id": "alien",
         "reachable": [{ "top": ["sing"], "align": ["failed"], "kind": ["coex"] }]
+      },
+      {
+        "id": "extinct",
+        "reachable": [{ "top": ["sing"], "align": ["failed"], "kind": ["other"] }]
+      },
+      {
+        "id": "survived",
+        "reachable": [{ "top": ["sing"], "align": ["robust"] }]
+      },
+      {
+        "id": "stalled",
+        "reachable": [{ "top": ["stall"] }]
       }
     ]
   }
