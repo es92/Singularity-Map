@@ -1391,8 +1391,6 @@
             }).catch(() => {});
         }
         async function fetchOutcomeStats(outcomeId, variantKey) {
-            const mockN = getMockRatingCount();
-            if (mockN != null) return mockStatsForCount(mockN);
             try {
                 const qs = variantKey ? '?variant_id=' + encodeURIComponent(variantKey) : '';
                 const res = await fetch(LOGGER_URL + '/stats/outcome/' + encodeURIComponent(outcomeId) + qs);
@@ -1401,41 +1399,6 @@
             } catch (_) {
                 return null;
             }
-        }
-        function getMockRatingCount() {
-            try {
-                const usp = new URLSearchParams(location.search);
-                const q = parseInt(usp.get('mockRatingStats'), 10);
-                if (Number.isFinite(q) && q > 0) return q;
-            } catch (_) {}
-            if (Number.isFinite(window.__mockRatingStats)) return window.__mockRatingStats;
-            return null;
-        }
-        function mockStatsForCount(n) {
-            const weights = [0.04, 0.08, 0.14, 0.20, 0.18, 0.14, 0.10, 0.07, 0.03, 0.02];
-            const histogram = new Array(10).fill(0);
-            let remaining = n;
-            for (let i = 0; i < 10; i++) {
-                const take = Math.min(remaining, Math.round(n * weights[i]));
-                histogram[i] = take;
-                remaining -= take;
-            }
-            let spillover = 3;
-            while (remaining > 0) { histogram[spillover]++; remaining--; }
-            const total = histogram.reduce((a, b) => a + b, 0);
-            let sum = 0, cum = 0, median = 50;
-            for (let i = 0; i < 10; i++) sum += histogram[i] * (i * 10 + 5);
-            for (let i = 0; i < 10; i++) {
-                cum += histogram[i];
-                if (cum >= total / 2) { median = i * 10 + 5; break; }
-            }
-            return {
-                count: total,
-                mean: total > 0 ? sum / total : 0,
-                median,
-                p25: 15, p75: 55,
-                histogram,
-            };
         }
         function outcomeRatingKey(outcomeId, variantKey) {
             if (!outcomeId) return null;
@@ -2042,8 +2005,7 @@
                 const histEl = section.querySelector('.rating-histogram');
                 const footEl = section.querySelector('.rating-result-footnote');
                 const stats = await fetchOutcomeStats(outcomeId, variantKey);
-                const minThreshold = getMockRatingCount() != null ? 0 : 20;
-                if (!stats || stats.pending || !stats.count || stats.count < minThreshold) {
+                if (!stats || stats.pending || !stats.count || stats.count < 20) {
                     if (crowdEl) crowdEl.textContent = '';
                     if (histEl) histEl.innerHTML = '';
                     if (footEl) {
