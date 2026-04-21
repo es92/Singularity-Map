@@ -816,8 +816,8 @@
         body.intro-active .intro-bg { opacity: 1; }
         body.intro-exiting .intro-bg {
             opacity: 0;
-            transform: translateY(-60px);
-            transition: opacity 800ms ease, transform 900ms cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(-400px);
+            transition: opacity 1500ms cubic-bezier(0.42, 0, 0.58, 1), transform 1500ms cubic-bezier(0.42, 0, 0.58, 1);
         }
         .intro-bg g { --drift-speed: 1; }
         .intro-bg g.depth-near { --drift-speed: 0.5; }
@@ -1096,7 +1096,7 @@
             _introExitTimer = setTimeout(() => {
                 cl.remove('intro-active', 'intro-exiting');
                 _introExitTimer = null;
-            }, 950);
+            }, 1550);
         }
 
         function resolveNarrativeVariant(variants, sel) {
@@ -2601,6 +2601,7 @@
                         questionZone.style.display = 'flex';
                         questionZone.style.flex = '1';
                         questionZone.style.paddingLeft = '0';
+                        questionZone.style.paddingBottom = '';
                     } else if (fullQuestions && nextQ) {
                         questionZone.style.flex = '';
                         questionZone.style.paddingLeft = '';
@@ -2907,6 +2908,7 @@
                 started = false;
                 history.replaceState({ screen: 'map' }, '', location.pathname);
                 update();
+                window.scrollTo({ top: 0, behavior: 'instant' });
             }
 
             app.addEventListener('click', e => {
