@@ -882,7 +882,7 @@ const NODES = [
         { id: 'sufficient', label: 'Brittle alignment holds', shortLabel: 'Brittle holds' },
         { id: 'escape', label: 'AI eventually escapes', shortLabel: 'Escapes' }
       ] },
-    { id: 'failure_mode', label: 'Delivery', stage: 3, forwardKey: true,
+    { id: 'failure_mode', label: 'Delivery', stage: 3, priority: 2, forwardKey: true,
       hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], post_war_aims: false, power_promise: ['for_everyone'], mobilization: ['strong'] },
