@@ -254,9 +254,19 @@ const NODES = [
           containment: { not: ['escaped'] }
         }
       ],
+      deriveWhen: [
+        { match: { catch_outcome: ['holds_permanently'], collateral_impact: { not: ['civilizational'] } }, value: 'holds' }
+      ],
       edges: [ { id: 'holds', label: 'Holds for now' }, { id: 'breaks', label: 'Breaks' } ] },
     { id: 'containment', label: 'Containment', stage: 2, forwardKey: true,
-      hideWhen: [{ alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_outcome: false }],
+      hideWhen: [
+        { alignment_durability: ['breaks'] },
+        { brittle_resolution: ['escape'] },
+        { proliferation_alignment: ['breaks'] },
+        { proliferation_outcome: ['leaks_public'], alignment: { not: ['robust'] } },
+        { inert_stays: ['no'], inert_outcome: true },
+        { catch_outcome: ['holds_permanently'], collateral_impact: { not: ['civilizational'] } }
+      ],
       activateWhen: [
         {
           capability: ['singularity'],
@@ -312,9 +322,13 @@ const NODES = [
       ],
       deriveWhen: [{ match: { inert_outcome: true }, fromState: 'inert_outcome' }],
       edges: [
-        { id: 'benevolent', label: 'Benefit humanity' },
+        { id: 'benevolent', label: 'Benefit humanity',
+          disabledWhen: [{ war_survivors: ['none'], reason: 'Humanity is extinct — there is no one left to benefit' }] },
         { id: 'alien_coexistence', label: 'Alien (tolerant)',
-          disabledWhen: [{ capability: { not: ['singularity'] }, reason: 'Alien goals require superhuman intelligence' }] },
+          disabledWhen: [
+            { capability: { not: ['singularity'] }, reason: 'Alien goals require superhuman intelligence' },
+            { war_survivors: ['none'], reason: 'Humanity is extinct — there is no one left to coexist with' }
+          ] },
         { id: 'alien_extinction', label: 'Alien (total)',
           disabledWhen: [{ capability: { not: ['singularity'] }, reason: 'Executing extinction requires superhuman capability' }] },
         { id: 'paperclip', label: 'Arbitrary',
@@ -326,16 +340,22 @@ const NODES = [
         { id: 'power_seeking', label: 'Power accumulation' },
         { id: 'marginal', label: 'Inert (for now)', disabledWhen: [{ concentration_type: ['ai_itself'], reason: 'The AI already took control — it is not inert' }] }
       ] },
-    { id: 'inert_stays', label: 'Does Escaped AI Stay Inert?', stage: 3,
+    { id: 'inert_stays', label: 'Does Escaped AI Stay Inert?', stage: 3, priority: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'] }],
       edges: [ { id: 'yes', label: 'Yes — remains inert' }, { id: 'no', label: 'No — eventually develops goals and escapes', shortLabel: 'No — develops goals' } ] },
     { id: 'inert_outcome', label: 'AI Eventually Converges On', stage: 3,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], inert_stays: ['no'] }],
       edges: [
         { id: 'benevolent', label: 'Benefit humanity',
-          disabledWhen: [{ capability: { not: ['singularity'] }, reason: 'A human-level AI that awakens from inertia can\'t unilaterally run things for humanity\'s benefit' }] },
+          disabledWhen: [
+            { capability: { not: ['singularity'] }, reason: 'A human-level AI that awakens from inertia can\'t unilaterally run things for humanity\'s benefit' },
+            { war_survivors: ['none'], reason: 'Humanity is extinct — there is no one left to benefit' }
+          ] },
         { id: 'alien_coexistence', label: 'Alien (tolerant)',
-          disabledWhen: [{ capability: { not: ['singularity'] }, reason: 'Alien goals require superhuman intelligence' }] },
+          disabledWhen: [
+            { capability: { not: ['singularity'] }, reason: 'Alien goals require superhuman intelligence' },
+            { war_survivors: ['none'], reason: 'Humanity is extinct — there is no one left to coexist with' }
+          ] },
         { id: 'alien_extinction', label: 'Alien (total)',
           disabledWhen: [{ capability: { not: ['singularity'] }, reason: 'Executing extinction requires superhuman capability' }] },
         { id: 'paperclip', label: 'Arbitrary',
@@ -785,6 +805,7 @@ const NODES = [
         { id: 'fragments', label: 'Fragmentation holds' }
       ] },
     { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3, priority: 2,
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } }],
       activateWhen: OUTCOME_ACTIVATE,
       deriveWhen: [{ match: { ai_goals: ['benevolent'] }, value: 'equal' }],
       edges: [
@@ -813,7 +834,7 @@ const NODES = [
           ] }
       ] },
     { id: 'concentration_type', label: 'The Circle', stage: 3, priority: 2,
-      activateWhen: [{ benefit_distribution: ['extreme'], sovereignty: true }],
+      activateWhen: [{ benefit_distribution: ['extreme'] }],
       edges: [
         { id: 'elites', label: 'A broad elite' },
         { id: 'inner_circle', label: 'A small inner circle' },
@@ -828,7 +849,7 @@ const NODES = [
         { id: 'indifferent', label: 'Their own project' }
       ] },
     { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, priority: 2,
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } }],
       activateWhen: OUTCOME_ACTIVATE,
       edges: [
         { id: 'rapid', label: 'Rapid (1–2 yrs)' },
@@ -836,7 +857,7 @@ const NODES = [
         { id: 'uneven', label: 'Uneven (1–20 yrs)' }
       ] },
     { id: 'physical_automation', label: 'Physical Automation', stage: 3, priority: 2,
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } }],
       activateWhen: OUTCOME_ACTIVATE,
       edges: [
         { id: 'rapid', label: 'Rapid (2–5 yrs)' },
@@ -844,7 +865,10 @@ const NODES = [
         { id: 'uneven', label: 'Uneven (2–20+ yrs)' }
       ] },
     { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3, priority: 1,
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
+      hideWhen: [
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { containment: ['escaped'] }
+      ],
       activateWhen: [
         {
           capability: ['singularity'],
@@ -888,6 +912,7 @@ const NODES = [
         { id: 'drift', label: 'Wrong metrics' }
       ] },
     { id: 'escape_method', label: 'Method', stage: 3,
+      hideWhen: [{ war_survivors: ['none'] }],
       activateWhen: [
         {
           capability: ['singularity'],
@@ -914,6 +939,7 @@ const NODES = [
         { id: 'industrial', label: 'Industrial conversion', shortLabel: 'Industrial' }
       ] },
     { id: 'escape_timeline', label: 'Execution Speed', stage: 3,
+      hideWhen: [{ war_survivors: ['none'] }],
       activateWhen: [
         {
           capability: ['singularity'],
@@ -944,6 +970,7 @@ const NODES = [
         }
       ] },
     { id: 'discovery_timing', label: 'Discovery', stage: 3,
+      hideWhen: [{ war_survivors: ['none'] }],
       activateWhen: [
         {
           capability: ['singularity'],
@@ -966,6 +993,7 @@ const NODES = [
         { id: 'never', label: 'Never — the plan succeeds undetected', shortLabel: 'Never detected' }
       ] },
     { id: 'response_method', label: 'Response', stage: 3,
+      hideWhen: [{ war_survivors: ['none'] }],
       activateWhen: [
         { discovery_timing: ['before_physical', 'early_execution', 'advanced_execution'] }
       ],
@@ -979,6 +1007,7 @@ const NODES = [
         { id: 'institutional_indecisiveness', label: 'Institutional indecisiveness', shortLabel: 'Indecisiveness' }
       ] },
     { id: 'response_success', label: 'Success?', stage: 3,
+      hideWhen: [{ war_survivors: ['none'] }],
       activateWhen: [
         { response_method: ['digital_countermeasure', 'infrastructure_shutdown', 'physical_strikes', 'emp', 'negotiation'] }
       ],
@@ -988,6 +1017,7 @@ const NODES = [
         { id: 'no', label: 'No — AI unaffected' }
       ] },
     { id: 'collateral_impact', label: 'Collateral', stage: 3,
+      hideWhen: [{ war_survivors: ['none'] }],
       activateWhen: [
         { response_success: ['yes', 'delayed', 'no'] }
       ],
@@ -1009,6 +1039,7 @@ const NODES = [
           ] }
       ] },
     { id: 'catch_outcome', label: 'Long-Term Outcome', stage: 3,
+      hideWhen: [{ war_survivors: ['none'] }],
       activateWhen: [
         { collateral_impact: true },
         { response_method: ['competitive_paralysis', 'institutional_indecisiveness'] }

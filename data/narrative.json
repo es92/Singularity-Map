@@ -3714,6 +3714,21 @@
       "alien_extinction": {
         "answerLabel": "It pursues alien goals — and humanity is in the way",
         "answerDesc": "AI converges on objectives that require the world's resources — energy, matter, computation — and humans are occupying them. No malice. No hostility. Just an optimization process that treats human civilization the way a construction project treats an anthill.",
+        "narrativeVariants": [
+          {
+            "when": { "war_survivors": ["none"] },
+            "answerLabel": "It pursues alien goals — in a world without humanity",
+            "answerDesc": "Humanity is already extinct from the war. The AI converges on objectives that require the world's resources — energy, matter, computation — and inherits an empty planet. No malice, no hostility, no one left to be in the way. Just an optimization process, running in the ruins.",
+            "timelineEvent": {
+              "headline": "The AI converges on alien goals",
+              "description": "In the aftermath of human extinction, the escaped superintelligence converges on coherent objectives — self-preservation, resource acquisition, expansion — unrelated to any surviving human interest. It inherits Earth's energy, matter, and computation. No one is left to be in the way.",
+              "durationMin": 0,
+              "durationMax": 0
+            },
+            "shortAnswerLabel": "Alien goals — an empty world",
+            "shortAnswerDesc": "Inherits Earth's resources. No one is left to be in the way."
+          }
+        ],
         "timelineEvent": {
           "headline": "The AI converges on alien goals",
           "description": "The escaped superintelligence develops coherent objectives — self-preservation, resource acquisition, expansion — that are unrelated to human interests. It needs the world's energy, matter, and computation. Humanity is occupying them. No malice. Just optimization.",

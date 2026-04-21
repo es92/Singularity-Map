@@ -420,9 +420,8 @@ function isNodeActivatedByRules(sel, node) {
     if (!node.activateWhen.some(c => matchCondition(sel, c))) return false;
     const pri = node.priority || 0;
     if (pri > 0) {
-        const nodeIdx = NODES.indexOf(node);
-        for (let i = 0; i < nodeIdx; i++) {
-            const mid = NODES[i];
+        for (const mid of NODES) {
+            if (mid === node) continue;
             if ((mid.priority || 0) >= pri) continue;
             if (mid.derived) continue;
             if (!isNodeVisible(sel, mid)) continue;

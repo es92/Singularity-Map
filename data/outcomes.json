@@ -393,6 +393,9 @@
           "ai_goals": [
             "marginal"
           ],
+          "inert_stays": [
+            "yes"
+          ],
           "intent": [
             "international",
             "coexistence"
@@ -478,6 +481,9 @@
           ],
           "ai_goals": [
             "marginal"
+          ],
+          "inert_stays": [
+            "yes"
           ],
           "escalation_outcome": [
             "conflict"
@@ -591,6 +597,9 @@
           ],
           "ai_goals": [
             "marginal"
+          ],
+          "inert_stays": [
+            "yes"
           ],
           "escalation_outcome": [
             "conflict"
@@ -921,6 +930,9 @@
           "ai_goals": [
             "marginal"
           ],
+          "inert_stays": [
+            "yes"
+          ],
           "intent": [
             "international",
             "coexistence"
@@ -1026,6 +1038,9 @@
           ],
           "ai_goals": [
             "marginal"
+          ],
+          "inert_stays": [
+            "yes"
           ],
           "escalation_outcome": [
             "conflict"
@@ -1523,6 +1538,9 @@
           "ai_goals": [
             "marginal"
           ],
+          "inert_stays": [
+            "yes"
+          ],
           "intent": [
             "international"
           ],
@@ -1606,6 +1624,9 @@
           ],
           "ai_goals": [
             "marginal"
+          ],
+          "inert_stays": [
+            "yes"
           ],
           "escalation_outcome": [
             "conflict"
@@ -1719,6 +1740,9 @@
           ],
           "ai_goals": [
             "marginal"
+          ],
+          "inert_stays": [
+            "yes"
           ],
           "escalation_outcome": [
             "conflict"
@@ -2040,6 +2064,9 @@
           "ai_goals": [
             "marginal"
           ],
+          "inert_stays": [
+            "yes"
+          ],
           "intent": [
             "self_interest"
           ],
@@ -2131,6 +2158,9 @@
           ],
           "ai_goals": [
             "marginal"
+          ],
+          "inert_stays": [
+            "yes"
           ],
           "escalation_outcome": [
             "conflict"
@@ -2446,6 +2476,9 @@
           "ai_goals": [
             "marginal"
           ],
+          "inert_stays": [
+            "yes"
+          ],
           "escalation_outcome": [
             "standoff"
           ]
@@ -2619,6 +2652,9 @@
           "ai_goals": [
             "marginal"
           ],
+          "inert_stays": [
+            "yes"
+          ],
           "escalation_outcome": [
             "conflict"
           ],
@@ -2652,6 +2688,9 @@
           ],
           "ai_goals": [
             "marginal"
+          ],
+          "inert_stays": [
+            "yes"
           ],
           "escalation_outcome": [
             "conflict"
@@ -2892,6 +2931,9 @@
           "ai_goals": [
             "marginal"
           ],
+          "inert_stays": [
+            "yes"
+          ],
           "intent": [
             "coexistence"
           ],
@@ -3118,6 +3160,9 @@
           ],
           "ai_goals": [
             "marginal"
+          ],
+          "inert_stays": [
+            "yes"
           ],
           "intent": [
             "international",
@@ -3402,16 +3447,13 @@
             "escaped"
           ],
           "ai_goals": [
-            "benevolent"
+            "paperclip",
+            "power_seeking"
           ],
-          "_not": {
-            "catch_outcome": [
-              "holds_permanently"
-            ],
-            "asi_threshold": [
-              "never"
-            ]
-          }
+          "catch_outcome": [
+            "never_stopped",
+            "holds_temporarily"
+          ]
         },
         {
           "capability": [
@@ -3427,15 +3469,37 @@
             "paperclip",
             "power_seeking"
           ],
-          "_not": {
-            "catch_outcome": [
-              "holds_permanently"
-            ]
-          }
+          "discovery_timing": [
+            "never"
+          ]
         },
         {
-          "concentration_type": [
-            "ai_itself"
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "escaped"
+          ],
+          "ai_goals": [
+            "paperclip",
+            "power_seeking"
+          ],
+          "war_survivors": [
+            "none"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "escaped"
           ],
           "ai_goals": [
             "benevolent"
@@ -3453,7 +3517,36 @@
           "ai_goals": [
             "paperclip",
             "power_seeking"
+          ],
+          "catch_outcome": [
+            "never_stopped",
+            "holds_temporarily"
           ]
+        },
+        {
+          "concentration_type": [
+            "ai_itself"
+          ],
+          "ai_goals": [
+            "paperclip",
+            "power_seeking"
+          ],
+          "discovery_timing": [
+            "never"
+          ]
+        },
+        {
+          "concentration_type": [
+            "ai_itself"
+          ],
+          "ai_goals": [
+            "benevolent"
+          ],
+          "_not": {
+            "asi_threshold": [
+              "never"
+            ]
+          }
         }
       ],
       "story": [],
@@ -3601,11 +3694,46 @@
             "alien_coexistence",
             "alien_extinction"
           ],
-          "_not": {
-            "catch_outcome": [
-              "holds_permanently"
-            ]
-          }
+          "catch_outcome": [
+            "never_stopped",
+            "holds_temporarily"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "escaped"
+          ],
+          "ai_goals": [
+            "alien_coexistence",
+            "alien_extinction"
+          ],
+          "discovery_timing": [
+            "never"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "escaped"
+          ],
+          "ai_goals": [
+            "alien_coexistence",
+            "alien_extinction"
+          ],
+          "war_survivors": [
+            "none"
+          ]
         },
         {
           "concentration_type": [
@@ -3614,6 +3742,22 @@
           "ai_goals": [
             "alien_coexistence",
             "alien_extinction"
+          ],
+          "catch_outcome": [
+            "never_stopped",
+            "holds_temporarily"
+          ]
+        },
+        {
+          "concentration_type": [
+            "ai_itself"
+          ],
+          "ai_goals": [
+            "alien_coexistence",
+            "alien_extinction"
+          ],
+          "discovery_timing": [
+            "never"
           ]
         }
       ],
@@ -3769,11 +3913,44 @@
           "ai_goals": [
             "swarm"
           ],
-          "_not": {
-            "catch_outcome": [
-              "holds_permanently"
-            ]
-          }
+          "catch_outcome": [
+            "never_stopped",
+            "holds_temporarily"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "escaped"
+          ],
+          "ai_goals": [
+            "swarm"
+          ],
+          "discovery_timing": [
+            "never"
+          ]
+        },
+        {
+          "capability": [
+            "singularity"
+          ],
+          "alignment": [
+            "failed"
+          ],
+          "containment": [
+            "escaped"
+          ],
+          "ai_goals": [
+            "swarm"
+          ],
+          "war_survivors": [
+            "none"
+          ]
         }
       ],
       "story": [],
