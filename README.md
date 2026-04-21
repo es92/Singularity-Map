@@ -4,13 +4,13 @@
 
 [**Try it →**](https://es92.github.io/Singularity-Map/)
 
-68 questions. 13 possible outcomes. Your choices determine the path.
+~20 questions per path. 28 possible futures. Your choices determine the path.
 
 ## What is this?
 
 An interactive choose-your-own-adventure through the future of AI. You answer questions about AI capability, alignment, governance, and power — and the app shows you the future your answers imply, with a narrative timeline of how it unfolds.
 
-Outcomes range from The Flourishing (genuine shared abundance) to The Ruin (civilizational catastrophe), with everything in between: plateaus, captures, standoffs, escapes, and chaos.
+Outcomes range from The Flourishing (genuine shared abundance) to The Ruin (civilizational catastrophe), with everything in between: plateaus, captures, standoffs, escapes, and chaos. 13 outcome families branch into 28 distinct variants.
 
 The app also generates personalized vignettes based on your profession and country — how each world event reaches you specifically.
 
@@ -29,23 +29,38 @@ Then open `http://localhost:3000`.
 ## Project structure
 
 ```
-index.html              Main app (single-page, all UI logic)
-graph.js                Decision graph — nodes, edges, conditions
-engine.js               State machine — selection, resolution, display order
-timeline-animator.js    Timeline rendering and animation
-timeline.css            All styles
+index.html                    Main app (single-page, all UI logic)
+graph.js                      Decision graph — nodes, edges, conditions
+engine.js                     State machine — selection, resolution, display order
+graph-walker.js               DFS walker — reachability, equivalence classes, irrelevance
+precompute-reachability.js    Builds per-outcome reach sets into data/reach/
+timeline-animator.js          Timeline rendering and animation
+timeline.css                  All styles
+milestone-utils.js            Timeline event grouping helpers
+generate-share-assets.js      OG image + share page generator
 
 data/
   narrative.json        Question text, answer descriptions, timeline events, personal vignettes
   outcomes.json         Outcome templates — titles, flavors, mood, variants
   personal.json         Profession list, country buckets
+  reach/                Per-outcome reachability sets (JSON + gzipped)
+
+test/
+  run.js                Baseline-vs-optimized DFS comparison across test graphs
+  graphs/               Minimal graphs exercising each reduction
+  reach-browser-sim.js  Simulates the browser's wouldReachOutcome path
+  reach-table.js        Reach-map inspection CLI
 
 tests/
   evaluate.js           LLM-based evaluation — persona simulation, audits, reports
   personas.json         Test personas for evaluation
 
+research/
+  graph-formalization.tex   Formal writeup of the graph, algorithms, reductions
+  graph-formalization.pdf
+
 validate.js             Graph integrity checker
-share/                  OG share pages and images for each outcome
+share/                  OG share pages and images for each outcome variant
 ```
 
 ## Analytics

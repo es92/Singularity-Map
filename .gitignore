@@ -13,3 +13,5 @@ research/*.log
 research/*.toc
 research/*.out
 research/*.synctex.gz
+research/*.fls
+research/*.fdb_latexmk

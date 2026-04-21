@@ -689,8 +689,12 @@ can skip a state whose $\ik$ has already been visited, and all algorithms
 \begin{remark}
 Irrelevance enables aggressive memoization: the DFS stores results keyed
 by $\ik(\sel)$ rather than the full state, collapsing the effective state
-space. In the Singularity Map, this reduces ${\sim}285\text{k}$ visited
-states to ${\sim}239\text{k}$ distinct irrelevance keys.
+space. In the Singularity Map, the optimized walk visits
+${\sim}216\text{k}$ distinct states; after variant and superposition
+expansion at recording time (Sections~\ref{sec:variants},
+\ref{sec:superexpand}), the final $\mathsf{ReachMap}$ contains
+${\sim}243\text{k}$ distinct irrelevance keys covering the full 76-node,
+13-outcome-family graph.
 \end{remark}
 
 %--------------------------------------------------------------------------
@@ -1098,18 +1102,35 @@ The harness (\texttt{test/run.js}) works as follows:
   \item \textbf{Optimized computation.} The production
     \textsf{computeReachability} function (Algorithm~\ref{alg:superdfs}
     with \textsf{RecordReach}) runs on the same graph and outcomes.
-  \item \textbf{Comparison.} Baseline states are aggregated by
-    $\ik$---all baseline masks sharing the same irrelevance key are
-    OR-combined. Then:
+  \item \textbf{Per-state reachability comparison.} For every state
+    $\sel$ visited by the baseline, the harness computes $\ik(\sel)$ and
+    compares the true mask $M_\text{true}(\sel)$ against
+    $\mathsf{ReachMap}(\ik(\sel))$:
     \begin{itemize}
-      \item \textbf{No false positives:} every bit in
-        $\mathsf{ReachMap}(\ik)$ must appear in the baseline aggregate
-        at $\ik$.
-      \item \textbf{No false negatives:} every bit in the baseline
-        aggregate must appear in $\mathsf{ReachMap}(\ik)$ (with a
-        documented exception for \texttt{noClassMergeDims} that are
-        unset in the selector).
+      \item \textbf{No false positives} (\texttt{reach-fp}): every bit
+        in $\mathsf{ReachMap}(\ik)$ must be set in
+        $M_\text{true}(\sel)$.
+      \item \textbf{No false negatives} (\texttt{reach-fn}): every bit
+        in $M_\text{true}(\sel)$ must appear in
+        $\mathsf{ReachMap}(\ik)$.
+      \item \textbf{No missing keys} (\texttt{reach-missing}):
+        every reachable $\ik$ whose true mask is non-zero must have an
+        entry in $\mathsf{ReachMap}$ (the browser's
+        \texttt{reachSet.has} query is fail-closed on absent keys).
     \end{itemize}
+    This is strictly stronger than aggregating baseline masks by $\ik$
+    before comparing: if two states with different true reach-sets
+    collapse to the same $\ik$, the stored mask is their OR, which would
+    appear correct to an aggregated check but violates the browser's
+    per-state query.
+  \item \textbf{Browser-sim comparison.} A separate harness
+    (\texttt{test/reach-browser-sim.js}) replays the browser's
+    \texttt{wouldReachOutcome} decision (lightweight push plus
+    $\mathsf{ReachMap}$ lookup) at every reachable state and compares it
+    against the true reach-set membership obtained by committing the push
+    and descending in the baseline. Both \texttt{sim-fp} (UI green-lights
+    a dead end) and \texttt{sim-fn} (UI hides a valid path) must be
+    empty.
 \end{enumerate}
 
 \subsection{Test Graphs}
@@ -1119,14 +1140,25 @@ The harness (\texttt{test/run.js}) works as follows:
 \textbf{Graph} & \textbf{Dims} & \textbf{Baseline} & \textbf{irrKeys}
   & \textbf{Primary target} \\
 \hline
-\texttt{trivial}       & 3  & 15     & 4  & Sanity check \\
-\texttt{classes}        & 3  & 23     & 4  & R1: equivalence classes \\
-\texttt{irrelevance}    & 3  & 19     & 4  & R2: irrelevance wildcarding \\
-\texttt{superposition}  & 4  & 36     & 5  & R3: superposition \\
-\texttt{variants}       & 3  & 22     & 4  & R4: variant expansion \\
-\texttt{kitchen-sink}   & 7  & 119    & 7  & Combined features \\
-\texttt{derive-crossover} & 5  & 11   & 5  & \texttt{deriveWhen} crossover \\
-\texttt{production-subgraph} & 16 & 6700 & 12
+\texttt{trivial}             & 3  & 15   & 4  & Sanity check \\
+\texttt{classes}             & 3  & 23   & 4  & R1: equivalence classes \\
+\texttt{irrelevance}         & 3  & 10   & 4  & R2: irrelevance wildcarding \\
+\texttt{superposition}       & 4  & 36   & 5  & R3: superposition \\
+\texttt{deep-superposition}  & 5  & 118  & 10 & R3: chained superposition \\
+\texttt{variants}            & 3  & 4    & 4  & R4: variant expansion \\
+\texttt{kitchen-sink}        & 7  & 23   & 13 & Combined features \\
+\texttt{derive-crossover}    & 5  & 9    & 7  & \texttt{deriveWhen} crossover \\
+\texttt{chained-derive}      & 5  & 7    & 6  & Transitive derivation \\
+\texttt{convergence-basic}   & 7  & 14   & 9  & Path convergence \\
+\texttt{diamond-convergence} & 4  & 8    & 7  & Diamond-shaped subgraph \\
+\texttt{disabled-by-derived} & 4  & 8    & 7  & Derived-value disabling \\
+\texttt{edge-requires}       & 4  & 16   & 12 & \texttt{requires} clauses \\
+\texttt{fp-cascade}          & 7  & 3    & 3  & Fingerprint cascade \\
+\texttt{hide-when}           & 4  & 12   & 12 & \texttt{hideWhen} predicates \\
+\texttt{multi-activate}      & 6  & 35   & 15 & Disjunctive activation \\
+\texttt{outcome-only-dim}    & 4  & 5    & 5  & Outcome-only dimensions \\
+\texttt{rederivation}        & 6  & 36   & 27 & Re-derived dead-end check \\
+\texttt{production-subgraph} & 16 & 1204 & 20
   & Real graph (capability $\to$ open\_source) \\
 \end{tabular}
 \end{center}
@@ -1136,15 +1168,16 @@ terminal memoization bug (Remark~\ref{rem:termmemo}): 5 dimensions, 10
 edges, with a \texttt{deriveWhen} rule that creates a path crossover.
 Before the fix (moving the terminal check before memoization), it
 produced both false positives and false negatives. After the fix, all
-8 graphs pass.
+19 graphs pass.
 
 The \texttt{production-subgraph} graph contains the first 16 dimensions
 of the production Singularity Map (up to and including
 \texttt{open\_source}), with all real \texttt{activateWhen},
 \texttt{disabledWhen}, \texttt{requires}, and \texttt{deriveWhen}
-conditions preserved. Its 6700 baseline states compress to 12 irrelevance
+conditions preserved. Its 1204 baseline states compress to 20 irrelevance
 keys, and the optimized--baseline comparison passes with zero
-discrepancies.
+discrepancies (no reachability false positives, false negatives, or
+missing entries; browser-sim FP/FN both zero).
 
 \subsection{Limitations}
 
@@ -1156,9 +1189,11 @@ multi-class testing: \texttt{capability} (2 classes),
 \texttt{stall\_recovery} (2 classes).
 
 The baseline DFS does not scale to the full production graph
-(${\sim}200\text{k}+$ states) within reasonable time, so the full graph
-is validated only by the \textsf{walk} procedure's internal invariant
-checks, not by baseline comparison.
+(${\sim}216\text{k}$ states visited by the walk, ${\sim}243\text{k}$
+irrelevance keys in the final $\mathsf{ReachMap}$) within reasonable
+time, so the full graph is validated only by the \textsf{walk}
+procedure's internal invariant checks and the browser-sim harness, not
+by baseline comparison.
 
 
 %==========================================================================

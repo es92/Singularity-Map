@@ -141,24 +141,36 @@ Everything is static. Can be opened as a local file or served from any static ho
 
 ```
 Singularity Map/
-├── SPEC.md                  ← this file
-├── README.md                ← project overview and setup
-├── index.html               ← main app (single-page, all UI logic)
-├── graph.js                 ← decision graph — nodes, edges, conditions
-├── engine.js                ← state machine — selection, resolution, display order
-├── timeline-animator.js     ← timeline rendering and animation
-├── timeline.css             ← all styles
-├── validate.js              ← graph integrity checker
-├── profile-locked-paths.js  ← performance profiler for locked explore paths
-├── serve.js                 ← local dev server
+├── SPEC.md                        ← this file
+├── README.md                      ← project overview and setup
+├── index.html                     ← main app (single-page, all UI logic)
+├── graph.js                       ← decision graph — nodes, edges, conditions
+├── engine.js                      ← state machine — selection, resolution, display order
+├── graph-walker.js                ← DFS walker, equivalence classes, irrelevance, superposition
+├── precompute-reachability.js    ← builds per-outcome reach sets into data/reach/
+├── timeline-animator.js           ← timeline rendering and animation
+├── timeline.css                   ← all styles
+├── milestone-utils.js             ← timeline event grouping helpers
+├── generate-share-assets.js       ← OG image + share page generator
+├── validate.js                    ← graph integrity checker (static + DFS invariants)
+├── serve.js                       ← local dev server
 ├── data/
-│   ├── outcomes.json        ← outcome templates (with variants, flavors, reachable conditions)
-│   ├── narrative.json       ← question text, answer descriptions, timeline events, vignettes
-│   └── personal.json        ← profession list, country buckets
-├── tests/
-│   ├── evaluate.js          ← LLM-based evaluation — persona simulation, audits
-│   └── personas.json        ← test personas for evaluation
-└── share/                   ← OG share pages and images for each outcome
+│   ├── outcomes.json              ← outcome templates (with variants, flavors, reachable conditions)
+│   ├── narrative.json             ← question text, answer descriptions, timeline events, vignettes
+│   ├── personal.json              ← profession list, country buckets
+│   └── reach/                     ← per-outcome reachability sets (JSON + gzipped)
+├── test/                          ← reduction-correctness harness
+│   ├── run.js                     ← baseline-vs-optimized DFS comparison
+│   ├── graphs/                    ← minimal graphs exercising each reduction
+│   ├── reach-browser-sim.js       ← simulates the browser's wouldReachOutcome path
+│   └── reach-table.js             ← reach-map inspection CLI
+├── tests/                         ← narrative/evaluation
+│   ├── evaluate.js                ← LLM-based evaluation — persona simulation, audits
+│   └── personas.json              ← test personas for evaluation
+├── research/
+│   ├── graph-formalization.tex    ← formal writeup (see \ref{sec:reductions})
+│   └── graph-formalization.pdf
+└── share/                         ← OG share pages and images for each outcome variant
 ```
 
 ---
