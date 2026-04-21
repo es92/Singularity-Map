@@ -512,8 +512,9 @@ function getEdgeDisabledReason(sel, node, edge) {
 // State management
 // ════════════════════════════════════════════════════════
 
-function cleanSelection(sel) {
-    for (let pass = 0; pass < 5; pass++) {
+function cleanSelection(sel, flavor) {
+    if (!flavor) flavor = {};
+    for (let pass = 0; pass < 6; pass++) {
         let changed = false;
         for (const node of NODES) {
             if (!isNodeVisible(sel, node)) continue;
@@ -525,9 +526,42 @@ function cleanSelection(sel) {
                 }
             }
         }
+        // Apply collapseToFlavor: move certain dims from sel to flavor when
+        // an edge declares it. Narrative-preserving state collapse.
+        for (const node of NODES) {
+            if (!sel[node.id]) continue;
+            const edge = node.edges && node.edges.find(v => v.id === sel[node.id]);
+            if (!edge || !edge.collapseToFlavor) continue;
+            const c = edge.collapseToFlavor;
+            if (c.move) {
+                for (const moveDim of c.move) {
+                    if (sel[moveDim] !== undefined) {
+                        flavor[moveDim] = sel[moveDim];
+                        delete sel[moveDim];
+                        changed = true;
+                    }
+                }
+            }
+            if (c.set) {
+                for (const k of Object.keys(c.set)) {
+                    if (sel[k] !== c.set[k]) {
+                        sel[k] = c.set[k];
+                        changed = true;
+                    }
+                }
+            }
+            if (c.setFlavor) {
+                for (const k of Object.keys(c.setFlavor)) {
+                    if (flavor[k] !== c.setFlavor[k]) {
+                        flavor[k] = c.setFlavor[k];
+                        changed = true;
+                    }
+                }
+            }
+        }
         if (!changed) break;
     }
-    return sel;
+    return { sel, flavor };
 }
 
 
@@ -591,8 +625,8 @@ function templatePartialMatch(t, state) {
 
 function createStack() {
     const state = {};
-    cleanSelection(state);
-    return [{ nodeId: null, edgeId: null, state }];
+    const { flavor } = cleanSelection(state);
+    return [{ nodeId: null, edgeId: null, state, flavor }];
 }
 
 function push(stack, nodeId, edgeId) {
@@ -600,10 +634,11 @@ function push(stack, nodeId, edgeId) {
     const base = existingIdx > 0 ? stack.slice(0, existingIdx) : stack;
 
     const prev = base[base.length - 1].state;
+    const prevFlavor = base[base.length - 1].flavor || {};
     const next = { ...prev };
     next[nodeId] = edgeId;
-    cleanSelection(next);
-    return [...base, { nodeId, edgeId, state: next }];
+    const { flavor } = cleanSelection(next, { ...prevFlavor });
+    return [...base, { nodeId, edgeId, state: next, flavor }];
 }
 
 function pop(stack) {
@@ -619,6 +654,20 @@ function popTo(stack, nodeId) {
 
 function currentState(stack) {
     return stack[stack.length - 1].state;
+}
+
+function currentFlavor(stack) {
+    return stack[stack.length - 1].flavor || {};
+}
+
+// Merged view for narrative resolution: sel wins on conflict (engine state
+// is the source of truth). Flavor contributes the dims that were moved out
+// of sel by collapseToFlavor — purely cosmetic lookups that matter only for
+// flavor text / heading / edge narrativeVariants.
+function narrativeState(stack) {
+    const sel = currentState(stack);
+    const flavor = currentFlavor(stack);
+    return Object.assign({}, flavor, sel);
 }
 
 function stackHas(stack, nodeId) {
@@ -671,14 +720,14 @@ if (typeof module !== 'undefined' && module.exports) {
         matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeActivatedByRules, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         cleanSelection, resolvedState,
         templateMatches, templatePartialMatch, resolveContextWhen,
-        createStack, push, pop, popTo, currentState, stackHas, displayOrder };
+        createStack, push, pop, popTo, currentState, currentFlavor, narrativeState, stackHas, displayOrder };
 }
 if (typeof window !== 'undefined') {
     window.Engine = { NODES, NODE_MAP,
         matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         cleanSelection, resolvedState,
         templateMatches, templatePartialMatch, resolveContextWhen,
-        createStack, push, pop, popTo, currentState, stackHas, displayOrder };
+        createStack, push, pop, popTo, currentState, currentFlavor, narrativeState, stackHas, displayOrder };
 }
 
 })();

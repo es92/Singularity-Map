@@ -89,6 +89,22 @@
           "stall_recovery": [
             "substantial",
             "never"
+          ],
+          "plateau_benefit_distribution": [
+            "equal",
+            "unequal",
+            "extreme"
+          ],
+          "plateau_knowledge_rate": [
+            "rapid",
+            "gradual",
+            "uneven",
+            "limited"
+          ],
+          "plateau_physical_rate": [
+            "gradual",
+            "uneven",
+            "limited"
           ]
         }
       ],
@@ -162,6 +178,22 @@
           "automation_recovery": [
             "substantial",
             "never"
+          ],
+          "auto_benefit_distribution": [
+            "equal",
+            "unequal",
+            "extreme"
+          ],
+          "auto_knowledge_rate": [
+            "rapid",
+            "gradual",
+            "uneven"
+          ],
+          "auto_physical_rate": [
+            "rapid",
+            "gradual",
+            "uneven",
+            "limited"
           ]
         }
       ],

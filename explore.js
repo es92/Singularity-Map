@@ -47,6 +47,12 @@
             font-size: 12px; line-height: 1.35;
             box-shadow: 0 2px 6px rgba(0,0,0,0.15);
             user-select: none;
+            cursor: grab;
+        }
+        #explore-root .explore-node.is-dragging { cursor: grabbing; z-index: 100; }
+        #explore-root .explore-node.is-pinned::after {
+            content: '📌'; position: absolute; top: -6px; right: -4px;
+            font-size: 10px; opacity: 0.7;
         }
         #explore-root .explore-node.is-root { border-color: var(--accent, #6b9bd1); }
         #explore-root .explore-node.is-outcome { border-color: #b3895e; background: rgba(179,137,94,0.08); }
@@ -87,6 +93,7 @@
             background: var(--bg); border-radius: 3px; font-size: 10px;
         }
         #explore-root .explore-dim-chip.is-derived { color: var(--accent, #6b9bd1); }
+        #explore-root .explore-dim-chip.explore-dim-flavor { color: var(--fg-dim, #888); font-style: italic; }
         #explore-root .explore-detail {
             position: absolute; top: 12px; right: 12px; z-index: 10;
             background: var(--bg-soft); border: 1px solid var(--border); border-radius: 8px;
@@ -188,21 +195,59 @@
         return dag;
     }
 
-    function getOrCreate(dag, sel) {
-        const clean = window.Engine.cleanSelection({ ...sel });
+    function getOrCreate(dag, sel, flavorIn) {
+        const { sel: clean, flavor } = window.Engine.cleanSelection({ ...sel }, { ...(flavorIn || {}) });
         const key = selKey(clean);
         if (dag.nodes.has(key)) return dag.nodes.get(key);
         const nq = findNextQ(clean);
         const node = {
-            key, sel: clean, nq,
+            key, sel: clean, flavor, nq,
             depth: Object.keys(clean).length,
-            outgoing: new Map(), // edgeId → child node key (or null when disabled)
-            incoming: new Set(), // Set of parent keys (edges can come from multiple)
+            // outgoing: edgeId → { childKey, flavorDelta } so path-specific
+            // flavor (e.g., stall_recovery='mild') is preserved even when the
+            // child node converges via DAG key.
+            outgoing: new Map(),
+            // incoming: parentKey → { edgeId, flavorDelta } for each inbound path
+            incoming: new Map(),
             x: 0, y: 0,
             hidden: false
         };
         dag.nodes.set(key, node);
         return node;
+    }
+
+    function placeNewNode(dag, node, parent) {
+        // Place relative to the parent's current position so that new nodes
+        // always appear to the right of the parent, even if the user has
+        // dragged the parent away from the default depth grid.
+        if (parent) {
+            node.x = parent.x + NODE_DX;
+        } else {
+            node.x = node.depth * NODE_DX;
+        }
+        // Siblings = other children of the SAME parent (that already have a
+        // position). Stack new children below the lowest existing one so they
+        // don't overlap.
+        const siblings = [];
+        if (parent) {
+            for (const outInfo of parent.outgoing.values()) {
+                const child = dag.nodes.get(outInfo.childKey);
+                if (!child || child === node) continue;
+                siblings.push(child);
+            }
+        }
+        if (siblings.length === 0) {
+            node.y = parent ? parent.y : 0;
+        } else {
+            let maxBottom = -Infinity;
+            for (const s of siblings) {
+                const h = s._height || DEFAULT_NODE_H;
+                const bottom = s.y + h;
+                if (bottom > maxBottom) maxBottom = bottom;
+            }
+            node.y = maxBottom + NODE_VGAP;
+        }
+        node.pinned = true;
     }
 
     function toggleEdge(dag, node, edgeId) {
@@ -212,7 +257,7 @@
         if (!edge) return;
         if (window.Engine.isEdgeDisabled(node.sel, q, edge)) return;
         if (node.outgoing.has(edgeId)) {
-            const childKey = node.outgoing.get(edgeId);
+            const { childKey } = node.outgoing.get(edgeId);
             node.outgoing.delete(edgeId);
             const child = dag.nodes.get(childKey);
             if (child) {
@@ -222,15 +267,26 @@
                 }
             }
         } else {
-            const childSel = { ...node.sel, [q.id]: edge.id };
-            const child = getOrCreate(dag, childSel);
-            child.incoming.add(node.key);
-            node.outgoing.set(edgeId, child.key);
+            const childSelIn = { ...node.sel, [q.id]: edge.id };
+            const { sel: cleanChild, flavor: childFlavor } =
+                window.Engine.cleanSelection({ ...childSelIn }, { ...node.flavor });
+            const childKey = selKey(cleanChild);
+            const isNew = !dag.nodes.has(childKey);
+            const child = getOrCreate(dag, childSelIn, node.flavor);
+            // flavorDelta = entries added by this edge relative to parent
+            const flavorDelta = {};
+            const parentFlavor = node.flavor || {};
+            for (const k of Object.keys(childFlavor)) {
+                if (parentFlavor[k] !== childFlavor[k]) flavorDelta[k] = childFlavor[k];
+            }
+            child.incoming.set(node.key, { edgeId, flavorDelta });
+            node.outgoing.set(edgeId, { childKey: child.key, flavorDelta });
+            if (isNew) placeNewNode(dag, child, node);
         }
     }
 
     function removeSubtree(dag, node) {
-        const childKeys = [...node.outgoing.values()];
+        const childKeys = [...node.outgoing.values()].map(v => v.childKey);
         dag.nodes.delete(node.key);
         for (const ck of childKeys) {
             const c = dag.nodes.get(ck);
@@ -246,6 +302,8 @@
 
     const NODE_DX = 320;
     const NODE_DY = 170;
+    const NODE_VGAP = 24;
+    const DEFAULT_NODE_H = 90;
 
     function layout(dag) {
         const byDepth = new Map();
@@ -256,6 +314,7 @@
         const depths = [...byDepth.keys()].sort((a, b) => a - b);
 
         for (const node of dag.nodes.values()) {
+            if (node.pinned) { node._tempY = node.y; continue; }
             if (node._tempY === undefined) node._tempY = 0;
         }
 
@@ -263,7 +322,8 @@
             for (const d of depths) {
                 if (d === 0) continue;
                 for (const node of byDepth.get(d)) {
-                    const parents = [...node.incoming].map(k => dag.nodes.get(k)).filter(Boolean);
+                    if (node.pinned) { node._tempY = node.y; continue; }
+                    const parents = [...node.incoming.keys()].map(k => dag.nodes.get(k)).filter(Boolean);
                     if (parents.length) {
                         const sum = parents.reduce((s, p) => s + p._tempY, 0);
                         node._tempY = sum / parents.length;
@@ -274,12 +334,14 @@
                 const arr = byDepth.get(d).slice().sort((a, b) => a._tempY - b._tempY || a.key.localeCompare(b.key));
                 const total = arr.length;
                 for (let i = 0; i < total; i++) {
+                    if (arr[i].pinned) continue;
                     arr[i]._tempY = (i - (total - 1) / 2) * NODE_DY;
                 }
             }
         }
 
         for (const node of dag.nodes.values()) {
+            if (node.pinned) continue;
             node.x = node.depth * NODE_DX;
             node.y = node._tempY;
         }
@@ -310,6 +372,7 @@
         if (nq.terminal && nq.kind === 'outcome') cls += ' is-outcome';
         if (nq.terminal && nq.kind === 'deadend') cls += ' is-deadend';
         if (selectedKey === node.key) cls += ' is-selected';
+        if (node.pinned) cls += ' is-pinned';
 
         let title = '';
         let edgesHtml = '';
@@ -349,7 +412,7 @@
         return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     }
 
-    function renderDetail(node) {
+    function renderDetail(dag, node) {
         if (!node) return '';
         const sel = node.sel;
         const res = node.nq.res;
@@ -357,6 +420,33 @@
         const derived = {};
         for (const k of Object.keys(res)) if (sel[k] === undefined) derived[k] = res[k];
         const derivedHtml = Object.keys(derived).length ? renderDimChips({}, derived) : '<span class="explore-dim-chip"><i>none</i></span>';
+        // Flavor union across all incoming edges: nodes that converge here
+        // may have taken different flavor-preserving paths. Show `|` between
+        // the different flavor values so the path-dependent narrative is
+        // visible even when sel has converged.
+        const flavorUnion = {};
+        if (node.incoming && node.incoming.size > 0) {
+            for (const info of node.incoming.values()) {
+                const delta = info.flavorDelta || {};
+                for (const k of Object.keys(delta)) {
+                    if (!flavorUnion[k]) flavorUnion[k] = new Set();
+                    flavorUnion[k].add(delta[k]);
+                }
+            }
+        } else if (node.flavor) {
+            // Root node or seeded-from-URL: single path; show directly.
+            for (const k of Object.keys(node.flavor)) {
+                flavorUnion[k] = new Set([node.flavor[k]]);
+            }
+        }
+        let flavorHtml = '';
+        if (Object.keys(flavorUnion).length) {
+            const chips = Object.keys(flavorUnion).map(k => {
+                const vals = [...flavorUnion[k]].join(' | ');
+                return `<span class="explore-dim-chip explore-dim-flavor">${escHtml(k)}=${escHtml(vals)}</span>`;
+            }).join(' ');
+            flavorHtml = `<div class="explore-detail-section"><h4>Flavor (narrative only)</h4>${chips}</div>`;
+        }
         const mapUrl = buildMapUrl(sel);
         let outcomeHtml = '';
         if (node.nq.terminal && node.nq.kind === 'outcome') {
@@ -370,6 +460,7 @@
             <h3>State @ depth ${node.depth}</h3>
             <div class="explore-detail-section"><h4>Selection</h4>${selHtml}</div>
             <div class="explore-detail-section"><h4>Derived / locked</h4>${derivedHtml}</div>
+            ${flavorHtml}
             ${nextHtml}${outcomeHtml}
             <div class="explore-detail-section"><h4>Links</h4><a href="${mapUrl}">Open in /map</a></div>
         `;
@@ -391,8 +482,8 @@
         }
         for (const node of dag.nodes.values()) {
             const hi = node.key === selectedKey;
-            for (const [edgeId, childKey] of node.outgoing) {
-                const child = dag.nodes.get(childKey);
+            for (const [edgeId, outInfo] of node.outgoing) {
+                const child = dag.nodes.get(outInfo.childKey);
                 if (!child) continue;
                 const x1 = node.x + 260;
                 const y1 = node.y + 24;
@@ -426,6 +517,7 @@
             <div id="explore-root">
                 <div class="explore-toolbar">
                     <button data-action="reset">Reset view</button>
+                    <button data-action="unpin">Unpin all</button>
                     <button data-action="clear">Clear expansions</button>
                     <button data-action="back">← Back to map</button>
                     <span class="explore-stats"></span>
@@ -451,13 +543,7 @@
             viewport.style.transform = `translate(${viewX}px, ${viewY}px) scale(${scale})`;
         }
 
-        function refresh() {
-            layout(dag);
-            const nodesHtml = [];
-            for (const node of dag.nodes.values()) {
-                nodesHtml.push(renderNodeHTML(dag, node, selectedKey));
-            }
-            nodesLayer.innerHTML = nodesHtml.join('');
+        function redrawEdges() {
             const edgeData = renderEdges(dag, selectedKey);
             edgesLayer.setAttribute('viewBox', edgeData.viewBox);
             edgesLayer.setAttribute('width', edgeData.width);
@@ -465,10 +551,30 @@
             edgesLayer.style.left = edgeData.minX + 'px';
             edgesLayer.style.top = edgeData.minY + 'px';
             edgesLayer.innerHTML = edgeData.svgInner;
+        }
+
+        function measureHeights() {
+            const els = nodesLayer.querySelectorAll('.explore-node');
+            for (const el of els) {
+                const key = el.dataset.key;
+                const node = dag.nodes.get(key);
+                if (node) node._height = el.offsetHeight;
+            }
+        }
+
+        function refresh() {
+            layout(dag);
+            const nodesHtml = [];
+            for (const node of dag.nodes.values()) {
+                nodesHtml.push(renderNodeHTML(dag, node, selectedKey));
+            }
+            nodesLayer.innerHTML = nodesHtml.join('');
+            measureHeights();
+            redrawEdges();
             statsEl.textContent = `${dag.nodes.size} nodes`;
             if (selectedKey && dag.nodes.has(selectedKey)) {
                 detail.hidden = false;
-                detail.innerHTML = renderDetail(dag.nodes.get(selectedKey));
+                detail.innerHTML = renderDetail(dag, dag.nodes.get(selectedKey));
             } else {
                 detail.hidden = true;
                 detail.innerHTML = '';
@@ -476,8 +582,60 @@
             applyTransform();
         }
 
+        // Node drag
+        let nodeDrag = null;
+        let suppressNextClick = false;
+        nodesLayer.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            const nodeEl = e.target.closest('.explore-node');
+            if (!nodeEl) return;
+            const key = nodeEl.dataset.key;
+            const node = dag.nodes.get(key);
+            if (!node) return;
+            nodeDrag = { node, nodeEl, startX: e.clientX, startY: e.clientY, x0: node.x, y0: node.y, moved: false };
+            e.stopPropagation();
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (!nodeDrag) return;
+            const dxPx = e.clientX - nodeDrag.startX;
+            const dyPx = e.clientY - nodeDrag.startY;
+            if (!nodeDrag.moved && Math.hypot(dxPx, dyPx) > 4) {
+                nodeDrag.moved = true;
+                nodeDrag.node.pinned = true;
+                nodeDrag.nodeEl.classList.add('is-dragging', 'is-pinned');
+            }
+            if (nodeDrag.moved) {
+                nodeDrag.node.x = nodeDrag.x0 + dxPx / scale;
+                nodeDrag.node.y = nodeDrag.y0 + dyPx / scale;
+                nodeDrag.nodeEl.style.left = nodeDrag.node.x + 'px';
+                nodeDrag.nodeEl.style.top = nodeDrag.node.y + 'px';
+                redrawEdges();
+            }
+        });
+        window.addEventListener('mouseup', () => {
+            if (!nodeDrag) return;
+            if (nodeDrag.moved) {
+                nodeDrag.nodeEl.classList.remove('is-dragging');
+                suppressNextClick = true;
+            }
+            nodeDrag = null;
+        });
+
+        // Double-click node to unpin (restore auto-layout for it)
+        nodesLayer.addEventListener('dblclick', (e) => {
+            const nodeEl = e.target.closest('.explore-node');
+            if (!nodeEl) return;
+            const node = dag.nodes.get(nodeEl.dataset.key);
+            if (!node || !node.pinned) return;
+            node.pinned = false;
+            suppressNextClick = true;
+            refresh();
+            e.preventDefault();
+        });
+
         // Interaction: click nodes, edges
         nodesLayer.addEventListener('click', (e) => {
+            if (suppressNextClick) { suppressNextClick = false; return; }
             const rowEl = e.target.closest('.explore-edge-row');
             const nodeEl = e.target.closest('.explore-node');
             if (!nodeEl) return;
@@ -536,6 +694,10 @@
         root.querySelector('[data-action="reset"]').addEventListener('click', () => {
             viewX = 400; viewY = window.innerHeight / 2; scale = 1;
             applyTransform();
+        });
+        root.querySelector('[data-action="unpin"]').addEventListener('click', () => {
+            for (const n of dag.nodes.values()) n.pinned = false;
+            refresh();
         });
         root.querySelector('[data-action="clear"]').addEventListener('click', () => {
             const rootSel = dag.nodes.get(dag.rootKey).sel;

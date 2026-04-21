@@ -1389,7 +1389,8 @@
         function resolvePersonalVignettes(stack, answers, dateMap) {
             if (!answers || !answers.profession) return [];
             const sel = Engine.currentState(stack);
-            const ctx = Object.assign({}, sel, {
+            const narrSel = Engine.narrativeState(stack);
+            const ctx = Object.assign({}, narrSel, {
                 profession: answers.profession,
             });
 
@@ -1406,15 +1407,23 @@
             ]);
 
             const vignettes = [];
-            for (const node of Engine.displayOrder(stack)) {
-                const value = sel[node.id];
+            // Iterate the stack directly (raw user picks), not sel — because
+            // collapseToFlavor moves some dims out of sel (e.g., stall_recovery,
+            // stall_duration) and may rewrite others (e.g., capability='stalls'
+            // → 'singularity'). We still want to render the vignette for the
+            // user's ORIGINAL pick.
+            for (const entry of stack) {
+                if (!entry.nodeId) continue;
+                const node = NODE_MAP[entry.nodeId];
+                if (!node || node.derived) continue;
+                const value = entry.edgeId;
                 if (!value) continue;
                 const edge = node.edges && node.edges.find(e => e.id === value);
                 if (!edge) continue;
 
                 let pv = null;
-                if (edge.narrativeVariants && sel) {
-                    const variant = resolveNarrativeVariant(edge.narrativeVariants, sel);
+                if (edge.narrativeVariants) {
+                    const variant = resolveNarrativeVariant(edge.narrativeVariants, narrSel);
                     if (variant && variant.personalVignette) pv = variant.personalVignette;
                 }
                 if (!pv && edge.personalVignette) pv = edge.personalVignette;
@@ -1911,6 +1920,9 @@
             function findNextQuestion() {
                 if (lockedId) _loadReachMap(lockedVariantKey ? lockedId + '--' + lockedVariantKey : lockedId);
                 const sel = Engine.currentState(stack);
+                // Narrative-match view: sel + flavor so edge narrativeVariants
+                // can observe flavor-moved dims (e.g., stall_recovery='mild').
+                const narrSel = Engine.narrativeState(stack);
                 // Outcomes are terminal (SPEC.md): once any template matches,
                 // the path is complete and we stop asking questions. The render
                 // layer reads nextQ==null as "show the matched outcome".
@@ -1925,7 +1937,7 @@
                             const options = node.edges.map(v => {
                                 const disabled = Engine.isEdgeDisabled(sel, node, v);
                                 const reason = Engine.getEdgeDisabledReason(sel, node, v);
-                                const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, sel) : null;
+                                const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, narrSel) : null;
                                 return {
                                     value: v.id, label: v.label, shortLabel: v.shortLabel,
                                     answerLabel: (variant && variant.answerLabel) || v.answerLabel || v.label,
@@ -1948,7 +1960,7 @@
                         .map(v => {
                             const disabled = Engine.isEdgeDisabled(sel, node, v);
                             const reason = Engine.getEdgeDisabledReason(sel, node, v);
-                            const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, sel) : null;
+                            const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, narrSel) : null;
                             return {
                                 value: v.id,
                                 label: v.label,
@@ -1970,6 +1982,7 @@
 
             function buildTimelineEvents(nextQ) {
                 const sel = Engine.currentState(stack);
+                const narrSel = Engine.narrativeState(stack);
                 const events = [];
                 let foundFrontier = false;
 
@@ -1994,7 +2007,11 @@
 
                     if (locked !== null && !inStack) continue;
                     const stackEntry = inStack && stack.find(e => e.nodeId === node.id);
-                    const value = sel[node.id] || locked || (stackEntry && stackEntry.edgeId);
+                    // Prefer the user's raw pick (stackEntry) over sel — sel may
+                    // have been rewritten by collapseToFlavor (e.g., capability
+                    // 'stalls' → 'singularity'). Timeline should show what the
+                    // user actually answered.
+                    const value = (stackEntry && stackEntry.edgeId) || sel[node.id] || locked;
                     const isLockedNode = locked !== null && !stackEntry;
 
                     if (!value) {
@@ -2010,7 +2027,7 @@
                         continue;
                     }
 
-                    const narr = nodeNarrativeFor(node.id, value, sel);
+                    const narr = nodeNarrativeFor(node.id, value, narrSel);
                     const nodeEdge = node.edges.find(v => v.id === value);
                     const paramLabel = nodeEdge ? nodeEdge.label : value;
                     const siblings = node.edges
@@ -2063,8 +2080,9 @@
                 map._totalMonths = cumulative;
 
                 const sel = Engine.currentState(stack);
-                const agiVal = sel['agi_threshold'];
-                const takeoffVal = sel['takeoff'];
+                const narrSel = Engine.narrativeState(stack);
+                const agiVal = narrSel['agi_threshold'];
+                const takeoffVal = narrSel['takeoff'];
                 if (agiVal && takeoffVal) {
                     const agiDoublings = { twenty_four_hours: 1, one_week: 3.8, few_months: 7.5, one_year: 9.5, ten_plus_years: 9.5 };
                     const takeoffAccel = { none: 0, slow: 0.1, moderate: 0.2, fast: 0.35, explosive: 0.5 };
@@ -2103,11 +2121,13 @@
 
             function getOutcomeShareInfo() {
                 const eff = Engine.resolvedState(Engine.currentState(stack));
+                // For narrative resolution (subtitle, flavor text) include flavor.
+                const narrEff = Object.assign({}, Engine.currentFlavor(stack), eff);
                 const matched = templatesList.filter(t => Engine.templateMatches(t, eff));
                 let url = location.origin + location.pathname + location.hash;
                 let title = '';
                 if (matched.length > 0) {
-                    const resolved = resolveTemplate(matched[0].id, eff);
+                    const resolved = resolveTemplate(matched[0].id, narrEff);
                     if (resolved) {
                         title = resolved.subtitle ? resolved.title + ': ' + resolved.subtitle : resolved.title;
                         const slug = resolved.variantKey ? matched[0].id + '--' + resolved.variantKey : matched[0].id;
@@ -2119,7 +2139,7 @@
                         }
                         for (const entry of stack) {
                             if (!entry.nodeId) continue;
-                            if (entry.state[entry.nodeId]) {
+                            if (entry.state[entry.nodeId] || (entry.flavor && entry.flavor[entry.nodeId])) {
                                 params.push(encodeURIComponent(entry.nodeId) + '=' + encodeURIComponent(entry.edgeId));
                             }
                         }
@@ -2134,11 +2154,14 @@
 
             function buildOutcomeSectionHtml() {
                 const eff = Engine.resolvedState(Engine.currentState(stack));
+                // Merged view for narrative resolution (flavors, flavor headings,
+                // conditional text) — flavor-moved dims need to be visible here.
+                const narrEff = Object.assign({}, Engine.currentFlavor(stack), eff);
                 const matched = templatesList.filter(t => Engine.templateMatches(t, eff));
                 if (matched.length === 0) return '';
 
                 const t = matched[0];
-                const resolved = resolveTemplate(t.id, eff);
+                const resolved = resolveTemplate(t.id, narrEff);
                 if (!resolved) return '';
 
                 const key = outcomeKey(t.id, resolved.variantKey);
@@ -2163,7 +2186,7 @@
                 </div>`;
 
                 const pickerHtml = buildProfessionPickerHtml();
-                const timelineHtml = buildMergedVignettesHtml(resolved, stack, eff, dateMap);
+                const timelineHtml = buildMergedVignettesHtml(resolved, stack, narrEff, dateMap);
 
                 const ctaHtml = `<div class="share-section scroll-reveal">
                     <div class="share-label">Share This Future</div>
@@ -2365,7 +2388,9 @@
                 const entries = [];
                 for (const entry of stack) {
                     if (!entry.nodeId) continue;
-                    if (entry.state[entry.nodeId]) {
+                    // Retracted entries are gone from both state and flavor.
+                    // Collapsed entries live in flavor. Keep either.
+                    if (entry.state[entry.nodeId] || (entry.flavor && entry.flavor[entry.nodeId])) {
                         entries.push(encodeURIComponent(entry.nodeId) + '=' + encodeURIComponent(entry.edgeId));
                     }
                 }
@@ -2628,8 +2653,8 @@
                                 ? (nextQ.node.shortQuestionText || nextQ.node.questionText || nextQ.node.label)
                                 : (nextQ.node.questionText || nextQ.node.label),
                             questionContext: shortQuestions
-                                ? (nextQ.node.shortQuestionContext || Engine.resolveContextWhen(Engine.currentState(stack), nextQ.node))
-                                : Engine.resolveContextWhen(Engine.currentState(stack), nextQ.node),
+                                ? (nextQ.node.shortQuestionContext || Engine.resolveContextWhen(Engine.narrativeState(stack), nextQ.node))
+                                : Engine.resolveContextWhen(Engine.narrativeState(stack), nextQ.node),
                             source: nextQ.node.source,
                             isForced: nextQ.isForced || false,
                             forcedValue: nextQ.forcedValue || null,
@@ -2749,14 +2774,15 @@
                         }
                         wireRatingSection(outcomeZone);
                         const eff = Engine.resolvedState(Engine.currentState(stack));
+                        const narrEff = Object.assign({}, Engine.currentFlavor(stack), eff);
                         const matchedT = templatesList.filter(t => Engine.templateMatches(t, eff));
                         if (matchedT.length > 0) {
-                            const resolved = resolveTemplate(matchedT[0].id, eff);
+                            const resolved = resolveTemplate(matchedT[0].id, narrEff);
                             const dateMap = buildTimelineDateMap();
 
                             function rerenderTimeline() {
                                 const tl = outcomeZone.querySelector('.outcome-timeline');
-                                const newHtml = buildMergedVignettesHtml(resolved, stack, eff, dateMap);
+                                const newHtml = buildMergedVignettesHtml(resolved, stack, narrEff, dateMap);
                                 if (tl) {
                                     tl.outerHTML = newHtml;
                                 } else {
