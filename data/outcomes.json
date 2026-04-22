@@ -2216,7 +2216,12 @@
             "rapid",
             "gradual",
             "uneven"
-          ]
+          ],
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -2246,7 +2251,12 @@
             "rapid",
             "gradual",
             "uneven"
-          ]
+          ],
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -2275,7 +2285,12 @@
             "rapid",
             "gradual",
             "uneven"
-          ]
+          ],
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         },
         {
           "capability": [
@@ -2304,7 +2319,12 @@
             "rapid",
             "gradual",
             "uneven"
-          ]
+          ],
+          "_not": {
+            "concentration_type": [
+              "ai_itself"
+            ]
+          }
         }
       ],
       "story": [],
