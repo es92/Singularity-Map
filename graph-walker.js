@@ -303,6 +303,13 @@ function resumeRvCache() { setRvCache(_activeRvMap); }
 const stateCache = new Map();
 let cacheHits = 0, cacheMisses = 0;
 
+// Cap the per-ck caches so long walks don't OOM. These caches are pure speed
+// optimizations (isNodeVisible/isEdgeDisabled/etc. are pure functions of sel
+// classes), so evicting on size is correctness-neutral. Chosen to comfortably
+// hold the hot working set without exceeding a few hundred MB of heap.
+const STATE_CACHE_MAX = 25000;
+const IRR_VECTOR_CACHE_MAX = 25000;
+
 // ═══════════════════════════════════════════════
 // Template awareness for irrelevance + class refinement
 // ═══════════════════════════════════════════════
@@ -418,6 +425,11 @@ function getCache(ck) {
     if (ck === _lastCk) return _lastSc;
     let sc = stateCache.get(ck);
     if (!sc) {
+        if (stateCache.size >= STATE_CACHE_MAX) {
+            stateCache.clear();
+            _lastCk = null;
+            _lastSc = null;
+        }
         sc = { irr: new Map(), vis: new Map(), edge: new Map(), cnbv: new Map(), du: new Map(), ca: new Map() };
         stateCache.set(ck, sc);
     }
@@ -664,6 +676,7 @@ function classAndSuperKey(sel, superSet) {
 
     let irrVec = irrVectorCache.get(ck);
     if (!irrVec) {
+        if (irrVectorCache.size >= IRR_VECTOR_CACHE_MAX) irrVectorCache.clear();
         irrVec = new Uint8Array(dimOrder.length);
         for (let i = 0; i < dimOrder.length; i++) {
             const dim = dimOrder[i];

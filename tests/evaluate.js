@@ -802,8 +802,8 @@ async function runPool(jobs, concurrency, onComplete) {
 
 const CONTEXT_COMBOS = [
     { distribution: 'monopoly', geo_spread: 'one' },
-    { distribution: 'open', geo_spread: 'several' },
-    { distribution: 'concentrated', geo_spread: 'two' },
+    { distribution: 'open', geo_spread: 'multiple' },
+    { distribution: 'concentrated', geo_spread: 'multiple' },
 ];
 
 function pruneInactiveNodes(state) {

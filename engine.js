@@ -34,6 +34,58 @@ function _precompile() {
         _idxToVal[node.id] = i2v;
     }
 
+    // Register "marker" dimensions that aren't declared nodes but are written
+    // into sel via `collapseToFlavor.set` (e.g. `agi_happens`, `asi_happens`,
+    // `takeoff_class`, `governance_set`, `plateau_knowledge_set`, ...). These
+    // need entries in _valToIdx/_idxToVal so derivation tables that reference
+    // them as inputs can be built and looked up at runtime.
+    //
+    // Also collect extra values for dims that ARE declared nodes when
+    // `collapseToFlavor.set` overrides the picked edge value with a collapsed
+    // value (e.g. `geo_spread` edges 'two'/'several' collapsing to 'multiple').
+    // Those collapsed values must be indexable too.
+    const markerVals = Object.create(null);
+    for (const node of NODES) {
+        if (!node.edges) continue;
+        for (const edge of node.edges) {
+            const raw = edge.collapseToFlavor;
+            if (!raw) continue;
+            const blocks = Array.isArray(raw) ? raw : [raw];
+            for (const c of blocks) {
+                if (!c || !c.set) continue;
+                for (const k of Object.keys(c.set)) {
+                    if (!markerVals[k]) markerVals[k] = new Set();
+                    markerVals[k].add(c.set[k]);
+                }
+            }
+        }
+    }
+    // Collapsed values from deriveWhen rules that produce values not present
+    // in a node's edges (e.g. `geo_spread` deriving 'multiple').
+    for (const node of NODES) {
+        if (!node.deriveWhen) continue;
+        for (const rule of node.deriveWhen) {
+            if (rule.value === undefined) continue;
+            if (!markerVals[node.id]) markerVals[node.id] = new Set();
+            markerVals[node.id].add(rule.value);
+        }
+    }
+    for (const k of Object.keys(markerVals)) {
+        let v2i = _valToIdx[k];
+        let i2v = _idxToVal[k];
+        if (!v2i) {
+            v2i = Object.create(null);
+            i2v = [undefined];
+            _valToIdx[k] = v2i;
+            _idxToVal[k] = i2v;
+        }
+        for (const val of markerVals[k]) {
+            if (v2i[val]) continue;
+            v2i[val] = i2v.length;
+            i2v.push(val);
+        }
+    }
+
     const derivedDims = new Set();
     for (const node of NODES) {
         if (node.deriveWhen) derivedDims.add(node.id);
@@ -528,33 +580,52 @@ function cleanSelection(sel, flavor) {
         }
         // Apply collapseToFlavor: move certain dims from sel to flavor when
         // an edge declares it. Narrative-preserving state collapse.
+        //
+        // An edge may declare either a single collapse block (object form) or
+        // an array of blocks, each with its own optional `when` gate. Array
+        // form is used when the collapse values depend on current sel (e.g.
+        // decel terminating edges that set decel_outcome based on the current
+        // decel_Xmo_progress value). Blocks are tried in order; each whose
+        // `when` matches applies its set/move/setFlavor independently.
         for (const node of NODES) {
             if (!sel[node.id]) continue;
             const edge = node.edges && node.edges.find(v => v.id === sel[node.id]);
             if (!edge || !edge.collapseToFlavor) continue;
-            const c = edge.collapseToFlavor;
-            if (c.move) {
-                for (const moveDim of c.move) {
-                    if (sel[moveDim] !== undefined) {
-                        flavor[moveDim] = sel[moveDim];
-                        delete sel[moveDim];
-                        changed = true;
+            const blocks = Array.isArray(edge.collapseToFlavor) ? edge.collapseToFlavor : [edge.collapseToFlavor];
+            for (const c of blocks) {
+                // Optional gate: collapse applies only when the current sel matches
+                // `when`. Used for subtree-conditional moves (e.g. move open_source
+                // to flavor only when distribution=concentrated at sovereignty.lab —
+                // preserves it in the distribution=monopoly subtree where decel
+                // chain still reads it).
+                if (c.when && !matchCondition(sel, c.when)) continue;
+                // set runs before move so that blocks which bake a derived
+                // value from a dim they then move (e.g. set decel_align_progress
+                // from decel_Xmo_progress, then move decel_Xmo_progress) read the
+                // dim while it's still in sel.
+                if (c.set) {
+                    for (const k of Object.keys(c.set)) {
+                        if (sel[k] !== c.set[k]) {
+                            sel[k] = c.set[k];
+                            changed = true;
+                        }
                     }
                 }
-            }
-            if (c.set) {
-                for (const k of Object.keys(c.set)) {
-                    if (sel[k] !== c.set[k]) {
-                        sel[k] = c.set[k];
-                        changed = true;
+                if (c.setFlavor) {
+                    for (const k of Object.keys(c.setFlavor)) {
+                        if (flavor[k] !== c.setFlavor[k]) {
+                            flavor[k] = c.setFlavor[k];
+                            changed = true;
+                        }
                     }
                 }
-            }
-            if (c.setFlavor) {
-                for (const k of Object.keys(c.setFlavor)) {
-                    if (flavor[k] !== c.setFlavor[k]) {
-                        flavor[k] = c.setFlavor[k];
-                        changed = true;
+                if (c.move) {
+                    for (const moveDim of c.move) {
+                        if (sel[moveDim] !== undefined) {
+                            flavor[moveDim] = sel[moveDim];
+                            delete sel[moveDim];
+                            changed = true;
+                        }
                     }
                 }
             }
@@ -567,6 +638,13 @@ function cleanSelection(sel, flavor) {
 
 function resolvedState(sel) {
     const d = {};
+    // Pass through sel keys that aren't declared nodes — these are
+    // collapse/gating markers written by `collapseToFlavor.set` (e.g.
+    // `asi_happens`, `governance_set`, `plateau_knowledge_set`). Outcome
+    // `reachable` clauses may reference them.
+    for (const k of Object.keys(sel)) {
+        if (!NODE_MAP[k]) d[k] = sel[k];
+    }
     for (const node of NODES) {
         if (!isNodeVisible(sel, node)) {
             if (node.deriveWhen) {
@@ -705,10 +783,33 @@ function displayOrder(stack) {
 function resolveContextWhen(sel, narr) {
     if (narr && narr.contextWhen) {
         for (const entry of narr.contextWhen) {
-            if (matchCondition(sel, entry.when)) return entry.questionContext;
+            if (matchContextWhen(sel, entry.when)) return entry.questionContext;
         }
     }
     return (narr && narr.questionContext) || '';
+}
+
+// Narrative-only match that also accepts the more-specific flavor detail
+// (e.g. `distribution_detail = 'lagging'` when sel collapsed lagging into
+// concentrated). Kept separate from `matchCondition` because graph gates and
+// template `reachable` clauses deliberately see only the collapsed sel.
+function matchContextWhen(state, cond) {
+    for (const [k, allowed] of Object.entries(cond)) {
+        if (k === 'reason' || k === '_ck' || k === '_ct' || k === '_cv' || k === '_direct') continue;
+        const v = state[k];
+        const detailV = state[k + '_detail'];
+        if (allowed === true)  { if (v == null && detailV == null) return false; continue; }
+        if (allowed === false) { if (v != null || detailV != null) return false; continue; }
+        if (allowed && allowed.not) {
+            if (allowed.required && v == null && detailV == null) return false;
+            if (v && allowed.not.includes(v)) return false;
+            if (detailV && allowed.not.includes(detailV)) return false;
+            continue;
+        }
+        if (!Array.isArray(allowed)) return false;
+        if (!((v && allowed.includes(v)) || (detailV && allowed.includes(detailV)))) return false;
+    }
+    return true;
 }
 
 // ════════════════════════════════════════════════════════

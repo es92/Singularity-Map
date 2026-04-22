@@ -51,6 +51,46 @@ Each node in `graph.js` represents a question (dimension). Each node has:
 Edges can have:
 - **`requires`** — conditions that must be met for this edge to be available
 - **`disabledWhen`** — conditions under which this edge is disabled
+- **`collapseToFlavor`** — state-shrinking rules applied when this edge is selected (see below)
+
+### State Split: `sel` vs `flavor`
+
+The decision state is split into two parallel bags:
+
+- **`sel`** — the behavioral state vector. Everything that affects engine branching (activation, derivation, edge enabling/disabling, template matching) reads from `sel`. Two states with identical `sel` are behaviorally identical.
+- **`flavor`** — the narrative state vector. Holds dimensions (or specific values of dimensions) that are only read by narrative renderers. Never consulted for branching decisions.
+
+`narrativeState(stack) = { ...flavor, ...sel }` (sel wins on conflict) is the merged view narrative text resolution uses. The main UI passes `narrativeState` everywhere a human-readable answer might need to be shown (including `primaryDimension` lookups, `contextWhen`, and outcome `flavors._when`/`_default` resolution).
+
+**Why split them?** Two reasons:
+1. **Convergence.** If five `agi_threshold` answers (`twenty_four_hours` … `ten_plus_years`) all lead to the same downstream decisions, moving the specific value to `flavor` lets them collapse to a single `sel` — crucial for `/explore`'s DAG convergence and for keeping the reachability / precompute tables small.
+2. **Narrative fidelity.** The specific value is still available to narrative text even when engine-level state has been deduplicated ("you chose 'week-long tasks'" can still show up in the story).
+
+### `collapseToFlavor`
+
+Applied during `cleanSelection` when the edge is selected. Supports three actions, any combination:
+
+| Key | Effect |
+|---|---|
+| `set: { k: v, … }` | Write/overwrite `sel[k] = v`. Typically used to set a "marker" dim (e.g. `asi_happens: 'yes'`) so the collapsed state is distinguishable from pre-answer state (matters for `selKey`-based convergence). |
+| `move: ['dim1', 'dim2']` | For each listed dim, if `sel[dim]` is set, move it to `flavor[dim]` and delete from `sel`. The specific chosen value is preserved in `flavor` for narrative lookups. |
+| `setFlavor: { k: v, … }` | Write `flavor[k] = v` directly (without going through `sel`). Useful when a narrative-only derived field needs to be recorded. |
+
+"Marker" dims (like `asi_happens`, `governance_set`, `takeoff_class`, `plateau_knowledge_set`) are written into `sel` via `collapseToFlavor.set` but aren't declared as graph nodes. The engine auto-registers them in its value-index tables at init so they can be used in `deriveWhen.match`, `activateWhen`, `requires`, etc., just like declared dims.
+
+### When is it safe to move a dim to flavor?
+
+A dim can be moved to `flavor` (via `collapseToFlavor.move`) **only if no downstream rule reads its specific value from `sel`**. Specifically, check all of the following across the rest of the graph:
+
+- `activateWhen`
+- `hideWhen`
+- `requires`
+- `disabledWhen`
+- `deriveWhen` (both `match` and `fromState`)
+
+If only **`primaryDimension` (outcome variants)**, **narrative `contextWhen`**, or **outcome `flavors._when` / `_default`** lookups reference it, it's fair game — those all resolve through `narrativeState`, which sees flavor.
+
+If engine branching still needs *one bit* of information from the dim (e.g. "did AGI happen at all?" vs. specific timing), introduce a marker dim via `collapseToFlavor.set` that captures that bit, update the downstream rules to gate on the marker, and move the original dim to flavor. See `agi_threshold` → `agi_happens` for a worked example.
 
 ### How a Path Progresses
 

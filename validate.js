@@ -41,6 +41,59 @@ function runStaticAnalysis(templates) {
     const errors = [];
     const metaNodes = new Set(NODES.map(d => d.id));
 
+    // Synthetic dims + values are written via `collapseToFlavor.set` and
+    // `deriveWhen.value/.valueMap` — they exist at runtime without being
+    // declared as graph nodes or edges. Collect both so conditions that
+    // reference them (`hideWhen: { open_source_set: ['yes'] }`,
+    // `requires: { geo_spread: ['multiple'] }`, etc.) don't false-flag.
+    //   metaNodes              — valid dim keys (real nodes ∪ marker dims)
+    //   extraValuesByDim[dim]  — values that aren't edge ids but are
+    //                            produced by collapseToFlavor.set or derive.
+    const extraValuesByDim = new Map();
+    const addExtra = (dim, val) => {
+        if (val == null) return;
+        if (!extraValuesByDim.has(dim)) extraValuesByDim.set(dim, new Set());
+        extraValuesByDim.get(dim).add(val);
+    };
+    for (const node of NODES) {
+        // deriveWhen on this node can set its own value to a non-edge string
+        // (e.g. geo_spread derives to 'multiple').
+        if (node.deriveWhen) {
+            for (const rule of node.deriveWhen) {
+                if (rule.value !== undefined) addExtra(node.id, rule.value);
+                if (rule.valueMap) {
+                    for (const out of Object.values(rule.valueMap)) addExtra(node.id, out);
+                }
+            }
+        }
+        if (!node.edges) continue;
+        for (const edge of node.edges) {
+            if (!edge.collapseToFlavor) continue;
+            const blocks = Array.isArray(edge.collapseToFlavor) ? edge.collapseToFlavor : [edge.collapseToFlavor];
+            for (const c of blocks) {
+                if (!c || !c.set) continue;
+                for (const [dim, val] of Object.entries(c.set)) {
+                    metaNodes.add(dim);
+                    addExtra(dim, val);
+                }
+            }
+        }
+    }
+
+    // Return the set of runtime-valid values for a dim (edges ∪ extras).
+    // Returns null for pure marker dims that have no edges — callers should
+    // skip value validation in that case (we accept any value for them).
+    function validValuesFor(dimId) {
+        const refNode = NODE_MAP[dimId];
+        const extras = extraValuesByDim.get(dimId);
+        if (!refNode || !refNode.edges) {
+            return extras ? new Set(extras) : null; // null = skip value check
+        }
+        const s = new Set(refNode.edges.map(v => v.id));
+        if (extras) for (const e of extras) s.add(e);
+        return s;
+    }
+
     function validateCondition(cond, nodeId, label) {
         for (const [k, vals] of Object.entries(cond)) {
             if (k === 'reason' || k.startsWith('_')) continue;
@@ -49,9 +102,8 @@ function runStaticAnalysis(templates) {
                 continue;
             }
             if (vals === true || vals === false) continue;
-            const refNode = NODE_MAP[k];
-            if (!refNode || !refNode.edges) continue;
-            const validIds = new Set(refNode.edges.map(v => v.id));
+            const validIds = validValuesFor(k);
+            if (!validIds) continue; // pure marker dim — accept any value
             if (vals && typeof vals === 'object' && !Array.isArray(vals) && vals.not) {
                 for (const v of vals.not) {
                     if (!validIds.has(v)) errors.push(`[${label}] "${nodeId}" references unknown edge "${k}=${v}" in not`);
@@ -94,16 +146,15 @@ function runStaticAnalysis(templates) {
     // 3. deriveWhen validation
     for (const node of NODES) {
         if (!node.deriveWhen) continue;
-        const ownEdges = node.edges ? new Set(node.edges.map(v => v.id)) : new Set();
+        const ownValues = validValuesFor(node.id) || new Set();
         for (const rule of node.deriveWhen) {
             if (rule.match) {
                 for (const [k, val] of Object.entries(rule.match)) {
                     if (k === 'reason') continue;
                     if (!metaNodes.has(k)) { errors.push(`[derivations] "${node.id}" references unknown node "${k}" in match`); continue; }
                     if (val === true || val === false) continue;
-                    const refNode = NODE_MAP[k];
-                    if (!refNode || !refNode.edges) continue;
-                    const validIds = new Set(refNode.edges.map(v => v.id));
+                    const validIds = validValuesFor(k);
+                    if (!validIds) continue;
                     if (val && typeof val === 'object' && !Array.isArray(val) && val.not) {
                         for (const v of val.not) {
                             if (!validIds.has(v)) errors.push(`[derivations] "${node.id}" unknown edge "${k}=${v}" in match.not`);
@@ -119,13 +170,13 @@ function runStaticAnalysis(templates) {
             if (rule.fromState && !metaNodes.has(rule.fromState)) {
                 errors.push(`[derivations] "${node.id}" unknown node "${rule.fromState}" in fromState`);
             }
-            if (rule.value !== undefined && !ownEdges.has(rule.value)) {
+            if (rule.value !== undefined && !ownValues.has(rule.value)) {
                 errors.push(`[derivations] "${node.id}" produces unknown edge "${rule.value}"`);
             }
             if (rule.valueMap) {
                 for (const [from, to] of Object.entries(rule.valueMap)) {
-                    if (!ownEdges.has(from)) errors.push(`[derivations] "${node.id}" valueMap unknown input "${from}"`);
-                    if (!ownEdges.has(to)) errors.push(`[derivations] "${node.id}" valueMap unknown output "${to}"`);
+                    if (!ownValues.has(from)) errors.push(`[derivations] "${node.id}" valueMap unknown input "${from}"`);
+                    if (!ownValues.has(to)) errors.push(`[derivations] "${node.id}" valueMap unknown output "${to}"`);
                 }
             }
         }

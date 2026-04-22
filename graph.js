@@ -27,7 +27,10 @@ const OUTCOME_ACTIVATE = [
     { capability: ['singularity'], automation: ['deep'], pushback_outcome: true },
     { capability: ['singularity'], automation: ['deep'], coalition_outcome: ['fragments'] },
     { capability: ['singularity'], automation: ['deep'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
-    { capability: ['singularity'], automation: ['deep'], ai_goals: ['benevolent'] }
+    { capability: ['singularity'], automation: ['deep'], ai_goals: ['benevolent'] },
+    // AI escaped but was ultimately caught — post-war world still needs to be
+    // characterized (who benefits, knowledge/physical automation).
+    { capability: ['singularity'], automation: ['deep'], catch_outcome: ['holds_permanently'], collateral_impact: { not: ['civilizational'] } }
 ];
 
 
@@ -47,6 +50,11 @@ const NODES = [
       ] },
     { id: 'stall_recovery', label: 'Recovery?', stage: 1,
       activateWhen: [{ capability: ['stalls'] }],
+      // Mild collapses capability → 'singularity', which naturally deactivates
+      // this node. Substantial/never move stall_recovery to flavor but keep
+      // capability='stalls', so we need an explicit marker-based hide to
+      // prevent findNextQ from re-offering the question.
+      hideWhen: [{ stall_later: ['yes'] }],
       edges: [
         // `mild` collapses back into the direct-singularity state.
         // `capability` becomes 'singularity' in sel, and stall_duration +
@@ -59,136 +67,241 @@ const NODES = [
             set: { capability: 'singularity' },
             move: ['stall_duration', 'stall_recovery']
           } },
-        { id: 'substantial', label: 'Years/decades' },
-        { id: 'never', label: 'Never' }
+        // `substantial` and `never` both gate downstream plateau questions
+        // identically — the only difference is narrative ("years-long wait"
+        // vs "permanent ceiling"). Collapse them to a shared `stall_later:
+        // 'yes'` marker in sel and keep the specific pick in flavor for
+        // flavor-text / heading lookups (the-plateau.flavors.stall_recovery,
+        // narrative.json stall_recovery.when: ['never']).
+        { id: 'substantial', label: 'Years/decades',
+          collapseToFlavor: { set: { stall_later: 'yes' }, move: ['stall_recovery'] } },
+        { id: 'never', label: 'Never',
+          collapseToFlavor: { set: { stall_later: 'yes' }, move: ['stall_recovery'] } }
       ] },
     { id: 'plateau_benefit_distribution', label: 'Who Benefits?', stage: 3, priority: 2,
-      activateWhen: [{ capability: ['stalls'], stall_recovery: ['substantial', 'never'] }],
+      activateWhen: [{ capability: ['stalls'], stall_later: ['yes'] }],
+      // In the plateau case, the specific benefit-distribution value only
+      // drives narrative flavor (`the-plateau.flavors.plateau_benefit_distribution`
+      // and a single `_when` clause in plateau_physical_rate.uneven). No
+      // graph-engine rule gates on it, so we collapse all three values to a
+      // shared `plateau_benefit_set: 'yes'` marker for /explore convergence
+      // and keep the specific pick in flavor.
+      hideWhen: [{ plateau_benefit_set: ['yes'] }],
       edges: [
-        { id: 'equal', label: 'Shared equally' },
-        { id: 'unequal', label: 'Wealth concentrates' },
-        { id: 'extreme', label: 'Power concentrates' }
+        { id: 'equal', label: 'Shared equally',
+          collapseToFlavor: { set: { plateau_benefit_set: 'yes' }, move: ['plateau_benefit_distribution'] } },
+        { id: 'unequal', label: 'Wealth concentrates',
+          collapseToFlavor: { set: { plateau_benefit_set: 'yes' }, move: ['plateau_benefit_distribution'] } },
+        { id: 'extreme', label: 'Power concentrates',
+          collapseToFlavor: { set: { plateau_benefit_set: 'yes' }, move: ['plateau_benefit_distribution'] } }
       ] },
     { id: 'plateau_knowledge_rate', label: 'Knowledge Work', stage: 3, priority: 2,
-      activateWhen: [{ capability: ['stalls'], stall_recovery: ['substantial', 'never'] }],
+      activateWhen: [{ capability: ['stalls'], stall_later: ['yes'] }],
+      // All edge values lead to the same outcome (the-plateau); specific
+      // values only drive narrative flavor text. Collapse to a shared marker
+      // so /explore converges the branches — the specific value lives in
+      // flavor for narrativeState lookups (`flavors.plateau_knowledge_rate.*`).
+      hideWhen: [{ plateau_knowledge_set: ['yes'] }],
       edges: [
-        { id: 'rapid', label: 'Rapid (2–5 yrs)', requires: { stall_duration: ['weeks', 'months'] } },
-        {
-          id: 'gradual',
-          label: 'Gradual (5–15 yrs)',
-          requires: { stall_duration: ['days', 'weeks', 'months'] }
-        },
-        { id: 'uneven', label: 'Uneven (2–20+ yrs)' },
-        { id: 'limited', label: 'Limited', requires: { stall_duration: ['hours', 'days'] } }
+        { id: 'rapid', label: 'Rapid (2–5 yrs)', requires: { stall_duration: ['weeks', 'months'] },
+          collapseToFlavor: { set: { plateau_knowledge_set: 'yes' }, move: ['plateau_knowledge_rate'] } },
+        { id: 'gradual', label: 'Gradual (5–15 yrs)',
+          requires: { stall_duration: ['days', 'weeks', 'months'] },
+          collapseToFlavor: { set: { plateau_knowledge_set: 'yes' }, move: ['plateau_knowledge_rate'] } },
+        { id: 'uneven', label: 'Uneven (2–20+ yrs)',
+          collapseToFlavor: { set: { plateau_knowledge_set: 'yes' }, move: ['plateau_knowledge_rate'] } },
+        { id: 'limited', label: 'Limited', requires: { stall_duration: ['hours', 'days'] },
+          collapseToFlavor: { set: { plateau_knowledge_set: 'yes' }, move: ['plateau_knowledge_rate'] } }
       ] },
     { id: 'plateau_physical_rate', label: 'Physical Automation', stage: 3, priority: 2,
-      activateWhen: [{ capability: ['stalls'], stall_recovery: ['substantial', 'never'] }],
+      activateWhen: [{ capability: ['stalls'], stall_later: ['yes'] }],
+      hideWhen: [{ plateau_physical_set: ['yes'] }],
       edges: [
-        {
-          id: 'gradual',
-          label: 'Gradual (10–25 yrs)',
-          requires: { stall_duration: ['days', 'weeks', 'months'] }
-        },
-        { id: 'uneven', label: 'Uneven (5–20+ yrs)' },
-        { id: 'limited', label: 'Limited' }
+        { id: 'gradual', label: 'Gradual (10–25 yrs)',
+          requires: { stall_duration: ['days', 'weeks', 'months'] },
+          collapseToFlavor: { set: { plateau_physical_set: 'yes' }, move: ['plateau_physical_rate'] } },
+        { id: 'uneven', label: 'Uneven (5–20+ yrs)',
+          collapseToFlavor: { set: { plateau_physical_set: 'yes' }, move: ['plateau_physical_rate'] } },
+        { id: 'limited', label: 'Limited',
+          collapseToFlavor: { set: { plateau_physical_set: 'yes' }, move: ['plateau_physical_rate'] } }
       ] },
     { id: 'agi_threshold', label: 'Human-Competitive AI', stage: 1,
       activateWhen: [{ capability: ['singularity'] }],
-      // After asi_threshold collapses agi/asi into flavor (asi_happens='yes'),
-      // these timing questions are no longer part of sel, so hide them in any
-      // sel-only view (e.g. /explore) so they aren't re-asked.
-      hideWhen: [{ asi_happens: ['yes'] }],
+      // Answering agi_threshold always sets a 1-bit sel marker `agi_happens`
+      // ('yes' for any specific timing, 'no' for never) and moves the timing
+      // value into flavor on the *next* step (asi_threshold's edges). The
+      // marker preserves the only behavioral bit downstream engine rules
+      // care about (automation/automation_recovery gate on agi=never), while
+      // the specific timing is narrative-only.
+      // hideWhen clauses are OR'd; these cover every state where this
+      // question has effectively been answered:
+      //   • `agi_happens: true` — answered but asi not yet reached (marker
+      //     still in sel).
+      //   • `asi_happens: ['yes']` — asi answered (non-never); agi_happens
+      //     moved to flavor.
+      //   • `asi_threshold: ['never']` — asi answered (never); agi_happens
+      //     moved to flavor.
+      hideWhen: [
+        { agi_happens: true },
+        { asi_happens: ['yes'] },
+        { asi_threshold: ['never'] }
+      ],
       edges: [
-        { id: 'twenty_four_hours', label: 'Day-long tasks — we\'re nearly there', shortLabel: 'Day-long tasks' },
-        { id: 'one_week', label: 'Week-long tasks — sustained competence', shortLabel: 'Week-long tasks' },
-        { id: 'few_months', label: 'Month-long projects — deep expertise', shortLabel: 'Month-long projects' },
-        { id: 'one_year', label: 'Year-long work — the bar is very high', shortLabel: 'Year-long work' },
-        { id: 'ten_plus_years', label: 'Decade-scale mastery', shortLabel: 'Decade-scale mastery' },
-        { id: 'never', label: 'Never' }
+        { id: 'twenty_four_hours', label: 'Day-long tasks — we\'re nearly there', shortLabel: 'Day-long tasks',
+          collapseToFlavor: { set: { agi_happens: 'yes' } } },
+        { id: 'one_week', label: 'Week-long tasks — sustained competence', shortLabel: 'Week-long tasks',
+          collapseToFlavor: { set: { agi_happens: 'yes' } } },
+        { id: 'few_months', label: 'Month-long projects — deep expertise', shortLabel: 'Month-long projects',
+          collapseToFlavor: { set: { agi_happens: 'yes' } } },
+        { id: 'one_year', label: 'Year-long work — the bar is very high', shortLabel: 'Year-long work',
+          collapseToFlavor: { set: { agi_happens: 'yes' } } },
+        { id: 'ten_plus_years', label: 'Decade-scale mastery', shortLabel: 'Decade-scale mastery',
+          collapseToFlavor: { set: { agi_happens: 'yes' } } },
+        { id: 'never', label: 'Never',
+          collapseToFlavor: { set: { agi_happens: 'no' } } }
       ] },
     { id: 'asi_threshold', label: 'Superhuman AI', stage: 1,
-      activateWhen: [{ capability: ['singularity'], agi_threshold: true }],
+      // Activate once agi has been answered (agi_happens is set).
+      activateWhen: [{ capability: ['singularity'], agi_happens: true }],
       hideWhen: [{ asi_happens: ['yes'] }],
-      // Non-never edges collapse both agi_threshold and asi_threshold into
-      // flavor: past this point (the R&D question onward) neither dim affects
-      // engine branching — they're narrative timing only. We also set a
-      // marker `asi_happens: 'yes'` in sel so the post-collapse state is
-      // distinct from the bare capability=singularity root (matters for
-      // /explore's DAG key, so asi_threshold doesn't appear to loop back).
-      // The `never` edge keeps them in sel because `agi_threshold=never`
-      // gates automation_recovery and `asi_threshold=never` gates several
-      // outcomes.
+      // Non-never edges collapse agi_threshold, asi_threshold, and
+      // agi_happens into flavor and set `asi_happens: 'yes'` in sel so
+      // /explore's DAG key is distinct from the pre-asi state.
+      // The never edge moves agi_threshold and agi_happens to flavor too
+      // (asi_threshold stays in sel as 'never' — several downstream rules
+      // and the-plateau/the-automation reachability gate on it). Moving
+      // agi_happens to flavor lets agi=yes/asi=never and agi=no/asi=never
+      // converge at the sel level (downstream automation derivation only
+      // needs asi_threshold='never', not agi_happens). `requires` on the
+      // non-never edges is evaluated BEFORE collapse runs, so it can still
+      // read the specific agi_threshold value in sel at edge-selection time.
       edges: [
         { id: 'twenty_four_hours', label: 'Day-long tasks — the jump is small', shortLabel: 'Day-long tasks',
           requires: { agi_threshold: ['twenty_four_hours'] },
-          collapseToFlavor: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold'] } },
+          collapseToFlavor: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold', 'agi_happens'] } },
         { id: 'one_week', label: 'Week-long tasks — outpaces quickly', shortLabel: 'Week-long tasks',
           requires: { agi_threshold: ['twenty_four_hours', 'one_week'] },
-          collapseToFlavor: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold'] } },
+          collapseToFlavor: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold', 'agi_happens'] } },
         { id: 'few_months', label: 'Month-long projects — strategic superiority', shortLabel: 'Month-long projects',
           requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months'] },
-          collapseToFlavor: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold'] } },
+          collapseToFlavor: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold', 'agi_happens'] } },
         { id: 'one_year', label: 'Year-long work — the bar is very high', shortLabel: 'Year-long work',
           requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year'] },
-          collapseToFlavor: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold'] } },
+          collapseToFlavor: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold', 'agi_happens'] } },
         { id: 'ten_plus_years', label: 'Decade-scale mastery — surpassing takes decades', shortLabel: 'Decade-scale mastery',
           requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year', 'ten_plus_years'] },
-          collapseToFlavor: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold'] } },
-        { id: 'never', label: 'Never — matching is the ceiling', shortLabel: 'Never' }
+          collapseToFlavor: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold', 'agi_happens'] } },
+        { id: 'never', label: 'Never — matching is the ceiling', shortLabel: 'Never',
+          collapseToFlavor: { move: ['agi_threshold', 'agi_happens'] } }
       ] },
     { id: 'automation', label: 'Knowledge Work', derived: true, forwardKey: true,
       deriveWhen: [
         { match: { automation_recovery: ['mild'] }, value: 'deep' },
-        { match: { agi_threshold: ['never'] }, value: 'shallow' },
+        // ASI never happens → no deep automation (covers both agi_happens='no'
+        // and agi_happens='yes' + asi=never; the latter is "AI matches humans
+        // but never exceeds"). On the mild-breakthrough path, asi_threshold
+        // is moved to flavor so this rule doesn't fire and we fall through
+        // to `capability:singularity → deep`.
+        { match: { asi_threshold: ['never'] }, value: 'shallow' },
         { match: { capability: ['singularity'] }, value: 'deep' }
       ],
       edges: [{ id: 'deep' }, { id: 'shallow' }] },
     { id: 'automation_recovery', label: 'Deep Automation Recovery?', stage: 1,
-      activateWhen: [{ capability: ['singularity'], agi_threshold: ['never'] }],
+      // Asked whenever ASI never happens — whether or not AGI happened. In
+      // the agi=yes case, the breakthrough represents closing the gap from
+      // human-level to superintelligence; in the agi=no case, it represents
+      // an alternative path cracking the barrier without AGI first.
+      activateWhen: [{ capability: ['singularity'], asi_threshold: ['never'] }],
+      // Mild moves asi_threshold → flavor, which naturally deactivates this
+      // node. Substantial/never keep asi_threshold='never' in sel but move
+      // automation_recovery to flavor, so we need a marker-based hide to
+      // prevent findNextQ from re-offering the question.
+      hideWhen: [{ automation_later: ['yes'] }],
       edges: [
-        { id: 'mild', label: 'Months/years' },
-        { id: 'substantial', label: 'Years/decades' },
-        { id: 'never', label: 'Never' }
+        // `mild` = "a later breakthrough cracks the barrier". Behaviorally
+        // this reaches the same end state as a normal agi+asi path (both
+        // happen → automation=deep), so we converge to that sel shape and
+        // push the stall/recovery specifics to flavor. /explore treats this
+        // as the same node as the direct-singularity path.
+        { id: 'mild', label: 'Months/years',
+          // Converge with the normal post-asi singularity sel: set
+          // asi_happens='yes' in sel (matches post-asi-specific state) and
+          // promote agi_happens to 'yes' in flavor (the breakthrough means
+          // AGI effectively happened, overriding any pre-mild 'no').
+          collapseToFlavor: {
+            set: { asi_happens: 'yes' },
+            setFlavor: { agi_happens: 'yes' },
+            move: ['automation_recovery', 'asi_threshold']
+          } },
+        // `substantial` and `never` gate downstream auto_* questions
+        // identically — only narrative text distinguishes them (the-automation
+        // flavors/flavorHeadings). Collapse to an `automation_later: 'yes'`
+        // marker in sel for /explore convergence; keep the specific pick in
+        // flavor for narrativeState lookups.
+        { id: 'substantial', label: 'Years/decades',
+          collapseToFlavor: { set: { automation_later: 'yes' }, move: ['automation_recovery'] } },
+        { id: 'never', label: 'Never',
+          collapseToFlavor: { set: { automation_later: 'yes' }, move: ['automation_recovery'] } }
       ] },
     { id: 'auto_benefit_distribution', label: 'Who Benefits?', stage: 3, priority: 2,
       activateWhen: [
         {
           capability: ['singularity'],
           automation: ['shallow'],
-          automation_recovery: ['substantial', 'never']
+          automation_later: ['yes']
         }
       ],
+      // Flavor-only: no graph rule gates on the specific value; only
+      // the-automation.flavors.auto_benefit_distribution (narrative),
+      // flavorHeadings, and a single narrative _when clause reference it,
+      // all through narrativeState. Collapse to a shared `auto_benefit_set:
+      // 'yes'` marker for /explore convergence.
+      hideWhen: [{ auto_benefit_set: ['yes'] }],
       edges: [
-        { id: 'equal', label: 'Shared equally' },
-        { id: 'unequal', label: 'Wealth concentrates' },
-        { id: 'extreme', label: 'Power concentrates' }
+        { id: 'equal', label: 'Shared equally',
+          collapseToFlavor: { set: { auto_benefit_set: 'yes' }, move: ['auto_benefit_distribution'] } },
+        { id: 'unequal', label: 'Wealth concentrates',
+          collapseToFlavor: { set: { auto_benefit_set: 'yes' }, move: ['auto_benefit_distribution'] } },
+        { id: 'extreme', label: 'Power concentrates',
+          collapseToFlavor: { set: { auto_benefit_set: 'yes' }, move: ['auto_benefit_distribution'] } }
       ] },
     { id: 'auto_knowledge_rate', label: 'Knowledge Work', stage: 3, priority: 2,
       activateWhen: [
         {
           capability: ['singularity'],
           automation: ['shallow'],
-          automation_recovery: ['substantial', 'never']
+          automation_later: ['yes']
         }
       ],
+      // Flavor-only: all values lead to the same outcome (the-automation);
+      // collapse for /explore convergence.
+      hideWhen: [{ auto_knowledge_set: ['yes'] }],
       edges: [
-        { id: 'rapid', label: 'Rapid (2–4 yrs)' },
-        { id: 'gradual', label: 'Gradual (5–15 yrs)' },
-        { id: 'uneven', label: 'Uneven (2–20+ yrs)' }
+        { id: 'rapid', label: 'Rapid (2–4 yrs)',
+          collapseToFlavor: { set: { auto_knowledge_set: 'yes' }, move: ['auto_knowledge_rate'] } },
+        { id: 'gradual', label: 'Gradual (5–15 yrs)',
+          collapseToFlavor: { set: { auto_knowledge_set: 'yes' }, move: ['auto_knowledge_rate'] } },
+        { id: 'uneven', label: 'Uneven (2–20+ yrs)',
+          collapseToFlavor: { set: { auto_knowledge_set: 'yes' }, move: ['auto_knowledge_rate'] } }
       ] },
     { id: 'auto_physical_rate', label: 'Physical Automation', stage: 3, priority: 2,
       activateWhen: [
         {
           capability: ['singularity'],
           automation: ['shallow'],
-          automation_recovery: ['substantial', 'never']
+          automation_later: ['yes']
         }
       ],
+      hideWhen: [{ auto_physical_set: ['yes'] }],
       edges: [
-        { id: 'rapid', label: 'Rapid (3–7 yrs)' },
-        { id: 'gradual', label: 'Gradual (10–25 yrs)' },
-        { id: 'uneven', label: 'Uneven (3–20+ yrs)' },
-        { id: 'limited', label: 'Limited' }
+        { id: 'rapid', label: 'Rapid (3–7 yrs)',
+          collapseToFlavor: { set: { auto_physical_set: 'yes' }, move: ['auto_physical_rate'] } },
+        { id: 'gradual', label: 'Gradual (10–25 yrs)',
+          collapseToFlavor: { set: { auto_physical_set: 'yes' }, move: ['auto_physical_rate'] } },
+        { id: 'uneven', label: 'Uneven (3–20+ yrs)',
+          collapseToFlavor: { set: { auto_physical_set: 'yes' }, move: ['auto_physical_rate'] } },
+        { id: 'limited', label: 'Limited',
+          collapseToFlavor: { set: { auto_physical_set: 'yes' }, move: ['auto_physical_rate'] } }
       ] },
     { id: 'takeoff', label: 'R&D Acceleration', stage: 1,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
@@ -196,8 +309,21 @@ const NODES = [
       // explosive). The raw value moves to flavor so narrative text
       // (`flavors.takeoff.<value>` etc.) and narrativeVariants keyed on the
       // specific speed keep working unchanged. All downstream engine
-      // conditions read `takeoff_class` instead of `takeoff`.
-      hideWhen: [{ takeoff_class: ['normal', 'fast', 'explosive'] }],
+      // conditions read `takeoff_class` (for governance_window) or
+      // `takeoff_explosive` (post-open_source) instead of `takeoff`.
+      // Hide clauses are OR'd:
+      //   • takeoff_class set (normal/fast) — answered, pre-open_source.
+      //   • takeoff_explosive=yes — answered as explosive (class is explosive,
+      //     but after open_source, takeoff_class moves to flavor; this
+      //     narrower marker remains in sel).
+      //   • open_source_set=yes — persistent marker set once the user answered
+      //     open_source. Stays in sel even after geo_spread=multiple moves
+      //     the raw open_source value to flavor.
+      hideWhen: [
+        { takeoff_class: ['normal', 'fast', 'explosive'] },
+        { takeoff_explosive: ['yes'] },
+        { open_source_set: ['yes'] }
+      ],
       edges: [
         { id: 'none', label: '0% — Baseline',
           collapseToFlavor: { set: { takeoff_class: 'normal' }, move: ['takeoff'] } },
@@ -209,7 +335,13 @@ const NODES = [
           collapseToFlavor: { set: { takeoff_class: 'fast' }, move: ['takeoff'] } },
         { id: 'explosive', label: '50% — Runaway',
           disabledWhen: [{ capability: { not: ['singularity'] }, reason: 'Without superhuman AI, recursive self-improvement can\'t drive runaway acceleration' }],
-          collapseToFlavor: { set: { takeoff_class: 'explosive' }, move: ['takeoff'] } }
+          // `takeoff_explosive: 'yes'` is a narrower binary marker so that
+          // takeoff_class can be moved to flavor after open_source (see
+          // open_source's collapseToFlavor). Every post-open_source read of
+          // takeoff_class only cares about "is it explosive?" — the three-way
+          // normal/fast/explosive distinction is only needed by
+          // governance_window.activateWhen, which fires before open_source.
+          collapseToFlavor: { set: { takeoff_class: 'explosive', takeoff_explosive: 'yes' }, move: ['takeoff'] } }
       ] },
     { id: 'governance_window', label: 'Governance Window', stage: 1,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], takeoff_class: ['normal'] }],
@@ -229,17 +361,44 @@ const NODES = [
       ] },
     { id: 'open_source', label: 'Open Source', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
+      // `open_source_set: 'yes'` is a persistent sel marker: it stays in sel
+      // even after downstream collapses (e.g. geo_spread=multiple's
+      // `move: ['open_source']`) that move the raw value to flavor. This
+      // lets self-hide and `takeoff.hideWhen` still recognize the
+      // "post-open_source" state via sel alone.
+      hideWhen: [{ open_source_set: ['yes'] }],
+      // After open_source is answered:
+      //   • takeoff_class → flavor. Downstream rules only need to know "is
+      //     takeoff explosive?" via the takeoff_explosive marker;
+      //     governance_window already fired based on takeoff_class.
+      //   • governance_set → flavor. Its only reader was
+      //     governance_window.hideWhen (self-hide), and that node is already
+      //     deactivated once takeoff_class leaves sel. Moving it converges
+      //     the "normal" path (which had governance_set=yes) with the "fast"
+      //     path (which never got governance_window offered, so no marker).
+      // `disabledWhen` on these edges is evaluated BEFORE cleanSelection
+      // runs the collapse, so it still reads the live takeoff_class at pick
+      // time.
       edges: [
-        { id: 'near_parity', label: 'Near-parity', disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }] },
-        { id: 'six_months', label: '~6 months', disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }] },
-        { id: 'twelve_months', label: '~12 months', disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }] },
-        { id: 'twenty_four_months', label: '~24 months' }
+        { id: 'near_parity', label: 'Near-parity',
+          disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }],
+          collapseToFlavor: { set: { open_source_set: 'yes' }, move: ['takeoff_class', 'governance_set'] } },
+        { id: 'six_months', label: '~6 months',
+          disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }],
+          collapseToFlavor: { set: { open_source_set: 'yes' }, move: ['takeoff_class', 'governance_set'] } },
+        { id: 'twelve_months', label: '~12 months',
+          disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }],
+          collapseToFlavor: { set: { open_source_set: 'yes' }, move: ['takeoff_class', 'governance_set'] } },
+        { id: 'twenty_four_months', label: '~24 months',
+          collapseToFlavor: { set: { open_source_set: 'yes' }, move: ['takeoff_class', 'governance_set'] } }
       ] },
     { id: 'distribution', label: 'Frontier Labs', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
       edges: [
-        { id: 'open', label: 'Distributed', requires: { open_source: ['near_parity'] }, disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this speed, only whoever gets there first has it' }] },
-        { id: 'lagging', label: 'Many compete', disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this speed, only whoever gets there first has it' }, { open_source: ['near_parity'], reason: 'With open-source at parity, no one is lagging behind' }] },
+        { id: 'open', label: 'Distributed', requires: { open_source: ['near_parity'] }, disabledWhen: [{ takeoff_explosive: ['yes'], reason: 'At this speed, only whoever gets there first has it' }] },
+        { id: 'lagging', label: 'Many compete',
+          disabledWhen: [{ takeoff_explosive: ['yes'], reason: 'At this speed, only whoever gets there first has it' }, { open_source: ['near_parity'], reason: 'With open-source at parity, no one is lagging behind' }],
+          collapseToFlavor: { set: { distribution: 'concentrated' }, setFlavor: { distribution_detail: 'lagging' } } },
         { id: 'concentrated', label: 'A few lead', disabledWhen: [{ open_source: ['near_parity'], reason: 'With open-source at parity, no one is lagging behind' }] },
         { id: 'monopoly', label: 'One dominates', disabledWhen: [{ open_source: ['near_parity'], reason: 'With open-source at parity, no one can monopolize it' }] }
       ] },
@@ -252,25 +411,38 @@ const NODES = [
         }
       ],
       deriveWhen: [
-        { match: { decel_outcome: ['rival', 'parity_solved', 'parity_failed'] }, value: 'two' },
-        { match: { proliferation_outcome: ['leaks_rivals'] }, value: 'two' },
-        { match: { proliferation_outcome: ['leaks_public'] }, value: 'several' }
+        { match: { decel_outcome: ['rival', 'parity_solved', 'parity_failed'] }, value: 'multiple' },
+        { match: { proliferation_outcome: ['leaks_rivals', 'leaks_public'] }, value: 'multiple' }
       ],
       edges: [
         { id: 'one', label: 'One country' },
-        { id: 'two', label: 'Two powers', disabledWhen: [{ takeoff_class: ['explosive'], reason: 'Only the first mover has it at this speed' }, { distribution: ['monopoly'], reason: 'One lab dominates — only one country is in the game' }] },
-        { id: 'several', label: 'Several', disabledWhen: [{ takeoff_class: ['explosive'], reason: 'Only the first mover has it at this speed' }, { distribution: ['monopoly'], reason: 'One lab dominates — only one country is in the game' }] }
+        { id: 'two', label: 'Two powers',
+          disabledWhen: [{ takeoff_explosive: ['yes'], reason: 'Only the first mover has it at this speed' }, { distribution: ['monopoly'], reason: 'One lab dominates — only one country is in the game' }],
+          collapseToFlavor: { set: { geo_spread: 'multiple' }, setFlavor: { geo_spread_detail: 'two' }, move: ['open_source'] } },
+        { id: 'several', label: 'Several',
+          disabledWhen: [{ takeoff_explosive: ['yes'], reason: 'Only the first mover has it at this speed' }, { distribution: ['monopoly'], reason: 'One lab dominates — only one country is in the game' }],
+          collapseToFlavor: { set: { geo_spread: 'multiple' }, setFlavor: { geo_spread_detail: 'several' }, move: ['open_source'] } }
       ] },
     { id: 'sovereignty', label: 'Power Holder', stage: 2,
       activateWhen: [
         {
           capability: ['singularity'],
           automation: ['deep'],
-          distribution: ['monopoly', 'concentrated', 'lagging'],
+          distribution: ['monopoly', 'concentrated'],
           geo_spread: ['one']
         }
       ],
-      edges: [ { id: 'lab', label: 'The labs' }, { id: 'state', label: 'The state' } ] },
+      edges: [
+        // In the concentrated+lab subtree, gov_action doesn't activate (its
+        // activateWhen requires either sovereignty=state OR distribution=
+        // monopoly), so the decel chain — the only remaining sel reader of
+        // open_source — is unreachable. Move open_source to flavor for
+        // /explore convergence. Gated by `when` so the monopoly+lab subtree
+        // (where gov_action DOES activate) keeps open_source in sel.
+        { id: 'lab', label: 'The labs',
+          collapseToFlavor: { when: { distribution: ['concentrated'] }, move: ['open_source'] } },
+        { id: 'state', label: 'The state' }
+      ] },
     { id: 'alignment', label: 'Alignment', stage: 2, forwardKey: true,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
       deriveWhen: [
@@ -311,9 +483,6 @@ const NODES = [
           containment: { not: ['escaped'] }
         }
       ],
-      deriveWhen: [
-        { match: { catch_outcome: ['holds_permanently'], collateral_impact: { not: ['civilizational'] } }, value: 'holds' }
-      ],
       edges: [ { id: 'holds', label: 'Holds for now' }, { id: 'breaks', label: 'Breaks' } ] },
     { id: 'containment', label: 'Containment', stage: 2, forwardKey: true,
       hideWhen: [
@@ -346,18 +515,18 @@ const NODES = [
         }
       ],
       deriveWhen: [
+        { match: { catch_outcome: ['holds_permanently'], collateral_impact: { not: ['civilizational'] } }, value: 'contained' },
         { match: { alignment_durability: ['breaks'] }, value: 'escaped' },
         { match: { brittle_resolution: ['escape'] }, value: 'escaped' },
         { match: { proliferation_alignment: ['breaks'] }, value: 'escaped' },
         { match: { proliferation_outcome: ['leaks_public'], alignment: { not: ['robust'] } }, value: 'escaped' },
-        { match: { inert_stays: ['no'], inert_outcome: true }, value: 'escaped' },
-        { match: { catch_outcome: ['holds_permanently'], collateral_impact: { not: ['civilizational'] } }, value: 'contained' }
+        { match: { inert_stays: ['no'], inert_outcome: true }, value: 'escaped' }
       ],
       edges: [
         {
           id: 'contained',
           label: 'Contained',
-          requires: { distribution: ['lagging', 'concentrated', 'monopoly'] },
+          requires: { distribution: ['concentrated', 'monopoly'] },
           disabledWhen: [
             { brittle_resolution: ['escape'], reason: 'Alignment broke down and the AI is already out' },
             { alignment_durability: ['breaks'], reason: 'Brittle alignment broke — the AI is already operating freely' },
@@ -423,11 +592,31 @@ const NODES = [
       ] },
     { id: 'gov_action', label: 'Deceleration', stage: 2,
       hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], geo_spread: ['one'] }],
+      // Decel is only coherent when some actor can actually enforce a slowdown
+      // in the one-country-leads case:
+      //   (a) sovereignty=state     → state mandates (any distribution), or
+      //   (b) distribution=monopoly → the one dominant lab self-decels
+      // Rules out distribution=concentrated + sovereignty=lab (multi-lab race,
+      // no actor can unilaterally slow).
+      activateWhen: [
+        { capability: ['singularity'], automation: ['deep'], geo_spread: ['one'], sovereignty: ['state'] },
+        { capability: ['singularity'], automation: ['deep'], geo_spread: ['one'], distribution: ['monopoly'] }
+      ],
       deriveWhen: [{ match: { alignment_durability: ['breaks'] }, value: 'accelerate' }],
+      // By this point all sel readers of `takeoff_explosive` have fired
+      // (takeoff self-hide, distribution/geo_spread disable clauses, and this
+      // node's own decelerate disable). The dim is purely narrative going
+      // forward, so both edges move it to flavor for /explore convergence.
+      // `move` no-ops when the dim isn't in sel (non-explosive paths).
       edges: [
-        { id: 'decelerate', label: 'Decelerate', disabledWhen: [{ alignment: ['robust'], reason: 'Alignment is solved — there is no case for slowing down' }, { takeoff_class: ['explosive'], reason: 'Moving too fast for any government to intervene' }] },
-        { id: 'accelerate', label: 'Accelerate' }
+        { id: 'decelerate', label: 'Decelerate',
+          disabledWhen: [{ alignment: ['robust'], reason: 'Alignment is solved — there is no case for slowing down' }, { takeoff_explosive: ['yes'], reason: 'Moving too fast for any government to intervene' }],
+          collapseToFlavor: { move: ['takeoff_explosive'] } },
+        // Picking accelerate means the decel chain is never entered, so the
+        // specific open_source timeline (6/12/24 months) no longer affects
+        // any downstream gating. Move it to flavor for /explore convergence.
+        { id: 'accelerate', label: 'Accelerate',
+          collapseToFlavor: { move: ['open_source', 'takeoff_explosive'] } }
       ] },
     { id: 'decel_2mo_progress', label: '2 Months', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], gov_action: ['decelerate'] }],
@@ -680,7 +869,7 @@ const NODES = [
             proliferation_control: ['deny_rivals', 'secure_access']
           },
           {
-            distribution: ['concentrated', 'lagging'],
+            distribution: ['concentrated'],
             geo_spread: ['one'],
             proliferation_control: ['deny_rivals', 'secure_access']
           }
@@ -690,28 +879,16 @@ const NODES = [
           id: 'coexistence',
           label: 'Coexistence',
           requires: [
-          { distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] },
-          {
-            distribution: ['lagging', 'concentrated'],
-            open_source: ['near_parity', 'twelve_months', 'twenty_four_months'],
-            geo_spread: ['two', 'several']
-          },
-          { geo_spread: ['two'] },
-          { proliferation_outcome: ['leaks_rivals', 'leaks_public'] }
+          { distribution: ['open'] },
+          { distribution: ['concentrated'], geo_spread: ['multiple'] }
         ]
         },
         {
           id: 'escalation',
           label: 'Escalation',
           requires: [
-          { distribution: ['open'], open_source: ['near_parity', 'twelve_months', 'twenty_four_months'] },
-          {
-            distribution: ['lagging', 'concentrated'],
-            open_source: ['near_parity', 'twelve_months', 'twenty_four_months'],
-            geo_spread: ['two', 'several']
-          },
-          { geo_spread: ['two'] },
-          { proliferation_outcome: ['leaks_rivals', 'leaks_public'] }
+          { distribution: ['open'] },
+          { distribution: ['concentrated'], geo_spread: ['multiple'] }
         ]
         },
         { id: 'international', label: 'International' }
@@ -780,7 +957,10 @@ const NODES = [
       activateWhen: [{ conflict_result: ['victory'] }],
       edges: [ { id: 'human_centered', label: 'Rebuild for humanity' }, { id: 'self_interest', label: 'Consolidate power' } ] },
     { id: 'power_promise', label: 'The Promise', stage: 3,
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
+      hideWhen: [
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { inert_stays: ['no'] }
+      ],
       activateWhen: [
         {
           capability: ['singularity'],
@@ -826,7 +1006,10 @@ const NODES = [
           ] }
       ] },
     { id: 'mobilization', label: 'Mobilization', stage: 3,
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
+      hideWhen: [
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { inert_stays: ['no'] }
+      ],
       activateWhen: [{ power_promise: true }],
       edges: [
         { id: 'strong', label: 'Strong mobilization' },
@@ -834,7 +1017,10 @@ const NODES = [
         { id: 'none', label: 'No meaningful mobilization', shortLabel: 'No mobilization' }
       ] },
     { id: 'sincerity_test', label: 'Sincerity Test', stage: 3,
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
+      hideWhen: [
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { inert_stays: ['no'] }
+      ],
       activateWhen: [
         { power_promise: ['for_everyone'], mobilization: ['none'] },
         { power_promise: ['for_everyone'], coalition_outcome: ['coalesces'] }
@@ -844,7 +1030,10 @@ const NODES = [
         { id: 'hollows_out', label: 'No — the promise hollows out', shortLabel: 'No — hollows out' }
       ] },
     { id: 'pushback_outcome', label: 'Public Pushback', stage: 3,
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
+      hideWhen: [
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { inert_stays: ['no'] }
+      ],
       activateWhen: [
         { mobilization: ['strong'], power_promise: ['keeping_safe', 'best_will_rise'] },
         { coalition_outcome: ['coalesces'], power_promise: ['keeping_safe', 'best_will_rise'] }
@@ -855,7 +1044,10 @@ const NODES = [
         { id: 'fails', label: 'Power prevails' }
       ] },
     { id: 'coalition_outcome', label: 'Coalition Problem', stage: 3,
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
+      hideWhen: [
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { inert_stays: ['no'] }
+      ],
       activateWhen: [{ mobilization: ['weak'] }],
       edges: [
         { id: 'coalesces', label: 'Coalition forms' },
@@ -1156,6 +1348,45 @@ for (const [pKey, aKey] of DECEL_PAIRS) {
     if (has('escapes'))    NODE_MAP['decel_align_progress'].deriveWhen.push({ match: { [aKey]: ['escapes'] }, fromState: pKey });
     if (has('accelerate')) NODE_MAP['decel_align_progress'].deriveWhen.push({ match: { [aKey]: ['accelerate'] }, fromState: pKey });
     if (has('rival'))      NODE_MAP['decel_align_progress'].deriveWhen.push({ match: { [aKey]: ['rival'] }, fromState: pKey });
+}
+
+// Attach collapseToFlavor blocks to every terminating decel edge so that the
+// decel step dims (7 progress + 7 action = 14 dims) get evicted from sel once
+// the loop exits. decel_outcome and decel_align_progress get baked into sel
+// using the same action+progress → outcome mapping as decel_outcome.deriveWhen
+// above. After collapse, sel contains only decel_outcome/decel_align_progress
+// (plus the terminating action itself, which is also in `move`), and the 14
+// raw dims live in flavor for narrative lookups.
+//
+// This is a large state-space optimization: without it, the walker carries
+// 7 progress (×3 classes) × 7 action (×4 classes) dims through all downstream
+// states — tens of millions of distinct ck entries. After collapse, only
+// decel_outcome (6 values) × decel_align_progress (3 values) remain.
+const DECEL_ALL_DIMS = [];
+for (const [pKey, aKey] of DECEL_PAIRS) {
+    DECEL_ALL_DIMS.push(pKey, aKey);
+}
+
+const DECEL_OUTCOME_TABLE = {
+    escapes:    { robust: 'escapes',       brittle: 'escapes', unsolved: 'escapes'       },
+    accelerate: { robust: 'solved',        brittle: 'abandon', unsolved: 'abandon'       },
+    rival:      { robust: 'parity_solved', brittle: 'rival',   unsolved: 'parity_failed' },
+};
+
+for (const [pKey, aKey] of DECEL_PAIRS) {
+    const actionNode = NODE_MAP[aKey];
+    for (const edge of actionNode.edges) {
+        const outcomeByProgress = DECEL_OUTCOME_TABLE[edge.id];
+        if (!outcomeByProgress) continue; // non-terminating (e.g. 'continue')
+        edge.collapseToFlavor = ['robust', 'brittle', 'unsolved'].map(pVal => ({
+            when: { [pKey]: [pVal] },
+            set: {
+                decel_outcome: outcomeByProgress[pVal],
+                decel_align_progress: pVal,
+            },
+            move: DECEL_ALL_DIMS,
+        }));
+    }
 }
 
 if (typeof module !== 'undefined' && module.exports) {

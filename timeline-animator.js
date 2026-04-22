@@ -45,7 +45,13 @@ class TimelineRenderer {
     }
 
     renderPills(event) {
-        if (!event.siblings || event.siblings.length < 2) {
+        // Frontier events always render their (possibly single) sibling as a
+        // clickable pill — otherwise a forced/locked next question with only
+        // one reachable option would silently produce no UI and the timeline
+        // would appear to dead-end.
+        const hasSiblings = event.siblings && event.siblings.length > 0;
+        const shouldFallback = !hasSiblings || (!event.isFrontier && event.siblings.length < 2);
+        if (shouldFallback) {
             if (!event.paramLabel) return '';
             return `<span class="timeline-param-wrap"><span class="timeline-param-dim">${this._esc(event.nodeLabel)}</span><span class="timeline-param">${this._esc(event.paramLabel)}</span></span>`;
         }

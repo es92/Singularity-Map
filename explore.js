@@ -57,6 +57,14 @@
         #explore-root .explore-node.is-root { border-color: var(--accent, #6b9bd1); }
         #explore-root .explore-node.is-outcome { border-color: #b3895e; background: rgba(179,137,94,0.08); }
         #explore-root .explore-node.is-deadend { border-color: #c76a6a; background: rgba(199,106,106,0.08); }
+        #explore-root .explore-node.has-unchecked { background: #ffffff; color: #111; }
+        #explore-root .explore-node.has-unchecked .explore-node-title,
+        #explore-root .explore-node.has-unchecked .explore-edge-row { color: #111; }
+        #explore-root .explore-node.has-unchecked .explore-edge-row:hover { background: rgba(0,0,0,0.06); }
+        #explore-root .explore-node.has-unchecked .explore-edge-row.is-expanded { background: rgba(107,155,209,0.25); color: #111; }
+        #explore-root .explore-node.has-unchecked .explore-edge-row.is-disabled { color: #888; }
+        #explore-root .explore-node.has-unchecked .explore-edge-chevron { color: #888; }
+        #explore-root .explore-node.has-unchecked .explore-node-depth { color: #666; }
         #explore-root .explore-node.is-selected { outline: 2px solid var(--accent, #6b9bd1); outline-offset: 2px; }
         #explore-root .explore-node-header {
             font-weight: 600; font-size: 12px; color: var(--text);
@@ -111,6 +119,13 @@
             font-size: 11px; background: var(--bg); padding: 1px 4px; border-radius: 3px;
         }
         #explore-root .explore-detail a { color: var(--accent, #6b9bd1); }
+        #explore-root .explore-copy-btn {
+            margin-left: 8px; padding: 2px 8px; font-size: 11px;
+            background: var(--bg); color: var(--text); border: 1px solid var(--border, #444);
+            border-radius: 3px; cursor: pointer;
+        }
+        #explore-root .explore-copy-btn:hover { background: var(--bg-hover, rgba(255,255,255,0.05)); }
+        #explore-root .explore-copy-btn.is-copied { color: var(--accent, #6b9bd1); border-color: var(--accent, #6b9bd1); }
     `;
 
     function injectCSS() {
@@ -217,38 +232,52 @@
     }
 
     function placeNewNode(dag, node, parent) {
-        // Place relative to the parent's current position so that new nodes
-        // always appear to the right of the parent, even if the user has
-        // dragged the parent away from the default depth grid.
-        if (parent) {
-            node.x = parent.x + NODE_DX;
-        } else {
-            node.x = node.depth * NODE_DX;
-        }
-        // Siblings = other children of the SAME parent (that already have a
-        // position). Stack new children below the lowest existing one so they
-        // don't overlap.
-        const siblings = [];
-        if (parent) {
-            for (const outInfo of parent.outgoing.values()) {
-                const child = dag.nodes.get(outInfo.childKey);
-                if (!child || child === node) continue;
-                siblings.push(child);
-            }
-        }
-        if (siblings.length === 0) {
-            node.y = parent ? parent.y : 0;
-        } else {
-            let maxBottom = -Infinity;
-            for (const s of siblings) {
-                const h = s._height || DEFAULT_NODE_H;
-                const bottom = s.y + h;
-                if (bottom > maxBottom) maxBottom = bottom;
-            }
-            node.y = maxBottom + NODE_VGAP;
-        }
-        node.pinned = true;
+        // Provisional anchor only — the real placement is done by the
+        // next `layout()` pass, which appends this fresh node below the
+        // bottom of its visual column (considering ALL column-mates, not
+        // just the parent's own siblings, so convergent DAG columns
+        // don't overlap). Leaving the node unpinned lets layout() move it.
+        node.x = parent ? parent.x + NODE_DX : node.depth * NODE_DX;
+        node.y = parent ? parent.y : 0;
+        node.pinned = false;
     }
+
+    // ═══ Open-set persistence ═══
+    // Every opened (selKey, edgeId) is recorded so the current expansion can
+    // be restored across reloads. Graph changes degrade gracefully: when a
+    // previously opened state no longer exists (or an edge is now disabled /
+    // removed), the replay simply skips it, leaving the rest of the tree
+    // intact.
+    const STORAGE_KEY = 'explore-opens-v1';
+    const VIEW_KEY = 'explore-view-v1';
+    const savedOpens = loadSavedOpens();
+    let replaying = false;
+
+    function loadSavedOpens() {
+        try {
+            const raw = typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEY);
+            if (!raw) return new Set();
+            const arr = JSON.parse(raw);
+            return new Set(Array.isArray(arr) ? arr : []);
+        } catch (e) { return new Set(); }
+    }
+    function persistOpens() {
+        if (replaying) return;
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...savedOpens])); } catch (e) {}
+    }
+    function loadSavedView() {
+        try {
+            const raw = typeof localStorage !== 'undefined' && localStorage.getItem(VIEW_KEY);
+            if (!raw) return null;
+            const v = JSON.parse(raw);
+            if (v && typeof v.x === 'number' && typeof v.y === 'number' && typeof v.s === 'number') return v;
+            return null;
+        } catch (e) { return null; }
+    }
+    function persistView(x, y, s) {
+        try { localStorage.setItem(VIEW_KEY, JSON.stringify({ x, y, s })); } catch (e) {}
+    }
+    function openTag(key, edgeId) { return key + '→' + edgeId; }
 
     function toggleEdge(dag, node, edgeId) {
         if (node.nq.terminal) return;
@@ -259,6 +288,8 @@
         if (node.outgoing.has(edgeId)) {
             const { childKey } = node.outgoing.get(edgeId);
             node.outgoing.delete(edgeId);
+            savedOpens.delete(openTag(node.key, edgeId));
+            persistOpens();
             const child = dag.nodes.get(childKey);
             if (child) {
                 child.incoming.delete(node.key);
@@ -281,15 +312,83 @@
             }
             child.incoming.set(node.key, { edgeId, flavorDelta });
             node.outgoing.set(edgeId, { childKey: child.key, flavorDelta });
+            savedOpens.add(openTag(node.key, edgeId));
+            persistOpens();
             if (isNew) placeNewNode(dag, child, node);
         }
     }
 
+    function replaySavedOpens(dag) {
+        if (!savedOpens.size) return;
+        replaying = true;
+        const preexisting = new Set(dag.nodes.keys());
+        try {
+            // Index savedOpens by parent key, preserving per-parent insertion
+            // order so siblings replay in click order (the order the user
+            // originally expanded them) rather than edge-declaration order.
+            const opensByKey = new Map();
+            for (const tag of savedOpens) {
+                const sep = tag.indexOf('→');
+                if (sep === -1) continue;
+                const parentKey = tag.slice(0, sep);
+                const edgeId = tag.slice(sep + 1);
+                if (!opensByKey.has(parentKey)) opensByKey.set(parentKey, []);
+                opensByKey.get(parentKey).push(edgeId);
+            }
+            // BFS from root: parents are always processed before their children.
+            const queue = [dag.nodes.get(dag.rootKey)];
+            const seen = new Set();
+            const MAX = 2000;
+            let count = 0;
+            while (queue.length && count++ < MAX) {
+                const node = queue.shift();
+                if (!node || seen.has(node.key)) continue;
+                seen.add(node.key);
+                if (node.nq.terminal) continue;
+                const edgeIds = opensByKey.get(node.key) || [];
+                for (const edgeId of edgeIds) {
+                    const edge = node.nq.node.edges.find(e => e.id === edgeId);
+                    if (!edge) continue;
+                    if (window.Engine.isEdgeDisabled(node.sel, node.nq.node, edge)) continue;
+                    if (!node.outgoing.has(edgeId)) toggleEdge(dag, node, edgeId);
+                    const info = node.outgoing.get(edgeId);
+                    if (info) {
+                        const child = dag.nodes.get(info.childKey);
+                        if (child && !seen.has(child.key)) queue.push(child);
+                    }
+                }
+            }
+            // Unpin everything created during replay. `placeNewNode` pinned
+            // each child with a height-based guess, but at replay time no DOM
+            // existed so `_height` fell back to DEFAULT_NODE_H and many nodes
+            // piled onto near-identical coordinates. Unpinning hands placement
+            // to layout(), which (after measureHeights) uses real heights +
+            // stable creation-order sort to preserve click order without
+            // overlap.
+            for (const n of dag.nodes.values()) {
+                if (!preexisting.has(n.key)) n.pinned = false;
+            }
+        } finally {
+            replaying = false;
+        }
+    }
+    function clearSavedOpens() {
+        savedOpens.clear();
+        try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    }
+
     function removeSubtree(dag, node) {
-        const childKeys = [...node.outgoing.values()].map(v => v.childKey);
+        // Forget this node's own outgoing expansions — otherwise, if a later
+        // click reaches this selKey again via a different path, replay on
+        // refresh would bloom the whole forgotten subtree back.
+        const childEntries = [...node.outgoing.entries()];
+        for (const [edgeId] of childEntries) {
+            savedOpens.delete(openTag(node.key, edgeId));
+        }
+        persistOpens();
         dag.nodes.delete(node.key);
-        for (const ck of childKeys) {
-            const c = dag.nodes.get(ck);
+        for (const [, info] of childEntries) {
+            const c = dag.nodes.get(info.childKey);
             if (!c) continue;
             c.incoming.delete(node.key);
             if (c.incoming.size === 0 && c.key !== dag.rootKey) {
@@ -301,50 +400,150 @@
     // ═══ Layout ═══
 
     const NODE_DX = 320;
-    const NODE_DY = 170;
     const NODE_VGAP = 24;
     const DEFAULT_NODE_H = 90;
 
     function layout(dag) {
-        const byDepth = new Map();
+        // Assign `_order` once (insertion into dag.nodes = click order, or
+        // — for saved-opens replay — original click order, preserved by
+        // `replaySavedOpens`'s per-parent insertion-order indexing).
+        let _creationOrder = 0;
         for (const node of dag.nodes.values()) {
-            if (!byDepth.has(node.depth)) byDepth.set(node.depth, []);
-            byDepth.get(node.depth).push(node);
-        }
-        const depths = [...byDepth.keys()].sort((a, b) => a - b);
-
-        for (const node of dag.nodes.values()) {
-            if (node.pinned) { node._tempY = node.y; continue; }
-            if (node._tempY === undefined) node._tempY = 0;
+            if (node._order == null) node._order = _creationOrder;
+            _creationOrder++;
         }
 
-        for (let iter = 0; iter < 8; iter++) {
-            for (const d of depths) {
-                if (d === 0) continue;
-                for (const node of byDepth.get(d)) {
-                    if (node.pinned) { node._tempY = node.y; continue; }
-                    const parents = [...node.incoming.keys()].map(k => dag.nodes.get(k)).filter(Boolean);
-                    if (parents.length) {
-                        const sum = parents.reduce((s, p) => s + p._tempY, 0);
-                        node._tempY = sum / parents.length;
-                    }
-                }
+        // Column = graph distance from root (longest path) rather than
+        // `Object.keys(sel).length`. Sel depth jumps unpredictably: picking
+        // `agi_threshold` sets both the dimension itself AND the
+        // `agi_happens=yes` marker, so sel grows by 2 in one click; picking
+        // `asi_threshold` collapses `agi_threshold` into flavor, so sel
+        // *shrinks* by 1. Neither maps to visual "distance from root" the
+        // way the user expects — they want each child sitting in the
+        // column immediately right of its parent.
+        //
+        // Processing in `_order` is safe because a node is always created
+        // from an already-present parent, so parents have smaller `_order`
+        // than their children and are assigned their column first.
+        const column = new Map();
+        column.set(dag.rootKey, 0);
+        const byOrder = [...dag.nodes.values()].sort((a, b) => a._order - b._order);
+        for (const node of byOrder) {
+            if (node.key === dag.rootKey) continue;
+            let maxCol = 0;
+            for (const pKey of node.incoming.keys()) {
+                const pc = column.get(pKey);
+                if (pc != null && pc + 1 > maxCol) maxCol = pc + 1;
             }
-            for (const d of depths) {
-                const arr = byDepth.get(d).slice().sort((a, b) => a._tempY - b._tempY || a.key.localeCompare(b.key));
-                const total = arr.length;
-                for (let i = 0; i < total; i++) {
-                    if (arr[i].pinned) continue;
-                    arr[i]._tempY = (i - (total - 1) / 2) * NODE_DY;
-                }
-            }
+            column.set(node.key, maxCol);
         }
 
+        // Stack each column by `_order` (click order) using real heights so
+        // tall nodes don't overlap. No barycenter: sel depth isn't
+        // monotonic (see comment above), and the user's expectation for a
+        // debug DAG is "first clicked sits on top", not "fewest edge
+        // crossings".
+        //
+        // Incremental placement: nodes that have been placed in a prior
+        // refresh keep their y (so opening new siblings doesn't shove
+        // existing ones around or re-center the column). Fresh nodes
+        // (`!_placed`) are appended below the existing bottom of the
+        // column. Only columns with no prior placements center-anchor
+        // around y=0.
+        const byCol = new Map();
         for (const node of dag.nodes.values()) {
-            if (node.pinned) continue;
-            node.x = node.depth * NODE_DX;
-            node.y = node._tempY;
+            const c = column.get(node.key) ?? 0;
+            node._col = c;
+            if (!byCol.has(c)) byCol.set(c, []);
+            byCol.get(c).push(node);
         }
+        for (const [c, arr] of byCol) {
+            arr.sort((a, b) => a._order - b._order);
+            const placed = arr.filter(n => n._placed);
+            const fresh = arr.filter(n => !n._placed);
+            if (!fresh.length) continue;
+            let cursor;
+            if (!placed.length) {
+                // First layout for this column: center the whole stack on y=0.
+                const heights = fresh.map(n => (n._height || DEFAULT_NODE_H));
+                const totalH = heights.reduce((s, h) => s + h, 0) + Math.max(0, fresh.length - 1) * NODE_VGAP;
+                cursor = -totalH / 2;
+            } else {
+                // Keep existing siblings anchored where they already are;
+                // append fresh nodes below the current bottom of the column.
+                let bottom = -Infinity;
+                for (const n of placed) {
+                    const h = n._height || DEFAULT_NODE_H;
+                    if (n.y + h > bottom) bottom = n.y + h;
+                }
+                cursor = bottom + NODE_VGAP;
+            }
+            for (const n of fresh) {
+                if (!n.pinned) {
+                    n.x = c * NODE_DX;
+                    n.y = cursor;
+                }
+                // Pinned (user-dragged) nodes still reserve their slot so
+                // following unpinned siblings don't slide on top of them.
+                cursor += (n._height || DEFAULT_NODE_H) + NODE_VGAP;
+            }
+        }
+    }
+
+    // ═══ Debug ═══
+
+    // Dump the DAG to the console in two formats:
+    //   1. A flat table (sortable) of every node with key, depth, x, y, h,
+    //      _order, pinned, and the outgoing edges in Map-insertion order
+    //      (= click order).
+    //   2. An indented tree from the root, listed per-parent in outgoing
+    //      (click) order, so you can eyeball whether the rendered left-to-
+    //      right / top-to-bottom positions match the click order.
+    function debugDumpGraph(dag) {
+        const rows = [];
+        for (const n of dag.nodes.values()) {
+            const outs = [...n.outgoing.entries()].map(([eid, info]) => {
+                const c = dag.nodes.get(info.childKey);
+                return eid + '→' + (c ? `${c.key} @(${Math.round(c.x)},${Math.round(c.y)})` : '?');
+            });
+            rows.push({
+                key: n.key,
+                depth: n.depth,
+                col: n._col,
+                x: Math.round(n.x),
+                y: Math.round(n.y),
+                h: n._height || null,
+                _order: n._order,
+                pinned: !!n.pinned,
+                parents: [...n.incoming.keys()],
+                children: outs
+            });
+        }
+        rows.sort((a, b) => a.col - b.col || a.y - b.y || a._order - b._order);
+        console.groupCollapsed(`[explore] graph dump — ${dag.nodes.size} nodes`);
+        console.table(rows.map(r => ({
+            key: r.key.length > 60 ? r.key.slice(0, 57) + '…' : r.key,
+            d: r.depth, col: r.col, x: r.x, y: r.y, h: r.h, ord: r._order, pin: r.pinned,
+            parents: r.parents.length, children: r.children.length
+        })));
+        // Tree view — walk outgoing in click order from root.
+        const lines = [];
+        const seen = new Set();
+        function walk(key, indent) {
+            const n = dag.nodes.get(key);
+            if (!n) { lines.push(indent + '?? ' + key); return; }
+            const marker = seen.has(key) ? ' [visited]' : '';
+            lines.push(`${indent}${key} d=${n.depth} x=${Math.round(n.x)} y=${Math.round(n.y)} h=${n._height || '?'} ord=${n._order}${marker}`);
+            if (seen.has(key)) return;
+            seen.add(key);
+            for (const [eid, info] of n.outgoing) {
+                lines.push(`${indent}  └─[${eid}]→`);
+                walk(info.childKey, indent + '    ');
+            }
+        }
+        walk(dag.rootKey, '');
+        console.log(lines.join('\n'));
+        console.groupEnd();
     }
 
     // ═══ Render ═══
@@ -373,6 +572,19 @@
         if (nq.terminal && nq.kind === 'deadend') cls += ' is-deadend';
         if (selectedKey === node.key) cls += ' is-selected';
         if (node.pinned) cls += ' is-pinned';
+
+        // A node has an "unchecked" edge when at least one enabled edge has
+        // not been expanded yet — highlight those to mark partially-explored
+        // subtrees. Terminal nodes (outcome/deadend) have no edges and keep
+        // their default tinted background.
+        let hasUnchecked = false;
+        if (!nq.terminal && nq.node && nq.node.edges) {
+            for (const edge of nq.node.edges) {
+                if (window.Engine.isEdgeDisabled(node.sel, nq.node, edge)) continue;
+                if (!node.outgoing.has(edge.id)) { hasUnchecked = true; break; }
+            }
+        }
+        if (hasUnchecked) cls += ' has-unchecked';
 
         let title = '';
         let edgesHtml = '';
@@ -462,7 +674,7 @@
             <div class="explore-detail-section"><h4>Derived / locked</h4>${derivedHtml}</div>
             ${flavorHtml}
             ${nextHtml}${outcomeHtml}
-            <div class="explore-detail-section"><h4>Links</h4><a href="${mapUrl}">Open in /map</a></div>
+            <div class="explore-detail-section"><h4>Links</h4><a href="${mapUrl}">Open in /map</a><button type="button" class="explore-copy-btn" data-copy-url="${escHtml(mapUrl)}">Copy</button></div>
         `;
     }
 
@@ -482,11 +694,16 @@
         }
         for (const node of dag.nodes.values()) {
             const hi = node.key === selectedKey;
+            const nodeW = node._width || 260;
             for (const [edgeId, outInfo] of node.outgoing) {
                 const child = dag.nodes.get(outInfo.childKey);
                 if (!child) continue;
-                const x1 = node.x + 260;
-                const y1 = node.y + 24;
+                const x1 = node.x + nodeW;
+                // Start the path at the vertical center of the corresponding
+                // edge row so sibling edges fan out from distinct points
+                // rather than stacking on a single node-edge anchor.
+                const rowY = node._edgeRowY && node._edgeRowY[edgeId];
+                const y1 = node.y + (rowY != null ? rowY : 24);
                 const x2 = child.x;
                 const y2 = child.y + 24;
                 const mx = (x1 + x2) / 2;
@@ -508,16 +725,19 @@
         const initialSel = opts.initialSel || {};
 
         const dag = createDag(initialSel);
-        // Auto-expand root's only enabled edges up to a minimum depth? No — just root for now.
+        replaySavedOpens(dag);
         let selectedKey = null;
-        let viewX = 400, viewY = window.innerHeight / 2;
-        let scale = 1;
+        const savedView = loadSavedView();
+        let viewX = savedView ? savedView.x : 400;
+        let viewY = savedView ? savedView.y : window.innerHeight / 2;
+        let scale = savedView ? savedView.s : 1;
 
         container.innerHTML = `
             <div id="explore-root">
                 <div class="explore-toolbar">
                     <button data-action="reset">Reset view</button>
                     <button data-action="unpin">Unpin all</button>
+                    <button data-action="expand-early">Expand to Open Source</button>
                     <button data-action="clear">Clear expansions</button>
                     <button data-action="back">← Back to map</button>
                     <span class="explore-stats"></span>
@@ -558,11 +778,26 @@
             for (const el of els) {
                 const key = el.dataset.key;
                 const node = dag.nodes.get(key);
-                if (node) node._height = el.offsetHeight;
+                if (!node) continue;
+                node._height = el.offsetHeight;
+                node._width = el.offsetWidth;
+                // Vertical center of each edge row, in node-local coords, so
+                // outgoing SVG paths can originate from the row instead of
+                // stacking at a single point on the node's right edge.
+                const rowY = {};
+                const rows = el.querySelectorAll('.explore-edge-row');
+                for (const r of rows) {
+                    const edgeId = r.dataset.edgeId;
+                    if (!edgeId) continue;
+                    rowY[edgeId] = r.offsetTop + r.offsetHeight / 2;
+                }
+                node._edgeRowY = rowY;
             }
         }
 
         function refresh() {
+            // Pass 1: layout with whatever _height values are currently cached
+            // (missing for brand-new nodes — falls back to DEFAULT_NODE_H).
             layout(dag);
             const nodesHtml = [];
             for (const node of dag.nodes.values()) {
@@ -570,6 +805,20 @@
             }
             nodesLayer.innerHTML = nodesHtml.join('');
             measureHeights();
+            // Pass 2: re-layout using the actual measured heights so new
+            // nodes don't overlap. Then patch the already-rendered DOM
+            // elements' positions in-place instead of re-rendering.
+            layout(dag);
+            // Mark every node as placed now that it has a real y from this
+            // refresh. Subsequent refreshes treat them as anchored; only
+            // brand-new nodes get repositioned (see `layout`).
+            for (const n of dag.nodes.values()) n._placed = true;
+            for (const el of nodesLayer.querySelectorAll('.explore-node')) {
+                const node = dag.nodes.get(el.dataset.key);
+                if (!node) continue;
+                el.style.left = node.x + 'px';
+                el.style.top = node.y + 'px';
+            }
             redrawEdges();
             statsEl.textContent = `${dag.nodes.size} nodes`;
             if (selectedKey && dag.nodes.has(selectedKey)) {
@@ -580,6 +829,36 @@
                 detail.innerHTML = '';
             }
             applyTransform();
+            debugDumpGraph(dag);
+        }
+
+        detail.addEventListener('click', (e) => {
+            const btn = e.target.closest('.explore-copy-btn');
+            if (!btn) return;
+            e.preventDefault();
+            const rel = btn.dataset.copyUrl || '';
+            const full = new URL(rel, location.href).href;
+            const done = () => {
+                const prev = btn.textContent;
+                btn.textContent = 'Copied';
+                btn.classList.add('is-copied');
+                setTimeout(() => { btn.textContent = prev; btn.classList.remove('is-copied'); }, 1200);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(full).then(done, () => fallbackCopy(full, done));
+            } else {
+                fallbackCopy(full, done);
+            }
+        });
+        function fallbackCopy(text, done) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch {}
+            document.body.removeChild(ta);
+            done();
         }
 
         // Node drag
@@ -671,8 +950,23 @@
             applyTransform();
         });
         window.addEventListener('mouseup', () => {
-            if (dragging) { dragging = false; canvas.classList.remove('dragging'); }
+            if (dragging) {
+                dragging = false;
+                canvas.classList.remove('dragging');
+                persistView(viewX, viewY, scale);
+            }
         });
+
+        // Persist on zoom — debounced via a short timer so rapid wheel
+        // events coalesce into a single localStorage write.
+        let zoomSaveTimer = null;
+        function scheduleViewSave() {
+            if (zoomSaveTimer) clearTimeout(zoomSaveTimer);
+            zoomSaveTimer = setTimeout(() => {
+                zoomSaveTimer = null;
+                persistView(viewX, viewY, scale);
+            }, 200);
+        }
 
         // Zoom
         canvas.addEventListener('wheel', (e) => {
@@ -688,15 +982,87 @@
             viewX = cx - wx * scale;
             viewY = cy - wy * scale;
             applyTransform();
+            scheduleViewSave();
         }, { passive: false });
+
+        function fitToContent(opts) {
+            opts = opts || {};
+            const pad = opts.pad != null ? opts.pad : 60;
+            const maxScale = opts.maxScale != null ? opts.maxScale : 1;
+            const minScale = opts.minScale != null ? opts.minScale : 0.2;
+            if (!dag.nodes.size) return;
+            let xmin = Infinity, ymin = Infinity, xmax = -Infinity, ymax = -Infinity;
+            for (const n of dag.nodes.values()) {
+                const w = n._width || 260;
+                const h = n._height || 120;
+                if (n.x < xmin) xmin = n.x;
+                if (n.y < ymin) ymin = n.y;
+                if (n.x + w > xmax) xmax = n.x + w;
+                if (n.y + h > ymax) ymax = n.y + h;
+            }
+            if (!isFinite(xmin)) return;
+            const rect = canvas.getBoundingClientRect();
+            const cw = rect.width, ch = rect.height;
+            if (cw <= 0 || ch <= 0) return;
+            const contentW = (xmax - xmin) + pad * 2;
+            const contentH = (ymax - ymin) + pad * 2;
+            const fitScale = Math.min(cw / contentW, ch / contentH);
+            scale = Math.max(minScale, Math.min(maxScale, fitScale));
+            const cx = (xmin + xmax) / 2;
+            const cy = (ymin + ymax) / 2;
+            viewX = cw / 2 - cx * scale;
+            viewY = ch / 2 - cy * scale;
+            applyTransform();
+            persistView(viewX, viewY, scale);
+        }
 
         // Toolbar
         root.querySelector('[data-action="reset"]').addEventListener('click', () => {
-            viewX = 400; viewY = window.innerHeight / 2; scale = 1;
-            applyTransform();
+            fitToContent();
         });
         root.querySelector('[data-action="unpin"]').addEventListener('click', () => {
-            for (const n of dag.nodes.values()) n.pinned = false;
+            // Clear `_placed` too so the layout re-centers every column
+            // from scratch, not just "append the dragged ones to the
+            // bottom of their existing stack".
+            for (const n of dag.nodes.values()) { n.pinned = false; n._placed = false; }
+            refresh();
+        });
+        root.querySelector('[data-action="expand-early"]').addEventListener('click', () => {
+            // BFS-expand every enabled edge from the current frontier, stopping
+            // descent as soon as a node is terminal (outcome/dead-end) OR its
+            // next question is `open_source`. The open_source node itself is
+            // rendered as a leaf but not expanded.
+            const STOP_AT = 'open_source';
+            const MAX_NODES = 500;
+            // Snapshot existing keys so we can unpin everything created by this
+            // expansion and let the barycenter auto-layout place them without
+            // sibling overlap.
+            const preexisting = new Set(dag.nodes.keys());
+            const queue = [dag.nodes.get(dag.rootKey)];
+            const seen = new Set();
+            while (queue.length && dag.nodes.size < MAX_NODES) {
+                const node = queue.shift();
+                if (!node || seen.has(node.key)) continue;
+                seen.add(node.key);
+                if (node.nq.terminal) continue;
+                if (node.nq.node.id === STOP_AT) continue;
+                for (const edge of node.nq.node.edges) {
+                    if (window.Engine.isEdgeDisabled(node.sel, node.nq.node, edge)) continue;
+                    if (!node.outgoing.has(edge.id)) {
+                        toggleEdge(dag, node, edge.id);
+                    }
+                    const info = node.outgoing.get(edge.id);
+                    if (!info) continue;
+                    const child = dag.nodes.get(info.childKey);
+                    if (child && !seen.has(child.key)) queue.push(child);
+                }
+            }
+            // Unpin newly created nodes so layout() spreads them vertically
+            // using the same barycenter logic used elsewhere. Pre-existing
+            // (user-dragged) nodes keep their pinned positions.
+            for (const n of dag.nodes.values()) {
+                if (!preexisting.has(n.key)) n.pinned = false;
+            }
             refresh();
         });
         root.querySelector('[data-action="clear"]').addEventListener('click', () => {
@@ -705,6 +1071,7 @@
             const r = getOrCreate(dag, rootSel);
             dag.rootKey = r.key;
             selectedKey = null;
+            clearSavedOpens();
             refresh();
         });
         root.querySelector('[data-action="back"]').addEventListener('click', () => {
@@ -712,6 +1079,13 @@
         });
 
         refresh();
+        // Restore the user's last viewport if we have one; otherwise fit
+        // the initial graph to the canvas so the whole DAG is visible.
+        if (savedView) {
+            applyTransform();
+        } else {
+            fitToContent();
+        }
     }
 
     async function start(container, opts) {

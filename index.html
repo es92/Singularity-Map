@@ -911,6 +911,7 @@
     <script src="graph-walker.js"></script>
     <script src="timeline-animator.js"></script>
     <script src="explore.js"></script>
+    <script src="nodes.js"></script>
     <script>
     (function () {
         'use strict';
@@ -1271,7 +1272,14 @@
                 if (entry._when) {
                     for (const cond of entry._when) {
                         const match = Object.entries(cond.if).every(
-                            ([k, vals]) => Array.isArray(vals) && vals.includes(state[k])
+                            ([k, vals]) => Array.isArray(vals) && (
+                                // Also accept the more-specific flavor detail
+                                // (e.g. `distribution_detail = 'lagging'` when
+                                // sel collapsed lagging → concentrated). Lets
+                                // narrative `_when` clauses keep referencing
+                                // the pre-collapse value directly.
+                                vals.includes(state[k]) || vals.includes(state[k + '_detail'])
+                            )
                         );
                         if (match) return cond.text;
                     }
@@ -1285,7 +1293,13 @@
             if (!flavors) return [];
             const result = [];
             for (const [nodeId, options] of Object.entries(flavors)) {
-                const val = state[nodeId];
+                // Prefer a more-specific flavor detail if the narrative declares
+                // a variant for it. This lets dims that were collapsed in sel
+                // (e.g. `distribution: lagging → concentrated` with
+                // `flavor.distribution_detail = lagging`) still surface their
+                // original narrative variant.
+                const detailVal = state[nodeId + '_detail'];
+                const val = (detailVal && options[detailVal]) ? detailVal : state[nodeId];
                 if (!val || !options[val]) continue;
                 const text = resolveConditionalText(options[val], state);
                 if (!text) continue;
@@ -1353,7 +1367,7 @@
             if (!bucketInfo) return false;
             const geo = worldState.geo_spread;
             if (geo === 'one' && bucketInfo.plausibleLeader) return true;
-            if (geo === 'two' && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) return true;
+            if (geo === 'multiple' && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) return true;
             if (!geo && bucketInfo.plausibleLeader) {
                 const dist = worldState.distribution;
                 if (dist === 'monopoly' || dist === 'concentrated') return true;
@@ -1366,7 +1380,7 @@
             const bucketInfo = personalData.countryBuckets[bucket];
             if (!bucketInfo) return 'no';
             const geo = worldState.geo_spread;
-            if (geo === 'several' && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) return 'yes';
+            if (geo === 'multiple' && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) return 'yes';
             if (!geo && bucketInfo.plausibleLeader) return 'yes';
             return 'no';
         }
@@ -1750,6 +1764,9 @@
                 }
                 return { screen: 'explore', initialSel };
             }
+            if (hash.startsWith('/nodes')) {
+                return { screen: 'nodes' };
+            }
             return { screen: 'map' };
         }
 
@@ -1764,6 +1781,10 @@
                 if (window.Explore) window.Explore.render(app, { initialSel: state.initialSel || {} });
                 return;
             }
+            if (state.screen === 'nodes') {
+                if (window.Nodes) window.Nodes.render(app);
+                return;
+            }
             const render = () => {
                 renderMap(state.pairs, state.lockedOutcomeId, state.flags, state.started);
             };
@@ -1775,6 +1796,18 @@
                 renderState(e.state, false);
             } else {
                 renderState(routeFromHash(), false);
+            }
+        });
+
+        // Hash-only navigations (e.g. links from /nodes or /explore to a
+        // different screen) don't fire popstate. Re-route on screen change.
+        let lastScreen = null;
+        window.addEventListener('hashchange', () => {
+            const next = routeFromHash();
+            if (next.screen !== lastScreen) {
+                lastScreen = next.screen;
+                history.replaceState(next, '', location.href);
+                renderState(next, false);
             }
         });
 
@@ -1995,11 +2028,15 @@
                     if (nextQ && nextQ.isForced && node.id === nextQ.node.id) {
                         if (!fullQuestions) {
                             foundFrontier = true;
-                            const forcedOpt = nextQ.options.find(o => o.value === nextQ.forcedValue);
-                            const siblings = forcedOpt ? [{
-                                value: forcedOpt.value, label: forcedOpt.label, shortLabel: forcedOpt.shortLabel,
-                                nodeId: forcedOpt.nodeId, reachable: true, disabled: false,
-                            }] : [];
+                            // Show all options (including disabled siblings) so
+                            // the forced case reads the same as a 2+ option row
+                            // — just with only one pill clickable.
+                            const siblings = nextQ.options.map(o => ({
+                                value: o.value, label: o.label, shortLabel: o.shortLabel,
+                                nodeId: o.nodeId,
+                                reachable: o.value === nextQ.forcedValue ? true : o.reachable,
+                                disabled: o.value === nextQ.forcedValue ? false : o.disabled,
+                            }));
                             events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: node.stage, year: '', paramLabel: '', nodeLabel: node.label, nodeId: node.id, selectedValue: null, siblings, isFrontier: true });
                         }
                         continue;

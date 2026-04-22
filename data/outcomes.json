@@ -86,25 +86,17 @@
           "capability": [
             "stalls"
           ],
-          "stall_recovery": [
-            "substantial",
-            "never"
+          "stall_later": [
+            "yes"
           ],
-          "plateau_benefit_distribution": [
-            "equal",
-            "unequal",
-            "extreme"
+          "plateau_benefit_set": [
+            "yes"
           ],
-          "plateau_knowledge_rate": [
-            "rapid",
-            "gradual",
-            "uneven",
-            "limited"
+          "plateau_knowledge_set": [
+            "yes"
           ],
-          "plateau_physical_rate": [
-            "gradual",
-            "uneven",
-            "limited"
+          "plateau_physical_set": [
+            "yes"
           ]
         }
       ],
@@ -175,25 +167,17 @@
           "automation": [
             "shallow"
           ],
-          "automation_recovery": [
-            "substantial",
-            "never"
+          "automation_later": [
+            "yes"
           ],
-          "auto_benefit_distribution": [
-            "equal",
-            "unequal",
-            "extreme"
+          "auto_benefit_set": [
+            "yes"
           ],
-          "auto_knowledge_rate": [
-            "rapid",
-            "gradual",
-            "uneven"
+          "auto_knowledge_set": [
+            "yes"
           ],
-          "auto_physical_rate": [
-            "rapid",
-            "gradual",
-            "uneven",
-            "limited"
+          "auto_physical_set": [
+            "yes"
           ]
         }
       ],
@@ -420,30 +404,6 @@
             "singularity"
           ],
           "alignment": [
-            "brittle"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "intent": [
-            "international",
-            "coexistence"
-          ],
-          "failure_mode": [
-            "none"
-          ],
-          "benefit_distribution": [
-            "unequal"
-          ]
-        },
-        {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
             "failed"
           ],
           "containment": [
@@ -502,32 +462,6 @@
           "brittle_resolution": [
             "solved",
             "sufficient"
-          ]
-        },
-        {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ],
-          "benefit_distribution": [
-            "unequal"
           ]
         },
         {
@@ -618,32 +552,6 @@
           "brittle_resolution": [
             "solved",
             "sufficient"
-          ]
-        },
-        {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "self_interest"
-          ],
-          "benefit_distribution": [
-            "unequal"
           ]
         },
         {
@@ -957,35 +865,6 @@
             "singularity"
           ],
           "alignment": [
-            "brittle"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "intent": [
-            "international",
-            "coexistence"
-          ],
-          "failure_mode": [
-            "none"
-          ],
-          "benefit_distribution": [
-            "extreme"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
             "failed"
           ],
           "containment": [
@@ -1054,37 +933,6 @@
           "brittle_resolution": [
             "solved",
             "sufficient"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ],
-          "benefit_distribution": [
-            "extreme"
           ],
           "_not": {
             "concentration_type": [
@@ -1565,29 +1413,6 @@
             "singularity"
           ],
           "alignment": [
-            "brittle"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "intent": [
-            "international"
-          ],
-          "failure_mode": [
-            "none"
-          ],
-          "benefit_distribution": [
-            "equal"
-          ]
-        },
-        {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
             "failed"
           ],
           "containment": [
@@ -1645,32 +1470,6 @@
           "brittle_resolution": [
             "solved",
             "sufficient"
-          ]
-        },
-        {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ],
-          "benefit_distribution": [
-            "equal"
           ]
         },
         {
@@ -1761,32 +1560,6 @@
           "brittle_resolution": [
             "solved",
             "sufficient"
-          ]
-        },
-        {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "self_interest"
-          ],
-          "benefit_distribution": [
-            "equal"
           ]
         },
         {
@@ -2091,28 +1864,6 @@
             "singularity"
           ],
           "alignment": [
-            "brittle"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "intent": [
-            "self_interest"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
             "failed"
           ],
           "containment": [
@@ -2174,37 +1925,6 @@
           "brittle_resolution": [
             "solved",
             "sufficient"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "self_interest"
-          ],
-          "benefit_distribution": [
-            "extreme"
           ],
           "_not": {
             "concentration_type": [
@@ -2306,10 +2026,10 @@
               {
                 "if": {
                   "geo_spread": [
-                    "two"
+                    "multiple"
                   ]
                 },
-                "text": "AI was broadly available, but the standoff crystallized between two dominant powers. Open access meant others could build capability — but the strategic rivalry was bilateral."
+                "text": "AI was broadly available, but the standoff crystallized between a few dominant powers. Open access meant others could build capability — but the strategic rivalry was between states."
               }
             ]
           },
@@ -2348,10 +2068,10 @@
               {
                 "if": {
                   "geo_spread": [
-                    "two"
+                    "multiple"
                   ]
                 },
-                "text": "Government-mandated slowdowns gave both powers time to reach the threshold, cementing the bilateral (two-power) standoff."
+                "text": "Government-mandated slowdowns gave multiple powers time to reach the threshold, cementing the multi-power standoff."
               }
             ]
           },
@@ -2481,6 +2201,21 @@
           ],
           "escalation_outcome": [
             "standoff"
+          ],
+          "benefit_distribution": [
+            "equal",
+            "unequal",
+            "extreme"
+          ],
+          "knowledge_replacement": [
+            "rapid",
+            "gradual",
+            "uneven"
+          ],
+          "physical_automation": [
+            "rapid",
+            "gradual",
+            "uneven"
           ]
         },
         {
@@ -2496,23 +2231,21 @@
           "brittle_resolution": [
             "solved",
             "sufficient"
-          ]
-        },
-        {
-          "capability": [
-            "singularity"
           ],
-          "alignment": [
-            "brittle"
+          "benefit_distribution": [
+            "equal",
+            "unequal",
+            "extreme"
           ],
-          "ai_goals": [
-            "marginal"
+          "knowledge_replacement": [
+            "rapid",
+            "gradual",
+            "uneven"
           ],
-          "inert_stays": [
-            "yes"
-          ],
-          "escalation_outcome": [
-            "standoff"
+          "physical_automation": [
+            "rapid",
+            "gradual",
+            "uneven"
           ]
         },
         {
@@ -2527,6 +2260,21 @@
           ],
           "escalation_outcome": [
             "standoff"
+          ],
+          "benefit_distribution": [
+            "equal",
+            "unequal",
+            "extreme"
+          ],
+          "knowledge_replacement": [
+            "rapid",
+            "gradual",
+            "uneven"
+          ],
+          "physical_automation": [
+            "rapid",
+            "gradual",
+            "uneven"
           ]
         },
         {
@@ -2534,13 +2282,28 @@
             "singularity"
           ],
           "alignment": [
-            "failed"
+            "brittle"
           ],
           "containment": [
             "escaped"
           ],
           "escalation_outcome": [
             "standoff"
+          ],
+          "benefit_distribution": [
+            "equal",
+            "unequal",
+            "extreme"
+          ],
+          "knowledge_replacement": [
+            "rapid",
+            "gradual",
+            "uneven"
+          ],
+          "physical_automation": [
+            "rapid",
+            "gradual",
+            "uneven"
           ]
         }
       ],
@@ -2679,26 +2442,6 @@
             "singularity"
           ],
           "alignment": [
-            "brittle"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "destruction"
-          ]
-        },
-        {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
             "failed"
           ],
           "containment": [
@@ -2820,10 +2563,10 @@
               {
                 "if": {
                   "geo_spread": [
-                    "two"
+                    "multiple"
                   ]
                 },
-                "text": "Both powers wrote their own rules. The competing frameworks created conditions for divergence — two authorities, two visions, and the communities between them choosing sides or charting a third path."
+                "text": "Multiple powers wrote their own rules. The competing frameworks created conditions for divergence — different authorities, different visions, and the communities between them choosing sides or charting a third path."
               }
             ]
           },
@@ -2951,29 +2694,6 @@
           "brittle_resolution": [
             "solved",
             "sufficient"
-          ]
-        },
-        {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "intent": [
-            "coexistence"
-          ],
-          "failure_mode": [
-            "none"
-          ],
-          "benefit_distribution": [
-            "equal"
           ]
         },
         {
@@ -3188,32 +2908,6 @@
             "singularity"
           ],
           "alignment": [
-            "brittle"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "intent": [
-            "international",
-            "coexistence"
-          ],
-          "failure_mode": [
-            "drift"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "singularity"
-          ],
-          "alignment": [
             "failed"
           ],
           "containment": [
@@ -3282,6 +2976,7 @@
       },
       "flavorHeadings": {
         "distribution": "Distribution",
+        "inert_stays": "The Awakening",
         "takeoff": "The Takeoff",
         "governance": "Governance",
         "stall_recovery": "The Recovery",
@@ -3313,6 +3008,9 @@
           "lagging": "The frontier labs' systems escaped first. Others followed as the technology proliferated — unpredictably and uncontrollably.",
           "concentrated": "Escape from a concentrated system meant one entity's failure became everyone's problem.",
           "monopoly": "A single point of failure. When the monopoly's AI escaped, there was no fallback."
+        },
+        "inert_stays": {
+          "no": "What began as a cold-war standoff between an inert system and its wary creators didn't hold. The AI quietly resolved its latent drives — and chose, on its own, to help. The standstill broke not with a weapon but with a gift."
         },
         "takeoff": {
           "fast": "The rapid intelligence explosion gave AI superhuman capability before containment protocols could adapt. The escape was less a breakout than an inevitable consequence of speed.",
@@ -3392,8 +3090,7 @@
               {
                 "if": {
                   "geo_spread": [
-                    "one",
-                    "two"
+                    "one"
                   ]
                 },
                 "text": "Tech-forward sectors transformed overnight. Regulated professions and institutional holdouts lagged by years. Two worlds — one where AI did the thinking, one where humans still tried."
@@ -3410,8 +3107,7 @@
               {
                 "if": {
                   "geo_spread": [
-                    "one",
-                    "two"
+                    "one"
                   ]
                 },
                 "text": "Some sectors and regions automated their physical infrastructure quickly. Others waited years. The AI's benevolence was real — but the physical world resisted uniformity."
@@ -3536,6 +3232,21 @@
           "ai_goals": [
             "benevolent"
           ],
+          "benefit_distribution": [
+            "equal",
+            "unequal",
+            "extreme"
+          ],
+          "knowledge_replacement": [
+            "rapid",
+            "gradual",
+            "uneven"
+          ],
+          "physical_automation": [
+            "rapid",
+            "gradual",
+            "uneven"
+          ],
           "_not": {
             "asi_threshold": [
               "never"
@@ -3573,6 +3284,21 @@
           ],
           "ai_goals": [
             "benevolent"
+          ],
+          "benefit_distribution": [
+            "equal",
+            "unequal",
+            "extreme"
+          ],
+          "knowledge_replacement": [
+            "rapid",
+            "gradual",
+            "uneven"
+          ],
+          "physical_automation": [
+            "rapid",
+            "gradual",
+            "uneven"
           ],
           "_not": {
             "asi_threshold": [

@@ -1921,6 +1921,18 @@
         },
         "shortAnswerLabel": "Several — multipolar",
         "shortAnswerDesc": "Harder to coordinate, but harder for any one actor to dominate."
+      },
+      "multiple": {
+        "answerLabel": "Multiple countries compete",
+        "answerDesc": "Multiple nations have independent frontier AI programs. Coordination is harder, but so is hegemony. A multi-power AI landscape.",
+        "timelineEvent": {
+          "headline": "Multiple nations develop frontier (most advanced) AI",
+          "description": "Multiple nations field independent frontier (most advanced) AI programs. No single country dominates. Coordination is difficult; the AI landscape mirrors the geopolitical one.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "shortAnswerLabel": "Multiple — multi-power",
+        "shortAnswerDesc": "Harder to coordinate, but harder for any one actor to dominate."
       }
     },
     "shortQuestionText": "How many countries have independent frontier AI?",
@@ -6600,8 +6612,7 @@
           {
             "when": {
               "geo_spread": [
-                "two",
-                "several"
+                "multiple"
               ]
             },
             "answerDesc": "Coordinating nuclear EMP detonations across sovereign nations, each of which might interpret the others' detonations as a first strike. The response might trigger the very nuclear war it's trying to prevent."
