@@ -1,0 +1,6965 @@
+[
+  {
+    "id": "monopoly-6mo|decel_2mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_2mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "escapes",
+      "decel_2mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_2mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "escapes",
+      "decel_2mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_2mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "accelerate",
+      "decel_2mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_2mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "accelerate",
+      "decel_2mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_2mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "accelerate",
+      "decel_2mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_2mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "rival",
+      "decel_2mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_2mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "rival",
+      "decel_2mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_2mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "rival",
+      "decel_2mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_4mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_4mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "escapes",
+      "decel_4mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_4mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "escapes",
+      "decel_4mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_4mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "accelerate",
+      "decel_4mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_4mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "accelerate",
+      "decel_4mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_4mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "accelerate",
+      "decel_4mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_4mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "rival",
+      "decel_4mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_4mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "rival",
+      "decel_4mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_4mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "rival",
+      "decel_4mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_6mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_6mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_6mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_6mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_6mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_6mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_6mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "rival",
+      "decel_6mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_6mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "rival",
+      "decel_6mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_6mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "rival",
+      "decel_6mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_9mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_9mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "escapes",
+      "decel_9mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_9mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "escapes",
+      "decel_9mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_9mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "accelerate",
+      "decel_9mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_9mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "accelerate",
+      "decel_9mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_9mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "accelerate",
+      "decel_9mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_9mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "rival",
+      "decel_9mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_9mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "rival",
+      "decel_9mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_9mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "rival",
+      "decel_9mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_12mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_12mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_12mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_12mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_12mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_12mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_12mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "rival",
+      "decel_12mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_12mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "rival",
+      "decel_12mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_12mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "rival",
+      "decel_12mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_18mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_18mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "escapes",
+      "decel_18mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_18mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "escapes",
+      "decel_18mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_18mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "accelerate",
+      "decel_18mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_18mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "accelerate",
+      "decel_18mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_18mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "accelerate",
+      "decel_18mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_18mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "rival",
+      "decel_18mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_18mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "rival",
+      "decel_18mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_18mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "rival",
+      "decel_18mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_24mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_24mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_24mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_24mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_24mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_24mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-6mo|decel_24mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_24mo_action": "rival",
+      "decel_24mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_24mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_24mo_action": "rival",
+      "decel_24mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-6mo|decel_24mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_24mo_action": "rival",
+      "decel_24mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_2mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-12mo|decel_2mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "escapes",
+      "decel_2mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_2mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "escapes",
+      "decel_2mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_2mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "accelerate",
+      "decel_2mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_2mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "accelerate",
+      "decel_2mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_2mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "accelerate",
+      "decel_2mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_2mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "rival",
+      "decel_2mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_2mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "rival",
+      "decel_2mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_2mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "rival",
+      "decel_2mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_4mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-12mo|decel_4mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "escapes",
+      "decel_4mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_4mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "escapes",
+      "decel_4mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_4mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "accelerate",
+      "decel_4mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_4mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "accelerate",
+      "decel_4mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_4mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "accelerate",
+      "decel_4mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_4mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "rival",
+      "decel_4mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_4mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "rival",
+      "decel_4mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_4mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "rival",
+      "decel_4mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_6mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-12mo|decel_6mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "escapes",
+      "decel_6mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_6mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "escapes",
+      "decel_6mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_6mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "accelerate",
+      "decel_6mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_6mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "accelerate",
+      "decel_6mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_6mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "accelerate",
+      "decel_6mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_6mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "rival",
+      "decel_6mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_6mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "rival",
+      "decel_6mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_6mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "rival",
+      "decel_6mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_9mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-12mo|decel_9mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "escapes",
+      "decel_9mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_9mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "escapes",
+      "decel_9mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_9mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "accelerate",
+      "decel_9mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_9mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "accelerate",
+      "decel_9mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_9mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "accelerate",
+      "decel_9mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_9mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "rival",
+      "decel_9mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_9mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "rival",
+      "decel_9mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_9mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "rival",
+      "decel_9mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_12mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-12mo|decel_12mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-12mo|decel_12mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-12mo|decel_12mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-12mo|decel_12mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-12mo|decel_12mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-12mo|decel_12mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "rival",
+      "decel_12mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_12mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "rival",
+      "decel_12mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_12mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "rival",
+      "decel_12mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_18mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-12mo|decel_18mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "escapes",
+      "decel_18mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_18mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "escapes",
+      "decel_18mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_18mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "accelerate",
+      "decel_18mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_18mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "accelerate",
+      "decel_18mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_18mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "accelerate",
+      "decel_18mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_18mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "rival",
+      "decel_18mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_18mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "rival",
+      "decel_18mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_18mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "rival",
+      "decel_18mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_24mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-12mo|decel_24mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-12mo|decel_24mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-12mo|decel_24mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-12mo|decel_24mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-12mo|decel_24mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-12mo|decel_24mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_24mo_action": "rival",
+      "decel_24mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_24mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_24mo_action": "rival",
+      "decel_24mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-12mo|decel_24mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_24mo_action": "rival",
+      "decel_24mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_2mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-24mo|decel_2mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "escapes",
+      "decel_2mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_2mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "escapes",
+      "decel_2mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_2mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "accelerate",
+      "decel_2mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_2mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "accelerate",
+      "decel_2mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_2mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "accelerate",
+      "decel_2mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_2mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "rival",
+      "decel_2mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_2mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "rival",
+      "decel_2mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_2mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "rival",
+      "decel_2mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_4mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-24mo|decel_4mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "escapes",
+      "decel_4mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_4mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "escapes",
+      "decel_4mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_4mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "accelerate",
+      "decel_4mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_4mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "accelerate",
+      "decel_4mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_4mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "accelerate",
+      "decel_4mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_4mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "rival",
+      "decel_4mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_4mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "rival",
+      "decel_4mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_4mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "rival",
+      "decel_4mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_6mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-24mo|decel_6mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "escapes",
+      "decel_6mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_6mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "escapes",
+      "decel_6mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_6mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "accelerate",
+      "decel_6mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_6mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "accelerate",
+      "decel_6mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_6mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "accelerate",
+      "decel_6mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_6mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "rival",
+      "decel_6mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_6mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "rival",
+      "decel_6mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_6mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "rival",
+      "decel_6mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_9mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-24mo|decel_9mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "escapes",
+      "decel_9mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_9mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "escapes",
+      "decel_9mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_9mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "accelerate",
+      "decel_9mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_9mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "accelerate",
+      "decel_9mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_9mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "accelerate",
+      "decel_9mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_9mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "rival",
+      "decel_9mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_9mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "rival",
+      "decel_9mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_9mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "rival",
+      "decel_9mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_12mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-24mo|decel_12mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "escapes",
+      "decel_12mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_12mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "escapes",
+      "decel_12mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_12mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "accelerate",
+      "decel_12mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_12mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "accelerate",
+      "decel_12mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_12mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "accelerate",
+      "decel_12mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_12mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "rival",
+      "decel_12mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_12mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "rival",
+      "decel_12mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_12mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "rival",
+      "decel_12mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_18mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-24mo|decel_18mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "escapes",
+      "decel_18mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_18mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "escapes",
+      "decel_18mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_18mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "monopoly"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "accelerate",
+      "decel_18mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_18mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "accelerate",
+      "decel_18mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_18mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "monopoly",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "accelerate",
+      "decel_18mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_18mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "rival",
+      "decel_18mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_18mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "rival",
+      "decel_18mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_18mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "rival",
+      "decel_18mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_24mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-24mo|decel_24mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-24mo|decel_24mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-24mo|decel_24mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-24mo|decel_24mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-24mo|decel_24mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "distribution": "monopoly",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "monopoly-24mo|decel_24mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_24mo_action": "rival",
+      "decel_24mo_progress": "robust"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_24mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_24mo_action": "rival",
+      "decel_24mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "monopoly-24mo|decel_24mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "gov_action": "decelerate",
+      "open_source": "twenty_four_months",
+      "open_source_set": "yes"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "monopoly",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_24mo_action": "rival",
+      "decel_24mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_2mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_2mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "escapes",
+      "decel_2mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_2mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "escapes",
+      "decel_2mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_2mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "accelerate",
+      "decel_2mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_2mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "accelerate",
+      "decel_2mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_2mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "accelerate",
+      "decel_2mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_2mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "rival",
+      "decel_2mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_2mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "rival",
+      "decel_2mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_2mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "rival",
+      "decel_2mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_4mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_4mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "escapes",
+      "decel_4mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_4mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "escapes",
+      "decel_4mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_4mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "accelerate",
+      "decel_4mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_4mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "accelerate",
+      "decel_4mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_4mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "accelerate",
+      "decel_4mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_4mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "rival",
+      "decel_4mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_4mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "rival",
+      "decel_4mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_4mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "rival",
+      "decel_4mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_6mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_6mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_6mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_6mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_6mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_6mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_6mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "rival",
+      "decel_6mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_6mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "rival",
+      "decel_6mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_6mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "rival",
+      "decel_6mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_9mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_9mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "escapes",
+      "decel_9mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_9mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "escapes",
+      "decel_9mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_9mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "accelerate",
+      "decel_9mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_9mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "accelerate",
+      "decel_9mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_9mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "accelerate",
+      "decel_9mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_9mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "rival",
+      "decel_9mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_9mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "rival",
+      "decel_9mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_9mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "rival",
+      "decel_9mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_12mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_12mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_12mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_12mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_12mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_12mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_12mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "rival",
+      "decel_12mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_12mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "rival",
+      "decel_12mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_12mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "rival",
+      "decel_12mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_18mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_18mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "escapes",
+      "decel_18mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_18mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "escapes",
+      "decel_18mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_18mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "accelerate",
+      "decel_18mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_18mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "accelerate",
+      "decel_18mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_18mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "accelerate",
+      "decel_18mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_18mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "rival",
+      "decel_18mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_18mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "rival",
+      "decel_18mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_18mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "rival",
+      "decel_18mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_24mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_24mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_24mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_24mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_24mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_24mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-6mo|decel_24mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_24mo_action": "rival",
+      "decel_24mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_24mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_24mo_action": "rival",
+      "decel_24mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-6mo|decel_24mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "six_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_24mo_action": "rival",
+      "decel_24mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_2mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-12mo|decel_2mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "escapes",
+      "decel_2mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_2mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "escapes",
+      "decel_2mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_2mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "accelerate",
+      "decel_2mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_2mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "accelerate",
+      "decel_2mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_2mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "accelerate",
+      "decel_2mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_2mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "rival",
+      "decel_2mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_2mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "rival",
+      "decel_2mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_2mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_2mo_action": "rival",
+      "decel_2mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_4mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-12mo|decel_4mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "escapes",
+      "decel_4mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_4mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "escapes",
+      "decel_4mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_4mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "accelerate",
+      "decel_4mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_4mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "accelerate",
+      "decel_4mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_4mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "accelerate",
+      "decel_4mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_4mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "rival",
+      "decel_4mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_4mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "rival",
+      "decel_4mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_4mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_4mo_action": "rival",
+      "decel_4mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_6mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-12mo|decel_6mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "escapes",
+      "decel_6mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_6mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "escapes",
+      "decel_6mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_6mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "accelerate",
+      "decel_6mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_6mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "accelerate",
+      "decel_6mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_6mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "accelerate",
+      "decel_6mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_6mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "rival",
+      "decel_6mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_6mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "rival",
+      "decel_6mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_6mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_6mo_action": "rival",
+      "decel_6mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_9mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-12mo|decel_9mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "escapes",
+      "decel_9mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_9mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "escapes",
+      "decel_9mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_9mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "accelerate",
+      "decel_9mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_9mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "accelerate",
+      "decel_9mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_9mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "accelerate",
+      "decel_9mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_9mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "rival",
+      "decel_9mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_9mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "rival",
+      "decel_9mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_9mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_9mo_action": "rival",
+      "decel_9mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_12mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-12mo|decel_12mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-12mo|decel_12mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-12mo|decel_12mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-12mo|decel_12mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-12mo|decel_12mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-12mo|decel_12mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "rival",
+      "decel_12mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_12mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "rival",
+      "decel_12mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_12mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_12mo_action": "rival",
+      "decel_12mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_18mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-12mo|decel_18mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "escapes",
+      "decel_18mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_18mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "failed",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "escapes",
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "escapes",
+      "decel_18mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_18mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "solved",
+      "distribution": "concentrated"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "accelerate",
+      "decel_18mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_18mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "brittle",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "accelerate",
+      "decel_18mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_18mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "abandon",
+      "distribution": "concentrated",
+      "governance": "race"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "accelerate",
+      "decel_18mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_18mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "rival",
+      "decel_18mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_18mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "rival",
+      "decel_18mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_18mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_18mo_action": "rival",
+      "decel_18mo_progress": "unsolved"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_24mo_progress|escapes|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-12mo|decel_24mo_progress|escapes|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-12mo|decel_24mo_progress|escapes|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-12mo|decel_24mo_progress|accelerate|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-12mo|decel_24mo_progress|accelerate|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-12mo|decel_24mo_progress|accelerate|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "distribution": "concentrated",
+      "governance": "slowdown"
+    },
+    "flavorInternal": {}
+  },
+  {
+    "id": "concentrated-state-12mo|decel_24mo_progress|rival|robust",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "robust",
+      "decel_align_progress": "robust",
+      "decel_outcome": "parity_solved",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_24mo_action": "rival",
+      "decel_24mo_progress": "robust"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_24mo_progress|rival|brittle",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "alignment": "brittle",
+      "decel_align_progress": "brittle",
+      "decel_outcome": "rival",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_24mo_action": "rival",
+      "decel_24mo_progress": "brittle"
+    }
+  },
+  {
+    "id": "concentrated-state-12mo|decel_24mo_progress|rival|unsolved",
+    "sel": {
+      "automation": "deep",
+      "capability": "singularity",
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "gov_action": "decelerate",
+      "open_source": "twelve_months",
+      "open_source_set": "yes",
+      "sovereignty": "state"
+    },
+    "resolved": {
+      "decel_align_progress": "unsolved",
+      "decel_outcome": "parity_failed",
+      "distribution": "concentrated",
+      "geo_spread": "multiple",
+      "governance": "slowdown",
+      "rival_emerges": "yes"
+    },
+    "flavorInternal": {
+      "decel_24mo_action": "rival",
+      "decel_24mo_progress": "unsolved"
+    }
+  }
+]

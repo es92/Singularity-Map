@@ -374,13 +374,34 @@
 
     function renderSidebar(selected) {
         const NODES = window.Engine.NODES;
+        const MODULES = (window.Graph && window.Graph.MODULES) || [];
+        // Dims that belong to a module — rendered in module sections
+        // rather than flat stage sections (Phase 5).
+        const moduleDims = new Set();
+        for (const m of MODULES) {
+            for (const d of (m.nodeIds || [])) moduleDims.add(d);
+        }
+        const inModule = (n) => moduleDims.has(n.id);
         const sections = [
-            { id: 'stage-1', label: 'Stage 1', items: NODES.filter(n => n.stage === 1) },
-            { id: 'stage-2', label: 'Stage 2', items: NODES.filter(n => n.stage === 2) },
-            { id: 'stage-3', label: 'Stage 3', items: NODES.filter(n => n.stage === 3) },
-            { id: 'stage-other', label: 'Other Nodes', items: NODES.filter(n => ![1,2,3].includes(n.stage)) },
-            { id: 'outcomes', label: 'Outcomes', items: templates.map(t => ({ id: t.id, label: t.title || '', _outcome: true })) }
+            { id: 'stage-1', label: 'Stage 1', items: NODES.filter(n => n.stage === 1 && !inModule(n)) },
+            { id: 'stage-2', label: 'Stage 2', items: NODES.filter(n => n.stage === 2 && !inModule(n)) },
+            { id: 'stage-3', label: 'Stage 3', items: NODES.filter(n => n.stage === 3 && !inModule(n)) },
+            { id: 'stage-other', label: 'Other Nodes', items: NODES.filter(n => ![1,2,3].includes(n.stage) && !inModule(n)) },
         ];
+        // Module sections — one per module, internal nodes grouped with
+        // the module's reads/writes contract shown up top.
+        for (const m of MODULES) {
+            const items = (m.nodeIds || []).map(id => window.Engine.NODE_MAP[id]).filter(Boolean);
+            if (items.length) {
+                sections.push({
+                    id: 'module-' + m.id,
+                    label: 'Module: ' + m.id,
+                    _module: m,
+                    items,
+                });
+            }
+        }
+        sections.push({ id: 'outcomes', label: 'Outcomes', items: templates.map(t => ({ id: t.id, label: t.title || '', _outcome: true })) });
         let html = `
             <div class="nodes-sidebar-head">
                 <a href="#/explore">← explore</a>
@@ -394,6 +415,15 @@
         for (const sec of sections) {
             if (!sec.items.length) continue;
             html += `<div class="nodes-list-section-head">${esc(sec.label)}</div>`;
+            if (sec._module) {
+                const m = sec._module;
+                const reads = (m.reads || []).join(', ');
+                const writes = (m.writes || []).join(', ');
+                html += `<div style="padding: 2px 12px 6px; font-size: 11px; color: var(--text-muted);">`
+                     + `<div>reads: <code>${esc(reads || '—')}</code></div>`
+                     + `<div>writes: <code>${esc(writes || '—')}</code></div>`
+                     + `</div>`;
+            }
             for (const n of sec.items) {
                 const isOutcome = !!n._outcome;
                 const href = isOutcome ? `#/nodes?o=${encodeURIComponent(n.id)}`

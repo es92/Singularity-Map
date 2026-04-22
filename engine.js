@@ -4,7 +4,7 @@
 
 (function() {
 
-const { SCENARIO, NODES, NODE_MAP } = (typeof module !== 'undefined' && module.exports)
+const { SCENARIO, NODES, NODE_MAP, MODULES, MODULE_MAP } = (typeof module !== 'undefined' && module.exports)
     ? require('./graph.js') : window.Graph;
 
 // ════════════════════════════════════════════════════════
@@ -259,7 +259,11 @@ function _buildDerivTables() {
     }
     for (const n of derivedNodes) topoVisit(n.id);
 
-    const largeDims = new Set(['decel_outcome', 'decel_align_progress']);
+    // Phase 4a: decel_outcome is deleted; decel_align_progress is no
+    // longer derived (written directly by the decel module reducer).
+    // The JIT chain tables below are therefore obsolete — largeDims is
+    // empty (we keep the set as a hook for future large-fanout dims).
+    const largeDims = new Set();
 
     for (const dimId of topoOrder) {
         if (largeDims.has(dimId)) continue;
@@ -333,89 +337,15 @@ function _buildDerivTables() {
         };
     }
 
-    // Chain tables for decel_outcome and decel_align_progress (production graph only)
-    if (!NODE_MAP['decel_outcome'] || !NODE_MAP['decel_align_progress']) return;
-    const steps = [
-        ['decel_2mo_action', 'decel_2mo_progress'],
-        ['decel_4mo_action', 'decel_4mo_progress'],
-        ['decel_6mo_action', 'decel_6mo_progress'],
-        ['decel_9mo_action', 'decel_9mo_progress'],
-        ['decel_12mo_action', 'decel_12mo_progress'],
-        ['decel_18mo_action', 'decel_18mo_progress'],
-        ['decel_24mo_action', 'decel_24mo_progress'],
-    ];
-
-    // decel_outcome: per-step 2D tables [actionIdx * pStride + progressIdx] -> resultIdx
-    const outcomeNode = NODE_MAP['decel_outcome'];
-    const outcomeI2V = _idxToVal['decel_outcome'];
-    const outcomeV2I = _valToIdx['decel_outcome'];
-    const oStepTables = [];
-    const oActionDims = [];
-    const oProgressDims = [];
-    const oActionV2I = [];
-    const oPStrides = [];
-
-    for (const [actionDim, progressDim] of steps) {
-        oActionDims.push(actionDim);
-        oProgressDims.push(progressDim);
-        oActionV2I.push(_valToIdx[actionDim]);
-        const aVals = _idxToVal[actionDim];
-        const pVals = _idxToVal[progressDim];
-        const pStride = pVals.length;
-        oPStrides.push(pStride);
-
-        const tbl = new Uint8Array(aVals.length * pVals.length);
-        for (let a = 0; a < aVals.length; a++) {
-            for (let p = 0; p < pVals.length; p++) {
-                const testSel = {};
-                if (aVals[a]) testSel[actionDim] = aVals[a];
-                if (pVals[p]) testSel[progressDim] = pVals[p];
-                const result = applyDerivations(outcomeNode.deriveWhen, testSel, 'decel_outcome');
-                if (result && outcomeV2I[result]) {
-                    tbl[a * pStride + p] = outcomeV2I[result];
-                }
-            }
-        }
-        oStepTables.push(tbl);
-    }
-
-    _derivTable['decel_outcome'] = function(sel) {
-        for (let s = 0; s < 7; s++) {
-            const action = sel[oActionDims[s]];
-            if (!action) continue;
-            const aIdx = oActionV2I[s][action];
-            if (!aIdx) continue;
-            const progress = sel[oProgressDims[s]];
-            const pIdx = progress ? (_valToIdx[oProgressDims[s]][progress] || 0) : 0;
-            const ri = oStepTables[s][aIdx * oPStrides[s] + pIdx];
-            if (ri) return outcomeI2V[ri];
-        }
-        return undefined;
-    };
-
-    // decel_align_progress: per-step action match sets
-    const alignNode = NODE_MAP['decel_align_progress'];
-    const alignActionSets = [];
-
-    for (const [actionDim, progressDim] of steps) {
-        const matching = new Set();
-        for (const rule of alignNode.deriveWhen) {
-            if (!rule.match) continue;
-            const vals = rule.match[actionDim];
-            if (vals && Array.isArray(vals)) for (const v of vals) matching.add(v);
-        }
-        alignActionSets.push(matching);
-    }
-
-    _derivTable['decel_align_progress'] = function(sel) {
-        for (let s = 0; s < 7; s++) {
-            const action = sel[steps[s][0]];
-            if (action && alignActionSets[s].has(action)) {
-                return sel[steps[s][1]];
-            }
-        }
-        return undefined;
-    };
+    // Phase 4a: removed the JIT chain tables for decel_outcome and
+    // decel_align_progress. Both were built over the 14 decel_*mo_*
+    // dims to collapse the derived chain into a single O(steps) lookup.
+    // Post-migration:
+    //   * decel_outcome no longer exists — decel module writes alignment/
+    //     geo_spread/rival_emerges/governance/containment directly.
+    //   * decel_align_progress is written directly by the module reducer
+    //     (collapseToFlavor.set) and needs no derivation — resolvedVal
+    //     reads it from sel.
 }
 _buildDerivTables();
 
@@ -701,10 +631,14 @@ function templatePartialMatch(t, state) {
 // Immutable answer stack
 // ════════════════════════════════════════════════════════
 
+// Each entry carries a `moduleStack` vector of active module frames. When
+// empty (the default), engine behavior is identical to the pre-module code:
+// every helper that consults frames short-circuits and just reads globals.
+// Frame shape (Phase 3 will instantiate these): { moduleId, local: {sel, flavor}, entryIndex }
 function createStack() {
     const state = {};
     const { flavor } = cleanSelection(state);
-    return [{ nodeId: null, edgeId: null, state, flavor }];
+    return [{ nodeId: null, edgeId: null, state, flavor, moduleStack: [] }];
 }
 
 function push(stack, nodeId, edgeId) {
@@ -713,10 +647,11 @@ function push(stack, nodeId, edgeId) {
 
     const prev = base[base.length - 1].state;
     const prevFlavor = base[base.length - 1].flavor || {};
+    const prevModuleStack = base[base.length - 1].moduleStack || [];
     const next = { ...prev };
     next[nodeId] = edgeId;
     const { flavor } = cleanSelection(next, { ...prevFlavor });
-    return [...base, { nodeId, edgeId, state: next, flavor }];
+    return [...base, { nodeId, edgeId, state: next, flavor, moduleStack: prevModuleStack }];
 }
 
 function pop(stack) {
@@ -736,6 +671,15 @@ function currentState(stack) {
 
 function currentFlavor(stack) {
     return stack[stack.length - 1].flavor || {};
+}
+
+function currentModuleStack(stack) {
+    return stack[stack.length - 1].moduleStack || [];
+}
+
+function currentModuleFrame(stack) {
+    const ms = currentModuleStack(stack);
+    return ms.length ? ms[ms.length - 1] : null;
 }
 
 // Merged view for narrative resolution: sel wins on conflict (engine state
@@ -817,18 +761,18 @@ function matchContextWhen(state, cond) {
 // ════════════════════════════════════════════════════════
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { NODES, NODE_MAP,
+    module.exports = { NODES, NODE_MAP, MODULES, MODULE_MAP,
         matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeActivatedByRules, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         cleanSelection, resolvedState,
         templateMatches, templatePartialMatch, resolveContextWhen,
-        createStack, push, pop, popTo, currentState, currentFlavor, narrativeState, stackHas, displayOrder };
+        createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas, displayOrder };
 }
 if (typeof window !== 'undefined') {
-    window.Engine = { NODES, NODE_MAP,
+    window.Engine = { NODES, NODE_MAP, MODULES, MODULE_MAP,
         matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         cleanSelection, resolvedState,
         templateMatches, templatePartialMatch, resolveContextWhen,
-        createStack, push, pop, popTo, currentState, currentFlavor, narrativeState, stackHas, displayOrder };
+        createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas, displayOrder };
 }
 
 })();

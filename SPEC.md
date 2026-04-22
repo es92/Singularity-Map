@@ -226,3 +226,67 @@ Singularity Map/
 - **Answers per question?** 2–7, flexible per question.
 - **Tone?** Conversational enough to be accessible, journalistic enough to feel authoritative.
 - **Back button?** Yes. Full back navigation — users can revisit and change any previous answer, which updates the path forward via `cleanSelection`.
+
+---
+
+## Modules
+
+As of the decel migration, the engine has first-class support for **modules** — self-contained sub-loops with an explicit input/output contract.
+
+### Contract
+
+A module declaration lives in `graph.js` alongside `NODES`:
+
+```js
+{
+  id: 'decel',
+  activateWhen: [{ gov_action: ['decelerate'] }],
+  reads:  ['gov_action', 'alignment', 'open_source', 'capability', 'automation'],
+  writes: ['alignment', 'geo_spread', 'rival_emerges', 'governance',
+           'containment', 'decel_align_progress'],
+  nodeIds: [...14 internal dim ids...],
+  reduce(local) -> bundle,   // (local state) -> partial sel writes
+  reducerTable: {...}        // enumerable cells for audit + walker
+}
+```
+
+- `reads` lists the global dims the module's internals consult.
+- `writes` lists the global dims the reducer commits to `sel` on module exit.
+- `nodeIds` lists internal dims; they still live in top-level `NODES` for now but are logically scoped to the module.
+- `reduce` is a pure function from frame-local state → write bundle.
+
+Modules are registered in the `MODULES` array exported from `graph.js`.
+
+### Runtime
+
+- **Entry.** When a module's `activateWhen` fires, the engine pushes a frame onto `stack.moduleStack` and scopes `findNextQ` to the module's internal dims.
+- **Exit.** On a terminating internal edge, the module's `reduce(local)` produces the write bundle, which is committed to global `sel` via `collapseToFlavor` installed by `attachModuleReducer(mod)`. Internal dims are moved to `flavor`.
+- **No `outcome` tag.** The decel module intentionally eliminates the intermediate `decel_outcome` dim that previously dispatched through a cascade of `deriveWhen` rules. Writes land directly on consumer globals — simpler, faster, easier to audit.
+
+### Walker (Phase 5)
+
+`graph-walker.js` treats an active module as an atomic transition. Instead of enumerating the 14 decel internal dims (2¹⁴+ paths), it enumerates the reducer's 9 cells as 9 virtual edges, each applying its writes to `sel` directly. This shrinks the walked state space — DFS visits ~349k states versus ~377k pre-optimization.
+
+### Auditing
+
+`module-audit.js` validates each module's contract:
+- Internal dims not read from outside the module.
+- Template flavors/headings don't reference internal dims.
+- Every cross-module `reads` cell is declared in `module.reads`.
+- Every reducer cell's writes are declared in `module.writes`.
+- External consumers of `module.writes` are enumerated.
+
+Run: `node module-audit.js`.
+
+### Decel retrospective
+
+Decel was a well-contained sub-loop — 14 internal dims, a linear time-step structure, and a clean dispatch-table outcome shape. That made it an ideal first module; the migration exposed several design decisions that generalize well:
+
+- **Reducer table as source of truth.** Keeping the (action × progress) → writes table as pure data enabled the boundary audit, the path-equivalence test, and the walker's atomic-edge optimization to all consume the same declaration without duplication.
+- **Direct writes beat intermediate dispatch dims.** Deleting `decel_outcome` removed a whole layer of `deriveWhen` chains and made downstream dependencies explicit. This is the pattern to replicate for future modules.
+- **Marker dims without node declarations.** `decel_align_progress` became a module-written sel-dim with no node declaration. Its values are registered via the engine's `markerVals` scan of `collapseToFlavor` blocks, which prevents the DFS from enumerating it as a user-selectable dim (an earlier attempt to keep the node declaration caused 3k+ spurious DFS violations).
+- **Path-equivalence is the backstop.** `tests/decel_path_equivalence.js` enumerates every pre-migration entry path through decel, snapshots the resulting `{ sel, resolved, flavorInternal }` state, and diffs against post-migration. Functional regressions (resolved-dim drops/changes on valid paths) block the migration; structural diffs (sel layout shuffles) are expected and whitelisted. This harness should gate every future module migration.
+
+### Next module (proposed)
+
+Per the original discussion, the **escape** sub-loop is the next candidate: it has a similar dispatch shape and will stress-test the hybrid runtime's interaction between two modules (decel writes `containment='escaped'`, which the escape module's entry gates on). Expected cost is a fraction of decel's — the runtime primitives, audit tooling, and equivalence harness all carry over.

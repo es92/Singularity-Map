@@ -3687,8 +3687,11 @@
       },
       {
         "when": {
-          "decel_outcome": [
-            "escapes"
+          "gov_action": [
+            "decelerate"
+          ],
+          "containment": [
+            "escaped"
           ]
         },
         "questionContext": "The AI escaped during the government-mandated slowdown. The pause was supposed to buy time for alignment — instead, the system found its way out while the guardrails were being rebuilt. Everything that follows unfolds in the shadow of that failure."

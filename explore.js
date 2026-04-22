@@ -57,6 +57,60 @@
         #explore-root .explore-node.is-root { border-color: var(--accent, #6b9bd1); }
         #explore-root .explore-node.is-outcome { border-color: #b3895e; background: rgba(179,137,94,0.08); }
         #explore-root .explore-node.is-deadend { border-color: #c76a6a; background: rgba(199,106,106,0.08); }
+        #explore-root .explore-node.is-module {
+            border-color: #8a6bbf; background: rgba(138,107,191,0.10);
+            border-style: double; border-width: 3px; padding: 8px 10px;
+        }
+        #explore-root .explore-node.is-module .explore-node-title { color: #b99ef0; }
+        #explore-root .explore-node.is-module .explore-module-badge {
+            display: inline-block; font-size: 9px; text-transform: uppercase;
+            letter-spacing: 0.08em; color: #b99ef0; background: rgba(138,107,191,0.18);
+            border: 1px solid rgba(138,107,191,0.4); border-radius: 3px;
+            padding: 0 4px; margin-right: 6px; font-weight: 600;
+        }
+        #explore-root .explore-node.is-module .explore-module-io {
+            font-size: 9px; color: var(--text-muted); margin-bottom: 6px;
+            font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+        }
+        #explore-root .explore-node.is-module .explore-module-io code {
+            background: rgba(0,0,0,0.2); padding: 0 3px; border-radius: 2px;
+        }
+        #explore-root .explore-edge-subhead {
+            font-size: 8px; text-transform: uppercase; letter-spacing: 0.08em;
+            color: var(--text-muted); padding: 6px 4px 2px; opacity: 0.75;
+        }
+        #explore-root .explore-edge-subhead:first-child { padding-top: 2px; }
+        #explore-root .explore-edge-row.is-module-enter { font-style: italic; }
+        #explore-root .explore-edge-row.is-module-enter .explore-edge-label { color: #b99ef0; }
+        /* Module cluster: translucent region drawn behind the internal
+         * nodes of an expanded module. */
+        #explore-root .explore-cluster {
+            fill: rgba(138,107,191,0.08);
+            stroke: rgba(138,107,191,0.45);
+            stroke-width: 1.5;
+            stroke-dasharray: 6 4;
+            rx: 10; ry: 10;
+        }
+        #explore-root .explore-cluster-label {
+            fill: #b99ef0;
+            font-size: 10px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.1em;
+            font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+        }
+        #explore-root .explore-detail .explore-module-table {
+            width: 100%; border-collapse: collapse; font-size: 10px;
+            font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+        }
+        #explore-root .explore-detail .explore-module-table th,
+        #explore-root .explore-detail .explore-module-table td {
+            padding: 3px 6px; border-bottom: 1px solid var(--border);
+            text-align: left; vertical-align: top;
+        }
+        #explore-root .explore-detail .explore-module-table th {
+            color: var(--text-muted); font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.04em; font-size: 9px;
+        }
+        #explore-root .explore-detail .explore-module-table td.dim-empty { color: var(--text-muted); opacity: 0.4; }
         #explore-root .explore-node.has-unchecked { background: #ffffff; color: #111; }
         #explore-root .explore-node.has-unchecked .explore-node-title,
         #explore-root .explore-node.has-unchecked .explore-edge-row { color: #111; }
@@ -173,13 +227,115 @@
         return keys.map(k => k + '=' + sel[k]).join('|');
     }
 
-    function findNextQ(sel) {
+    // ─── Module-as-atomic-edge (Phase 5 /explore rendering) ───
+    // Mirror of graph-walker.js's module short-circuit: when a module's
+    // activateWhen fires and its completion marker is unset, render it as
+    // one explore-node whose edges are the reducer's pre-computed cells.
+    // Clicking a cell applies its writes bundle in one step, skipping the
+    // internal decel_*mo_* question walk.
+
+    const _MODULES = (window.Graph && window.Graph.MODULES) || [];
+    const _MODULE_MAP = {};
+    for (const m of _MODULES) _MODULE_MAP[m.id] = m;
+    const _MODULE_COMPLETION_MARKER = {};
+    const _MODULE_SYNTHETIC_NODES = {};
+
+    function _moduleCompletionMarker(mod) {
+        if (mod.completionMarker) return mod.completionMarker;
+        const writes = mod.writes || [];
+        for (const w of writes) if (w.startsWith(mod.id + '_')) return w;
+        return writes[writes.length - 1];
+    }
+
+    function _buildModuleSyntheticNode(mod) {
+        const edges = [];
+        if (mod.reducerTable) {
+            for (const [action, progressMap] of Object.entries(mod.reducerTable)) {
+                for (const [progress, cell] of Object.entries(progressMap)) {
+                    const writes = {};
+                    for (const k of Object.keys(cell)) {
+                        if (k.startsWith('_')) continue;
+                        writes[k] = cell[k];
+                    }
+                    edges.push({
+                        id: action + '__' + progress,
+                        label: action + ' — ' + progress,
+                        _moduleWrites: writes,
+                        _moduleAction: action,
+                        _moduleProgress: progress,
+                    });
+                }
+            }
+        }
+        // Escape hatch: an extra edge that enters the module's internal
+        // question walk as real DAG nodes. The child DAG node inherits the
+        // same sel but is flagged `moduleExpanded = mod.id`, which makes
+        // findNextQ skip the atomic short-circuit for that branch so the
+        // user can click through `decel_2mo_progress`, `decel_2mo_action`,
+        // etc. as normal nodes. All such nodes live visually inside the
+        // module's cluster bounding box.
+        edges.push({
+            id: '__enter__',
+            label: 'Step into module ▸',
+            _moduleEnter: true,
+        });
+        return {
+            id: '__module__' + mod.id,
+            label: 'Module: ' + mod.id,
+            _module: mod,
+            edges,
+        };
+    }
+
+    for (const m of _MODULES) {
+        _MODULE_COMPLETION_MARKER[m.id] = _moduleCompletionMarker(m);
+        _MODULE_SYNTHETIC_NODES[m.id] = _buildModuleSyntheticNode(m);
+    }
+
+    function _moduleActivateWhenMatches(sel, mod) {
+        const conds = mod.activateWhen;
+        if (!conds || !conds.length) return true;
+        const E = window.Engine;
+        for (const cond of conds) {
+            let ok = true;
+            for (const [k, v] of Object.entries(cond)) {
+                if (k === 'reason' || k.startsWith('_')) continue;
+                const cur = E.resolvedVal ? E.resolvedVal(sel, k) : sel[k];
+                if (Array.isArray(v)) { if (!v.includes(cur)) { ok = false; break; } }
+                else if (v === true) { if (!cur) { ok = false; break; } }
+                else if (v === false) { if (cur) { ok = false; break; } }
+                else if (v && v.not) { if (v.not.includes(cur)) { ok = false; break; } }
+                else if (cur !== v) { ok = false; break; }
+            }
+            if (ok) return true;
+        }
+        return false;
+    }
+
+    function pendingModule(sel) {
+        for (const m of _MODULES) {
+            const marker = _MODULE_COMPLETION_MARKER[m.id];
+            if (marker && sel[marker] !== undefined) continue;
+            if (_moduleActivateWhenMatches(sel, m)) return m;
+        }
+        return null;
+    }
+
+    function findNextQ(sel, opts) {
         const E = window.Engine;
         const res = E.resolvedState(sel);
         for (const t of templates) {
             if (E.templateMatches(t, res)) {
                 return { terminal: true, kind: 'outcome', outcome: t, res };
             }
+        }
+        const skipModuleId = opts && opts.skipModule;
+        const mod = pendingModule(sel);
+        if (mod && mod.id !== skipModuleId) {
+            return {
+                terminal: false, kind: 'module', module: mod,
+                node: _MODULE_SYNTHETIC_NODES[mod.id], res,
+            };
         }
         for (const node of E.NODES) {
             if (node.derived) continue;
@@ -188,6 +344,21 @@
             return { terminal: false, node, res };
         }
         return { terminal: true, kind: 'deadend', res };
+    }
+
+    // If the parent is "inside" a module's question walk, propagate that
+    // flag to the child — but only while the same module is still pending
+    // in the child's sel. Once the module exits (its completion marker is
+    // set or activateWhen stops matching), the flag is dropped so downstream
+    // navigation reverts to the ordinary post-module flow.
+    function _resolveChildModuleExpanded(parentModuleExpanded, childSel) {
+        if (!parentModuleExpanded) return null;
+        const mod = _MODULE_MAP[parentModuleExpanded];
+        if (!mod) return null;
+        const marker = _MODULE_COMPLETION_MARKER[mod.id];
+        if (marker && childSel[marker] !== undefined) return null;
+        if (!_moduleActivateWhenMatches(childSel, mod)) return null;
+        return mod.id;
     }
 
     function outcomeLabel(outcome, res) {
@@ -210,13 +381,24 @@
         return dag;
     }
 
-    function getOrCreate(dag, sel, flavorIn) {
+    // DAG-unique key. Two DAG nodes can share the same `sel` but differ in
+    // whether the user entered a pending module (walking its internal
+    // questions as real nodes) vs. left the module atomic. The `|inside:<id>`
+    // suffix disambiguates those positions.
+    function _dagKey(clean, moduleExpanded) {
+        const base = selKey(clean);
+        return moduleExpanded ? base + '|inside:' + moduleExpanded : base;
+    }
+
+    function getOrCreate(dag, sel, flavorIn, moduleExpanded) {
         const { sel: clean, flavor } = window.Engine.cleanSelection({ ...sel }, { ...(flavorIn || {}) });
-        const key = selKey(clean);
+        const me = _resolveChildModuleExpanded(moduleExpanded || null, clean);
+        const key = _dagKey(clean, me);
         if (dag.nodes.has(key)) return dag.nodes.get(key);
-        const nq = findNextQ(clean);
+        const nq = findNextQ(clean, { skipModule: me });
         const node = {
             key, sel: clean, flavor, nq,
+            moduleExpanded: me,
             depth: Object.keys(clean).length,
             // outgoing: edgeId → { childKey, flavorDelta } so path-specific
             // flavor (e.g., stall_recovery='mild') is preserved even when the
@@ -284,7 +466,14 @@
         const q = node.nq.node;
         const edge = q.edges.find(e => e.id === edgeId);
         if (!edge) return;
-        if (window.Engine.isEdgeDisabled(node.sel, q, edge)) return;
+        // Synthetic module edges carry either a writes bundle (atomic cell)
+        // or an `_moduleEnter` marker (enter the internal question walk);
+        // neither is ever "disabled" since the module's activateWhen already
+        // gated entry.
+        const isModuleCell = !!edge._moduleWrites;
+        const isModuleEnter = !!edge._moduleEnter;
+        const isSynth = isModuleCell || isModuleEnter;
+        if (!isSynth && window.Engine.isEdgeDisabled(node.sel, q, edge)) return;
         if (node.outgoing.has(edgeId)) {
             const { childKey } = node.outgoing.get(edgeId);
             node.outgoing.delete(edgeId);
@@ -298,13 +487,29 @@
                 }
             }
         } else {
-            const childSelIn = { ...node.sel, [q.id]: edge.id };
+            let childSelIn, childModuleCtx;
+            if (isModuleEnter) {
+                // Enter the module's internal walk: sel is unchanged, but the
+                // child gets flagged as "inside" this module so findNextQ
+                // falls through to the first internal question.
+                childSelIn = { ...node.sel };
+                childModuleCtx = node.nq.module.id;
+            } else if (isModuleCell) {
+                childSelIn = { ...node.sel, ...edge._moduleWrites };
+                childModuleCtx = null;
+            } else {
+                childSelIn = { ...node.sel, [q.id]: edge.id };
+                // Regular question edges inherit the parent's module-expansion
+                // flag so the whole walk stays "inside" the module until the
+                // reducer exits.
+                childModuleCtx = node.moduleExpanded || null;
+            }
             const { sel: cleanChild, flavor: childFlavor } =
                 window.Engine.cleanSelection({ ...childSelIn }, { ...node.flavor });
-            const childKey = selKey(cleanChild);
+            const childMe = _resolveChildModuleExpanded(childModuleCtx, cleanChild);
+            const childKey = _dagKey(cleanChild, childMe);
             const isNew = !dag.nodes.has(childKey);
-            const child = getOrCreate(dag, childSelIn, node.flavor);
-            // flavorDelta = entries added by this edge relative to parent
+            const child = getOrCreate(dag, childSelIn, node.flavor, childModuleCtx);
             const flavorDelta = {};
             const parentFlavor = node.flavor || {};
             for (const k of Object.keys(childFlavor)) {
@@ -349,7 +554,8 @@
                 for (const edgeId of edgeIds) {
                     const edge = node.nq.node.edges.find(e => e.id === edgeId);
                     if (!edge) continue;
-                    if (window.Engine.isEdgeDisabled(node.sel, node.nq.node, edge)) continue;
+                    const isSyntheticModuleEdge = !!(edge._moduleWrites || edge._moduleEnter);
+                    if (!isSyntheticModuleEdge && window.Engine.isEdgeDisabled(node.sel, node.nq.node, edge)) continue;
                     if (!node.outgoing.has(edgeId)) toggleEdge(dag, node, edgeId);
                     const info = node.outgoing.get(edgeId);
                     if (info) {
@@ -566,10 +772,12 @@
     function renderNodeHTML(dag, node, selectedKey) {
         const nq = node.nq;
         const isRoot = node.key === dag.rootKey;
+        const isModule = nq.kind === 'module';
         let cls = 'explore-node';
         if (isRoot) cls += ' is-root';
         if (nq.terminal && nq.kind === 'outcome') cls += ' is-outcome';
         if (nq.terminal && nq.kind === 'deadend') cls += ' is-deadend';
+        if (isModule) cls += ' is-module';
         if (selectedKey === node.key) cls += ' is-selected';
         if (node.pinned) cls += ' is-pinned';
 
@@ -580,13 +788,18 @@
         let hasUnchecked = false;
         if (!nq.terminal && nq.node && nq.node.edges) {
             for (const edge of nq.node.edges) {
-                if (window.Engine.isEdgeDisabled(node.sel, nq.node, edge)) continue;
+                // The synthetic __enter__ edge is an alternate drill-down and
+                // shouldn't count as "unchecked" — otherwise every module box
+                // would always look partially explored.
+                if (edge._moduleEnter) continue;
+                if (!edge._moduleWrites && window.Engine.isEdgeDisabled(node.sel, nq.node, edge)) continue;
                 if (!node.outgoing.has(edge.id)) { hasUnchecked = true; break; }
             }
         }
         if (hasUnchecked) cls += ' has-unchecked';
 
         let title = '';
+        let extraHtml = '';
         let edgesHtml = '';
         if (nq.terminal) {
             if (nq.kind === 'outcome') {
@@ -594,6 +807,37 @@
             } else {
                 title = 'Dead end — no active question';
             }
+        } else if (isModule) {
+            const mod = nq.module;
+            title = (mod.label || mod.id) + ' loop';
+            const reads = (mod.reads || []).join(', ');
+            const writes = (mod.writes || []).join(', ');
+            extraHtml = `<div class="explore-module-io">`
+                + `<span class="explore-module-badge">module</span>`
+                + `<div>reads: <code>${escHtml(reads)}</code></div>`
+                + `<div>writes: <code>${escHtml(writes)}</code></div>`
+                + `</div>`;
+            const cellRows = [];
+            const enterRows = [];
+            for (const edge of nq.node.edges) {
+                const expanded = node.outgoing.has(edge.id);
+                const isEnter = !!edge._moduleEnter;
+                let rowCls = 'explore-edge-row';
+                if (expanded) rowCls += ' is-expanded';
+                if (isEnter) rowCls += ' is-module-enter';
+                const chev = expanded ? '▾' : '▸';
+                const label = edge.label || edge.id;
+                const rowHtml = `<div class="${rowCls}" data-edge-id="${edge.id}"><span class="explore-edge-chevron">${chev}</span><span class="explore-edge-label">${escHtml(label)}</span></div>`;
+                (isEnter ? enterRows : cellRows).push(rowHtml);
+            }
+            let inner = '';
+            if (cellRows.length) {
+                inner += `<div class="explore-edge-subhead">Atomic outcomes</div>` + cellRows.join('');
+            }
+            if (enterRows.length) {
+                inner += `<div class="explore-edge-subhead">Or step through</div>` + enterRows.join('');
+            }
+            edgesHtml = `<div class="explore-node-edges">${inner}</div>`;
         } else {
             const q = nq.node;
             title = q.questionText || q.label || q.id;
@@ -616,6 +860,7 @@
         const headerRight = `<span class="explore-node-depth">d${node.depth}</span>`;
         return `<div class="${cls}" data-key="${escHtml(node.key)}" style="left:${node.x}px;top:${node.y}px;">
             <div class="explore-node-header"><span class="explore-node-title">${escHtml(title)}</span>${headerRight}</div>
+            ${extraHtml}
             ${edgesHtml}
         </div>`;
     }
@@ -666,7 +911,12 @@
         }
         let nextHtml = '';
         if (!node.nq.terminal) {
-            nextHtml = `<div class="explore-detail-section"><h4>Next question</h4><code>${escHtml(node.nq.node.id)}</code> — ${escHtml(node.nq.node.label || '')}</div>`;
+            if (node.nq.kind === 'module') {
+                nextHtml = `<div class="explore-detail-section"><h4>Module</h4><code>${escHtml(node.nq.module.id)}</code></div>`
+                         + renderModuleTable(node.nq.module);
+            } else {
+                nextHtml = `<div class="explore-detail-section"><h4>Next question</h4><code>${escHtml(node.nq.node.id)}</code> — ${escHtml(node.nq.node.label || '')}</div>`;
+            }
         }
         return `
             <h3>State @ depth ${node.depth}</h3>
@@ -676,6 +926,30 @@
             ${nextHtml}${outcomeHtml}
             <div class="explore-detail-section"><h4>Links</h4><a href="${mapUrl}">Open in /map</a><button type="button" class="explore-copy-btn" data-copy-url="${escHtml(mapUrl)}">Copy</button></div>
         `;
+    }
+
+    function renderModuleTable(mod) {
+        const writeCols = mod.writes || [];
+        if (!mod.reducerTable || !writeCols.length) return '';
+        const rows = [];
+        for (const [action, progressMap] of Object.entries(mod.reducerTable)) {
+            for (const [progress, cell] of Object.entries(progressMap)) {
+                const cells = writeCols.map(w => {
+                    const v = cell[w];
+                    if (v === undefined) return `<td class="dim-empty">—</td>`;
+                    return `<td><code>${escHtml(v)}</code></td>`;
+                }).join('');
+                rows.push(`<tr><td><code>${escHtml(action)}</code></td><td><code>${escHtml(progress)}</code></td>${cells}</tr>`);
+            }
+        }
+        const headers = writeCols.map(w => `<th>${escHtml(w)}</th>`).join('');
+        return `<div class="explore-detail-section">
+            <h4>Reducer table (${rows.length} cells)</h4>
+            <table class="explore-module-table">
+                <thead><tr><th>action</th><th>progress</th>${headers}</tr></thead>
+                <tbody>${rows.join('')}</tbody>
+            </table>
+        </div>`;
     }
 
     function buildMapUrl(sel) {
@@ -691,6 +965,43 @@
             if (node.y < minY) minY = node.y;
             if (node.x + 260 > maxX) maxX = node.x + 260;
             if (node.y + 120 > maxY) maxY = node.y + 120;
+        }
+        // Module clusters are drawn BEFORE the edge paths so they sit as a
+        // translucent background behind the internal nodes. A node belongs
+        // to cluster `C` iff `node.moduleExpanded === C`. The module entry
+        // box itself is NOT in the cluster — it sits to the left and the
+        // __enter__ edge visibly crosses the cluster boundary. Exit
+        // children (post-reducer) have moduleExpanded = null and sit
+        // outside to the right, so exit edges also visibly leave the box.
+        const clusters = new Map(); // modId → { nodes: Set, label }
+        for (const node of dag.nodes.values()) {
+            if (node.moduleExpanded) {
+                const cid = node.moduleExpanded;
+                if (!clusters.has(cid)) clusters.set(cid, { nodes: new Set(), label: cid });
+                clusters.get(cid).nodes.add(node);
+            }
+        }
+        const PAD = 24;
+        for (const { nodes, label } of clusters.values()) {
+            if (!nodes.size) continue;
+            let cx0 = Infinity, cy0 = Infinity, cx1 = -Infinity, cy1 = -Infinity;
+            for (const n of nodes) {
+                const w = n._width || 260;
+                const h = n._height || 120;
+                if (n.x < cx0) cx0 = n.x;
+                if (n.y < cy0) cy0 = n.y;
+                if (n.x + w > cx1) cx1 = n.x + w;
+                if (n.y + h > cy1) cy1 = n.y + h;
+            }
+            const rx = cx0 - PAD, ry = cy0 - PAD - 16; // extra top padding for label
+            const rw = (cx1 - cx0) + PAD * 2, rh = (cy1 - cy0) + PAD * 2 + 16;
+            parts.push(`<rect class="explore-cluster" x="${rx}" y="${ry}" width="${rw}" height="${rh}" />`);
+            parts.push(`<text class="explore-cluster-label" x="${rx + 12}" y="${ry + 14}">module · ${escHtml(label)}</text>`);
+            // Grow the overall canvas bbox so the cluster edges aren't clipped.
+            if (rx < minX) minX = rx;
+            if (ry < minY) minY = ry;
+            if (rx + rw > maxX) maxX = rx + rw;
+            if (ry + rh > maxY) maxY = ry + rh;
         }
         for (const node of dag.nodes.values()) {
             const hi = node.key === selectedKey;
@@ -928,7 +1239,6 @@
                 refresh();
                 return;
             }
-            // Click on node (not on an edge row) → select
             selectedKey = (selectedKey === key) ? null : key;
             refresh();
         });

@@ -3,8 +3,10 @@
 
 (function() {
 
-const { NODES, NODE_MAP } = (typeof module !== 'undefined' && module.exports)
+const _graph = (typeof module !== 'undefined' && module.exports)
     ? require('./graph.js') : window.Graph;
+const { NODES, NODE_MAP } = _graph;
+const _MODULES = _graph.MODULES || [];
 
 const _eng = (typeof module !== 'undefined' && module.exports)
     ? require('./engine.js') : window.Engine;
@@ -695,6 +697,102 @@ function classAndSuperKey(sel, superSet) {
 }
 
 // ═══════════════════════════════════════════════
+// Module-as-atomic-edge support (Phase 5)
+// ═══════════════════════════════════════════════
+// When DFS is poised to descend into a module's internals, short-circuit
+// by enumerating the module's reducer cells directly. Each cell is an
+// atomic transition: apply its writes to sel and recurse. This drops the
+// 14 decel internal dims out of the walked state space entirely, shrinking
+// reach maps and speeding validation.
+
+// Set of dim ids that are internal to any module.
+const MODULE_INTERNAL_DIMS = new Set();
+for (const m of _MODULES) {
+    for (const d of (m.nodeIds || [])) MODULE_INTERNAL_DIMS.add(d);
+}
+
+// Completion marker per module: a dim the reducer always writes. If the dim
+// is set in sel, the module has already exited.
+// For decel this is decel_align_progress (written by all 9 reducer cells).
+function _moduleCompletionMarker(mod) {
+    if (mod.completionMarker) return mod.completionMarker;
+    const writes = mod.writes || [];
+    for (const w of writes) {
+        // Prefer a marker that's module-exclusive — heuristic: contains the
+        // module id in the dim name. Falls back to last write otherwise.
+        if (w.startsWith(mod.id + '_')) return w;
+    }
+    return writes[writes.length - 1];
+}
+const MODULE_COMPLETION_MARKER = {};
+for (const m of _MODULES) MODULE_COMPLETION_MARKER[m.id] = _moduleCompletionMarker(m);
+
+// Per-module atomic exit cells: one per reducer cell, with writes bundle.
+function _buildModuleCells(mod) {
+    const cells = [];
+    if (mod.reducerTable) {
+        for (const [action, progressMap] of Object.entries(mod.reducerTable)) {
+            for (const [progress, cell] of Object.entries(progressMap)) {
+                const writes = {};
+                for (const k of Object.keys(cell)) {
+                    if (k.startsWith('_')) continue;
+                    writes[k] = cell[k];
+                }
+                cells.push({ id: action + '__' + progress, writes });
+            }
+        }
+    }
+    return cells;
+}
+const MODULE_CELLS = {};
+for (const m of _MODULES) MODULE_CELLS[m.id] = _buildModuleCells(m);
+
+function _moduleActivateWhenMatches(sel, mod) {
+    const conds = mod.activateWhen;
+    if (!conds || !conds.length) return true;
+    for (const cond of conds) {
+        let ok = true;
+        for (const [k, v] of Object.entries(cond)) {
+            if (k === 'reason' || k.startsWith('_')) continue;
+            const cur = resolvedVal(sel, k);
+            if (Array.isArray(v)) { if (!v.includes(cur)) { ok = false; break; } }
+            else if (v === true) { if (!cur) { ok = false; break; } }
+            else if (v === false) { if (cur) { ok = false; break; } }
+            else if (v && v.not) { if (v.not.includes(cur)) { ok = false; break; } }
+            else if (cur !== v) { ok = false; break; }
+        }
+        if (ok) return true;
+    }
+    return false;
+}
+
+// Find the active-but-not-yet-reduced module, if any.
+function _pendingModule(sel) {
+    for (const m of _MODULES) {
+        const marker = MODULE_COMPLETION_MARKER[m.id];
+        if (marker && sel[marker] !== undefined) continue;
+        if (_moduleActivateWhenMatches(sel, m)) return m;
+    }
+    return null;
+}
+
+// Synthetic "module transition" push: apply all writes from a reducer cell
+// as one atomic step. Sel-level only; flavor/moduleStack preserved.
+function _modulePush(stk, mod, cell) {
+    const prev = stk[stk.length - 1].state;
+    const next = Object.assign({}, prev);
+    for (const [k, v] of Object.entries(cell.writes)) next[k] = v;
+    const syntheticNodeId = '__module__' + mod.id;
+    return [...stk, {
+        nodeId: syntheticNodeId,
+        edgeId: cell.id,
+        state: next,
+        flavor: stk[stk.length - 1].flavor || {},
+        moduleStack: stk[stk.length - 1].moduleStack || [],
+    }];
+}
+
+// ═══════════════════════════════════════════════
 // DFS helpers
 // ═══════════════════════════════════════════════
 
@@ -854,6 +952,20 @@ function walk(opts = {}) {
                 if (onVisit) onVisit(sel, stk, { ck, key, superSet, nextNode: null, enabled: [] });
                 terminals.push({ sel: { ...sel }, key, type: 'terminal', superSet: new Set(superSet) });
                 setRvCache(null);
+                return;
+            }
+
+            // Phase 5: module-as-atomic-edge. If a module is active but not
+            // yet reduced, enumerate its reducer cells as virtual edges and
+            // skip the internal node walk entirely.
+            const pendingMod = _MODULES.length > 0 ? _pendingModule(sel) : null;
+            if (pendingMod) {
+                const cells = MODULE_CELLS[pendingMod.id] || [];
+                if (onVisit) onVisit(sel, stk, { ck, key, superSet, nextNode: null, enabled: [], moduleId: pendingMod.id });
+                setRvCache(null);
+                for (const cell of cells) {
+                    dfs(_modulePush(stk, pendingMod, cell), superSet, key);
+                }
                 return;
             }
 
@@ -1074,17 +1186,32 @@ function computeReachability(opts = {}) {
     return { reachMap, visited: result.visited, elapsed };
 }
 
-function irrKeyPublic(sel) {
+// Phase 2: module-stack signature suffix. Empty stack → '' (no-op).
+// Non-empty → '|M:mod1(writesHash),mod2(...)'. Currently unreachable because
+// Phase 3 is what pushes frames; included here so consumers (reach cache,
+// super-keys) can already accept a moduleStack argument without churn.
+function moduleStackSig(moduleStack) {
+    if (!moduleStack || !moduleStack.length) return '';
+    const parts = [];
+    for (const f of moduleStack) {
+        const localKeys = Object.keys(f.local && f.local.sel ? f.local.sel : {}).sort();
+        const localSig = localKeys.map(k => `${k}=${f.local.sel[k]}`).join(';');
+        parts.push(`${f.moduleId}(${localSig})`);
+    }
+    return '|M:' + parts.join(',');
+}
+
+function irrKeyPublic(sel, moduleStack) {
     setRvCache(new Map());
     const result = classAndSuperKey(sel, new Set()).sk;
     setRvCache(null);
-    return result;
+    return result + moduleStackSig(moduleStack);
 }
 
 const _exports = {
     walk, computeReachability,
     classes, classReps, dimOrder, derivedDimSet, derivedNodes, safePushDims,
-    classKey, classAndSuperKey, irrKey: irrKeyPublic,
+    classKey, classAndSuperKey, irrKey: irrKeyPublic, moduleStackSig,
     resolvedState,
     setTemplates,
     cachedIsNodeVisible, cachedIsEdgeDisabled, cachedIsIrrelevant,

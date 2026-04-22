@@ -11,7 +11,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { NODES, NODE_MAP } = require('./graph.js');
+const { NODES, NODE_MAP, MODULES } = require('./graph.js');
 const {
     matchCondition, resolvedVal, resolvedState: engineResolvedState,
     isNodeVisible, isNodeActivatedByRules, isNodeLocked, isEdgeDisabled,
