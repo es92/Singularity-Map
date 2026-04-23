@@ -413,7 +413,7 @@ const NODES = [
         { match: { proliferation_alignment: ['breaks'] }, value: 'failed' },
         { match: { alignment_durability: ['breaks'] }, value: 'failed' },
         { match: { brittle_resolution: ['escape'] }, value: 'failed' },
-        { match: { inert_stays: ['no'], inert_outcome: true }, value: 'failed' },
+        { match: { inert_stays: ['no'] }, value: 'failed' },
         { match: { brittle_resolution: ['solved'] }, value: 'robust' },
         { match: { brittle_resolution: ['sufficient'] }, valueMap: { failed: 'brittle' } },
         {
@@ -460,13 +460,13 @@ const NODES = [
         { brittle_resolution: ['escape'] },
         { proliferation_alignment: ['breaks'] },
         { proliferation_outcome: ['leaks_public'], alignment: { not: ['robust'] } },
-        { inert_stays: ['no'], inert_outcome: true },
+        { inert_stays: ['no'] },
         { catch_outcome: ['holds_permanently'], collateral_impact: { not: ['civilizational'] } }
       ],
       // Phase 4a: removed `decel_outcome: { not: ['solved', 'parity_solved'] }`
       // from all three clauses. Each clause already requires
       // alignment='failed' (clause 1), ai_goals='marginal' (clause 2),
-      // or inert_outcome (clause 3) — none of which are compatible with
+      // or inert_stays='no' (clause 3) — none of which are compatible with
       // decel's solved/parity_solved outcomes (which write alignment='robust').
       // So the exclusion was redundant given the other conditions.
       activateWhen: [
@@ -485,7 +485,7 @@ const NODES = [
         {
           capability: ['singularity'],
           automation: ['deep'],
-          inert_outcome: true
+          inert_stays: ['no']
         }
       ],
       deriveWhen: [
@@ -494,7 +494,7 @@ const NODES = [
         { match: { brittle_resolution: ['escape'] }, value: 'escaped' },
         { match: { proliferation_alignment: ['breaks'] }, value: 'escaped' },
         { match: { proliferation_outcome: ['leaks_public'], alignment: { not: ['robust'] } }, value: 'escaped' },
-        { match: { inert_stays: ['no'], inert_outcome: true }, value: 'escaped' }
+        { match: { inert_stays: ['no'] }, value: 'escaped' }
       ],
       edges: [
         {
@@ -524,10 +524,12 @@ const NODES = [
         },
         { concentration_type: ['ai_itself'] }
       ],
-      deriveWhen: [{ match: { inert_outcome: true }, fromState: 'inert_outcome' }],
       edges: [
         { id: 'benevolent', label: 'Benefit humanity',
-          disabledWhen: [{ war_survivors: ['none'], reason: 'Humanity is extinct — there is no one left to benefit' }] },
+          disabledWhen: [
+            { inert_stays: ['no'], capability: { not: ['singularity'] }, reason: 'A human-level AI that awakens from inertia can\'t unilaterally run things for humanity\'s benefit' },
+            { war_survivors: ['none'], reason: 'Humanity is extinct — there is no one left to benefit' }
+          ] },
         { id: 'alien_coexistence', label: 'Alien (tolerant)',
           disabledWhen: [
             { capability: { not: ['singularity'] }, reason: 'Alien goals require superhuman intelligence' },
@@ -542,34 +544,39 @@ const NODES = [
             { capability: { not: ['singularity'] }, reason: 'Divergent fragmentation requires superhuman coordination' }
           ] },
         { id: 'power_seeking', label: 'Power accumulation' },
-        { id: 'marginal', label: 'Inert (for now)', disabledWhen: [{ concentration_type: ['ai_itself'], reason: 'The AI already took control — it is not inert' }] }
+        { id: 'marginal', label: 'Inert (for now)', disabledWhen: [
+            { concentration_type: ['ai_itself'], reason: 'The AI already took control — it is not inert' },
+            { inert_stays: ['no'], reason: 'You already chose "eventually develops goals" — the AI can\'t stay inert' }
+          ] }
       ] },
     { id: 'inert_stays', label: 'Does Escaped AI Stay Inert?', stage: 3, priority: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'] }],
-      edges: [ { id: 'yes', label: 'Yes — remains inert' }, { id: 'no', label: 'No — eventually develops goals and escapes', shortLabel: 'No — develops goals' } ] },
-    { id: 'inert_outcome', label: 'AI Eventually Converges On', stage: 3,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], inert_stays: ['no'] }],
       edges: [
-        { id: 'benevolent', label: 'Benefit humanity',
-          disabledWhen: [
-            { capability: { not: ['singularity'] }, reason: 'A human-level AI that awakens from inertia can\'t unilaterally run things for humanity\'s benefit' },
-            { war_survivors: ['none'], reason: 'Humanity is extinct — there is no one left to benefit' }
-          ] },
-        { id: 'alien_coexistence', label: 'Alien (tolerant)',
-          disabledWhen: [
-            { capability: { not: ['singularity'] }, reason: 'Alien goals require superhuman intelligence' },
-            { war_survivors: ['none'], reason: 'Humanity is extinct — there is no one left to coexist with' }
-          ] },
-        { id: 'alien_extinction', label: 'Alien (total)',
-          disabledWhen: [{ capability: { not: ['singularity'] }, reason: 'Executing extinction requires superhuman capability' }] },
-        { id: 'paperclip', label: 'Arbitrary',
-          disabledWhen: [{ capability: { not: ['singularity'] }, reason: 'Arbitrary optimization at scale requires superhuman capability' }] },
-        { id: 'swarm', label: 'Divergent',
-          disabledWhen: [{ capability: { not: ['singularity'] }, reason: 'Divergent fragmentation requires superhuman coordination' }] },
-        { id: 'power_seeking', label: 'Power accumulation' }
+        { id: 'yes', label: 'Yes — remains inert' },
+        {
+          id: 'no',
+          label: 'No — eventually develops goals and escapes',
+          shortLabel: 'No — develops goals',
+          // Eviction step for the inert-wakes re-ask of ai_goals:
+          // move the original marginal pick to flavor so the ai_goals
+          // node re-activates and the user picks the new (hostile) goal
+          // the AI wakes up with. See the ESCAPE_MODULE docstring.
+          //
+          // Gated by `when: ai_goals=marginal` so this only fires on the
+          // initial transition (before the re-pick) — otherwise every
+          // cleanSelection pass would re-evict the new hostile choice.
+          // (The ai_goals.marginal edge also has a disabledWhen on
+          // inert_stays=no that deletes the value directly, so the
+          // `move` is rarely reached; kept here as a narrative-layer
+          // backup in case the disabled-eviction order changes.)
+          collapseToFlavor: { when: { ai_goals: ['marginal'] }, move: ['ai_goals'] }
+        }
       ] },
+    // Note: the former `inert_outcome` node is gone. The inert-wakes path
+    // now re-asks `ai_goals` instead — see ESCAPE_MODULE and
+    // inert_stays.no.collapseToFlavor.
     { id: 'gov_action', label: 'Deceleration', stage: 2,
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } }],
       // Decel is only coherent when some actor can actually enforce a slowdown
       // in the one-country-leads case:
       //   (a) sovereignty=state     → state mandates (any distribution), or
@@ -766,8 +773,8 @@ const NODES = [
       edges: [ { id: 'rival', label: 'Rival reaches parity' } ] },
     { id: 'proliferation_control', label: 'Proliferation Control', stage: 2,
       hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
-        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_outcome: false }
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } },
+        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_stays: false }
       ],
       // Phase 4a rewrite: decel_outcome: { not: ['escapes', 'parity_failed'] }
       // expanded to DNF. Activates when decel didn't run at all, OR decel
@@ -807,8 +814,8 @@ const NODES = [
       ] },
     { id: 'proliferation_outcome', label: 'Control Outcome', stage: 2,
       hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
-        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_outcome: false }
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } },
+        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_stays: false }
       ],
       activateWhen: [
         {
@@ -843,7 +850,7 @@ const NODES = [
         { id: 'breaks', label: 'Someone cracks it' }
       ] },
     { id: 'intent', label: 'Intent', stage: 2, forwardKey: true,
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } }],
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], proliferation_control: true },
         {
@@ -852,7 +859,7 @@ const NODES = [
           alignment: ['failed'], containment: ['contained']
         },
         { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'] },
-        { capability: ['singularity'], automation: ['deep'], inert_outcome: true }
+        { capability: ['singularity'], automation: ['deep'], inert_stays: ['no'] }
       ],
       deriveWhen: [
         { match: { escalation_outcome: ['agreement'] }, value: 'coexistence' },
@@ -863,7 +870,12 @@ const NODES = [
         // fire from `resolvedState` (which reads sel only), and `intent` is
         // already resolved upstream (stage 2) in every path that reaches
         // pushback_outcome (stage 3, inside who_benefits).
-        { match: { rival_dynamics: true }, fromState: 'rival_dynamics' }
+        //
+        // Note: the `rival_dynamics → intent` override used to live here but
+        // moved into the INTENT_MODULE reducer (rival_dynamics.edges'
+        // collapseToFlavor.set writes `intent` directly). rival_dynamics is
+        // now module-internal and evicted to flavor on module exit, so a
+        // sel-based derivation rule could no longer fire.
       ],
       edges: [
         {
@@ -902,8 +914,8 @@ const NODES = [
       ] },
     { id: 'block_entrants', label: 'Block New Entrants?', stage: 2,
       hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
-        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_outcome: false }
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } },
+        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_stays: false }
       ],
       activateWhen: [
         {
@@ -918,22 +930,22 @@ const NODES = [
       edges: [ { id: 'attempt', label: 'Attempt to block' }, { id: 'no_attempt', label: 'No attempt' } ] },
     { id: 'block_outcome', label: 'Blocking Outcome', stage: 2,
       hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
-        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_outcome: false }
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } },
+        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_stays: false }
       ],
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], block_entrants: ['attempt'] }],
       edges: [ { id: 'holds', label: 'Holds' }, { id: 'fails', label: 'Fails' } ] },
     { id: 'new_entrants', label: 'New Entrants?', stage: 2,
       hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
-        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_outcome: false }
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } },
+        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_stays: false }
       ],
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], block_entrants: ['no_attempt'] }],
       edges: [ { id: 'emerge', label: 'Emerge' }, { id: 'none', label: 'None' } ] },
     { id: 'rival_dynamics', label: 'Rival Dynamics', stage: 2,
       hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
-        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_outcome: false }
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } },
+        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_stays: false }
       ],
       activateWhen: [
         { capability: ['singularity'], automation: ['deep'], block_outcome: ['fails'] },
@@ -965,7 +977,7 @@ const NODES = [
       edges: [ { id: 'human_centered', label: 'Rebuild for humanity' }, { id: 'self_interest', label: 'Consolidate power' } ] },
     { id: 'power_promise', label: 'The Promise', stage: 3,
       hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } },
         { inert_stays: ['no'] }
       ],
       activateWhen: [
@@ -1014,7 +1026,7 @@ const NODES = [
       ] },
     { id: 'mobilization', label: 'Mobilization', stage: 3,
       hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } },
         { inert_stays: ['no'] }
       ],
       activateWhen: [{ power_promise: true }],
@@ -1025,7 +1037,7 @@ const NODES = [
       ] },
     { id: 'sincerity_test', label: 'Sincerity Test', stage: 3,
       hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } },
         { inert_stays: ['no'] }
       ],
       activateWhen: [
@@ -1038,7 +1050,7 @@ const NODES = [
       ] },
     { id: 'pushback_outcome', label: 'Public Pushback', stage: 3,
       hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } },
         { inert_stays: ['no'] }
       ],
       activateWhen: [
@@ -1052,7 +1064,7 @@ const NODES = [
       ] },
     { id: 'coalition_outcome', label: 'Coalition Problem', stage: 3,
       hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } },
         { inert_stays: ['no'] }
       ],
       activateWhen: [{ mobilization: ['weak'] }],
@@ -1204,7 +1216,7 @@ const NODES = [
       ] },
     { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3, priority: 1,
       hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } },
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } },
         { containment: ['escaped'] }
       ],
       activateWhen: [
@@ -1221,7 +1233,7 @@ const NODES = [
         { id: 'escape', label: 'AI eventually escapes', shortLabel: 'Escapes' }
       ] },
     { id: 'failure_mode', label: 'Delivery', stage: 3, priority: 2, forwardKey: true,
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } }],
       // Four alignment/containment paths, each gated on who_benefits having
       // completed (who_benefits_set=yes is written on every module exit).
       // The old version cartesian-multiplied each path by five explicit
@@ -1627,10 +1639,13 @@ const DECEL_MODULE = {
 // ESCAPE_MODULE — the "AI out of control" sub-loop
 // ════════════════════════════════════════════════════════
 //
-// 8 internal dims, in order:
-//   ai_goals → (if hostile) escape_method → escape_timeline →
-//   discovery_timing → response_method → response_success →
-//   collateral_impact → catch_outcome
+// 9 internal dims, in order:
+//   ai_goals → (if marginal) inert_stays → (if no) [re-ask ai_goals
+//                                                   with marginal
+//                                                   disabled] → ...
+//   (if hostile) escape_method → escape_timeline → discovery_timing
+//     → response_method → response_success → collateral_impact
+//     → catch_outcome
 //
 // Activation: the two legacy ai_goals activation conditions. By widening
 // the module gate from the old "hostile-only" activateWhen to these
@@ -1640,17 +1655,23 @@ const DECEL_MODULE = {
 //   (a) cap=singularity, auto=deep, alignment=failed, containment=escaped
 //   (b) concentration_type=ai_itself
 //
-// Early exits. ai_goals has 7 edges; only 5 of them lead into the escape
-// pipeline. The remaining 2 short-circuit the module with no pipeline
-// questions asked:
-//   * ai_goals.benevolent — the AI turned out benign; no escape chain.
-//   * ai_goals.marginal    — the AI is inert/marginal; no escape chain.
-// Both emit an exit tuple setting `escape_set: yes` directly on the
-// ai_goals edge. On the hostile paths (alien_coexistence, alien_extinction,
-// paperclip, swarm, power_seeking), ai_goals is the first question and
-// escape_method's own activateWhen gates the pipeline start — so only
-// hostile answers trigger the follow-ups. Swarm is additionally disabled
-// on concentration_type=ai_itself via its node-level disabledWhen.
+// Inert-wakes loop (replaces the old standalone `inert_outcome` node):
+//   When ai_goals=marginal is picked, the module asks `inert_stays`
+//   ("does it stay inert?"). On `yes`, the module exits keeping
+//   ai_goals=marginal. On `no`, the `inert_stays.no` edge evicts
+//   ai_goals to flavor via collapseToFlavor.move — the ai_goals node
+//   re-activates and the user picks a new (hostile) value, with
+//   `marginal` disabled by ai_goals.marginal.disabledWhen. The escape
+//   pipeline then fires normally because escape_method.activateWhen
+//   already matches (containment=escaped or concentration_type=ai_itself
+//   + hostile ai_goals).
+//
+// Early exits. ai_goals has 7 edges; 5 hostile goals lead into the
+// escape pipeline; marginal enters the inert-stays sub-loop above;
+// benevolent short-circuits with no pipeline. escape_method's own
+// activateWhen gates the pipeline start — so only hostile answers
+// trigger the follow-ups. Swarm is additionally disabled on
+// concentration_type=ai_itself via its node-level disabledWhen.
 //
 // External contract:
 //   * writes = 3 dims — ai_goals (externally consumed across many hideWhen
@@ -1674,6 +1695,7 @@ const DECEL_MODULE = {
 
 const ESCAPE_NODE_IDS = [
     'ai_goals',
+    'inert_stays',
     'escape_method',
     'escape_timeline',
     'discovery_timing',
@@ -1699,7 +1721,10 @@ function escapeReduce(local) {
 }
 
 // 4 exit edges:
-//   * ai_goals.{benevolent, marginal} — early exits, no pipeline.
+//   * ai_goals.benevolent — benign AI, no pipeline.
+//   * inert_stays.yes — AI stays inert, no pipeline; ai_goals=marginal
+//     stands. (ai_goals.marginal is NOT an exit — the module asks
+//     inert_stays next to decide whether the inertia holds.)
 //   * catch_outcome.{not_permanent, holds_permanently}
 //     — normal pipeline-complete exits.
 // All set `escape_set: 'yes'`; no `when` gates because the (nodeId, edgeId)
@@ -1719,7 +1744,8 @@ function buildEscapeExitPlan() {
             });
         }
     };
-    add('ai_goals', ['benevolent', 'marginal']);
+    add('ai_goals', ['benevolent']);
+    add('inert_stays', ['yes']);
     // catch_outcome has 2 edges — include them all.
     const catchNode = NODE_MAP.catch_outcome;
     if (catchNode && catchNode.edges) {
@@ -1747,11 +1773,6 @@ const ESCAPE_MODULE = {
         // pipeline hideWhen/disabledWhen clauses)
         'capability', 'automation', 'alignment', 'containment',
         'concentration_type', 'geo_spread', 'war_survivors',
-        // ai_goals.deriveWhen flips the value on inert_outcome; though this
-        // derivation only fires in non-escape contexts, the structural
-        // reference still shows up as an external read once ai_goals is
-        // internal to the module.
-        'inert_outcome',
     ],
     writes: ESCAPE_WRITES,
     nodeIds: ESCAPE_NODE_IDS,
@@ -1934,9 +1955,9 @@ const WHO_BENEFITS_MODULE = {
         'capability', 'automation', 'alignment', 'containment', 'intent',
         'ai_goals', 'inert_stays', 'post_war_aims', 'escalation_outcome',
         'brittle_resolution',
-        // benefit_distribution gates on inert_outcome via hideWhen and on
+        // benefit_distribution gates on inert_stays via hideWhen and on
         // catch_outcome/collateral_impact via the post-catch activate clause.
-        'inert_outcome', 'catch_outcome', 'collateral_impact',
+        'inert_stays', 'catch_outcome', 'collateral_impact',
     ],
     writes: WHO_BENEFITS_WRITES,
     nodeIds: WHO_BENEFITS_NODE_IDS,
@@ -2071,7 +2092,7 @@ const ROLLOUT_MODULE = {
         // failure_mode gates
         'alignment', 'brittle_resolution',
         'ai_goals', 'containment', 'intent', 'post_war_aims',
-        'inert_stays', 'inert_outcome',
+        'inert_stays',
         'who_benefits_set',
         // knowledge_rate / physical_rate re-ask guards (hideWhen markers)
         'knowledge_rate_set', 'physical_rate_set',
@@ -2360,7 +2381,7 @@ const PROLIFERATION_MODULE = {
         'alignment', 'decel_align_progress',
         // Internal hideWhen clauses on proliferation_control /
         // proliferation_outcome reference these
-        'ai_goals', 'inert_outcome', 'containment', 'alignment_durability',
+        'ai_goals', 'inert_stays', 'containment', 'alignment_durability',
         // proliferation_control.edges[deny_rivals|secure_access].disabledWhen
         // reads distribution.
         'distribution',
@@ -2496,9 +2517,188 @@ const EMERGENCE_MODULE = {
     get exitPlan() { return buildEmergenceExitPlan(); },
 };
 
-const MODULES = [DECEL_MODULE, ESCAPE_MODULE, WHO_BENEFITS_MODULE, ROLLOUT_MODULE, EMERGENCE_MODULE, CONTROL_MODULE, PROLIFERATION_MODULE];
+// ════════════════════════════════════════════════════════
+// INTENT_MODULE — the "geopolitics / rival dynamics" sub-loop
+// ════════════════════════════════════════════════════════
+//
+// The Intent question (self_interest / coexistence / escalation /
+// international) has a conditional 3-step tail whenever the user picks
+// self_interest or international on the "clean win" path (alignment ∈
+// robust/brittle, proliferation_control=secure_access,
+// proliferation_outcome=holds):
+//
+//     intent → block_entrants → (block_outcome | new_entrants)
+//                             → rival_dynamics?
+//
+// The tail may override the user's initial pick: if block_outcome=fails
+// or new_entrants=emerge, rival_dynamics fires and its value (coexistence
+// or escalation) replaces `intent`.
+//
+// Before modularization, rival_dynamics' override lived in
+// intent.deriveWhen as a sel-reading derivation. With the tail now
+// evicted to flavor on exit, that rule can no longer see it — the
+// reducer here handles the override directly: rival_dynamics exit tuples
+// `set: { intent: <rival_dynamics value> }`.
+//
+// External contract:
+//   * writes = [intent] — the one dim downstream consumers need.
+//     intent_set is the completion marker (a side-channel write, not in
+//     the published reads/writes list since it's internal to module
+//     scheduling).
+//   * The four tail dims (block_entrants, block_outcome, new_entrants,
+//     rival_dynamics) are NOT referenced anywhere outside this cluster
+//     (grep-verified in graph.js / data/*.json). They exist purely to
+//     compute the final intent value + narrate the geopolitics flavor,
+//     and evict to flavor on module exit.
+//
+// Post-exit derivations:
+//   `intent` keeps two deriveWhen rules (escalation_outcome=agreement
+//   and post_war_aims=human_centered, both → coexistence) because those
+//   stage-3 signals may fire AFTER the module exits and resolve
+//   escalation branches down-flow. Those rules read sel dims that the
+//   module does NOT move to flavor, so they continue to work normally.
+//
+// Exit plan:
+//   * intent.coexistence, intent.escalation — always exit.
+//   * intent.self_interest, intent.international — exit IFF block_entrants
+//     won't activate. Block_entrants requires alignment ∈ (robust,brittle)
+//     AND proliferation_control=secure_access AND proliferation_outcome
+//     =holds; we encode the negation as three separate exit tuples (OR).
+//   * block_outcome.holds — exit (initial intent pick stands).
+//   * new_entrants.none — exit (initial intent pick stands).
+//   * rival_dynamics.{coexistence,escalation} — exit AND override intent
+//     with the rival_dynamics value.
+//
+// Walker: no reducerTable — exit space is path-dependent (12 tuples).
+// /explore falls through to normal DFS like escape / who_benefits.
+
+const INTENT_NODE_IDS = [
+    'intent',
+    'block_entrants',
+    'block_outcome',
+    'new_entrants',
+    'rival_dynamics',
+];
+
+const INTENT_WRITES = ['intent'];
+
+function intentReduce(local) {
+    // rival_dynamics overrides the initial intent pick when the tail
+    // fires. Else the user's original intent pick stands.
+    if (local.rival_dynamics !== undefined) {
+        return { intent: local.rival_dynamics };
+    }
+    const bundle = {};
+    if (local.intent !== undefined) bundle.intent = local.intent;
+    return bundle;
+}
+
+function buildIntentExitPlan() {
+    const plan = [];
+    // intent: coexistence / escalation — no tail, direct exit.
+    plan.push({
+        nodeId: 'intent', edgeId: 'coexistence',
+        when: {}, set: { intent_set: 'yes' },
+    });
+    plan.push({
+        nodeId: 'intent', edgeId: 'escalation',
+        when: {}, set: { intent_set: 'yes' },
+    });
+    // intent: self_interest / international — enter tail IFF
+    // block_entrants activates (alignment ∈ (robust,brittle) AND
+    // proliferation_control=secure_access AND proliferation_outcome=holds).
+    // Exit here when ANY of those fails (three separate tuples = OR).
+    for (const edgeId of ['self_interest', 'international']) {
+        plan.push({
+            nodeId: 'intent', edgeId,
+            when: { alignment: { not: ['robust', 'brittle'], required: true } },
+            set: { intent_set: 'yes' },
+        });
+        plan.push({
+            nodeId: 'intent', edgeId,
+            when: { proliferation_control: { not: ['secure_access'], required: true } },
+            set: { intent_set: 'yes' },
+        });
+        plan.push({
+            nodeId: 'intent', edgeId,
+            when: { proliferation_outcome: { not: ['holds'], required: true } },
+            set: { intent_set: 'yes' },
+        });
+    }
+    // block_outcome.holds — blocking succeeded, initial intent stands.
+    // block_outcome.fails continues to rival_dynamics.
+    plan.push({
+        nodeId: 'block_outcome', edgeId: 'holds',
+        when: {}, set: { intent_set: 'yes' },
+    });
+    // new_entrants.none — no rivals arrived, initial intent stands.
+    // new_entrants.emerge continues to rival_dynamics.
+    plan.push({
+        nodeId: 'new_entrants', edgeId: 'none',
+        when: {}, set: { intent_set: 'yes' },
+    });
+    // rival_dynamics terminals — override intent with the rival_dynamics
+    // outcome (was intent.deriveWhen's `rival_dynamics: true` rule
+    // pre-module; now handled declaratively here).
+    const rd = NODE_MAP.rival_dynamics;
+    if (rd && rd.edges) {
+        for (const e of rd.edges) {
+            plan.push({
+                nodeId: 'rival_dynamics', edgeId: e.id,
+                when: {},
+                set: { intent: e.id, intent_set: 'yes' },
+            });
+        }
+    }
+    return plan;
+}
+
+const INTENT_MODULE = {
+    id: 'intent_loop',
+    // Mirrors intent.activateWhen verbatim — module is pending exactly
+    // while intent is askable.
+    activateWhen: [
+        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], proliferation_control: true },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['contained'] },
+        { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'] },
+        { capability: ['singularity'], automation: ['deep'], inert_stays: ['no'] },
+    ],
+    reads: [
+        // Activation gate
+        'capability', 'automation', 'alignment', 'containment',
+        'ai_goals', 'inert_stays',
+        // Tail gating (block_entrants.activateWhen)
+        'proliferation_control', 'proliferation_outcome',
+        // intent.edges.requires + tail hideWhen chains
+        'distribution', 'geo_spread', 'alignment_durability',
+    ],
+    writes: INTENT_WRITES,
+    nodeIds: INTENT_NODE_IDS,
+    completionMarker: 'intent_set',
+    reduce: intentReduce,
+    get exitPlan() { return buildIntentExitPlan(); },
+};
+
+const MODULES = [DECEL_MODULE, ESCAPE_MODULE, WHO_BENEFITS_MODULE, ROLLOUT_MODULE, EMERGENCE_MODULE, CONTROL_MODULE, PROLIFERATION_MODULE, INTENT_MODULE];
 const MODULE_MAP = {};
 for (const m of MODULES) MODULE_MAP[m.id] = m;
+
+// Derived back-pointer: each node.module = module-id if the node belongs
+// to a module's internal nodeIds list, else null. MODULE.nodeIds remains
+// the source of truth; `node.module` is populated here so consumers can
+// ask "what module is this node in?" without a reverse lookup. A node
+// may belong to at most one module.
+for (const n of NODES) n.module = null;
+for (const m of MODULES) {
+    for (const nid of (m.nodeIds || [])) {
+        const n = NODE_MAP[nid];
+        if (!n) continue;
+        if (n.module && n.module !== m.id) {
+            throw new Error(`Node "${nid}" claimed by both modules "${n.module}" and "${m.id}"`);
+        }
+        n.module = m.id;
+    }
+}
 
 // Phase 4a: install the decel module's reducer attachments on the
 // terminating action edges. This replaces the legacy DECEL_OUTCOME_TABLE

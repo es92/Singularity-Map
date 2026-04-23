@@ -60,8 +60,173 @@
         #nodes-root .nodes-list-item.nl-derived .nl-id { font-style: italic; }
         #nodes-root .nodes-list-item.nl-outcome .nl-id { color: #b3895e; }
 
+        /* ─── Grid pane (replaces the old flat sidebar) ────────── */
+        #nodes-root .nodes-grid-pane {
+            flex: 1 1 60%; min-width: 420px; max-width: 65%;
+            overflow-y: auto; background: var(--bg);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+        }
+        #nodes-root .ng-head {
+            padding: 10px 14px; border-bottom: 1px solid var(--border);
+            display: flex; gap: 10px; align-items: center; flex: 0 0 auto;
+            background: var(--bg-soft);
+        }
+        #nodes-root .ng-head a {
+            color: var(--text-muted); text-decoration: none; font-size: 12px;
+        }
+        #nodes-root .ng-head a:hover { color: var(--text); }
+        #nodes-root .ng-head .nodes-search { flex: 1; }
+        #nodes-root .ng-body { flex: 1; overflow-y: auto; padding: 14px; }
+        #nodes-root .ng-section { margin-bottom: 18px; }
+        #nodes-root .ng-section-head {
+            font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+            color: var(--text-muted); font-weight: 600; margin: 0 0 8px 2px;
+        }
+        #nodes-root .ng-module {
+            border: 1px solid var(--border); border-radius: 8px;
+            padding: 12px 12px 10px; margin-bottom: 14px;
+            background: var(--bg-soft);
+        }
+        #nodes-root .ng-module-head {
+            margin-bottom: 10px;
+        }
+        #nodes-root .ng-module-title {
+            font-weight: 600; font-size: 13px;
+            font-family: ui-monospace, monospace;
+            color: var(--accent, #6b9bd1);
+        }
+        #nodes-root .ng-module-contract {
+            font-size: 10px; color: var(--text-muted);
+            margin-top: 3px; line-height: 1.5;
+            font-family: ui-monospace, monospace;
+        }
+        #nodes-root .ng-module-contract b { color: var(--text); font-weight: 600; }
+        #nodes-root .ng-grid {
+            display: grid; gap: 6px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        }
+        #nodes-root .ng-cell {
+            position: relative;
+            display: block; padding: 6px 22px 6px 8px;
+            border: 1px solid var(--border); border-radius: 4px;
+            background: var(--bg); text-decoration: none; color: var(--text);
+            font-size: 11px; line-height: 1.3; cursor: pointer;
+            transition: border-color 100ms;
+        }
+        #nodes-root .ng-cell:hover { border-color: var(--accent, #6b9bd1); }
+        #nodes-root .ng-cell.is-active {
+            border-color: var(--accent, #6b9bd1);
+            background: rgba(107,155,209,0.10);
+        }
+        #nodes-root .ng-cell .ng-id {
+            font-family: ui-monospace, monospace; font-weight: 600;
+            display: block; color: var(--text);
+        }
+        #nodes-root .ng-cell .ng-lbl {
+            display: block; color: var(--text-muted);
+            font-size: 10px; margin-top: 2px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        #nodes-root .ng-cell.nl-derived .ng-id { font-style: italic; }
+        #nodes-root .ng-cell.nl-outcome { border-color: rgba(179,137,94,0.35); }
+        #nodes-root .ng-cell.nl-outcome .ng-id { color: #b3895e; }
+        #nodes-root .ng-cell .ng-badges {
+            position: absolute; top: 4px; right: 4px;
+            display: flex; gap: 2px; flex-direction: column; align-items: flex-end;
+        }
+        #nodes-root .ng-cell .ng-badge {
+            font-size: 8px; line-height: 1;
+            padding: 2px 3px; border-radius: 2px;
+            font-family: ui-monospace, monospace; font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+        #nodes-root .ng-cell .ng-badge.ng-badge-in {
+            color: #6b9bd1; background: rgba(107,155,209,0.15);
+        }
+        #nodes-root .ng-cell .ng-badge.ng-badge-out {
+            color: #b3895e; background: rgba(179,137,94,0.15);
+        }
+        #nodes-root .ng-cell .ng-badge.ng-badge-stage {
+            color: var(--text-muted); background: transparent;
+        }
+
         #nodes-root .nodes-detail {
             flex: 1; overflow-y: auto; padding: 20px 28px;
+        }
+
+        /* ─── Narrative preview (node detail, top section) ──── */
+        #nodes-root .nd-narr {
+            border: 1px solid var(--border); border-radius: 8px;
+            padding: 14px 16px; margin: 0 0 20px 0;
+            background: var(--bg-soft);
+        }
+        #nodes-root .nd-narr-head {
+            font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+            color: var(--text-muted); font-weight: 600; margin: 0 0 10px 0;
+        }
+        #nodes-root .nd-narr-question {
+            font-size: 15px; font-weight: 600; color: var(--text);
+            margin: 0 0 6px 0; line-height: 1.35;
+        }
+        #nodes-root .nd-narr-context {
+            font-size: 13px; color: var(--text); line-height: 1.5;
+        }
+        #nodes-root .nd-narr-context p:first-child { margin-top: 0; }
+        #nodes-root .nd-narr-context p:last-child { margin-bottom: 0; }
+        #nodes-root .nd-narr-source {
+            margin-top: 8px; font-size: 11px;
+        }
+        #nodes-root .nd-narr-source a {
+            color: var(--text-muted); text-decoration: none;
+            border-bottom: 1px dotted var(--text-muted);
+        }
+        #nodes-root .nd-narr-source a:hover { color: var(--text); }
+        #nodes-root .nd-narr-options {
+            display: flex; flex-direction: column; gap: 8px;
+            margin-top: 14px; padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        #nodes-root .nd-narr-opt {
+            padding: 10px 12px; border: 1px solid var(--border);
+            border-radius: 6px; background: var(--bg);
+        }
+        #nodes-root .nd-narr-opt-head {
+            display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+            margin-bottom: 4px;
+        }
+        #nodes-root .nd-narr-opt-id {
+            font-family: ui-monospace, monospace; font-size: 11px;
+            color: var(--text-muted); background: var(--bg-soft);
+            padding: 2px 6px; border-radius: 3px;
+        }
+        #nodes-root .nd-narr-opt-label {
+            font-size: 13px; font-weight: 600; color: var(--text);
+            flex: 1 1 auto; min-width: 0;
+        }
+        #nodes-root .nd-narr-opt-desc {
+            font-size: 12px; color: var(--text-muted); line-height: 1.5;
+        }
+        #nodes-root .nd-narr-opt-desc p:first-child { margin-top: 0; }
+        #nodes-root .nd-narr-opt-desc p:last-child { margin-bottom: 0; }
+        #nodes-root .nd-narr-variant-row {
+            display: flex; align-items: center; gap: 8px;
+            margin: 4px 0 8px 0;
+        }
+        #nodes-root .nd-narr-variant-row label {
+            font-size: 10px; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--text-muted);
+        }
+        #nodes-root .nd-narr-select {
+            font-size: 11px; padding: 2px 6px; max-width: 320px;
+            background: var(--bg); color: var(--text);
+            border: 1px solid var(--border); border-radius: 3px;
+            font-family: ui-monospace, monospace;
+        }
+        #nodes-root .nd-narr-hidden { display: none; }
+        #nodes-root .nd-narr-hint {
+            font-size: 10px; color: var(--text-muted);
+            font-style: italic; margin-top: 4px;
         }
         #nodes-root .nodes-detail-empty {
             color: var(--text-muted); font-size: 14px; padding: 40px 0;
@@ -372,74 +537,275 @@
         return `<a class="nd-chip nd-chip-outcome" href="#/nodes?o=${encodeURIComponent(oid)}">${esc(oid)}${title ? `<span class="nd-chip-count">${esc(title)}</span>` : ''}</a>`;
     }
 
-    function renderSidebar(selected) {
+    // Compute per-node cross-module data flow indicators:
+    //   hasIn:  node reads a dim owned by a different module (or owned by
+    //           some module, if node itself is flat).
+    //   hasOut: node's dim is read by something living in a different
+    //           module (or by some module, if node itself is flat).
+    // Used by the grid to show contract-at-a-glance badges.
+    function _crossModuleFlow(node, A) {
+        const NODE_MAP = window.Engine.NODE_MAP;
+        const myMod = node.module || null;
+        let hasIn = false, hasOut = false;
+        const reads = A.nodeReads.get(node.id);
+        if (reads) {
+            for (const d of reads) {
+                const src = NODE_MAP[d];
+                const srcMod = src && src.module;
+                if (srcMod && srcMod !== myMod) { hasIn = true; break; }
+            }
+        }
+        const readers = A.readBy.get(node.id) || [];
+        for (const r of readers) {
+            const src = NODE_MAP[r.nodeId];
+            const srcMod = src && src.module;
+            if (srcMod !== myMod && (srcMod || myMod)) { hasOut = true; break; }
+        }
+        return { hasIn, hasOut };
+    }
+
+    function _cellHtml(node, selected, A, opts = {}) {
+        const isOutcome = !!opts.outcome;
+        const isNode = !isOutcome;
+        const href = isOutcome ? `#/nodes?o=${encodeURIComponent(node.id)}`
+                                : `#/nodes?n=${encodeURIComponent(node.id)}`;
+        const active = (isNode && selected.nodeId === node.id) ||
+                       (isOutcome && selected.outcomeId === node.id);
+        const cls = 'ng-cell'
+            + (active ? ' is-active' : '')
+            + (node.derived ? ' nl-derived' : '')
+            + (isOutcome ? ' nl-outcome' : '');
+        let badges = '';
+        if (isNode && A) {
+            const flow = _crossModuleFlow(node, A);
+            if (flow.hasIn) badges += `<span class="ng-badge ng-badge-in" title="reads a dim owned by another module">r</span>`;
+            if (flow.hasOut) badges += `<span class="ng-badge ng-badge-out" title="its dim is read by something in another module">w</span>`;
+            if (node.stage != null) badges += `<span class="ng-badge ng-badge-stage" title="stage">${esc(String(node.stage))}</span>`;
+        }
+        const badgesHtml = badges ? `<span class="ng-badges">${badges}</span>` : '';
+        const search = esc((node.id + ' ' + (node.label || '')).toLowerCase());
+        return `<a class="${cls}" href="${href}" data-search="${search}">
+            <span class="ng-id">${esc(node.id)}</span>
+            <span class="ng-lbl">${esc(node.label || '')}</span>
+            ${badgesHtml}
+        </a>`;
+    }
+
+    function renderGrid(selected) {
         const NODES = window.Engine.NODES;
+        const NODE_MAP = window.Engine.NODE_MAP;
         const MODULES = (window.Graph && window.Graph.MODULES) || [];
-        // Dims that belong to a module — rendered in module sections
-        // rather than flat stage sections (Phase 5).
-        const moduleDims = new Set();
-        for (const m of MODULES) {
-            for (const d of (m.nodeIds || [])) moduleDims.add(d);
-        }
-        const inModule = (n) => moduleDims.has(n.id);
-        const sections = [
-            { id: 'stage-1', label: 'Stage 1', items: NODES.filter(n => n.stage === 1 && !inModule(n)) },
-            { id: 'stage-2', label: 'Stage 2', items: NODES.filter(n => n.stage === 2 && !inModule(n)) },
-            { id: 'stage-3', label: 'Stage 3', items: NODES.filter(n => n.stage === 3 && !inModule(n)) },
-            { id: 'stage-other', label: 'Other Nodes', items: NODES.filter(n => ![1,2,3].includes(n.stage) && !inModule(n)) },
-        ];
-        // Module sections — one per module, internal nodes grouped with
-        // the module's reads/writes contract shown up top.
-        for (const m of MODULES) {
-            const items = (m.nodeIds || []).map(id => window.Engine.NODE_MAP[id]).filter(Boolean);
-            if (items.length) {
-                sections.push({
-                    id: 'module-' + m.id,
-                    label: 'Module: ' + m.id,
-                    _module: m,
-                    items,
-                });
-            }
-        }
-        sections.push({ id: 'outcomes', label: 'Outcomes', items: templates.map(t => ({ id: t.id, label: t.title || '', _outcome: true })) });
+        const A = buildAnalysis();
+
         let html = `
-            <div class="nodes-sidebar-head">
+            <div class="ng-head">
                 <a href="#/explore">← explore</a>
-                <a href="#/map" style="margin-left: auto;">map →</a>
-            </div>
-            <div style="padding: 8px 10px;">
                 <input type="text" class="nodes-search" placeholder="Search nodes / outcomes…" />
+                <a href="#/map">map →</a>
             </div>
-            <div class="nodes-list">
+            <div class="ng-body">
         `;
-        for (const sec of sections) {
-            if (!sec.items.length) continue;
-            html += `<div class="nodes-list-section-head">${esc(sec.label)}</div>`;
-            if (sec._module) {
-                const m = sec._module;
-                const reads = (m.reads || []).join(', ');
-                const writes = (m.writes || []).join(', ');
-                html += `<div style="padding: 2px 12px 6px; font-size: 11px; color: var(--text-muted);">`
-                     + `<div>reads: <code>${esc(reads || '—')}</code></div>`
-                     + `<div>writes: <code>${esc(writes || '—')}</code></div>`
-                     + `</div>`;
-            }
-            for (const n of sec.items) {
-                const isOutcome = !!n._outcome;
-                const href = isOutcome ? `#/nodes?o=${encodeURIComponent(n.id)}`
-                                        : `#/nodes?n=${encodeURIComponent(n.id)}`;
-                const active = (!isOutcome && selected.nodeId === n.id) || (isOutcome && selected.outcomeId === n.id);
-                const cls = 'nodes-list-item'
-                    + (active ? ' is-active' : '')
-                    + (n.derived ? ' nl-derived' : '')
-                    + (isOutcome ? ' nl-outcome' : '');
-                html += `<a class="${cls}" href="${href}"
-                          data-search="${esc((n.id + ' ' + (n.label || '')).toLowerCase())}">
-                            <span class="nl-id">${esc(n.id)}</span>
-                            <span class="nl-label">${esc(n.label || '')}</span>
-                         </a>`;
-            }
+
+        // Modules — one card per module, internal nodes in a grid, with the
+        // reads/writes contract right under the header.
+        html += `<div class="ng-section">`;
+        html += `<h3 class="ng-section-head">Modules</h3>`;
+        for (const m of MODULES) {
+            const items = (m.nodeIds || []).map(id => NODE_MAP[id]).filter(Boolean);
+            if (!items.length) continue;
+            const reads = (m.reads || []).join(', ') || '—';
+            const writes = (m.writes || []).join(', ') || '—';
+            html += `<div class="ng-module" id="ng-module-${esc(m.id)}">`;
+            html += `<div class="ng-module-head">`;
+            html += `<div class="ng-module-title">${esc(m.id)}</div>`;
+            html += `<div class="ng-module-contract">`
+                 + `<div><b>reads</b> <code>${esc(reads)}</code></div>`
+                 + `<div><b>writes</b> <code>${esc(writes)}</code></div>`
+                 + `</div>`;
+            html += `</div>`;
+            html += `<div class="ng-grid">`;
+            for (const n of items) html += _cellHtml(n, selected, A);
+            html += `</div>`;
+            html += `</div>`;
         }
+        html += `</div>`;
+
+        // Unmodularized nodes — split derived (internal routing tags,
+        // never asked) from regular flat nodes, and sub-group regular
+        // nodes by stage.
+        const isFlat = (n) => !n.module;
+        const stageGroups = [
+            { label: 'Stage 1 (flat)', items: NODES.filter(n => n.stage === 1 && isFlat(n) && !n.derived) },
+            { label: 'Stage 2 (flat)', items: NODES.filter(n => n.stage === 2 && isFlat(n) && !n.derived) },
+            { label: 'Stage 3 (flat)', items: NODES.filter(n => n.stage === 3 && isFlat(n) && !n.derived) },
+            { label: 'Other (flat)',   items: NODES.filter(n => ![1,2,3].includes(n.stage) && isFlat(n) && !n.derived) },
+        ];
+        for (const g of stageGroups) {
+            if (!g.items.length) continue;
+            html += `<div class="ng-section">`;
+            html += `<h3 class="ng-section-head">${esc(g.label)}</h3>`;
+            html += `<div class="ng-grid">`;
+            for (const n of g.items) html += _cellHtml(n, selected, A);
+            html += `</div>`;
+            html += `</div>`;
+        }
+
+        // Derived tags — flat nodes computed via deriveWhen, never asked
+        // directly. Module-internal derived nodes stay in their module
+        // card (they're part of that module's machinery).
+        const derivedFlat = NODES.filter(n => n.derived && isFlat(n));
+        if (derivedFlat.length) {
+            html += `<div class="ng-section">`;
+            html += `<h3 class="ng-section-head">Derived tags (never asked)</h3>`;
+            html += `<div class="ng-grid">`;
+            for (const n of derivedFlat) html += _cellHtml(n, selected, A);
+            html += `</div>`;
+            html += `</div>`;
+        }
+
+        // Outcomes.
+        html += `<div class="ng-section">`;
+        html += `<h3 class="ng-section-head">Outcomes</h3>`;
+        html += `<div class="ng-grid">`;
+        for (const t of templates) {
+            const pseudo = { id: t.id, label: t.title || '' };
+            html += _cellHtml(pseudo, selected, null, { outcome: true });
+        }
+        html += `</div>`;
+        html += `</div>`;
+
+        html += `</div>`;
+        return html;
+    }
+
+    // Format a narrative `when` condition as a compact human-readable
+    // label for the variant <select> options. Falls back to JSON for
+    // anything unusual.
+    function _formatWhen(w) {
+        if (!w || typeof w !== 'object') return 'default';
+        const parts = [];
+        for (const [k, v] of Object.entries(w)) {
+            if (Array.isArray(v)) parts.push(`${k}=${v.join('|')}`);
+            else if (v && typeof v === 'object' && v.not) parts.push(`${k}≠${(Array.isArray(v.not) ? v.not : [v.not]).join('|')}`);
+            else if (v === true) parts.push(`${k}:set`);
+            else if (v === false) parts.push(`${k}:unset`);
+            else if (typeof v === 'string' || typeof v === 'number') parts.push(`${k}=${v}`);
+            else parts.push(`${k}=${JSON.stringify(v)}`);
+        }
+        return parts.join(' & ') || 'default';
+    }
+
+    function _md(s) {
+        if (!s) return '';
+        try { return window.marked ? window.marked.parse(String(s).replace(/~/g, '\\~')) : esc(s); }
+        catch (_) { return esc(s); }
+    }
+
+    // Narrative preview pane: node's question text, context (with a
+    // contextWhen variant dropdown if any), and one card per edge
+    // showing the answer label + desc, plus a narrativeVariants dropdown
+    // per edge. Visible variants swap via CSS (no rerender). All text
+    // goes through marked.parse() to honor **bold** / paragraphs like
+    // the main UI does.
+    //
+    // Derived nodes (internal routing tags like `ruin_type`) have no
+    // narrative — the user never sees them asked — so we render a
+    // short note instead of an empty shell.
+    function renderNarrativePanel(node) {
+        const narr = narrative && narrative[node.id];
+        if (node.derived && !narr) {
+            const edgeIds = (node.edges || []).map(e => e.id).join(', ');
+            return `<div class="nd-narr">
+                <div class="nd-narr-head">Derived tag · no narrative</div>
+                <div class="nd-narr-hint">
+                    <code>${esc(node.id)}</code> is never asked. Its value is
+                    computed from other dims via <code>deriveWhen</code> and
+                    consumed by outcome templates and edge gates.
+                    ${edgeIds ? `Possible values: <code>${esc(edgeIds)}</code>.` : ''}
+                </div>
+            </div>`;
+        }
+        const qText = (narr && narr.questionText) || node.questionText || node.label || node.id;
+        const qCtxDefault = (narr && narr.questionContext) || '';
+        const contextVariants = (narr && narr.contextWhen) || [];
+
+        let html = `<div class="nd-narr">`;
+        html += `<div class="nd-narr-head">Narrative preview</div>`;
+        html += `<div class="nd-narr-question">${esc(qText)}</div>`;
+
+        // Question context (default + contextWhen variants).
+        if (contextVariants.length) {
+            html += `<div class="nd-narr-variant-row">`;
+            html += `<label>context variant</label>`;
+            html += `<select class="nd-narr-select" data-affects="ctx-${esc(node.id)}">`;
+            html += `<option value="default">default</option>`;
+            contextVariants.forEach((v, i) => {
+                html += `<option value="v${i}">${esc(_formatWhen(v.when))}</option>`;
+            });
+            html += `</select>`;
+            html += `</div>`;
+        }
+        if (qCtxDefault || contextVariants.length) {
+            html += `<div class="nd-narr-context" data-group="ctx-${esc(node.id)}" data-variant="default">${qCtxDefault ? _md(qCtxDefault) : '<span class="nd-narr-hint">(no context)</span>'}</div>`;
+            contextVariants.forEach((v, i) => {
+                const text = v.questionContext || qCtxDefault || '';
+                html += `<div class="nd-narr-context nd-narr-hidden" data-group="ctx-${esc(node.id)}" data-variant="v${i}">${text ? _md(text) : '<span class="nd-narr-hint">(variant omits context)</span>'}</div>`;
+            });
+        }
+
+        if (narr && narr.source && narr.source.url) {
+            html += `<div class="nd-narr-source"><a href="${esc(narr.source.url)}" target="_blank" rel="noopener">${esc(narr.source.label || narr.source.url)} ↗</a></div>`;
+        }
+
+        // Options (one card per edge).
+        if (node.edges && node.edges.length) {
+            html += `<div class="nd-narr-options">`;
+            for (const e of node.edges) {
+                const val = narr && narr.values && narr.values[e.id];
+                const variants = (val && val.narrativeVariants) || [];
+                const labelDefault = (val && val.answerLabel) || e.label || e.id;
+                const descDefault = (val && val.answerDesc) || '';
+                const gLbl = `opt-lbl-${node.id}-${e.id}`;
+                const gDesc = `opt-desc-${node.id}-${e.id}`;
+
+                html += `<div class="nd-narr-opt">`;
+                html += `<div class="nd-narr-opt-head">`;
+                html += `<span class="nd-narr-opt-id">${esc(e.id)}</span>`;
+                // If the label echoes the id (no narrative / no edge.label),
+                // skip the label span so we don't render "warwar".
+                const idEchoes = (s) => String(s).trim() === e.id;
+                if (!idEchoes(labelDefault)) {
+                    html += `<span class="nd-narr-opt-label" data-group="${gLbl}" data-variant="default">${esc(labelDefault)}</span>`;
+                    variants.forEach((v, i) => {
+                        const l = v.answerLabel || labelDefault;
+                        html += `<span class="nd-narr-opt-label nd-narr-hidden" data-group="${gLbl}" data-variant="v${i}">${esc(l)}</span>`;
+                    });
+                }
+                html += `</div>`;
+
+                if (variants.length) {
+                    html += `<div class="nd-narr-variant-row">`;
+                    html += `<label>variant</label>`;
+                    html += `<select class="nd-narr-select" data-affects="${gLbl} ${gDesc}">`;
+                    html += `<option value="default">default</option>`;
+                    variants.forEach((v, i) => {
+                        html += `<option value="v${i}">${esc(_formatWhen(v.when))}</option>`;
+                    });
+                    html += `</select>`;
+                    html += `</div>`;
+                }
+
+                html += `<div class="nd-narr-opt-desc" data-group="${gDesc}" data-variant="default">${descDefault ? _md(descDefault) : '<span class="nd-narr-hint">(no description)</span>'}</div>`;
+                variants.forEach((v, i) => {
+                    const text = v.answerDesc || descDefault || '';
+                    html += `<div class="nd-narr-opt-desc nd-narr-hidden" data-group="${gDesc}" data-variant="v${i}">${text ? _md(text) : '<span class="nd-narr-hint">(variant omits desc)</span>'}</div>`;
+                });
+
+                html += `</div>`;
+            }
+            html += `</div>`;
+        }
+
         html += `</div>`;
         return html;
     }
@@ -479,9 +845,10 @@
 
         let html = `
             <h2 class="nd-title"><span class="nd-id">${esc(node.id)}</span><span>${esc(node.label || '')}</span></h2>
-            <div class="nd-subtitle">${esc(node.questionText || '')}</div>
             <div class="nd-meta">${tags.map(t => `<span class="nd-tag">${esc(t)}</span>`).join('')}</div>
         `;
+
+        html += renderNarrativePanel(node);
 
         // ─── Written by
         html += `<div class="nd-section"><h3>Written by</h3>`;
@@ -762,15 +1129,38 @@
 
     function wireSearch(root) {
         const input = root.querySelector('.nodes-search');
-        const list = root.querySelector('.nodes-list');
-        if (!input || !list) return;
+        const body = root.querySelector('.ng-body');
+        if (!input || !body) return;
         input.addEventListener('input', () => {
             const q = input.value.trim().toLowerCase();
-            const items = list.querySelectorAll('.nodes-list-item');
-            items.forEach(it => {
+            const cells = body.querySelectorAll('.ng-cell');
+            cells.forEach(it => {
                 const s = it.dataset.search || '';
                 it.style.display = (!q || s.includes(q)) ? '' : 'none';
             });
+            // Hide empty sections / modules so the grid stays tidy.
+            body.querySelectorAll('.ng-section, .ng-module').forEach(sec => {
+                const visible = sec.querySelector('.ng-cell:not([style*="display: none"])');
+                sec.style.display = (!q || visible) ? '' : 'none';
+            });
+        });
+    }
+
+    // Narrative variant <select>s swap visible content in-place — no
+    // re-render so the detail pane keeps its scroll position.
+    function wireNarrative(root) {
+        const detail = root.querySelector('.nodes-detail');
+        if (!detail) return;
+        detail.addEventListener('change', (e) => {
+            const sel = e.target;
+            if (!(sel.matches && sel.matches('.nd-narr-select'))) return;
+            const affects = (sel.dataset.affects || '').split(/\s+/).filter(Boolean);
+            const val = sel.value;
+            for (const g of affects) {
+                detail.querySelectorAll(`[data-group="${g}"]`).forEach(el => {
+                    el.classList.toggle('nd-narr-hidden', el.dataset.variant !== val);
+                });
+            }
         });
     }
 
@@ -795,19 +1185,65 @@
         app.innerHTML = `<div id="nodes-root"></div>`;
         const root = app.querySelector('#nodes-root');
 
-        function paint() {
+        // Full paint — only on first load or route change.
+        function paintFull() {
             const sel = parseSelection();
             root.innerHTML = `
-                <div class="nodes-sidebar">${renderSidebar(sel)}</div>
+                <div class="nodes-grid-pane">${renderGrid(sel)}</div>
                 <div class="nodes-detail">${renderDetail(sel)}</div>
             `;
             wireSearch(root);
+            wireNarrative(root);
         }
-        paint();
 
-        // Internal navigation repaints without full route change.
+        // Cell-click repaints: refresh the detail pane + toggle the
+        // is-active highlight, but keep both panes' scroll positions
+        // untouched. Avoids jumping to the top of the grid every click.
+        function paintSelectionChange() {
+            const sel = parseSelection();
+            const detail = root.querySelector('.nodes-detail');
+            if (detail) detail.innerHTML = renderDetail(sel);
+            // Update is-active class on grid cells without rerendering them.
+            const pane = root.querySelector('.nodes-grid-pane');
+            if (pane) {
+                pane.querySelectorAll('.ng-cell.is-active').forEach(c => c.classList.remove('is-active'));
+                const nodeHref = sel.nodeId ? `#/nodes?n=${encodeURIComponent(sel.nodeId)}` : null;
+                const outHref = sel.outcomeId ? `#/nodes?o=${encodeURIComponent(sel.outcomeId)}` : null;
+                if (nodeHref) {
+                    const cell = pane.querySelector(`.ng-cell[href="${nodeHref}"]`);
+                    if (cell) cell.classList.add('is-active');
+                } else if (outHref) {
+                    const cell = pane.querySelector(`.ng-cell[href="${outHref}"]`);
+                    if (cell) cell.classList.add('is-active');
+                }
+            }
+        }
+
+        paintFull();
+
+        // Intercept cell clicks so the browser's default anchor
+        // navigation (which resets scroll to the nearest match or to
+        // the top of the scroll container) doesn't fire. We update the
+        // URL manually via history.replaceState, then repaint only the
+        // detail pane — preserving the grid's scroll position exactly.
+        root.addEventListener('click', (e) => {
+            const a = e.target.closest && e.target.closest('a.ng-cell, a.nd-chip');
+            if (!a) return;
+            const href = a.getAttribute('href') || '';
+            if (!href.startsWith('#/nodes')) return;
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+            e.preventDefault();
+            if (location.hash !== href) {
+                history.replaceState(null, '', href);
+                paintSelectionChange();
+            }
+        });
+
+        // Fallback: external hash changes (e.g. browser back/forward)
+        // still trigger a repaint.
         window.addEventListener('hashchange', () => {
-            if (location.hash.startsWith('#/nodes')) paint();
+            if (!location.hash.startsWith('#/nodes')) return;
+            paintSelectionChange();
         });
     }
 

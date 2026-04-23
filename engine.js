@@ -397,17 +397,45 @@ function matchCondition(sel, cond) {
     return true;
 }
 
+// Module-first priority scheduling support. Once a module's walk is in
+// progress (some of its internals answered but completion marker not yet
+// written), its internal questions jump the priority queue — flat
+// priority-lower questions outside the module wait until the module
+// exits. This keeps each module's walk contiguous instead of being
+// preempted mid-way by an unrelated flat question.
+//
+// Uses `node.module` back-pointer populated in graph.js from MODULE.nodeIds.
+function _moduleCompletionMarkerOf(mod) {
+    if (mod.completionMarker) return mod.completionMarker;
+    const writes = mod.writes || [];
+    for (const w of writes) if (w.startsWith(mod.id + '_')) return w;
+    return writes[writes.length - 1];
+}
+function _isModulePending(sel, mod) {
+    const marker = _moduleCompletionMarkerOf(mod);
+    if (marker && sel[marker] !== undefined) return false;
+    const conds = mod.activateWhen;
+    if (!conds || !conds.length) return true;
+    return conds.some(c => matchCondition(sel, c));
+}
+
 function isNodeActivatedByRules(sel, node) {
     if (!node.activateWhen) return true;
     if (!node.activateWhen.some(c => matchCondition(sel, c))) return false;
     const pri = node.priority || 0;
     if (pri > 0) {
+        const myMod = node.module ? MODULE_MAP[node.module] : null;
+        const inPendingMod = !!(myMod && _isModulePending(sel, myMod));
         for (const mid of NODES) {
             if (mid === node) continue;
             if ((mid.priority || 0) >= pri) continue;
             if (mid.derived) continue;
             if (!isNodeVisible(sel, mid)) continue;
             if (isNodeLocked(sel, mid) !== null) continue;
+            // Module-first: when `node` is an internal of a pending
+            // module M, the priority gate ignores priority-lower nodes
+            // that are NOT internal to M.
+            if (inPendingMod && mid.module !== node.module) continue;
             if (!sel[mid.id]) return false;
         }
     }
