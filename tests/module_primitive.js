@@ -374,4 +374,22 @@ assert.strictEqual(ruin, 'self_inflicted',
 
 console.log('engine escape module path integration: PASS');
 
+// ────────────────────────────────────────────────────────────
+// 5. Invariant: every module's string completionMarker must be in
+//    its `writes` list. Otherwise captureExitResult puts it in
+//    setFlavor, and a sel-only outer DFS (validate2, chain_order,
+//    reachability) will see the module as perpetually pending and
+//    re-fire it. Emergence uses a structured marker ({dim, values})
+//    — skipped here.
+// ────────────────────────────────────────────────────────────
+for (const mod of MODULES) {
+    const cm = mod.completionMarker;
+    if (!cm || typeof cm !== 'string') continue;
+    assert(
+        (mod.writes || []).includes(cm),
+        `${mod.id}.completionMarker='${cm}' must be listed in ${mod.id}.writes (else the sel-only DFS won't see the module as done)`
+    );
+}
+console.log('module completionMarker ⊆ writes invariant: PASS');
+
 console.log('\nAll Phase 3 runtime-primitive checks passed.');

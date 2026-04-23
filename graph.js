@@ -524,8 +524,13 @@ const NODES = [
             { inert_stays: ['no'], escape_set: false, reason: 'You already chose "eventually develops goals" — the AI can\'t stay inert' }
           ] }
       ] },
-    { id: 'inert_stays', label: 'Does Escaped AI Stay Inert?', stage: 3, priority: 2,
-      activateWhen: [{ capability: ['asi'], ai_goals: ['marginal'] }],
+    { id: 'inert_stays', label: 'Does Escaped AI Stay Inert?', stage: 3, priority: 1,
+      // Gated on who_benefits_set: inert_stays is a "final surprise"
+      // that fires near the end of the chain, after who_benefits has
+      // resolved. Without this gate, inert_stays becomes askable as
+      // soon as ai_goals='marginal' is set (at escape module exit),
+      // which would jump it ahead of who_benefits on some paths.
+      activateWhen: [{ capability: ['asi'], ai_goals: ['marginal'], who_benefits_set: ['yes'] }],
       edges: [
         { id: 'yes', label: 'Yes — remains inert' },
         {
@@ -1137,11 +1142,18 @@ const NODES = [
         { ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } },
         { containment: ['escaped'] }
       ],
+      // Gated on who_benefits_set: brittle_resolution is a "final
+      // surprise" that fires near the end of the chain, after
+      // who_benefits has resolved. Without this gate, brittle_resolution
+      // becomes askable as soon as ALIGNMENT_MODULE exits with
+      // alignment=brittle, which would jump it ahead of who_benefits
+      // on some paths.
       activateWhen: [
         {
           capability: ['asi'],
           alignment: ['brittle'],
-          alignment_durability: ['holds']
+          alignment_durability: ['holds'],
+          who_benefits_set: ['yes']
         }
       ],
       // Each edge directly writes the final alignment/containment values —
@@ -1606,10 +1618,11 @@ const DECEL_MODULE = {
 //   (b) concentration_type=ai_itself
 //
 // Inert-wakes loop (late re-entry, not an internal sub-flow):
-//   `inert_stays` is intentionally a late-priority flat node (priority: 2,
-//   outside the module) so the user walks the full marginal-path flow
-//   (who_benefits, proliferation, knowledge_rate, etc.) before being
-//   asked whether the AI actually stays inert. Two outcomes:
+//   `inert_stays` is intentionally a flat node (priority: 1, outside
+//   the module) gated on who_benefits_set so the user walks the full
+//   marginal-path flow (who_benefits, etc.) before being asked whether
+//   the AI actually stays inert. Priority 1 (vs rollout's pri 2) ensures
+//   it fires AFTER who_benefits but BEFORE rollout begins. Two outcomes:
 //     * inert_stays=yes — nothing further; the marginal pick stands.
 //     * inert_stays=no — the edge's collapseToFlavor evicts both
 //       `ai_goals` and `escape_set` (the completion marker) to flavor.
@@ -1652,8 +1665,8 @@ const DECEL_MODULE = {
 const ESCAPE_NODE_IDS = [
     'ai_goals',
     // `inert_stays` is intentionally NOT in the module. It sits outside
-    // as a late-priority flat node (priority: 2) so the user walks the
-    // full marginal-path flow (who_benefits, proliferation, etc.) before
+    // as a flat node (priority: 1, gated on who_benefits_set) so the
+    // user walks the full marginal-path flow (who_benefits, etc.) before
     // being asked whether the AI actually stays inert. On
     // inert_stays=no, the edge's collapseToFlavor evicts both `ai_goals`
     // and `escape_set` — which clears the module's completion marker
@@ -1923,6 +1936,10 @@ const WHO_BENEFITS_NODE_IDS = [
 const WHO_BENEFITS_WRITES = [
     'concentration_type',
     'delivery_ask_eligible',
+    // Completion marker — must be in `writes` so `captureExitResult`
+    // puts it into `setSel` (not setFlavor). Without this, the sel-only
+    // outer DFS never sees the module as done and re-fires it.
+    'who_benefits_set',
 ];
 
 function whoBenefitsReduce(local) {
@@ -2080,7 +2097,9 @@ const ROLLOUT_NODE_IDS = [
     'failure_mode',
 ];
 
-const ROLLOUT_WRITES = [];
+// Only the completion marker propagates globally — all narrative dims
+// move to flavor on exit. See `rolloutReduce` comment.
+const ROLLOUT_WRITES = ['rollout_set'];
 
 function rolloutReduce(_local) {
     // All rollout dims move to flavor on module exit — nothing persists
@@ -2725,7 +2744,7 @@ const INTENT_NODE_IDS = [
     'rival_dynamics',
 ];
 
-const INTENT_WRITES = ['intent'];
+const INTENT_WRITES = ['intent', 'intent_set'];
 
 function intentReduce(local) {
     // rival_dynamics overrides the initial intent pick when the tail

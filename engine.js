@@ -456,40 +456,46 @@ function _isModuleActivelyPending(sel, mod) {
     return false;
 }
 
+// Shallow askability — activate matched, hide not matched, unanswered,
+// has at least one enabled edge. NO recursion into isNodeVisible /
+// isNodeActivatedByRules (those would create mutual recursion through
+// the priority gate). Mirrors the gates `_isModuleActivelyPending` uses.
+function _shallowAskable(sel, n) {
+    if (n.derived) return false;
+    if (sel[n.id] !== undefined) return false;
+    if (!n.edges || n.edges.length === 0) return false;
+    if (n.activateWhen && !n.activateWhen.some(c => matchCondition(sel, c))) return false;
+    if (n.hideWhen && n.hideWhen.some(c => matchCondition(sel, c))) return false;
+    if (!n.edges.some(e => !isEdgeDisabled(sel, n, e))) return false;
+    return true;
+}
+
 function isNodeActivatedByRules(sel, node) {
     if (!node.activateWhen) return true;
     if (!node.activateWhen.some(c => matchCondition(sel, c))) return false;
 
     const pri = node.priority || 0;
-    const myMod = node.module ? MODULE_MAP[node.module] : null;
-    const inPendingMod = !!(myMod && _isModulePending(sel, myMod));
+    const imAModuleInternal = !!node.module;
 
-    // Hard module-first: if ANY module is actively pending and this
-    // node isn't an internal of a pending module, defer — regardless
-    // of priority. Nodes inside any pending module (even a different
-    // one) can still fire, which handles the rare cross-pending case
-    // (e.g. ALIGNMENT exits on containment.escaped while ESCAPE is
-    // still pending — ESCAPE's internals can run normally).
-    if (!inPendingMod) {
-        for (const otherMod of MODULES) {
-            if (otherMod === myMod) continue;
-            if (_isModuleActivelyPending(sel, otherMod)) return false;
-        }
-    }
-
-    if (pri > 0) {
-        for (const mid of NODES) {
-            if (mid === node) continue;
-            if ((mid.priority || 0) >= pri) continue;
-            if (mid.derived) continue;
-            if (!isNodeVisible(sel, mid)) continue;
-            if (isNodeLocked(sel, mid) !== null) continue;
-            // Module-first for priority gate: a priority-higher module
-            // internal doesn't wait on priority-lower non-module nodes
-            // while its own module is pending (keeps the module walk
-            // self-contained).
-            if (inPendingMod && mid.module !== node.module) continue;
-            if (!sel[mid.id]) return false;
+    // Priority-first scheduling, ties → modules:
+    //   - Defer if ANY shallow-askable node has STRICTLY LOWER priority
+    //     number (lower pri# = fires first).
+    //   - At the same priority, a flat (non-module) node defers to any
+    //     active-module-internal (tie goes to modules). Module walks
+    //     stay contiguous at their priority level because nothing inside
+    //     the module has a lower priority, and same-priority externals
+    //     defer to the module.
+    //
+    // Uses shallow askability (no isNodeVisible recursion) to avoid
+    // mutual recursion through this priority gate.
+    for (const mid of NODES) {
+        if (mid === node) continue;
+        if (!_shallowAskable(sel, mid)) continue;
+        const midPri = mid.priority || 0;
+        if (midPri < pri) return false;
+        if (midPri === pri && !imAModuleInternal && mid.module) {
+            const otherMod = MODULE_MAP[mid.module];
+            if (otherMod && _isModulePending(sel, otherMod)) return false;
         }
     }
     return true;
