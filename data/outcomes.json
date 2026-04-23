@@ -590,20 +590,6 @@
             "asi"
           ],
           "ai_goals": [
-            "benevolent"
-          ],
-          "asi_threshold": [
-            "never"
-          ],
-          "benefit_distribution": [
-            "unequal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "ai_goals": [
             "marginal"
           ],
           "inert_stays": [
@@ -980,20 +966,6 @@
               "ai_itself"
             ]
           }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "ai_goals": [
-            "benevolent"
-          ],
-          "asi_threshold": [
-            "never"
-          ],
-          "benefit_distribution": [
-            "extreme"
-          ]
         },
         {
           "capability": [
@@ -1588,20 +1560,6 @@
           ],
           "post_war_aims": [
             "self_interest"
-          ],
-          "benefit_distribution": [
-            "equal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "ai_goals": [
-            "benevolent"
-          ],
-          "asi_threshold": [
-            "never"
           ],
           "benefit_distribution": [
             "equal"
@@ -3261,12 +3219,7 @@
             "rapid",
             "gradual",
             "uneven"
-          ],
-          "_not": {
-            "asi_threshold": [
-              "never"
-            ]
-          }
+          ]
         },
         {
           "concentration_type": [
@@ -3313,12 +3266,7 @@
             "rapid",
             "gradual",
             "uneven"
-          ],
-          "_not": {
-            "asi_threshold": [
-              "never"
-            ]
-          }
+          ]
         }
       ],
       "story": [],

@@ -319,21 +319,9 @@ const escapePath = [
     ['gov_action', 'decelerate'],
     ['decel_2mo_progress', 'unsolved'],
     ['decel_2mo_action', 'escapes'],      // decel writes alignment='failed', containment='escaped'
-    // power_seeking is the only hostile ai_goals edge without a pre-existing
-    // `capability: { not: ['singularity'] }` disabledWhen (a stale rule from
-    // the pre-consolidation capability={singularity, stalls} era that now
-    // fires for every post-emergence path since capability is one of
-    // {stalls, plateau, agi, asi}). Using power_seeking lets this test run
-    // the full escape pipeline; the disabledWhen is an orthogonal bug
-    // tracked separately.
-    ['ai_goals', 'power_seeking'],
-    // `industrial` is a safer edge choice: nanotech/pathogens both inherit
-    // the same stale `capability: { not: ['singularity'] }` disabledWhen
-    // described on ai_goals above.
-    ['escape_method', 'industrial'],
-    // days_weeks requires escape_method=nanotech; `years` is compatible
-    // with the industrial method.
-    ['escape_timeline', 'years'],
+    ['ai_goals', 'paperclip'],
+    ['escape_method', 'nanotech'],
+    ['escape_timeline', 'days_weeks'],
     ['discovery_timing', 'early_execution'],
     ['response_method', 'physical_strikes'],
     ['response_success', 'yes'],
@@ -355,7 +343,7 @@ assert.strictEqual(escSel.post_catch, 'ruined',
     'post_catch=ruined on civilizational tail');
 assert.strictEqual(escSel.war_survivors, 'most',
     'war_survivors=most written by collateral_survivors exit tuple');
-assert.strictEqual(escSel.ai_goals, 'power_seeking', 'ai_goals stays in sel');
+assert.strictEqual(escSel.ai_goals, 'paperclip', 'ai_goals stays in sel');
 assert.strictEqual(escSel.escape_set, 'yes', 'escape_set=yes on exit');
 // catch_outcome + collateral_impact move to flavor (no longer in writes).
 assert.strictEqual(escSel.catch_outcome, undefined,
@@ -368,9 +356,9 @@ assert.strictEqual(escFlavor.collateral_impact, 'civilizational',
     'collateral_impact preserved in flavor');
 // Pure-internal pipeline dims moved to flavor.
 assert.strictEqual(escSel.escape_method, undefined, 'escape_method moved out of sel');
-assert.strictEqual(escFlavor.escape_method, 'industrial', 'escape_method in flavor');
+assert.strictEqual(escFlavor.escape_method, 'nanotech', 'escape_method in flavor');
 assert.strictEqual(escSel.escape_timeline, undefined, 'escape_timeline moved out of sel');
-assert.strictEqual(escFlavor.escape_timeline, 'years', 'escape_timeline in flavor');
+assert.strictEqual(escFlavor.escape_timeline, 'days_weeks', 'escape_timeline in flavor');
 assert.strictEqual(escSel.discovery_timing, undefined, 'discovery_timing moved out of sel');
 assert.strictEqual(escFlavor.discovery_timing, 'early_execution', 'discovery_timing in flavor');
 assert.strictEqual(escSel.response_method, undefined, 'response_method moved out of sel');
