@@ -7364,6 +7364,49 @@
     },
     "shortQuestionContext": "Even a successful response has consequences. How much damage did stopping the AI require?"
   },
+  "collateral_survivors": {
+    "questionText": "How much of humanity survives?",
+    "questionContext": "**The AI was stopped, permanently — but the response itself crippled the civilization that stopped it.** Power grids, supply chains, hospitals, communications — all gone with the substrate the AI lived in. The question is what's left after the dust settles: a wounded civilization that can rebuild, scattered remnants starting over, or nothing at all.",
+    "values": {
+      "most": {
+        "answerLabel": "Most survive — devastated but recoverable",
+        "answerDesc": "The collateral damage was catastrophic but not existential. Infrastructure is wrecked and billions suffer, but the core of humanity — and enough knowledge, institutions, and capacity — survives. Recovery will take decades, but the species endures and can rebuild on firmer ground, with the AI threat behind it.",
+        "timelineEvent": {
+          "headline": "Most of humanity survives",
+          "description": "The response crippled infrastructure but not the species. Recovery is possible, if slow and uncertain.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "shortAnswerDesc": "Devastated but recoverable."
+      },
+      "remnants": {
+        "answerLabel": "Remnants — civilization collapses",
+        "answerDesc": "The systems that kept billions alive — power, water, food, medicine — unraveled too fast for any organized response. Scattered populations survive in pockets, maybe millions in total, but the civilization that built superintelligent AI is gone. What comes next, if anything, starts from something much smaller.",
+        "timelineEvent": {
+          "headline": "Civilization collapses",
+          "description": "The response destroyed the infrastructure of modern civilization. Scattered remnants persist, but the world that existed before is gone.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "Civilization collapsed in the aftermath of stopping the AI. Communication is fragmented, supply chains don't exist, infrastructure is destroyed. What remains is local, improvised, and fragile. Billions are dead."
+        },
+        "shortAnswerDesc": "Civilization collapses. Small pockets remain."
+      },
+      "none": {
+        "answerLabel": "None — extinction",
+        "answerDesc": "The response was too aggressive, the damage too deep, the cascade too fast. Without the infrastructure that fed and protected billions, the collapse is total. The AI is gone. So is humanity.",
+        "timelineEvent": {
+          "headline": "Extinction",
+          "description": "The collapse that followed the response leaves no meaningful survivors. The human story ends.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "shortAnswerDesc": "Humanity does not survive the aftermath."
+      }
+    },
+    "shortQuestionContext": "Stopping the AI broke modern civilization. How much of humanity survives what came next?"
+  },
   "catch_outcome": {
     "questionText": "What does the future hold?",
     "questionContext": "The immediate crisis is resolved — one way or another. The question is what comes next.",

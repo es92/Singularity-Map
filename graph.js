@@ -546,7 +546,15 @@ const NODES = [
         { id: 'power_seeking', label: 'Power accumulation' },
         { id: 'marginal', label: 'Inert (for now)', disabledWhen: [
             { concentration_type: ['ai_itself'], reason: 'The AI already took control — it is not inert' },
-            { inert_stays: ['no'], reason: 'You already chose "eventually develops goals" — the AI can\'t stay inert' }
+            // Disables marginal during the ESCAPE_MODULE re-entry triggered
+            // by inert_stays=no. The `escape_set: false` gate ensures this
+            // rule only fires AFTER the inert_stays.no collapseToFlavor has
+            // evicted `ai_goals` + `escape_set` to flavor. Without that
+            // gate, cleanSelection would delete sel.ai_goals before the
+            // move runs (disabledWhen fires earlier in the same pass than
+            // collapseToFlavor), and the move's `when: { ai_goals: ['marginal'] }`
+            // would then fail to match, leaving escape_set stuck.
+            { inert_stays: ['no'], escape_set: false, reason: 'You already chose "eventually develops goals" — the AI can\'t stay inert' }
           ] }
       ] },
     { id: 'inert_stays', label: 'Does Escaped AI Stay Inert?', stage: 3, priority: 2,
@@ -557,26 +565,34 @@ const NODES = [
           id: 'no',
           label: 'No — eventually develops goals and escapes',
           shortLabel: 'No — develops goals',
-          // Eviction step for the inert-wakes re-ask of ai_goals:
-          // move the original marginal pick to flavor so the ai_goals
-          // node re-activates and the user picks the new (hostile) goal
-          // the AI wakes up with. See the ESCAPE_MODULE docstring.
-          //
-          // Gated by `when: ai_goals=marginal` so this only fires on the
-          // initial transition (before the re-pick) — otherwise every
-          // cleanSelection pass would re-evict the new hostile choice.
-          // (The ai_goals.marginal edge also has a disabledWhen on
-          // inert_stays=no that deletes the value directly, so the
-          // `move` is rarely reached; kept here as a narrative-layer
-          // backup in case the disabled-eviction order changes.)
-          collapseToFlavor: { when: { ai_goals: ['marginal'] }, move: ['ai_goals'] }
+          // Re-entry step for ESCAPE_MODULE. The marginal path exited
+          // the module via ai_goals.marginal (escape_set='yes',
+          // ai_goals='marginal' in sel). On inert_stays=no we evict:
+          //   * ai_goals  — ai_goals re-activates, user picks a hostile
+          //     value (marginal disabled via ai_goals.marginal.disabledWhen).
+          //   * escape_set — clears the module's completion marker so
+          //     _isModulePending returns true again; module-first
+          //     scheduling then walks the full escape pipeline.
+          // Gated by `when: ai_goals=['marginal']` so it only fires on
+          // the initial transition — once the user re-picks a hostile
+          // goal, subsequent cleanSelection passes don't re-evict.
+          collapseToFlavor: { when: { ai_goals: ['marginal'] }, move: ['ai_goals', 'escape_set'] }
         }
       ] },
     // Note: the former `inert_outcome` node is gone. The inert-wakes path
     // now re-asks `ai_goals` instead — see ESCAPE_MODULE and
     // inert_stays.no.collapseToFlavor.
     { id: 'gov_action', label: 'Deceleration', stage: 2,
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } }],
+      // Hide once the AI has escaped containment — the deceleration
+      // decision is moot at that point, regardless of how the escape
+      // pipeline resolved (hostile pipeline, benevolent/marginal
+      // early-exit, or inert_stays loop). The second clause catches
+      // the concentration_type=ai_itself hostile path where containment
+      // is never set but ai_goals is hostile.
+      hideWhen: [
+        { containment: ['escaped'] },
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } }
+      ],
       // Decel is only coherent when some actor can actually enforce a slowdown
       // in the one-country-leads case:
       //   (a) sovereignty=state     → state mandates (any distribution), or
@@ -962,10 +978,14 @@ const NODES = [
     { id: 'conflict_result', label: 'Conflict Result', stage: 3,
       activateWhen: [{ escalation_outcome: ['conflict'] }],
       edges: [ { id: 'victory', label: 'Decisive victory' }, { id: 'destruction', label: 'Mutual destruction' } ] },
+    // war_survivors — narrowed to the war-destruction branch only. The
+    // escape-catch branch is handled by collateral_survivors (declared in
+    // ESCAPE_MODULE), which writes to the same `war_survivors` sel dim
+    // so downstream consumers (outcome templates, ruin_type) are unaware
+    // of the split.
     { id: 'war_survivors', label: 'Humanity Survives?', stage: 3,
       activateWhen: [
-        { conflict_result: ['destruction'] },
-        { catch_outcome: ['holds_permanently'], collateral_impact: ['civilizational'] }
+        { conflict_result: ['destruction'] }
       ],
       edges: [
         { id: 'most', label: 'Most — devastated but recoverable', shortLabel: 'Most survive' },
@@ -1399,6 +1419,23 @@ const NODES = [
         { id: 'holds_permanently', label: 'The stop holds permanently', shortLabel: 'Holds permanently',
           requires: { response_success: ['yes'] } }
       ] },
+    // collateral_survivors — the escape-pipeline twin of war_survivors.
+    // Fires only on the civilizational-collateral branch of the catch path
+    // (catch_outcome=holds_permanently + collateral_impact=civilizational)
+    // and writes to the shared `war_survivors` sel dim via
+    // collapseToFlavor.set — so downstream consumers (outcome templates,
+    // ruin_type) read one canonical key regardless of which pipeline
+    // produced the survivor count. Narrative is AI-catastrophe flavored,
+    // distinct from the war_survivors node which stays war-flavored.
+    { id: 'collateral_survivors', label: 'Humanity Survives?', stage: 3,
+      activateWhen: [
+        { catch_outcome: ['holds_permanently'], collateral_impact: ['civilizational'] }
+      ],
+      edges: [
+        { id: 'most', label: 'Most — devastated but recoverable', shortLabel: 'Most survive' },
+        { id: 'remnants', label: 'Remnants — civilization collapses', shortLabel: 'Remnants' },
+        { id: 'none', label: 'None — extinction' }
+      ] },
     // Phase 4a: decel_outcome deleted — decel module writes alignment,
     // geo_spread, rival_emerges, governance, containment, and
     // decel_align_progress directly via the module reducer.
@@ -1639,13 +1676,11 @@ const DECEL_MODULE = {
 // ESCAPE_MODULE — the "AI out of control" sub-loop
 // ════════════════════════════════════════════════════════
 //
-// 9 internal dims, in order:
-//   ai_goals → (if marginal) inert_stays → (if no) [re-ask ai_goals
-//                                                   with marginal
-//                                                   disabled] → ...
-//   (if hostile) escape_method → escape_timeline → discovery_timing
-//     → response_method → response_success → collateral_impact
-//     → catch_outcome
+// 9 internal dims, in order (inert_stays lives OUTSIDE the module):
+//   ai_goals → (if hostile) escape_method → escape_timeline
+//     → discovery_timing → response_method → response_success
+//     → collateral_impact → catch_outcome
+//     → (if holds_permanently + civilizational) collateral_survivors
 //
 // Activation: the two legacy ai_goals activation conditions. By widening
 // the module gate from the old "hostile-only" activateWhen to these
@@ -1655,47 +1690,60 @@ const DECEL_MODULE = {
 //   (a) cap=singularity, auto=deep, alignment=failed, containment=escaped
 //   (b) concentration_type=ai_itself
 //
-// Inert-wakes loop (replaces the old standalone `inert_outcome` node):
-//   When ai_goals=marginal is picked, the module asks `inert_stays`
-//   ("does it stay inert?"). On `yes`, the module exits keeping
-//   ai_goals=marginal. On `no`, the `inert_stays.no` edge evicts
-//   ai_goals to flavor via collapseToFlavor.move — the ai_goals node
-//   re-activates and the user picks a new (hostile) value, with
-//   `marginal` disabled by ai_goals.marginal.disabledWhen. The escape
-//   pipeline then fires normally because escape_method.activateWhen
-//   already matches (containment=escaped or concentration_type=ai_itself
-//   + hostile ai_goals).
+// Inert-wakes loop (late re-entry, not an internal sub-flow):
+//   `inert_stays` is intentionally a late-priority flat node (priority: 2,
+//   outside the module) so the user walks the full marginal-path flow
+//   (who_benefits, proliferation, knowledge_rate, etc.) before being
+//   asked whether the AI actually stays inert. Two outcomes:
+//     * inert_stays=yes — nothing further; the marginal pick stands.
+//     * inert_stays=no — the edge's collapseToFlavor evicts both
+//       `ai_goals` and `escape_set` (the completion marker) to flavor.
+//       With the marker cleared, _isModulePending flips back to true;
+//       module-first priority scheduling then re-walks ai_goals (with
+//       marginal disabled via ai_goals.marginal.disabledWhen) and the
+//       full escape pipeline. On pipeline completion `escape_set` is
+//       set again and the module exits normally.
 //
 // Early exits. ai_goals has 7 edges; 5 hostile goals lead into the
-// escape pipeline; marginal enters the inert-stays sub-loop above;
-// benevolent short-circuits with no pipeline. escape_method's own
-// activateWhen gates the pipeline start — so only hostile answers
-// trigger the follow-ups. Swarm is additionally disabled on
-// concentration_type=ai_itself via its node-level disabledWhen.
+// escape pipeline; marginal exits the module directly (inert_stays is
+// asked later as a flat node); benevolent short-circuits with no
+// pipeline. escape_method's own activateWhen gates the pipeline start —
+// so only hostile answers trigger the follow-ups. Swarm is additionally
+// disabled on concentration_type=ai_itself via its node-level
+// disabledWhen.
 //
 // External contract:
-//   * writes = 3 dims — ai_goals (externally consumed across many hideWhen
-//     clauses, outcome templates, and downstream nodes), plus
+//   * writes = 4 sel dims — ai_goals (externally consumed across many
+//     hideWhen clauses, outcome templates, and downstream nodes),
 //     catch_outcome and collateral_impact (read by outcome templates and
-//     the vignette builder). All stay in sel post-exit.
-//   * The remaining 5 internal dims (escape_method, escape_timeline,
-//     discovery_timing, response_method, response_success) are pure
-//     flavor — nothing outside the module reads them from sel. Templates
-//     and narrative variants that reference them go through
-//     resolvedStateWithFlavor / narrativeState, so flavor lookups work.
-//     attachModuleReducer auto-computes move = nodeIds \ writes and
-//     evicts them to flavor on exit.
-//   * completionMarker: `escape_set`. The auto-detection (last write) would
-//     pick ai_goals, but on pipeline exits we'd need to recognize
-//     catch_outcome as the "done" signal too — so we declare an explicit
-//     marker and set it on every exit tuple (5 exit edges total).
+//     the vignette builder), and war_survivors (shared with WAR_MODULE's
+//     war_survivors node; written only via collateral_survivors edges).
+//     All stay in sel post-exit.
+//   * The remaining internal dims (escape_method, escape_timeline,
+//     discovery_timing, response_method, response_success,
+//     collateral_survivors) are pure flavor — nothing outside the
+//     module reads them from sel. Templates and narrative variants
+//     that reference them go through resolvedStateWithFlavor /
+//     narrativeState, so flavor lookups work. attachModuleReducer
+//     auto-computes move = nodeIds \ writes and evicts them to flavor
+//     on exit.
+//   * completionMarker: `escape_set`. The auto-detection (last write)
+//     would pick war_survivors which is only set on one tail branch, so
+//     we declare an explicit marker and set it on every exit tuple.
 //
 // No reducerTable — walker falls through to normal DFS inside the module.
 // /explore hub uses dynamic atomic-cell enumeration.
 
 const ESCAPE_NODE_IDS = [
     'ai_goals',
-    'inert_stays',
+    // `inert_stays` is intentionally NOT in the module. It sits outside
+    // as a late-priority flat node (priority: 2) so the user walks the
+    // full marginal-path flow (who_benefits, proliferation, etc.) before
+    // being asked whether the AI actually stays inert. On
+    // inert_stays=no, the edge's collapseToFlavor evicts both `ai_goals`
+    // and `escape_set` — which clears the module's completion marker
+    // and lets it re-enter with a hostile ai_goals pick (marginal
+    // disabled).
     'escape_method',
     'escape_timeline',
     'discovery_timing',
@@ -1703,12 +1751,19 @@ const ESCAPE_NODE_IDS = [
     'response_success',
     'collateral_impact',
     'catch_outcome',
+    // collateral_survivors — tail node on the
+    // (holds_permanently + civilizational) sub-branch. Writes to the
+    // shared `war_survivors` sel dim (see buildEscapeExitPlan).
+    'collateral_survivors',
 ];
 
 const ESCAPE_WRITES = [
     'ai_goals',
     'catch_outcome',
     'collateral_impact',
+    // war_survivors is written by collateral_survivors edges via the
+    // exit plan's set-block (shared dim with the standalone war module).
+    'war_survivors',
     'escape_set',
 ];
 
@@ -1720,18 +1775,25 @@ function escapeReduce(local) {
     return bundle;
 }
 
-// 4 exit edges:
+// Exit edges:
 //   * ai_goals.benevolent — benign AI, no pipeline.
-//   * inert_stays.yes — AI stays inert, no pipeline; ai_goals=marginal
-//     stands. (ai_goals.marginal is NOT an exit — the module asks
-//     inert_stays next to decide whether the inertia holds.)
-//   * catch_outcome.{not_permanent, holds_permanently}
-//     — normal pipeline-complete exits.
-// All set `escape_set: 'yes'`; no `when` gates because the (nodeId, edgeId)
-// pair uniquely identifies the exit path.
+//   * ai_goals.marginal — AI is inert (for now), no pipeline. The
+//     late-priority flat node `inert_stays` asks later whether the
+//     inertia holds; on `no` it evicts `ai_goals` + `escape_set` so the
+//     module re-enters for a hostile re-pick + full pipeline.
+//   * catch_outcome.not_permanent — always a direct exit.
+//   * catch_outcome.holds_permanently — direct exit EXCEPT when
+//     collateral_impact=civilizational; that branch defers to
+//     collateral_survivors.
+//   * collateral_survivors.{most, remnants, none} — pipeline-complete
+//     exits on the civilizational-collateral tail. Each writes the
+//     chosen value back to the shared `war_survivors` sel dim via the
+//     exit-tuple `set` block (attachModuleReducer installs it as a
+//     collapseToFlavor.set on the edge).
+// All set `escape_set: 'yes'`.
 function buildEscapeExitPlan() {
     const plan = [];
-    const add = (nodeId, edgeIds) => {
+    const addSimple = (nodeId, edgeIds) => {
         const n = NODE_MAP[nodeId];
         if (!n || !n.edges) return;
         const want = new Set(edgeIds);
@@ -1744,12 +1806,30 @@ function buildEscapeExitPlan() {
             });
         }
     };
-    add('ai_goals', ['benevolent']);
-    add('inert_stays', ['yes']);
-    // catch_outcome has 2 edges — include them all.
-    const catchNode = NODE_MAP.catch_outcome;
-    if (catchNode && catchNode.edges) {
-        add('catch_outcome', catchNode.edges.map(e => e.id));
+    addSimple('ai_goals', ['benevolent', 'marginal']);
+    // catch_outcome.not_permanent — always exits directly.
+    addSimple('catch_outcome', ['not_permanent']);
+    // catch_outcome.holds_permanently — exits only when collateral_impact
+    // is NOT civilizational. In the civilizational case, the module
+    // defers to collateral_survivors (no exit tuple matches, so the
+    // module stays pending and module-first scheduling picks the next
+    // internal node).
+    plan.push({
+        nodeId: 'catch_outcome', edgeId: 'holds_permanently',
+        when: { collateral_impact: { not: ['civilizational'] } },
+        set: { escape_set: 'yes' },
+    });
+    // collateral_survivors — tail exits for the civilizational branch.
+    // Each edge writes its own value into the shared war_survivors dim.
+    const cs = NODE_MAP.collateral_survivors;
+    if (cs && cs.edges) {
+        for (const e of cs.edges) {
+            plan.push({
+                nodeId: 'collateral_survivors', edgeId: e.id,
+                when: {},
+                set: { escape_set: 'yes', war_survivors: e.id },
+            });
+        }
     }
     return plan;
 }
@@ -1826,10 +1906,13 @@ function attachModuleReducer(mod) {
 //
 // Pipeline: power_promise → mobilization → {sincerity_test |
 // pushback_outcome | coalition_outcome} → benefit_distribution →
-// (extreme only) concentration_type. Two exit paths:
+// (extreme only) concentration_type → ({singleton, inner_circle}
+// only) power_use. Three exit paths:
 //   * benefit_distribution ∈ {equal, unequal} — direct exit
-//   * benefit_distribution = extreme → concentration_type.* — exits
-//     after the follow-up question.
+//   * benefit_distribution = extreme → concentration_type ∈
+//     {elites, ai_itself} — exits after concentration_type
+//   * benefit_distribution = extreme → concentration_type ∈
+//     {singleton, inner_circle} → power_use.* — exits after power_use
 //
 // External contract:
 //   * writes = [benefit_distribution, concentration_type] — both have
@@ -1864,6 +1947,13 @@ const WHO_BENEFITS_NODE_IDS = [
     'coalition_outcome',
     'benefit_distribution',
     'concentration_type',
+    // power_use is a stage-3 tail: activates on
+    // concentration_type ∈ {singleton, inner_circle} and writes to
+    // flavor-only outcome templates (no `reachable` refs, no external
+    // hideWhen/activateWhen). Exit tuples on the two concentration_type
+    // edges that activate it defer completion to power_use; on
+    // {elites, ai_itself} concentration_type still exits directly.
+    'power_use',
 ];
 
 const WHO_BENEFITS_WRITES = [
@@ -1901,9 +1991,27 @@ function buildWhoBenefitsExitPlan() {
     }
     const ct = NODE_MAP.concentration_type;
     if (ct && ct.edges) {
+        // power_use.activateWhen = { concentration_type:
+        // [singleton, inner_circle] }. Defer module exit on those two
+        // edges so power_use gets asked next; exit directly on
+        // {elites, ai_itself} which don't activate power_use.
+        const deferToPowerUse = new Set(['singleton', 'inner_circle']);
         for (const e of ct.edges) {
+            if (deferToPowerUse.has(e.id)) continue;
             plan.push({
                 nodeId: 'concentration_type',
+                edgeId: e.id,
+                when: {},
+                set: { who_benefits_set: 'yes' },
+            });
+        }
+    }
+    // power_use tail exit — all three edges are terminal.
+    const pu = NODE_MAP.power_use;
+    if (pu && pu.edges) {
+        for (const e of pu.edges) {
+            plan.push({
+                nodeId: 'power_use',
                 edgeId: e.id,
                 when: {},
                 set: { who_benefits_set: 'yes' },
@@ -2679,7 +2787,271 @@ const INTENT_MODULE = {
     get exitPlan() { return buildIntentExitPlan(); },
 };
 
-const MODULES = [DECEL_MODULE, ESCAPE_MODULE, WHO_BENEFITS_MODULE, ROLLOUT_MODULE, EMERGENCE_MODULE, CONTROL_MODULE, PROLIFERATION_MODULE, INTENT_MODULE];
+// ════════════════════════════════════════════════════════
+// WAR_MODULE — the "escalation → conflict → aftermath" sub-loop
+// ════════════════════════════════════════════════════════
+//
+// Fires whenever the rival-powers path reaches intent=escalation.
+// Pipeline:
+//
+//     escalation_outcome
+//        ├── standoff  ──────────► exit
+//        ├── agreement ──────────► exit
+//        └── conflict  → conflict_result
+//                          ├── victory     → post_war_aims.* → exit
+//                          └── destruction → war_survivors.* → exit
+//
+// External contract:
+//   * writes = [escalation_outcome, conflict_result, post_war_aims,
+//     war_survivors] — every dim is consumed by at least one outside
+//     consumer (intent.deriveWhen, power_promise.activateWhen/hideWhen,
+//     outcome templates, ruin_type.deriveWhen, collateral_impact and
+//     catch_outcome hideWhen via war_survivors). Nothing evicts to
+//     flavor; moveDims = nodeIds \ writes = [].
+//   * war_survivors is the shared dim with ESCAPE_MODULE's
+//     collateral_survivors. Both modules are mutually exclusive at
+//     activation time (the war path requires intent=escalation on the
+//     "clean win" branches; the escape-catch path requires
+//     alignment=failed or concentration_type=ai_itself) so only one
+//     writer touches war_survivors per run.
+//   * completionMarker: `war_set`. Declared explicitly because the
+//     auto-detection would pick the last write (war_survivors), which
+//     is set on only one of the four exit tails.
+//
+// Walker: no reducerTable — 7 exit tuples with straightforward
+// (nodeId, edgeId) mapping; /explore falls through to normal DFS.
+
+const WAR_NODE_IDS = [
+    'escalation_outcome',
+    'conflict_result',
+    'post_war_aims',
+    'war_survivors',
+];
+
+const WAR_WRITES = [
+    'escalation_outcome',
+    'conflict_result',
+    'post_war_aims',
+    'war_survivors',
+    'war_set',
+];
+
+function warReduce(local) {
+    const bundle = {};
+    for (const k of WAR_WRITES) {
+        if (local[k] !== undefined) bundle[k] = local[k];
+    }
+    return bundle;
+}
+
+// 7 exit edges:
+//   * escalation_outcome.{standoff, agreement} — direct exits.
+//   * escalation_outcome.conflict — no exit (continues to conflict_result).
+//   * conflict_result.victory — no exit (continues to post_war_aims).
+//   * conflict_result.destruction — no exit (continues to war_survivors).
+//   * post_war_aims.{human_centered, self_interest} — exits.
+//   * war_survivors.{most, remnants, none} — exits.
+// All set `war_set: 'yes'`.
+function buildWarExitPlan() {
+    const plan = [];
+    const addAll = (nodeId) => {
+        const n = NODE_MAP[nodeId];
+        if (!n || !n.edges) return;
+        for (const e of n.edges) {
+            plan.push({
+                nodeId, edgeId: e.id,
+                when: {},
+                set: { war_set: 'yes' },
+            });
+        }
+    };
+    const addSome = (nodeId, edgeIds) => {
+        const n = NODE_MAP[nodeId];
+        if (!n || !n.edges) return;
+        const want = new Set(edgeIds);
+        for (const e of n.edges) {
+            if (!want.has(e.id)) continue;
+            plan.push({
+                nodeId, edgeId: e.id,
+                when: {},
+                set: { war_set: 'yes' },
+            });
+        }
+    };
+    addSome('escalation_outcome', ['standoff', 'agreement']);
+    addAll('post_war_aims');
+    addAll('war_survivors');
+    return plan;
+}
+
+const WAR_MODULE = {
+    id: 'war_loop',
+    // Mirrors escalation_outcome.activateWhen — module is pending from
+    // the moment escalation_outcome would first be askable through to
+    // either an early exit (standoff/agreement) or pipeline completion
+    // (post_war_aims/war_survivors).
+    activateWhen: [
+        { intent: ['escalation'] },
+    ],
+    reads: [
+        // Activation gate
+        'intent',
+        // Reads by downstream consumers inside the module (via hideWhen
+        // on war_survivors paths) — kept for explicitness even though
+        // these are all internal writes.
+        'capability', 'automation',
+    ],
+    writes: WAR_WRITES,
+    nodeIds: WAR_NODE_IDS,
+    completionMarker: 'war_set',
+    reduce: warReduce,
+    get exitPlan() { return buildWarExitPlan(); },
+};
+
+// ════════════════════════════════════════════════════════
+// ALIGNMENT_MODULE — the "alignment cluster + deceleration" sub-loop
+// ════════════════════════════════════════════════════════
+//
+// Groups the four stage-2 nodes that together answer "what does the
+// world look like alignment-wise, and are we slowing down?":
+//   * alignment              — Robust / Brittle / Unsolved
+//   * alignment_durability   — (brittle only) Holds / Breaks
+//   * containment            — (failed only) Contained / Escaped
+//   * gov_action             — (geo_spread=one + sov=state OR
+//                               distribution=monopoly) Decelerate /
+//                               Accelerate
+//
+// Paths:
+//   * robust → gov_action (if geo_spread=one + sov/dist)
+//   * brittle → holds → gov_action (if gates met)
+//   * brittle → breaks → containment derives 'escaped' → ESCAPE_MODULE;
+//     gov_action hidden (containment=escaped) — module exits on
+//     durability.breaks.
+//   * failed → contained → gov_action (if gates met)
+//   * failed → escaped → ESCAPE_MODULE via ai_goals; gov_action hidden
+//     (containment=escaped) — module exits on containment.escaped.
+//
+// Once the AI has escaped, the deceleration decision is moot — so on
+// every containment=escaped path we exit this module on containment
+// (or alignment_durability.breaks, which derives containment='escaped'),
+// and gov_action's own hideWhen suppresses it for the rest of the flow.
+// The only interleaving with ESCAPE_MODULE is visual (two modules
+// pending at once is fine — module-first scheduling is advisory for
+// priority gates, not a serializer).
+//
+// External contract:
+//   * writes = [alignment, alignment_durability, containment,
+//     gov_action, alignment_set] — all four question dims are heavily
+//     consumed downstream (template refs, activateWhen/hideWhen gates),
+//     so none move to flavor.
+//   * nodeIds = the four question dims → move list = writes \ nodeIds
+//     is empty.
+//
+// Completion marker: `alignment_set`. Deferred on alignment.{brittle,
+// failed} (which route to the next internal node), otherwise exits
+// directly. gov_action's own exit tuples are idempotent for paths
+// where an earlier edge already set the marker.
+//
+// Walker: no reducerTable — enumerating the 4 nodes × their edges ×
+// their activation gates would produce many cells with no compression
+// win. /explore falls through to normal DFS inside.
+
+const ALIGNMENT_NODE_IDS = [
+    'alignment',
+    'alignment_durability',
+    'containment',
+    'gov_action',
+];
+
+const ALIGNMENT_WRITES = [
+    'alignment',
+    'alignment_durability',
+    'containment',
+    'gov_action',
+    'alignment_set',
+];
+
+function alignmentReduce(local) {
+    const bundle = {};
+    for (const k of ALIGNMENT_WRITES) {
+        if (local[k] !== undefined) bundle[k] = local[k];
+    }
+    return bundle;
+}
+
+// Exit edges:
+//   * alignment.robust — direct exit (durability/containment skip on
+//     this path; gov_action's own exit idempotently re-sets the marker
+//     if it activates).
+//   * alignment.{brittle, failed} — no exit (defer to the next
+//     internal node).
+//   * alignment_durability.{holds, breaks} — direct exits.
+//   * containment.{contained, escaped} — direct exits.
+//   * gov_action.{decelerate, accelerate} — direct exits (idempotent
+//     when reached after an earlier exit).
+// All set `alignment_set: 'yes'`.
+function buildAlignmentExitPlan() {
+    const plan = [];
+    const addSome = (nodeId, edgeIds) => {
+        const n = NODE_MAP[nodeId];
+        if (!n || !n.edges) return;
+        const want = new Set(edgeIds);
+        for (const e of n.edges) {
+            if (!want.has(e.id)) continue;
+            plan.push({
+                nodeId, edgeId: e.id,
+                when: {},
+                set: { alignment_set: 'yes' },
+            });
+        }
+    };
+    const addAll = (nodeId) => {
+        const n = NODE_MAP[nodeId];
+        if (!n || !n.edges) return;
+        for (const e of n.edges) {
+            plan.push({
+                nodeId, edgeId: e.id,
+                when: {},
+                set: { alignment_set: 'yes' },
+            });
+        }
+    };
+    addSome('alignment', ['robust']);
+    addAll('alignment_durability');
+    addAll('containment');
+    addAll('gov_action');
+    return plan;
+}
+
+const ALIGNMENT_MODULE = {
+    id: 'alignment_loop',
+    // Mirrors alignment.activateWhen — the module is pending from the
+    // moment alignment would first be askable through to whichever
+    // internal edge trips its exit tuple.
+    activateWhen: [
+        { capability: ['singularity'], automation: ['deep'] },
+    ],
+    reads: [
+        // activation / gov_action gating
+        'capability', 'automation',
+        'geo_spread', 'sovereignty', 'distribution',
+        // deriveWhen inputs on alignment / containment / gov_action
+        'proliferation_alignment', 'proliferation_outcome',
+        'brittle_resolution',
+        'ai_goals', 'inert_stays',
+        'catch_outcome', 'collateral_impact',
+        'rival_emerges', 'decel_align_progress',
+        // gov_action edge collapseToFlavor moves (pre-existing)
+        'takeoff_explosive', 'open_source',
+    ],
+    writes: ALIGNMENT_WRITES,
+    nodeIds: ALIGNMENT_NODE_IDS,
+    completionMarker: 'alignment_set',
+    reduce: alignmentReduce,
+    get exitPlan() { return buildAlignmentExitPlan(); },
+};
+
+const MODULES = [DECEL_MODULE, ESCAPE_MODULE, WHO_BENEFITS_MODULE, ROLLOUT_MODULE, EMERGENCE_MODULE, CONTROL_MODULE, PROLIFERATION_MODULE, INTENT_MODULE, WAR_MODULE, ALIGNMENT_MODULE];
 const MODULE_MAP = {};
 for (const m of MODULES) MODULE_MAP[m.id] = m;
 
