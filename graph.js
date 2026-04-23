@@ -405,17 +405,28 @@ const NODES = [
       // Phase 4a: removed three decel_outcome-based rules — decel reducer
       // now writes alignment directly (robust on solved/parity_solved,
       // brittle on (rival, brittle), failed on (escapes, *)).
+      // deriveWhen trimmed: rules formerly keyed on external writer
+      // dimensions (proliferation_alignment, proliferation_outcome,
+      // brittle_resolution) moved to their rightful writer modules /
+      // nodes:
+      //   * PROLIFERATION exit plan (proliferation_alignment.breaks,
+      //     proliferation_outcome.leaks_public + alignment≠robust,
+      //     proliferation_control.none + alignment≠robust) now sets
+      //     alignment='failed' directly via collapseToFlavor.set.
+      //   * brittle_resolution.{escape, solved, sufficient} edges now
+      //     set alignment={failed, robust, brittle} directly via
+      //     collapseToFlavor.set.
+      // Only alignment_durability.breaks remains as a derive (intra-module
+      // — alignment_durability is an ALIGNMENT_MODULE internal dim, so
+      // it can stay as a derive without creating a cross-module read).
+      // The marginal-path re-classification (failed → brittle when
+      // ai_goals=marginal) also stays; it's simplified (no longer guards
+      // on brittle_resolution≠solved — since brittle_resolution's own
+      // edge-level set writes alignment='robust' first, that value isn't
+      // in the valueMap so it's preserved).
       deriveWhen: [
-        { match: { proliferation_alignment: ['breaks'] }, value: 'failed' },
         { match: { alignment_durability: ['breaks'] }, value: 'failed' },
-        { match: { brittle_resolution: ['escape'] }, value: 'failed' },
-        { match: { brittle_resolution: ['solved'] }, value: 'robust' },
-        { match: { brittle_resolution: ['sufficient'] }, valueMap: { failed: 'brittle' } },
-        {
-          match: { ai_goals: ['marginal'], brittle_resolution: { not: ['solved'] } },
-          valueMap: { failed: 'brittle' }
-        },
-        { match: { proliferation_outcome: ['leaks_public'], alignment: { not: ['robust'] } }, value: 'failed' },
+        { match: { ai_goals: ['marginal'] }, valueMap: { failed: 'brittle' } },
       ],
       edges: [
         { id: 'robust', label: 'Robust' },
@@ -439,24 +450,23 @@ const NODES = [
       ],
       edges: [ { id: 'holds', label: 'Holds for now' }, { id: 'breaks', label: 'Breaks' } ] },
     { id: 'containment', label: 'Containment', stage: 2, forwardKey: true,
+      // hideWhen / activateWhen / deriveWhen / disabledWhen trimmed:
+      // rules formerly keyed on external writer dims (brittle_resolution,
+      // proliferation_alignment, proliferation_outcome, post_catch) are
+      // gone. Those modules / nodes now pre-write containment directly
+      // via collapseToFlavor.set (ESCAPE.post_catch=contained,
+      // PROLIFERATION.{leaked-exits}, brittle_resolution.escape), so
+      // containment is already set in sel on those paths — the node's
+      // own activation and rendering auto-skip without needing guards
+      // here. alignment_durability.breaks remains (intra-module — it's
+      // an ALIGNMENT_MODULE internal node).
       hideWhen: [
-        { alignment_durability: ['breaks'] },
-        { brittle_resolution: ['escape'] },
-        { proliferation_alignment: ['breaks'] },
-        { proliferation_outcome: ['leaks_public'], alignment: { not: ['robust'] } },
-        { post_catch: ['contained'] }
+        { alignment_durability: ['breaks'] }
       ],
-      // Phase 4a: removed `decel_outcome: { not: ['solved', 'parity_solved'] }`
-      // from both clauses. Each clause already requires alignment='failed'
-      // (clause 1) or ai_goals='marginal' (clause 2) — neither compatible
-      // with decel's solved/parity_solved outcomes (which write
-      // alignment='robust'). So the exclusion was redundant.
       activateWhen: [
         {
           capability: ['asi'],
-          alignment: ['failed'],
-          proliferation_outcome: { not: ['leaks_public'] },
-          brittle_resolution: { not: ['escape'] }, proliferation_alignment: { not: ['breaks'] }
+          alignment: ['failed']
         },
         {
           capability: ['asi'],
@@ -464,26 +474,15 @@ const NODES = [
         }
       ],
       deriveWhen: [
-        { match: { post_catch: ['contained'] }, value: 'contained' },
-        { match: { alignment_durability: ['breaks'] }, value: 'escaped' },
-        { match: { brittle_resolution: ['escape'] }, value: 'escaped' },
-        { match: { proliferation_alignment: ['breaks'] }, value: 'escaped' },
-        { match: { proliferation_outcome: ['leaks_public'], alignment: { not: ['robust'] } }, value: 'escaped' }
+        { match: { alignment_durability: ['breaks'] }, value: 'escaped' }
       ],
       edges: [
         {
           id: 'contained',
           label: 'Contained',
           requires: { distribution: ['concentrated', 'monopoly'] },
-          // Phase 4a: removed `decel_outcome: ['escapes']` disabledWhen —
-          // decel reducer now writes containment='escaped' directly on
-          // (escapes, *) cells, which pre-answers the containment node;
-          // the disabledWhen guard is unreachable (sel[containment] is
-          // set before this edge is ever evaluated).
           disabledWhen: [
-            { brittle_resolution: ['escape'], reason: 'Alignment broke down and the AI is already out' },
-            { alignment_durability: ['breaks'], reason: 'Brittle alignment broke — the AI is already operating freely' },
-            { proliferation_outcome: ['leaks_public'], reason: 'The technology leaked publicly — there is nothing left to contain' }
+            { alignment_durability: ['breaks'], reason: 'Brittle alignment broke — the AI is already operating freely' }
           ]
         },
         { id: 'escaped', label: 'Escapes' }
@@ -1145,10 +1144,21 @@ const NODES = [
           alignment_durability: ['holds']
         }
       ],
+      // Each edge directly writes the final alignment/containment values —
+      // replaces the old alignment.deriveWhen + containment.deriveWhen rules
+      // keyed on brittle_resolution, so ALIGNMENT_MODULE no longer needs
+      // to read this dim. brittle_resolution only activates on alignment=
+      // brittle paths, so 'solved' (alignment gets fully solved later) sets
+      // alignment='robust', 'escape' flips to alignment='failed' +
+      // containment='escaped', and 'sufficient' keeps alignment='brittle'
+      // (no-op, written explicitly for clarity).
       edges: [
-        { id: 'solved', label: 'Alignment fully solved', shortLabel: 'Fully solved' },
-        { id: 'sufficient', label: 'Brittle alignment holds', shortLabel: 'Brittle holds' },
-        { id: 'escape', label: 'AI eventually escapes', shortLabel: 'Escapes' }
+        { id: 'solved', label: 'Alignment fully solved', shortLabel: 'Fully solved',
+          collapseToFlavor: { set: { alignment: 'robust' } } },
+        { id: 'sufficient', label: 'Brittle alignment holds', shortLabel: 'Brittle holds',
+          collapseToFlavor: { set: { alignment: 'brittle' } } },
+        { id: 'escape', label: 'AI eventually escapes', shortLabel: 'Escapes',
+          collapseToFlavor: { set: { alignment: 'failed', containment: 'escaped' } } }
       ] },
     { id: 'failure_mode', label: 'Delivery', stage: 3, priority: 2, forwardKey: true,
       hideWhen: [
@@ -1676,6 +1686,10 @@ const ESCAPE_WRITES = [
     // war_survivors is written by collateral_survivors edges via the
     // exit plan's set-block (shared dim with the standalone war module).
     'war_survivors',
+    // ESCAPE overrides containment='contained' on the post_catch=contained
+    // exit. Replaces the old containment.deriveWhen rule so ALIGNMENT_MODULE
+    // no longer needs to read post_catch.
+    'containment',
     'escape_set',
 ];
 
@@ -1736,7 +1750,9 @@ function buildEscapeExitPlan() {
     plan.push({
         nodeId: 'catch_outcome', edgeId: 'holds_permanently',
         when: { collateral_impact: { not: ['civilizational'] } },
-        set: { escape_set: 'yes', post_catch: 'contained' },
+        // containment flips escaped→contained here (replaces the old
+        // containment.deriveWhen { post_catch: 'contained' → 'contained' }).
+        set: { escape_set: 'yes', post_catch: 'contained', containment: 'contained' },
     });
     // collateral_survivors — tail exits for the civilizational branch.
     // post_catch=ruined. Each edge also writes its own value into the
@@ -2356,6 +2372,16 @@ const PROLIFERATION_WRITES = [
     // Replaces the old geo_spread.deriveWhen rule so CONTROL_MODULE no
     // longer needs to read proliferation_outcome.
     'geo_spread',
+    // PROLIFERATION also overrides alignment='failed' + containment='escaped'
+    // on leaked-weights exits where alignment isn't robust:
+    //   * proliferation_alignment.breaks (any)
+    //   * proliferation_outcome.leaks_public + alignment≠robust
+    //   * proliferation_control.none + alignment≠robust (derives leaks_public)
+    // Replaces the old alignment.deriveWhen + containment.deriveWhen rules
+    // so ALIGNMENT_MODULE no longer needs to read
+    // proliferation_alignment / proliferation_outcome.
+    'alignment',
+    'containment',
 ];
 
 function proliferationReduce(local) {
@@ -2368,50 +2394,76 @@ function proliferationReduce(local) {
 
 function buildProliferationExitPlan() {
     const plan = [];
-    // Any "leaked weights" exit also overrides geo_spread='multiple'
-    // (replaces the former geo_spread.deriveWhen). Only 'holds' leaves
-    // geo_spread alone. proliferation_alignment always activates on a
-    // leaks_public path, so all its exit tuples carry the override too.
+    // Any "leaked weights" exit overrides geo_spread='multiple' (replaces
+    // the former geo_spread.deriveWhen). Leaked-weights exits also override
+    // alignment='failed' + containment='escaped' whenever alignment wasn't
+    // robust — replaces the former alignment.deriveWhen + containment.
+    // deriveWhen rules keyed on proliferation_outcome='leaks_public' and
+    // proliferation_alignment='breaks'. Only 'holds' leaves all three
+    // alone. proliferation_alignment always activates on a leaks_public
+    // path (alignment robust gate), and its 'breaks' edge specifically
+    // flips alignment/containment regardless of the prior alignment
+    // value (though in practice robust is the only way to reach it).
     const LEAKED = { proliferation_set: 'yes', geo_spread: 'multiple' };
+    const LEAKED_UNROBUST = {
+        proliferation_set: 'yes',
+        geo_spread: 'multiple',
+        alignment: 'failed',
+        containment: 'escaped',
+    };
     const HOLDS  = { proliferation_set: 'yes' };
 
-    // proliferation_control.none: exit unless alignment=robust (in which
-    // case proliferation_outcome auto-derives to leaks_public and
-    // proliferation_alignment then activates). The none edge always
-    // produces a leaks_public world (derived), so it's a LEAKED exit.
+    // proliferation_control.none: always a leaked-weights world with
+    // alignment≠robust (if alignment=robust, proliferation_outcome derives
+    // to leaks_public and proliferation_alignment activates — the module
+    // doesn't exit here). So always carries the full alignment override.
     plan.push({
         nodeId: 'proliferation_control',
         edgeId: 'none',
         when: { alignment: { not: ['robust'] } },
-        set: LEAKED,
+        set: LEAKED_UNROBUST,
     });
     // proliferation_outcome terminal edges.
     const outNode = NODE_MAP.proliferation_outcome;
     if (outNode && outNode.edges) {
         for (const e of outNode.edges) {
-            const set = (e.id === 'holds') ? HOLDS : LEAKED;
-            const tuple = { nodeId: 'proliferation_outcome', edgeId: e.id, set };
-            if (e.id === 'leaks_public') {
-                // Only exit here if proliferation_alignment won't activate.
-                tuple.when = { alignment: { not: ['robust'] } };
+            if (e.id === 'holds') {
+                plan.push({
+                    nodeId: 'proliferation_outcome', edgeId: e.id,
+                    when: {}, set: HOLDS,
+                });
+            } else if (e.id === 'leaks_public') {
+                // Only exit here if proliferation_alignment won't activate
+                // (i.e. alignment≠robust). alignment/containment flip.
+                plan.push({
+                    nodeId: 'proliferation_outcome', edgeId: e.id,
+                    when: { alignment: { not: ['robust'] } },
+                    set: LEAKED_UNROBUST,
+                });
             } else {
-                // holds / leaks_rivals: proliferation_alignment never
-                // activates (needs leaks_public), always exit.
-                tuple.when = {};
+                // leaks_rivals: proliferation_alignment never activates
+                // (needs leaks_public). Old derives didn't flip alignment
+                // on leaks_rivals either, so keep LEAKED (geo_spread only).
+                plan.push({
+                    nodeId: 'proliferation_outcome', edgeId: e.id,
+                    when: {}, set: LEAKED,
+                });
             }
-            plan.push(tuple);
         }
     }
     // proliferation_alignment terminal edges — only reached on a
-    // leaks_public path, so always carry the LEAKED override.
+    // leaks_public path. 'breaks' flips alignment/containment (replaces
+    // the old proliferation_alignment=breaks deriveWhen); 'holds' keeps
+    // the pre-existing alignment (geo_spread override only).
     const alignNode = NODE_MAP.proliferation_alignment;
     if (alignNode && alignNode.edges) {
         for (const e of alignNode.edges) {
+            const set = (e.id === 'breaks') ? LEAKED_UNROBUST : LEAKED;
             plan.push({
                 nodeId: 'proliferation_alignment',
                 edgeId: e.id,
                 when: {},
-                set: LEAKED,
+                set,
             });
         }
     }
@@ -3034,13 +3086,9 @@ const ALIGNMENT_MODULE = {
         // activation / gov_action gating
         'capability',
         'geo_spread', 'sovereignty', 'distribution',
-        // deriveWhen inputs on alignment / containment / gov_action
-        'proliferation_alignment', 'proliferation_outcome',
-        'brittle_resolution',
+        // alignment.deriveWhen marginal-path re-classification; containment
+        // activateWhen clause 2 (ai_goals=marginal).
         'ai_goals',
-        // post_catch (contained) is read by gov_action.hideWhen via
-        // OUTCOME_ACTIVATE-style clauses.
-        'post_catch',
         // gov_action edge collapseToFlavor moves (pre-existing)
         'takeoff_class',
     ],

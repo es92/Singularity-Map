@@ -213,8 +213,8 @@ console.log('engine decel module path integration: PASS');
 const escape = MODULE_MAP.escape;
 assert(escape, 'escape module must exist');
 assert.deepStrictEqual(escape.writes.slice().sort(), [
-    'ai_goals', 'escape_set', 'post_catch', 'war_survivors',
-].sort(), 'escape.writes should be ai_goals + post_catch + war_survivors + escape_set');
+    'ai_goals', 'containment', 'escape_set', 'post_catch', 'war_survivors',
+].sort(), 'escape.writes should be ai_goals + post_catch + war_survivors + containment + escape_set');
 
 const escPlan = escape.exitPlan;
 // 2 (ai_goals early) + 1 (catch_outcome.not_permanent) + 1 (catch_outcome.holds_permanently)
