@@ -29,11 +29,11 @@ const DECEL_PAIRS = [
 // purely for readability; the pure-internal dims they gate on are in sel
 // while the module is active.
 const WHO_BENEFITS_INTERNAL_ACTIVATE = [
-    { capability: ['singularity'], automation: ['deep'], power_promise: ['for_everyone'], mobilization: ['strong'] },
-    { capability: ['singularity'], automation: ['deep'], sincerity_test: true },
-    { capability: ['singularity'], automation: ['deep'], pushback_outcome: true },
-    { capability: ['singularity'], automation: ['deep'], coalition_outcome: ['fragments'] },
-    { capability: ['singularity'], automation: ['deep'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
+    { capability: ['asi'], power_promise: ['for_everyone'], mobilization: ['strong'] },
+    { capability: ['asi'], sincerity_test: true },
+    { capability: ['asi'], pushback_outcome: true },
+    { capability: ['asi'], coalition_outcome: ['fragments'] },
+    { capability: ['asi'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
 ];
 
 // Activation rules for post-who_benefits outcome nodes (knowledge_rate,
@@ -45,11 +45,13 @@ const WHO_BENEFITS_INTERNAL_ACTIVATE = [
 // catch_outcome clause characterises the post-war world after a successful
 // catch.
 const OUTCOME_ACTIVATE = [
-    { capability: ['singularity'], automation: ['deep'], who_benefits_set: ['yes'] },
-    { capability: ['singularity'], automation: ['deep'], ai_goals: ['benevolent'] },
+    { capability: ['asi'], who_benefits_set: ['yes'] },
+    { capability: ['asi'], ai_goals: ['benevolent'] },
     // AI escaped but was ultimately caught — post-war world still needs to be
     // characterized (who benefits, knowledge/physical automation).
-    { capability: ['singularity'], automation: ['deep'], catch_outcome: ['holds_permanently'], collateral_impact: { not: ['civilizational'] } }
+    // post_catch=contained replaces the old compound
+    // (catch_outcome=holds_permanently, collateral_impact≠civilizational).
+    { capability: ['asi'], post_catch: ['contained'] }
 ];
 
 
@@ -73,7 +75,11 @@ const NODES = [
       // this node. Substantial/never move stall_recovery to flavor but keep
       // capability='stalls', so we need an explicit marker-based hide to
       // prevent findNextQ from re-offering the question.
-      hideWhen: [{ stall_later: ['yes'] }],
+      // After module exit runs, capability is rewritten to 'plateau' on
+      // substantial/never edges (see EMERGENCE exit plan). The mild edge
+      // stays inside the module and routes back into the singularity
+      // sub-path via collapseToFlavor below.
+      hideWhen: [{ capability: ['plateau'] }],
       edges: [
         // `mild` collapses back into the direct-singularity state.
         // `capability` becomes 'singularity' in sel, and stall_duration +
@@ -88,31 +94,34 @@ const NODES = [
           } },
         // `substantial` and `never` both gate downstream plateau questions
         // identically — the only difference is narrative ("years-long wait"
-        // vs "permanent ceiling"). Collapse them to a shared `stall_later:
-        // 'yes'` marker in sel and keep the specific pick in flavor for
-        // flavor-text / heading lookups (the-plateau.flavors.stall_recovery,
-        // narrative.json stall_recovery.when: ['never']).
+        // vs "permanent ceiling"). The exit plan sets capability='plateau'
+        // on both edges (the shared gate); the specific value is moved to
+        // flavor for flavor-text / heading lookups (the-plateau.flavors.
+        // stall_recovery, narrative.json stall_recovery.when: ['never']).
         { id: 'substantial', label: 'Years/decades',
-          collapseToFlavor: { set: { stall_later: 'yes' }, move: ['stall_recovery'] } },
+          collapseToFlavor: { move: ['stall_recovery'] } },
         { id: 'never', label: 'Never',
-          collapseToFlavor: { set: { stall_later: 'yes' }, move: ['stall_recovery'] } }
+          collapseToFlavor: { move: ['stall_recovery'] } }
       ] },
     { id: 'plateau_benefit_distribution', label: 'Who Benefits?', stage: 3, priority: 2,
-      activateWhen: [{ capability: ['stalls'], stall_later: ['yes'] }],
+      activateWhen: [{ capability: ['plateau'] }],
       // In the plateau case, the specific benefit-distribution value only
       // drives narrative flavor (`the-plateau.flavors.plateau_benefit_distribution`
       // and a single `_when` clause in plateau_physical_rate.uneven). No
-      // graph-engine rule gates on it, so we collapse all three values to a
-      // shared `plateau_benefit_set: 'yes'` marker for /explore convergence
-      // and keep the specific pick in flavor.
-      hideWhen: [{ plateau_benefit_set: ['yes'] }],
+      // graph-engine rule gates on it, so we collapse all three values to
+      // the shared `who_benefits_set: 'yes'` marker (same marker the main
+      // WHO_BENEFITS_MODULE writes) so rollout activation and other
+      // "benefits done?" gates only need to read one dim. The plateau
+      // activation gate (`capability=plateau`) keeps this question
+      // distinct from the main-path one.
+      hideWhen: [{ who_benefits_set: ['yes'] }],
       edges: [
         { id: 'equal', label: 'Shared equally',
-          collapseToFlavor: { set: { plateau_benefit_set: 'yes' }, move: ['plateau_benefit_distribution'] } },
+          collapseToFlavor: { set: { who_benefits_set: 'yes' }, move: ['plateau_benefit_distribution'] } },
         { id: 'unequal', label: 'Wealth concentrates',
-          collapseToFlavor: { set: { plateau_benefit_set: 'yes' }, move: ['plateau_benefit_distribution'] } },
+          collapseToFlavor: { set: { who_benefits_set: 'yes' }, move: ['plateau_benefit_distribution'] } },
         { id: 'extreme', label: 'Power concentrates',
-          collapseToFlavor: { set: { plateau_benefit_set: 'yes' }, move: ['plateau_benefit_distribution'] } }
+          collapseToFlavor: { set: { who_benefits_set: 'yes' }, move: ['plateau_benefit_distribution'] } }
       ] },
     // The unified knowledge_rate and physical_rate nodes (defined near the
     // end of NODES, after who_benefits) serve plateau, auto-shallow, and
@@ -125,7 +134,7 @@ const NODES = [
       // ('yes' for any specific timing, 'no' for never) and moves the timing
       // value into flavor on the *next* step (asi_threshold's edges). The
       // marker preserves the only behavioral bit downstream engine rules
-      // care about (automation/automation_recovery gate on agi=never), while
+      // care about (automation_recovery gates on asi_threshold=never), while
       // the specific timing is narrative-only.
       // hideWhen clauses are OR'd; these cover every state where this
       // question has effectively been answered:
@@ -165,8 +174,8 @@ const NODES = [
       // (asi_threshold stays in sel as 'never' — several downstream rules
       // and the-plateau/the-automation reachability gate on it). Moving
       // agi_happens to flavor lets agi=yes/asi=never and agi=no/asi=never
-      // converge at the sel level (downstream automation derivation only
-      // needs asi_threshold='never', not agi_happens). `requires` on the
+      // converge at the sel level (downstream gates only need
+      // asi_threshold='never', not agi_happens). `requires` on the
       // non-never edges is evaluated BEFORE collapse runs, so it can still
       // read the specific agi_threshold value in sel at edge-selection time.
       edges: [
@@ -188,35 +197,30 @@ const NODES = [
         { id: 'never', label: 'Never — matching is the ceiling', shortLabel: 'Never',
           collapseToFlavor: { move: ['agi_threshold', 'agi_happens'] } }
       ] },
-    { id: 'automation', label: 'Knowledge Work', derived: true, forwardKey: true,
-      deriveWhen: [
-        { match: { automation_recovery: ['mild'] }, value: 'deep' },
-        // ASI never happens → no deep automation (covers both agi_happens='no'
-        // and agi_happens='yes' + asi=never; the latter is "AI matches humans
-        // but never exceeds"). On the mild-breakthrough path, asi_threshold
-        // is moved to flavor so this rule doesn't fire and we fall through
-        // to `capability:singularity → deep`.
-        { match: { asi_threshold: ['never'] }, value: 'shallow' },
-        { match: { capability: ['singularity'] }, value: 'deep' }
-      ],
-      edges: [{ id: 'deep' }, { id: 'shallow' }] },
+    // `automation` node was removed in the capability-4-value refactor.
+    // Its role (distinguishing deep/shallow paths on the singularity branch)
+    // is now encoded directly in `capability`: post-emergence-exit the
+    // value is one of {plateau, agi, asi}. Formerly shallow→'agi',
+    // deep→'asi'. See EMERGENCE_MODULE.buildEmergenceExitPlan for the
+    // per-exit-edge capability writes.
     { id: 'automation_recovery', label: 'Deep Automation Recovery?', stage: 1,
       // Asked whenever ASI never happens — whether or not AGI happened. In
       // the agi=yes case, the breakthrough represents closing the gap from
       // human-level to superintelligence; in the agi=no case, it represents
       // an alternative path cracking the barrier without AGI first.
       activateWhen: [{ capability: ['singularity'], asi_threshold: ['never'] }],
-      // Mild moves asi_threshold → flavor, which naturally deactivates this
-      // node. Substantial/never keep asi_threshold='never' in sel but move
-      // automation_recovery to flavor, so we need a marker-based hide to
-      // prevent findNextQ from re-offering the question.
-      hideWhen: [{ automation_later: ['yes'] }],
+      // After module exit runs, capability is rewritten to 'agi' on
+      // substantial/never edges (see EMERGENCE exit plan). The mild edge
+      // stays inside the module and routes back into the full
+      // singularity-with-ASI sub-path via collapseToFlavor below.
+      hideWhen: [{ capability: ['agi'] }],
       edges: [
         // `mild` = "a later breakthrough cracks the barrier". Behaviorally
         // this reaches the same end state as a normal agi+asi path (both
-        // happen → automation=deep), so we converge to that sel shape and
-        // push the stall/recovery specifics to flavor. /explore treats this
-        // as the same node as the direct-singularity path.
+        // happen → capability='asi' on module exit), so we converge to that
+        // sel shape: set asi_happens='yes' and push the stall/recovery
+        // specifics to flavor. /explore treats this as the same node as
+        // the direct-singularity path.
         { id: 'mild', label: 'Months/years',
           // Converge with the normal post-asi singularity sel: set
           // asi_happens='yes' in sel (matches post-asi-specific state) and
@@ -227,62 +231,62 @@ const NODES = [
             setFlavor: { agi_happens: 'yes' },
             move: ['automation_recovery', 'asi_threshold']
           } },
-        // `substantial` and `never` gate downstream auto_* questions
+        // `substantial` and `never` gate downstream agi-only questions
         // identically — only narrative text distinguishes them (the-automation
-        // flavors/flavorHeadings). Collapse to an `automation_later: 'yes'`
-        // marker in sel for /explore convergence; keep the specific pick in
+        // flavors/flavorHeadings). The exit plan sets capability='agi' on
+        // both edges (the shared gate); the specific pick is moved to
         // flavor for narrativeState lookups.
         { id: 'substantial', label: 'Years/decades',
-          collapseToFlavor: { set: { automation_later: 'yes' }, move: ['automation_recovery'] } },
+          collapseToFlavor: { move: ['automation_recovery'] } },
         { id: 'never', label: 'Never',
-          collapseToFlavor: { set: { automation_later: 'yes' }, move: ['automation_recovery'] } }
+          collapseToFlavor: { move: ['automation_recovery'] } }
       ] },
     { id: 'auto_benefit_distribution', label: 'Who Benefits?', stage: 3, priority: 2,
-      activateWhen: [
-        {
-          capability: ['singularity'],
-          automation: ['shallow'],
-          automation_later: ['yes']
-        }
-      ],
+      activateWhen: [{ capability: ['agi'] }],
       // Flavor-only: no graph rule gates on the specific value; only
       // the-automation.flavors.auto_benefit_distribution (narrative),
       // flavorHeadings, and a single narrative _when clause reference it,
-      // all through narrativeState. Collapse to a shared `auto_benefit_set:
-      // 'yes'` marker for /explore convergence.
-      hideWhen: [{ auto_benefit_set: ['yes'] }],
+      // all through narrativeState. Collapse to the shared
+      // `who_benefits_set: 'yes'` marker (same marker the main
+      // WHO_BENEFITS_MODULE writes) so rollout activation and other
+      // "benefits done?" gates only need to read one dim. The agi
+      // activation gate (`capability=agi`) keeps this question distinct
+      // from the main-path one.
+      hideWhen: [{ who_benefits_set: ['yes'] }],
       edges: [
         { id: 'equal', label: 'Shared equally',
-          collapseToFlavor: { set: { auto_benefit_set: 'yes' }, move: ['auto_benefit_distribution'] } },
+          collapseToFlavor: { set: { who_benefits_set: 'yes' }, move: ['auto_benefit_distribution'] } },
         { id: 'unequal', label: 'Wealth concentrates',
-          collapseToFlavor: { set: { auto_benefit_set: 'yes' }, move: ['auto_benefit_distribution'] } },
+          collapseToFlavor: { set: { who_benefits_set: 'yes' }, move: ['auto_benefit_distribution'] } },
         { id: 'extreme', label: 'Power concentrates',
-          collapseToFlavor: { set: { auto_benefit_set: 'yes' }, move: ['auto_benefit_distribution'] } }
+          collapseToFlavor: { set: { who_benefits_set: 'yes' }, move: ['auto_benefit_distribution'] } }
       ] },
     // knowledge_rate / physical_rate (unified across plateau, auto-shallow,
     // and main paths) live near the end of NODES — see note near the old
     // plateau_knowledge_rate position.
     { id: 'takeoff', label: 'R&D Acceleration', stage: 1,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
+      // Inside emergence: fires once the user has committed to the ASI
+      // sub-path. `asi_happens: 'yes'` is set on every asi_threshold
+      // non-never edge and also by automation_recovery.mild (which
+      // routes back into the direct-ASI sel shape). `capability` is
+      // still 'singularity' here — the module's post-exit rewrite to
+      // 'asi' happens on the takeoff/governance_window edge itself.
+      activateWhen: [{ capability: ['singularity'], asi_happens: ['yes'] }],
       // Engine branches on three behavioral classes only (normal / fast /
       // explosive). The raw value moves to flavor so narrative text
       // (`flavors.takeoff.<value>` etc.) and narrativeVariants keyed on the
       // specific speed keep working unchanged. All downstream engine
-      // conditions read `takeoff_class` (for governance_window) or
-      // `takeoff_explosive` (post-open_source) instead of `takeoff`.
+      // conditions read `takeoff_class` (governance_window activate,
+      // open_source / distribution / geo_spread / sovereignty / gov_action
+      // disable) instead of `takeoff`.
       // Hide clauses are OR'd:
-      //   • takeoff_class set (normal/fast) — answered, pre-open_source.
-      //   • takeoff_explosive=yes — answered as explosive (class is explosive,
-      //     but after open_source, takeoff_class moves to flavor; this
-      //     narrower marker remains in sel).
-      //   • emergence_set=yes — module has exited. Catches the post-open_source
-      //     non-explosive path where `takeoff_class` has moved to flavor,
-      //     leaving the first two clauses unable to fire. Self-referring to
-      //     the owning module's completion marker keeps this hide local.
+      //   • takeoff_class set — answered.
+      //   • capability ∈ {plateau, agi, asi} — module has exited. Catches
+      //     post-exit states where takeoff_class might have been moved
+      //     to flavor by a downstream collapse.
       hideWhen: [
         { takeoff_class: ['normal', 'fast', 'explosive'] },
-        { takeoff_explosive: ['yes'] },
-        { emergence_set: ['yes'] }
+        { capability: ['plateau', 'agi', 'asi'] }
       ],
       edges: [
         { id: 'none', label: '0% — Baseline',
@@ -295,23 +299,22 @@ const NODES = [
           collapseToFlavor: { set: { takeoff_class: 'fast' }, move: ['takeoff'] } },
         { id: 'explosive', label: '50% — Runaway',
           disabledWhen: [{ capability: { not: ['singularity'] }, reason: 'Without superhuman AI, recursive self-improvement can\'t drive runaway acceleration' }],
-          // `takeoff_explosive: 'yes'` is a narrower binary marker so that
-          // takeoff_class can be moved to flavor after open_source (see
-          // open_source's collapseToFlavor). Every post-open_source read of
-          // takeoff_class only cares about "is it explosive?" — the three-way
-          // normal/fast/explosive distinction is only needed by
-          // governance_window.activateWhen, which fires before open_source.
-          collapseToFlavor: { set: { takeoff_class: 'explosive', takeoff_explosive: 'yes' }, move: ['takeoff'] } }
+          collapseToFlavor: { set: { takeoff_class: 'explosive' }, move: ['takeoff'] } }
       ] },
     { id: 'governance_window', label: 'Governance Window', stage: 1,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], takeoff_class: ['normal'] }],
+      // Inside emergence: capability is still 'singularity' here (module
+      // rewrites to 'asi' on this node's exit edges). asi_happens='yes'
+      // is set by asi_threshold non-never / automation_recovery.mild and
+      // implies we're on the direct-ASI sub-path; takeoff_class='normal'
+      // further narrows to the path that needs the governance question.
+      activateWhen: [{ capability: ['singularity'], asi_happens: ['yes'], takeoff_class: ['normal'] }],
       // Once answered, all three edges move governance_window to flavor
       // and encode the specific value into flavor.governance, so /explore
       // treats them as one converged state. Self-hide keys on the module's
-      // own `emergence_set` marker (governance_window is an EMERGENCE exit
-      // node, so emergence_set='yes' is guaranteed to be set by the module
-      // exit reducer on this same pick).
-      hideWhen: [{ emergence_set: ['yes'] }],
+      // own post-exit completion marker: capability='asi' is set by the
+      // module exit reducer on this same pick (governance_window is an
+      // EMERGENCE exit node on the main ASI path).
+      hideWhen: [{ capability: ['asi'] }],
       edges: [
         { id: 'governed', label: 'Active preparation',
           collapseToFlavor: { setFlavor: { governance: 'governed' }, move: ['governance_window'] } },
@@ -321,40 +324,36 @@ const NODES = [
           collapseToFlavor: { setFlavor: { governance: 'race' }, move: ['governance_window'] } }
       ] },
     { id: 'open_source', label: 'Open Source', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
+      activateWhen: [{ capability: ['asi'] }],
       // `open_source_set: 'yes'` is a persistent sel marker: it stays in sel
       // even after downstream collapses (e.g. geo_spread=multiple's
       // `move: ['open_source']`) that move the raw value to flavor. This
       // lets self-hide and `takeoff.hideWhen` still recognize the
       // "post-open_source" state via sel alone.
       hideWhen: [{ open_source_set: ['yes'] }],
-      // After open_source is answered, takeoff_class → flavor. Downstream
-      // rules only need to know "is takeoff explosive?" via the
-      // takeoff_explosive marker; governance_window already fired based on
-      // takeoff_class.
-      //
-      // `disabledWhen` on these edges is evaluated BEFORE cleanSelection
-      // runs the collapse, so it still reads the live takeoff_class at pick
-      // time.
+      // takeoff_class stays in sel through downstream consumers
+      // (distribution, geo_spread, sovereignty, gov_action disabledWhen all
+      // read takeoff_class: ['explosive']). It's finally moved to flavor by
+      // gov_action's edge collapses.
       edges: [
         { id: 'near_parity', label: 'Near-parity',
           disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }],
-          collapseToFlavor: { set: { open_source_set: 'yes' }, move: ['takeoff_class'] } },
+          collapseToFlavor: { set: { open_source_set: 'yes' } } },
         { id: 'six_months', label: '~6 months',
           disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }],
-          collapseToFlavor: { set: { open_source_set: 'yes' }, move: ['takeoff_class'] } },
+          collapseToFlavor: { set: { open_source_set: 'yes' } } },
         { id: 'twelve_months', label: '~12 months',
           disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }],
-          collapseToFlavor: { set: { open_source_set: 'yes' }, move: ['takeoff_class'] } },
+          collapseToFlavor: { set: { open_source_set: 'yes' } } },
         { id: 'twenty_four_months', label: '~24 months',
-          collapseToFlavor: { set: { open_source_set: 'yes' }, move: ['takeoff_class'] } }
+          collapseToFlavor: { set: { open_source_set: 'yes' } } }
       ] },
     { id: 'distribution', label: 'Frontier Labs', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
+      activateWhen: [{ capability: ['asi'] }],
       edges: [
-        { id: 'open', label: 'Distributed', requires: { open_source: ['near_parity'] }, disabledWhen: [{ takeoff_explosive: ['yes'], reason: 'At this speed, only whoever gets there first has it' }] },
+        { id: 'open', label: 'Distributed', requires: { open_source: ['near_parity'] }, disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this speed, only whoever gets there first has it' }] },
         { id: 'lagging', label: 'Many compete',
-          disabledWhen: [{ takeoff_explosive: ['yes'], reason: 'At this speed, only whoever gets there first has it' }, { open_source: ['near_parity'], reason: 'With open-source at parity, no one is lagging behind' }],
+          disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this speed, only whoever gets there first has it' }, { open_source: ['near_parity'], reason: 'With open-source at parity, no one is lagging behind' }],
           collapseToFlavor: { set: { distribution: 'concentrated' }, setFlavor: { distribution_detail: 'lagging' } } },
         { id: 'concentrated', label: 'A few lead', disabledWhen: [{ open_source: ['near_parity'], reason: 'With open-source at parity, no one is lagging behind' }] },
         { id: 'monopoly', label: 'One dominates', disabledWhen: [{ open_source: ['near_parity'], reason: 'With open-source at parity, no one can monopolize it' }] }
@@ -362,8 +361,7 @@ const NODES = [
     { id: 'geo_spread', label: 'Countries', stage: 2,
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           open_source: ['six_months', 'twelve_months', 'twenty_four_months']
         }
       ],
@@ -376,17 +374,16 @@ const NODES = [
       edges: [
         { id: 'one', label: 'One country' },
         { id: 'two', label: 'Two powers',
-          disabledWhen: [{ takeoff_explosive: ['yes'], reason: 'Only the first mover has it at this speed' }, { distribution: ['monopoly'], reason: 'One lab dominates — only one country is in the game' }],
+          disabledWhen: [{ takeoff_class: ['explosive'], reason: 'Only the first mover has it at this speed' }, { distribution: ['monopoly'], reason: 'One lab dominates — only one country is in the game' }],
           collapseToFlavor: { set: { geo_spread: 'multiple' }, setFlavor: { geo_spread_detail: 'two' }, move: ['open_source'] } },
         { id: 'several', label: 'Several',
-          disabledWhen: [{ takeoff_explosive: ['yes'], reason: 'Only the first mover has it at this speed' }, { distribution: ['monopoly'], reason: 'One lab dominates — only one country is in the game' }],
+          disabledWhen: [{ takeoff_class: ['explosive'], reason: 'Only the first mover has it at this speed' }, { distribution: ['monopoly'], reason: 'One lab dominates — only one country is in the game' }],
           collapseToFlavor: { set: { geo_spread: 'multiple' }, setFlavor: { geo_spread_detail: 'several' }, move: ['open_source'] } }
       ] },
     { id: 'sovereignty', label: 'Power Holder', stage: 2,
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           distribution: ['monopoly', 'concentrated'],
           geo_spread: ['one']
         }
@@ -403,7 +400,7 @@ const NODES = [
         { id: 'state', label: 'The state' }
       ] },
     { id: 'alignment', label: 'Alignment', stage: 2, forwardKey: true,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
+      activateWhen: [{ capability: ['asi'] }],
       // Phase 4a: removed three decel_outcome-based rules — decel reducer
       // now writes alignment directly (robust on solved/parity_solved,
       // brittle on (rival, brittle), failed on (escapes, *)).
@@ -426,28 +423,17 @@ const NODES = [
         { id: 'failed', label: 'Unsolved' }
       ] },
     { id: 'alignment_durability', label: 'Alignment Durability', stage: 2,
-      // Phase 4a rewrite:
-      //   clause 1 (decel didn't run): decel_outcome: false
-      //     -> gov_action: { not: ['decelerate'] }
-      //   clause 2 (decel produced rival with brittle progress):
-      //     decel_outcome: ['rival'], decel_align_progress: ['brittle']
-      //     -> rival_emerges: ['yes'], decel_align_progress: ['brittle']
-      //     (alignment='brittle' already in the condition; rival_emerges
-      //      is only written by decel on (rival, *) cells, so
-      //      rival_emerges='yes' uniquely identifies post-decel-rival.)
+      // Simplified gate: ask about brittle-alignment durability whenever
+      // alignment resolved to 'brittle' and containment is still holding,
+      // regardless of which path produced the brittle state. The decel
+      // reducer writes alignment='brittle' only on the (rival, brittle)
+      // cell; (escapes, *) write alignment='failed' and sets
+      // containment='escaped'; (abandon, brittle) preserves pre-decel
+      // alignment — all handled uniformly by this single clause.
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           alignment: ['brittle'],
-          gov_action: { not: ['decelerate'] },
-          containment: { not: ['escaped'] }
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          alignment: ['brittle'],
-          rival_emerges: ['yes'], decel_align_progress: ['brittle'],
           containment: { not: ['escaped'] }
         }
       ],
@@ -459,7 +445,7 @@ const NODES = [
         { proliferation_alignment: ['breaks'] },
         { proliferation_outcome: ['leaks_public'], alignment: { not: ['robust'] } },
         { inert_stays: ['no'] },
-        { catch_outcome: ['holds_permanently'], collateral_impact: { not: ['civilizational'] } }
+        { post_catch: ['contained'] }
       ],
       // Phase 4a: removed `decel_outcome: { not: ['solved', 'parity_solved'] }`
       // from all three clauses. Each clause already requires
@@ -469,25 +455,22 @@ const NODES = [
       // So the exclusion was redundant given the other conditions.
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           alignment: ['failed'],
           proliferation_outcome: { not: ['leaks_public'] },
           brittle_resolution: { not: ['escape'] }, proliferation_alignment: { not: ['breaks'] }
         },
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           ai_goals: ['marginal']
         },
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           inert_stays: ['no']
         }
       ],
       deriveWhen: [
-        { match: { catch_outcome: ['holds_permanently'], collateral_impact: { not: ['civilizational'] } }, value: 'contained' },
+        { match: { post_catch: ['contained'] }, value: 'contained' },
         { match: { alignment_durability: ['breaks'] }, value: 'escaped' },
         { match: { brittle_resolution: ['escape'] }, value: 'escaped' },
         { match: { proliferation_alignment: ['breaks'] }, value: 'escaped' },
@@ -515,8 +498,7 @@ const NODES = [
     { id: 'ai_goals', label: 'AI Converges On', stage: 2, forwardKey: true,
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           alignment: ['failed'],
           containment: ['escaped']
         },
@@ -556,7 +538,7 @@ const NODES = [
           ] }
       ] },
     { id: 'inert_stays', label: 'Does Escaped AI Stay Inert?', stage: 3, priority: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'] }],
+      activateWhen: [{ capability: ['asi'], ai_goals: ['marginal'] }],
       edges: [
         { id: 'yes', label: 'Yes — remains inert' },
         {
@@ -598,27 +580,27 @@ const NODES = [
       // Rules out distribution=concentrated + sovereignty=lab (multi-lab race,
       // no actor can unilaterally slow).
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], geo_spread: ['one'], sovereignty: ['state'] },
-        { capability: ['singularity'], automation: ['deep'], geo_spread: ['one'], distribution: ['monopoly'] }
+        { capability: ['asi'], geo_spread: ['one'], sovereignty: ['state'] },
+        { capability: ['asi'], geo_spread: ['one'], distribution: ['monopoly'] }
       ],
       deriveWhen: [{ match: { alignment_durability: ['breaks'] }, value: 'accelerate' }],
-      // By this point all sel readers of `takeoff_explosive` have fired
-      // (takeoff self-hide, distribution/geo_spread disable clauses, and this
+      // By this point all sel readers of `takeoff_class` have fired
+      // (governance_window activate, takeoff self-hide, open_source /
+      // distribution / geo_spread / sovereignty disable clauses, and this
       // node's own decelerate disable). The dim is purely narrative going
       // forward, so both edges move it to flavor for /explore convergence.
-      // `move` no-ops when the dim isn't in sel (non-explosive paths).
       edges: [
         { id: 'decelerate', label: 'Decelerate',
-          disabledWhen: [{ alignment: ['robust'], reason: 'Alignment is solved — there is no case for slowing down' }, { takeoff_explosive: ['yes'], reason: 'Moving too fast for any government to intervene' }],
-          collapseToFlavor: { move: ['takeoff_explosive'] } },
+          disabledWhen: [{ alignment: ['robust'], reason: 'Alignment is solved — there is no case for slowing down' }, { takeoff_class: ['explosive'], reason: 'Moving too fast for any government to intervene' }],
+          collapseToFlavor: { move: ['takeoff_class'] } },
         // Picking accelerate means the decel chain is never entered, so the
         // specific open_source timeline (6/12/24 months) no longer affects
         // any downstream gating. Move it to flavor for /explore convergence.
         { id: 'accelerate', label: 'Accelerate',
-          collapseToFlavor: { move: ['open_source', 'takeoff_explosive'] } }
+          collapseToFlavor: { move: ['open_source', 'takeoff_class'] } }
       ] },
     { id: 'decel_2mo_progress', label: '2 Months', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], gov_action: ['decelerate'] }],
+      activateWhen: [{ capability: ['asi'], gov_action: ['decelerate'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
@@ -627,8 +609,7 @@ const NODES = [
     { id: 'decel_2mo_action', label: '2mo Decision', stage: 2,
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           decel_2mo_progress: ['robust', 'brittle', 'unsolved']
         }
       ],
@@ -639,7 +620,7 @@ const NODES = [
         { id: 'continue', label: 'Continue', requires: { decel_2mo_progress: ['brittle', 'unsolved'] } }
       ] },
     { id: 'decel_4mo_progress', label: '4 Months', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_2mo_action: ['continue'] }],
+      activateWhen: [{ capability: ['asi'], decel_2mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
@@ -648,8 +629,7 @@ const NODES = [
     { id: 'decel_4mo_action', label: '4mo Decision', stage: 2,
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           decel_4mo_progress: ['robust', 'brittle', 'unsolved']
         }
       ],
@@ -660,7 +640,7 @@ const NODES = [
         { id: 'continue', label: 'Continue', requires: { decel_4mo_progress: ['brittle', 'unsolved'] } }
       ] },
     { id: 'decel_6mo_progress', label: '6 Months', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_4mo_action: ['continue'] }],
+      activateWhen: [{ capability: ['asi'], decel_4mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
@@ -669,8 +649,7 @@ const NODES = [
     { id: 'decel_6mo_action', label: '6mo Decision', stage: 2,
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           decel_6mo_progress: ['robust', 'brittle', 'unsolved']
         }
       ],
@@ -699,7 +678,7 @@ const NODES = [
         }
       ] },
     { id: 'decel_9mo_progress', label: '9 Months', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_6mo_action: ['continue'] }],
+      activateWhen: [{ capability: ['asi'], decel_6mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
@@ -708,8 +687,7 @@ const NODES = [
     { id: 'decel_9mo_action', label: '9mo Decision', stage: 2,
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           decel_9mo_progress: ['robust', 'brittle', 'unsolved']
         }
       ],
@@ -720,7 +698,7 @@ const NODES = [
         { id: 'continue', label: 'Continue', requires: { decel_9mo_progress: ['brittle', 'unsolved'] } }
       ] },
     { id: 'decel_12mo_progress', label: '12 Months', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_9mo_action: ['continue'] }],
+      activateWhen: [{ capability: ['asi'], decel_9mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
@@ -729,8 +707,7 @@ const NODES = [
     { id: 'decel_12mo_action', label: '12mo Decision', stage: 2,
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           decel_12mo_progress: ['robust', 'brittle', 'unsolved']
         }
       ],
@@ -749,7 +726,7 @@ const NODES = [
         }
       ] },
     { id: 'decel_18mo_progress', label: '18 Months', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_12mo_action: ['continue'] }],
+      activateWhen: [{ capability: ['asi'], decel_12mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
@@ -758,8 +735,7 @@ const NODES = [
     { id: 'decel_18mo_action', label: '18mo Decision', stage: 2,
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           decel_18mo_progress: ['robust', 'brittle', 'unsolved']
         }
       ],
@@ -770,7 +746,7 @@ const NODES = [
         { id: 'continue', label: 'Continue', requires: { decel_18mo_progress: ['brittle', 'unsolved'] } }
       ] },
     { id: 'decel_24mo_progress', label: '24 Months', stage: 2,
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], decel_18mo_action: ['continue'] }],
+      activateWhen: [{ capability: ['asi'], decel_18mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
@@ -779,8 +755,7 @@ const NODES = [
     { id: 'decel_24mo_action', label: '24mo Decision', stage: 2,
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           decel_24mo_progress: ['robust', 'brittle', 'unsolved']
         }
       ],
@@ -790,35 +765,15 @@ const NODES = [
         { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } },
         { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_stays: false }
       ],
-      // Phase 4a rewrite: decel_outcome: { not: ['escapes', 'parity_failed'] }
-      // expanded to DNF. Activates when decel didn't run at all, OR decel
-      // ran and didn't end in escape (escapes, *) or parity-fail (rival, unsolved).
-      //
-      // Expansion:
-      //   Clause A — decel didn't run: gov_action ≠ decelerate
-      //   Clause B — decel ran, accelerate-path (escapes writes alignment=failed):
-      //       gov_action=decelerate, rival_emerges ≠ yes, alignment ≠ failed
-      //   Clause C — decel ran, rival path with robust or brittle progress:
-      //       gov_action=decelerate, rival_emerges=yes, decel_align_progress ≠ unsolved
+      // Simplified gate: ask about proliferation control whenever an ASI
+      // exists and alignment hasn't catastrophically failed. Three post-decel
+      // cells write alignment='failed' — (escapes, *) and (rival, unsolved)
+      // — and are excluded uniformly; all other cells preserve or set
+      // alignment to robust/brittle and activate this question normally.
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
-          gov_action: { not: ['decelerate'] }
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          gov_action: ['decelerate'],
-          rival_emerges: { not: ['yes'] },
+          capability: ['asi'],
           alignment: { not: ['failed'] }
-        },
-        {
-          capability: ['singularity'],
-          automation: ['deep'],
-          gov_action: ['decelerate'],
-          rival_emerges: ['yes'],
-          decel_align_progress: { not: ['unsolved'] }
         }
       ],
       edges: [
@@ -833,8 +788,7 @@ const NODES = [
       ],
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           proliferation_control: ['deny_rivals', 'secure_access']
         }
       ],
@@ -853,8 +807,7 @@ const NODES = [
     { id: 'proliferation_alignment', label: 'Alignment Under Open Weights', stage: 2,
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           alignment: ['robust'],
           proliferation_outcome: ['leaks_public']
         }
@@ -866,14 +819,13 @@ const NODES = [
     { id: 'intent', label: 'Intent', stage: 2, forwardKey: true,
       hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } }],
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], proliferation_control: true },
+        { capability: ['asi'], alignment: ['robust', 'brittle'], proliferation_control: true },
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           alignment: ['failed'], containment: ['contained']
         },
-        { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'] },
-        { capability: ['singularity'], automation: ['deep'], inert_stays: ['no'] }
+        { capability: ['asi'], ai_goals: ['marginal'] },
+        { capability: ['asi'], inert_stays: ['no'] }
       ],
       deriveWhen: [
         { match: { escalation_outcome: ['agreement'] }, value: 'coexistence' },
@@ -933,8 +885,7 @@ const NODES = [
       ],
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           alignment: ['robust', 'brittle'],
           proliferation_control: ['secure_access'],
           proliferation_outcome: ['holds'],
@@ -947,14 +898,14 @@ const NODES = [
         { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } },
         { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_stays: false }
       ],
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], block_entrants: ['attempt'] }],
+      activateWhen: [{ capability: ['asi'], block_entrants: ['attempt'] }],
       edges: [ { id: 'holds', label: 'Holds' }, { id: 'fails', label: 'Fails' } ] },
     { id: 'new_entrants', label: 'New Entrants?', stage: 2,
       hideWhen: [
         { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } },
         { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_stays: false }
       ],
-      activateWhen: [{ capability: ['singularity'], automation: ['deep'], block_entrants: ['no_attempt'] }],
+      activateWhen: [{ capability: ['asi'], block_entrants: ['no_attempt'] }],
       edges: [ { id: 'emerge', label: 'Emerge' }, { id: 'none', label: 'None' } ] },
     { id: 'rival_dynamics', label: 'Rival Dynamics', stage: 2,
       hideWhen: [
@@ -962,8 +913,8 @@ const NODES = [
         { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] }, inert_stays: false }
       ],
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], block_outcome: ['fails'] },
-        { capability: ['singularity'], automation: ['deep'], new_entrants: ['emerge'] }
+        { capability: ['asi'], block_outcome: ['fails'] },
+        { capability: ['asi'], new_entrants: ['emerge'] }
       ],
       edges: [ { id: 'coexistence', label: 'Coexistence' }, { id: 'escalation', label: 'Escalation' } ] },
     { id: 'escalation_outcome', label: 'Escalation Resolves', stage: 3,
@@ -1000,36 +951,32 @@ const NODES = [
       ],
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           alignment: ['robust', 'brittle'],
           intent: ['international', 'coexistence'],
           post_war_aims: false
         },
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           brittle_resolution: ['escape'],
           intent: ['international', 'coexistence'],
           post_war_aims: false
         },
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           alignment: ['failed'], containment: ['contained'],
           intent: ['international', 'coexistence'],
           post_war_aims: false
         },
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           ai_goals: ['marginal'], inert_stays: ['yes'],
           intent: ['international', 'coexistence'],
           post_war_aims: false
         },
-        { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'] },
-        { capability: ['singularity'], automation: ['deep'], post_war_aims: true },
-        { capability: ['singularity'], automation: ['deep'], escalation_outcome: ['standoff'] }
+        { capability: ['asi'], intent: ['self_interest'] },
+        { capability: ['asi'], post_war_aims: true },
+        { capability: ['asi'], escalation_outcome: ['standoff'] }
       ],
       edges: [
         { id: 'for_everyone', label: 'This is for everyone',
@@ -1097,8 +1044,8 @@ const NODES = [
       // derivation bypass and the post-catch characterisation path.
       activateWhen: [
         ...WHO_BENEFITS_INTERNAL_ACTIVATE,
-        { capability: ['singularity'], automation: ['deep'], ai_goals: ['benevolent'] },
-        { capability: ['singularity'], automation: ['deep'], catch_outcome: ['holds_permanently'], collateral_impact: { not: ['civilizational'] } }
+        { capability: ['asi'], ai_goals: ['benevolent'] },
+        { capability: ['asi'], post_catch: ['contained'] }
       ],
       deriveWhen: [{ match: { ai_goals: ['benevolent'] }, value: 'equal' }],
       edges: [
@@ -1116,7 +1063,12 @@ const NODES = [
             { power_promise: ['for_everyone'], mobilization: ['strong'], reason: 'Promise and pressure aligned — broadly shared outcomes, not partial inequality' },
             { sincerity_test: ['sincere'], reason: 'Genuine cooperative intent produced broadly shared outcomes' },
             { pushback_outcome: ['succeeds'], reason: 'Successful pushback forced genuine redistribution' },
-          ] },
+          ],
+          // Self-interest + unequal = capture-ish world; the "did delivery
+          // match intent?" question doesn't add narrative value on top of
+          // the power-concentration framing (intent was to capture, and
+          // capture happened). Mark ineligible so failure_mode skips.
+          collapseToFlavor: { when: { intent: ['self_interest'] }, set: { delivery_ask_eligible: 'no' } } },
         { id: 'extreme', label: 'Power concentrates',
           disabledWhen: [
             { ai_goals: ['benevolent'], capability: ['singularity'], reason: 'A genuinely benevolent superintelligence has no reason to concentrate power — it bypasses human structures entirely' },
@@ -1124,7 +1076,11 @@ const NODES = [
             { sincerity_test: ['sincere'], reason: 'The cooperative intent proved genuine — power didn\'t concentrate this far' },
             { pushback_outcome: ['succeeds'], reason: 'The pushback forced genuine redistribution' },
             { pushback_outcome: ['partial'], reason: 'Real concessions were made — not equality, but enough to prevent lock-in' }
-          ] }
+          ],
+          // Extreme concentration → the-capture territory. The outcome is
+          // defined by power concentration; delivery drift isn't a useful
+          // orthogonal axis here. Mark ineligible regardless of intent.
+          collapseToFlavor: { set: { delivery_ask_eligible: 'no' } } }
       ] },
     { id: 'concentration_type', label: 'The Circle', stage: 3, priority: 2,
       activateWhen: [{ benefit_distribution: ['extreme'] }],
@@ -1141,16 +1097,15 @@ const NODES = [
         { id: 'extractive', label: 'A tightening grip' },
         { id: 'indifferent', label: 'Their own project' }
       ] },
-    // knowledge_rate / physical_rate — unified across three contexts:
-    //   • main singularity path (capability: singularity, automation: deep)
-    //     — rollout exits on failure_mode.*; all three rollout dims
-    //       (knowledge_rate, physical_rate, failure_mode) move to flavor
-    //       via the module exit tuple.
-    //   • plateau path (capability: stalls, stall_later: yes) — rollout
-    //       exits on physical_rate.*; both dims move to flavor via the
-    //       module exit tuple (same mechanism).
-    //   • auto-shallow path (capability: singularity, automation: shallow,
-    //       automation_later: yes) — same as plateau.
+    // knowledge_rate / physical_rate — unified across three contexts
+    // keyed on the post-emergence `capability` value:
+    //   • capability='asi' (main singularity path) — rollout exits on
+    //       failure_mode.*; all three rollout dims (knowledge_rate,
+    //       physical_rate, failure_mode) move to flavor via the module
+    //       exit tuple.
+    //   • capability='plateau' — rollout exits on physical_rate.*; both
+    //       dims move to flavor via the module exit tuple (same mechanism).
+    //   • capability='agi' (AGI-only / auto-shallow) — same as plateau.
     //
     // The `rollout_set` completion marker (set by every module exit tuple)
     // doubles as the post-answer hide for all three nodes. Narrative /
@@ -1171,19 +1126,19 @@ const NODES = [
       ],
       activateWhen: [
         ...OUTCOME_ACTIVATE,
-        { capability: ['stalls'], stall_later: ['yes'] },
-        { capability: ['singularity'], automation: ['shallow'], automation_later: ['yes'] }
+        { capability: ['plateau'] },
+        { capability: ['agi'] }
       ],
       edges: [
         { id: 'rapid', label: 'Rapid',
-          disabledWhen: [{ capability: ['stalls'], stall_duration: ['hours', 'days'], reason: 'At this stall duration, rapid adoption isn\'t possible' }] },
+          disabledWhen: [{ capability: ['plateau'], stall_duration: ['hours', 'days'], reason: 'At this stall duration, rapid adoption isn\'t possible' }] },
         { id: 'gradual', label: 'Gradual',
-          disabledWhen: [{ capability: ['stalls'], stall_duration: ['hours'], reason: 'The stall is too short for gradual rollout' }] },
+          disabledWhen: [{ capability: ['plateau'], stall_duration: ['hours'], reason: 'The stall is too short for gradual rollout' }] },
         { id: 'uneven', label: 'Uneven' },
         { id: 'limited', label: 'Limited',
           disabledWhen: [
-            { capability: ['singularity'], reason: 'At this capability, AI displaces rather than augments knowledge work' },
-            { capability: ['stalls'], stall_duration: ['weeks', 'months'], reason: 'With a longer stall, AI has room to move beyond augmentation' }
+            { capability: ['asi'], reason: 'At this capability, AI displaces rather than augments knowledge work' },
+            { capability: ['plateau'], stall_duration: ['weeks', 'months'], reason: 'With a longer stall, AI has room to move beyond augmentation' }
           ] }
       ] },
     { id: 'physical_rate', label: 'Physical Automation', stage: 3, priority: 2,
@@ -1193,17 +1148,17 @@ const NODES = [
       ],
       activateWhen: [
         ...OUTCOME_ACTIVATE,
-        { capability: ['stalls'], stall_later: ['yes'] },
-        { capability: ['singularity'], automation: ['shallow'], automation_later: ['yes'] }
+        { capability: ['plateau'] },
+        { capability: ['agi'] }
       ],
       edges: [
         { id: 'rapid', label: 'Rapid',
-          disabledWhen: [{ capability: ['stalls'], reason: 'Physical automation can\'t be rapid while AI itself is plateaued' }] },
+          disabledWhen: [{ capability: ['plateau'], reason: 'Physical automation can\'t be rapid while AI itself is plateaued' }] },
         { id: 'gradual', label: 'Gradual',
-          disabledWhen: [{ capability: ['stalls'], stall_duration: ['hours'], reason: 'The stall is too short for gradual rollout' }] },
+          disabledWhen: [{ capability: ['plateau'], stall_duration: ['hours'], reason: 'The stall is too short for gradual rollout' }] },
         { id: 'uneven', label: 'Uneven' },
         { id: 'limited', label: 'Limited',
-          disabledWhen: [{ capability: ['singularity'], automation: ['deep'], reason: 'At this capability, physical automation moves beyond augmentation' }] }
+          disabledWhen: [{ capability: ['asi'], reason: 'At this capability, physical automation moves beyond augmentation' }] }
       ] },
     { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3, priority: 1,
       hideWhen: [
@@ -1212,8 +1167,7 @@ const NODES = [
       ],
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           alignment: ['brittle'],
           alignment_durability: ['holds']
         }
@@ -1228,19 +1182,15 @@ const NODES = [
         { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } },
         { rollout_set: ['yes'] }
       ],
-      // Four alignment/containment paths, each gated on who_benefits having
-      // completed (who_benefits_set=yes is written on every module exit).
-      // The old version cartesian-multiplied each path by five explicit
-      // who_benefits terminal combinations (20 clauses total); those are now
-      // captured by a single marker. Plus one benevolent bypass, where
-      // benefit_distribution is derived (not asked) but the "did delivery
-      // succeed?" question still applies.
+      // After Who Benefits completes, delivery is eligible unless the world
+      // already ended in a capture-like shape (benefit_distribution=extreme,
+      // or self-interest + unequal — see benefit_distribution edges, which
+      // set `delivery_ask_eligible: 'no'` on those paths). The benevolent
+      // bypass keeps the delivery question askable even on benevolent-AI
+      // paths that bypass the regular who_benefits flow.
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], post_war_aims: false, who_benefits_set: ['yes'] },
-        { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], post_war_aims: false, who_benefits_set: ['yes'] },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['contained'], intent: ['international', 'coexistence'], post_war_aims: false, who_benefits_set: ['yes'] },
-        { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'], inert_stays: ['yes'], intent: ['international', 'coexistence'], post_war_aims: false, who_benefits_set: ['yes'] },
-        { capability: ['singularity'], automation: ['deep'], ai_goals: ['benevolent'] }
+        { capability: ['asi'], who_benefits_set: ['yes'], delivery_ask_eligible: { not: ['no'] } },
+        { capability: ['asi'], ai_goals: ['benevolent'] }
       ],
       edges: [
         { id: 'none', label: 'Succeeds' },
@@ -1250,8 +1200,7 @@ const NODES = [
       hideWhen: [{ war_survivors: ['none'] }],
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           alignment: ['failed'],
           containment: ['escaped'],
           ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm', 'power_seeking']
@@ -1277,8 +1226,7 @@ const NODES = [
       hideWhen: [{ war_survivors: ['none'] }],
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           alignment: ['failed'],
           containment: ['escaped'],
           ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm', 'power_seeking'],
@@ -1308,8 +1256,7 @@ const NODES = [
       hideWhen: [{ war_survivors: ['none'] }],
       activateWhen: [
         {
-          capability: ['singularity'],
-          automation: ['deep'],
+          capability: ['asi'],
           alignment: ['failed'],
           containment: ['escaped'],
           ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm', 'power_seeking'],
@@ -1451,7 +1398,7 @@ const NODES = [
     // collapseToFlavor.set encounter.
     { id: 'ruin_type', label: 'Ruin Cause', derived: true,
       deriveWhen: [
-        { match: { catch_outcome: ['holds_permanently'], collateral_impact: ['civilizational'] }, value: 'self_inflicted' },
+        { match: { post_catch: ['ruined'] }, value: 'self_inflicted' },
         { match: { conflict_result: ['destruction'] }, value: 'war' }
       ],
       edges: [{ id: 'war' }, { id: 'self_inflicted' }] }
@@ -1566,7 +1513,7 @@ const DECEL_REDUCER_TABLE = {
     rival: {
         robust:   { alignment: 'robust',  geo_spread: 'multiple', rival_emerges: 'yes', governance: 'slowdown', decel_align_progress: 'robust',   _provenance: 'parity_solved' },
         brittle:  { alignment: 'brittle', geo_spread: 'multiple', rival_emerges: 'yes', governance: 'slowdown', decel_align_progress: 'brittle',  _provenance: 'rival'         },
-        unsolved: {                       geo_spread: 'multiple', rival_emerges: 'yes', governance: 'slowdown', decel_align_progress: 'unsolved', _provenance: 'parity_failed' },
+        unsolved: { alignment: 'failed', geo_spread: 'multiple', rival_emerges: 'yes', governance: 'slowdown', decel_align_progress: 'unsolved', _provenance: 'parity_failed' },
     },
 };
 
@@ -1627,19 +1574,33 @@ const DECEL_MODULE = {
         'gov_action',
         'alignment',       // decel_Nmo_progress.unsolved.disabledWhen reads alignment=brittle
         'open_source',     // decel_6mo_action + decel_12mo_action.escapes/continue/accelerate.requires
-        'capability',      // all progress/action activateWhen
-        'automation',      // all progress/action activateWhen
+        'capability',      // all progress/action activateWhen (capability='asi')
     ],
-    // Globals the reducer commits to sel on exit. Union of non-underscore
-    // keys across all DECEL_REDUCER_TABLE cells.
+    // Globals the reducer commits to sel on exit. Only the three dims
+    // below are read as sel by external gate logic (alignment by many
+    // downstream activateWhen/hideWhen rules, geo_spread by sovereignty /
+    // intent / war clauses, containment by escape / proliferation /
+    // rollout clauses). governance / decel_align_progress / rival_emerges
+    // are written too but only for narrative — see internalMarkers.
     writes: [
         'alignment',
         'geo_spread',
-        'rival_emerges',
-        'governance',
         'containment',
-        'decel_align_progress',
     ],
+    // Markers that the reducer sets mid-tick into sel (so internal gates
+    // can observe them) but which no external sel-only logic reads — they
+    // get evicted into flavor at module exit, where outcome templates still
+    // see them via fused state.
+    //   * rival_emerges — pure provenance tag (post-decel multi-polar
+    //     world caused by deceleration). Read only by outcome templates.
+    //   * governance — race / slowdown / governed / partial tagline. Read
+    //     only by outcome templates; governance_window already writes it
+    //     to flavor via setFlavor, and this move makes the decel path
+    //     consistent.
+    //   * decel_align_progress — robust / brittle / unsolved marker. No
+    //     external gate reads it post-simplification; kept in flavor only
+    //     for snapshot tests and possible future narrative use.
+    internalMarkers: ['rival_emerges', 'governance', 'decel_align_progress'],
     nodeIds: DECEL_MODULE_NODE_IDS,
     reduce: decelReduce,
     reducerTable: DECEL_REDUCER_TABLE,  // exposed for audit + tests
@@ -1733,8 +1694,15 @@ const ESCAPE_NODE_IDS = [
 
 const ESCAPE_WRITES = [
     'ai_goals',
-    'catch_outcome',
-    'collateral_impact',
+    // post_catch consolidates (catch_outcome, collateral_impact) into a
+    // single 3-valued marker for cross-module routing: loose | contained
+    // | ruined. See buildEscapeExitPlan for the mapping. The raw
+    // catch_outcome + collateral_impact nodeIds are NOT in writes, so
+    // attachModuleReducer's nodeIds\writes rule auto-evicts them to
+    // flavor on exit — outcome templates (narrative variants under
+    // flavors.catch_outcome.* and flavors.collateral_impact.*) still see
+    // them via fused state.
+    'post_catch',
     // war_survivors is written by collateral_survivors edges via the
     // exit plan's set-block (shared dim with the standalone war module).
     'war_survivors',
@@ -1767,41 +1735,49 @@ function escapeReduce(local) {
 // All set `escape_set: 'yes'`.
 function buildEscapeExitPlan() {
     const plan = [];
-    const addSimple = (nodeId, edgeIds) => {
-        const n = NODE_MAP[nodeId];
-        if (!n || !n.edges) return;
-        const want = new Set(edgeIds);
-        for (const e of n.edges) {
-            if (!want.has(e.id)) continue;
+    // ai_goals.{benevolent, marginal} — early exits, no escape pipeline
+    // ran, so post_catch stays undefined (outcome clauses keyed on
+    // post_catch just don't fire on these paths, same as they never
+    // fired on catch_outcome before the consolidation).
+    const aiGoals = NODE_MAP.ai_goals;
+    if (aiGoals && aiGoals.edges) {
+        const earlyExits = new Set(['benevolent', 'marginal']);
+        for (const e of aiGoals.edges) {
+            if (!earlyExits.has(e.id)) continue;
             plan.push({
-                nodeId, edgeId: e.id,
+                nodeId: 'ai_goals', edgeId: e.id,
                 when: {},
                 set: { escape_set: 'yes' },
             });
         }
-    };
-    addSimple('ai_goals', ['benevolent', 'marginal']);
-    // catch_outcome.not_permanent — always exits directly.
-    addSimple('catch_outcome', ['not_permanent']);
-    // catch_outcome.holds_permanently — exits only when collateral_impact
-    // is NOT civilizational. In the civilizational case, the module
-    // defers to collateral_survivors (no exit tuple matches, so the
-    // module stays pending and module-first scheduling picks the next
-    // internal node).
+    }
+    // catch_outcome.not_permanent — always a direct exit. post_catch=loose.
+    plan.push({
+        nodeId: 'catch_outcome', edgeId: 'not_permanent',
+        when: {},
+        set: { escape_set: 'yes', post_catch: 'loose' },
+    });
+    // catch_outcome.holds_permanently — exits directly when
+    // collateral_impact is NOT civilizational. post_catch=contained.
+    // In the civilizational case, the module defers to
+    // collateral_survivors (no exit tuple matches here, so the module
+    // stays pending and module-first scheduling picks the next
+    // internal node — collateral_survivors).
     plan.push({
         nodeId: 'catch_outcome', edgeId: 'holds_permanently',
         when: { collateral_impact: { not: ['civilizational'] } },
-        set: { escape_set: 'yes' },
+        set: { escape_set: 'yes', post_catch: 'contained' },
     });
     // collateral_survivors — tail exits for the civilizational branch.
-    // Each edge writes its own value into the shared war_survivors dim.
+    // post_catch=ruined. Each edge also writes its own value into the
+    // shared war_survivors dim.
     const cs = NODE_MAP.collateral_survivors;
     if (cs && cs.edges) {
         for (const e of cs.edges) {
             plan.push({
                 nodeId: 'collateral_survivors', edgeId: e.id,
                 when: {},
-                set: { escape_set: 'yes', war_survivors: e.id },
+                set: { escape_set: 'yes', post_catch: 'ruined', war_survivors: e.id },
             });
         }
     }
@@ -1815,8 +1791,7 @@ const ESCAPE_MODULE = {
     // early-exit (benevolent/marginal) or pipeline completion (catch_outcome).
     activateWhen: [
         {
-            capability: ['singularity'],
-            automation: ['deep'],
+            capability: ['asi'],
             alignment: ['failed'],
             containment: ['escaped'],
         },
@@ -1825,7 +1800,7 @@ const ESCAPE_MODULE = {
     reads: [
         // Gates into the pipeline (escape_method.activateWhen, various
         // pipeline hideWhen/disabledWhen clauses)
-        'capability', 'automation', 'alignment', 'containment',
+        'capability', 'alignment', 'containment',
         'concentration_type', 'geo_spread', 'war_survivors',
     ],
     writes: ESCAPE_WRITES,
@@ -1950,8 +1925,15 @@ const WHO_BENEFITS_NODE_IDS = [
 // which resolve through fused state (sel ∪ flavor). Nothing outside the
 // module gates on it, so it's safe to move to flavor on module exit
 // (via nodeIds \ writes auto-eviction in attachModuleReducer).
+//
+// `delivery_ask_eligible` is a synthetic marker (no host node) set by
+// benefit_distribution edges via `collapseToFlavor.set` to signal to
+// failure_mode in ROLLOUT whether the delivery-drift question makes
+// sense on this path. Listed here to document the cross-module output;
+// the audit only cares about node-id writes, so this is informational.
 const WHO_BENEFITS_WRITES = [
     'concentration_type',
+    'delivery_ask_eligible',
 ];
 
 function whoBenefitsReduce(local) {
@@ -2021,44 +2003,41 @@ const WHO_BENEFITS_MODULE = {
     // the tightest shared precondition across all 7 internal dims.
     activateWhen: [
         {
-            capability: ['singularity'],
-            automation: ['deep'],
+            capability: ['asi'],
             alignment: ['robust', 'brittle'],
             intent: ['international', 'coexistence'],
             post_war_aims: false,
         },
         {
-            capability: ['singularity'],
-            automation: ['deep'],
+            capability: ['asi'],
             brittle_resolution: ['escape'],
             intent: ['international', 'coexistence'],
             post_war_aims: false,
         },
         {
-            capability: ['singularity'],
-            automation: ['deep'],
+            capability: ['asi'],
             alignment: ['failed'], containment: ['contained'],
             intent: ['international', 'coexistence'],
             post_war_aims: false,
         },
         {
-            capability: ['singularity'],
-            automation: ['deep'],
+            capability: ['asi'],
             ai_goals: ['marginal'], inert_stays: ['yes'],
             intent: ['international', 'coexistence'],
             post_war_aims: false,
         },
-        { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'] },
-        { capability: ['singularity'], automation: ['deep'], post_war_aims: true },
-        { capability: ['singularity'], automation: ['deep'], escalation_outcome: ['standoff'] },
+        { capability: ['asi'], intent: ['self_interest'] },
+        { capability: ['asi'], post_war_aims: true },
+        { capability: ['asi'], escalation_outcome: ['standoff'] },
     ],
     reads: [
-        'capability', 'automation', 'alignment', 'containment', 'intent',
+        'capability', 'alignment', 'containment', 'intent',
         'ai_goals', 'inert_stays', 'post_war_aims', 'escalation_outcome',
         'brittle_resolution',
         // benefit_distribution gates on inert_stays via hideWhen and on
-        // catch_outcome/collateral_impact via the post-catch activate clause.
-        'inert_stays', 'catch_outcome', 'collateral_impact',
+        // post_catch (the consolidated escape-exit marker) via the
+        // post-catch activate clause.
+        'inert_stays', 'post_catch',
     ],
     writes: WHO_BENEFITS_WRITES,
     nodeIds: WHO_BENEFITS_NODE_IDS,
@@ -2077,17 +2056,14 @@ const WHO_BENEFITS_MODULE = {
 //   * failure_mode   — "Delivery": does the transformation match intent,
 //     or do the metrics diverge from reality? (only asked on main path)
 //
-// Three contexts, with different question sets per context:
-//   * main singularity (capability=singularity, automation=deep + outcome
-//     gates) — all three asked; all three move to flavor on module exit
-//     (failure_mode.* edges).
-//   * plateau (capability=stalls, stall_later=yes) — only knowledge_rate
-//     and physical_rate asked; both move to flavor on module exit
-//     (physical_rate.* edges). failure_mode never activates (its
-//     activateWhen requires capability=singularity).
-//   * auto-shallow (capability=singularity, automation=shallow,
-//     automation_later=yes) — same as plateau: only knowledge/physical,
-//     exit on physical_rate.
+// Three contexts, keyed on the post-emergence `capability` value:
+//   * capability='asi' (+ outcome gates) — main path: all three asked; all
+//     three move to flavor on module exit (failure_mode.* edges).
+//   * capability='plateau' — only knowledge_rate and physical_rate asked;
+//     both move to flavor on module exit (physical_rate.* edges).
+//     failure_mode never activates (its activateWhen requires asi).
+//   * capability='agi' (AGI-only / auto-shallow) — same as plateau: only
+//     knowledge/physical, exit on physical_rate.
 //
 // Writes: [] — no dim needs to persist globally. All three rollout dims
 // have zero external sel-only gate readers; every consumer (outcome
@@ -2129,8 +2105,8 @@ function rolloutReduce(_local) {
 // Exit tuples:
 //   * failure_mode.{none, drift} — main path exit, always. No `when` gate.
 //   * physical_rate.{rapid, gradual, uneven, limited} — plateau and
-//     auto-shallow exits. Gate on capability/automation so these don't
-//     fire on the main path (where failure_mode is the real exit).
+//     AGI-only exits. Gate on capability ∈ {plateau, agi} so these don't
+//     fire on the main ASI path (where failure_mode is the real exit).
 function buildRolloutExitPlan() {
     const plan = [];
     const fm = NODE_MAP.failure_mode;
@@ -2158,7 +2134,7 @@ function buildRolloutExitPlan() {
             plan.push({
                 nodeId: 'physical_rate',
                 edgeId: e.id,
-                when: { capability: ['singularity'], automation: ['shallow'] },
+                when: { capability: ['agi'] },
                 set: { rollout_set: 'yes' },
             });
         }
@@ -2175,27 +2151,31 @@ const ROLLOUT_MODULE = {
         // benevolent / catch_holds bypasses), so the module only activates
         // once Who Benefits has completed.
         ...OUTCOME_ACTIVATE,
-        // Plateau path — only after plateau_benefit_distribution is answered,
-        // so the plateau "Who Benefits?" question doesn't visually fall inside
-        // this module's cluster in /explore.
-        { capability: ['stalls'], stall_later: ['yes'], plateau_benefit_set: ['yes'] },
-        // Auto-shallow path — same reasoning as plateau.
-        { capability: ['singularity'], automation: ['shallow'], automation_later: ['yes'], auto_benefit_set: ['yes'] },
+        // Plateau / auto-shallow paths — plateau_benefit_distribution and
+        // auto_benefit_distribution now both write the shared
+        // `who_benefits_set` marker (unified with the main WHO_BENEFITS
+        // module). Capability keeps the contexts distinct.
+        { capability: ['plateau'], who_benefits_set: ['yes'] },
+        { capability: ['agi'], who_benefits_set: ['yes'] },
     ],
     reads: [
-        // Activation / gating across the three contexts
-        'capability', 'automation', 'automation_later',
-        'stall_later', 'stall_duration',
-        // Per-context predecessors (so rollout doesn't activate before the
-        // preceding plateau / auto-shallow "Who Benefits?" question).
-        'plateau_benefit_set', 'auto_benefit_set',
-        // OUTCOME_ACTIVATE conditions (post-escape catch path)
-        'catch_outcome', 'collateral_impact',
-        // failure_mode gates
-        'alignment', 'brittle_resolution',
-        'ai_goals', 'containment', 'intent', 'post_war_aims',
-        'inert_stays',
-        'who_benefits_set',
+        // Activation / gating across the three contexts. Post-emergence
+        // capability is one of {plateau, agi, asi} (or 'stalls' for the
+        // reserved short-stall dead-end). stall_duration is still read
+        // by some plateau narrative / reachable gates.
+        'capability', 'stall_duration',
+        // OUTCOME_ACTIVATE conditions (post-escape catch path) — single
+        // consolidated marker (replaces compound catch_outcome +
+        // collateral_impact).
+        'post_catch',
+        // Shared rollout hideWhen (uncaught bad-escape cut) +
+        // failure_mode.hideWhen (adds inert_stays to the rule).
+        'ai_goals', 'containment', 'inert_stays',
+        // Main-path activation marker + delivery-eligibility marker.
+        // failure_mode activates on who_benefits_set=yes when
+        // delivery_ask_eligible is not 'no' (set by WHO_BENEFITS on
+        // capture-shaped paths).
+        'who_benefits_set', 'delivery_ask_eligible',
         // Module's own completion marker is read by every internal node's
         // hideWhen (post-answer re-ask guard now that all 3 internal dims
         // move to flavor on exit).
@@ -2321,13 +2301,14 @@ function buildControlExitPlan() {
 const CONTROL_MODULE = {
     id: 'control',
     activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], emergence_set: ['yes'] },
+        { capability: ['asi'] },
     ],
     reads: [
         // Post-emergence state that internal nodes read (disabledWhen,
-        // activateWhen, deriveWhen clauses).
-        'capability', 'automation', 'emergence_set',
-        'takeoff_class', 'takeoff_explosive',
+        // activateWhen, deriveWhen clauses). capability='asi' is the
+        // module's activation gate and also its completion marker check.
+        'capability',
+        'takeoff_class',
         // geo_spread.deriveWhen flips geo_spread to 'multiple' on
         // leaks_rivals / leaks_public. proliferation_outcome is set by
         // downstream nodes (post-module), so the derivation only fires
@@ -2460,29 +2441,13 @@ const PROLIFERATION_MODULE = {
     // pending exactly while proliferation_control is askable.
     activateWhen: [
         {
-            capability: ['singularity'],
-            automation: ['deep'],
-            gov_action: { not: ['decelerate'] },
-        },
-        {
-            capability: ['singularity'],
-            automation: ['deep'],
-            gov_action: ['decelerate'],
-            rival_emerges: { not: ['yes'] },
+            capability: ['asi'],
             alignment: { not: ['failed'] },
-        },
-        {
-            capability: ['singularity'],
-            automation: ['deep'],
-            gov_action: ['decelerate'],
-            rival_emerges: ['yes'],
-            decel_align_progress: { not: ['unsolved'] },
         },
     ],
     reads: [
         // Activation gate
-        'capability', 'automation', 'gov_action', 'rival_emerges',
-        'alignment', 'decel_align_progress',
+        'capability', 'alignment',
         // Internal hideWhen clauses on proliferation_control /
         // proliferation_outcome reference these
         'ai_goals', 'inert_stays', 'containment', 'alignment_durability',
@@ -2513,21 +2478,19 @@ const PROLIFERATION_MODULE = {
 // Internal user-pickable nodes:
 //   capability, stall_duration, stall_recovery, agi_threshold,
 //   asi_threshold, automation_recovery, takeoff, governance_window
-// (`automation` is derived from internal state — not in nodeIds but
-// conceptually part of the module; external consumers read it as a
-// derived write.)
 //
-// Three exits, all set `emergence_set: 'yes'`:
-//   * Plateau: stall_recovery.{substantial, never} — sets stall_later=yes
-//   * Auto-shallow: automation_recovery.{substantial, never} — sets
-//     automation_later=yes
-//   * Main → open_source: either takeoff.{fast, explosive} (governance
-//     skipped) or governance_window.{governed, partial, race} (normal
-//     takeoff). 7 exit edges on main + 2 + 2 = 11 total exit points; some
-//     converge to the same {set, move} blocks via attachModuleReducer.
+// Three exits, each rewriting `capability` to one of the 4 post-exit
+// values (which doubles as the completion marker — see completionMarker):
+//   * Plateau: stall_recovery.{substantial, never} → capability='plateau'
+//   * AGI-only: automation_recovery.{substantial, never} → capability='agi'
+//   * ASI path → open_source: either takeoff.{fast, explosive}
+//     (governance skipped) or governance_window.{governed, partial, race}
+//     (normal takeoff). Both set capability='asi'. 7 exit edges on main +
+//     2 + 2 = 11 total exit points; some converge to the same
+//     {set, move} blocks via attachModuleReducer.
 //
 // activateWhen: `[]` means "always active". Module is pending from empty
-// sel through to emergence_set='yes'.
+// sel through to capability ∈ {plateau, agi, asi, stalls}.
 //
 // No reducerTable — exit space spans 4 different terminal nodes with
 // path-specific collapseToFlavor blocks. Walker falls through to normal
@@ -2550,26 +2513,28 @@ const EMERGENCE_NODE_IDS = [
 // governance_window) each have their own per-edge collapseToFlavor that
 // moves them to flavor; we don't list them here.
 //
-// `capability` and `stall_duration` never move to flavor — they're
-// consumed by every downstream branch. `asi_threshold` stays in sel only
-// on the 'never' edge (downstream automation-derivation rules read it);
-// non-never edges move it to flavor but that happens via the node's own
-// collapse, so listing it here is correct (it's a conditional write).
+// `capability` never moves to flavor — it's rewritten on module exit to
+// one of {plateau, agi, asi} (or stays 'stalls' on the reserved path)
+// and is consumed by every downstream branch. Its post-exit value doubles
+// as the module's completion marker (see completionMarker below).
+// `stall_duration` also persists — it's read by several downstream
+// plateau narrative gates. `asi_threshold` stays in sel only on the
+// 'never' edge (plateau/AGI narrative gates read it); non-never edges
+// move it to flavor via the node's own per-edge collapse.
 //
 // `asi_happens` is deliberately NOT in writes — see internalMarkers
 // below. `agi_happens` is also NOT in writes: every asi_threshold edge
 // moves it to flavor, so it's never durable in sel post-exit.
+//
+// Former writes dropped in the capability-4-value refactor:
+//   * `automation` — the derived node was deleted; capability now
+//     encodes the deep/shallow distinction directly (asi vs agi).
+//   * `stall_later` — replaced by capability='plateau'.
+//   * `automation_later` — replaced by capability='agi'.
+//   * `emergence_set` — replaced by capability ∈ {plateau, agi, asi}.
 const EMERGENCE_WRITES = [
     'capability', 'stall_duration', 'asi_threshold',
-    'stall_later', 'automation_later',
-    'takeoff_class', 'takeoff_explosive',
-    // `automation` is a derived dim whose deriveWhen only consults
-    // emergence-internal state — it's effectively a module output used by
-    // many external consumers (plateau_benefit_distribution, open_source,
-    // distribution, etc.). Listed as a write so the audit recognizes it
-    // as an intentional export rather than an internal leak.
-    'automation',
-    'emergence_set',
+    'takeoff_class',
 ];
 
 // Internal markers: dims set into sel mid-module to gate internal
@@ -2582,7 +2547,12 @@ const EMERGENCE_WRITES = [
 //     automation_recovery.mild. Consumed by agi_threshold.hideWhen and
 //     asi_threshold.hideWhen to suppress re-asking after the asi
 //     question resolves. No external reader.
-const EMERGENCE_INTERNAL_MARKERS = ['asi_happens'];
+//   * `agi_happens` — set by agi_threshold edges (yes/no) and consumed
+//     by asi_threshold.activateWhen / agi_threshold.hideWhen. Always
+//     moved to flavor by asi_threshold's own per-edge collapseToFlavor
+//     (or by automation_recovery.mild.setFlavor); never durable in sel
+//     post-exit and never read externally.
+const EMERGENCE_INTERNAL_MARKERS = ['asi_happens', 'agi_happens'];
 
 function emergenceReduce(local) {
     const bundle = {};
@@ -2592,11 +2562,23 @@ function emergenceReduce(local) {
     return bundle;
 }
 
-// Exit tuples: 11 edges across 4 nodes, all setting emergence_set='yes'.
+// Exit tuples: 11 edges across 4 nodes. Each sets `capability` to the
+// post-exit value that classifies the scenario: one of
+//   * `plateau` — stalls path with long / permanent stall
+//   * `agi`     — singularity path with asi=never (no ASI, auto-shallow)
+//   * `asi`     — singularity path reaching ASI (deep automation)
+// (The `stalls` post-exit value is reserved for a future "short stall
+//  dead-end" outcome; no current exit tuple sets it.)
+//
+// The capability value itself serves as the module's completion marker
+// (see EMERGENCE_MODULE.completionMarker), replacing the prior
+// `emergence_set: 'yes'` marker. Also replaces the prior
+// `stall_later: 'yes'` (now = capability: 'plateau') and
+// `automation_later: 'yes'` (now = capability: 'agi') markers.
 // No `when` gates — the edge id carries the path distinction.
 function buildEmergenceExitPlan() {
     const plan = [];
-    const add = (nodeId, edgeIds) => {
+    const add = (nodeId, edgeIds, capabilityValue) => {
         const n = NODE_MAP[nodeId];
         if (!n || !n.edges) return;
         const want = new Set(edgeIds);
@@ -2605,32 +2587,34 @@ function buildEmergenceExitPlan() {
             plan.push({
                 nodeId, edgeId: e.id,
                 when: {},
-                set: { emergence_set: 'yes' },
+                set: { capability: capabilityValue },
             });
         }
     };
-    // Plateau exit
-    add('stall_recovery', ['substantial', 'never']);
-    // Auto-shallow exit
-    add('automation_recovery', ['substantial', 'never']);
-    // Main path, fast takeoff — governance skipped, direct exit
-    add('takeoff', ['fast', 'explosive']);
-    // Main path, normal takeoff — governance answered
-    add('governance_window', ['governed', 'partial', 'race']);
+    // Plateau exit (stalls path, stall_recovery = long/permanent)
+    add('stall_recovery', ['substantial', 'never'], 'plateau');
+    // AGI-only exit (asi=never, recovery not mild)
+    add('automation_recovery', ['substantial', 'never'], 'agi');
+    // ASI via fast/explosive takeoff — governance skipped, direct exit
+    add('takeoff', ['fast', 'explosive'], 'asi');
+    // ASI via normal takeoff — governance answered
+    add('governance_window', ['governed', 'partial', 'race'], 'asi');
     return plan;
 }
 
 const EMERGENCE_MODULE = {
     id: 'emergence',
     activateWhen: [], // always active — entry module; completion marker gates
-    // No external reads. takeoff's post-exit self-hide now keys on the
-    // module's own `emergence_set` marker instead of `open_source_set`,
-    // keeping the hide local to the module.
     reads: [],
     writes: EMERGENCE_WRITES,
     internalMarkers: EMERGENCE_INTERNAL_MARKERS,
     nodeIds: EMERGENCE_NODE_IDS,
-    completionMarker: 'emergence_set',
+    // Done iff capability has been rewritten from the user-answered
+    // {singularity, stalls} to one of the post-exit values. Uses the
+    // object-form marker (engine._isModuleDone) since a bare "has value"
+    // check matches pre-exit too (capability is user-picked inside the
+    // module).
+    completionMarker: { dim: 'capability', values: ['plateau', 'agi', 'asi', 'stalls'] },
     reduce: emergenceReduce,
     get exitPlan() { return buildEmergenceExitPlan(); },
 };
@@ -2776,14 +2760,14 @@ const INTENT_MODULE = {
     // Mirrors intent.activateWhen verbatim — module is pending exactly
     // while intent is askable.
     activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], proliferation_control: true },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['contained'] },
-        { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'] },
-        { capability: ['singularity'], automation: ['deep'], inert_stays: ['no'] },
+        { capability: ['asi'], alignment: ['robust', 'brittle'], proliferation_control: true },
+        { capability: ['asi'], alignment: ['failed'], containment: ['contained'] },
+        { capability: ['asi'], ai_goals: ['marginal'] },
+        { capability: ['asi'], inert_stays: ['no'] },
     ],
     reads: [
         // Activation gate
-        'capability', 'automation', 'alignment', 'containment',
+        'capability', 'alignment', 'containment',
         'ai_goals', 'inert_stays',
         // Tail gating (block_entrants.activateWhen)
         'proliferation_control', 'proliferation_outcome',
@@ -2909,7 +2893,7 @@ const WAR_MODULE = {
         // Reads by downstream consumers inside the module (via hideWhen
         // on war_survivors paths) — kept for explicitness even though
         // these are all internal writes.
-        'capability', 'automation',
+        'capability',
     ],
     writes: WAR_WRITES,
     nodeIds: WAR_NODE_IDS,
@@ -3039,20 +3023,21 @@ const ALIGNMENT_MODULE = {
     // moment alignment would first be askable through to whichever
     // internal edge trips its exit tuple.
     activateWhen: [
-        { capability: ['singularity'], automation: ['deep'] },
+        { capability: ['asi'] },
     ],
     reads: [
         // activation / gov_action gating
-        'capability', 'automation',
+        'capability',
         'geo_spread', 'sovereignty', 'distribution',
         // deriveWhen inputs on alignment / containment / gov_action
         'proliferation_alignment', 'proliferation_outcome',
         'brittle_resolution',
         'ai_goals', 'inert_stays',
-        'catch_outcome', 'collateral_impact',
-        'rival_emerges', 'decel_align_progress',
+        // post_catch (contained) is read by gov_action.hideWhen via
+        // OUTCOME_ACTIVATE-style clauses.
+        'post_catch',
         // gov_action edge collapseToFlavor moves (pre-existing)
-        'takeoff_explosive', 'open_source',
+        'takeoff_class', 'open_source',
     ],
     writes: ALIGNMENT_WRITES,
     nodeIds: ALIGNMENT_NODE_IDS,

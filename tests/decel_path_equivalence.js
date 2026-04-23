@@ -8,10 +8,16 @@
 //
 // An empty diff is the Phase 4c go/no-go checkpoint.
 //
-// Decel entry requires: capability=singularity, automation=deep, distribution
+// Decel entry requires: capability=asi (post-emergence), distribution
 // ∈ {monopoly} OR (distribution=concentrated AND sovereignty=state), and
 // geo_spread=one. The entry node is gov_action; the decelerate edge starts
 // the decel loop.
+//
+// Post-emergence-refactor note: the user-answered capability='singularity'
+// gets rewritten to 'asi' on module exit (governance_window.partial or
+// takeoff.slow → exit tuple). So each prefix now walks the full emergence
+// module (capability, agi_threshold, asi_threshold, takeoff,
+// governance_window) before reaching open_source.
 //
 // Enumerated paths:
 //   For each entry sub-scenario × each (terminating_month, action, progress) cell:
@@ -22,29 +28,42 @@ const path = require('path');
 const engine = require('../engine.js');
 const { DECEL_PAIRS, NODE_MAP } = require('../graph.js');
 
+// Shared emergence-module prefix: every decel path requires that
+// emergence has completed with capability rewritten to 'asi'. Chosen
+// path: singularity → few_months / few_months → slow takeoff (forces
+// governance_window answer) → partial governance (exits module,
+// sets capability='asi').
+const EMERGENCE_ASI_PREFIX = [
+    ['capability', 'singularity'],
+    ['agi_threshold', 'few_months'],
+    ['asi_threshold', 'few_months'],
+    ['takeoff', 'slow'],
+    ['governance_window', 'partial'],
+];
+
 // Pre-decel prefixes that reach gov_action being askable.
 const PREFIXES = [
     // monopoly path: 1 country, 1 lab
     { label: 'monopoly-6mo', path: [
-        ['capability', 'singularity'], ['automation', 'deep'],
+        ...EMERGENCE_ASI_PREFIX,
         ['open_source', 'six_months'], ['distribution', 'monopoly'],
     ]},
     { label: 'monopoly-12mo', path: [
-        ['capability', 'singularity'], ['automation', 'deep'],
+        ...EMERGENCE_ASI_PREFIX,
         ['open_source', 'twelve_months'], ['distribution', 'monopoly'],
     ]},
     { label: 'monopoly-24mo', path: [
-        ['capability', 'singularity'], ['automation', 'deep'],
+        ...EMERGENCE_ASI_PREFIX,
         ['open_source', 'twenty_four_months'], ['distribution', 'monopoly'],
     ]},
     // concentrated + state sovereignty path
     { label: 'concentrated-state-6mo', path: [
-        ['capability', 'singularity'], ['automation', 'deep'],
+        ...EMERGENCE_ASI_PREFIX,
         ['open_source', 'six_months'], ['distribution', 'concentrated'],
         ['sovereignty', 'state'],
     ]},
     { label: 'concentrated-state-12mo', path: [
-        ['capability', 'singularity'], ['automation', 'deep'],
+        ...EMERGENCE_ASI_PREFIX,
         ['open_source', 'twelve_months'], ['distribution', 'concentrated'],
         ['sovereignty', 'state'],
     ]},
@@ -63,10 +82,13 @@ for (const [pKey, aKey] of DECEL_PAIRS) { INTERNAL_DIMS.add(pKey); INTERNAL_DIMS
 // known to the engine plus a few resolved-via-derive dims of interest.
 // Post-migration: decel_outcome will no longer exist, so we note that.
 const TRACKED_RESOLVED = [
-    'alignment', 'distribution', 'geo_spread', 'rival_emerges',
-    'governance', 'containment', 'decel_align_progress',
+    'alignment', 'distribution', 'geo_spread', 'containment',
     // legacy-only; will disappear after Phase 4a:
     'decel_outcome',
+    // rival_emerges / governance / decel_align_progress are flavor-only
+    // markers post-decel (moved out of sel via DECEL_MODULE.internalMarkers) —
+    // they're not read by any downstream sel-only gate, only by outcome
+    // templates via fused sel+flavor state.
     // others worth cross-checking for spurious drift:
     'alignment_durability', 'ai_goals', 'proliferation_control',
 ];

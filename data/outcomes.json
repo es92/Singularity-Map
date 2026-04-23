@@ -84,12 +84,9 @@
       "reachable": [
         {
           "capability": [
-            "stalls"
+            "plateau"
           ],
-          "stall_later": [
-            "yes"
-          ],
-          "plateau_benefit_set": [
+          "who_benefits_set": [
             "yes"
           ],
           "rollout_set": [
@@ -159,15 +156,9 @@
       "reachable": [
         {
           "capability": [
-            "singularity"
+            "agi"
           ],
-          "automation": [
-            "shallow"
-          ],
-          "automation_later": [
-            "yes"
-          ],
-          "auto_benefit_set": [
+          "who_benefits_set": [
             "yes"
           ],
           "rollout_set": [
@@ -355,7 +346,7 @@
       "reachable": [
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "robust"
@@ -373,7 +364,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "brittle"
@@ -395,7 +386,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -416,7 +407,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "robust"
@@ -436,7 +427,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "brittle"
@@ -460,7 +451,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -483,7 +474,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -506,7 +497,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "robust"
@@ -526,7 +517,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "brittle"
@@ -550,7 +541,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -573,7 +564,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -596,7 +587,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "ai_goals": [
             "benevolent"
@@ -610,7 +601,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "ai_goals": [
             "marginal"
@@ -806,7 +797,7 @@
       "reachable": [
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "robust"
@@ -829,7 +820,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "brittle"
@@ -856,7 +847,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -882,7 +873,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "robust"
@@ -907,7 +898,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "brittle"
@@ -936,7 +927,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -964,7 +955,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -992,7 +983,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "ai_goals": [
             "benevolent"
@@ -1006,7 +997,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "ai_goals": [
             "marginal"
@@ -1366,7 +1357,7 @@
       "reachable": [
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "robust"
@@ -1383,7 +1374,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "brittle"
@@ -1404,7 +1395,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -1424,7 +1415,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "robust"
@@ -1444,7 +1435,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "brittle"
@@ -1468,7 +1459,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -1491,7 +1482,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -1514,7 +1505,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "robust"
@@ -1534,7 +1525,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "brittle"
@@ -1558,7 +1549,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -1581,7 +1572,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -1604,7 +1595,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "ai_goals": [
             "benevolent"
@@ -1618,7 +1609,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "ai_goals": [
             "marginal"
@@ -1819,7 +1810,7 @@
       "reachable": [
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "robust"
@@ -1835,7 +1826,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "brittle"
@@ -1855,7 +1846,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -1874,7 +1865,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "robust"
@@ -1899,7 +1890,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "brittle"
@@ -1928,7 +1919,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -1956,7 +1947,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -2188,7 +2179,7 @@
       "reachable": [
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "robust"
@@ -2219,7 +2210,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "brittle"
@@ -2254,7 +2245,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -2288,7 +2279,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "brittle"
@@ -2421,7 +2412,7 @@
       "reachable": [
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "robust"
@@ -2435,7 +2426,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "brittle"
@@ -2453,7 +2444,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -2470,7 +2461,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -2490,13 +2481,10 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
-          "catch_outcome": [
-            "holds_permanently"
-          ],
-          "collateral_impact": [
-            "civilizational"
+          "post_catch": [
+            "ruined"
           ]
         }
       ],
@@ -2674,7 +2662,7 @@
       "reachable": [
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "robust"
@@ -2691,7 +2679,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "brittle"
@@ -2712,7 +2700,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -2732,7 +2720,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "ai_goals": [
             "marginal"
@@ -2875,7 +2863,7 @@
       "reachable": [
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "robust"
@@ -2895,7 +2883,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "brittle"
@@ -2919,7 +2907,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -2942,7 +2930,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "ai_goals": [
             "marginal"
@@ -3194,7 +3182,7 @@
       "reachable": [
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -3206,13 +3194,13 @@
             "paperclip",
             "power_seeking"
           ],
-          "catch_outcome": [
-            "not_permanent"
+          "post_catch": [
+            "loose"
           ]
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -3230,7 +3218,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -3248,7 +3236,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -3288,8 +3276,8 @@
             "paperclip",
             "power_seeking"
           ],
-          "catch_outcome": [
-            "not_permanent"
+          "post_catch": [
+            "loose"
           ]
         },
         {
@@ -3481,7 +3469,7 @@
       "reachable": [
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -3493,13 +3481,13 @@
             "alien_coexistence",
             "alien_extinction"
           ],
-          "catch_outcome": [
-            "not_permanent"
+          "post_catch": [
+            "loose"
           ]
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -3517,7 +3505,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -3541,8 +3529,8 @@
             "alien_coexistence",
             "alien_extinction"
           ],
-          "catch_outcome": [
-            "not_permanent"
+          "post_catch": [
+            "loose"
           ]
         },
         {
@@ -3714,7 +3702,7 @@
       "reachable": [
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -3725,13 +3713,13 @@
           "ai_goals": [
             "swarm"
           ],
-          "catch_outcome": [
-            "not_permanent"
+          "post_catch": [
+            "loose"
           ]
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"
@@ -3748,7 +3736,7 @@
         },
         {
           "capability": [
-            "singularity"
+            "asi"
           ],
           "alignment": [
             "failed"

@@ -359,9 +359,9 @@
         const NODES = window.Engine.NODES;
         const dimSet = new Set(NODES.map(n => n.id));
         // Outcome "dims" exist too — templates reference marker-like keys
-        // written only via collapseToFlavor.set (e.g. `stall_later`). Include
-        // those so references to them resolve, but we'll treat them as
-        // synthetic dims without a host node.
+        // written only via collapseToFlavor.set (e.g. `rollout_set`,
+        // `asi_happens`). Include those so references to them resolve, but
+        // we'll treat them as synthetic dims without a host node.
         const syntheticDims = new Set();
 
         // First pass: discover synthetic dims written by collapseToFlavor.set.

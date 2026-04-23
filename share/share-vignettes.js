@@ -272,8 +272,10 @@
         // AI was stopped but the threat returns. Post-merge, that case is
         // `not_permanent` + `response_success=yes`; `response_success=no`
         // is the old `never_stopped` leg with no actual catch, so no
-        // end-date to propagate. response_success lives in flavor → narrSel.
-        if (sel.catch_outcome === 'not_permanent' && narrSel.response_success === 'yes') {
+        // end-date to propagate. The consolidated post_catch marker keys
+        // 'loose' on catch_outcome=not_permanent. response_success still
+        // lives in flavor → narrSel.
+        if (sel.post_catch === 'loose' && narrSel.response_success === 'yes') {
             const endDate = dateMap && dateMap['catch_outcome'];
             if (endDate) {
                 for (const v of vignettes) {

@@ -5204,7 +5204,7 @@
       {
         "when": {
           "capability": [
-            "stalls"
+            "plateau"
           ]
         },
         "questionText": "How much knowledge work does AI at this level actually replace?",
@@ -5215,7 +5215,7 @@
       {
         "when": {
           "capability": [
-            "stalls"
+            "plateau"
           ],
           "stall_duration": [
             "hours"
@@ -5226,7 +5226,7 @@
       {
         "when": {
           "capability": [
-            "stalls"
+            "plateau"
           ],
           "stall_duration": [
             "days"
@@ -5237,7 +5237,7 @@
       {
         "when": {
           "capability": [
-            "stalls"
+            "plateau"
           ],
           "stall_duration": [
             "weeks",
@@ -5249,10 +5249,7 @@
       {
         "when": {
           "capability": [
-            "singularity"
-          ],
-          "automation": [
-            "shallow"
+            "agi"
           ]
         },
         "questionText": "How fast does routine knowledge work actually get displaced?",
@@ -5337,7 +5334,7 @@
           {
             "when": {
               "capability": [
-                "stalls"
+                "plateau"
               ]
             },
             "answerLabel": "Rapid — within AI's range, most work automated in 2–5 years",
@@ -5414,10 +5411,7 @@
           {
             "when": {
               "capability": [
-                "singularity"
-              ],
-              "automation": [
-                "shallow"
+                "agi"
               ]
             },
             "answerLabel": "Rapid — most routine knowledge work displaced within 2–4 years",
@@ -5568,7 +5562,7 @@
           {
             "when": {
               "capability": [
-                "stalls"
+                "plateau"
               ]
             },
             "answerLabel": "Gradual — adoption unfolds over 5–15 years",
@@ -5657,10 +5651,7 @@
           {
             "when": {
               "capability": [
-                "singularity"
-              ],
-              "automation": [
-                "shallow"
+                "agi"
               ]
             },
             "answerLabel": "Gradual — sector by sector over 5–15 years",
@@ -5810,7 +5801,7 @@
           {
             "when": {
               "capability": [
-                "stalls"
+                "plateau"
               ]
             },
             "answerLabel": "Uneven — 2–5 years in tech, 10–20+ in lagging sectors",
@@ -5898,10 +5889,7 @@
           {
             "when": {
               "capability": [
-                "singularity"
-              ],
-              "automation": [
-                "shallow"
+                "agi"
               ]
             },
             "answerLabel": "Uneven — 2–4 years in tech, 10–20+ in lagging sectors",
@@ -6058,7 +6046,7 @@
       {
         "when": {
           "capability": [
-            "stalls"
+            "plateau"
           ]
         },
         "questionText": "Does physical automation advance alongside AI, or does it lag?",
@@ -6069,7 +6057,7 @@
       {
         "when": {
           "capability": [
-            "stalls"
+            "plateau"
           ],
           "knowledge_rate": [
             "rapid"
@@ -6080,7 +6068,7 @@
       {
         "when": {
           "capability": [
-            "stalls"
+            "plateau"
           ],
           "knowledge_rate": [
             "limited"
@@ -6091,10 +6079,7 @@
       {
         "when": {
           "capability": [
-            "singularity"
-          ],
-          "automation": [
-            "shallow"
+            "agi"
           ]
         },
         "questionText": "Does physical automation follow?",
@@ -6138,10 +6123,7 @@
           {
             "when": {
               "capability": [
-                "singularity"
-              ],
-              "automation": [
-                "shallow"
+                "agi"
               ]
             },
             "answerLabel": "Rapid — physical world transforms within 3–7 years",
@@ -6212,7 +6194,7 @@
           {
             "when": {
               "capability": [
-                "stalls"
+                "plateau"
               ]
             },
             "answerLabel": "Gradual — physical automation trails by 10–25 years",
@@ -6249,10 +6231,7 @@
           {
             "when": {
               "capability": [
-                "singularity"
-              ],
-              "automation": [
-                "shallow"
+                "agi"
               ]
             },
             "answerLabel": "Gradual — physical automation trails by 10–25 years",
@@ -6322,7 +6301,7 @@
           {
             "when": {
               "capability": [
-                "stalls"
+                "plateau"
               ]
             },
             "answerLabel": "Uneven — 5–10 years in manufacturing hubs, 20+ elsewhere",
@@ -6359,10 +6338,7 @@
           {
             "when": {
               "capability": [
-                "singularity"
-              ],
-              "automation": [
-                "shallow"
+                "agi"
               ]
             },
             "answerLabel": "Uneven — 3–7 years in leading regions, 20+ elsewhere",
@@ -6432,10 +6408,7 @@
           {
             "when": {
               "capability": [
-                "singularity"
-              ],
-              "automation": [
-                "shallow"
+                "agi"
               ]
             },
             "answerLabel": "Limited — physical work remains largely human indefinitely",

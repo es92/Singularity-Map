@@ -796,6 +796,13 @@ function _moduleCompletionMarker(mod) {
     }
     return writes[writes.length - 1];
 }
+// Marker may be a string dim or { dim, values } (see engine._isModuleDone).
+function _isMarkerSatisfied(marker, sel) {
+    if (!marker) return false;
+    if (typeof marker === 'string') return sel[marker] !== undefined;
+    const v = sel[marker.dim];
+    return v !== undefined && marker.values.indexOf(v) !== -1;
+}
 const MODULE_COMPLETION_MARKER = {};
 for (const m of _MODULES) MODULE_COMPLETION_MARKER[m.id] = _moduleCompletionMarker(m);
 
@@ -848,7 +855,7 @@ function _pendingModule(sel) {
         const cells = MODULE_CELLS[m.id];
         if (!cells || cells.length === 0) continue;
         const marker = MODULE_COMPLETION_MARKER[m.id];
-        if (marker && sel[marker] !== undefined) continue;
+        if (_isMarkerSatisfied(marker, sel)) continue;
         if (_moduleActivateWhenMatches(sel, m)) return m;
     }
     return null;

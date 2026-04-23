@@ -36,7 +36,7 @@ function _precompile() {
 
     // Register "marker" dimensions that aren't declared nodes but are written
     // into sel via `collapseToFlavor.set` (e.g. `agi_happens`, `asi_happens`,
-    // `takeoff_class`, `emergence_set`, `rollout_set`, ...). These
+    // `takeoff_class`, `rollout_set`, ...). These
     // need entries in _valToIdx/_idxToVal so derivation tables that reference
     // them as inputs can be built and looked up at runtime.
     //
@@ -407,15 +407,28 @@ function matchCondition(sel, cond) {
 // rare but harmless.
 //
 // Uses `node.module` back-pointer populated in graph.js from MODULE.nodeIds.
+// Module completion marker: can be
+//   * string dim name — module is done iff sel[dim] !== undefined
+//   * { dim, values }  — module is done iff sel[dim] is in `values`
+//     (used by EMERGENCE, where capability is user-answered mid-module
+//     with {singularity, stalls} and then rewritten to {plateau, agi,
+//     asi} on module exit; a simple "has any value" check can't
+//     distinguish mid-module from post-exit).
 function _moduleCompletionMarkerOf(mod) {
     if (mod.completionMarker) return mod.completionMarker;
     const writes = mod.writes || [];
     for (const w of writes) if (w.startsWith(mod.id + '_')) return w;
     return writes[writes.length - 1];
 }
+function _isModuleDone(sel, marker) {
+    if (!marker) return false;
+    if (typeof marker === 'string') return sel[marker] !== undefined;
+    const v = sel[marker.dim];
+    return v !== undefined && marker.values.indexOf(v) !== -1;
+}
 function _isModulePending(sel, mod) {
     const marker = _moduleCompletionMarkerOf(mod);
-    if (marker && sel[marker] !== undefined) return false;
+    if (_isModuleDone(sel, marker)) return false;
     const conds = mod.activateWhen;
     if (!conds || !conds.length) return true;
     return conds.some(c => matchCondition(sel, c));
@@ -648,7 +661,7 @@ function resolvedState(sel) {
     const d = {};
     // Pass through sel keys that aren't declared nodes — these are
     // collapse/gating markers written by `collapseToFlavor.set` (e.g.
-    // `asi_happens`, `emergence_set`, `rollout_set`). Outcome
+    // `asi_happens`, `rollout_set`, `who_benefits_set`). Outcome
     // `reachable` clauses may reference them.
     for (const k of Object.keys(sel)) {
         if (!NODE_MAP[k]) d[k] = sel[k];

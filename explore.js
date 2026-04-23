@@ -267,6 +267,14 @@
         for (const w of writes) if (w.startsWith(mod.id + '_')) return w;
         return writes[writes.length - 1];
     }
+    // Marker can be a string dim name ("module done iff sel[dim] defined")
+    // or an object { dim, values } ("module done iff sel[dim] ∈ values").
+    function _isMarkerSatisfied(marker, sel) {
+        if (!marker) return false;
+        if (typeof marker === 'string') return sel[marker] !== undefined;
+        const v = sel[marker.dim];
+        return v !== undefined && marker.values.indexOf(v) !== -1;
+    }
 
     function _buildModuleSyntheticNode(mod) {
         const edges = [];
@@ -365,7 +373,7 @@
     function pendingModule(sel) {
         for (const m of _MODULES) {
             const marker = _MODULE_COMPLETION_MARKER[m.id];
-            if (marker && sel[marker] !== undefined) continue;
+            if (_isMarkerSatisfied(marker, sel)) continue;
             if (_moduleActivateWhenMatches(sel, m)) return m;
         }
         return null;
@@ -397,7 +405,7 @@
             const k = selKey(sel);
             if (seen.has(k)) continue;
             seen.add(k);
-            if (marker && sel[marker] !== undefined) continue;
+            if (_isMarkerSatisfied(marker, sel)) continue;
             let nextNode = null;
             for (const nodeId of mod.nodeIds || []) {
                 const node = E.NODE_MAP[nodeId];
@@ -472,10 +480,10 @@
             const k = selKey(sel);
             if (seen.has(k)) continue;
             seen.add(k);
-            if (marker && sel[marker] !== undefined && inputSel[marker] === undefined) {
+            if (_isMarkerSatisfied(marker, sel) && !_isMarkerSatisfied(marker, inputSel)) {
                 // Exit — capture ALL sel deltas from inputSel, not just
                 // `mod.writes`. Internal per-node completion markers
-                // (e.g., stall_later) live outside
+                // (e.g., `asi_happens`) live outside
                 // `writes` but are required to hide internal nodes when
                 // the cell is applied; without them findNextQ would
                 // re-activate the first internal node after the click.
@@ -617,7 +625,7 @@
         const mod = _MODULE_MAP[parentModuleExpanded];
         if (!mod) return null;
         const marker = _MODULE_COMPLETION_MARKER[mod.id];
-        if (marker && childSel[marker] !== undefined) return null;
+        if (_isMarkerSatisfied(marker, childSel)) return null;
         if (!_moduleActivateWhenMatches(childSel, mod)) return null;
         return mod.id;
     }

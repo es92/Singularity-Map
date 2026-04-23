@@ -37,11 +37,13 @@ function loadTemplates() {
     return all;
 }
 
-// Default upstream answers for a `singularity` path; covers the common spine
-// that most outcomes assume has been traversed.
+// Default upstream answers for the main ASI path; covers the common
+// spine that most outcomes assume has been traversed. capability='asi'
+// is the post-emergence value — the module rewrites the user's
+// 'singularity' pick to 'asi' on exit.
 const SINGULARITY_DEFAULTS = [
-    { capability: 'singularity', agi_threshold: 'few_months', asi_threshold: 'few_months',
-      automation: 'deep', knowledge_rate: 'rapid', physical_rate: 'rapid',
+    { capability: 'asi', agi_threshold: 'few_months', asi_threshold: 'few_months',
+      knowledge_rate: 'rapid', physical_rate: 'rapid',
       takeoff: 'slow', governance_window: 'partial', open_source: 'six_months',
       distribution: 'concentrated', geo_spread: 'one', sovereignty: 'state',
       alignment: 'robust', proliferation_control: 'deny_rivals',
@@ -50,18 +52,20 @@ const SINGULARITY_DEFAULTS = [
       benefit_distribution: 'equal', gov_action: 'accelerate' },
 ];
 
-// Defaults for a `stalls` path.
+// Defaults for the plateau (long-stall) path.
 const STALLS_DEFAULTS = [
-    { capability: 'stalls', stall_duration: 'years', stall_later: 'yes',
+    { capability: 'plateau', stall_duration: 'years',
       plateau_benefit_distribution: 'equal', knowledge_rate: 'gradual',
       physical_rate: 'gradual', rollout_set: 'yes',
-      plateau_benefit_set: 'yes' },
+      who_benefits_set: 'yes' },
 ];
 
-// Defaults for an `automation` path.
+// Defaults for the AGI-only / auto-shallow path (asi_threshold='never',
+// recovery substantial/never). Module rewrites capability to 'agi' on
+// exit.
 const AUTO_DEFAULTS = [
-    { capability: 'automates', automation: 'deep', knowledge_rate: 'rapid',
-      physical_rate: 'rapid', automation_recovery: 'mild',
+    { capability: 'agi', knowledge_rate: 'rapid',
+      physical_rate: 'rapid', automation_recovery: 'substantial',
       benefit_distribution: 'equal', auto_benefit_distribution: 'equal' },
 ];
 
@@ -76,9 +80,9 @@ function clauseToState(clause) {
 
 function pickDefaults(clauseState) {
     const cap = clauseState.capability;
-    if (cap === 'singularity') return SINGULARITY_DEFAULTS;
-    if (cap === 'stalls') return STALLS_DEFAULTS;
-    if (cap === 'automates') return AUTO_DEFAULTS;
+    if (cap === 'asi') return SINGULARITY_DEFAULTS;
+    if (cap === 'plateau') return STALLS_DEFAULTS;
+    if (cap === 'agi') return AUTO_DEFAULTS;
     return SINGULARITY_DEFAULTS;
 }
 
