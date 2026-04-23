@@ -76,7 +76,7 @@ Applied during `cleanSelection` when the edge is selected. Supports three action
 | `move: ['dim1', 'dim2']` | For each listed dim, if `sel[dim]` is set, move it to `flavor[dim]` and delete from `sel`. The specific chosen value is preserved in `flavor` for narrative lookups. |
 | `setFlavor: { k: v, … }` | Write `flavor[k] = v` directly (without going through `sel`). Useful when a narrative-only derived field needs to be recorded. |
 
-"Marker" dims (like `asi_happens`, `governance_set`, `takeoff_class`, `knowledge_rate_set`) are written into `sel` via `collapseToFlavor.set` but aren't declared as graph nodes. The engine auto-registers them in its value-index tables at init so they can be used in `deriveWhen.match`, `activateWhen`, `requires`, etc., just like declared dims.
+"Marker" dims (like `asi_happens`, `emergence_set`, `takeoff_class`, `rollout_set`) are written into `sel` via `collapseToFlavor.set` but aren't declared as graph nodes. The engine auto-registers them in its value-index tables at init so they can be used in `deriveWhen.match`, `activateWhen`, `requires`, etc., just like declared dims.
 
 ### When is it safe to move a dim to flavor?
 
@@ -317,7 +317,7 @@ Following Who Benefits, we merged six near-duplicate stage-3 rate questions into
 **After:** one `knowledge_rate` node and one `physical_rate` node, each with:
 - A union `activateWhen` spanning main / plateau / auto-shallow paths.
 - Edge-level `disabledWhen` rules per context (e.g., `limited` is disabled on the main path; `rapid` on physical is disabled on the plateau path).
-- Conditional `collapseToFlavor` blocks: on main path the dim stays in sel (because it's a `primaryDimension` for several outcomes); on plateau/auto-shallow paths it collapses to flavor and sets a single `knowledge_rate_set` / `physical_rate_set` marker.
+- Post-rollout-module, both dims (and `failure_mode` on the main path) are auto-moved to `flavor` via `attachModuleReducer` (`nodeIds \ writes`, with `ROLLOUT_WRITES = []`). `rollout_set` serves as the single re-ask guard for all three nodes via `hideWhen`. Templates / narrative / `primaryDimension` lookups read the dim through the fused view (`sel ∪ flavor`), so no template surface changes.
 
 **Narrative preserved without schema changes.** Context-specific text was already supported by two existing mechanisms:
 - `narrativeVariants` on each value entry — per-context `answerLabel`, `answerDesc`, `timelineEvent`, `personalVignette` overrides keyed by `when`.
@@ -331,18 +331,17 @@ Following Who Benefits, we merged six near-duplicate stage-3 rate questions into
 
 Rollout (3 internal dims: `knowledge_rate`, `physical_rate`, `failure_mode`) was the fourth module. It's the first module where the internal question set varies by context:
 
-- **Main singularity path** asks all three; all three stay in sel (template / primaryDimension consumers).
-- **Plateau path** asks only knowledge_rate / physical_rate; both collapse to flavor.
-- **Auto-shallow path** asks only knowledge_rate / physical_rate; both collapse to flavor.
+- **Main singularity path** asks all three; all three move to flavor on module exit (`failure_mode.*`).
+- **Plateau path** asks only knowledge_rate / physical_rate; both move to flavor on module exit (`physical_rate.*`).
+- **Auto-shallow path** asks only knowledge_rate / physical_rate; same as plateau.
 
-This pattern generalizes: a module can be a *question-set superset* spanning multiple contexts, with per-context activation and exit behavior, as long as the writes / collapse decisions are expressed at the node level (`collapseToFlavor` with `when` gates) and the module-level machinery (`writes`, `nodeIds`, `exitPlan`) just declares the union contract.
+This pattern generalizes: a module can be a *question-set superset* spanning multiple contexts, with per-context activation and exit behavior, as long as exit tuples are expressed at the node level (`exitPlan` with `when` gates) and the module-level machinery (`writes`, `nodeIds`, `internalMarkers`) declares the union contract.
 
 Key design points:
 
-- **`writes = nodeIds` when all internals are external-consumed.** On the main path, all three dims are template / narrative consumers that must stay in sel, so `writes` = all three. `move = nodeIds \ writes = ∅`, so `attachModuleReducer` doesn't force any flavor eviction — the per-node `collapseToFlavor` rules (already context-aware from the rate-question dedup) handle plateau/auto-shallow themselves. This is the inverse shape from decel (where `writes ∩ nodeIds = ∅`) and shows the `attachModuleReducer` generalization works across the full spectrum.
+- **`writes = []` when all internals are flavor-consumed.** None of the three rollout dims have external sel-only logic-gate readers: outcome templates consume them via `primaryDimension` (which reads fused state), reachable clauses consume only the `rollout_set` completion marker, and narrative reads via `narrEff`. So `writes = []`, and `attachModuleReducer`'s `nodeIds \ writes` auto-moves all three to flavor on every module exit. `rollout_set` serves as the single post-answer hide gate via `hideWhen` on each of the three nodes.
 - **Multi-context exit plan.** `buildRolloutExitPlan` emits tuples for two distinct exit edges: `failure_mode.{none,drift}` (main path, unconditional `set: rollout_set`) and `physical_rate.{rapid,gradual,uneven,limited}` with `when: capability=stalls` and `when: capability=singularity,automation=shallow` gates (plateau / auto-shallow exits). knowledge_rate is never an exit edge — physical_rate always comes second (same priority, later NODES position).
-- **Completion marker coexists with node-level markers.** `rollout_set` lives alongside `knowledge_rate_set` / `physical_rate_set` — the per-node markers guard against re-asking individual rate questions; `rollout_set` marks overall module completion for `/explore` cluster rendering and future downstream gates.
-- **Metrics.** DFS violations, reach mismatches, premature-outcomes, decel path-equivalence all **unchanged** from post-dedup baseline (0 / 20 / 0 / 18 / PASS). The module is purely organizational on top of the already-unified rate nodes — no state-space implications.
+- **Single completion marker.** `rollout_set` is the only sel-level output; there are no longer any per-node completion markers (`knowledge_rate_set` / `physical_rate_set` were removed in favor of the unified gate). This both shrinks the marker set and keeps the `rollout_set`-to-external-readers contract minimal.
 
 ### Emergence retrospective
 

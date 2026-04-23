@@ -36,7 +36,7 @@ function _precompile() {
 
     // Register "marker" dimensions that aren't declared nodes but are written
     // into sel via `collapseToFlavor.set` (e.g. `agi_happens`, `asi_happens`,
-    // `takeoff_class`, `governance_set`, `knowledge_rate_set`, ...). These
+    // `takeoff_class`, `emergence_set`, `rollout_set`, ...). These
     // need entries in _valToIdx/_idxToVal so derivation tables that reference
     // them as inputs can be built and looked up at runtime.
     //
@@ -397,12 +397,14 @@ function matchCondition(sel, cond) {
     return true;
 }
 
-// Module-first priority scheduling support. Once a module's walk is in
-// progress (some of its internals answered but completion marker not yet
-// written), its internal questions jump the priority queue — flat
-// priority-lower questions outside the module wait until the module
-// exits. This keeps each module's walk contiguous instead of being
-// preempted mid-way by an unrelated flat question.
+// Module-first scheduling. Once a module's walk is in progress (some of
+// its internals answered but completion marker not yet written), every
+// non-module node defers — regardless of priority — until the module
+// completes. Inside the pending module, its own internals flow normally.
+// This keeps each module's walk contiguous; no flat question (priority 0
+// or otherwise) can preempt mid-module. Cross-pending-module interleave
+// is allowed (internals of ANY pending module are fair game), which is
+// rare but harmless.
 //
 // Uses `node.module` back-pointer populated in graph.js from MODULE.nodeIds.
 function _moduleCompletionMarkerOf(mod) {
@@ -419,22 +421,60 @@ function _isModulePending(sel, mod) {
     return conds.some(c => matchCondition(sel, c));
 }
 
+// "Actively pending" = module pending AND at least one internal is
+// currently askable (passes its own activateWhen + hideWhen). A module
+// can be in a pending state but have no internals askable right now
+// (e.g. waiting on a derived dim from another module); in that case
+// it doesn't block external nodes.
+//
+// Uses a shallow activation check (activateWhen + hideWhen only, no
+// priority-gate, no isNodeVisible recursion) to avoid infinite loops
+// when `isNodeActivatedByRules` calls back here.
+function _isModuleActivelyPending(sel, mod) {
+    if (!_isModulePending(sel, mod)) return false;
+    for (const nid of (mod.nodeIds || [])) {
+        const n = NODE_MAP[nid];
+        if (!n || n.derived) continue;
+        if (sel[n.id] !== undefined) continue;
+        if (n.activateWhen && !n.activateWhen.some(c => matchCondition(sel, c))) continue;
+        if (n.hideWhen && n.hideWhen.some(c => matchCondition(sel, c))) continue;
+        return true;
+    }
+    return false;
+}
+
 function isNodeActivatedByRules(sel, node) {
     if (!node.activateWhen) return true;
     if (!node.activateWhen.some(c => matchCondition(sel, c))) return false;
+
     const pri = node.priority || 0;
+    const myMod = node.module ? MODULE_MAP[node.module] : null;
+    const inPendingMod = !!(myMod && _isModulePending(sel, myMod));
+
+    // Hard module-first: if ANY module is actively pending and this
+    // node isn't an internal of a pending module, defer — regardless
+    // of priority. Nodes inside any pending module (even a different
+    // one) can still fire, which handles the rare cross-pending case
+    // (e.g. ALIGNMENT exits on containment.escaped while ESCAPE is
+    // still pending — ESCAPE's internals can run normally).
+    if (!inPendingMod) {
+        for (const otherMod of MODULES) {
+            if (otherMod === myMod) continue;
+            if (_isModuleActivelyPending(sel, otherMod)) return false;
+        }
+    }
+
     if (pri > 0) {
-        const myMod = node.module ? MODULE_MAP[node.module] : null;
-        const inPendingMod = !!(myMod && _isModulePending(sel, myMod));
         for (const mid of NODES) {
             if (mid === node) continue;
             if ((mid.priority || 0) >= pri) continue;
             if (mid.derived) continue;
             if (!isNodeVisible(sel, mid)) continue;
             if (isNodeLocked(sel, mid) !== null) continue;
-            // Module-first: when `node` is an internal of a pending
-            // module M, the priority gate ignores priority-lower nodes
-            // that are NOT internal to M.
+            // Module-first for priority gate: a priority-higher module
+            // internal doesn't wait on priority-lower non-module nodes
+            // while its own module is pending (keeps the module walk
+            // self-contained).
             if (inPendingMod && mid.module !== node.module) continue;
             if (!sel[mid.id]) return false;
         }
@@ -608,7 +648,7 @@ function resolvedState(sel) {
     const d = {};
     // Pass through sel keys that aren't declared nodes — these are
     // collapse/gating markers written by `collapseToFlavor.set` (e.g.
-    // `asi_happens`, `governance_set`, `knowledge_rate_set`). Outcome
+    // `asi_happens`, `emergence_set`, `rollout_set`). Outcome
     // `reachable` clauses may reference them.
     for (const k of Object.keys(sel)) {
         if (!NODE_MAP[k]) d[k] = sel[k];

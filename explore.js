@@ -475,7 +475,7 @@
             if (marker && sel[marker] !== undefined && inputSel[marker] === undefined) {
                 // Exit — capture ALL sel deltas from inputSel, not just
                 // `mod.writes`. Internal per-node completion markers
-                // (e.g., knowledge_rate_set, stall_later) live outside
+                // (e.g., stall_later) live outside
                 // `writes` but are required to hide internal nodes when
                 // the cell is applied; without them findNextQ would
                 // re-activate the first internal node after the click.

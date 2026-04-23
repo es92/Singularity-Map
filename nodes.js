@@ -615,12 +615,14 @@
             if (!items.length) continue;
             const reads = (m.reads || []).join(', ') || '—';
             const writes = (m.writes || []).join(', ') || '—';
+            const internalMarkers = (m.internalMarkers || []).join(', ');
             html += `<div class="ng-module" id="ng-module-${esc(m.id)}">`;
             html += `<div class="ng-module-head">`;
             html += `<div class="ng-module-title">${esc(m.id)}</div>`;
             html += `<div class="ng-module-contract">`
                  + `<div><b>reads</b> <code>${esc(reads)}</code></div>`
                  + `<div><b>writes</b> <code>${esc(writes)}</code></div>`
+                 + (internalMarkers ? `<div><b>internal markers</b> <code>${esc(internalMarkers)}</code></div>` : '')
                  + `</div>`;
             html += `</div>`;
             html += `<div class="ng-grid">`;

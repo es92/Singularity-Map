@@ -275,13 +275,14 @@ const NODES = [
       //   • takeoff_explosive=yes — answered as explosive (class is explosive,
       //     but after open_source, takeoff_class moves to flavor; this
       //     narrower marker remains in sel).
-      //   • open_source_set=yes — persistent marker set once the user answered
-      //     open_source. Stays in sel even after geo_spread=multiple moves
-      //     the raw open_source value to flavor.
+      //   • emergence_set=yes — module has exited. Catches the post-open_source
+      //     non-explosive path where `takeoff_class` has moved to flavor,
+      //     leaving the first two clauses unable to fire. Self-referring to
+      //     the owning module's completion marker keeps this hide local.
       hideWhen: [
         { takeoff_class: ['normal', 'fast', 'explosive'] },
         { takeoff_explosive: ['yes'] },
-        { open_source_set: ['yes'] }
+        { emergence_set: ['yes'] }
       ],
       edges: [
         { id: 'none', label: '0% — Baseline',
@@ -304,19 +305,20 @@ const NODES = [
       ] },
     { id: 'governance_window', label: 'Governance Window', stage: 1,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'], takeoff_class: ['normal'] }],
-      // Once answered, all three edges collapse to the same sel marker
-      // (`governance_set: 'yes'`) so /explore treats them as one converged
-      // state — the specific governance value lives in flavor for narrative
-      // lookups (flavors.governance.<value>, and variants that key on
-      // governance_window literally).
-      hideWhen: [{ governance_set: ['yes'] }],
+      // Once answered, all three edges move governance_window to flavor
+      // and encode the specific value into flavor.governance, so /explore
+      // treats them as one converged state. Self-hide keys on the module's
+      // own `emergence_set` marker (governance_window is an EMERGENCE exit
+      // node, so emergence_set='yes' is guaranteed to be set by the module
+      // exit reducer on this same pick).
+      hideWhen: [{ emergence_set: ['yes'] }],
       edges: [
         { id: 'governed', label: 'Active preparation',
-          collapseToFlavor: { set: { governance_set: 'yes' }, setFlavor: { governance: 'governed' }, move: ['governance_window'] } },
+          collapseToFlavor: { setFlavor: { governance: 'governed' }, move: ['governance_window'] } },
         { id: 'partial', label: 'Partial preparation',
-          collapseToFlavor: { set: { governance_set: 'yes' }, setFlavor: { governance: 'partial' }, move: ['governance_window'] } },
+          collapseToFlavor: { setFlavor: { governance: 'partial' }, move: ['governance_window'] } },
         { id: 'race', label: 'Relative complacency',
-          collapseToFlavor: { set: { governance_set: 'yes' }, setFlavor: { governance: 'race' }, move: ['governance_window'] } }
+          collapseToFlavor: { setFlavor: { governance: 'race' }, move: ['governance_window'] } }
       ] },
     { id: 'open_source', label: 'Open Source', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
@@ -326,30 +328,26 @@ const NODES = [
       // lets self-hide and `takeoff.hideWhen` still recognize the
       // "post-open_source" state via sel alone.
       hideWhen: [{ open_source_set: ['yes'] }],
-      // After open_source is answered:
-      //   • takeoff_class → flavor. Downstream rules only need to know "is
-      //     takeoff explosive?" via the takeoff_explosive marker;
-      //     governance_window already fired based on takeoff_class.
-      //   • governance_set → flavor. Its only reader was
-      //     governance_window.hideWhen (self-hide), and that node is already
-      //     deactivated once takeoff_class leaves sel. Moving it converges
-      //     the "normal" path (which had governance_set=yes) with the "fast"
-      //     path (which never got governance_window offered, so no marker).
+      // After open_source is answered, takeoff_class → flavor. Downstream
+      // rules only need to know "is takeoff explosive?" via the
+      // takeoff_explosive marker; governance_window already fired based on
+      // takeoff_class.
+      //
       // `disabledWhen` on these edges is evaluated BEFORE cleanSelection
       // runs the collapse, so it still reads the live takeoff_class at pick
       // time.
       edges: [
         { id: 'near_parity', label: 'Near-parity',
           disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }],
-          collapseToFlavor: { set: { open_source_set: 'yes' }, move: ['takeoff_class', 'governance_set'] } },
+          collapseToFlavor: { set: { open_source_set: 'yes' }, move: ['takeoff_class'] } },
         { id: 'six_months', label: '~6 months',
           disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }],
-          collapseToFlavor: { set: { open_source_set: 'yes' }, move: ['takeoff_class', 'governance_set'] } },
+          collapseToFlavor: { set: { open_source_set: 'yes' }, move: ['takeoff_class'] } },
         { id: 'twelve_months', label: '~12 months',
           disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }],
-          collapseToFlavor: { set: { open_source_set: 'yes' }, move: ['takeoff_class', 'governance_set'] } },
+          collapseToFlavor: { set: { open_source_set: 'yes' }, move: ['takeoff_class'] } },
         { id: 'twenty_four_months', label: '~24 months',
-          collapseToFlavor: { set: { open_source_set: 'yes' }, move: ['takeoff_class', 'governance_set'] } }
+          collapseToFlavor: { set: { open_source_set: 'yes' }, move: ['takeoff_class'] } }
       ] },
     { id: 'distribution', label: 'Frontier Labs', stage: 2,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
@@ -1145,15 +1143,19 @@ const NODES = [
       ] },
     // knowledge_rate / physical_rate — unified across three contexts:
     //   • main singularity path (capability: singularity, automation: deep)
-    //     — stays in sel because the-gilded-singularity / the-new-hierarchy /
-    //       the-flourishing / the-hostage / the-alien-ai use it as
-    //       primaryDimension for variant selection.
-    //   • plateau path (capability: stalls, stall_later: yes) — collapsed to
-    //     flavor via `when: { capability: ['stalls'] }` block; marker
-    //     `knowledge_rate_set` / `physical_rate_set` lives in sel.
+    //     — rollout exits on failure_mode.*; all three rollout dims
+    //       (knowledge_rate, physical_rate, failure_mode) move to flavor
+    //       via the module exit tuple.
+    //   • plateau path (capability: stalls, stall_later: yes) — rollout
+    //       exits on physical_rate.*; both dims move to flavor via the
+    //       module exit tuple (same mechanism).
     //   • auto-shallow path (capability: singularity, automation: shallow,
-    //     automation_later: yes) — collapsed to flavor via the matching
-    //     `when` block; same marker.
+    //       automation_later: yes) — same as plateau.
+    //
+    // The `rollout_set` completion marker (set by every module exit tuple)
+    // doubles as the post-answer hide for all three nodes. Narrative /
+    // templates read the dim via fused state (sel ∪ flavor), so moving
+    // to flavor on exit is narrative-safe.
     //
     // `limited` is always present as an edge (per user: "always have limited
     // as an option, it just gets disabled sometimes"). It's disabled
@@ -1165,7 +1167,7 @@ const NODES = [
     { id: 'knowledge_rate', label: 'Knowledge Work', stage: 3, priority: 2,
       hideWhen: [
         { ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } },
-        { knowledge_rate_set: ['yes'] }
+        { rollout_set: ['yes'] }
       ],
       activateWhen: [
         ...OUTCOME_ACTIVATE,
@@ -1174,35 +1176,20 @@ const NODES = [
       ],
       edges: [
         { id: 'rapid', label: 'Rapid',
-          disabledWhen: [{ capability: ['stalls'], stall_duration: ['hours', 'days'], reason: 'At this stall duration, rapid adoption isn\'t possible' }],
-          collapseToFlavor: [
-            { when: { capability: ['stalls'] }, set: { knowledge_rate_set: 'yes' }, move: ['knowledge_rate'] },
-            { when: { capability: ['singularity'], automation: ['shallow'] }, set: { knowledge_rate_set: 'yes' }, move: ['knowledge_rate'] }
-          ] },
+          disabledWhen: [{ capability: ['stalls'], stall_duration: ['hours', 'days'], reason: 'At this stall duration, rapid adoption isn\'t possible' }] },
         { id: 'gradual', label: 'Gradual',
-          disabledWhen: [{ capability: ['stalls'], stall_duration: ['hours'], reason: 'The stall is too short for gradual rollout' }],
-          collapseToFlavor: [
-            { when: { capability: ['stalls'] }, set: { knowledge_rate_set: 'yes' }, move: ['knowledge_rate'] },
-            { when: { capability: ['singularity'], automation: ['shallow'] }, set: { knowledge_rate_set: 'yes' }, move: ['knowledge_rate'] }
-          ] },
-        { id: 'uneven', label: 'Uneven',
-          collapseToFlavor: [
-            { when: { capability: ['stalls'] }, set: { knowledge_rate_set: 'yes' }, move: ['knowledge_rate'] },
-            { when: { capability: ['singularity'], automation: ['shallow'] }, set: { knowledge_rate_set: 'yes' }, move: ['knowledge_rate'] }
-          ] },
+          disabledWhen: [{ capability: ['stalls'], stall_duration: ['hours'], reason: 'The stall is too short for gradual rollout' }] },
+        { id: 'uneven', label: 'Uneven' },
         { id: 'limited', label: 'Limited',
           disabledWhen: [
             { capability: ['singularity'], reason: 'At this capability, AI displaces rather than augments knowledge work' },
             { capability: ['stalls'], stall_duration: ['weeks', 'months'], reason: 'With a longer stall, AI has room to move beyond augmentation' }
-          ],
-          collapseToFlavor: [
-            { when: { capability: ['stalls'] }, set: { knowledge_rate_set: 'yes' }, move: ['knowledge_rate'] }
           ] }
       ] },
     { id: 'physical_rate', label: 'Physical Automation', stage: 3, priority: 2,
       hideWhen: [
         { ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } },
-        { physical_rate_set: ['yes'] }
+        { rollout_set: ['yes'] }
       ],
       activateWhen: [
         ...OUTCOME_ACTIVATE,
@@ -1211,28 +1198,12 @@ const NODES = [
       ],
       edges: [
         { id: 'rapid', label: 'Rapid',
-          disabledWhen: [{ capability: ['stalls'], reason: 'Physical automation can\'t be rapid while AI itself is plateaued' }],
-          collapseToFlavor: [
-            { when: { capability: ['stalls'] }, set: { physical_rate_set: 'yes' }, move: ['physical_rate'] },
-            { when: { capability: ['singularity'], automation: ['shallow'] }, set: { physical_rate_set: 'yes' }, move: ['physical_rate'] }
-          ] },
+          disabledWhen: [{ capability: ['stalls'], reason: 'Physical automation can\'t be rapid while AI itself is plateaued' }] },
         { id: 'gradual', label: 'Gradual',
-          disabledWhen: [{ capability: ['stalls'], stall_duration: ['hours'], reason: 'The stall is too short for gradual rollout' }],
-          collapseToFlavor: [
-            { when: { capability: ['stalls'] }, set: { physical_rate_set: 'yes' }, move: ['physical_rate'] },
-            { when: { capability: ['singularity'], automation: ['shallow'] }, set: { physical_rate_set: 'yes' }, move: ['physical_rate'] }
-          ] },
-        { id: 'uneven', label: 'Uneven',
-          collapseToFlavor: [
-            { when: { capability: ['stalls'] }, set: { physical_rate_set: 'yes' }, move: ['physical_rate'] },
-            { when: { capability: ['singularity'], automation: ['shallow'] }, set: { physical_rate_set: 'yes' }, move: ['physical_rate'] }
-          ] },
+          disabledWhen: [{ capability: ['stalls'], stall_duration: ['hours'], reason: 'The stall is too short for gradual rollout' }] },
+        { id: 'uneven', label: 'Uneven' },
         { id: 'limited', label: 'Limited',
-          disabledWhen: [{ capability: ['singularity'], automation: ['deep'], reason: 'At this capability, physical automation moves beyond augmentation' }],
-          collapseToFlavor: [
-            { when: { capability: ['stalls'] }, set: { physical_rate_set: 'yes' }, move: ['physical_rate'] },
-            { when: { capability: ['singularity'], automation: ['shallow'] }, set: { physical_rate_set: 'yes' }, move: ['physical_rate'] }
-          ] }
+          disabledWhen: [{ capability: ['singularity'], automation: ['deep'], reason: 'At this capability, physical automation moves beyond augmentation' }] }
       ] },
     { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3, priority: 1,
       hideWhen: [
@@ -1253,7 +1224,10 @@ const NODES = [
         { id: 'escape', label: 'AI eventually escapes', shortLabel: 'Escapes' }
       ] },
     { id: 'failure_mode', label: 'Delivery', stage: 3, priority: 2, forwardKey: true,
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } }],
+      hideWhen: [
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_stays: false, containment: { not: ['contained'] } },
+        { rollout_set: ['yes'] }
+      ],
       // Four alignment/containment paths, each gated on who_benefits having
       // completed (who_benefits_set=yes is written on every module exit).
       // The old version cartesian-multiplied each path by five explicit
@@ -1875,7 +1849,15 @@ const ESCAPE_MODULE = {
 function attachModuleReducer(mod) {
     if (!mod || !mod.exitPlan) return;
     const writes = new Set(mod.writes || []);
-    const moveDims = (mod.nodeIds || []).filter(d => !writes.has(d));
+    // Auto-moved on exit:
+    //   * nodeIds \ writes — "pure-internal" question dims that don't need
+    //     to persist globally.
+    //   * internalMarkers — non-nodeId marker dims that are set into sel
+    //     mid-module (for internal hideWhen/activateWhen gates) but aren't
+    //     read by any external sel-only logic post-exit. They move to
+    //     flavor so narrative/templates (fused state) still see them.
+    const moveDims = (mod.nodeIds || []).filter(d => !writes.has(d))
+        .concat(mod.internalMarkers || []);
     // Group by (nodeId, edgeId) so multiple progress-when cells stack up
     // on the same edge as a collapseToFlavor ARRAY.
     const byEdge = new Map();
@@ -1915,15 +1897,22 @@ function attachModuleReducer(mod) {
 //     {singleton, inner_circle} → power_use.* — exits after power_use
 //
 // External contract:
-//   * writes = [benefit_distribution, concentration_type] — both have
-//     template `reachable` refs so they MUST stay in sel.
-//     concentration_type is only written on the extreme path; on the
-//     equal/unequal exits it's undefined in sel, which is correct
-//     (its activateWhen gates on benefit_distribution=extreme).
-//   * nodeIds = all 7 dims. Move list (nodeIds \ writes) = the 5
-//     upstream dims — all of them are flavor-only consumers
-//     (template flavors/headings, narrative.contextWhen) rendered via
-//     narrEff (sel ∪ flavor), so they safely evict on exit.
+//   * writes = [concentration_type] — only dim with an external sel-only
+//     gate reader (ai_goals / escape_method / escape_timeline /
+//     discovery_timing all gate on concentration_type=ai_itself in
+//     activateWhen). concentration_type is only written on the extreme
+//     path; on the equal/unequal exits it's undefined in sel, which
+//     is correct (its own activateWhen gates on
+//     benefit_distribution=extreme).
+//   * benefit_distribution is NOT in writes: its only sel-level reader
+//     is concentration_type (internal). Templates / narrative read it
+//     through the fused view (resolvedStateWithFlavor / narrEff), so
+//     it safely collapses to flavor on module exit via the standard
+//     nodeIds \ writes auto-eviction in attachModuleReducer.
+//   * nodeIds = all 8 dims. Move list (nodeIds \ writes) = the 7
+//     non-concentration_type dims — all of them are flavor-only
+//     external consumers (template flavors/reachables, narrative
+//     contextWhen) rendered via narrEff, so they safely evict on exit.
 //
 // Completion marker:
 //   The auto-detection (`writes[-1]` = concentration_type) would
@@ -1956,8 +1945,12 @@ const WHO_BENEFITS_NODE_IDS = [
     'power_use',
 ];
 
+// Note: `benefit_distribution` is read only by WHO_BENEFITS-internal
+// nodes (concentration_type.activateWhen) and by templates / narrative,
+// which resolve through fused state (sel ∪ flavor). Nothing outside the
+// module gates on it, so it's safe to move to flavor on module exit
+// (via nodeIds \ writes auto-eviction in attachModuleReducer).
 const WHO_BENEFITS_WRITES = [
-    'benefit_distribution',
     'concentration_type',
 ];
 
@@ -2086,21 +2079,26 @@ const WHO_BENEFITS_MODULE = {
 //
 // Three contexts, with different question sets per context:
 //   * main singularity (capability=singularity, automation=deep + outcome
-//     gates) — all three asked; all three stay in sel (all are
-//     primaryDimensions or directly template-consumed).
+//     gates) — all three asked; all three move to flavor on module exit
+//     (failure_mode.* edges).
 //   * plateau (capability=stalls, stall_later=yes) — only knowledge_rate
-//     and physical_rate asked; both collapse to flavor on exit via
-//     their per-edge collapseToFlavor blocks. failure_mode never
-//     activates (its activateWhen requires capability=singularity).
+//     and physical_rate asked; both move to flavor on module exit
+//     (physical_rate.* edges). failure_mode never activates (its
+//     activateWhen requires capability=singularity).
 //   * auto-shallow (capability=singularity, automation=shallow,
 //     automation_later=yes) — same as plateau: only knowledge/physical,
-//     both collapse to flavor.
+//     exit on physical_rate.
 //
-// Writes: [knowledge_rate, physical_rate, failure_mode] — all three are
-// template/narrative consumers on the main path. On plateau/auto-shallow,
-// knowledge_rate and physical_rate collapse to flavor via the node's own
-// collapseToFlavor (per-edge `when` gates). Module machinery doesn't force
-// flavor moves because move = nodeIds \ writes = ∅.
+// Writes: [] — no dim needs to persist globally. All three rollout dims
+// have zero external sel-only gate readers; every consumer (outcome
+// templates, narrative flavors / contextWhen) resolves via fused state
+// (sel ∪ flavor via resolvedStateWithFlavor / narrEff). The module exit
+// tuples set `rollout_set: 'yes'` and attachModuleReducer auto-moves
+// nodeIds \ writes = all 3 dims to flavor.
+//
+// Post-exit self-hide: each of the 3 nodes adds `{ rollout_set: ['yes'] }`
+// to hideWhen so findNextQ doesn't re-offer them once their dim sits in
+// flavor instead of sel.
 //
 // Completion marker: `rollout_set`. Set on the last question of the
 // module per context:
@@ -2118,18 +2116,14 @@ const ROLLOUT_NODE_IDS = [
     'failure_mode',
 ];
 
-const ROLLOUT_WRITES = [
-    'knowledge_rate',
-    'physical_rate',
-    'failure_mode',
-];
+const ROLLOUT_WRITES = [];
 
-function rolloutReduce(local) {
-    const bundle = {};
-    for (const k of ROLLOUT_WRITES) {
-        if (local[k] !== undefined) bundle[k] = local[k];
-    }
-    return bundle;
+function rolloutReduce(_local) {
+    // All rollout dims move to flavor on module exit — nothing persists
+    // globally. The module's only sel-level output is the `rollout_set`
+    // completion marker (set via exit-tuple `set:` blocks, not via this
+    // reducer).
+    return {};
 }
 
 // Exit tuples:
@@ -2202,8 +2196,10 @@ const ROLLOUT_MODULE = {
         'ai_goals', 'containment', 'intent', 'post_war_aims',
         'inert_stays',
         'who_benefits_set',
-        // knowledge_rate / physical_rate re-ask guards (hideWhen markers)
-        'knowledge_rate_set', 'physical_rate_set',
+        // Module's own completion marker is read by every internal node's
+        // hideWhen (post-answer re-ask guard now that all 3 internal dims
+        // move to flavor on exit).
+        'rollout_set',
     ],
     writes: ROLLOUT_WRITES,
     nodeIds: ROLLOUT_NODE_IDS,
@@ -2559,11 +2555,14 @@ const EMERGENCE_NODE_IDS = [
 // on the 'never' edge (downstream automation-derivation rules read it);
 // non-never edges move it to flavor but that happens via the node's own
 // collapse, so listing it here is correct (it's a conditional write).
+//
+// `asi_happens` is deliberately NOT in writes — see internalMarkers
+// below. `agi_happens` is also NOT in writes: every asi_threshold edge
+// moves it to flavor, so it's never durable in sel post-exit.
 const EMERGENCE_WRITES = [
     'capability', 'stall_duration', 'asi_threshold',
     'stall_later', 'automation_later',
-    'takeoff_class', 'takeoff_explosive', 'governance_set',
-    'agi_happens', 'asi_happens',
+    'takeoff_class', 'takeoff_explosive',
     // `automation` is a derived dim whose deriveWhen only consults
     // emergence-internal state — it's effectively a module output used by
     // many external consumers (plateau_benefit_distribution, open_source,
@@ -2572,6 +2571,18 @@ const EMERGENCE_WRITES = [
     'automation',
     'emergence_set',
 ];
+
+// Internal markers: dims set into sel mid-module to gate internal
+// activateWhen/hideWhen, but with no external sel-only readers. They
+// move to flavor on module exit via attachModuleReducer, keeping the
+// post-exit sel surface narrow while still being visible to
+// narrative/templates (which read fused sel ∪ flavor).
+//
+//   * `asi_happens` — set by asi_threshold.yes-path edges and
+//     automation_recovery.mild. Consumed by agi_threshold.hideWhen and
+//     asi_threshold.hideWhen to suppress re-asking after the asi
+//     question resolves. No external reader.
+const EMERGENCE_INTERNAL_MARKERS = ['asi_happens'];
 
 function emergenceReduce(local) {
     const bundle = {};
@@ -2612,13 +2623,12 @@ function buildEmergenceExitPlan() {
 const EMERGENCE_MODULE = {
     id: 'emergence',
     activateWhen: [], // always active — entry module; completion marker gates
-    reads: [
-        // takeoff.hideWhen reads open_source_set (a downstream marker that
-        // only becomes set AFTER this module exits, but the node rule still
-        // references the dim).
-        'open_source_set',
-    ],
+    // No external reads. takeoff's post-exit self-hide now keys on the
+    // module's own `emergence_set` marker instead of `open_source_set`,
+    // keeping the hide local to the module.
+    reads: [],
     writes: EMERGENCE_WRITES,
+    internalMarkers: EMERGENCE_INTERNAL_MARKERS,
     nodeIds: EMERGENCE_NODE_IDS,
     completionMarker: 'emergence_set',
     reduce: emergenceReduce,

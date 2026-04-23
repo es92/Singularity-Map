@@ -54,7 +54,7 @@ const SINGULARITY_DEFAULTS = [
 const STALLS_DEFAULTS = [
     { capability: 'stalls', stall_duration: 'years', stall_later: 'yes',
       plateau_benefit_distribution: 'equal', knowledge_rate: 'gradual',
-      physical_rate: 'gradual', knowledge_rate_set: 'yes', physical_rate_set: 'yes',
+      physical_rate: 'gradual', rollout_set: 'yes',
       plateau_benefit_set: 'yes' },
 ];
 

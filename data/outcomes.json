@@ -92,10 +92,7 @@
           "plateau_benefit_set": [
             "yes"
           ],
-          "knowledge_rate_set": [
-            "yes"
-          ],
-          "physical_rate_set": [
+          "rollout_set": [
             "yes"
           ]
         }
@@ -173,10 +170,7 @@
           "auto_benefit_set": [
             "yes"
           ],
-          "knowledge_rate_set": [
-            "yes"
-          ],
-          "physical_rate_set": [
+          "rollout_set": [
             "yes"
           ]
         }
