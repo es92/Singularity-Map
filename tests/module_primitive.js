@@ -180,4 +180,140 @@ const resolvedAlign = engine.resolvedVal(selEnd, 'alignment');
 assert.strictEqual(resolvedAlign, 'robust', 'resolved alignment=robust after reducer write');
 console.log('engine decel module path integration: PASS');
 
+// ────────────────────────────────────────────────────────────
+// 4. Escape module — writes⊂nodeIds contract with early-exits.
+//    Escape has no reducerTable; its reducer is an identity pass-through
+//    for (ai_goals, catch_outcome, collateral_impact) plus the
+//    escape_set marker. The 5 pure-internal flavor dims (escape_method,
+//    escape_timeline, discovery_timing, response_method, response_success)
+//    move to flavor on exit while the 3 write dims stay in sel.
+//    Templates / narrative variants that still reference the flavor dims
+//    read them via resolvedStateWithFlavor / narrativeState.
+//    Exit plan: 4 tuples across 2 terminal nodes —
+//      * ai_goals.{benevolent, marginal} (early exits; pipeline skipped)
+//      * catch_outcome.{not_permanent, holds_permanently}
+//        (pipeline-complete exits; not_permanent fuses the pre-merge
+//         never_stopped + holds_temporarily edges — they were already
+//         mutually exclusive on response_success, so narrative
+//         disambiguates via response_success in flavor)
+// ────────────────────────────────────────────────────────────
+
+const escape = MODULE_MAP.escape;
+assert(escape, 'escape module must exist');
+assert.deepStrictEqual(escape.writes.slice().sort(), [
+    'ai_goals', 'catch_outcome', 'collateral_impact', 'escape_set',
+].sort(), 'escape.writes should be the 3 exported dims + escape_set marker');
+
+const escPlan = escape.exitPlan;
+assert(Array.isArray(escPlan) && escPlan.length === 4,
+    `escape exitPlan should have 4 tuples (2 ai_goals early + 2 catch_outcome pipeline); got ${escPlan.length}`);
+const planByNode = {};
+for (const t of escPlan) {
+    assert.deepStrictEqual(t.set, { escape_set: 'yes' }, 'every escape exit sets escape_set=yes');
+    assert.deepStrictEqual(t.when, {}, 'escape exit tuples are unconditional (edge id carries the path)');
+    (planByNode[t.nodeId] = planByNode[t.nodeId] || []).push(t.edgeId);
+}
+assert.deepStrictEqual(planByNode.ai_goals.slice().sort(), ['benevolent', 'marginal'],
+    'ai_goals early-exit edges');
+assert.deepStrictEqual(planByNode.catch_outcome.slice().sort(),
+    ['holds_permanently', 'not_permanent'],
+    'catch_outcome pipeline-exit edges');
+
+// After attachModuleReducer ran at graph.js load, each exit edge should
+// carry a collapseToFlavor block with move = [escape_method,
+// escape_timeline, discovery_timing, response_method, response_success]
+// and set = { escape_set: 'yes' }.
+const catchNode = graph.NODE_MAP.catch_outcome;
+const expectedMove = ['discovery_timing', 'escape_method', 'escape_timeline', 'response_method', 'response_success'].sort();
+for (const e of catchNode.edges) {
+    assert(e.collapseToFlavor, `catch_outcome.${e.id} should have collapseToFlavor installed`);
+    const blocks = Array.isArray(e.collapseToFlavor) ? e.collapseToFlavor : [e.collapseToFlavor];
+    const ourBlock = blocks.find(b => b.set && b.set.escape_set === 'yes');
+    assert(ourBlock, `catch_outcome.${e.id}: module block with escape_set=yes`);
+    assert.deepStrictEqual(ourBlock.move.slice().sort(), expectedMove,
+        `catch_outcome.${e.id}: move list is the 5 pure-internal flavor dims`);
+}
+const aiGoalsNode = graph.NODE_MAP.ai_goals;
+for (const edgeId of ['benevolent', 'marginal']) {
+    const e = aiGoalsNode.edges.find(x => x.id === edgeId);
+    assert(e, `ai_goals.${edgeId} edge must exist`);
+    const blocks = Array.isArray(e.collapseToFlavor) ? e.collapseToFlavor : (e.collapseToFlavor ? [e.collapseToFlavor] : []);
+    const ourBlock = blocks.find(b => b.set && b.set.escape_set === 'yes');
+    assert(ourBlock, `ai_goals.${edgeId}: module block with escape_set=yes should be installed`);
+    assert.deepStrictEqual(ourBlock.move.slice().sort(), expectedMove,
+        `ai_goals.${edgeId}: module-computed move list`);
+}
+
+// Pass-through reducer: feed each write dim into local and verify bundle.
+const localFake = {
+    ai_goals: 'paperclip',
+    catch_outcome: 'holds_permanently',
+    collateral_impact: 'civilizational',
+    discovery_timing: 'early_execution',    // not a write — should be ignored
+    response_success: 'yes',                // not a write — should be ignored
+    escape_set: 'yes',
+    escape_method: 'nanotech',              // not a write — should be ignored
+};
+const escBundle = escape.reduce(localFake);
+assert.deepStrictEqual(escBundle, {
+    ai_goals: 'paperclip',
+    catch_outcome: 'holds_permanently',
+    collateral_impact: 'civilizational',
+    escape_set: 'yes',
+}, 'escape.reduce returns only declared writes');
+
+console.log('escape module contract (writes⊂nodeIds, pass-through): PASS');
+
+// ────────────────────────────────────────────────────────────
+// 5. Escape engine integration — walk a full escape path and verify
+//    internal-flavor dims moved, write dims stayed, catch_outcome
+//    consumers (ruin_type) resolve correctly.
+// ────────────────────────────────────────────────────────────
+
+let escStk = engine.createStack();
+const escapePath = [
+    ['capability', 'singularity'],
+    ['automation', 'deep'],
+    ['open_source', 'six_months'],
+    ['distribution', 'monopoly'],
+    ['sovereignty', 'state'],
+    ['gov_action', 'decelerate'],
+    ['decel_2mo_progress', 'unsolved'],
+    ['decel_2mo_action', 'escapes'],      // decel writes alignment='failed', containment='escaped'
+    ['ai_goals', 'paperclip'],
+    ['escape_method', 'nanotech'],
+    ['escape_timeline', 'days_weeks'],
+    ['discovery_timing', 'early_execution'],
+    ['response_method', 'physical_strikes'],
+    ['response_success', 'yes'],
+    ['collateral_impact', 'civilizational'],
+    ['catch_outcome', 'holds_permanently'],
+];
+for (const [nid, eid] of escapePath) escStk = engine.push(escStk, nid, eid);
+const escSel = engine.currentState(escStk);
+const escFlavor = engine.currentFlavor(escStk);
+
+// Writes stay in sel.
+assert.strictEqual(escSel.catch_outcome, 'holds_permanently', 'catch_outcome stays in sel');
+assert.strictEqual(escSel.collateral_impact, 'civilizational', 'collateral_impact stays in sel');
+// Pure-internal dims moved to flavor.
+assert.strictEqual(escSel.escape_method, undefined, 'escape_method moved out of sel');
+assert.strictEqual(escFlavor.escape_method, 'nanotech', 'escape_method in flavor');
+assert.strictEqual(escSel.escape_timeline, undefined, 'escape_timeline moved out of sel');
+assert.strictEqual(escFlavor.escape_timeline, 'days_weeks', 'escape_timeline in flavor');
+assert.strictEqual(escSel.discovery_timing, undefined, 'discovery_timing moved out of sel');
+assert.strictEqual(escFlavor.discovery_timing, 'early_execution', 'discovery_timing in flavor');
+assert.strictEqual(escSel.response_method, undefined, 'response_method moved out of sel');
+assert.strictEqual(escFlavor.response_method, 'physical_strikes', 'response_method in flavor');
+assert.strictEqual(escSel.response_success, undefined, 'response_success moved out of sel');
+assert.strictEqual(escFlavor.response_success, 'yes', 'response_success in flavor');
+
+// Downstream: ruin_type.deriveWhen reads catch_outcome + collateral_impact
+// and should resolve to 'self_inflicted' for this path.
+const ruin = engine.resolvedVal(escSel, 'ruin_type');
+assert.strictEqual(ruin, 'self_inflicted',
+    `ruin_type should derive to 'self_inflicted' from (holds_permanently, civilizational); got ${ruin}`);
+
+console.log('engine escape module path integration: PASS');
+
 console.log('\nAll Phase 3 runtime-primitive checks passed.');

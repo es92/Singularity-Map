@@ -36,7 +36,7 @@ function _precompile() {
 
     // Register "marker" dimensions that aren't declared nodes but are written
     // into sel via `collapseToFlavor.set` (e.g. `agi_happens`, `asi_happens`,
-    // `takeoff_class`, `governance_set`, `plateau_knowledge_set`, ...). These
+    // `takeoff_class`, `governance_set`, `knowledge_rate_set`, ...). These
     // need entries in _valToIdx/_idxToVal so derivation tables that reference
     // them as inputs can be built and looked up at runtime.
     //
@@ -498,11 +498,21 @@ function cleanSelection(sel, flavor) {
     if (!flavor) flavor = {};
     for (let pass = 0; pass < 6; pass++) {
         let changed = false;
+        // Edge-validity checks read from a fused view (flavor underlaid,
+        // sel wins). Once a dim is moved to flavor it's still a "locked-in
+        // answer" — downstream requires/disabledWhen that reference it must
+        // continue to evaluate against its known value, not treat it as
+        // undefined. Without this, moving e.g. response_success to flavor
+        // would delete catch_outcome from sel on the next pass because its
+        // requires clause references response_success.
+        const fused = {};
+        for (const k of Object.keys(flavor)) fused[k] = flavor[k];
+        for (const k of Object.keys(sel)) fused[k] = sel[k];
         for (const node of NODES) {
-            if (!isNodeVisible(sel, node)) continue;
+            if (!isNodeVisible(fused, node)) continue;
             if (sel[node.id]) {
                 const edge = node.edges && node.edges.find(v => v.id === sel[node.id]);
-                if (edge && isEdgeDisabled(sel, node, edge)) {
+                if (edge && isEdgeDisabled(fused, node, edge)) {
                     delete sel[node.id];
                     changed = true;
                 }
@@ -570,7 +580,7 @@ function resolvedState(sel) {
     const d = {};
     // Pass through sel keys that aren't declared nodes — these are
     // collapse/gating markers written by `collapseToFlavor.set` (e.g.
-    // `asi_happens`, `governance_set`, `plateau_knowledge_set`). Outcome
+    // `asi_happens`, `governance_set`, `knowledge_rate_set`). Outcome
     // `reachable` clauses may reference them.
     for (const k of Object.keys(sel)) {
         if (!NODE_MAP[k]) d[k] = sel[k];
@@ -588,6 +598,20 @@ function resolvedState(sel) {
         const locked = isNodeLocked(sel, node);
         if (locked !== null) d[node.id] = locked;
     }
+    return d;
+}
+
+// State used for template `reachable` matching. Underlays flavor beneath
+// resolvedState so dims moved to flavor by `collapseToFlavor.move` (e.g.
+// module-internal dims exported only for outcome routing) remain matchable
+// without needing to live in sel. sel wins on conflict — flavor is a
+// fallback layer, not an override.
+function resolvedStateWithFlavor(sel, flavor) {
+    const base = resolvedState(sel);
+    if (!flavor) return base;
+    const d = {};
+    for (const k of Object.keys(flavor)) d[k] = flavor[k];
+    for (const k of Object.keys(base)) d[k] = base[k];
     return d;
 }
 
@@ -727,10 +751,41 @@ function displayOrder(stack) {
 function resolveContextWhen(sel, narr) {
     if (narr && narr.contextWhen) {
         for (const entry of narr.contextWhen) {
-            if (matchContextWhen(sel, entry.when)) return entry.questionContext;
+            if (matchContextWhen(sel, entry.when) && entry.questionContext) return entry.questionContext;
         }
     }
     return (narr && narr.questionContext) || '';
+}
+
+// contextWhen entries may optionally include a `questionText` override. When
+// present, the first matching entry wins (same precedence as questionContext).
+// Falls back to the node's top-level questionText (or undefined, letting the
+// caller default to node.label).
+function resolveQuestionText(sel, narr) {
+    if (narr && narr.contextWhen) {
+        for (const entry of narr.contextWhen) {
+            if (matchContextWhen(sel, entry.when) && entry.questionText) return entry.questionText;
+        }
+    }
+    return narr && narr.questionText;
+}
+
+function resolveShortQuestionText(sel, narr) {
+    if (narr && narr.contextWhen) {
+        for (const entry of narr.contextWhen) {
+            if (matchContextWhen(sel, entry.when) && entry.shortQuestionText) return entry.shortQuestionText;
+        }
+    }
+    return narr && narr.shortQuestionText;
+}
+
+function resolveShortQuestionContext(sel, narr) {
+    if (narr && narr.contextWhen) {
+        for (const entry of narr.contextWhen) {
+            if (matchContextWhen(sel, entry.when) && entry.shortQuestionContext) return entry.shortQuestionContext;
+        }
+    }
+    return narr && narr.shortQuestionContext;
 }
 
 // Narrative-only match that also accepts the more-specific flavor detail
@@ -763,15 +818,15 @@ function matchContextWhen(state, cond) {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { NODES, NODE_MAP, MODULES, MODULE_MAP,
         matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeActivatedByRules, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
-        cleanSelection, resolvedState,
-        templateMatches, templatePartialMatch, resolveContextWhen,
+        cleanSelection, resolvedState, resolvedStateWithFlavor,
+        templateMatches, templatePartialMatch, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
         createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas, displayOrder };
 }
 if (typeof window !== 'undefined') {
     window.Engine = { NODES, NODE_MAP, MODULES, MODULE_MAP,
         matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
-        cleanSelection, resolvedState,
-        templateMatches, templatePartialMatch, resolveContextWhen,
+        cleanSelection, resolvedState, resolvedStateWithFlavor,
+        templateMatches, templatePartialMatch, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
         createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas, displayOrder };
 }
 

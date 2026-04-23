@@ -21,12 +21,31 @@ const DECEL_PAIRS = [
 ];
 
 
-const OUTCOME_ACTIVATE = [
+// Activation rules internal to the who_benefits module — used only by
+// `benefit_distribution`, which is itself inside the module. These rules
+// reference power_promise/mobilization/sincerity_test/pushback_outcome/
+// coalition_outcome (all internal to who_benefits), so they are legitimate
+// intra-module reads. They stay here (not inlined into the node below)
+// purely for readability; the pure-internal dims they gate on are in sel
+// while the module is active.
+const WHO_BENEFITS_INTERNAL_ACTIVATE = [
     { capability: ['singularity'], automation: ['deep'], power_promise: ['for_everyone'], mobilization: ['strong'] },
     { capability: ['singularity'], automation: ['deep'], sincerity_test: true },
     { capability: ['singularity'], automation: ['deep'], pushback_outcome: true },
     { capability: ['singularity'], automation: ['deep'], coalition_outcome: ['fragments'] },
     { capability: ['singularity'], automation: ['deep'], power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
+];
+
+// Activation rules for post-who_benefits outcome nodes (knowledge_rate,
+// physical_rate on the main path). The old rules duplicated the 5 WHO_BENEFITS_INTERNAL_ACTIVATE
+// clauses — that tightly coupled these external nodes to the module's
+// internals. Now they gate on the single completion marker `who_benefits_set`,
+// which is written on every module exit edge. The benevolent clause bypasses
+// who_benefits entirely (AI goals render the question moot), and the
+// catch_outcome clause characterises the post-war world after a successful
+// catch.
+const OUTCOME_ACTIVATE = [
+    { capability: ['singularity'], automation: ['deep'], who_benefits_set: ['yes'] },
     { capability: ['singularity'], automation: ['deep'], ai_goals: ['benevolent'] },
     // AI escaped but was ultimately caught — post-war world still needs to be
     // characterized (who benefits, knowledge/physical automation).
@@ -95,36 +114,11 @@ const NODES = [
         { id: 'extreme', label: 'Power concentrates',
           collapseToFlavor: { set: { plateau_benefit_set: 'yes' }, move: ['plateau_benefit_distribution'] } }
       ] },
-    { id: 'plateau_knowledge_rate', label: 'Knowledge Work', stage: 3, priority: 2,
-      activateWhen: [{ capability: ['stalls'], stall_later: ['yes'] }],
-      // All edge values lead to the same outcome (the-plateau); specific
-      // values only drive narrative flavor text. Collapse to a shared marker
-      // so /explore converges the branches — the specific value lives in
-      // flavor for narrativeState lookups (`flavors.plateau_knowledge_rate.*`).
-      hideWhen: [{ plateau_knowledge_set: ['yes'] }],
-      edges: [
-        { id: 'rapid', label: 'Rapid (2–5 yrs)', requires: { stall_duration: ['weeks', 'months'] },
-          collapseToFlavor: { set: { plateau_knowledge_set: 'yes' }, move: ['plateau_knowledge_rate'] } },
-        { id: 'gradual', label: 'Gradual (5–15 yrs)',
-          requires: { stall_duration: ['days', 'weeks', 'months'] },
-          collapseToFlavor: { set: { plateau_knowledge_set: 'yes' }, move: ['plateau_knowledge_rate'] } },
-        { id: 'uneven', label: 'Uneven (2–20+ yrs)',
-          collapseToFlavor: { set: { plateau_knowledge_set: 'yes' }, move: ['plateau_knowledge_rate'] } },
-        { id: 'limited', label: 'Limited', requires: { stall_duration: ['hours', 'days'] },
-          collapseToFlavor: { set: { plateau_knowledge_set: 'yes' }, move: ['plateau_knowledge_rate'] } }
-      ] },
-    { id: 'plateau_physical_rate', label: 'Physical Automation', stage: 3, priority: 2,
-      activateWhen: [{ capability: ['stalls'], stall_later: ['yes'] }],
-      hideWhen: [{ plateau_physical_set: ['yes'] }],
-      edges: [
-        { id: 'gradual', label: 'Gradual (10–25 yrs)',
-          requires: { stall_duration: ['days', 'weeks', 'months'] },
-          collapseToFlavor: { set: { plateau_physical_set: 'yes' }, move: ['plateau_physical_rate'] } },
-        { id: 'uneven', label: 'Uneven (5–20+ yrs)',
-          collapseToFlavor: { set: { plateau_physical_set: 'yes' }, move: ['plateau_physical_rate'] } },
-        { id: 'limited', label: 'Limited',
-          collapseToFlavor: { set: { plateau_physical_set: 'yes' }, move: ['plateau_physical_rate'] } }
-      ] },
+    // The unified knowledge_rate and physical_rate nodes (defined near the
+    // end of NODES, after who_benefits) serve plateau, auto-shallow, and
+    // main singularity paths. On plateau, they fire here in displayOrder
+    // after plateau_benefit_distribution — activation is driven entirely
+    // by the node's multi-path activateWhen, not position.
     { id: 'agi_threshold', label: 'Human-Competitive AI', stage: 1,
       activateWhen: [{ capability: ['singularity'] }],
       // Answering agi_threshold always sets a 1-bit sel marker `agi_happens`
@@ -265,44 +259,9 @@ const NODES = [
         { id: 'extreme', label: 'Power concentrates',
           collapseToFlavor: { set: { auto_benefit_set: 'yes' }, move: ['auto_benefit_distribution'] } }
       ] },
-    { id: 'auto_knowledge_rate', label: 'Knowledge Work', stage: 3, priority: 2,
-      activateWhen: [
-        {
-          capability: ['singularity'],
-          automation: ['shallow'],
-          automation_later: ['yes']
-        }
-      ],
-      // Flavor-only: all values lead to the same outcome (the-automation);
-      // collapse for /explore convergence.
-      hideWhen: [{ auto_knowledge_set: ['yes'] }],
-      edges: [
-        { id: 'rapid', label: 'Rapid (2–4 yrs)',
-          collapseToFlavor: { set: { auto_knowledge_set: 'yes' }, move: ['auto_knowledge_rate'] } },
-        { id: 'gradual', label: 'Gradual (5–15 yrs)',
-          collapseToFlavor: { set: { auto_knowledge_set: 'yes' }, move: ['auto_knowledge_rate'] } },
-        { id: 'uneven', label: 'Uneven (2–20+ yrs)',
-          collapseToFlavor: { set: { auto_knowledge_set: 'yes' }, move: ['auto_knowledge_rate'] } }
-      ] },
-    { id: 'auto_physical_rate', label: 'Physical Automation', stage: 3, priority: 2,
-      activateWhen: [
-        {
-          capability: ['singularity'],
-          automation: ['shallow'],
-          automation_later: ['yes']
-        }
-      ],
-      hideWhen: [{ auto_physical_set: ['yes'] }],
-      edges: [
-        { id: 'rapid', label: 'Rapid (3–7 yrs)',
-          collapseToFlavor: { set: { auto_physical_set: 'yes' }, move: ['auto_physical_rate'] } },
-        { id: 'gradual', label: 'Gradual (10–25 yrs)',
-          collapseToFlavor: { set: { auto_physical_set: 'yes' }, move: ['auto_physical_rate'] } },
-        { id: 'uneven', label: 'Uneven (3–20+ yrs)',
-          collapseToFlavor: { set: { auto_physical_set: 'yes' }, move: ['auto_physical_rate'] } },
-        { id: 'limited', label: 'Limited',
-          collapseToFlavor: { set: { auto_physical_set: 'yes' }, move: ['auto_physical_rate'] } }
-      ] },
+    // knowledge_rate / physical_rate (unified across plateau, auto-shallow,
+    // and main paths) live near the end of NODES — see note near the old
+    // plateau_knowledge_rate position.
     { id: 'takeoff', label: 'R&D Acceleration', stage: 1,
       activateWhen: [{ capability: ['singularity'], automation: ['deep'] }],
       // Engine branches on three behavioral classes only (normal / fast /
@@ -898,7 +857,12 @@ const NODES = [
       deriveWhen: [
         { match: { escalation_outcome: ['agreement'] }, value: 'coexistence' },
         { match: { post_war_aims: ['human_centered'] }, value: 'coexistence' },
-        { match: { pushback_outcome: ['succeeds'] }, value: 'international' },
+        // Note: a `pushback_outcome: ['succeeds'] → international` rule lived
+        // here historically. Removed when who_benefits became a module —
+        // pushback_outcome moves to flavor on exit, so the rule could never
+        // fire from `resolvedState` (which reads sel only), and `intent` is
+        // already resolved upstream (stage 2) in every path that reaches
+        // pushback_outcome (stage 3, inside who_benefits).
         { match: { rival_dynamics: true }, fromState: 'rival_dynamics' }
       ],
       edges: [
@@ -1098,7 +1062,14 @@ const NODES = [
       ] },
     { id: 'benefit_distribution', label: 'Who Benefits?', stage: 3, priority: 2,
       hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } }],
-      activateWhen: OUTCOME_ACTIVATE,
+      // Internal to who_benefits module: activated via the module's upstream
+      // pipeline (power_promise → mobilization → ...), plus the benevolent
+      // derivation bypass and the post-catch characterisation path.
+      activateWhen: [
+        ...WHO_BENEFITS_INTERNAL_ACTIVATE,
+        { capability: ['singularity'], automation: ['deep'], ai_goals: ['benevolent'] },
+        { capability: ['singularity'], automation: ['deep'], catch_outcome: ['holds_permanently'], collateral_impact: { not: ['civilizational'] } }
+      ],
       deriveWhen: [{ match: { ai_goals: ['benevolent'] }, value: 'equal' }],
       edges: [
         { id: 'equal', label: 'Shared equally',
@@ -1140,21 +1111,96 @@ const NODES = [
         { id: 'extractive', label: 'A tightening grip' },
         { id: 'indifferent', label: 'Their own project' }
       ] },
-    { id: 'knowledge_replacement', label: 'Knowledge Work', stage: 3, priority: 2,
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } }],
-      activateWhen: OUTCOME_ACTIVATE,
+    // knowledge_rate / physical_rate — unified across three contexts:
+    //   • main singularity path (capability: singularity, automation: deep)
+    //     — stays in sel because the-gilded-singularity / the-new-hierarchy /
+    //       the-flourishing / the-hostage / the-alien-ai use it as
+    //       primaryDimension for variant selection.
+    //   • plateau path (capability: stalls, stall_later: yes) — collapsed to
+    //     flavor via `when: { capability: ['stalls'] }` block; marker
+    //     `knowledge_rate_set` / `physical_rate_set` lives in sel.
+    //   • auto-shallow path (capability: singularity, automation: shallow,
+    //     automation_later: yes) — collapsed to flavor via the matching
+    //     `when` block; same marker.
+    //
+    // `limited` is always present as an edge (per user: "always have limited
+    // as an option, it just gets disabled sometimes"). It's disabled
+    // everywhere except on the plateau path with short stalls for knowledge;
+    // for physical it's available on plateau and auto-shallow.
+    //
+    // `rapid` on physical_rate is disabled on the plateau path (the original
+    // plateau_physical_rate had no rapid edge).
+    { id: 'knowledge_rate', label: 'Knowledge Work', stage: 3, priority: 2,
+      hideWhen: [
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } },
+        { knowledge_rate_set: ['yes'] }
+      ],
+      activateWhen: [
+        ...OUTCOME_ACTIVATE,
+        { capability: ['stalls'], stall_later: ['yes'] },
+        { capability: ['singularity'], automation: ['shallow'], automation_later: ['yes'] }
+      ],
       edges: [
-        { id: 'rapid', label: 'Rapid (1–2 yrs)' },
-        { id: 'gradual', label: 'Gradual (3–10 yrs)' },
-        { id: 'uneven', label: 'Uneven (1–20 yrs)' }
+        { id: 'rapid', label: 'Rapid',
+          disabledWhen: [{ capability: ['stalls'], stall_duration: ['hours', 'days'], reason: 'At this stall duration, rapid adoption isn\'t possible' }],
+          collapseToFlavor: [
+            { when: { capability: ['stalls'] }, set: { knowledge_rate_set: 'yes' }, move: ['knowledge_rate'] },
+            { when: { capability: ['singularity'], automation: ['shallow'] }, set: { knowledge_rate_set: 'yes' }, move: ['knowledge_rate'] }
+          ] },
+        { id: 'gradual', label: 'Gradual',
+          disabledWhen: [{ capability: ['stalls'], stall_duration: ['hours'], reason: 'The stall is too short for gradual rollout' }],
+          collapseToFlavor: [
+            { when: { capability: ['stalls'] }, set: { knowledge_rate_set: 'yes' }, move: ['knowledge_rate'] },
+            { when: { capability: ['singularity'], automation: ['shallow'] }, set: { knowledge_rate_set: 'yes' }, move: ['knowledge_rate'] }
+          ] },
+        { id: 'uneven', label: 'Uneven',
+          collapseToFlavor: [
+            { when: { capability: ['stalls'] }, set: { knowledge_rate_set: 'yes' }, move: ['knowledge_rate'] },
+            { when: { capability: ['singularity'], automation: ['shallow'] }, set: { knowledge_rate_set: 'yes' }, move: ['knowledge_rate'] }
+          ] },
+        { id: 'limited', label: 'Limited',
+          disabledWhen: [
+            { capability: ['singularity'], reason: 'At this capability, AI displaces rather than augments knowledge work' },
+            { capability: ['stalls'], stall_duration: ['weeks', 'months'], reason: 'With a longer stall, AI has room to move beyond augmentation' }
+          ],
+          collapseToFlavor: [
+            { when: { capability: ['stalls'] }, set: { knowledge_rate_set: 'yes' }, move: ['knowledge_rate'] }
+          ] }
       ] },
-    { id: 'physical_automation', label: 'Physical Automation', stage: 3, priority: 2,
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } }],
-      activateWhen: OUTCOME_ACTIVATE,
+    { id: 'physical_rate', label: 'Physical Automation', stage: 3, priority: 2,
+      hideWhen: [
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } },
+        { physical_rate_set: ['yes'] }
+      ],
+      activateWhen: [
+        ...OUTCOME_ACTIVATE,
+        { capability: ['stalls'], stall_later: ['yes'] },
+        { capability: ['singularity'], automation: ['shallow'], automation_later: ['yes'] }
+      ],
       edges: [
-        { id: 'rapid', label: 'Rapid (2–5 yrs)' },
-        { id: 'gradual', label: 'Gradual (5–20 yrs)' },
-        { id: 'uneven', label: 'Uneven (2–20+ yrs)' }
+        { id: 'rapid', label: 'Rapid',
+          disabledWhen: [{ capability: ['stalls'], reason: 'Physical automation can\'t be rapid while AI itself is plateaued' }],
+          collapseToFlavor: [
+            { when: { capability: ['stalls'] }, set: { physical_rate_set: 'yes' }, move: ['physical_rate'] },
+            { when: { capability: ['singularity'], automation: ['shallow'] }, set: { physical_rate_set: 'yes' }, move: ['physical_rate'] }
+          ] },
+        { id: 'gradual', label: 'Gradual',
+          disabledWhen: [{ capability: ['stalls'], stall_duration: ['hours'], reason: 'The stall is too short for gradual rollout' }],
+          collapseToFlavor: [
+            { when: { capability: ['stalls'] }, set: { physical_rate_set: 'yes' }, move: ['physical_rate'] },
+            { when: { capability: ['singularity'], automation: ['shallow'] }, set: { physical_rate_set: 'yes' }, move: ['physical_rate'] }
+          ] },
+        { id: 'uneven', label: 'Uneven',
+          collapseToFlavor: [
+            { when: { capability: ['stalls'] }, set: { physical_rate_set: 'yes' }, move: ['physical_rate'] },
+            { when: { capability: ['singularity'], automation: ['shallow'] }, set: { physical_rate_set: 'yes' }, move: ['physical_rate'] }
+          ] },
+        { id: 'limited', label: 'Limited',
+          disabledWhen: [{ capability: ['singularity'], automation: ['deep'], reason: 'At this capability, physical automation moves beyond augmentation' }],
+          collapseToFlavor: [
+            { when: { capability: ['stalls'] }, set: { physical_rate_set: 'yes' }, move: ['physical_rate'] },
+            { when: { capability: ['singularity'], automation: ['shallow'] }, set: { physical_rate_set: 'yes' }, move: ['physical_rate'] }
+          ] }
       ] },
     { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3, priority: 1,
       hideWhen: [
@@ -1176,27 +1222,18 @@ const NODES = [
       ] },
     { id: 'failure_mode', label: 'Delivery', stage: 3, priority: 2, forwardKey: true,
       hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, inert_outcome: false, containment: { not: ['contained'] } }],
+      // Four alignment/containment paths, each gated on who_benefits having
+      // completed (who_benefits_set=yes is written on every module exit).
+      // The old version cartesian-multiplied each path by five explicit
+      // who_benefits terminal combinations (20 clauses total); those are now
+      // captured by a single marker. Plus one benevolent bypass, where
+      // benefit_distribution is derived (not asked) but the "did delivery
+      // succeed?" question still applies.
       activateWhen: [
-        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], post_war_aims: false, power_promise: ['for_everyone'], mobilization: ['strong'] },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], post_war_aims: false, sincerity_test: true },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], post_war_aims: false, pushback_outcome: true },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], post_war_aims: false, coalition_outcome: ['fragments'] },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], post_war_aims: false, power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
-        { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], post_war_aims: false, power_promise: ['for_everyone'], mobilization: ['strong'] },
-        { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], post_war_aims: false, sincerity_test: true },
-        { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], post_war_aims: false, pushback_outcome: true },
-        { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], post_war_aims: false, coalition_outcome: ['fragments'] },
-        { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], post_war_aims: false, power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['contained'], intent: ['international', 'coexistence'], post_war_aims: false, power_promise: ['for_everyone'], mobilization: ['strong'] },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['contained'], intent: ['international', 'coexistence'], post_war_aims: false, sincerity_test: true },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['contained'], intent: ['international', 'coexistence'], post_war_aims: false, pushback_outcome: true },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['contained'], intent: ['international', 'coexistence'], post_war_aims: false, coalition_outcome: ['fragments'] },
-        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['contained'], intent: ['international', 'coexistence'], post_war_aims: false, power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
-        { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'], inert_stays: ['yes'], intent: ['international', 'coexistence'], post_war_aims: false, power_promise: ['for_everyone'], mobilization: ['strong'] },
-        { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'], inert_stays: ['yes'], intent: ['international', 'coexistence'], post_war_aims: false, sincerity_test: true },
-        { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'], inert_stays: ['yes'], intent: ['international', 'coexistence'], post_war_aims: false, pushback_outcome: true },
-        { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'], inert_stays: ['yes'], intent: ['international', 'coexistence'], post_war_aims: false, coalition_outcome: ['fragments'] },
-        { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'], inert_stays: ['yes'], intent: ['international', 'coexistence'], post_war_aims: false, power_promise: ['keeping_safe', 'best_will_rise'], mobilization: ['none'] },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['robust', 'brittle'], intent: ['international', 'coexistence'], post_war_aims: false, who_benefits_set: ['yes'] },
+        { capability: ['singularity'], automation: ['deep'], brittle_resolution: ['escape'], ai_goals: ['benevolent', 'marginal'], intent: ['international', 'coexistence'], post_war_aims: false, who_benefits_set: ['yes'] },
+        { capability: ['singularity'], automation: ['deep'], alignment: ['failed'], containment: ['contained'], intent: ['international', 'coexistence'], post_war_aims: false, who_benefits_set: ['yes'] },
+        { capability: ['singularity'], automation: ['deep'], ai_goals: ['marginal'], inert_stays: ['yes'], intent: ['international', 'coexistence'], post_war_aims: false, who_benefits_set: ['yes'] },
         { capability: ['singularity'], automation: ['deep'], ai_goals: ['benevolent'] }
       ],
       edges: [
@@ -1336,11 +1373,17 @@ const NODES = [
         { collateral_impact: true },
         { response_method: ['competitive_paralysis', 'institutional_indecisiveness'] }
       ],
+      // `not_permanent` fuses the pre-merge `never_stopped`
+      // (response_success=no) and `holds_temporarily`
+      // (response_success=yes) edges: both describe outcomes where the AI
+      // isn't permanently stopped, and each was only ever available under
+      // its own response_success branch — so they never coexisted as
+      // distinct choices at the same state. Narrative/flavor text
+      // disambiguates the two cases by reading response_success from
+      // flavor (via narrSel / resolvedStateWithFlavor). Collapsing them
+      // halves the module's terminal-edge fan-out on catch_outcome.
       edges: [
-        { id: 'never_stopped', label: 'The AI was never actually stopped', shortLabel: 'Never stopped',
-          disabledWhen: [{ response_success: ['yes'], reason: 'The response succeeded' }] },
-        { id: 'holds_temporarily', label: 'The stop holds — but the threat eventually returns', shortLabel: 'Holds temporarily',
-          requires: { response_success: ['yes'] } },
+        { id: 'not_permanent', label: 'The AI isn\'t permanently stopped', shortLabel: 'Not permanent' },
         { id: 'holds_permanently', label: 'The stop holds permanently', shortLabel: 'Holds permanently',
           requires: { response_success: ['yes'] } }
       ] },
@@ -1510,7 +1553,7 @@ const DECEL_REDUCER_TABLE = {
 // table cell. Returns {} if no terminating action is present yet (caller
 // shouldn't invoke reduce in that case).
 function decelReduce(local) {
-    for (const [pKey, aKey] of DECEL_PAIRS) {
+for (const [pKey, aKey] of DECEL_PAIRS) {
         const action = local[aKey];
         if (!action || action === 'continue') continue;
         const progress = local[pKey];
@@ -1580,24 +1623,165 @@ const DECEL_MODULE = {
     get exitPlan() { return buildDecelExitPlan(); },
 };
 
+// ════════════════════════════════════════════════════════
+// ESCAPE_MODULE — the "AI out of control" sub-loop
+// ════════════════════════════════════════════════════════
+//
+// 8 internal dims, in order:
+//   ai_goals → (if hostile) escape_method → escape_timeline →
+//   discovery_timing → response_method → response_success →
+//   collateral_impact → catch_outcome
+//
+// Activation: the two legacy ai_goals activation conditions. By widening
+// the module gate from the old "hostile-only" activateWhen to these
+// broader conditions, the module wraps ai_goals itself and becomes
+// reusable — the same encapsulated "what does the AI want? then what
+// happens?" sub-flow fires in both:
+//   (a) cap=singularity, auto=deep, alignment=failed, containment=escaped
+//   (b) concentration_type=ai_itself
+//
+// Early exits. ai_goals has 7 edges; only 5 of them lead into the escape
+// pipeline. The remaining 2 short-circuit the module with no pipeline
+// questions asked:
+//   * ai_goals.benevolent — the AI turned out benign; no escape chain.
+//   * ai_goals.marginal    — the AI is inert/marginal; no escape chain.
+// Both emit an exit tuple setting `escape_set: yes` directly on the
+// ai_goals edge. On the hostile paths (alien_coexistence, alien_extinction,
+// paperclip, swarm, power_seeking), ai_goals is the first question and
+// escape_method's own activateWhen gates the pipeline start — so only
+// hostile answers trigger the follow-ups. Swarm is additionally disabled
+// on concentration_type=ai_itself via its node-level disabledWhen.
+//
+// External contract:
+//   * writes = 3 dims — ai_goals (externally consumed across many hideWhen
+//     clauses, outcome templates, and downstream nodes), plus
+//     catch_outcome and collateral_impact (read by outcome templates and
+//     the vignette builder). All stay in sel post-exit.
+//   * The remaining 5 internal dims (escape_method, escape_timeline,
+//     discovery_timing, response_method, response_success) are pure
+//     flavor — nothing outside the module reads them from sel. Templates
+//     and narrative variants that reference them go through
+//     resolvedStateWithFlavor / narrativeState, so flavor lookups work.
+//     attachModuleReducer auto-computes move = nodeIds \ writes and
+//     evicts them to flavor on exit.
+//   * completionMarker: `escape_set`. The auto-detection (last write) would
+//     pick ai_goals, but on pipeline exits we'd need to recognize
+//     catch_outcome as the "done" signal too — so we declare an explicit
+//     marker and set it on every exit tuple (5 exit edges total).
+//
+// No reducerTable — walker falls through to normal DFS inside the module.
+// /explore hub uses dynamic atomic-cell enumeration.
+
+const ESCAPE_NODE_IDS = [
+    'ai_goals',
+    'escape_method',
+    'escape_timeline',
+    'discovery_timing',
+    'response_method',
+    'response_success',
+    'collateral_impact',
+    'catch_outcome',
+];
+
+const ESCAPE_WRITES = [
+    'ai_goals',
+    'catch_outcome',
+    'collateral_impact',
+    'escape_set',
+];
+
+function escapeReduce(local) {
+    const bundle = {};
+    for (const k of ESCAPE_WRITES) {
+        if (local[k] !== undefined) bundle[k] = local[k];
+    }
+    return bundle;
+}
+
+// 4 exit edges:
+//   * ai_goals.{benevolent, marginal} — early exits, no pipeline.
+//   * catch_outcome.{not_permanent, holds_permanently}
+//     — normal pipeline-complete exits.
+// All set `escape_set: 'yes'`; no `when` gates because the (nodeId, edgeId)
+// pair uniquely identifies the exit path.
+function buildEscapeExitPlan() {
+    const plan = [];
+    const add = (nodeId, edgeIds) => {
+        const n = NODE_MAP[nodeId];
+        if (!n || !n.edges) return;
+        const want = new Set(edgeIds);
+        for (const e of n.edges) {
+            if (!want.has(e.id)) continue;
+            plan.push({
+                nodeId, edgeId: e.id,
+                when: {},
+                set: { escape_set: 'yes' },
+            });
+        }
+    };
+    add('ai_goals', ['benevolent', 'marginal']);
+    // catch_outcome has 2 edges — include them all.
+    const catchNode = NODE_MAP.catch_outcome;
+    if (catchNode && catchNode.edges) {
+        add('catch_outcome', catchNode.edges.map(e => e.id));
+    }
+    return plan;
+}
+
+const ESCAPE_MODULE = {
+    id: 'escape',
+    // Mirrors ai_goals's own activateWhen exactly — so the module is pending
+    // from the moment ai_goals would first be askable through to either an
+    // early-exit (benevolent/marginal) or pipeline completion (catch_outcome).
+    activateWhen: [
+        {
+            capability: ['singularity'],
+            automation: ['deep'],
+            alignment: ['failed'],
+            containment: ['escaped'],
+        },
+        { concentration_type: ['ai_itself'] },
+    ],
+    reads: [
+        // Gates into the pipeline (escape_method.activateWhen, various
+        // pipeline hideWhen/disabledWhen clauses)
+        'capability', 'automation', 'alignment', 'containment',
+        'concentration_type', 'geo_spread', 'war_survivors',
+        // ai_goals.deriveWhen flips the value on inert_outcome; though this
+        // derivation only fires in non-escape contexts, the structural
+        // reference still shows up as an external read once ai_goals is
+        // internal to the module.
+        'inert_outcome',
+    ],
+    writes: ESCAPE_WRITES,
+    nodeIds: ESCAPE_NODE_IDS,
+    completionMarker: 'escape_set',
+    reduce: escapeReduce,
+    get exitPlan() { return buildEscapeExitPlan(); },
+};
+
 // Phase 3 runtime primitive — attach the module's reducer output to the
 // terminating-edge collapseToFlavor blocks. Given an exit plan (a list of
 // { nodeId, edgeId, when, set } tuples), install collapseToFlavor on the
-// matching edges. The `move` list is the full set of internal dims, so
-// they get evicted from sel into flavor on module exit (same space-saving
-// behavior as the legacy decel collapse).
+// matching edges. The `move` list is the set of internal dims that are
+// NOT also writes — they get evicted from sel into flavor on module exit,
+// while writes stay in sel for downstream consumers. For decel, writes ∩
+// nodeIds = ∅ so move = all 14 internal dims (same as legacy collapse).
+// For escape, writes ⊂ nodeIds so move = the 3 pure-flavor dims.
 //
-// Dormant until Phase 4a wires it up for the decel module.
+// Dormant until attached — Phase 4a wires it up for the decel module,
+// and the escape module attaches the same way once registered.
 function attachModuleReducer(mod) {
     if (!mod || !mod.exitPlan) return;
-    const internalDims = mod.nodeIds.slice();
+    const writes = new Set(mod.writes || []);
+    const moveDims = (mod.nodeIds || []).filter(d => !writes.has(d));
     // Group by (nodeId, edgeId) so multiple progress-when cells stack up
     // on the same edge as a collapseToFlavor ARRAY.
     const byEdge = new Map();
     for (const tuple of mod.exitPlan) {
         const key = tuple.nodeId + '|' + tuple.edgeId;
         if (!byEdge.has(key)) byEdge.set(key, []);
-        byEdge.get(key).push({ when: tuple.when, set: tuple.set, move: internalDims });
+        byEdge.get(key).push({ when: tuple.when, set: tuple.set, move: moveDims.slice() });
     }
     for (const [key, blocks] of byEdge) {
         const [nodeId, edgeId] = key.split('|');
@@ -1615,7 +1799,704 @@ function attachModuleReducer(mod) {
     }
 }
 
-const MODULES = [DECEL_MODULE];
+// ════════════════════════════════════════════════════════
+// WHO_BENEFITS_MODULE — the "who gets the gains?" sub-loop
+// ════════════════════════════════════════════════════════
+//
+// Pipeline: power_promise → mobilization → {sincerity_test |
+// pushback_outcome | coalition_outcome} → benefit_distribution →
+// (extreme only) concentration_type. Two exit paths:
+//   * benefit_distribution ∈ {equal, unequal} — direct exit
+//   * benefit_distribution = extreme → concentration_type.* — exits
+//     after the follow-up question.
+//
+// External contract:
+//   * writes = [benefit_distribution, concentration_type] — both have
+//     template `reachable` refs so they MUST stay in sel.
+//     concentration_type is only written on the extreme path; on the
+//     equal/unequal exits it's undefined in sel, which is correct
+//     (its activateWhen gates on benefit_distribution=extreme).
+//   * nodeIds = all 7 dims. Move list (nodeIds \ writes) = the 5
+//     upstream dims — all of them are flavor-only consumers
+//     (template flavors/headings, narrative.contextWhen) rendered via
+//     narrEff (sel ∪ flavor), so they safely evict on exit.
+//
+// Completion marker:
+//   The auto-detection (`writes[-1]` = concentration_type) would
+//   wrongly flag equal/unequal exits as still-pending (because
+//   concentration_type is never set on those paths). Instead we
+//   declare a custom marker `who_benefits_set` and set it in the
+//   `set` block of every exit tuple. First module to need this;
+//   the completionMarker field has existed in the contract since
+//   decel but wasn't exercised.
+//
+// Walker: no reducerTable — the exit space (5 pre-exit picks × 3
+// benefit_distribution edges × 4 concentration_type edges) would
+// produce ~dozens of cells with no real compression win. Walker
+// falls through to normal DFS inside, same as escape.
+
+const WHO_BENEFITS_NODE_IDS = [
+    'power_promise',
+    'mobilization',
+    'sincerity_test',
+    'pushback_outcome',
+    'coalition_outcome',
+    'benefit_distribution',
+    'concentration_type',
+];
+
+const WHO_BENEFITS_WRITES = [
+    'benefit_distribution',
+    'concentration_type',
+];
+
+function whoBenefitsReduce(local) {
+    const bundle = {};
+    for (const k of WHO_BENEFITS_WRITES) {
+        if (local[k] !== undefined) bundle[k] = local[k];
+    }
+    return bundle;
+}
+
+// Exit tuples. `set: { who_benefits_set: 'yes' }` on every exit
+// edge so completionMarker detects the module as done regardless of
+// which path was taken. No `when` gates — the edge id carries the
+// distinction.
+function buildWhoBenefitsExitPlan() {
+    const plan = [];
+    const bd = NODE_MAP.benefit_distribution;
+    if (bd && bd.edges) {
+        for (const e of bd.edges) {
+            // Only equal/unequal are direct exits. `extreme` keeps the
+            // module active so concentration_type gets asked next.
+            if (e.id === 'extreme') continue;
+            plan.push({
+                nodeId: 'benefit_distribution',
+                edgeId: e.id,
+                when: {},
+                set: { who_benefits_set: 'yes' },
+            });
+        }
+    }
+    const ct = NODE_MAP.concentration_type;
+    if (ct && ct.edges) {
+        for (const e of ct.edges) {
+            plan.push({
+                nodeId: 'concentration_type',
+                edgeId: e.id,
+                when: {},
+                set: { who_benefits_set: 'yes' },
+            });
+        }
+    }
+    return plan;
+}
+
+const WHO_BENEFITS_MODULE = {
+    id: 'who_benefits',
+    // Mirror power_promise's activation exactly — the loop is gated on
+    // power_promise being askable, and power_promise's activateWhen is
+    // the tightest shared precondition across all 7 internal dims.
+    activateWhen: [
+        {
+            capability: ['singularity'],
+            automation: ['deep'],
+            alignment: ['robust', 'brittle'],
+            intent: ['international', 'coexistence'],
+            post_war_aims: false,
+        },
+        {
+            capability: ['singularity'],
+            automation: ['deep'],
+            brittle_resolution: ['escape'],
+            intent: ['international', 'coexistence'],
+            post_war_aims: false,
+        },
+        {
+            capability: ['singularity'],
+            automation: ['deep'],
+            alignment: ['failed'], containment: ['contained'],
+            intent: ['international', 'coexistence'],
+            post_war_aims: false,
+        },
+        {
+            capability: ['singularity'],
+            automation: ['deep'],
+            ai_goals: ['marginal'], inert_stays: ['yes'],
+            intent: ['international', 'coexistence'],
+            post_war_aims: false,
+        },
+        { capability: ['singularity'], automation: ['deep'], intent: ['self_interest'] },
+        { capability: ['singularity'], automation: ['deep'], post_war_aims: true },
+        { capability: ['singularity'], automation: ['deep'], escalation_outcome: ['standoff'] },
+    ],
+    reads: [
+        'capability', 'automation', 'alignment', 'containment', 'intent',
+        'ai_goals', 'inert_stays', 'post_war_aims', 'escalation_outcome',
+        'brittle_resolution',
+        // benefit_distribution gates on inert_outcome via hideWhen and on
+        // catch_outcome/collateral_impact via the post-catch activate clause.
+        'inert_outcome', 'catch_outcome', 'collateral_impact',
+    ],
+    writes: WHO_BENEFITS_WRITES,
+    nodeIds: WHO_BENEFITS_NODE_IDS,
+    completionMarker: 'who_benefits_set',
+    reduce: whoBenefitsReduce,
+    get exitPlan() { return buildWhoBenefitsExitPlan(); },
+};
+
+// ════════════════════════════════════════════════════════
+// ROLLOUT_MODULE — the "how does the transformation play out?" sub-loop
+// ════════════════════════════════════════════════════════
+//
+// Groups the three stage-3 "rollout" questions:
+//   * knowledge_rate — pace of AI impact on knowledge work
+//   * physical_rate  — pace of AI impact on physical work
+//   * failure_mode   — "Delivery": does the transformation match intent,
+//     or do the metrics diverge from reality? (only asked on main path)
+//
+// Three contexts, with different question sets per context:
+//   * main singularity (capability=singularity, automation=deep + outcome
+//     gates) — all three asked; all three stay in sel (all are
+//     primaryDimensions or directly template-consumed).
+//   * plateau (capability=stalls, stall_later=yes) — only knowledge_rate
+//     and physical_rate asked; both collapse to flavor on exit via
+//     their per-edge collapseToFlavor blocks. failure_mode never
+//     activates (its activateWhen requires capability=singularity).
+//   * auto-shallow (capability=singularity, automation=shallow,
+//     automation_later=yes) — same as plateau: only knowledge/physical,
+//     both collapse to flavor.
+//
+// Writes: [knowledge_rate, physical_rate, failure_mode] — all three are
+// template/narrative consumers on the main path. On plateau/auto-shallow,
+// knowledge_rate and physical_rate collapse to flavor via the node's own
+// collapseToFlavor (per-edge `when` gates). Module machinery doesn't force
+// flavor moves because move = nodeIds \ writes = ∅.
+//
+// Completion marker: `rollout_set`. Set on the last question of the
+// module per context:
+//   * main path: failure_mode edges (last question there)
+//   * plateau / auto-shallow: physical_rate edges (knowledge_rate is
+//     asked first by priority+position, physical_rate second and final)
+//
+// No reducerTable — exit space is three-way conditional with variable
+// question count; walker falls through to normal DFS like escape /
+// who_benefits.
+
+const ROLLOUT_NODE_IDS = [
+    'knowledge_rate',
+    'physical_rate',
+    'failure_mode',
+];
+
+const ROLLOUT_WRITES = [
+    'knowledge_rate',
+    'physical_rate',
+    'failure_mode',
+];
+
+function rolloutReduce(local) {
+    const bundle = {};
+    for (const k of ROLLOUT_WRITES) {
+        if (local[k] !== undefined) bundle[k] = local[k];
+    }
+    return bundle;
+}
+
+// Exit tuples:
+//   * failure_mode.{none, drift} — main path exit, always. No `when` gate.
+//   * physical_rate.{rapid, gradual, uneven, limited} — plateau and
+//     auto-shallow exits. Gate on capability/automation so these don't
+//     fire on the main path (where failure_mode is the real exit).
+function buildRolloutExitPlan() {
+    const plan = [];
+    const fm = NODE_MAP.failure_mode;
+    if (fm && fm.edges) {
+        for (const e of fm.edges) {
+            plan.push({
+                nodeId: 'failure_mode',
+                edgeId: e.id,
+                when: {},
+                set: { rollout_set: 'yes' },
+            });
+        }
+    }
+    const pr = NODE_MAP.physical_rate;
+    if (pr && pr.edges) {
+        for (const e of pr.edges) {
+            // Plateau exit
+            plan.push({
+                nodeId: 'physical_rate',
+                edgeId: e.id,
+                when: { capability: ['stalls'] },
+                set: { rollout_set: 'yes' },
+            });
+            // Auto-shallow exit
+            plan.push({
+                nodeId: 'physical_rate',
+                edgeId: e.id,
+                when: { capability: ['singularity'], automation: ['shallow'] },
+                set: { rollout_set: 'yes' },
+            });
+        }
+    }
+    return plan;
+}
+
+const ROLLOUT_MODULE = {
+    id: 'rollout',
+    activateWhen: [
+        // Main path — any condition under which failure_mode could eventually
+        // activate, or knowledge_rate / physical_rate activate via OUTCOME_ACTIVATE.
+        // OUTCOME_ACTIVATE is already gated on `who_benefits_set=yes` (or the
+        // benevolent / catch_holds bypasses), so the module only activates
+        // once Who Benefits has completed.
+        ...OUTCOME_ACTIVATE,
+        // Plateau path — only after plateau_benefit_distribution is answered,
+        // so the plateau "Who Benefits?" question doesn't visually fall inside
+        // this module's cluster in /explore.
+        { capability: ['stalls'], stall_later: ['yes'], plateau_benefit_set: ['yes'] },
+        // Auto-shallow path — same reasoning as plateau.
+        { capability: ['singularity'], automation: ['shallow'], automation_later: ['yes'], auto_benefit_set: ['yes'] },
+    ],
+    reads: [
+        // Activation / gating across the three contexts
+        'capability', 'automation', 'automation_later',
+        'stall_later', 'stall_duration',
+        // Per-context predecessors (so rollout doesn't activate before the
+        // preceding plateau / auto-shallow "Who Benefits?" question).
+        'plateau_benefit_set', 'auto_benefit_set',
+        // OUTCOME_ACTIVATE conditions (post-escape catch path)
+        'catch_outcome', 'collateral_impact',
+        // failure_mode gates
+        'alignment', 'brittle_resolution',
+        'ai_goals', 'containment', 'intent', 'post_war_aims',
+        'inert_stays', 'inert_outcome',
+        'who_benefits_set',
+        // knowledge_rate / physical_rate re-ask guards (hideWhen markers)
+        'knowledge_rate_set', 'physical_rate_set',
+    ],
+    writes: ROLLOUT_WRITES,
+    nodeIds: ROLLOUT_NODE_IDS,
+    completionMarker: 'rollout_set',
+    reduce: rolloutReduce,
+    get exitPlan() { return buildRolloutExitPlan(); },
+};
+
+// ════════════════════════════════════════════════════════
+// CONTROL_MODULE — the "who ends up running the AI?" sub-loop
+// ════════════════════════════════════════════════════════
+//
+// Stage-2 bridge between emergence (Act 1) and alignment (Act 2). Four
+// questions, ordered:
+//   open_source → distribution → geo_spread → sovereignty
+//
+// Internal branching (all on the main singularity path):
+//   * open_source=near_parity → distribution forced to 'open' (other edges
+//     disabledWhen); geo_spread / sovereignty both skipped (activateWhen
+//     not met). Exit after distribution.
+//   * open_source in {6/12/24mo} → distribution asked (open edge requires
+//     near_parity, so unavailable here). Then:
+//       - distribution=monopoly → geo_spread two/several disabled (only
+//         one country in the game); geo_spread=one forced; sovereignty
+//         asked; exit after sovereignty.
+//       - distribution=lagging → collapses to distribution='concentrated'
+//         with setFlavor lagging. Follows the concentrated branch.
+//       - distribution=concentrated → geo_spread asked with all three
+//         options available.
+//         * geo_spread=one → sovereignty asked; exit after sovereignty.
+//         * geo_spread=two/several → collapse to geo_spread='multiple';
+//           sovereignty skipped; exit after geo_spread.
+//
+// External contract:
+//   reads  = emergence outputs + takeoff gates + proliferation_outcome
+//            (geo_spread.deriveWhen reads it, though that derivation only
+//            fires post-module once decel/escape set it).
+//   writes = open_source_set (marker), open_source (conditional — stays
+//            in sel on paths where downstream decel chain reads it, moved
+//            to flavor on others via existing per-edge collapseToFlavor
+//            rules), distribution, geo_spread, sovereignty, control_set.
+//
+// completionMarker: `control_set`. The auto-detected last-write wouldn't
+// work here (sovereignty is undefined on distribution.open and
+// geo_spread.{two, several} exits), so we declare it explicitly and set
+// it in every exit tuple — same pattern as who_benefits / rollout /
+// emergence.
+//
+// No reducerTable — 5 exit edges across 3 terminal nodes, each with its
+// own path-specific collapse behavior. Walker falls through to normal
+// DFS like escape / who_benefits / rollout / emergence. The /explore hub
+// uses dynamic atomic-cell enumeration.
+
+const CONTROL_NODE_IDS = [
+    'open_source',
+    'distribution',
+    'geo_spread',
+    'sovereignty',
+];
+
+// Writes = dims that remain in sel (or are markers set in sel) post-exit
+// and are read by external consumers downstream. Every user-pickable dim
+// in this module is externally consumed on at least one path:
+//   * `open_source` — read by gov_action / decel_* `requires` clauses on
+//     the geo=one+state and monopoly paths (where it stays in sel).
+//   * `distribution` — read by gov_action, proliferation_control,
+//     containment-related rules.
+//   * `geo_spread` — read by gov_action, decel reducer, and multiple
+//     outcome templates.
+//   * `sovereignty` — read by gov_action, power_structure outcomes.
+// The audit recognizes these as declared exports; per-edge node-level
+// collapseToFlavor rules still move them to flavor on the specific paths
+// where downstream consumers don't need them (e.g., geo_spread.two moves
+// open_source; sovereignty.lab on concentrated also moves open_source).
+const CONTROL_WRITES = [
+    'open_source', 'open_source_set',
+    'distribution',
+    'geo_spread',
+    'sovereignty',
+    'control_set',
+];
+
+function controlReduce(local) {
+    const bundle = {};
+    for (const k of CONTROL_WRITES) {
+        if (local[k] !== undefined) bundle[k] = local[k];
+    }
+    return bundle;
+}
+
+// 5 exit edges across 3 terminal nodes. All set control_set='yes'; no
+// `when` gates because the (nodeId, edgeId) pair uniquely identifies the
+// exit path.
+function buildControlExitPlan() {
+    const plan = [];
+    const add = (nodeId, edgeIds) => {
+        const n = NODE_MAP[nodeId];
+        if (!n || !n.edges) return;
+        const want = new Set(edgeIds);
+        for (const e of n.edges) {
+            if (!want.has(e.id)) continue;
+            plan.push({
+                nodeId, edgeId: e.id,
+                when: {},
+                set: { control_set: 'yes' },
+            });
+        }
+    };
+    // open_source=near_parity → distribution=open forced, geo_spread /
+    // sovereignty both skipped. Exit here.
+    add('distribution', ['open']);
+    // geo_spread ∈ {two, several} → sovereignty skipped. Exit here.
+    add('geo_spread', ['two', 'several']);
+    // geo_spread=one → sovereignty answered. Exit here.
+    add('sovereignty', ['lab', 'state']);
+    return plan;
+}
+
+const CONTROL_MODULE = {
+    id: 'control',
+    activateWhen: [
+        { capability: ['singularity'], automation: ['deep'], emergence_set: ['yes'] },
+    ],
+    reads: [
+        // Post-emergence state that internal nodes read (disabledWhen,
+        // activateWhen, deriveWhen clauses).
+        'capability', 'automation', 'emergence_set',
+        'takeoff_class', 'takeoff_explosive',
+        // geo_spread.deriveWhen flips geo_spread to 'multiple' on
+        // leaks_rivals / leaks_public. proliferation_outcome is set by
+        // downstream nodes (post-module), so the derivation only fires
+        // once control has already exited — but the structural reference
+        // still counts as an external read for audit purposes.
+        'proliferation_outcome',
+    ],
+    writes: CONTROL_WRITES,
+    nodeIds: CONTROL_NODE_IDS,
+    completionMarker: 'control_set',
+    reduce: controlReduce,
+    get exitPlan() { return buildControlExitPlan(); },
+};
+
+// ════════════════════════════════════════════════════════
+// PROLIFERATION_MODULE — "how does control over the tech play out?"
+// ════════════════════════════════════════════════════════
+//
+// Three-node stage-2 sub-loop covering the "once the AI works, who gets
+// access, does control hold, and can alignment survive if it leaks":
+//   proliferation_control → proliferation_outcome → proliferation_alignment
+//
+// Internal flow:
+//   * proliferation_control asked first. Edges: deny_rivals, secure_access,
+//     none.
+//     - deny_rivals / secure_access → proliferation_outcome asked.
+//     - none → proliferation_outcome auto-derives to leaks_public via its
+//       deriveWhen; NOT asked as a question.
+//   * proliferation_outcome (asked or derived). Edges: holds, leaks_rivals,
+//     leaks_public.
+//     - leaks_public AND alignment=robust → proliferation_alignment asked.
+//     - Any other combination → module exits.
+//   * proliferation_alignment asked only on leaks_public + robust.
+//     Edges: holds, breaks. Always exits.
+//
+// First module to use CONDITIONAL EXIT TUPLES. Two edges
+// (`proliferation_control.none`, `proliferation_outcome.leaks_public`)
+// behave differently depending on `alignment`:
+//   * alignment ≠ robust → exit (downstream proliferation_alignment won't
+//     fire)
+//   * alignment = robust → DON'T exit; module continues to
+//     proliferation_alignment
+// Expressed by giving those exit tuples a `when: { alignment: { not:
+// ['robust'] } }` gate. `cleanSelection` evaluates block-array `when`
+// clauses per block; when none match, the edge emits no marker and the
+// module stays active. Same mechanism that decel's reducerTable uses for
+// its action/progress conditional rules, now exposed at the exit-plan
+// layer.
+//
+// External contract:
+//   * writes = all 3 internal dims + completion marker. Every internal dim
+//     is externally consumed by stage-2 and stage-3 nodes (intent.requires,
+//     block_entrants.activateWhen, alignment.deriveWhen,
+//     alignment_durability.activateWhen, containment.deriveWhen, etc.), so
+//     all stay in sel on exit. `nodeIds \ writes = ∅` means no flavor
+//     moves, same pattern as control / rollout / emergence.
+//   * activateWhen mirrors proliferation_control's activateWhen verbatim —
+//     module is pending exactly while proliferation_control is askable.
+//
+// No reducerTable — exit space is conditional and path-dependent; walker
+// falls through to normal DFS like escape / who_benefits / rollout /
+// emergence / control. /explore hub uses dynamic atomic-cell enumeration.
+
+const PROLIFERATION_NODE_IDS = [
+    'proliferation_control',
+    'proliferation_outcome',
+    'proliferation_alignment',
+];
+
+const PROLIFERATION_WRITES = [
+    'proliferation_control',
+    'proliferation_outcome',
+    'proliferation_alignment',
+    'proliferation_set',
+];
+
+function proliferationReduce(local) {
+    const bundle = {};
+    for (const k of PROLIFERATION_WRITES) {
+        if (local[k] !== undefined) bundle[k] = local[k];
+    }
+    return bundle;
+}
+
+function buildProliferationExitPlan() {
+    const plan = [];
+    // proliferation_control.none: exit unless alignment=robust (in which
+    // case proliferation_outcome auto-derives to leaks_public and
+    // proliferation_alignment then activates).
+    plan.push({
+        nodeId: 'proliferation_control',
+        edgeId: 'none',
+        when: { alignment: { not: ['robust'] } },
+        set: { proliferation_set: 'yes' },
+    });
+    // proliferation_outcome terminal edges.
+    const outNode = NODE_MAP.proliferation_outcome;
+    if (outNode && outNode.edges) {
+        for (const e of outNode.edges) {
+            const tuple = { nodeId: 'proliferation_outcome', edgeId: e.id, set: { proliferation_set: 'yes' } };
+            if (e.id === 'leaks_public') {
+                // Only exit here if proliferation_alignment won't activate.
+                tuple.when = { alignment: { not: ['robust'] } };
+            } else {
+                // holds / leaks_rivals: proliferation_alignment never
+                // activates (needs leaks_public), always exit.
+                tuple.when = {};
+            }
+            plan.push(tuple);
+        }
+    }
+    // proliferation_alignment terminal edges.
+    const alignNode = NODE_MAP.proliferation_alignment;
+    if (alignNode && alignNode.edges) {
+        for (const e of alignNode.edges) {
+            plan.push({
+                nodeId: 'proliferation_alignment',
+                edgeId: e.id,
+                when: {},
+                set: { proliferation_set: 'yes' },
+            });
+        }
+    }
+    return plan;
+}
+
+const PROLIFERATION_MODULE = {
+    id: 'proliferation',
+    // Mirrors proliferation_control.activateWhen verbatim — module is
+    // pending exactly while proliferation_control is askable.
+    activateWhen: [
+        {
+            capability: ['singularity'],
+            automation: ['deep'],
+            gov_action: { not: ['decelerate'] },
+        },
+        {
+            capability: ['singularity'],
+            automation: ['deep'],
+            gov_action: ['decelerate'],
+            rival_emerges: { not: ['yes'] },
+            alignment: { not: ['failed'] },
+        },
+        {
+            capability: ['singularity'],
+            automation: ['deep'],
+            gov_action: ['decelerate'],
+            rival_emerges: ['yes'],
+            decel_align_progress: { not: ['unsolved'] },
+        },
+    ],
+    reads: [
+        // Activation gate
+        'capability', 'automation', 'gov_action', 'rival_emerges',
+        'alignment', 'decel_align_progress',
+        // Internal hideWhen clauses on proliferation_control /
+        // proliferation_outcome reference these
+        'ai_goals', 'inert_outcome', 'containment', 'alignment_durability',
+        // proliferation_control.edges[deny_rivals|secure_access].disabledWhen
+        // reads distribution.
+        'distribution',
+    ],
+    writes: PROLIFERATION_WRITES,
+    nodeIds: PROLIFERATION_NODE_IDS,
+    completionMarker: 'proliferation_set',
+    reduce: proliferationReduce,
+    get exitPlan() { return buildProliferationExitPlan(); },
+};
+
+// ════════════════════════════════════════════════════════
+// EMERGENCE_MODULE — the "how AI arrives" sub-loop (Act 1)
+// ════════════════════════════════════════════════════════
+//
+// The entry phase of the scenario: from the first question through to
+// either the plateau/auto-shallow branches or the main path's entry into
+// open_source (stage 2). This is the largest and most central module —
+// the "Act 1" of the story, determining:
+//   * Does the capability trend continue, or stall?
+//   * When does AGI / ASI arrive (or not)?
+//   * How fast does R&D accelerate post-ASI?
+//   * Does governance respond in time?
+//
+// Internal user-pickable nodes:
+//   capability, stall_duration, stall_recovery, agi_threshold,
+//   asi_threshold, automation_recovery, takeoff, governance_window
+// (`automation` is derived from internal state — not in nodeIds but
+// conceptually part of the module; external consumers read it as a
+// derived write.)
+//
+// Three exits, all set `emergence_set: 'yes'`:
+//   * Plateau: stall_recovery.{substantial, never} — sets stall_later=yes
+//   * Auto-shallow: automation_recovery.{substantial, never} — sets
+//     automation_later=yes
+//   * Main → open_source: either takeoff.{fast, explosive} (governance
+//     skipped) or governance_window.{governed, partial, race} (normal
+//     takeoff). 7 exit edges on main + 2 + 2 = 11 total exit points; some
+//     converge to the same {set, move} blocks via attachModuleReducer.
+//
+// activateWhen: `[]` means "always active". Module is pending from empty
+// sel through to emergence_set='yes'.
+//
+// No reducerTable — exit space spans 4 different terminal nodes with
+// path-specific collapseToFlavor blocks. Walker falls through to normal
+// DFS, same as escape / who_benefits / rollout.
+
+const EMERGENCE_NODE_IDS = [
+    'capability',
+    'stall_duration',
+    'stall_recovery',
+    'agi_threshold',
+    'asi_threshold',
+    'automation_recovery',
+    'takeoff',
+    'governance_window',
+];
+
+// Writes = dims that remain in sel (or are markers set in sel) post-exit
+// and are read by external consumers downstream. The pure-internal dims
+// (stall_recovery, agi_threshold, automation_recovery, takeoff,
+// governance_window) each have their own per-edge collapseToFlavor that
+// moves them to flavor; we don't list them here.
+//
+// `capability` and `stall_duration` never move to flavor — they're
+// consumed by every downstream branch. `asi_threshold` stays in sel only
+// on the 'never' edge (downstream automation-derivation rules read it);
+// non-never edges move it to flavor but that happens via the node's own
+// collapse, so listing it here is correct (it's a conditional write).
+const EMERGENCE_WRITES = [
+    'capability', 'stall_duration', 'asi_threshold',
+    'stall_later', 'automation_later',
+    'takeoff_class', 'takeoff_explosive', 'governance_set',
+    'agi_happens', 'asi_happens',
+    // `automation` is a derived dim whose deriveWhen only consults
+    // emergence-internal state — it's effectively a module output used by
+    // many external consumers (plateau_benefit_distribution, open_source,
+    // distribution, etc.). Listed as a write so the audit recognizes it
+    // as an intentional export rather than an internal leak.
+    'automation',
+    'emergence_set',
+];
+
+function emergenceReduce(local) {
+    const bundle = {};
+    for (const k of EMERGENCE_WRITES) {
+        if (local[k] !== undefined) bundle[k] = local[k];
+    }
+    return bundle;
+}
+
+// Exit tuples: 11 edges across 4 nodes, all setting emergence_set='yes'.
+// No `when` gates — the edge id carries the path distinction.
+function buildEmergenceExitPlan() {
+    const plan = [];
+    const add = (nodeId, edgeIds) => {
+        const n = NODE_MAP[nodeId];
+        if (!n || !n.edges) return;
+        const want = new Set(edgeIds);
+        for (const e of n.edges) {
+            if (!want.has(e.id)) continue;
+            plan.push({
+                nodeId, edgeId: e.id,
+                when: {},
+                set: { emergence_set: 'yes' },
+            });
+        }
+    };
+    // Plateau exit
+    add('stall_recovery', ['substantial', 'never']);
+    // Auto-shallow exit
+    add('automation_recovery', ['substantial', 'never']);
+    // Main path, fast takeoff — governance skipped, direct exit
+    add('takeoff', ['fast', 'explosive']);
+    // Main path, normal takeoff — governance answered
+    add('governance_window', ['governed', 'partial', 'race']);
+    return plan;
+}
+
+const EMERGENCE_MODULE = {
+    id: 'emergence',
+    activateWhen: [], // always active — entry module; completion marker gates
+    reads: [
+        // takeoff.hideWhen reads open_source_set (a downstream marker that
+        // only becomes set AFTER this module exits, but the node rule still
+        // references the dim).
+        'open_source_set',
+    ],
+    writes: EMERGENCE_WRITES,
+    nodeIds: EMERGENCE_NODE_IDS,
+    completionMarker: 'emergence_set',
+    reduce: emergenceReduce,
+    get exitPlan() { return buildEmergenceExitPlan(); },
+};
+
+const MODULES = [DECEL_MODULE, ESCAPE_MODULE, WHO_BENEFITS_MODULE, ROLLOUT_MODULE, EMERGENCE_MODULE, CONTROL_MODULE, PROLIFERATION_MODULE];
 const MODULE_MAP = {};
 for (const m of MODULES) MODULE_MAP[m.id] = m;
 

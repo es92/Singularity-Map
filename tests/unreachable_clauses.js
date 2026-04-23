@@ -24,7 +24,7 @@ function loadTemplates() {
 
 const UPSTREAM_DEFAULTS = {
     capability: 'singularity', agi_threshold: 'few_months', asi_threshold: 'few_months',
-    automation: 'deep', auto_knowledge_rate: 'dramatic', auto_physical_rate: 'dramatic',
+    automation: 'deep', knowledge_rate: 'rapid', physical_rate: 'rapid',
     takeoff: 'slow', governance_window: 'partial', open_source: 'six_months',
     distribution: 'concentrated', geo_spread: 'one', sovereignty: 'state',
     proliferation_control: 'deny_rivals', proliferation_outcome: 'holds',

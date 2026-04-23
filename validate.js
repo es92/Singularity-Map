@@ -13,10 +13,10 @@ const fs = require('fs');
 const path = require('path');
 const { NODES, NODE_MAP, MODULES } = require('./graph.js');
 const {
-    matchCondition, resolvedVal, resolvedState: engineResolvedState,
+    matchCondition, resolvedVal, resolvedState: engineResolvedState, resolvedStateWithFlavor,
     isNodeVisible, isNodeActivatedByRules, isNodeLocked, isEdgeDisabled,
     templateMatches,
-    createStack, push, currentState, stackHas, displayOrder
+    createStack, push, currentState, currentFlavor, stackHas, displayOrder
 } = require('./engine.js');
 const { walk, resolvedState, dimOrder, classes, derivedDimSet, setTemplates, irrKey, safePushDims } = require('./graph-walker.js');
 const { cleanSelection } = require('./engine.js');
@@ -330,8 +330,8 @@ function runTraversal(templates, opts = {}) {
         edgesReached.add(`${nodeId}=${edgeId}`);
     }
 
-    function isTerminal(sel) {
-        const state = resolvedState(sel);
+    function isTerminal(sel, flavor) {
+        const state = resolvedStateWithFlavor(sel, flavor);
         const matched = templates.filter(t => templateMatches(t, state));
         if (matched.length > 1) {
             violations.ambiguous.push({ outcomes: matched.map(t => t.id), sel: { ...sel }, url: selToUrl(sel) });
@@ -423,13 +423,15 @@ function runReachInvariantCheck(templates, opts = {}) {
         return { skipped: true, reason: 'No data/reach/*.json files found (run: node precompute-reachability.js)' };
     }
 
-    function doLightPush(sel, nodeId, edgeId) {
+    function doLightPush(sel, flavor, nodeId, edgeId) {
         const next = Object.assign({}, sel);
         next[nodeId] = edgeId;
+        let nextFlavor = flavor ? Object.assign({}, flavor) : {};
         if (!safePushDims.has(nodeId)) {
-            cleanSelection(next);
+            const r = cleanSelection(next, nextFlavor);
+            nextFlavor = r.flavor || nextFlavor;
         }
-        return next;
+        return { sel: next, flavor: nextFlavor };
     }
 
     function selKey(sel) {
@@ -497,12 +499,14 @@ function runReachInvariantCheck(templates, opts = {}) {
 
         for (const edge of enabled) {
             if (truncated) return;
-            const lightSel = doLightPush(decSel, node.id, edge.id);
-            const lightKey = irrKey(lightSel);
+            const decFlavor = currentFlavor(decStack);
+            const { sel: lightSel, flavor: lightFlavor } = doLightPush(decSel, decFlavor, node.id, edge.id);
+            const lightKey = irrKey(lightSel, lightFlavor);
 
             const childStack = push(decStack, node.id, edge.id);
             const commitSel = currentState(childStack);
-            const commitKey = irrKey(commitSel);
+            const commitFlavor = currentFlavor(childStack);
+            const commitKey = irrKey(commitSel, commitFlavor);
             edgesChecked++;
 
             for (const rs of reachSets) {

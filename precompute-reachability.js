@@ -8,7 +8,7 @@ const path = require('path');
 const { createGzip } = require('zlib');
 const { pipeline } = require('stream/promises');
 
-const { templateMatches } = require('./engine.js');
+const { templateMatches, resolvedStateWithFlavor } = require('./engine.js');
 const { computeReachability, resolvedState, setTemplates } = require('./graph-walker.js');
 
 function buildMatchersAndCompute(templates, opts = {}) {
@@ -21,8 +21,8 @@ function buildMatchersAndCompute(templates, opts = {}) {
             for (const vk of variants) {
                 entries.push({
                     id: t.id + '--' + vk,
-                    matcher: (sel) => {
-                        const state = resolvedState(sel);
+                    matcher: (sel, flavor) => {
+                        const state = resolvedStateWithFlavor(sel, flavor);
                         return templateMatches(t, state) && state[t.primaryDimension] === vk;
                     },
                 });
@@ -30,7 +30,7 @@ function buildMatchersAndCompute(templates, opts = {}) {
         } else {
             entries.push({
                 id: t.id,
-                matcher: (sel) => templateMatches(t, resolvedState(sel)),
+                matcher: (sel, flavor) => templateMatches(t, resolvedStateWithFlavor(sel, flavor)),
             });
         }
     }

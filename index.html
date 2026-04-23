@@ -1306,7 +1306,15 @@
                 let heading = null;
                 if (flavorHeadings && flavorHeadings[nodeId]) {
                     const h = flavorHeadings[nodeId];
-                    heading = typeof h === 'string' ? h : (h[val] || null);
+                    if (typeof h === 'string') {
+                        heading = h;
+                    } else {
+                        // Per-value headings may themselves be strings or
+                        // `_when`/`_default` blocks — let resolveConditionalText
+                        // handle both forms so headings can branch on state
+                        // (e.g., response_success) just like flavor body text.
+                        heading = resolveConditionalText(h[val], state) || null;
+                    }
                 }
                 if (!heading) {
                     const node = NODE_MAP[nodeId];
@@ -1415,9 +1423,7 @@
             };
 
             const professionalNodes = new Set([
-                'agi_threshold', 'plateau_knowledge_rate', 'auto_knowledge_rate',
-                'knowledge_replacement', 'plateau_physical_rate', 'auto_physical_rate',
-                'physical_automation',
+                'agi_threshold', 'knowledge_rate', 'physical_rate',
             ]);
 
             const vignettes = [];
@@ -1461,8 +1467,16 @@
                 'plateau_benefit_distribution', 'auto_benefit_distribution', 'benefit_distribution',
             ]);
             const deathNodes = new Set(['war_survivors']);
-            if (sel.response_success !== 'yes') deathNodes.add('escape_method');
-            if (sel.catch_outcome === 'holds_temporarily') {
+            // response_success may live in flavor post-module-exit; narrSel
+            // layers flavor under sel so this check survives the move.
+            if (narrSel.response_success !== 'yes') deathNodes.add('escape_method');
+            // Pre-merge this was `catch_outcome === 'holds_temporarily'`
+            // (i.e., the AI was stopped but the threat returns). After the
+            // merge, that case is `not_permanent` + `response_success=yes`;
+            // `response_success=no` is the old `never_stopped` leg where
+            // there was no actual catch, so no end-date to propagate.
+            // response_success lives in flavor, hence narrSel.
+            if (sel.catch_outcome === 'not_permanent' && narrSel.response_success === 'yes') {
                 const endDate = dateMap && dateMap['catch_outcome'];
                 if (endDate) {
                     for (const v of vignettes) {
@@ -1913,13 +1927,15 @@
                     });
             }
 
-            function _lightPush(sel, nodeId, edgeId) {
+            function _lightPush(sel, flavor, nodeId, edgeId) {
                 const next = Object.assign({}, sel);
                 next[nodeId] = edgeId;
+                let nextFlavor = flavor ? Object.assign({}, flavor) : {};
                 if (!GraphWalker.safePushDims.has(nodeId)) {
-                    Engine.cleanSelection(next);
+                    const r = Engine.cleanSelection(next, nextFlavor);
+                    nextFlavor = r.flavor || nextFlavor;
                 }
-                return next;
+                return { sel: next, flavor: nextFlavor };
             }
 
             function wouldReachOutcome(nodeId, edgeId) {
@@ -1930,8 +1946,9 @@
                 // matches, so the reach-set lookup on the post-click state is
                 // sufficient — no template-match short-circuit is needed.
                 const sel = Engine.currentState(stack);
-                const childSel = _lightPush(sel, nodeId, edgeId);
-                const ik = GraphWalker.irrKey(childSel);
+                const flavor = Engine.currentFlavor(stack);
+                const { sel: childSel, flavor: childFlavor } = _lightPush(sel, flavor, nodeId, edgeId);
+                const ik = GraphWalker.irrKey(childSel, childFlavor);
                 return _reachSet.has(ik);
             }
 
@@ -1959,7 +1976,9 @@
                 // Outcomes are terminal (SPEC.md): once any template matches,
                 // the path is complete and we stop asking questions. The render
                 // layer reads nextQ==null as "show the matched outcome".
-                const eff = Engine.resolvedState(sel);
+                // Match against sel+flavor so module-internal dims exported only
+                // for outcome routing (via `collapseToFlavor.move`) remain matchable.
+                const eff = Engine.resolvedStateWithFlavor(sel, Engine.currentFlavor(stack));
                 for (const t of templatesList) {
                     if (Engine.templateMatches(t, eff)) return null;
                 }
@@ -2157,10 +2176,11 @@
             }
 
             function getOutcomeShareInfo() {
-                const eff = Engine.resolvedState(Engine.currentState(stack));
-                // For narrative resolution (subtitle, flavor text) include flavor.
-                const narrEff = Object.assign({}, Engine.currentFlavor(stack), eff);
-                const matched = templatesList.filter(t => Engine.templateMatches(t, eff));
+                // For narrative resolution (subtitle, flavor text) and template
+                // matching alike, underlay flavor beneath resolvedState so
+                // module-exported flavor dims remain visible to both.
+                const narrEff = Engine.resolvedStateWithFlavor(Engine.currentState(stack), Engine.currentFlavor(stack));
+                const matched = templatesList.filter(t => Engine.templateMatches(t, narrEff));
                 let url = location.origin + location.pathname + location.hash;
                 let title = '';
                 if (matched.length > 0) {
@@ -2190,11 +2210,11 @@
             }
 
             function buildOutcomeSectionHtml() {
-                const eff = Engine.resolvedState(Engine.currentState(stack));
                 // Merged view for narrative resolution (flavors, flavor headings,
-                // conditional text) — flavor-moved dims need to be visible here.
-                const narrEff = Object.assign({}, Engine.currentFlavor(stack), eff);
-                const matched = templatesList.filter(t => Engine.templateMatches(t, eff));
+                // conditional text) and template matching — flavor-moved dims
+                // need to be visible to both.
+                const narrEff = Engine.resolvedStateWithFlavor(Engine.currentState(stack), Engine.currentFlavor(stack));
+                const matched = templatesList.filter(t => Engine.templateMatches(t, narrEff));
                 if (matched.length === 0) return '';
 
                 const t = matched[0];
@@ -2684,14 +2704,18 @@
                     } else if (fullQuestions && nextQ) {
                         questionZone.style.flex = '';
                         questionZone.style.paddingLeft = '';
+                        const narrStateForQ = Engine.narrativeState(stack);
+                        const resolvedQT = Engine.resolveQuestionText(narrStateForQ, nextQ.node);
+                        const resolvedSQT = Engine.resolveShortQuestionText(narrStateForQ, nextQ.node);
+                        const resolvedSQC = Engine.resolveShortQuestionContext(narrStateForQ, nextQ.node);
                         const questionData = {
                             nodeLabel: nextQ.node.label,
                             questionText: shortQuestions
-                                ? (nextQ.node.shortQuestionText || nextQ.node.questionText || nextQ.node.label)
-                                : (nextQ.node.questionText || nextQ.node.label),
+                                ? (resolvedSQT || resolvedQT || nextQ.node.label)
+                                : (resolvedQT || nextQ.node.label),
                             questionContext: shortQuestions
-                                ? (nextQ.node.shortQuestionContext || Engine.resolveContextWhen(Engine.narrativeState(stack), nextQ.node))
-                                : Engine.resolveContextWhen(Engine.narrativeState(stack), nextQ.node),
+                                ? (resolvedSQC || Engine.resolveContextWhen(narrStateForQ, nextQ.node))
+                                : Engine.resolveContextWhen(narrStateForQ, nextQ.node),
                             source: nextQ.node.source,
                             isForced: nextQ.isForced || false,
                             forcedValue: nextQ.forcedValue || null,
@@ -2810,9 +2834,8 @@
                             });
                         }
                         wireRatingSection(outcomeZone);
-                        const eff = Engine.resolvedState(Engine.currentState(stack));
-                        const narrEff = Object.assign({}, Engine.currentFlavor(stack), eff);
-                        const matchedT = templatesList.filter(t => Engine.templateMatches(t, eff));
+                        const narrEff = Engine.resolvedStateWithFlavor(Engine.currentState(stack), Engine.currentFlavor(stack));
+                        const matchedT = templatesList.filter(t => Engine.templateMatches(t, narrEff));
                         if (matchedT.length > 0) {
                             const resolved = resolveTemplate(matchedT[0].id, narrEff);
                             const dateMap = buildTimelineDateMap();

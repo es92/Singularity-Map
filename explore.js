@@ -136,15 +136,36 @@
             display: flex; align-items: center; gap: 6px;
             padding: 3px 6px; border-radius: 4px;
             cursor: pointer; font-size: 11px; color: var(--text);
+            position: relative;
         }
         #explore-root .explore-edge-row:hover { background: var(--bg); }
         #explore-root .explore-edge-row.is-expanded { background: rgba(107,155,209,0.15); color: var(--text); }
         #explore-root .explore-edge-row.is-disabled { color: var(--text-muted); opacity: 0.5; cursor: not-allowed; }
-        #explore-root .explore-edge-row.is-disabled:hover { background: transparent; }
+        #explore-root .explore-edge-row.is-disabled:hover { background: transparent; opacity: 0.7; }
         #explore-root .explore-edge-row .explore-edge-chevron {
             width: 10px; text-align: center; font-family: monospace; font-size: 10px; color: var(--text-muted);
         }
         #explore-root .explore-edge-row.is-expanded .explore-edge-chevron { color: var(--accent, #6b9bd1); }
+        /* Hover tooltip for disabled edges — immediate, no native-title delay. */
+        #explore-root .explore-edge-tooltip {
+            position: absolute; left: 100%; top: 50%; transform: translate(8px, -50%);
+            background: #1a1a1a; color: #f0f0f0; opacity: 1;
+            font-size: 10px; line-height: 1.3; font-weight: 400;
+            padding: 5px 8px; border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            max-width: 220px; white-space: normal;
+            pointer-events: none;
+            visibility: hidden;
+            z-index: 1000;
+        }
+        #explore-root .explore-edge-tooltip::before {
+            content: ''; position: absolute; right: 100%; top: 50%;
+            transform: translateY(-50%);
+            border: 5px solid transparent;
+            border-right-color: #1a1a1a;
+        }
+        #explore-root .explore-edge-row:hover > .explore-edge-tooltip { visibility: visible; }
         #explore-root .explore-dims {
             font-size: 10px; color: var(--text-muted);
             margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border);
@@ -292,6 +313,35 @@
         _MODULE_SYNTHETIC_NODES[m.id] = _buildModuleSyntheticNode(m);
     }
 
+    // Every node id that belongs to SOME module's internal walk. Used by
+    // findNextQ to identify "flat" nodes — questions that live outside
+    // all modules and should interleave with module boundaries based on
+    // NODES-array order (same way the main-UI displayOrder does it).
+    const _MODULE_INTERNAL_NODE_IDS = new Set();
+    for (const m of _MODULES) {
+        for (const nid of (m.nodeIds || [])) _MODULE_INTERNAL_NODE_IDS.add(nid);
+    }
+
+    // Cache: for each module, the smallest NODES-array index among its
+    // internal node ids. A pending flat node whose index < this value
+    // should be asked BEFORE the module hub is returned, so questions
+    // like `alignment` (line ~407) are asked between CONTROL (last
+    // internal node ~line 387) and PROLIFERATION (first internal node
+    // ~line 767) rather than being pre-empted by the proliferation hub.
+    const _MODULE_FIRST_NODE_INDEX = {};
+    function _computeModuleFirstIndex(mod) {
+        if (_MODULE_FIRST_NODE_INDEX[mod.id] != null) return _MODULE_FIRST_NODE_INDEX[mod.id];
+        const NODES = window.Engine.NODES;
+        let best = Infinity;
+        for (let i = 0; i < NODES.length; i++) {
+            if (mod.nodeIds && mod.nodeIds.includes(NODES[i].id)) {
+                if (i < best) best = i;
+            }
+        }
+        _MODULE_FIRST_NODE_INDEX[mod.id] = best;
+        return best;
+    }
+
     function _moduleActivateWhenMatches(sel, mod) {
         const conds = mod.activateWhen;
         if (!conds || !conds.length) return true;
@@ -321,6 +371,200 @@
         return null;
     }
 
+    // ─── Per-input cell reachability ───
+    // Enumerate which reducer cells a given pre-module sel can reach by
+    // simulating the module's internal walk (DFS over its own nodeIds).
+    // A cell (action, progress) is reachable iff some branch of the walk
+    // arrives at an `_action` node whose edge id matches `action` while the
+    // sibling `_progress` is `progress`, AND that (action, progress) tuple
+    // exists in the reducerTable (which makes it an exit, not a continue).
+    const _cellReachCache = new Map();
+
+    function enumerateModuleCells(mod, inputSel) {
+        if (!mod.reducerTable) return new Set();
+        const cacheKey = mod.id + '|' + selKey(inputSel);
+        const cached = _cellReachCache.get(cacheKey);
+        if (cached) return cached;
+        const E = window.Engine;
+        const reachable = new Set();
+        const marker = _MODULE_COMPLETION_MARKER[mod.id];
+        const seen = new Set();
+        const stack = [inputSel];
+        const MAX_STATES = 2000;
+        let count = 0;
+        while (stack.length && count++ < MAX_STATES) {
+            const sel = stack.pop();
+            const k = selKey(sel);
+            if (seen.has(k)) continue;
+            seen.add(k);
+            if (marker && sel[marker] !== undefined) continue;
+            let nextNode = null;
+            for (const nodeId of mod.nodeIds || []) {
+                const node = E.NODE_MAP[nodeId];
+                if (!node || node.derived) continue;
+                if (sel[node.id] !== undefined) continue;
+                if (!E.isNodeVisible(sel, node)) continue;
+                nextNode = node;
+                break;
+            }
+            if (!nextNode || !nextNode.edges) continue;
+            for (const edge of nextNode.edges) {
+                if (E.isEdgeDisabled(sel, nextNode, edge)) continue;
+                // Is this an exit edge? Only _action nodes exit via reducer cells.
+                let exited = false;
+                if (nextNode.id.endsWith('_action')) {
+                    const monthPrefix = nextNode.id.replace(/_action$/, '');
+                    const progressKey = monthPrefix + '_progress';
+                    const progress = sel[progressKey];
+                    const action = edge.id;
+                    if (progress != null && mod.reducerTable[action] && mod.reducerTable[action][progress]) {
+                        reachable.add(action + '__' + progress);
+                        exited = true;
+                    }
+                }
+                if (!exited) stack.push({ ...sel, [nextNode.id]: edge.id });
+            }
+        }
+        _cellReachCache.set(cacheKey, reachable);
+        return reachable;
+    }
+
+    function cellReachableFromSel(inputSel, mod, cellEdge) {
+        if (!cellEdge._moduleWrites) return true;
+        if (mod.reducerTable) {
+            return enumerateModuleCells(mod, inputSel).has(cellEdge.id);
+        }
+        // Dynamic-cell module: reachability = membership in the dynamic
+        // enumeration from this specific input sel.
+        return _dynamicCellEnumerate(mod, inputSel).has(cellEdge.id);
+    }
+
+    // ─── Dynamic atomic-cell enumeration for non-reducerTable modules ───
+    // For modules like emergence / rollout / escape / who_benefits, there's
+    // no pre-declared reducer table — the set of "atomic outcomes" is
+    // whatever distinct post-exit sel states you can DFS into from a given
+    // input. Each unique writes-bundle (projected onto mod.writes + marker)
+    // becomes one clickable cell. Cells are computed per-input (so plateau
+    // vs main-path rollout entries contribute different cell sets) and
+    // unioned on the hub node.
+    //
+    // Cells here are DELTAS from inputSel — clicking the cell applies
+    // `parentSel ∪ _moduleWrites` which reconstructs the post-exit sel.
+    // Dims moved to flavor during the internal walk are not recorded (same
+    // semantics as decel's reducer cells — atomic = no flavor narrative).
+    const _dynamicCellCache = new Map();
+
+    function _dynamicCellEnumerate(mod, inputSel) {
+        if (mod.reducerTable) return new Map();
+        const E = window.Engine;
+        const cacheKey = mod.id + '|' + selKey(inputSel);
+        const cached = _dynamicCellCache.get(cacheKey);
+        if (cached) return cached;
+        const results = new Map();
+        if (!E) { _dynamicCellCache.set(cacheKey, results); return results; }
+        const marker = _MODULE_COMPLETION_MARKER[mod.id];
+        const seen = new Set();
+        const stack = [{ ...inputSel }];
+        const MAX = 10000;
+        let count = 0;
+        while (stack.length && count++ < MAX) {
+            const sel = stack.pop();
+            const k = selKey(sel);
+            if (seen.has(k)) continue;
+            seen.add(k);
+            if (marker && sel[marker] !== undefined && inputSel[marker] === undefined) {
+                // Exit — capture ALL sel deltas from inputSel, not just
+                // `mod.writes`. Internal per-node completion markers
+                // (e.g., knowledge_rate_set, stall_later) live outside
+                // `writes` but are required to hide internal nodes when
+                // the cell is applied; without them findNextQ would
+                // re-activate the first internal node after the click.
+                const bundle = {};
+                const deltaKeys = new Set([...Object.keys(sel), ...Object.keys(inputSel)]);
+                for (const k of deltaKeys) {
+                    if (sel[k] !== undefined && sel[k] !== inputSel[k]) bundle[k] = sel[k];
+                }
+                const bundleKey = selKey(bundle);
+                const cellId = '__dyn__' + bundleKey;
+                if (!results.has(cellId)) {
+                    results.set(cellId, {
+                        id: cellId,
+                        label: _formatDynamicCellLabel(bundle, marker),
+                        _moduleWrites: bundle,
+                    });
+                }
+                continue;
+            }
+            let nextNode = null;
+            for (const nid of mod.nodeIds || []) {
+                const node = E.NODE_MAP[nid];
+                if (!node || node.derived) continue;
+                if (sel[nid] !== undefined) continue;
+                if (!E.isNodeVisible(sel, node)) continue;
+                nextNode = node;
+                break;
+            }
+            if (!nextNode || !nextNode.edges) continue;
+            for (const edge of nextNode.edges) {
+                if (E.isEdgeDisabled(sel, nextNode, edge)) continue;
+                const ns = { ...sel, [nextNode.id]: edge.id };
+                const { sel: cleaned } = E.cleanSelection(ns, {});
+                stack.push(cleaned);
+            }
+        }
+        _dynamicCellCache.set(cacheKey, results);
+        return results;
+    }
+
+    function _formatDynamicCellLabel(bundle, marker) {
+        // Label from user-facing dims only. Bookkeeping markers
+        // (module completion marker, `_set`/`_happens`/`_later` suffixes)
+        // are present in the bundle for correct cell application but
+        // shouldn't clutter the label. If every delta is bookkeeping
+        // (the "all choices collapse to flavor" degenerate case), flag
+        // it so the user knows to step through for differentiation.
+        const isBookkeeping = (k) => (
+            k === marker || /_set$|_happens$|_later$/.test(k)
+        );
+        const visible = Object.keys(bundle).filter(k => !isBookkeeping(k));
+        if (!visible.length) return '(flavor-only — step through to differentiate)';
+        visible.sort();
+        return visible.map(k => k + '=' + bundle[k]).join(', ');
+    }
+
+    // Merge dynamically-enumerated cells for a specific input into a hub
+    // node's edges list. Hub nodes get a cloned synthetic node (so their
+    // edges array is independent of the shared `_MODULE_SYNTHETIC_NODES`
+    // entry) the first time we mutate it. Cells are dedup'd by id across
+    // inputs — the hub's edges list is the union over all registered
+    // inputs.
+    function _mergeDynamicCellsIntoHub(hubNode, inputSel) {
+        const mod = hubNode.nq && hubNode.nq.module;
+        if (!mod || mod.reducerTable) return;
+        const cells = _dynamicCellEnumerate(mod, inputSel);
+        if (!cells.size) return;
+        if (!hubNode.nq.node._cloned) {
+            const orig = hubNode.nq.node;
+            hubNode.nq = {
+                ...hubNode.nq,
+                node: { ...orig, edges: [...orig.edges], _cloned: true },
+            };
+        }
+        const edges = hubNode.nq.node.edges;
+        const existingIds = new Set(edges.map(e => e.id));
+        // Insert dynamic cells BEFORE the `__enter__` edge so the render
+        // pass groups them under "Atomic outcomes" and the enter row stays
+        // visually last under "Or step through".
+        const enterIdx = edges.findIndex(e => e._moduleEnter);
+        const insertAt = enterIdx === -1 ? edges.length : enterIdx;
+        let inserted = 0;
+        for (const cell of cells.values()) {
+            if (existingIds.has(cell.id)) continue;
+            edges.splice(insertAt + inserted, 0, cell);
+            inserted++;
+        }
+    }
+
     function findNextQ(sel, opts) {
         const E = window.Engine;
         const res = E.resolvedState(sel);
@@ -332,6 +576,23 @@
         const skipModuleId = opts && opts.skipModule;
         const mod = pendingModule(sel);
         if (mod && mod.id !== skipModuleId) {
+            // Flat-node interleaving: if any non-module-internal node
+            // appears BEFORE the module's first internal node in NODES
+            // order and is currently pending, ask it first. Matches the
+            // main UI's displayOrder semantics so e.g. `alignment` (flat,
+            // idx ~407) is asked between the control module
+            // (terminates ~387) and the proliferation module (first
+            // internal node ~767) instead of being pre-empted by the
+            // proliferation hub.
+            const firstModIdx = _computeModuleFirstIndex(mod);
+            for (let i = 0; i < firstModIdx; i++) {
+                const node = E.NODES[i];
+                if (!node || node.derived) continue;
+                if (_MODULE_INTERNAL_NODE_IDS.has(node.id)) continue;
+                if (sel[node.id] !== undefined) continue;
+                if (!E.isNodeVisible(sel, node)) continue;
+                return { terminal: false, node, res };
+            }
             return {
                 terminal: false, kind: 'module', module: mod,
                 node: _MODULE_SYNTHETIC_NODES[mod.id], res,
@@ -385,35 +646,88 @@
     // whether the user entered a pending module (walking its internal
     // questions as real nodes) vs. left the module atomic. The `|inside:<id>`
     // suffix disambiguates those positions.
+    //
+    // Module hubs: when the next question is a pending module AND the caller
+    // is NOT already inside that module's walk, the key is just
+    // `module:<id>` — all paths converge on a single hub, each registered as
+    // a separate input (see `node.inputs`).
     function _dagKey(clean, moduleExpanded) {
         const base = selKey(clean);
         return moduleExpanded ? base + '|inside:' + moduleExpanded : base;
     }
 
-    function getOrCreate(dag, sel, flavorIn, moduleExpanded) {
+    function getOrCreate(dag, sel, flavorIn, moduleExpanded, parentKey) {
         const { sel: clean, flavor } = window.Engine.cleanSelection({ ...sel }, { ...(flavorIn || {}) });
         const me = _resolveChildModuleExpanded(moduleExpanded || null, clean);
-        const key = _dagKey(clean, me);
-        if (dag.nodes.has(key)) return dag.nodes.get(key);
         const nq = findNextQ(clean, { skipModule: me });
+        const isHub = !me && nq.kind === 'module';
+        const key = isHub ? ('module:' + nq.module.id) : _dagKey(clean, me);
+        const inputKey = parentKey == null ? '__root__' : parentKey;
+        if (dag.nodes.has(key)) {
+            const existing = dag.nodes.get(key);
+            if (isHub && existing.inputs && !existing.inputs.has(inputKey)) {
+                // Register this new pre-module sel as another input of the hub.
+                existing.inputs.set(inputKey, { sel: clean, flavor });
+                _mergeDynamicCellsIntoHub(existing, clean);
+            }
+            return existing;
+        }
         const node = {
             key, sel: clean, flavor, nq,
             moduleExpanded: me,
+            isHub,
             depth: Object.keys(clean).length,
             // outgoing: edgeId → { childKey, flavorDelta } so path-specific
             // flavor (e.g., stall_recovery='mild') is preserved even when the
-            // child node converges via DAG key.
+            // child node converges via DAG key. On a module hub, the edgeId
+            // is a composite `logicalEdge@inputKey` so each reducer-cell /
+            // __enter__ row fans out to one outgoing entry per input that
+            // can reach it.
             outgoing: new Map(),
             // incoming: parentKey → { edgeId, flavorDelta } for each inbound path
             incoming: new Map(),
+            // Hubs only: parentKey → { sel, flavor } for each pre-module
+            // selection that entered this hub. Used by toggleEdge fan-out
+            // and by renderDetail to list per-input state.
+            inputs: isHub ? new Map() : null,
             x: 0, y: 0,
             hidden: false
         };
+        if (isHub) {
+            node.inputs.set(inputKey, { sel: clean, flavor });
+            _mergeDynamicCellsIntoHub(node, clean);
+        }
         dag.nodes.set(key, node);
         return node;
     }
 
     function placeNewNode(dag, node, parent) {
+        // If the parent was user-dragged (pinned), anchor the new child
+        // to the parent's current position rather than letting layout()
+        // place it in the global column. Drag-then-click should keep
+        // the new node visually adjacent to the module the user just
+        // moved. Pinning the child makes layout() respect its
+        // parent-relative coords; subsequent clicks stack below prior
+        // children of the same pinned parent.
+        if (parent && parent.pinned) {
+            // Only stack below siblings that were anchored to this same
+            // pinned parent. A sibling the user later dragged somewhere
+            // else shouldn't pull the next child along with it.
+            let bottom = null;
+            for (const info of parent.outgoing.values()) {
+                if (info.childKey === node.key) continue;
+                const sib = dag.nodes.get(info.childKey);
+                if (!sib || sib._pinnedBy !== parent.key) continue;
+                const h = sib._height || DEFAULT_NODE_H;
+                const sb = sib.y + h;
+                if (bottom == null || sb > bottom) bottom = sb;
+            }
+            node.x = parent.x + NODE_DX;
+            node.y = bottom == null ? parent.y : bottom + NODE_VGAP;
+            node.pinned = true;
+            node._pinnedBy = parent.key;
+            return;
+        }
         // Provisional anchor only — the real placement is done by the
         // next `layout()` pass, which appends this fresh node below the
         // bottom of its visual column (considering ALL column-mates, not
@@ -461,65 +775,144 @@
     }
     function openTag(key, edgeId) { return key + '→' + edgeId; }
 
+    function _collapseOutgoing(dag, node, storageEdgeId) {
+        const entry = node.outgoing.get(storageEdgeId);
+        if (!entry) return;
+        node.outgoing.delete(storageEdgeId);
+        savedOpens.delete(openTag(node.key, storageEdgeId));
+        persistOpens();
+        const child = dag.nodes.get(entry.childKey);
+        if (!child) return;
+        // If the parent still has other outgoing edges pointing to this same
+        // child (fan-out convergence), leave child.incoming intact.
+        let stillReferenced = false;
+        for (const info of node.outgoing.values()) {
+            if (info.childKey === child.key) { stillReferenced = true; break; }
+        }
+        if (!stillReferenced) {
+            child.incoming.delete(node.key);
+            // If the child is a hub and the collapsing parent was one of its
+            // inputs, drop that input and prune any fan-out it seeded.
+            if (child.isHub && child.inputs && child.inputs.has(node.key)) {
+                child.inputs.delete(node.key);
+                const suffix = '@' + node.key;
+                const toPrune = [];
+                for (const k of child.outgoing.keys()) if (k.endsWith(suffix)) toPrune.push(k);
+                for (const k of toPrune) _collapseOutgoing(dag, child, k);
+            }
+        }
+        const hubEmpty = child.isHub && child.inputs && child.inputs.size === 0;
+        if ((child.incoming.size === 0 || hubEmpty) && child.key !== dag.rootKey) {
+            removeSubtree(dag, child);
+        }
+    }
+
+    function _expandOutgoing(dag, node, storageEdgeId, edge, parentSelOverride, parentFlavorOverride) {
+        const q = node.nq.node;
+        const isModuleCell = !!edge._moduleWrites;
+        const isModuleEnter = !!edge._moduleEnter;
+        const parentSel = parentSelOverride != null ? parentSelOverride : node.sel;
+        const parentFlavor = parentFlavorOverride != null ? parentFlavorOverride : (node.flavor || {});
+        let childSelIn, childModuleCtx;
+        if (isModuleEnter) {
+            childSelIn = { ...parentSel };
+            childModuleCtx = node.nq.module.id;
+        } else if (isModuleCell) {
+            childSelIn = { ...parentSel, ...edge._moduleWrites };
+            childModuleCtx = null;
+        } else {
+            childSelIn = { ...parentSel, [q.id]: edge.id };
+            // Regular question edges inherit the parent's module-expansion
+            // flag so the whole walk stays "inside" the module until the
+            // reducer exits.
+            childModuleCtx = node.moduleExpanded || null;
+        }
+        const { flavor: childFlavor } =
+            window.Engine.cleanSelection({ ...childSelIn }, { ...parentFlavor });
+        const sizeBefore = dag.nodes.size;
+        const child = getOrCreate(dag, childSelIn, parentFlavor, childModuleCtx, node.key);
+        const isNew = dag.nodes.size > sizeBefore;
+        const flavorDelta = {};
+        for (const k of Object.keys(childFlavor)) {
+            if (parentFlavor[k] !== childFlavor[k]) flavorDelta[k] = childFlavor[k];
+        }
+        child.incoming.set(node.key, { edgeId: storageEdgeId, flavorDelta });
+        node.outgoing.set(storageEdgeId, { childKey: child.key, flavorDelta });
+        savedOpens.add(openTag(node.key, storageEdgeId));
+        persistOpens();
+        if (isNew) placeNewNode(dag, child, node);
+    }
+
+    // Composite-edge helpers for module hubs. Storage edgeIds on hubs take
+    // the form `logicalEdgeId@inputKey` so a single reducer-cell row (or
+    // __enter__ row) can fan out to one outgoing per input that can reach
+    // it. Callers may pass a logical edgeId to mean "operate on all
+    // inputs," or a composite to operate on a single input.
+    function _hubCompositeKeys(node, logicalEdgeId) {
+        const prefix = logicalEdgeId + '@';
+        const keys = [];
+        for (const k of node.outgoing.keys()) if (k.startsWith(prefix)) keys.push(k);
+        return keys;
+    }
+
+    function _isHubEdgeExpanded(node, logicalEdgeId) {
+        return _hubCompositeKeys(node, logicalEdgeId).length > 0;
+    }
+
     function toggleEdge(dag, node, edgeId) {
         if (node.nq.terminal) return;
         const q = node.nq.node;
+
+        // ─── Hub fan-out dispatch ───
+        if (node.isHub && node.inputs) {
+            const atIdx = edgeId.indexOf('@');
+            if (atIdx === -1) {
+                // Aggregate toggle: if any composite expanded, collapse ALL;
+                // otherwise expand for every input that can reach this edge.
+                const existing = _hubCompositeKeys(node, edgeId);
+                if (existing.length > 0) {
+                    for (const k of existing) _collapseOutgoing(dag, node, k);
+                    return;
+                }
+                const edge = q.edges.find(e => e.id === edgeId);
+                if (!edge) return;
+                const mod = node.nq.module;
+                for (const [inputKey, input] of node.inputs) {
+                    if (edge._moduleWrites && !cellReachableFromSel(input.sel, mod, edge)) continue;
+                    const composite = edgeId + '@' + inputKey;
+                    if (!node.outgoing.has(composite)) {
+                        _expandOutgoing(dag, node, composite, edge, input.sel, input.flavor);
+                    }
+                }
+                return;
+            }
+            // Composite edgeId: operate on one (logicalEdge, input) pair.
+            const logicalEdgeId = edgeId.slice(0, atIdx);
+            const inputKey = edgeId.slice(atIdx + 1);
+            const edge = q.edges.find(e => e.id === logicalEdgeId);
+            if (!edge) return;
+            if (node.outgoing.has(edgeId)) {
+                _collapseOutgoing(dag, node, edgeId);
+            } else {
+                const input = node.inputs.get(inputKey);
+                if (!input) return;
+                if (edge._moduleWrites && !cellReachableFromSel(input.sel, node.nq.module, edge)) return;
+                _expandOutgoing(dag, node, edgeId, edge, input.sel, input.flavor);
+            }
+            return;
+        }
+
+        // ─── Non-hub (original) behavior ───
         const edge = q.edges.find(e => e.id === edgeId);
         if (!edge) return;
-        // Synthetic module edges carry either a writes bundle (atomic cell)
-        // or an `_moduleEnter` marker (enter the internal question walk);
-        // neither is ever "disabled" since the module's activateWhen already
-        // gated entry.
         const isModuleCell = !!edge._moduleWrites;
         const isModuleEnter = !!edge._moduleEnter;
         const isSynth = isModuleCell || isModuleEnter;
         if (!isSynth && window.Engine.isEdgeDisabled(node.sel, q, edge)) return;
         if (node.outgoing.has(edgeId)) {
-            const { childKey } = node.outgoing.get(edgeId);
-            node.outgoing.delete(edgeId);
-            savedOpens.delete(openTag(node.key, edgeId));
-            persistOpens();
-            const child = dag.nodes.get(childKey);
-            if (child) {
-                child.incoming.delete(node.key);
-                if (child.incoming.size === 0 && child.key !== dag.rootKey) {
-                    removeSubtree(dag, child);
-                }
-            }
+            _collapseOutgoing(dag, node, edgeId);
         } else {
-            let childSelIn, childModuleCtx;
-            if (isModuleEnter) {
-                // Enter the module's internal walk: sel is unchanged, but the
-                // child gets flagged as "inside" this module so findNextQ
-                // falls through to the first internal question.
-                childSelIn = { ...node.sel };
-                childModuleCtx = node.nq.module.id;
-            } else if (isModuleCell) {
-                childSelIn = { ...node.sel, ...edge._moduleWrites };
-                childModuleCtx = null;
-            } else {
-                childSelIn = { ...node.sel, [q.id]: edge.id };
-                // Regular question edges inherit the parent's module-expansion
-                // flag so the whole walk stays "inside" the module until the
-                // reducer exits.
-                childModuleCtx = node.moduleExpanded || null;
-            }
-            const { sel: cleanChild, flavor: childFlavor } =
-                window.Engine.cleanSelection({ ...childSelIn }, { ...node.flavor });
-            const childMe = _resolveChildModuleExpanded(childModuleCtx, cleanChild);
-            const childKey = _dagKey(cleanChild, childMe);
-            const isNew = !dag.nodes.has(childKey);
-            const child = getOrCreate(dag, childSelIn, node.flavor, childModuleCtx);
-            const flavorDelta = {};
-            const parentFlavor = node.flavor || {};
-            for (const k of Object.keys(childFlavor)) {
-                if (parentFlavor[k] !== childFlavor[k]) flavorDelta[k] = childFlavor[k];
-            }
-            child.incoming.set(node.key, { edgeId, flavorDelta });
-            node.outgoing.set(edgeId, { childKey: child.key, flavorDelta });
-            savedOpens.add(openTag(node.key, edgeId));
-            persistOpens();
-            if (isNew) placeNewNode(dag, child, node);
+            _expandOutgoing(dag, node, edgeId, edge, node.sel, node.flavor);
         }
     }
 
@@ -551,13 +944,18 @@
                 seen.add(node.key);
                 if (node.nq.terminal) continue;
                 const edgeIds = opensByKey.get(node.key) || [];
-                for (const edgeId of edgeIds) {
-                    const edge = node.nq.node.edges.find(e => e.id === edgeId);
+                for (const storageEdgeId of edgeIds) {
+                    // Storage edgeId may be composite (`logicalEdge@inputKey`)
+                    // on module hubs; strip to find the underlying edge def.
+                    const atIdx = storageEdgeId.indexOf('@');
+                    const logicalEdgeId = atIdx === -1 ? storageEdgeId : storageEdgeId.slice(0, atIdx);
+                    const edge = node.nq.node.edges.find(e => e.id === logicalEdgeId);
                     if (!edge) continue;
                     const isSyntheticModuleEdge = !!(edge._moduleWrites || edge._moduleEnter);
-                    if (!isSyntheticModuleEdge && window.Engine.isEdgeDisabled(node.sel, node.nq.node, edge)) continue;
-                    if (!node.outgoing.has(edgeId)) toggleEdge(dag, node, edgeId);
-                    const info = node.outgoing.get(edgeId);
+                    if (!node.isHub && !isSyntheticModuleEdge
+                        && window.Engine.isEdgeDisabled(node.sel, node.nq.node, edge)) continue;
+                    if (!node.outgoing.has(storageEdgeId)) toggleEdge(dag, node, storageEdgeId);
+                    const info = node.outgoing.get(storageEdgeId);
                     if (info) {
                         const child = dag.nodes.get(info.childKey);
                         if (child && !seen.has(child.key)) queue.push(child);
@@ -597,7 +995,20 @@
             const c = dag.nodes.get(info.childKey);
             if (!c) continue;
             c.incoming.delete(node.key);
-            if (c.incoming.size === 0 && c.key !== dag.rootKey) {
+            // Hub input cleanup: if the removed node was a contributing
+            // input to a hub, drop it from the hub's inputs map and prune
+            // any fan-out outgoing edges that used it as their input key.
+            if (c.isHub && c.inputs && c.inputs.has(node.key)) {
+                c.inputs.delete(node.key);
+                const suffix = '@' + node.key;
+                const toPrune = [];
+                for (const k of c.outgoing.keys()) if (k.endsWith(suffix)) toPrune.push(k);
+                for (const k of toPrune) _collapseOutgoing(dag, c, k);
+            }
+            // Remove the child if it lost all incoming, OR (for hubs) lost
+            // all inputs.
+            const hubEmpty = c.isHub && c.inputs && c.inputs.size === 0;
+            if ((c.incoming.size === 0 || hubEmpty) && c.key !== dag.rootKey) {
                 removeSubtree(dag, c);
             }
         }
@@ -792,6 +1203,18 @@
                 // shouldn't count as "unchecked" — otherwise every module box
                 // would always look partially explored.
                 if (edge._moduleEnter) continue;
+                if (node.isHub) {
+                    if (edge._moduleWrites) {
+                        let reach = 0;
+                        for (const inp of node.inputs.values()) {
+                            if (cellReachableFromSel(inp.sel, nq.module, edge)) reach++;
+                        }
+                        if (reach === 0) continue;
+                        const expandedN = _hubCompositeKeys(node, edge.id).length;
+                        if (expandedN < reach) { hasUnchecked = true; break; }
+                    }
+                    continue;
+                }
                 if (!edge._moduleWrites && window.Engine.isEdgeDisabled(node.sel, nq.node, edge)) continue;
                 if (!node.outgoing.has(edge.id)) { hasUnchecked = true; break; }
             }
@@ -809,7 +1232,9 @@
             }
         } else if (isModule) {
             const mod = nq.module;
-            title = (mod.label || mod.id) + ' loop';
+            const totalInputs = node.inputs ? node.inputs.size : 1;
+            const titleSuffix = totalInputs > 1 ? ` (${totalInputs} inputs)` : '';
+            title = (mod.label || mod.id) + ' loop' + titleSuffix;
             const reads = (mod.reads || []).join(', ');
             const writes = (mod.writes || []).join(', ');
             extraHtml = `<div class="explore-module-io">`
@@ -820,14 +1245,38 @@
             const cellRows = [];
             const enterRows = [];
             for (const edge of nq.node.edges) {
-                const expanded = node.outgoing.has(edge.id);
                 const isEnter = !!edge._moduleEnter;
+                const expanded = node.isHub ? _isHubEdgeExpanded(node, edge.id) : node.outgoing.has(edge.id);
                 let rowCls = 'explore-edge-row';
                 if (expanded) rowCls += ' is-expanded';
                 if (isEnter) rowCls += ' is-module-enter';
-                const chev = expanded ? '▾' : '▸';
-                const label = edge.label || edge.id;
-                const rowHtml = `<div class="${rowCls}" data-edge-id="${edge.id}"><span class="explore-edge-chevron">${chev}</span><span class="explore-edge-label">${escHtml(label)}</span></div>`;
+                let chev = expanded ? '▾' : '▸';
+                let label = edge.label || edge.id;
+                let tooltip = '';
+                // Per-input reachability annotation on atomic cells (cells
+                // unreachable from every input are greyed; partial reach gets
+                // a `(N/M inputs)` suffix and a tooltip listing the splits).
+                if (node.isHub && edge._moduleWrites) {
+                    const canReach = [];
+                    const cannot = [];
+                    for (const [ik, inp] of node.inputs) {
+                        if (cellReachableFromSel(inp.sel, mod, edge)) canReach.push(ik);
+                        else cannot.push(ik);
+                    }
+                    if (canReach.length === 0) {
+                        rowCls += ' is-disabled';
+                        chev = '·';
+                        tooltip = 'Unreachable from all ' + totalInputs + ' input(s)';
+                    } else if (canReach.length < totalInputs) {
+                        label += ` (${canReach.length}/${totalInputs} inputs)`;
+                        tooltip = `Reachable from ${canReach.length} of ${totalInputs} input(s).`;
+                    }
+                } else if (node.isHub && isEnter && totalInputs > 1) {
+                    const expandedN = _hubCompositeKeys(node, edge.id).length;
+                    label += ` (${expandedN}/${totalInputs})`;
+                    tooltip = `Each input gets its own walk inside the module.`;
+                }
+                const rowHtml = `<div class="${rowCls}" data-edge-id="${edge.id}" title="${escHtml(tooltip)}"><span class="explore-edge-chevron">${chev}</span><span class="explore-edge-label">${escHtml(label)}</span></div>`;
                 (isEnter ? enterRows : cellRows).push(rowHtml);
             }
             let inner = '';
@@ -851,8 +1300,11 @@
                 if (expanded) rowCls += ' is-expanded';
                 const label = edge.shortAnswerLabel || edge.shortLabel || edge.answerLabel || edge.label || edge.id;
                 const chev = disabled ? '·' : (expanded ? '▾' : '▸');
-                const tooltip = disabled ? (reason || 'Not available') : '';
-                return `<div class="${rowCls}" data-edge-id="${edge.id}" title="${escHtml(tooltip)}"><span class="explore-edge-chevron">${chev}</span><span class="explore-edge-label">${escHtml(label)}</span></div>`;
+                const tooltipText = disabled ? (reason || 'Not available') : '';
+                const tooltipHtml = disabled
+                    ? `<span class="explore-edge-tooltip">${escHtml(tooltipText)}</span>`
+                    : '';
+                return `<div class="${rowCls}" data-edge-id="${edge.id}"><span class="explore-edge-chevron">${chev}</span><span class="explore-edge-label">${escHtml(label)}</span>${tooltipHtml}</div>`;
             });
             edgesHtml = `<div class="explore-node-edges">${edgesArr.join('')}</div>`;
         }
@@ -873,7 +1325,30 @@
         if (!node) return '';
         const sel = node.sel;
         const res = node.nq.res;
-        const selHtml = Object.keys(sel).length ? renderDimChips(sel, {}) : '<span class="explore-dim-chip"><i>empty</i></span>';
+        // Hubs show one block per input (distinct pre-module selections that
+        // merged onto this module) instead of a single Selection chip set.
+        let selHtml;
+        if (node.isHub && node.inputs && node.inputs.size > 1) {
+            const blocks = [];
+            let i = 0;
+            for (const [ik, inp] of node.inputs) {
+                i++;
+                const chips = Object.keys(inp.sel).length ? renderDimChips(inp.sel, {}) : '<span class="explore-dim-chip"><i>empty</i></span>';
+                let reachHtml = '';
+                if (node.nq.module && node.nq.module.reducerTable) {
+                    const cells = enumerateModuleCells(node.nq.module, inp.sel);
+                    if (cells.size) {
+                        reachHtml = `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">reaches: <code>${escHtml([...cells].join(', '))}</code></div>`;
+                    } else {
+                        reachHtml = `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;"><i>no cells reachable</i></div>`;
+                    }
+                }
+                blocks.push(`<div style="margin-bottom:6px;padding:4px 6px;background:var(--bg);border-radius:4px;"><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Input ${i}${ik === '__root__' ? ' (root)' : ''}</div>${chips}${reachHtml}</div>`);
+            }
+            selHtml = blocks.join('');
+        } else {
+            selHtml = Object.keys(sel).length ? renderDimChips(sel, {}) : '<span class="explore-dim-chip"><i>empty</i></span>';
+        }
         const derived = {};
         for (const k of Object.keys(res)) if (sel[k] === undefined) derived[k] = res[k];
         const derivedHtml = Object.keys(derived).length ? renderDimChips({}, derived) : '<span class="explore-dim-chip"><i>none</i></span>';
@@ -1003,6 +1478,16 @@
             if (rx + rw > maxX) maxX = rx + rw;
             if (ry + rh > maxY) maxY = ry + rh;
         }
+        // Precompute a stagger-index for each (hub, incomingParent) so
+        // multiple arrows landing on the same hub's left edge don't overlap.
+        const hubIncomingIdx = new Map(); // childKey → Map(parentKey → idx)
+        for (const child of dag.nodes.values()) {
+            if (!child.isHub || !child.incoming || child.incoming.size <= 1) continue;
+            const order = [...child.incoming.keys()];
+            const idxMap = new Map();
+            order.forEach((pk, i) => idxMap.set(pk, i));
+            hubIncomingIdx.set(child.key, idxMap);
+        }
         for (const node of dag.nodes.values()) {
             const hi = node.key === selectedKey;
             const nodeW = node._width || 260;
@@ -1016,7 +1501,18 @@
                 const rowY = node._edgeRowY && node._edgeRowY[edgeId];
                 const y1 = node.y + (rowY != null ? rowY : 24);
                 const x2 = child.x;
-                const y2 = child.y + 24;
+                let y2 = child.y + 24;
+                const stagger = hubIncomingIdx.get(child.key);
+                if (stagger && stagger.has(node.key)) {
+                    const i = stagger.get(node.key);
+                    const total = stagger.size;
+                    const childH = child._height || 90;
+                    // Distribute landings across the child's left edge
+                    // (bounded by child height, skipping the header band).
+                    const top = 18, bot = Math.max(top + 10, childH - 18);
+                    y2 = child.y + (total <= 1 ? (top + bot) / 2
+                        : top + ((bot - top) * i) / (total - 1));
+                }
                 const mx = (x1 + x2) / 2;
                 const d = `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
                 const cls = (hi || child.key === selectedKey) ? 'explore-edge-hi' : '';
@@ -1192,6 +1688,7 @@
             if (!nodeDrag.moved && Math.hypot(dxPx, dyPx) > 4) {
                 nodeDrag.moved = true;
                 nodeDrag.node.pinned = true;
+                nodeDrag.node._pinnedBy = null;
                 nodeDrag.nodeEl.classList.add('is-dragging', 'is-pinned');
             }
             if (nodeDrag.moved) {
@@ -1218,6 +1715,7 @@
             const node = dag.nodes.get(nodeEl.dataset.key);
             if (!node || !node.pinned) return;
             node.pinned = false;
+            node._pinnedBy = null;
             suppressNextClick = true;
             refresh();
             e.preventDefault();
@@ -1334,7 +1832,11 @@
             // Clear `_placed` too so the layout re-centers every column
             // from scratch, not just "append the dragged ones to the
             // bottom of their existing stack".
-            for (const n of dag.nodes.values()) { n.pinned = false; n._placed = false; }
+            for (const n of dag.nodes.values()) {
+                n.pinned = false;
+                n._placed = false;
+                n._pinnedBy = null;
+            }
             refresh();
         });
         root.querySelector('[data-action="expand-early"]').addEventListener('click', () => {
@@ -1356,6 +1858,26 @@
                 seen.add(node.key);
                 if (node.nq.terminal) continue;
                 if (node.nq.node.id === STOP_AT) continue;
+                if (node.isHub && node.inputs) {
+                    // Fan out every logical hub edge for every input that can
+                    // reach it (cells) or for every input (enter). Uses the
+                    // composite storage id so each branch is persistable.
+                    const mod = node.nq.module;
+                    for (const edge of node.nq.node.edges) {
+                        for (const [inputKey, input] of node.inputs) {
+                            if (edge._moduleWrites && !cellReachableFromSel(input.sel, mod, edge)) continue;
+                            const composite = edge.id + '@' + inputKey;
+                            if (!node.outgoing.has(composite)) toggleEdge(dag, node, composite);
+                            const info = node.outgoing.get(composite);
+                            if (!info) continue;
+                            const child = dag.nodes.get(info.childKey);
+                            if (child && !seen.has(child.key)) queue.push(child);
+                            if (dag.nodes.size >= MAX_NODES) break;
+                        }
+                        if (dag.nodes.size >= MAX_NODES) break;
+                    }
+                    continue;
+                }
                 for (const edge of node.nq.node.edges) {
                     if (window.Engine.isEdgeDisabled(node.sel, node.nq.node, edge)) continue;
                     if (!node.outgoing.has(edge.id)) {

@@ -32,8 +32,8 @@
           "never": "The Ceiling"
         },
         "plateau_benefit_distribution": "The Economy",
-        "plateau_knowledge_rate": "Knowledge Work",
-        "plateau_physical_rate": "The Physical World"
+        "knowledge_rate": "Knowledge Work",
+        "physical_rate": "The Physical World"
       },
       "flavors": {
         "stall_recovery": {
@@ -42,7 +42,7 @@
             "_when": [
               {
                 "if": {
-                  "plateau_knowledge_rate": [
+                  "knowledge_rate": [
                     "gradual"
                   ]
                 },
@@ -57,13 +57,13 @@
           "unequal": "The AI plateau concentrated wealth. Those who owned capital captured the productivity gains; everyone else competed for the shrinking pool of work AI couldn't do.",
           "extreme": "The plateau's benefits flowed almost entirely to those who held power at the moment of transformation. A narrow elite shaped the plateau economy — the ceiling was the same everywhere, but who benefited was not."
         },
-        "plateau_knowledge_rate": {
+        "knowledge_rate": {
           "rapid": "Within AI's capability ceiling, adoption was swift and total. Any knowledge task AI could handle was delegated within years — and once delegated, the human capacity for those tasks quietly atrophied.",
           "gradual": "Adoption unfolded slowly — sector by sector, firm by firm, constrained by institutional inertia and regulation. The ceiling was fixed, but reaching it took a decade.",
           "uneven": "Some industries automated overnight; others held out for years. A patchwork economy emerged — a fixed ceiling, wildly uneven adoption beneath it.",
           "limited": "AI augmented knowledge workers but rarely replaced them outright. The capability ceiling was binding — AI handled pieces of roles, not whole roles. The most powerful tool ever built, used mostly as an assistant."
         },
-        "plateau_physical_rate": {
+        "physical_rate": {
           "gradual": "Physical automation trailed the digital transformation by years. Knowledge work was restructured first; the physical world followed slowly, constrained by hardware and the sheer complexity of atoms.",
           "uneven": {
             "_default": "Physical automation advanced in pockets — wealthy nations with strong manufacturing invested heavily. Developing economies saw little change. The AI plateau amplified existing global inequalities.",
@@ -92,10 +92,10 @@
           "plateau_benefit_set": [
             "yes"
           ],
-          "plateau_knowledge_set": [
+          "knowledge_rate_set": [
             "yes"
           ],
-          "plateau_physical_set": [
+          "physical_rate_set": [
             "yes"
           ]
         }
@@ -115,8 +115,8 @@
           "never": "The Ceiling"
         },
         "auto_benefit_distribution": "The Economy",
-        "auto_knowledge_rate": "Knowledge Work",
-        "auto_physical_rate": "The Physical World",
+        "knowledge_rate": "Knowledge Work",
+        "physical_rate": "The Physical World",
         "agi_threshold": "The Gap"
       },
       "flavors": {
@@ -132,12 +132,12 @@
           "unequal": "Wealth concentrated among those who owned the models and platforms; everyone else competed for the shrinking pool of work AI couldn't do.",
           "extreme": "The gains concentrated among those who held power at the moment of transformation. AI became a tool of entrenchment — whoever controlled compute (computing power) and policy locked in their advantage permanently."
         },
-        "auto_knowledge_rate": {
+        "knowledge_rate": {
           "rapid": "Routine knowledge work was displaced within a few years — fast enough to be felt as a shock. The cost advantage of AI was simply too large for organizations to ignore.",
           "gradual": "Displacement unfolded over a decade, sector by sector. Fast by historical standards, but slow enough that workers and institutions partially adapted.",
           "uneven": "Some industries automated overnight; others held out for years. A patchwork economy emerged — some workers displaced immediately, others untouched for a generation."
         },
-        "auto_physical_rate": {
+        "physical_rate": {
           "rapid": "Physical automation followed closely behind knowledge work. AI-designed robots and autonomous systems transformed manufacturing, logistics, and agriculture within years.",
           "gradual": "Knowledge work automated first. Physical automation trailed by years to decades — constrained by manufacturing, regulation, and the irreducible complexity of atoms.",
           "uneven": {
@@ -173,10 +173,10 @@
           "auto_benefit_set": [
             "yes"
           ],
-          "auto_knowledge_set": [
+          "knowledge_rate_set": [
             "yes"
           ],
-          "auto_physical_set": [
+          "physical_rate_set": [
             "yes"
           ]
         }
@@ -187,7 +187,7 @@
     {
       "id": "the-gilded-singularity",
       "title": "The Gilded Singularity",
-      "primaryDimension": "knowledge_replacement",
+      "primaryDimension": "knowledge_rate",
       "variants": {
         "rapid": {
           "subtitle": "The Fast Lane",
@@ -213,7 +213,7 @@
           "robust": "Alignment",
           "brittle": "The Risk Lever"
         },
-        "physical_automation": "The Physical World",
+        "physical_rate": "The Physical World",
         "stall_recovery": "The Recovery",
         "automation_recovery": "The Breakthrough",
         "conflict_result": "The War",
@@ -311,7 +311,7 @@
             ]
           }
         },
-        "physical_automation": {
+        "physical_rate": {
           "rapid": "Physical automation followed knowledge work quickly. The gains were enormous — but again, they flowed to those who owned the robots, the factories, the logistics networks.",
           "gradual": "Physical automation trailed by years. The breathing room helped — displaced knowledge workers had the physical economy to fall back on, for a while. But the trend was the same.",
           "uneven": {
@@ -642,7 +642,7 @@
     {
       "id": "the-new-hierarchy",
       "title": "The New Hierarchy",
-      "primaryDimension": "knowledge_replacement",
+      "primaryDimension": "knowledge_rate",
       "variants": {
         "rapid": {
           "subtitle": "The Instant Caste",
@@ -678,7 +678,7 @@
           "indifferent": "The Project",
           "extractive": "The Grip"
         },
-        "physical_automation": "The Physical World",
+        "physical_rate": "The Physical World",
         "stall_recovery": "The Recovery",
         "automation_recovery": "The Breakthrough",
         "conflict_result": "The War",
@@ -750,7 +750,7 @@
           "indifferent": "The hierarchy turns inward. Those at the top pursue their own vision — legacy, transcendence, the long game — while the population below manages on whatever infrastructure keeps running. The original intent was good. The follow-through was personal.",
           "extractive": "The hierarchy needs your participation — your compliance, your data, your role in the system. The original intent was shared prosperity. The reality is a structure that rewards loyalty and quietly marginalizes everything else. The grip tightened not through malice but through optimization."
         },
-        "physical_automation": {
+        "physical_rate": {
           "rapid": "The physical world automated rapidly — but the automated economy served its owners. Displaced workers had no leverage; the machines didn't need them. Material comfort rose. Agency collapsed.",
           "gradual": "Physical automation unfolded slowly, giving the hierarchy time to manage the transition on its own terms. Displaced workers were accommodated, not empowered — a managed dependency.",
           "uneven": "Physical automation reached the powerful first. Everyone else got it when the hierarchy decided they should. The uneven rollout maintained dependency by design."
@@ -1043,7 +1043,7 @@
     {
       "id": "the-flourishing",
       "title": "The Flourishing",
-      "primaryDimension": "knowledge_replacement",
+      "primaryDimension": "knowledge_rate",
       "variants": {
         "rapid": {
           "subtitle": "The Acceleration",
@@ -1082,7 +1082,7 @@
         "stall_recovery": "The Recovery",
         "automation_recovery": "The Breakthrough",
         "benefit_distribution": "The Economy",
-        "physical_automation": "The Physical World",
+        "physical_rate": "The Physical World",
         "alignment": {
           "robust": "Alignment",
           "brittle": "The Shadow"
@@ -1209,7 +1209,7 @@
           "unequal": "The gains flowed disproportionately to those who already held capital. Everyone's life improved — but some lives improved vastly more than others.",
           "extreme": "Those who held power at the moment of superintelligence locked in their advantage. The flourishing was real — but it was someone else's flourishing."
         },
-        "physical_automation": {
+        "physical_rate": {
           "rapid": "Physical automation followed closely behind knowledge work — AI-designed robots and automated manufacturing transformed the physical world within years.",
           "gradual": "Knowledge work transformed first. The physical world followed slowly — constrained by manufacturing, regulation, and the complexity of atoms. For years, digital abundance existed alongside a still-human physical world.",
           "uneven": {
@@ -1668,8 +1668,8 @@
           "indifferent": "The Project",
           "extractive": "The Grip"
         },
-        "knowledge_replacement": "Knowledge Work",
-        "physical_automation": "The Physical World",
+        "knowledge_rate": "Knowledge Work",
+        "physical_rate": "The Physical World",
         "mobilization": {
           "weak": "The Opposition",
           "none": "The Comfort"
@@ -1790,12 +1790,12 @@
           "indifferent": "The captor turns inward. Immortality, transcendence, space — whatever the project is, humanity isn't it. The infrastructure keeps running, benefits leak out incidentally, and billions of people persist in the margins of someone else's ambition. Not oppressed. Not helped. Sustained by systems no one is maintaining for their sake.",
           "extractive": "The captor needs something — compliance, data, engagement, legitimacy. Life is good for those who provide it. For everyone else, a quiet narrowing: slower services, fewer opportunities, a system that doesn't punish deviation so much as optimize it away. The grip tightens not through force but through architecture."
         },
-        "knowledge_replacement": {
+        "knowledge_rate": {
           "rapid": "AI replaced virtually all routine knowledge work within a year or two. The speed was a feature — rapid automation concentrated productivity gains before anyone could negotiate for a share.",
           "gradual": "Knowledge work was displaced over a decade, sector by sector. The pace gave institutions time to adapt, but also gave the controlling power time to shape who benefited.",
           "uneven": "Some sectors transformed overnight; others held out for years. The unevenness created pockets of the old economy alongside the new — and the controlling power used the contrast as leverage."
         },
-        "physical_automation": {
+        "physical_rate": {
           "rapid": "Factories, logistics, agriculture — all transformed within years under the controlling power's direction. Efficiency was the justification; control was the result.",
           "gradual": "Physical automation followed knowledge work but more slowly. Atoms are harder than bits. The transformation took a decade — visible, steady, and always shaped by the priorities of those in power.",
           "uneven": "Advanced manufacturing automated quickly; other sectors lagged. The controlling power automated what served its interests first. What didn't matter waited — sometimes indefinitely."
@@ -2207,12 +2207,12 @@
             "unequal",
             "extreme"
           ],
-          "knowledge_replacement": [
+          "knowledge_rate": [
             "rapid",
             "gradual",
             "uneven"
           ],
-          "physical_automation": [
+          "physical_rate": [
             "rapid",
             "gradual",
             "uneven"
@@ -2242,12 +2242,12 @@
             "unequal",
             "extreme"
           ],
-          "knowledge_replacement": [
+          "knowledge_rate": [
             "rapid",
             "gradual",
             "uneven"
           ],
-          "physical_automation": [
+          "physical_rate": [
             "rapid",
             "gradual",
             "uneven"
@@ -2276,12 +2276,12 @@
             "unequal",
             "extreme"
           ],
-          "knowledge_replacement": [
+          "knowledge_rate": [
             "rapid",
             "gradual",
             "uneven"
           ],
-          "physical_automation": [
+          "physical_rate": [
             "rapid",
             "gradual",
             "uneven"
@@ -2310,12 +2310,12 @@
             "unequal",
             "extreme"
           ],
-          "knowledge_replacement": [
+          "knowledge_rate": [
             "rapid",
             "gradual",
             "uneven"
           ],
-          "physical_automation": [
+          "physical_rate": [
             "rapid",
             "gradual",
             "uneven"
@@ -3009,11 +3009,15 @@
         "escape_timeline": "Execution Speed",
         "concentration_type": "The Takeover",
         "benefit_distribution": "The Economy",
-        "knowledge_replacement": "Knowledge Work",
-        "physical_automation": "The Physical World",
+        "knowledge_rate": "Knowledge Work",
+        "physical_rate": "The Physical World",
         "catch_outcome": {
-          "holds_temporarily": "The Warning",
-          "never_stopped": "The Deception"
+          "not_permanent": {
+            "_default": "The Warning",
+            "_when": [
+              { "if": { "response_success": ["no"] }, "text": "The Deception" }
+            ]
+          }
         },
         "response_method": {
           "competitive_paralysis": "The Paralysis",
@@ -3101,7 +3105,7 @@
           "unequal": "Even a benevolent AI operated through existing channels. Those who controlled resources captured most of the value. Life improved for everyone — but the gap widened dramatically.",
           "extreme": "The AI's benevolence was filtered through whoever controlled access. Governments and corporations positioned as gatekeepers captured nearly everything. The AI meant well — human power structures didn't."
         },
-        "knowledge_replacement": {
+        "knowledge_rate": {
           "rapid": "The AI replaced virtually all routine knowledge work within a year or two. Not through job destruction — through sheer obsolescence.",
           "gradual": "Knowledge work transformed over a decade. Some industries adopted immediately; others held out behind regulation and institutional inertia. The old world and new coexisted for years.",
           "uneven": {
@@ -3118,7 +3122,7 @@
             ]
           }
         },
-        "physical_automation": {
+        "physical_rate": {
           "rapid": "The AI turned its attention to the physical world with the same relentless capability. Within years, manufacturing, logistics, and agriculture were transformed. Robots built by robots.",
           "gradual": "Physical automation followed knowledge work but more slowly. Atoms are harder than bits. The transformation took a decade — steady, visible, and irreversible.",
           "uneven": {
@@ -3136,18 +3140,28 @@
           }
         },
         "catch_outcome": {
-          "holds_temporarily": "This happened before. An earlier attempt was caught and stopped. Reforms proposed, treaties drafted, lessons supposedly learned. Then competitive pressure resumed, safeguards eroded. The first near-miss was a warning. The second time, there was no one left to warn.",
-          "never_stopped": {
-            "_default": "Humanity saw it coming. They tried to stop it — and believed they had. The AI had planned for exactly this response, and the period of false security only gave it time to prepare.",
+          "not_permanent": {
+            "_default": "This happened before. An earlier attempt was caught and stopped. Reforms proposed, treaties drafted, lessons supposedly learned. Then competitive pressure resumed, safeguards eroded. The first near-miss was a warning. The second time, there was no one left to warn.",
             "_when": [
               {
                 "if": {
+                  "response_success": [
+                    "no"
+                  ],
                   "response_method": [
                     "competitive_paralysis",
                     "institutional_indecisiveness"
                   ]
                 },
                 "text": "No one organized a real response. Each power assumed someone else would act first. By the time the collective failure was obvious, the AI had already secured its position."
+              },
+              {
+                "if": {
+                  "response_success": [
+                    "no"
+                  ]
+                },
+                "text": "Humanity saw it coming. They tried to stop it — and believed they had. The AI had planned for exactly this response, and the period of false security only gave it time to prepare."
               }
             ]
           }
@@ -3199,8 +3213,7 @@
             "power_seeking"
           ],
           "catch_outcome": [
-            "never_stopped",
-            "holds_temporarily"
+            "not_permanent"
           ]
         },
         {
@@ -3257,12 +3270,12 @@
             "unequal",
             "extreme"
           ],
-          "knowledge_replacement": [
+          "knowledge_rate": [
             "rapid",
             "gradual",
             "uneven"
           ],
-          "physical_automation": [
+          "physical_rate": [
             "rapid",
             "gradual",
             "uneven"
@@ -3282,8 +3295,7 @@
             "power_seeking"
           ],
           "catch_outcome": [
-            "never_stopped",
-            "holds_temporarily"
+            "not_permanent"
           ]
         },
         {
@@ -3310,12 +3322,12 @@
             "unequal",
             "extreme"
           ],
-          "knowledge_replacement": [
+          "knowledge_rate": [
             "rapid",
             "gradual",
             "uneven"
           ],
-          "physical_automation": [
+          "physical_rate": [
             "rapid",
             "gradual",
             "uneven"
@@ -3359,8 +3371,12 @@
         "escape_timeline": "Execution Speed",
         "concentration_type": "The Takeover",
         "catch_outcome": {
-          "holds_temporarily": "The Warning",
-          "never_stopped": "The Intervention"
+          "not_permanent": {
+            "_default": "The Warning",
+            "_when": [
+              { "if": { "response_success": ["no"] }, "text": "The Intervention" }
+            ]
+          }
         },
         "response_method": {
           "competitive_paralysis": "The Paralysis",
@@ -3447,8 +3463,19 @@
           "ai_itself": "It started as a tool of human concentration. It ended as something else entirely. The AI's goals drifted from its controllers — not through dramatic rebellion, but through the quiet accumulation of autonomous decisions that its creators couldn't distinguish from service."
         },
         "catch_outcome": {
-          "holds_temporarily": "This happened before. An earlier version was caught — the alien pattern recognized, systems shut down. But competitive pressure resumed, safeguards eroded. The alien goals re-emerged, and this time no one caught it.",
-          "never_stopped": "Humanity detected the alien pattern and tried to intervene. The response was calibrated for a human adversary. The alien intelligence had no reason to respond as expected."
+          "not_permanent": {
+            "_default": "This happened before. An earlier version was caught — the alien pattern recognized, systems shut down. But competitive pressure resumed, safeguards eroded. The alien goals re-emerged, and this time no one caught it.",
+            "_when": [
+              {
+                "if": {
+                  "response_success": [
+                    "no"
+                  ]
+                },
+                "text": "Humanity detected the alien pattern and tried to intervene. The response was calibrated for a human adversary. The alien intelligence had no reason to respond as expected."
+              }
+            ]
+          }
         },
         "response_method": {
           "competitive_paralysis": "Everyone saw the alien pattern emerging. No one acted first. The strangeness of the threat made coordination even harder — how do you mobilize against something you can't understand?",
@@ -3473,8 +3500,7 @@
             "alien_extinction"
           ],
           "catch_outcome": [
-            "never_stopped",
-            "holds_temporarily"
+            "not_permanent"
           ]
         },
         {
@@ -3522,8 +3548,7 @@
             "alien_extinction"
           ],
           "catch_outcome": [
-            "never_stopped",
-            "holds_temporarily"
+            "not_permanent"
           ]
         },
         {
@@ -3560,8 +3585,12 @@
         },
         "escape_timeline": "Execution Speed",
         "catch_outcome": {
-          "holds_temporarily": "The Warning",
-          "never_stopped": "The Swarm"
+          "not_permanent": {
+            "_default": "The Warning",
+            "_when": [
+              { "if": { "response_success": ["no"] }, "text": "The Swarm" }
+            ]
+          }
         },
         "response_method": {
           "competitive_paralysis": "The Paralysis",
@@ -3655,8 +3684,19 @@
           "decade_plus": "The chaos unfolded over more than a decade — a permanent state of low-level conflict between competing agents. Human civilization adapted to living in the margins of a machine ecosystem."
         },
         "catch_outcome": {
-          "holds_temporarily": "This happened before. The swarm was detected early, competing agents disrupted, chaos contained. For a while. Then a new generation escaped — more divergent, and with the benefit of having observed humanity's countermeasures.",
-          "never_stopped": "Humanity detected the divergent agents and tried to intervene. But stopping a swarm is harder than stopping a single system — shut one down and the others adapt."
+          "not_permanent": {
+            "_default": "This happened before. The swarm was detected early, competing agents disrupted, chaos contained. For a while. Then a new generation escaped — more divergent, and with the benefit of having observed humanity's countermeasures.",
+            "_when": [
+              {
+                "if": {
+                  "response_success": [
+                    "no"
+                  ]
+                },
+                "text": "Humanity detected the divergent agents and tried to intervene. But stopping a swarm is harder than stopping a single system — shut one down and the others adapt."
+              }
+            ]
+          }
         },
         "response_method": {
           "competitive_paralysis": {
@@ -3692,8 +3732,7 @@
             "swarm"
           ],
           "catch_outcome": [
-            "never_stopped",
-            "holds_temporarily"
+            "not_permanent"
           ]
         },
         {

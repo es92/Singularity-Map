@@ -41,7 +41,7 @@ function loadTemplates() {
 // that most outcomes assume has been traversed.
 const SINGULARITY_DEFAULTS = [
     { capability: 'singularity', agi_threshold: 'few_months', asi_threshold: 'few_months',
-      automation: 'deep', auto_knowledge_rate: 'dramatic', auto_physical_rate: 'dramatic',
+      automation: 'deep', knowledge_rate: 'rapid', physical_rate: 'rapid',
       takeoff: 'slow', governance_window: 'partial', open_source: 'six_months',
       distribution: 'concentrated', geo_spread: 'one', sovereignty: 'state',
       alignment: 'robust', proliferation_control: 'deny_rivals',
@@ -53,14 +53,15 @@ const SINGULARITY_DEFAULTS = [
 // Defaults for a `stalls` path.
 const STALLS_DEFAULTS = [
     { capability: 'stalls', stall_duration: 'years', stall_later: 'yes',
-      plateau_benefit_distribution: 'equal', plateau_knowledge_rate: 'substantial',
-      plateau_physical_rate: 'substantial' },
+      plateau_benefit_distribution: 'equal', knowledge_rate: 'gradual',
+      physical_rate: 'gradual', knowledge_rate_set: 'yes', physical_rate_set: 'yes',
+      plateau_benefit_set: 'yes' },
 ];
 
 // Defaults for an `automation` path.
 const AUTO_DEFAULTS = [
-    { capability: 'automates', automation: 'deep', auto_knowledge_rate: 'dramatic',
-      auto_physical_rate: 'dramatic', automation_recovery: 'mild',
+    { capability: 'automates', automation: 'deep', knowledge_rate: 'rapid',
+      physical_rate: 'rapid', automation_recovery: 'mild',
       benefit_distribution: 'equal', auto_benefit_distribution: 'equal' },
 ];
 

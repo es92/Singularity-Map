@@ -11,7 +11,7 @@ const _MODULES = _graph.MODULES || [];
 const _eng = (typeof module !== 'undefined' && module.exports)
     ? require('./engine.js') : window.Engine;
 const { resolvedVal, setRvCache, isNodeVisible, isEdgeDisabled,
-        cleanSelection, createStack, push, currentState } = _eng;
+        cleanSelection, createStack, push, currentState, currentFlavor } = _eng;
 
 // ═══════════════════════════════════════════════
 // Equivalence Classes
@@ -266,11 +266,16 @@ for (const node of NODES) {
     }
 }
 
-// Pre-compute safePushDims: dims not referenced by any edge condition
+// Pre-compute safePushDims: dims not referenced by any edge condition.
+// Also exclude dims whose own edges carry collapseToFlavor — pushing them
+// via the fast path would skip cleanSelection and miss the set/move/setFlavor
+// directives (e.g. module completion markers like who_benefits_set).
 const edgeConditionDeps = new Set();
+const collapseSourceDims = new Set();
 for (const node of NODES) {
     if (!node.edges) continue;
     for (const edge of node.edges) {
+        if (edge.collapseToFlavor) collapseSourceDims.add(node.id);
         const refs = [];
         if (edge.disabledWhen) for (const cond of edge.disabledWhen) refs.push(...Object.keys(cond).filter(k => k !== 'reason'));
         if (edge.requires) {
@@ -289,7 +294,7 @@ for (const node of NODES) {
         }
     }
 }
-const safePushDims = new Set(dimOrder.filter(d => !edgeConditionDeps.has(d)));
+const safePushDims = new Set(dimOrder.filter(d => !edgeConditionDeps.has(d) && !collapseSourceDims.has(d)));
 const dimsInKey = new Set(dimOrder);
 
 const derivedNodes = NODES.filter(n => n.deriveWhen);
@@ -325,6 +330,17 @@ const IRR_VECTOR_CACHE_MAX = 25000;
 // `classes[dim]` using per-value template signatures for (2).
 
 let _outcomeReadersByDim = {};
+// Dims that are (a) read by some template's `reachable` clause AND (b) moved
+// to flavor by some edge's `collapseToFlavor.move`. For these, a path's final
+// sel alone doesn't determine template match — we must also observe the dim's
+// flavor value. Populated by setTemplates(); empty unless a module actually
+// exports a template-read dim via flavor.
+let _templateFlavorDims = new Set();
+// Nodes whose edges' collapseToFlavor directives would move a templateFlavorDim
+// into flavor. Answering these nodes must go through the full push() +
+// cleanSelection pipeline (not the safePush fast path) so the walker's flavor
+// tracking stays in sync with the engine.
+let _templateFlavorMoverNodes = new Set();
 let _baseClasses = null;
 let _baseClassReps = null;
 
@@ -413,6 +429,36 @@ function setTemplates(templates) {
         for (const e of node.edges) {
             const c = cm.get(e.id);
             if (!seen.has(c)) { seen.add(c); classReps[dim].push(e.id); }
+        }
+    }
+
+    // Compute templateFlavorDims: template-read dims that can be moved to
+    // flavor by at least one edge. These need to be tracked in irrKey.
+    _templateFlavorDims = new Set();
+    _templateFlavorMoverNodes = new Set();
+    for (const node of NODES) {
+        if (!node.edges) continue;
+        for (const edge of node.edges) {
+            if (!edge.collapseToFlavor) continue;
+            const blocks = Array.isArray(edge.collapseToFlavor) ? edge.collapseToFlavor : [edge.collapseToFlavor];
+            for (const b of blocks) {
+                if (b.move) {
+                    for (const d of b.move) {
+                        if (_outcomeReadersByDim[d]) {
+                            _templateFlavorDims.add(d);
+                            _templateFlavorMoverNodes.add(node.id);
+                        }
+                    }
+                }
+                if (b.setFlavor) {
+                    for (const d of Object.keys(b.setFlavor)) {
+                        if (_outcomeReadersByDim[d]) {
+                            _templateFlavorDims.add(d);
+                            _templateFlavorMoverNodes.add(node.id);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -668,7 +714,31 @@ function classKey(sel) {
 
 const irrVectorCache = new Map();
 
-function classAndSuperKey(sel, superSet) {
+// Digest of flavor content. Two paths with the same sel but different
+// flavor are NOT equivalent for dedup purposes:
+//   - Templates may read flavor via resolvedStateWithFlavor.
+//   - More importantly, flavor records "answered-and-moved" dims.
+//     cleanSelection shrinks sel, which otherwise breaks the walker's
+//     "sel only grows" invariant and causes post-collapse states to
+//     collapse back onto their own ancestors' irrKeys (silent dedup).
+// We include every flavor entry (key+value). This enlarges the key but
+// keeps dedup correct under collapseToFlavor.
+function _flavorDigest(sel, flavor) {
+    if (!flavor) return '';
+    const keys = Object.keys(flavor);
+    if (keys.length === 0) return '';
+    keys.sort();
+    const parts = [];
+    for (const d of keys) {
+        // If sel also has this dim, sel wins (matches resolvedStateWithFlavor).
+        // We still include the flavor entry so that different flavor
+        // histories distinguish states.
+        parts.push(d + '=' + flavor[d]);
+    }
+    return '|F:' + parts.join(';');
+}
+
+function classAndSuperKey(sel, superSet, flavor) {
     for (let i = 0; i < dimOrder.length; i++) {
         const dim = dimOrder[i];
         const v = derivedDimSet.has(dim) ? resolvedVal(sel, dim) : sel[dim];
@@ -693,7 +763,9 @@ function classAndSuperKey(sel, superSet) {
     for (let i = 0; i < dimOrder.length; i++) {
         _skBuf[i] = (superSet.has(dimOrder[i]) || irrVec[i]) ? 42 : _ckBuf[i];
     }
-    return { ck, sk: String.fromCharCode.apply(null, _skBuf) };
+    const base = String.fromCharCode.apply(null, _skBuf);
+    const suffix = _flavorDigest(sel, flavor);
+    return { ck, sk: suffix ? base + suffix : base };
 }
 
 // ═══════════════════════════════════════════════
@@ -767,8 +839,14 @@ function _moduleActivateWhenMatches(sel, mod) {
 }
 
 // Find the active-but-not-yet-reduced module, if any.
+// Only modules with a non-empty cell set are eligible for atomic-edge
+// short-circuiting; modules without a reducerTable (e.g. escape, whose
+// exit space doesn't compress cleanly) fall through to normal DFS and
+// are walked internally like any other subgraph.
 function _pendingModule(sel) {
     for (const m of _MODULES) {
+        const cells = MODULE_CELLS[m.id];
+        if (!cells || cells.length === 0) continue;
         const marker = MODULE_COMPLETION_MARKER[m.id];
         if (marker && sel[marker] !== undefined) continue;
         if (_moduleActivateWhenMatches(sel, m)) return m;
@@ -798,7 +876,12 @@ function _modulePush(stk, mod, cell) {
 
 function dfsPush(stk, nodeId, edgeId) {
     const existingIdx = stk.findIndex(e => e.nodeId === nodeId);
-    if (existingIdx <= 0 && safePushDims.has(nodeId)) {
+    // Safe fast path skips cleanSelection, which also means it skips
+    // collapseToFlavor processing. If this node's edges can move any
+    // template-read dim into flavor, the slow path is required so the
+    // walker's flavor tracking stays consistent with irrKey's flavor
+    // digest (and therefore with the engine's runtime state).
+    if (existingIdx <= 0 && safePushDims.has(nodeId) && !_templateFlavorMoverNodes.has(nodeId)) {
         const prev = stk[stk.length - 1].state;
         const next = Object.assign({}, prev);
         next[nodeId] = edgeId;
@@ -807,11 +890,17 @@ function dfsPush(stk, nodeId, edgeId) {
     return push(stk, nodeId, edgeId);
 }
 
-function pickNextNode(sel, ck) {
+function pickNextNode(sel, ck, flavor) {
     let nextNode = null, bestP = -Infinity;
     for (const n of NODES) {
         if (n.derived) continue;
         if (sel[n.id]) continue;
+        // Dim may have been moved to flavor by a prior collapseToFlavor.move —
+        // it's effectively answered, just relocated. Without this skip, the
+        // walker re-asks the same question forever (cleanSelection moves the
+        // answer right back to flavor on each push, producing duplicate keys
+        // that visited-dedup silently swallows).
+        if (flavor && flavor[n.id] !== undefined) continue;
         if (!(ck ? cachedIsNodeVisible(ck, sel, n) : isNodeVisible(sel, n))) continue;
         if (!n.edges || n.edges.length === 0) continue;
         if (n.edges.every(e => ck ? cachedIsEdgeDisabled(ck, sel, n, e) : isEdgeDisabled(sel, n, e))) continue;
@@ -938,19 +1027,20 @@ function walk(opts = {}) {
 
     function dfs(stk, superSet, parentKey) {
         const sel = currentState(stk);
+        const flavor = currentFlavor(stk);
         _activeRvMap.clear();
         setRvCache(_activeRvMap);
-        const { ck, sk: key } = classAndSuperKey(sel, superSet);
+        const { ck, sk: key } = classAndSuperKey(sel, superSet, flavor);
         if (onDescent && parentKey !== null) onDescent(parentKey, key);
         if (visited.has(key)) { setRvCache(null); return; }
         visited.add(key);
         stateCount++;
 
         try {
-            if (isTerminal(sel)) {
+            if (isTerminal(sel, flavor)) {
                 earlyTerminations++;
                 if (onVisit) onVisit(sel, stk, { ck, key, superSet, nextNode: null, enabled: [] });
-                terminals.push({ sel: { ...sel }, key, type: 'terminal', superSet: new Set(superSet) });
+                terminals.push({ sel: { ...sel }, flavor: { ...flavor }, key, type: 'terminal', superSet: new Set(superSet) });
                 setRvCache(null);
                 return;
             }
@@ -969,18 +1059,18 @@ function walk(opts = {}) {
                 return;
             }
 
-            const nextNode = pickNextNode(sel, ck);
+            const nextNode = pickNextNode(sel, ck, flavor);
             const enabled = nextNode ? nextNode.edges.filter(e => !cachedIsEdgeDisabled(ck, sel, nextNode, e)) : [];
             if (onVisit) onVisit(sel, stk, { ck, key, superSet, nextNode, enabled });
             setRvCache(null);
 
             if (!nextNode) {
-                deadEnds.push({ sel: { ...sel }, key, superSet: new Set(superSet) });
-                terminals.push({ sel: { ...sel }, key, type: 'dead_end', superSet: new Set(superSet) });
+                deadEnds.push({ sel: { ...sel }, flavor: { ...flavor }, key, superSet: new Set(superSet) });
+                terminals.push({ sel: { ...sel }, flavor: { ...flavor }, key, type: 'dead_end', superSet: new Set(superSet) });
                 return;
             }
             if (excludeDims.has(nextNode.id)) {
-                terminals.push({ sel: { ...sel }, key, type: 'boundary', boundaryNode: nextNode.id, superSet: new Set(superSet) });
+                terminals.push({ sel: { ...sel }, flavor: { ...flavor }, key, type: 'boundary', boundaryNode: nextNode.id, superSet: new Set(superSet) });
                 return;
             }
 
@@ -997,8 +1087,8 @@ function walk(opts = {}) {
             }
 
             if (enabled.length === 0) {
-                deadEnds.push({ sel: { ...sel }, key, superSet: new Set(superSet) });
-                terminals.push({ sel: { ...sel }, key, type: 'dead_end', superSet: new Set(superSet) });
+                deadEnds.push({ sel: { ...sel }, flavor: { ...flavor }, key, superSet: new Set(superSet) });
+                terminals.push({ sel: { ...sel }, flavor: { ...flavor }, key, type: 'dead_end', superSet: new Set(superSet) });
                 return;
             }
             const seenClasses = new Set();
@@ -1053,7 +1143,10 @@ function walk(opts = {}) {
  * post-hoc expansion is needed.
  *
  * @param {Object} opts
- * @param {Function[]} opts.matchers - Array of (sel) => bool functions, one per outcome.
+ * @param {Function[]} opts.matchers - Array of (sel, flavor) => bool functions, one per outcome.
+ *        flavor is passed so matchers can read module-exported flavor dims
+ *        referenced by template `reachable` clauses. Legacy (sel)-only
+ *        matchers still work — they just ignore the extra arg.
  * @param {boolean} [opts.quiet]
  * @returns {{ reachMap: Map<string,number>, visited: number, elapsed: number }}
  */
@@ -1063,20 +1156,20 @@ function computeReachability(opts = {}) {
     if (matchers.length > 31) throw new Error('Max 31 outcomes (bitmask limit)');
 
     const _emptySet = new Set();
-    function irrKey(sel) {
-        return classAndSuperKey(sel, _emptySet).sk;
+    function irrKey(sel, flavor) {
+        return classAndSuperKey(sel, _emptySet, flavor).sk;
     }
 
-    // Forward pass: walk() with hooks to record edges, sel-per-key, and
-    // post-order finish sequence. isTerminal mirrors validate.js semantics:
-    // stop DFS as soon as any outcome matches.
+    // Forward pass: walk() with hooks to record edges, sel+flavor-per-key,
+    // and post-order finish sequence. isTerminal mirrors validate.js
+    // semantics: stop DFS as soon as any outcome matches.
     const children = new Map();     // parentKey -> Set<childKey>
-    const selByKey = new Map();     // key -> sel snapshot
+    const selByKey = new Map();     // key -> { sel, flavor, superSet }
     const finishOrder = [];         // DFS post-order: children precede parents
 
-    const isTerminal = (sel) => {
+    const isTerminal = (sel, flavor) => {
         for (let i = 0; i < matchers.length; i++) {
-            if (matchers[i](sel)) return true;
+            if (matchers[i](sel, flavor)) return true;
         }
         return false;
     };
@@ -1089,9 +1182,10 @@ function computeReachability(opts = {}) {
             if (!set) { set = new Set(); children.set(parentKey, set); }
             set.add(childKey);
         },
-        onVisit(sel, _stk, ctx) {
+        onVisit(sel, stk, ctx) {
             const ss = (ctx.superSet && ctx.superSet.size > 0) ? new Set(ctx.superSet) : null;
-            selByKey.set(ctx.key, { sel: { ...sel }, superSet: ss });
+            const flavor = currentFlavor(stk);
+            selByKey.set(ctx.key, { sel: { ...sel }, flavor: { ...flavor }, superSet: ss });
         },
         onFinish(key) {
             finishOrder.push(key);
@@ -1109,7 +1203,7 @@ function computeReachability(opts = {}) {
         if (t.type !== 'terminal') continue;
         let m = 0;
         for (let i = 0; i < matchers.length; i++) {
-            if (matchers[i](t.sel)) m |= (1 << i);
+            if (matchers[i](t.sel, t.flavor)) m |= (1 << i);
         }
         if (m) terminalMask.set(t.key, m);
     }
@@ -1132,7 +1226,7 @@ function computeReachability(opts = {}) {
 
         const entry = selByKey.get(key);
         if (!entry) continue;
-        const { sel, superSet } = entry;
+        const { sel, flavor, superSet } = entry;
 
         _rvMap.clear();
         setRvCache(_rvMap);
@@ -1151,7 +1245,7 @@ function computeReachability(opts = {}) {
         }
 
         if (!superDims || superDims.length === 0) {
-            const ik = irrKey(sel);
+            const ik = irrKey(sel, flavor);
             reachMap.set(ik, (reachMap.get(ik) || 0) | m);
         } else {
             const saved = {};
@@ -1159,7 +1253,7 @@ function computeReachability(opts = {}) {
             (function recurse(i) {
                 if (i === superDims.length) {
                     _rvMap.clear();
-                    const ik = irrKey(sel);
+                    const ik = irrKey(sel, flavor);
                     reachMap.set(ik, (reachMap.get(ik) || 0) | m);
                     return;
                 }
@@ -1201,9 +1295,20 @@ function moduleStackSig(moduleStack) {
     return '|M:' + parts.join(',');
 }
 
-function irrKeyPublic(sel, moduleStack) {
+function irrKeyPublic(sel, flavorOrModuleStack, moduleStackArg) {
+    // Backward-compat: historical signature was (sel, moduleStack). If the
+    // second arg is an Array, treat it as moduleStack and assume no flavor.
+    // New signature: (sel, flavor, moduleStack) — flavor is a plain object.
+    let flavor, moduleStack;
+    if (Array.isArray(flavorOrModuleStack)) {
+        flavor = null;
+        moduleStack = flavorOrModuleStack;
+    } else {
+        flavor = flavorOrModuleStack || null;
+        moduleStack = moduleStackArg || null;
+    }
     setRvCache(new Map());
-    const result = classAndSuperKey(sel, new Set()).sk;
+    const result = classAndSuperKey(sel, new Set(), flavor).sk;
     setRvCache(null);
     return result + moduleStackSig(moduleStack);
 }
@@ -1214,6 +1319,8 @@ const _exports = {
     classKey, classAndSuperKey, irrKey: irrKeyPublic, moduleStackSig,
     resolvedState,
     setTemplates,
+    getTemplateFlavorDims: () => new Set(_templateFlavorDims),
+    getTemplateFlavorMoverNodes: () => new Set(_templateFlavorMoverNodes),
     cachedIsNodeVisible, cachedIsEdgeDisabled, cachedIsIrrelevant,
     pickNextNode, enabledEdgeIds,
     stateCache, irrVectorCache,

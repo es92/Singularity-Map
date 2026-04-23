@@ -224,7 +224,10 @@
         if (!professionId) return [];
         const Engine = window.Engine;
         const sel = Engine.currentState(stack);
-        const ctx = Object.assign({}, sel, { profession: professionId });
+        // narrSel layers flavor under sel — needed for dims that live in
+        // flavor post-module-exit (e.g., response_success).
+        const narrSel = Engine.narrativeState(stack);
+        const ctx = Object.assign({}, narrSel, { profession: professionId });
 
         const profEntry = personalData && personalData.professions.find(p => p.id === professionId);
         const tokenReplace = (str) => {
@@ -233,9 +236,7 @@
         };
 
         const professionalNodes = new Set([
-            'agi_threshold', 'plateau_knowledge_rate', 'auto_knowledge_rate',
-            'knowledge_replacement', 'plateau_physical_rate', 'auto_physical_rate',
-            'physical_automation',
+            'agi_threshold', 'knowledge_rate', 'physical_rate',
         ]);
 
         const vignettes = [];
@@ -266,8 +267,13 @@
         const latePersonalNodes = new Set(['power_use']);
         const benefitNodes = new Set(['plateau_benefit_distribution', 'auto_benefit_distribution', 'benefit_distribution']);
         const deathNodes = new Set(['war_survivors']);
-        if (sel.response_success !== 'yes') deathNodes.add('escape_method');
-        if (sel.catch_outcome === 'holds_temporarily') {
+        if (narrSel.response_success !== 'yes') deathNodes.add('escape_method');
+        // Pre-merge this was `catch_outcome === 'holds_temporarily'` — the
+        // AI was stopped but the threat returns. Post-merge, that case is
+        // `not_permanent` + `response_success=yes`; `response_success=no`
+        // is the old `never_stopped` leg with no actual catch, so no
+        // end-date to propagate. response_success lives in flavor → narrSel.
+        if (sel.catch_outcome === 'not_permanent' && narrSel.response_success === 'yes') {
             const endDate = dateMap && dateMap['catch_outcome'];
             if (endDate) {
                 for (const v of vignettes) {
@@ -473,13 +479,16 @@
         }
 
         const sel = Engine.currentState(stack);
-        const eff = Engine.resolvedState(sel);
+        // Module exits move dims like escape_method/escape_timeline/response_method
+        // into flavor. Template match + timeline resolution both need sel + flavor
+        // so module-exported flavor dims remain visible.
+        const narrEff = Engine.resolvedStateWithFlavor(sel, Engine.currentFlavor(stack));
 
         const templatesMap = {};
         for (const t of outcomes.templates) templatesMap[t.id] = t;
-        const matched = outcomes.templates.filter(t => Engine.templateMatches(t, eff));
+        const matched = outcomes.templates.filter(t => Engine.templateMatches(t, narrEff));
         if (matched.length === 0) return;
-        const resolved = resolveTemplate(templatesMap, matched[0].id, eff);
+        const resolved = resolveTemplate(templatesMap, matched[0].id, narrEff);
         if (!resolved) return;
 
         const events = buildTimelineEvents(stack);

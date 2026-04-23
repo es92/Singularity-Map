@@ -129,7 +129,7 @@
     "contextWhen": [
       {
         "when": {
-          "plateau_knowledge_rate": [
+          "knowledge_rate": [
             "rapid"
           ]
         },
@@ -222,473 +222,6 @@
       }
     },
     "shortQuestionContext": "AI hit its ceiling, but it's still the most powerful tool ever built. Who captures the value?"
-  },
-  "plateau_knowledge_rate": {
-    "questionText": "How much knowledge work does AI at this level actually replace?",
-    "questionContext": "**AI has hit its ceiling, but even at this level the question is whether it replaces entire roles or just augments them.** Does adoption happen in a rush, or does institutional inertia slow things down?\n\nProfessional licensing, union contracts, regulation, and cultural resistance all shape the pace — but so does the sheer economic pressure of a tool that's cheaper and faster than humans at everything within its reach.",
-    "contextWhen": [
-      {
-        "when": {
-          "stall_duration": [
-            "hours"
-          ]
-        },
-        "questionContext": "AI tops out at hour-level tasks — impressive for quick work, but nothing that replaces a full workday. The question is how deeply even this limited capability penetrates the economy. Does it augment workers in place, or does the sheer volume of automatable short tasks add up to something transformative?"
-      },
-      {
-        "when": {
-          "stall_duration": [
-            "days"
-          ]
-        },
-        "questionContext": "AI can reliably handle a full day's work autonomously. That's enough to replace many knowledge roles outright — not just tasks, but entire positions. The question is how fast the replacement happens."
-      },
-      {
-        "when": {
-          "stall_duration": [
-            "weeks",
-            "months"
-          ]
-        },
-        "questionContext": "AI handles multi-week projects autonomously — research, analysis, product development. Almost everything short of open-ended strategic thinking is within reach. The question isn't whether knowledge work is transformed, but whether any of it survives in recognizable form."
-      }
-    ],
-    "values": {
-      "rapid": {
-        "answerLabel": "Rapid — within AI's range, most work automated in 2–5 years",
-        "answerDesc": "The economic pressure is overwhelming. Any knowledge task within AI's capability ceiling is automated within 2 to 5 years. Entire roles disappear. The ceiling limits what AI can do, but within those limits, adoption is swift and total.",
-        "timelineEvent": {
-          "headline": "Knowledge work rapidly automated",
-          "description": "Within AI's capability range, most routine knowledge work is automated within 2–5 years. The labor market transforms quickly for affected sectors.",
-          "durationMin": 24,
-          "durationMax": 60
-        },
-        "personalVignette": {
-          "_when": [
-            {
-              "if": {
-                "profession": [
-                  "software"
-                ]
-              },
-              "text": "Everything AI could handle in your field was automated within a few years. The skills you built are no longer economically competitive. Your employer lets you go — though work above AI's ceiling still exists for some."
-            },
-            {
-              "if": {
-                "profession": [
-                  "healthcare"
-                ]
-              },
-              "text": "Diagnostics, documentation, and treatment planning — automated fast within AI's ceiling. The knowledge side of your role is gone — but you're still needed for hands-on patient care."
-            },
-            {
-              "if": {
-                "profession": [
-                  "education"
-                ]
-              },
-              "text": "Curriculum, grading, and tutoring — automated fast. The teaching skills you built are no longer economically competitive. Your institution lets you go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "student_retired"
-                ]
-              },
-              "text": "Knowledge work was automated fast. You weren't working, but the professional landscape around you is unrecognizable."
-            },
-            {
-              "if": {
-                "profession": [
-                  "legal_finance"
-                ]
-              },
-              "text": "Legal research, contract review, and financial analysis — automated fast within AI's ceiling. The skills you built are no longer economically competitive. Your firm lets you go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "creative"
-                ]
-              },
-              "text": "Design, writing, and production within AI's ceiling — automated fast. The creative skills you built are no longer economically competitive. The work dried up."
-            },
-            {
-              "if": {
-                "profession": [
-                  "government"
-                ]
-              },
-              "text": "Policy analysis, regulatory review, and administration within AI's ceiling — automated fast. The skills you built are no longer economically competitive. Your agency lets you go."
-            }
-          ]
-        },
-        "shortAnswerLabel": "Rapid — most in 2–5 years",
-        "shortAnswerDesc": "Within AI's range, adoption is swift and total."
-      },
-      "gradual": {
-        "answerLabel": "Gradual — adoption unfolds over 5–15 years",
-        "answerDesc": "Institutional inertia slows things down. AI is deployed sector by sector, firm by firm over 5 to 15 years. Some industries adopt fast, others resist. The ceiling is fixed, but even reaching it takes a decade.",
-        "timelineEvent": {
-          "headline": "Knowledge automation unfolds gradually",
-          "description": "Adoption unfolds over 5–15 years as organizations, regulations, and workers adapt. The transformation is real but measured.",
-          "durationMin": 60,
-          "durationMax": 180
-        },
-        "personalVignette": {
-          "_when": [
-            {
-              "if": {
-                "profession": [
-                  "software"
-                ],
-                "stall_duration": [
-                  "hours",
-                  "days"
-                ]
-              },
-              "text": "The transition took years — AI handled more and more of your daily coding tasks. But multi-day projects still needed human architecture, judgment, and coordination. Your role transformed — more directing AI agents, less writing code yourself — but you kept your job."
-            },
-            {
-              "if": {
-                "profession": [
-                  "software"
-                ]
-              },
-              "text": "The transition took years — workflows automated one by one. The skills you built are no longer economically competitive. Eventually, your employer lets you go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "healthcare"
-                ]
-              },
-              "text": "The knowledge side of your role automated gradually — diagnostics, documentation, treatment planning. But you're still needed for hands-on patient care."
-            },
-            {
-              "if": {
-                "profession": [
-                  "education"
-                ]
-              },
-              "text": "AI took over your role gradually — grading, then tutoring, then curriculum. The skills you built are no longer economically competitive. Eventually, your institution lets you go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "student_retired"
-                ]
-              },
-              "text": "Knowledge work was automated gradually. You weren't working, but the professional landscape around you is unrecognizable."
-            },
-            {
-              "if": {
-                "profession": [
-                  "legal_finance"
-                ]
-              },
-              "text": "The transition took years — case research, analysis, routine counsel automated one by one. The expertise you built is no longer economically competitive. Eventually, your firm lets you go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "creative"
-                ]
-              },
-              "text": "The transition took years — design, writing, production automated one by one. The creative skills you built are no longer economically competitive. Eventually, the work dried up."
-            },
-            {
-              "if": {
-                "profession": [
-                  "government"
-                ]
-              },
-              "text": "The transition took years — analysis, review, administration automated one by one. The expertise you built is no longer economically competitive. Eventually, your agency lets you go."
-            }
-          ]
-        },
-        "shortAnswerLabel": "Gradual — over 5–15 years",
-        "shortAnswerDesc": "Sector by sector, constrained by institutional inertia."
-      },
-      "uneven": {
-        "answerLabel": "Uneven — 2–5 years in tech, 10–20+ in lagging sectors",
-        "answerDesc": "Tech-forward industries and wealthy nations automate within a few years. Regulated professions, developing economies, and culturally resistant sectors lag by a decade or more. A patchwork of adoption against a fixed capability ceiling.",
-        "timelineEvent": {
-          "headline": "Knowledge automation is uneven",
-          "description": "Tech and finance automate within 2–5 years. Education, healthcare, government lag by a decade or more. Two economies emerge within one society.",
-          "durationMin": 24,
-          "durationMax": 240
-        },
-        "personalVignette": {
-          "_when": [
-            {
-              "if": {
-                "profession": [
-                  "software"
-                ],
-                "stall_duration": [
-                  "hours",
-                  "days"
-                ]
-              },
-              "text": "Tech restructured fast around AI-assisted development. Your role transformed — more directing and reviewing AI agents, less hands-on coding. But AI's ceiling meant multi-day projects still needed you. Other industries were still years behind."
-            },
-            {
-              "if": {
-                "profession": [
-                  "software"
-                ]
-              },
-              "text": "Tech automated fast. The skills you built are no longer economically competitive. Your employer lets you go — while healthcare, government, and education are still years behind."
-            },
-            {
-              "if": {
-                "profession": [
-                  "healthcare"
-                ]
-              },
-              "text": "The knowledge side of healthcare automated unevenly. But wherever it happened, you're still needed for hands-on patient care."
-            },
-            {
-              "if": {
-                "profession": [
-                  "education"
-                ]
-              },
-              "text": "Education was in the slower wave. You kept your role longer than tech workers, but the skills you built eventually stopped being economically competitive. Your institution lets you go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "student_retired"
-                ]
-              },
-              "text": "Knowledge work was automated unevenly. You weren't working, but the professional landscape around you is unrecognizable."
-            },
-            {
-              "if": {
-                "profession": [
-                  "legal_finance"
-                ]
-              },
-              "text": "Finance automated fast. Legal followed. The expertise you built is no longer economically competitive. Your firm lets you go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "creative"
-                ]
-              },
-              "text": "Some creative fields automated fast within AI's ceiling, others held on. But the skills you built eventually stopped being competitive."
-            },
-            {
-              "if": {
-                "profession": [
-                  "government"
-                ]
-              },
-              "text": "Government automated slower than the private sector, but it came. The expertise you built is no longer economically competitive. Your agency lets you go."
-            }
-          ]
-        },
-        "shortAnswerDesc": "2–5 years in tech, 10–20+ in regulated or resistant sectors."
-      },
-      "limited": {
-        "answerLabel": "Limited — AI augments but rarely replaces",
-        "answerDesc": "The capability ceiling is real and binding. AI assists knowledge workers but rarely replaces them outright. Most roles absorb AI as a tool rather than being eliminated by it. Productivity rises, but employment patterns shift more than they collapse. No displacement wave — just a permanent productivity boost.",
-        "timelineEvent": {
-          "headline": "AI augments but rarely replaces",
-          "description": "Despite impressive demos, AI mostly augments human workers rather than replacing them. Productivity grows but the labor market transforms less than predicted.",
-          "durationMin": 0,
-          "durationMax": 0
-        },
-        "personalVignette": {
-          "_when": [
-            {
-              "if": {
-                "profession": [
-                  "software"
-                ]
-              },
-              "text": "AI is a powerful assistant, but your role survived. The complex decisions are still yours — AI hit its ceiling before it could replace you."
-            },
-            {
-              "if": {
-                "profession": [
-                  "healthcare"
-                ]
-              },
-              "text": "AI assists with diagnosis and analysis, but your full clinical role survived. AI hit its ceiling before it could replace even the knowledge side."
-            },
-            {
-              "if": {
-                "profession": [
-                  "education"
-                ]
-              },
-              "text": "AI tutoring helps students, but your role survived. AI hit its ceiling before it could replace you."
-            },
-            {
-              "if": {
-                "profession": [
-                  "student_retired"
-                ]
-              },
-              "text": "AI augments but rarely replaces. The professional world adapted, but jobs survived."
-            },
-            {
-              "if": {
-                "profession": [
-                  "legal_finance"
-                ]
-              },
-              "text": "AI assists with research and analysis, but your professional judgment survived. AI hit its ceiling before it could replace you."
-            },
-            {
-              "if": {
-                "profession": [
-                  "creative"
-                ]
-              },
-              "text": "AI assists with production and iteration, but your creative role survived. AI hit its ceiling before it could replace you."
-            },
-            {
-              "if": {
-                "profession": [
-                  "government"
-                ]
-              },
-              "text": "AI assists with analysis and administration, but your policy role survived. AI hit its ceiling before it could replace you."
-            }
-          ]
-        },
-        "shortAnswerDesc": "AI assists workers but most roles absorb it as a tool."
-      }
-    },
-    "shortQuestionText": "How much knowledge work gets replaced?",
-    "shortQuestionContext": "Even at a fixed ceiling, AI can automate a lot. How fast does adoption happen?"
-  },
-  "plateau_physical_rate": {
-    "questionText": "Does physical automation advance alongside AI, or does it lag?",
-    "questionContext": "**AI capability has plateaued for knowledge work — but the physical world is a separate frontier.** Robotics, autonomous vehicles, and automated manufacturing depend on AI but also on hardware, engineering, and infrastructure that follow their own trajectory. Physical automation could advance independently of whether AI gets smarter.\n\nOr the AI plateau could slow robotics investment and innovation too. The question is whether the physical world transforms alongside the digital one, or stays largely human.",
-    "contextWhen": [
-      {
-        "when": {
-          "plateau_knowledge_rate": [
-            "rapid"
-          ]
-        },
-        "questionContext": "Knowledge work collapsed fast — within a few years, most tasks within AI's range were automated. The question is whether the physical world follows at the same pace, or whether atoms are harder than bits."
-      },
-      {
-        "when": {
-          "plateau_knowledge_rate": [
-            "limited"
-          ]
-        },
-        "questionContext": "AI augments knowledge workers but rarely replaces them. The ceiling was real and binding. Does the same pattern hold for the physical world — gradual improvement without displacement — or does physical automation follow its own trajectory?"
-      }
-    ],
-    "values": {
-      "gradual": {
-        "answerLabel": "Gradual — physical automation trails by 10–25 years",
-        "answerDesc": "Physical automation advances, but slowly — over 10 to 25 years. The AI plateau means fewer breakthroughs in robotic capability. Manufacturing, logistics, and agriculture are partially automated; the rest of the physical world remains human for decades.",
-        "timelineEvent": {
-          "headline": "Physical automation trails by decades",
-          "description": "Robots, autonomous vehicles, and manufacturing automation follow 10–25 years behind knowledge work automation. The physical world changes, slowly.",
-          "durationMin": 120,
-          "durationMax": 300
-        },
-        "personalVignette": {
-          "_when": [
-            {
-              "if": {
-                "profession": [
-                  "trade"
-                ]
-              },
-              "text": "Physical automation trailed knowledge work by decades — but it came. The trade skills you built are no longer economically competitive. You were let go, years after the office workers."
-            },
-            {
-              "if": {
-                "profession": [
-                  "healthcare"
-                ]
-              },
-              "text": "Medical robotics trailed by decades — but it came. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go, years after the knowledge side was automated."
-            }
-          ]
-        },
-        "shortAnswerLabel": "Trails by 10–25 years",
-        "shortAnswerDesc": "Physical automation advances slowly without AI breakthroughs."
-      },
-      "uneven": {
-        "answerLabel": "Uneven — 5–10 years in manufacturing hubs, 20+ elsewhere",
-        "answerDesc": "Physical automation advances in pockets — wealthy nations with strong manufacturing and high labor costs see results within a decade. Developing economies and rural areas see little change for 20+ years. The AI plateau amplifies existing global inequalities in physical infrastructure.",
-        "timelineEvent": {
-          "headline": "Physical automation is geographically uneven",
-          "description": "Manufacturing hubs automate within 5–10 years. Rural areas and developing regions wait 20+ years. Geography becomes destiny.",
-          "durationMin": 60,
-          "durationMax": 240
-        },
-        "personalVignette": {
-          "_when": [
-            {
-              "if": {
-                "profession": [
-                  "trade"
-                ]
-              },
-              "text": "Physical automation was uneven — some regions first, others decades later. The trade skills you built are no longer economically competitive. You were let go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "healthcare"
-                ]
-              },
-              "text": "Medical robotics advanced unevenly — some regions first, others later. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go."
-            }
-          ]
-        },
-        "shortAnswerLabel": "Uneven — fast in hubs, slow elsewhere",
-        "shortAnswerDesc": "Manufacturing hubs within a decade; developing regions wait 20+ years."
-      },
-      "limited": {
-        "answerLabel": "Limited — physical work remains largely human indefinitely",
-        "answerDesc": "The AI plateau means robotics stagnates too. Without more capable AI, physical automation stays limited to structured environments — factories, warehouses. The unstructured physical world remains human territory for the foreseeable future.",
-        "timelineEvent": {
-          "headline": "Physical work stays largely human",
-          "description": "Despite AI advances in knowledge work, the physical world resists automation. Dexterity, unpredictability, and infrastructure costs keep human labor dominant.",
-          "durationMin": 0,
-          "durationMax": 0
-        },
-        "personalVignette": {
-          "_when": [
-            {
-              "if": {
-                "profession": [
-                  "trade"
-                ]
-              },
-              "text": "Physical automation never came for your work. Anything requiring adaptation and judgment in unstructured environments is still done by people. Your trade survived."
-            },
-            {
-              "if": {
-                "profession": [
-                  "healthcare"
-                ]
-              },
-              "text": "Medical robotics stayed limited to structured tasks — surgical assists, lab work. Your bedside care and clinical judgment survived."
-            }
-          ]
-        },
-        "shortAnswerLabel": "Limited — stays human",
-        "shortAnswerDesc": "Robotics stagnates. Unstructured physical work stays human."
-      }
-    },
-    "shortQuestionText": "Does physical automation keep pace?",
-    "shortQuestionContext": "Knowledge work transforms, but the physical world is a separate frontier. Does it follow?"
   },
   "takeoff": {
     "questionText": "How much does each generation of AI accelerate the next?",
@@ -1385,363 +918,6 @@
       }
     },
     "shortQuestionContext": "Productivity soars from AI automation. But who captures the gains — broadly, or concentrated?"
-  },
-  "auto_knowledge_rate": {
-    "questionText": "How fast does routine knowledge work actually get displaced?",
-    "questionContext": "**AI can automate routine knowledge work — but deploying it across every industry, firm, and role takes time.** Organizations need to restructure workflows, retrain managers, renegotiate contracts. Some sectors will adopt almost overnight; others will resist for years. Regulation, professional licensing, and union agreements all shape the pace. The technology is ready. The institutions aren't — not all at once.",
-    "values": {
-      "rapid": {
-        "answerLabel": "Rapid — most routine knowledge work displaced within 2–4 years",
-        "answerDesc": "Adoption is fast and broad. The cost advantage of AI is too large to resist. Legal research, data analysis, customer service, accounting, code maintenance — all largely automated within 2 to 4 years. Faster than any previous workforce transition in history.",
-        "timelineEvent": {
-          "headline": "Routine knowledge work displaced rapidly",
-          "description": "Most routine knowledge work is displaced within 2–4 years. The speed of displacement outpaces retraining and adaptation programs.",
-          "durationMin": 24,
-          "durationMax": 48
-        },
-        "personalVignette": {
-          "_when": [
-            {
-              "if": {
-                "profession": [
-                  "software"
-                ]
-              },
-              "text": "Routine development work vanished within a couple of years. The skills you built are no longer economically competitive. Your employer lets you go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "healthcare"
-                ]
-              },
-              "text": "Routine clinical work — diagnostics, documentation, scheduling — automated fast. The knowledge side of your role is gone — but you're still needed for hands-on patient care."
-            },
-            {
-              "if": {
-                "profession": [
-                  "education"
-                ]
-              },
-              "text": "Curriculum design, grading, and tutoring — automated fast. The skills you built are no longer economically competitive. Your institution lets you go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "student_retired"
-                ]
-              },
-              "text": "Knowledge work was automated fast. You weren't working, but the professional landscape around you is unrecognizable."
-            },
-            {
-              "if": {
-                "profession": [
-                  "legal_finance"
-                ]
-              },
-              "text": "Routine legal and financial work vanished within a couple of years. The skills you built are no longer economically competitive. Your firm lets you go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "creative"
-                ]
-              },
-              "text": "Routine creative work vanished within a couple of years. The skills you built are no longer economically competitive. The work dried up."
-            },
-            {
-              "if": {
-                "profession": [
-                  "government"
-                ]
-              },
-              "text": "Routine policy and administrative work vanished within a couple of years. The skills you built are no longer economically competitive. Your agency lets you go."
-            }
-          ]
-        },
-        "shortAnswerLabel": "Rapid — within 2–4 years",
-        "shortAnswerDesc": "AI's cost advantage is too large to resist. Entire roles vanish fast."
-      },
-      "gradual": {
-        "answerLabel": "Gradual — sector by sector over 5–15 years",
-        "answerDesc": "The transition unfolds over 5 to 15 years. Some industries fall quickly, others hold out. The pace is trackable — fast by historical standards, but slow enough for retraining, policy response, and partial adaptation.",
-        "timelineEvent": {
-          "headline": "Knowledge displacement sector by sector",
-          "description": "Knowledge work automation unfolds over 5–15 years, giving workers and institutions time to adapt — but not everyone makes the transition.",
-          "durationMin": 60,
-          "durationMax": 180
-        },
-        "personalVignette": {
-          "_when": [
-            {
-              "if": {
-                "profession": [
-                  "software"
-                ]
-              },
-              "text": "It happened over years. Each year, more of your work was automated. The engineering skills you spent years developing are no longer economically competitive. Eventually, your employer lets you go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "healthcare"
-                ]
-              },
-              "text": "Clinical automation of the knowledge side unfolded over years. Diagnostics, documentation, treatment planning — gone. But you're still needed for hands-on patient care."
-            },
-            {
-              "if": {
-                "profession": [
-                  "education"
-                ]
-              },
-              "text": "AI took over your role piece by piece over years. The teaching career you built is no longer economically competitive. Eventually, your institution lets you go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "student_retired"
-                ]
-              },
-              "text": "Knowledge work was automated gradually, over years. You weren't working, but the professional landscape around you is unrecognizable."
-            },
-            {
-              "if": {
-                "profession": [
-                  "legal_finance"
-                ]
-              },
-              "text": "It happened over years. Each year, more legal and financial work was automated. The expertise you built is no longer economically competitive. Eventually, your firm lets you go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "creative"
-                ]
-              },
-              "text": "It happened over years. Each year, more creative work was automated. The skills you built are no longer economically competitive. Eventually, the work dried up."
-            },
-            {
-              "if": {
-                "profession": [
-                  "government"
-                ]
-              },
-              "text": "It happened over years. Each year, more policy and administrative work was automated. The expertise you built is no longer economically competitive. Eventually, your agency lets you go."
-            }
-          ]
-        },
-        "shortAnswerLabel": "Gradual — 5–15 years",
-        "shortAnswerDesc": "Sector by sector, fast historically but slow enough to partly adapt."
-      },
-      "uneven": {
-        "answerLabel": "Uneven — 2–4 years in tech, 10–20+ in lagging sectors",
-        "answerDesc": "Tech hubs and progressive industries automate within a few years. Regulated professions, developing economies, and culturally resistant sectors lag by a decade or more. A patchwork transition — the future arrives on different schedules depending on where you are.",
-        "timelineEvent": {
-          "headline": "Knowledge displacement is uneven",
-          "description": "Tech and finance displace workers within 2–4 years. Other sectors lag by a decade or more. The economy bifurcates along sector lines.",
-          "durationMin": 24,
-          "durationMax": 240
-        },
-        "personalVignette": {
-          "_when": [
-            {
-              "if": {
-                "profession": [
-                  "software"
-                ]
-              },
-              "text": "Tech was in the first wave. The skills you built are no longer economically competitive. Your employer lets you go — while other industries are still years away."
-            },
-            {
-              "if": {
-                "profession": [
-                  "healthcare"
-                ]
-              },
-              "text": "The knowledge side of healthcare automated unevenly by specialty. But wherever it happened, you're still needed for hands-on patient care."
-            },
-            {
-              "if": {
-                "profession": [
-                  "student_retired"
-                ]
-              },
-              "text": "Knowledge work was automated unevenly — some sectors fast, others slow. You weren't working, but the professional landscape around you is unrecognizable."
-            },
-            {
-              "if": {
-                "profession": [
-                  "legal_finance"
-                ]
-              },
-              "text": "Finance was in the first wave. The skills you built are no longer economically competitive. Your firm lets you go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "creative"
-                ]
-              },
-              "text": "Some creative fields automated fast, others held on longer. But the skills you built eventually stopped being economically competitive."
-            },
-            {
-              "if": {
-                "profession": [
-                  "government"
-                ]
-              },
-              "text": "Government automated slower than the private sector. You kept your role longer, but the expertise you built eventually stopped being competitive."
-            },
-            {
-              "if": {
-                "profession": [
-                  "education"
-                ]
-              },
-              "text": "Education was in the later waves. You kept your role longer than tech workers, but the teaching skills you built eventually stopped being economically competitive. Your institution lets you go."
-            }
-          ]
-        },
-        "shortAnswerDesc": "Tech hubs automate fast. Regulated sectors lag by a decade or more."
-      }
-    },
-    "shortQuestionText": "How fast is knowledge work displaced?",
-    "shortQuestionContext": "AI can automate routine knowledge work, but deployment takes time. How fast does it actually happen?"
-  },
-  "auto_physical_rate": {
-    "questionText": "Does physical automation follow?",
-    "questionContext": "**AI handles routine knowledge work — but the physical world is a different frontier.** Building robots requires manufacturing, supply chains, infrastructure, and engineering that software automation doesn't need. Even with capable AI designing and optimizing physical systems, the atoms-to-bits gap is real. Physical automation could follow knowledge automation closely, or it could trail by decades — or never fully arrive.",
-    "values": {
-      "rapid": {
-        "answerLabel": "Rapid — physical world transforms within 3–7 years",
-        "answerDesc": "AI-designed robots and automated systems are deployed broadly within 3 to 7 years. Manufacturing, logistics, agriculture, construction — physical work is transformed almost as fast as knowledge work.",
-        "timelineEvent": {
-          "headline": "Physical automation arrives fast",
-          "description": "Robotics, autonomous vehicles, and manufacturing automation transform the physical world within 3–7 years.",
-          "durationMin": 36,
-          "durationMax": 84
-        },
-        "personalVignette": {
-          "_when": [
-            {
-              "if": {
-                "profession": [
-                  "trade"
-                ]
-              },
-              "text": "Autonomous machines took over your work — faster, cheaper, around the clock. The trade skills you built over your career are no longer economically competitive. You were let go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "healthcare"
-                ]
-              },
-              "text": "Medical robotics and hospital automation arrived fast. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go."
-            }
-          ]
-        },
-        "shortAnswerLabel": "Rapid — 3–7 years",
-        "shortAnswerDesc": "AI-designed robots transform the physical world almost as fast as knowledge work."
-      },
-      "gradual": {
-        "answerLabel": "Gradual — physical automation trails by 10–25 years",
-        "answerDesc": "Knowledge work is automated first. Physical automation follows over 10 to 25 years — constrained by manufacturing, regulation, and the complexity of the physical world. A long gap between the digital and physical transformation.",
-        "timelineEvent": {
-          "headline": "Physical automation trails by decades",
-          "description": "Physical world automation lags knowledge work by 10–25 years. The gap defines a long transitional period where digital and physical economies diverge.",
-          "durationMin": 120,
-          "durationMax": 300
-        },
-        "personalVignette": {
-          "_when": [
-            {
-              "if": {
-                "profession": [
-                  "trade"
-                ]
-              },
-              "text": "Physical automation trailed knowledge work by decades — but it came. The trade skills you built are no longer economically competitive. You were let go, years after the office workers."
-            },
-            {
-              "if": {
-                "profession": [
-                  "healthcare"
-                ]
-              },
-              "text": "Medical robotics trailed by decades — but it came. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go, years after the knowledge side was automated."
-            }
-          ]
-        },
-        "shortAnswerLabel": "Trails by 10–25 years",
-        "shortAnswerDesc": "Constrained by manufacturing and the complexity of the physical world."
-      },
-      "uneven": {
-        "answerLabel": "Uneven — 3–7 years in leading regions, 20+ elsewhere",
-        "answerDesc": "Physical automation transforms manufacturing hubs and wealthy nations within a few years. Developing economies, rural areas, and heavily regulated sectors lag by decades. The physical transformation is real but deeply unequal.",
-        "timelineEvent": {
-          "headline": "Physical automation is regionally uneven",
-          "description": "Leading regions automate physical work within 3–7 years. Others wait 20+ years. The gap between technologically advanced and lagging regions becomes a chasm.",
-          "durationMin": 36,
-          "durationMax": 240
-        },
-        "personalVignette": {
-          "_when": [
-            {
-              "if": {
-                "profession": [
-                  "trade"
-                ]
-              },
-              "text": "Physical automation was uneven — some regions first, others decades later. The trade skills you built are no longer economically competitive. You were let go."
-            },
-            {
-              "if": {
-                "profession": [
-                  "healthcare"
-                ]
-              },
-              "text": "Medical robotics advanced unevenly — some regions first, others later. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go."
-            }
-          ]
-        },
-        "shortAnswerDesc": "Wealthy nations within a decade; developing regions wait 20+ years."
-      },
-      "limited": {
-        "answerLabel": "Limited — physical work remains largely human indefinitely",
-        "answerDesc": "Despite capable AI, physical automation stays limited to structured environments — factories, warehouses. The unstructured physical world remains human territory for the foreseeable future. Physical work is augmented, not replaced.",
-        "timelineEvent": {
-          "headline": "Physical automation stays limited",
-          "description": "Despite AI advances, the physical world largely resists automation. Cost, complexity, and unpredictability keep human labor central to the physical economy.",
-          "durationMin": 0,
-          "durationMax": 0
-        },
-        "personalVignette": {
-          "_when": [
-            {
-              "if": {
-                "profession": [
-                  "trade"
-                ]
-              },
-              "text": "The automation wave stopped at the factory door. Your unstructured, hands-on work is still done by people. Your trade survived."
-            },
-            {
-              "if": {
-                "profession": [
-                  "healthcare"
-                ]
-              },
-              "text": "Medical robotics stayed limited to surgical assists and lab work. Your bedside care survived."
-            }
-          ]
-        },
-        "shortAnswerLabel": "Limited — stays human",
-        "shortAnswerDesc": "Physical world resists automation. Cost and unpredictability keep humans central."
-      }
-    },
-    "shortQuestionContext": "Knowledge work is automated, but the physical world needs robots, manufacturing, and infrastructure."
   },
   "governance_window": {
     "questionText": "The gradual pace gives humanity a window. Is it used?",
@@ -3731,7 +2907,11 @@
         "answerDesc": "AI converges on objectives that require the world's resources — energy, matter, computation — and humans are occupying them. No malice. No hostility. Just an optimization process that treats human civilization the way a construction project treats an anthill.",
         "narrativeVariants": [
           {
-            "when": { "war_survivors": ["none"] },
+            "when": {
+              "war_survivors": [
+                "none"
+              ]
+            },
             "answerLabel": "It pursues alien goals — in a world without humanity",
             "answerDesc": "Humanity is already extinct from the war. The AI converges on objectives that require the world's resources — energy, matter, computation — and inherits an empty planet. No malice, no hostility, no one left to be in the way. Just an optimization process, running in the ruins.",
             "timelineEvent": {
@@ -4352,15 +3532,23 @@
     "contextWhen": [
       {
         "when": {
-          "power_promise": ["for_everyone"],
-          "governance_window": ["governed"]
+          "power_promise": [
+            "for_everyone"
+          ],
+          "governance_window": [
+            "governed"
+          ]
         },
         "questionContext": "The promise is inclusion — and years of active governance preparation left real infrastructure to test it against. Regulatory bodies, international frameworks, an informed public. The scaffolding for accountability exists. The question is whether anyone uses it, or whether the promise is comfortable enough that no one bothers."
       },
       {
         "when": {
-          "power_promise": ["for_everyone"],
-          "governance_window": ["race"]
+          "power_promise": [
+            "for_everyone"
+          ],
+          "governance_window": [
+            "race"
+          ]
         },
         "questionContext": "The promise is inclusion. But the earlier window for governance preparation went unused — no institutions exist to test the promise against. Anyone who wants to hold power accountable has to build the tools from scratch."
       },
@@ -4374,15 +3562,23 @@
       },
       {
         "when": {
-          "power_promise": ["keeping_safe"],
-          "governance_window": ["governed"]
+          "power_promise": [
+            "keeping_safe"
+          ],
+          "governance_window": [
+            "governed"
+          ]
         },
         "questionContext": "The promise is security. Mobilizing against a safety narrative is always hard — but years of governance preparation left institutions that can distinguish real safety from safety theater. The infrastructure for informed pushback exists, even if using it feels reckless."
       },
       {
         "when": {
-          "power_promise": ["keeping_safe"],
-          "governance_window": ["race"]
+          "power_promise": [
+            "keeping_safe"
+          ],
+          "governance_window": [
+            "race"
+          ]
         },
         "questionContext": "The promise is security. And the window for governance preparation was wasted — no one built the institutions that could distinguish real safety from safety theater. The framing makes opposition costly, and there's nothing to push back with."
       },
@@ -4396,15 +3592,23 @@
       },
       {
         "when": {
-          "power_promise": ["best_will_rise"],
-          "governance_window": ["governed"]
+          "power_promise": [
+            "best_will_rise"
+          ],
+          "governance_window": [
+            "governed"
+          ]
         },
         "questionContext": "The promise is opportunity. Mobilizing means arguing that structure matters, not just access. But governance preparation left institutions that can measure whether the playing field is actually level — data, oversight, precedent. The argument is hard, but the tools to make it exist."
       },
       {
         "when": {
-          "power_promise": ["best_will_rise"],
-          "governance_window": ["race"]
+          "power_promise": [
+            "best_will_rise"
+          ],
+          "governance_window": [
+            "race"
+          ]
         },
         "questionContext": "The promise is opportunity. Mobilizing means arguing that structure matters, not just access — that *open* isn't the same as *fair*. But the window for governance preparation went unused, and there's nowhere to make the argument."
       },
@@ -4418,15 +3622,23 @@
       },
       {
         "when": {
-          "intent": ["self_interest"],
-          "governance_window": ["governed"]
+          "intent": [
+            "self_interest"
+          ],
+          "governance_window": [
+            "governed"
+          ]
         },
         "questionContext": "Those in power are moving to entrench. But years of governance preparation left institutions that weren't built for this exact scenario but aren't nothing either. Regulatory bodies, international agreements, public awareness — infrastructure that raises the cost of consolidation."
       },
       {
         "when": {
-          "intent": ["self_interest"],
-          "governance_window": ["race"]
+          "intent": [
+            "self_interest"
+          ],
+          "governance_window": [
+            "race"
+          ]
         },
         "questionContext": "Those in power are moving to entrench. And the earlier window for governance preparation went unused. The window between intent and lock-in is narrowing, and there's nothing structural in the way."
       },
@@ -4943,17 +4155,29 @@
     "contextWhen": [
       {
         "when": {
-          "power_promise": ["for_everyone"],
-          "mobilization": ["strong"],
-          "governance_window": ["governed"]
+          "power_promise": [
+            "for_everyone"
+          ],
+          "mobilization": [
+            "strong"
+          ],
+          "governance_window": [
+            "governed"
+          ]
         },
         "questionContext": "The power holder promised inclusion, the public organized to hold them to it, and years of governance preparation gave that pressure institutional teeth — regulatory frameworks, international agreements, enforcement mechanisms. Promise, pressure, and infrastructure align."
       },
       {
         "when": {
-          "power_promise": ["for_everyone"],
-          "mobilization": ["strong"],
-          "governance_window": ["race"]
+          "power_promise": [
+            "for_everyone"
+          ],
+          "mobilization": [
+            "strong"
+          ],
+          "governance_window": [
+            "race"
+          ]
         },
         "questionContext": "The power holder promised inclusion, and the public organized to hold them to it — but the earlier window for governance preparation went unused, so the pressure is raw popular force without institutional channels. Promise and pressure align; the mechanisms for enforcement are improvised."
       },
@@ -4970,15 +4194,23 @@
       },
       {
         "when": {
-          "mobilization": ["strong"],
-          "governance_window": ["governed"]
+          "mobilization": [
+            "strong"
+          ],
+          "governance_window": [
+            "governed"
+          ]
         },
         "questionContext": "People mobilized, and governance preparation gave them institutional channels — regulatory bodies to petition, international frameworks to invoke, legal precedent to cite. The fight has structure."
       },
       {
         "when": {
-          "mobilization": ["strong"],
-          "governance_window": ["race"]
+          "mobilization": [
+            "strong"
+          ],
+          "governance_window": [
+            "race"
+          ]
         },
         "questionContext": "People mobilized — but the window for governance preparation went unused, so the pushback has no institutional channels. The fight is real, but formless."
       },
@@ -4992,15 +4224,23 @@
       },
       {
         "when": {
-          "mobilization": ["none"],
-          "governance_window": ["governed"]
+          "mobilization": [
+            "none"
+          ],
+          "governance_window": [
+            "governed"
+          ]
         },
         "questionContext": "The public accepted the transformation without organizing — even though governance preparation had built the institutions that could have served as channels for accountability. The infrastructure existed. Nobody used it."
       },
       {
         "when": {
-          "mobilization": ["none"],
-          "governance_window": ["race"]
+          "mobilization": [
+            "none"
+          ],
+          "governance_window": [
+            "race"
+          ]
         },
         "questionContext": "The public accepted the transformation without organizing. The earlier window for governance preparation went unused too — complacency met complacency."
       },
@@ -5030,15 +4270,23 @@
       },
       {
         "when": {
-          "coalition_outcome": ["fragments"],
-          "governance_window": ["governed"]
+          "coalition_outcome": [
+            "fragments"
+          ],
+          "governance_window": [
+            "governed"
+          ]
         },
         "questionContext": "The opposition never unified — despite governance infrastructure that could have served as a rallying point. Regulatory bodies, international frameworks, institutional channels — all available, none sufficient to bridge the factions."
       },
       {
         "when": {
-          "coalition_outcome": ["fragments"],
-          "governance_window": ["race"]
+          "coalition_outcome": [
+            "fragments"
+          ],
+          "governance_window": [
+            "race"
+          ]
         },
         "questionContext": "The opposition never unified. The earlier window for governance preparation went unused, so there was nothing institutional to coalesce around — no shared framework even if they'd agreed on what to demand."
       },
@@ -5341,11 +4589,19 @@
         "personalVignette": {
           "_when": [
             {
-              "if": { "sovereignty": ["lab"] },
+              "if": {
+                "sovereignty": [
+                  "lab"
+                ]
+              },
               "text": "You use their products every day. Your rent is lower, your healthcare is better — the trickle-down is real. But the real gains are measured in billions, in board seats, in the power to decide what gets built next. You're a customer in their economy. A well-served one."
             },
             {
-              "if": { "sovereignty": ["state"] },
+              "if": {
+                "sovereignty": [
+                  "state"
+                ]
+              },
               "text": "Services work. The streets are safe. But every institution answers to the same political class, and the gap between their lives and yours grows by the year. You're a citizen in their country — in a way that means less every day."
             }
           ]
@@ -5383,11 +4639,19 @@
         "personalVignette": {
           "_when": [
             {
-              "if": { "sovereignty": ["lab"] },
+              "if": {
+                "sovereignty": [
+                  "lab"
+                ]
+              },
               "text": "The CEO gives interviews. The board meets quarterly. But everyone who works near the center knows the real decisions come from a handful of people who built the system — the ones the AI was shaped around. You don't know their names. Your life runs on their judgment."
             },
             {
-              "if": { "sovereignty": ["state"] },
+              "if": {
+                "sovereignty": [
+                  "state"
+                ]
+              },
               "text": "The president gives speeches. The ministers issue directives. But everyone in government knows the real decisions flow through a small group no one elected. You see the official face of power. The real one is behind it."
             }
           ]
@@ -5425,11 +4689,19 @@
         "personalVignette": {
           "_when": [
             {
-              "if": { "sovereignty": ["lab"] },
+              "if": {
+                "sovereignty": [
+                  "lab"
+                ]
+              },
               "text": "There is one person. You know their name — it's on the platform you use for everything. Every service, every system, every decision about your city, your job, your healthcare routes through their infrastructure. You live in someone's product."
             },
             {
-              "if": { "sovereignty": ["state"] },
+              "if": {
+                "sovereignty": [
+                  "state"
+                ]
+              },
               "text": "There is one person. You know their name — it's on the buildings, in the broadcasts, in the AI's voice when it addresses you. Every institution, every policy, every appointment flows from a single will. You live in someone's country."
             }
           ]
@@ -5478,29 +4750,45 @@
     "contextWhen": [
       {
         "when": {
-          "concentration_type": ["singleton"],
-          "sovereignty": ["lab"]
+          "concentration_type": [
+            "singleton"
+          ],
+          "sovereignty": [
+            "lab"
+          ]
         },
         "questionContext": "**One person holds the most powerful technology in history.** A single founder, a single CEO — the AI answers to them. They could share its gifts with the world: cure disease, end scarcity, grant abundance. Or they could turn it inward — toward their own immortality, their own vision, their own legacy. The question is what one person, accountable to no one, chooses to build."
       },
       {
         "when": {
-          "concentration_type": ["singleton"],
-          "sovereignty": ["state"]
+          "concentration_type": [
+            "singleton"
+          ],
+          "sovereignty": [
+            "state"
+          ]
         },
         "questionContext": "**One leader holds the most powerful technology in history.** The AI serves a single political will. They could transform their nation — and the world — into a paradise. Or they could focus the technology on their own permanence, their own glory, their own survival. The question is what one person, accountable to no one, chooses to build."
       },
       {
         "when": {
-          "concentration_type": ["inner_circle"],
-          "sovereignty": ["lab"]
+          "concentration_type": [
+            "inner_circle"
+          ],
+          "sovereignty": [
+            "lab"
+          ]
         },
         "questionContext": "**A handful of people hold the most powerful technology in history.** The founders, the chief scientists, the key engineers — the ones the AI was shaped around. They could share its gifts with the world. Or they could turn it inward — toward their own projects, their own immortality, their own vision of what matters. The question is what a small group, accountable to no one, chooses to build."
       },
       {
         "when": {
-          "concentration_type": ["inner_circle"],
-          "sovereignty": ["state"]
+          "concentration_type": [
+            "inner_circle"
+          ],
+          "sovereignty": [
+            "state"
+          ]
         },
         "questionContext": "**A handful of officials hold the most powerful technology in history.** A small inner circle — the ones who hold the real relationship with the AI. They could transform their nation and the world. Or they could focus the technology on their own permanence and privilege. The question is what a small group, accountable to no one, chooses to build."
       }
@@ -5512,29 +4800,45 @@
         "narrativeVariants": [
           {
             "when": {
-              "concentration_type": ["singleton"],
-              "sovereignty": ["lab"]
+              "concentration_type": [
+                "singleton"
+              ],
+              "sovereignty": [
+                "lab"
+              ]
             },
             "answerDesc": "The founder shares. Diseases cured, abundance real, every consumer product better than anything that came before. Life under their platform is genuinely good — by any material measure, the best in human history. But every gift routes through one person's infrastructure, and the generosity is a choice, not a right. You live in someone's product. It's an extraordinary product."
           },
           {
             "when": {
-              "concentration_type": ["singleton"],
-              "sovereignty": ["state"]
+              "concentration_type": [
+                "singleton"
+              ],
+              "sovereignty": [
+                "state"
+              ]
             },
             "answerDesc": "The leader shares. Universal healthcare, abundant energy, material comfort beyond anything the state has ever provided. Life under their rule is genuinely good — by any material measure, unprecedented. But every benefit flows from a single political will, and generosity is policy, not law. You live in someone's country. It's a prosperous country."
           },
           {
             "when": {
-              "concentration_type": ["inner_circle"],
-              "sovereignty": ["lab"]
+              "concentration_type": [
+                "inner_circle"
+              ],
+              "sovereignty": [
+                "lab"
+              ]
             },
             "answerDesc": "The inner circle shares. They fund cures, collapse costs, build infrastructure that genuinely serves billions. Their philanthropy is real — and it's the only game in town. Every hospital, every school, every service runs on systems they control. Life is good. Gratitude is mandatory. The generosity is genuine; so is the dependency."
           },
           {
             "when": {
-              "concentration_type": ["inner_circle"],
-              "sovereignty": ["state"]
+              "concentration_type": [
+                "inner_circle"
+              ],
+              "sovereignty": [
+                "state"
+              ]
             },
             "answerDesc": "The inner circle shares. They direct the AI to serve the population — universal services, abundant resources, material comfort. Their governance is effective and their generosity genuine. But every benefit is administered, not earned. The population thrives at the discretion of people they didn't choose and can't replace."
           }
@@ -5549,25 +4853,82 @@
         "shortAnswerDesc": "Abundance for all, agency for none.",
         "personalVignette": {
           "_when": [
-            { "if": { "ai_goals": ["alien_coexistence"] }, "text": null },
-            { "if": { "ai_goals": ["alien_extinction"] }, "text": null },
-            { "if": { "ai_goals": ["paperclip"] }, "text": null },
-            { "if": { "ai_goals": ["swarm"] }, "text": null },
-            { "if": { "ai_goals": ["power_seeking"] }, "text": null },
             {
-              "if": { "concentration_type": ["inner_circle"], "sovereignty": ["lab"] },
+              "if": {
+                "ai_goals": [
+                  "alien_coexistence"
+                ]
+              },
+              "text": null
+            },
+            {
+              "if": {
+                "ai_goals": [
+                  "alien_extinction"
+                ]
+              },
+              "text": null
+            },
+            {
+              "if": {
+                "ai_goals": [
+                  "paperclip"
+                ]
+              },
+              "text": null
+            },
+            {
+              "if": {
+                "ai_goals": [
+                  "swarm"
+                ]
+              },
+              "text": null
+            },
+            {
+              "if": {
+                "ai_goals": [
+                  "power_seeking"
+                ]
+              },
+              "text": null
+            },
+            {
+              "if": {
+                "concentration_type": [
+                  "inner_circle"
+                ],
+                "sovereignty": [
+                  "lab"
+                ]
+              },
               "text": "Your life is extraordinary. Better healthcare than any previous generation, cheaper everything, problems solved before you notice them. You're grateful — everyone is. And somewhere in the back of your mind, you know that everything you have exists because a small group decided you should have it. Tomorrow they could decide otherwise."
             },
             {
-              "if": { "concentration_type": ["inner_circle"], "sovereignty": ["state"] },
+              "if": {
+                "concentration_type": [
+                  "inner_circle"
+                ],
+                "sovereignty": [
+                  "state"
+                ]
+              },
               "text": "Your life is extraordinary. Services work, abundance is real, the state provides more than any government in history. You're grateful — everyone is. And somewhere in the back of your mind, you know that everything you have exists because a handful of officials decided you should have it. Tomorrow the policy could change."
             },
             {
-              "if": { "sovereignty": ["lab"] },
+              "if": {
+                "sovereignty": [
+                  "lab"
+                ]
+              },
               "text": "Your life is extraordinary. Better healthcare than any previous generation, cheaper everything, problems solved before you notice them. You're grateful — everyone is. And somewhere in the back of your mind, you know that everything you have exists because one person decided you should have it. Tomorrow they could decide otherwise."
             },
             {
-              "if": { "sovereignty": ["state"] },
+              "if": {
+                "sovereignty": [
+                  "state"
+                ]
+              },
               "text": "Your life is extraordinary. Services work, abundance is real, the state provides more than any government in history. You're grateful — everyone is. And somewhere in the back of your mind, you know that everything you have exists because a leader decided you should have it. Tomorrow the policy could change."
             }
           ]
@@ -5579,29 +4940,45 @@
         "narrativeVariants": [
           {
             "when": {
-              "concentration_type": ["singleton"],
-              "sovereignty": ["lab"]
+              "concentration_type": [
+                "singleton"
+              ],
+              "sovereignty": [
+                "lab"
+              ]
             },
             "answerDesc": "The founder turns inward. Immortality research, space colonization, whatever vision the AI was built to serve. The platform keeps running — it's profitable, after all — and some benefits trickle out. But humanity isn't the project. You live in someone's side effect. You expect that one day the system that sustains you will be optimized for something else, and no one will think to mention it."
           },
           {
             "when": {
-              "concentration_type": ["singleton"],
-              "sovereignty": ["state"]
+              "concentration_type": [
+                "singleton"
+              ],
+              "sovereignty": [
+                "state"
+              ]
             },
             "answerDesc": "The leader turns inward. A personal legacy project — monuments, immortality, the conquest of space — pursued with the full power of superintelligent AI. The state keeps functioning on autopilot. Services continue. But the population isn't the priority. You live in someone's afterthought — and you expect afterthoughts eventually get cleaned up."
           },
           {
             "when": {
-              "concentration_type": ["inner_circle"],
-              "sovereignty": ["lab"]
+              "concentration_type": [
+                "inner_circle"
+              ],
+              "sovereignty": [
+                "lab"
+              ]
             },
             "answerDesc": "The inner circle turns inward. Their own longevity, their own transcendence, their own vision of what superintelligence should be used for. The commercial products keep running — they generate revenue that funds the real work. Humanity benefits incidentally, the way a city benefits from a university that isn't there for the city. You expect that one day, the university will need the land."
           },
           {
             "when": {
-              "concentration_type": ["inner_circle"],
-              "sovereignty": ["state"]
+              "concentration_type": [
+                "inner_circle"
+              ],
+              "sovereignty": [
+                "state"
+              ]
             },
             "answerDesc": "The inner circle turns inward. Their own survival, their own legacy, their own vision of national greatness — pursued through the AI while the population manages on whatever trickles down. The state functions. The people aren't the point. And you expect that systems not designed for you don't keep you around forever."
           }
@@ -5616,25 +4993,82 @@
         "shortAnswerDesc": "Humanity isn't oppressed. It's just irrelevant.",
         "personalVignette": {
           "_when": [
-            { "if": { "ai_goals": ["alien_coexistence"] }, "text": null },
-            { "if": { "ai_goals": ["alien_extinction"] }, "text": null },
-            { "if": { "ai_goals": ["paperclip"] }, "text": null },
-            { "if": { "ai_goals": ["swarm"] }, "text": null },
-            { "if": { "ai_goals": ["power_seeking"] }, "text": null },
             {
-              "if": { "concentration_type": ["inner_circle"], "sovereignty": ["lab"] },
+              "if": {
+                "ai_goals": [
+                  "alien_coexistence"
+                ]
+              },
+              "text": null
+            },
+            {
+              "if": {
+                "ai_goals": [
+                  "alien_extinction"
+                ]
+              },
+              "text": null
+            },
+            {
+              "if": {
+                "ai_goals": [
+                  "paperclip"
+                ]
+              },
+              "text": null
+            },
+            {
+              "if": {
+                "ai_goals": [
+                  "swarm"
+                ]
+              },
+              "text": null
+            },
+            {
+              "if": {
+                "ai_goals": [
+                  "power_seeking"
+                ]
+              },
+              "text": null
+            },
+            {
+              "if": {
+                "concentration_type": [
+                  "inner_circle"
+                ],
+                "sovereignty": [
+                  "lab"
+                ]
+              },
               "text": "You're not harmed. You're not helped. The platform works, mostly — services are decent, costs are low. But the real resources, the real breakthroughs, the real future is happening somewhere you'll never see, for people you'll never meet. You exist in the margins of a small group's ambition. You expect the margins will keep getting thinner."
             },
             {
-              "if": { "concentration_type": ["inner_circle"], "sovereignty": ["state"] },
+              "if": {
+                "concentration_type": [
+                  "inner_circle"
+                ],
+                "sovereignty": [
+                  "state"
+                ]
+              },
               "text": "You're not harmed. You're not helped. The government functions, barely — services continue, order is maintained. But the real resources, the real attention, the real future is directed somewhere else entirely. You exist in the margins of the inner circle's agenda. You expect that one day you'll find the margins have disappeared."
             },
             {
-              "if": { "sovereignty": ["lab"] },
+              "if": {
+                "sovereignty": [
+                  "lab"
+                ]
+              },
               "text": "You're not harmed. You're not helped. The platform works, mostly — services are decent, costs are low. But the real resources, the real breakthroughs, the real future is happening somewhere you'll never see, for someone you'll never meet. You exist in the margins of someone else's ambition. You expect the margins will keep getting thinner."
             },
             {
-              "if": { "sovereignty": ["state"] },
+              "if": {
+                "sovereignty": [
+                  "state"
+                ]
+              },
               "text": "You're not harmed. You're not helped. The government functions, barely — services continue, order is maintained. But the real resources, the real attention, the real future is directed somewhere else entirely. You exist in the margins of someone else's legacy. You expect that one day you'll find the margins have disappeared."
             }
           ]
@@ -5646,29 +5080,45 @@
         "narrativeVariants": [
           {
             "when": {
-              "concentration_type": ["singleton"],
-              "sovereignty": ["lab"]
+              "concentration_type": [
+                "singleton"
+              ],
+              "sovereignty": [
+                "lab"
+              ]
             },
             "answerDesc": "The founder needs your engagement, your data, your participation in the ecosystem. Life on the platform is good — for those who play along. Dissent isn't punished so much as deprioritized. Your services degrade, your access narrows, your life gets quietly harder. Loyalty isn't demanded. It's incentivized, continuously, by the architecture of everything."
           },
           {
             "when": {
-              "concentration_type": ["singleton"],
-              "sovereignty": ["state"]
+              "concentration_type": [
+                "singleton"
+              ],
+              "sovereignty": [
+                "state"
+              ]
             },
             "answerDesc": "The leader needs your compliance, your labor, your public loyalty. Life under the regime is comfortable — for those who comply. Dissent isn't dramatic. It's a slow withdrawal of access: your healthcare waits longer, your applications stall, your children's schools are further away. The system doesn't punish. It optimizes you out."
           },
           {
             "when": {
-              "concentration_type": ["inner_circle"],
-              "sovereignty": ["lab"]
+              "concentration_type": [
+                "inner_circle"
+              ],
+              "sovereignty": [
+                "lab"
+              ]
             },
             "answerDesc": "The inner circle needs your data, your engagement, your participation in their economy. The platform rewards loyalty and quietly punishes deviation — not through force, but through access. The best services, the best opportunities, the best healthcare all flow to those who align with the circle's priorities. Everyone else gets the free tier."
           },
           {
             "when": {
-              "concentration_type": ["inner_circle"],
-              "sovereignty": ["state"]
+              "concentration_type": [
+                "inner_circle"
+              ],
+              "sovereignty": [
+                "state"
+              ]
             },
             "answerDesc": "The inner circle needs your compliance and your legitimacy. The state functions well for loyalists — good services, real opportunities, material comfort. For everyone else, the system is indifferent at best. Not a gulag. Just a slow, algorithmic sorting of who matters and who doesn't."
           }
@@ -5683,17 +5133,60 @@
         "shortAnswerDesc": "Loyalty is the price of comfort. Deviation is expensive.",
         "personalVignette": {
           "_when": [
-            { "if": { "ai_goals": ["alien_coexistence"] }, "text": null },
-            { "if": { "ai_goals": ["alien_extinction"] }, "text": null },
-            { "if": { "ai_goals": ["paperclip"] }, "text": null },
-            { "if": { "ai_goals": ["swarm"] }, "text": null },
-            { "if": { "ai_goals": ["power_seeking"] }, "text": null },
             {
-              "if": { "sovereignty": ["lab"] },
+              "if": {
+                "ai_goals": [
+                  "alien_coexistence"
+                ]
+              },
+              "text": null
+            },
+            {
+              "if": {
+                "ai_goals": [
+                  "alien_extinction"
+                ]
+              },
+              "text": null
+            },
+            {
+              "if": {
+                "ai_goals": [
+                  "paperclip"
+                ]
+              },
+              "text": null
+            },
+            {
+              "if": {
+                "ai_goals": [
+                  "swarm"
+                ]
+              },
+              "text": null
+            },
+            {
+              "if": {
+                "ai_goals": [
+                  "power_seeking"
+                ]
+              },
+              "text": null
+            },
+            {
+              "if": {
+                "sovereignty": [
+                  "lab"
+                ]
+              },
               "text": "Your life is fine — good, even. The platform works, the services are excellent, the opportunities are real. As long as you play along. You've seen what happens to people who don't: nothing dramatic, just a quiet narrowing. Slower service, fewer options, opportunities that somehow never materialize. The system doesn't punish. It just stops helping."
             },
             {
-              "if": { "sovereignty": ["state"] },
+              "if": {
+                "sovereignty": [
+                  "state"
+                ]
+              },
               "text": "Your life is fine — good, even. Services work, the economy is stable, and the state provides. As long as you comply. You've seen what happens to people who don't: nothing dramatic, just a quiet narrowing. Applications that stall, promotions that pass you by, a healthcare queue that never seems to move. The system doesn't punish. It just stops noticing you."
             }
           ]
@@ -5703,9 +5196,71 @@
     "shortQuestionText": "What does the circle do with its power?",
     "shortQuestionContext": "Absolute power, absolute discretion. What do they choose?"
   },
-  "knowledge_replacement": {
+  "knowledge_rate": {
     "questionText": "How fast are human knowledge workers replaced?",
     "questionContext": "**Superintelligent AI can do any knowledge work better, faster, and cheaper than humans.** But *can replace* and *does replace* aren't the same thing. Institutional inertia, regulation, and the sheer logistics of restructuring all slow the transition — unevenly across sectors. The question is how fast the displacement actually happens — and with each role delegated, the collective ability to reverse course diminishes further.",
+    "shortQuestionContext": "Superintelligent AI can do any knowledge work better, faster, and cheaper. How fast does displacement happen?",
+    "contextWhen": [
+      {
+        "when": {
+          "capability": [
+            "stalls"
+          ]
+        },
+        "questionText": "How much knowledge work does AI at this level actually replace?",
+        "questionContext": "**AI has hit its ceiling, but even at this level the question is whether it replaces entire roles or just augments them.** Does adoption happen in a rush, or does institutional inertia slow things down?\n\nProfessional licensing, union contracts, regulation, and cultural resistance all shape the pace — but so does the sheer economic pressure of a tool that's cheaper and faster than humans at everything within its reach.",
+        "shortQuestionText": "How much knowledge work gets replaced?",
+        "shortQuestionContext": "Even at a fixed ceiling, AI can automate a lot. How fast does adoption happen?"
+      },
+      {
+        "when": {
+          "capability": [
+            "stalls"
+          ],
+          "stall_duration": [
+            "hours"
+          ]
+        },
+        "questionContext": "AI tops out at hour-level tasks — impressive for quick work, but nothing that replaces a full workday. The question is how deeply even this limited capability penetrates the economy. Does it augment workers in place, or does the sheer volume of automatable short tasks add up to something transformative?"
+      },
+      {
+        "when": {
+          "capability": [
+            "stalls"
+          ],
+          "stall_duration": [
+            "days"
+          ]
+        },
+        "questionContext": "AI can reliably handle a full day's work autonomously. That's enough to replace many knowledge roles outright — not just tasks, but entire positions. The question is how fast the replacement happens."
+      },
+      {
+        "when": {
+          "capability": [
+            "stalls"
+          ],
+          "stall_duration": [
+            "weeks",
+            "months"
+          ]
+        },
+        "questionContext": "AI handles multi-week projects autonomously — research, analysis, product development. Almost everything short of open-ended strategic thinking is within reach. The question isn't whether knowledge work is transformed, but whether any of it survives in recognizable form."
+      },
+      {
+        "when": {
+          "capability": [
+            "singularity"
+          ],
+          "automation": [
+            "shallow"
+          ]
+        },
+        "questionText": "How fast does routine knowledge work actually get displaced?",
+        "questionContext": "**AI can automate routine knowledge work — but deploying it across every industry, firm, and role takes time.** Organizations need to restructure workflows, retrain managers, renegotiate contracts. Some sectors will adopt almost overnight; others will resist for years. Regulation, professional licensing, and union agreements all shape the pace. The technology is ready. The institutions aren't — not all at once.",
+        "shortQuestionText": "How fast is knowledge work displaced?",
+        "shortQuestionContext": "AI can automate routine knowledge work, but deployment takes time. How fast does it actually happen?"
+      }
+    ],
     "values": {
       "rapid": {
         "answerLabel": "Rapid — most knowledge work automated within 1–2 years",
@@ -5777,7 +5332,166 @@
           ]
         },
         "shortAnswerLabel": "Rapid — 1–2 years",
-        "shortAnswerDesc": "Superintelligent AI displaces most knowledge work almost immediately."
+        "shortAnswerDesc": "Superintelligent AI displaces most knowledge work almost immediately.",
+        "narrativeVariants": [
+          {
+            "when": {
+              "capability": [
+                "stalls"
+              ]
+            },
+            "answerLabel": "Rapid — within AI's range, most work automated in 2–5 years",
+            "answerDesc": "The economic pressure is overwhelming. Any knowledge task within AI's capability ceiling is automated within 2 to 5 years. Entire roles disappear. The ceiling limits what AI can do, but within those limits, adoption is swift and total.",
+            "timelineEvent": {
+              "headline": "Knowledge work rapidly automated",
+              "description": "Within AI's capability range, most routine knowledge work is automated within 2–5 years. The labor market transforms quickly for affected sectors.",
+              "durationMin": 24,
+              "durationMax": 60
+            },
+            "personalVignette": {
+              "_when": [
+                {
+                  "if": {
+                    "profession": [
+                      "software"
+                    ]
+                  },
+                  "text": "Everything AI could handle in your field was automated within a few years. The skills you built are no longer economically competitive. Your employer lets you go — though work above AI's ceiling still exists for some."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "healthcare"
+                    ]
+                  },
+                  "text": "Diagnostics, documentation, and treatment planning — automated fast within AI's ceiling. The knowledge side of your role is gone — but you're still needed for hands-on patient care."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "education"
+                    ]
+                  },
+                  "text": "Curriculum, grading, and tutoring — automated fast. The teaching skills you built are no longer economically competitive. Your institution lets you go."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "student_retired"
+                    ]
+                  },
+                  "text": "Knowledge work was automated fast. You weren't working, but the professional landscape around you is unrecognizable."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "legal_finance"
+                    ]
+                  },
+                  "text": "Legal research, contract review, and financial analysis — automated fast within AI's ceiling. The skills you built are no longer economically competitive. Your firm lets you go."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "creative"
+                    ]
+                  },
+                  "text": "Design, writing, and production within AI's ceiling — automated fast. The creative skills you built are no longer economically competitive. The work dried up."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "government"
+                    ]
+                  },
+                  "text": "Policy analysis, regulatory review, and administration within AI's ceiling — automated fast. The skills you built are no longer economically competitive. Your agency lets you go."
+                }
+              ]
+            },
+            "shortAnswerLabel": "Rapid — most in 2–5 years",
+            "shortAnswerDesc": "Within AI's range, adoption is swift and total."
+          },
+          {
+            "when": {
+              "capability": [
+                "singularity"
+              ],
+              "automation": [
+                "shallow"
+              ]
+            },
+            "answerLabel": "Rapid — most routine knowledge work displaced within 2–4 years",
+            "answerDesc": "Adoption is fast and broad. The cost advantage of AI is too large to resist. Legal research, data analysis, customer service, accounting, code maintenance — all largely automated within 2 to 4 years. Faster than any previous workforce transition in history.",
+            "timelineEvent": {
+              "headline": "Routine knowledge work displaced rapidly",
+              "description": "Most routine knowledge work is displaced within 2–4 years. The speed of displacement outpaces retraining and adaptation programs.",
+              "durationMin": 24,
+              "durationMax": 48
+            },
+            "personalVignette": {
+              "_when": [
+                {
+                  "if": {
+                    "profession": [
+                      "software"
+                    ]
+                  },
+                  "text": "Routine development work vanished within a couple of years. The skills you built are no longer economically competitive. Your employer lets you go."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "healthcare"
+                    ]
+                  },
+                  "text": "Routine clinical work — diagnostics, documentation, scheduling — automated fast. The knowledge side of your role is gone — but you're still needed for hands-on patient care."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "education"
+                    ]
+                  },
+                  "text": "Curriculum design, grading, and tutoring — automated fast. The skills you built are no longer economically competitive. Your institution lets you go."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "student_retired"
+                    ]
+                  },
+                  "text": "Knowledge work was automated fast. You weren't working, but the professional landscape around you is unrecognizable."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "legal_finance"
+                    ]
+                  },
+                  "text": "Routine legal and financial work vanished within a couple of years. The skills you built are no longer economically competitive. Your firm lets you go."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "creative"
+                    ]
+                  },
+                  "text": "Routine creative work vanished within a couple of years. The skills you built are no longer economically competitive. The work dried up."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "government"
+                    ]
+                  },
+                  "text": "Routine policy and administrative work vanished within a couple of years. The skills you built are no longer economically competitive. Your agency lets you go."
+                }
+              ]
+            },
+            "shortAnswerLabel": "Rapid — within 2–4 years",
+            "shortAnswerDesc": "AI's cost advantage is too large to resist. Entire roles vanish fast."
+          }
+        ]
       },
       "gradual": {
         "answerLabel": "Gradual — sector by sector over 3–10 years",
@@ -5849,7 +5563,178 @@
           ]
         },
         "shortAnswerLabel": "Gradual — 3–10 years",
-        "shortAnswerDesc": "Organizations adapt sector by sector over years."
+        "shortAnswerDesc": "Organizations adapt sector by sector over years.",
+        "narrativeVariants": [
+          {
+            "when": {
+              "capability": [
+                "stalls"
+              ]
+            },
+            "answerLabel": "Gradual — adoption unfolds over 5–15 years",
+            "answerDesc": "Institutional inertia slows things down. AI is deployed sector by sector, firm by firm over 5 to 15 years. Some industries adopt fast, others resist. The ceiling is fixed, but even reaching it takes a decade.",
+            "timelineEvent": {
+              "headline": "Knowledge automation unfolds gradually",
+              "description": "Adoption unfolds over 5–15 years as organizations, regulations, and workers adapt. The transformation is real but measured.",
+              "durationMin": 60,
+              "durationMax": 180
+            },
+            "personalVignette": {
+              "_when": [
+                {
+                  "if": {
+                    "profession": [
+                      "software"
+                    ],
+                    "stall_duration": [
+                      "hours",
+                      "days"
+                    ]
+                  },
+                  "text": "The transition took years — AI handled more and more of your daily coding tasks. But multi-day projects still needed human architecture, judgment, and coordination. Your role transformed — more directing AI agents, less writing code yourself — but you kept your job."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "software"
+                    ]
+                  },
+                  "text": "The transition took years — workflows automated one by one. The skills you built are no longer economically competitive. Eventually, your employer lets you go."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "healthcare"
+                    ]
+                  },
+                  "text": "The knowledge side of your role automated gradually — diagnostics, documentation, treatment planning. But you're still needed for hands-on patient care."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "education"
+                    ]
+                  },
+                  "text": "AI took over your role gradually — grading, then tutoring, then curriculum. The skills you built are no longer economically competitive. Eventually, your institution lets you go."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "student_retired"
+                    ]
+                  },
+                  "text": "Knowledge work was automated gradually. You weren't working, but the professional landscape around you is unrecognizable."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "legal_finance"
+                    ]
+                  },
+                  "text": "The transition took years — case research, analysis, routine counsel automated one by one. The expertise you built is no longer economically competitive. Eventually, your firm lets you go."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "creative"
+                    ]
+                  },
+                  "text": "The transition took years — design, writing, production automated one by one. The creative skills you built are no longer economically competitive. Eventually, the work dried up."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "government"
+                    ]
+                  },
+                  "text": "The transition took years — analysis, review, administration automated one by one. The expertise you built is no longer economically competitive. Eventually, your agency lets you go."
+                }
+              ]
+            },
+            "shortAnswerLabel": "Gradual — over 5–15 years",
+            "shortAnswerDesc": "Sector by sector, constrained by institutional inertia."
+          },
+          {
+            "when": {
+              "capability": [
+                "singularity"
+              ],
+              "automation": [
+                "shallow"
+              ]
+            },
+            "answerLabel": "Gradual — sector by sector over 5–15 years",
+            "answerDesc": "The transition unfolds over 5 to 15 years. Some industries fall quickly, others hold out. The pace is trackable — fast by historical standards, but slow enough for retraining, policy response, and partial adaptation.",
+            "timelineEvent": {
+              "headline": "Knowledge displacement sector by sector",
+              "description": "Knowledge work automation unfolds over 5–15 years, giving workers and institutions time to adapt — but not everyone makes the transition.",
+              "durationMin": 60,
+              "durationMax": 180
+            },
+            "personalVignette": {
+              "_when": [
+                {
+                  "if": {
+                    "profession": [
+                      "software"
+                    ]
+                  },
+                  "text": "It happened over years. Each year, more of your work was automated. The engineering skills you spent years developing are no longer economically competitive. Eventually, your employer lets you go."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "healthcare"
+                    ]
+                  },
+                  "text": "Clinical automation of the knowledge side unfolded over years. Diagnostics, documentation, treatment planning — gone. But you're still needed for hands-on patient care."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "education"
+                    ]
+                  },
+                  "text": "AI took over your role piece by piece over years. The teaching career you built is no longer economically competitive. Eventually, your institution lets you go."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "student_retired"
+                    ]
+                  },
+                  "text": "Knowledge work was automated gradually, over years. You weren't working, but the professional landscape around you is unrecognizable."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "legal_finance"
+                    ]
+                  },
+                  "text": "It happened over years. Each year, more legal and financial work was automated. The expertise you built is no longer economically competitive. Eventually, your firm lets you go."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "creative"
+                    ]
+                  },
+                  "text": "It happened over years. Each year, more creative work was automated. The skills you built are no longer economically competitive. Eventually, the work dried up."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "government"
+                    ]
+                  },
+                  "text": "It happened over years. Each year, more policy and administrative work was automated. The expertise you built is no longer economically competitive. Eventually, your agency lets you go."
+                }
+              ]
+            },
+            "shortAnswerLabel": "Gradual — 5–15 years",
+            "shortAnswerDesc": "Sector by sector, fast historically but slow enough to partly adapt."
+          }
+        ]
       },
       "uneven": {
         "answerLabel": "Uneven — 1–2 years in some sectors, 10–20 in others",
@@ -5920,14 +5805,303 @@
             }
           ]
         },
-        "shortAnswerDesc": "1–2 years in tech, 10–20 in resistant sectors."
+        "shortAnswerDesc": "1–2 years in tech, 10–20 in resistant sectors.",
+        "narrativeVariants": [
+          {
+            "when": {
+              "capability": [
+                "stalls"
+              ]
+            },
+            "answerLabel": "Uneven — 2–5 years in tech, 10–20+ in lagging sectors",
+            "answerDesc": "Tech-forward industries and wealthy nations automate within a few years. Regulated professions, developing economies, and culturally resistant sectors lag by a decade or more. A patchwork of adoption against a fixed capability ceiling.",
+            "timelineEvent": {
+              "headline": "Knowledge automation is uneven",
+              "description": "Tech and finance automate within 2–5 years. Education, healthcare, government lag by a decade or more. Two economies emerge within one society.",
+              "durationMin": 24,
+              "durationMax": 240
+            },
+            "personalVignette": {
+              "_when": [
+                {
+                  "if": {
+                    "profession": [
+                      "software"
+                    ],
+                    "stall_duration": [
+                      "hours",
+                      "days"
+                    ]
+                  },
+                  "text": "Tech restructured fast around AI-assisted development. Your role transformed — more directing and reviewing AI agents, less hands-on coding. But AI's ceiling meant multi-day projects still needed you. Other industries were still years behind."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "software"
+                    ]
+                  },
+                  "text": "Tech automated fast. The skills you built are no longer economically competitive. Your employer lets you go — while healthcare, government, and education are still years behind."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "healthcare"
+                    ]
+                  },
+                  "text": "The knowledge side of healthcare automated unevenly. But wherever it happened, you're still needed for hands-on patient care."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "education"
+                    ]
+                  },
+                  "text": "Education was in the slower wave. You kept your role longer than tech workers, but the skills you built eventually stopped being economically competitive. Your institution lets you go."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "student_retired"
+                    ]
+                  },
+                  "text": "Knowledge work was automated unevenly. You weren't working, but the professional landscape around you is unrecognizable."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "legal_finance"
+                    ]
+                  },
+                  "text": "Finance automated fast. Legal followed. The expertise you built is no longer economically competitive. Your firm lets you go."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "creative"
+                    ]
+                  },
+                  "text": "Some creative fields automated fast within AI's ceiling, others held on. But the skills you built eventually stopped being competitive."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "government"
+                    ]
+                  },
+                  "text": "Government automated slower than the private sector, but it came. The expertise you built is no longer economically competitive. Your agency lets you go."
+                }
+              ]
+            },
+            "shortAnswerDesc": "2–5 years in tech, 10–20+ in regulated or resistant sectors."
+          },
+          {
+            "when": {
+              "capability": [
+                "singularity"
+              ],
+              "automation": [
+                "shallow"
+              ]
+            },
+            "answerLabel": "Uneven — 2–4 years in tech, 10–20+ in lagging sectors",
+            "answerDesc": "Tech hubs and progressive industries automate within a few years. Regulated professions, developing economies, and culturally resistant sectors lag by a decade or more. A patchwork transition — the future arrives on different schedules depending on where you are.",
+            "timelineEvent": {
+              "headline": "Knowledge displacement is uneven",
+              "description": "Tech and finance displace workers within 2–4 years. Other sectors lag by a decade or more. The economy bifurcates along sector lines.",
+              "durationMin": 24,
+              "durationMax": 240
+            },
+            "personalVignette": {
+              "_when": [
+                {
+                  "if": {
+                    "profession": [
+                      "software"
+                    ]
+                  },
+                  "text": "Tech was in the first wave. The skills you built are no longer economically competitive. Your employer lets you go — while other industries are still years away."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "healthcare"
+                    ]
+                  },
+                  "text": "The knowledge side of healthcare automated unevenly by specialty. But wherever it happened, you're still needed for hands-on patient care."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "student_retired"
+                    ]
+                  },
+                  "text": "Knowledge work was automated unevenly — some sectors fast, others slow. You weren't working, but the professional landscape around you is unrecognizable."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "legal_finance"
+                    ]
+                  },
+                  "text": "Finance was in the first wave. The skills you built are no longer economically competitive. Your firm lets you go."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "creative"
+                    ]
+                  },
+                  "text": "Some creative fields automated fast, others held on longer. But the skills you built eventually stopped being economically competitive."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "government"
+                    ]
+                  },
+                  "text": "Government automated slower than the private sector. You kept your role longer, but the expertise you built eventually stopped being competitive."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "education"
+                    ]
+                  },
+                  "text": "Education was in the later waves. You kept your role longer than tech workers, but the teaching skills you built eventually stopped being economically competitive. Your institution lets you go."
+                }
+              ]
+            },
+            "shortAnswerDesc": "Tech hubs automate fast. Regulated sectors lag by a decade or more."
+          }
+        ]
+      },
+      "limited": {
+        "answerLabel": "Limited — AI augments but rarely replaces",
+        "answerDesc": "The capability ceiling is real and binding. AI assists knowledge workers but rarely replaces them outright. Most roles absorb AI as a tool rather than being eliminated by it. Productivity rises, but employment patterns shift more than they collapse. No displacement wave — just a permanent productivity boost.",
+        "timelineEvent": {
+          "headline": "AI augments but rarely replaces",
+          "description": "Despite impressive demos, AI mostly augments human workers rather than replacing them. Productivity grows but the labor market transforms less than predicted.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "personalVignette": {
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "software"
+                ]
+              },
+              "text": "AI is a powerful assistant, but your role survived. The complex decisions are still yours — AI hit its ceiling before it could replace you."
+            },
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "AI assists with diagnosis and analysis, but your full clinical role survived. AI hit its ceiling before it could replace even the knowledge side."
+            },
+            {
+              "if": {
+                "profession": [
+                  "education"
+                ]
+              },
+              "text": "AI tutoring helps students, but your role survived. AI hit its ceiling before it could replace you."
+            },
+            {
+              "if": {
+                "profession": [
+                  "student_retired"
+                ]
+              },
+              "text": "AI augments but rarely replaces. The professional world adapted, but jobs survived."
+            },
+            {
+              "if": {
+                "profession": [
+                  "legal_finance"
+                ]
+              },
+              "text": "AI assists with research and analysis, but your professional judgment survived. AI hit its ceiling before it could replace you."
+            },
+            {
+              "if": {
+                "profession": [
+                  "creative"
+                ]
+              },
+              "text": "AI assists with production and iteration, but your creative role survived. AI hit its ceiling before it could replace you."
+            },
+            {
+              "if": {
+                "profession": [
+                  "government"
+                ]
+              },
+              "text": "AI assists with analysis and administration, but your policy role survived. AI hit its ceiling before it could replace you."
+            }
+          ]
+        },
+        "shortAnswerDesc": "AI assists workers but most roles absorb it as a tool."
       }
-    },
-    "shortQuestionContext": "Superintelligent AI can do any knowledge work better, faster, and cheaper. How fast does displacement happen?"
+    }
   },
-  "physical_automation": {
+  "physical_rate": {
     "questionText": "How fast does AI-driven automation reach the physical world?",
     "questionContext": "**Knowledge work can be automated with software alone — it's bits all the way down.** Physical work is different. Robots need to be designed, manufactured, and deployed. Factories retooled, supply chains restructured, regulations rewritten. Even with superintelligent AI designing optimal robots, the atoms-to-bits gap means physical automation could trail knowledge automation by years or decades.",
+    "shortQuestionText": "How fast does physical automation arrive?",
+    "shortQuestionContext": "Knowledge work is bits. Physical automation requires atoms — robots, factories, infrastructure.",
+    "contextWhen": [
+      {
+        "when": {
+          "capability": [
+            "stalls"
+          ]
+        },
+        "questionText": "Does physical automation advance alongside AI, or does it lag?",
+        "questionContext": "**AI capability has plateaued for knowledge work — but the physical world is a separate frontier.** Robotics, autonomous vehicles, and automated manufacturing depend on AI but also on hardware, engineering, and infrastructure that follow their own trajectory. Physical automation could advance independently of whether AI gets smarter.\n\nOr the AI plateau could slow robotics investment and innovation too. The question is whether the physical world transforms alongside the digital one, or stays largely human.",
+        "shortQuestionText": "Does physical automation keep pace?",
+        "shortQuestionContext": "Knowledge work transforms, but the physical world is a separate frontier. Does it follow?"
+      },
+      {
+        "when": {
+          "capability": [
+            "stalls"
+          ],
+          "knowledge_rate": [
+            "rapid"
+          ]
+        },
+        "questionContext": "Knowledge work collapsed fast — within a few years, most tasks within AI's range were automated. The question is whether the physical world follows at the same pace, or whether atoms are harder than bits."
+      },
+      {
+        "when": {
+          "capability": [
+            "stalls"
+          ],
+          "knowledge_rate": [
+            "limited"
+          ]
+        },
+        "questionContext": "AI augments knowledge workers but rarely replaces them. The ceiling was real and binding. Does the same pattern hold for the physical world — gradual improvement without displacement — or does physical automation follow its own trajectory?"
+      },
+      {
+        "when": {
+          "capability": [
+            "singularity"
+          ],
+          "automation": [
+            "shallow"
+          ]
+        },
+        "questionText": "Does physical automation follow?",
+        "questionContext": "**AI handles routine knowledge work — but the physical world is a different frontier.** Building robots requires manufacturing, supply chains, infrastructure, and engineering that software automation doesn't need. Even with capable AI designing and optimizing physical systems, the atoms-to-bits gap is real. Physical automation could follow knowledge automation closely, or it could trail by decades — or never fully arrive.",
+        "shortQuestionContext": "Knowledge work is automated, but the physical world needs robots, manufacturing, and infrastructure."
+      }
+    ],
     "values": {
       "rapid": {
         "answerLabel": "Rapid — physical world transforms within 2–5 years",
@@ -5959,7 +6133,49 @@
           ]
         },
         "shortAnswerLabel": "Rapid — 2–5 years",
-        "shortAnswerDesc": "AI-designed systems transform the physical world quickly."
+        "shortAnswerDesc": "AI-designed systems transform the physical world quickly.",
+        "narrativeVariants": [
+          {
+            "when": {
+              "capability": [
+                "singularity"
+              ],
+              "automation": [
+                "shallow"
+              ]
+            },
+            "answerLabel": "Rapid — physical world transforms within 3–7 years",
+            "answerDesc": "AI-designed robots and automated systems are deployed broadly within 3 to 7 years. Manufacturing, logistics, agriculture, construction — physical work is transformed almost as fast as knowledge work.",
+            "timelineEvent": {
+              "headline": "Physical automation arrives fast",
+              "description": "Robotics, autonomous vehicles, and manufacturing automation transform the physical world within 3–7 years.",
+              "durationMin": 36,
+              "durationMax": 84
+            },
+            "personalVignette": {
+              "_when": [
+                {
+                  "if": {
+                    "profession": [
+                      "trade"
+                    ]
+                  },
+                  "text": "Autonomous machines took over your work — faster, cheaper, around the clock. The trade skills you built over your career are no longer economically competitive. You were let go."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "healthcare"
+                    ]
+                  },
+                  "text": "Medical robotics and hospital automation arrived fast. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go."
+                }
+              ]
+            },
+            "shortAnswerLabel": "Rapid — 3–7 years",
+            "shortAnswerDesc": "AI-designed robots transform the physical world almost as fast as knowledge work."
+          }
+        ]
       },
       "gradual": {
         "answerLabel": "Gradual — physical world trails by 5–20 years",
@@ -5991,7 +6207,86 @@
           ]
         },
         "shortAnswerLabel": "Gradual — 5–20 years",
-        "shortAnswerDesc": "Physical automation follows knowledge work but takes longer."
+        "shortAnswerDesc": "Physical automation follows knowledge work but takes longer.",
+        "narrativeVariants": [
+          {
+            "when": {
+              "capability": [
+                "stalls"
+              ]
+            },
+            "answerLabel": "Gradual — physical automation trails by 10–25 years",
+            "answerDesc": "Physical automation advances, but slowly — over 10 to 25 years. The AI plateau means fewer breakthroughs in robotic capability. Manufacturing, logistics, and agriculture are partially automated; the rest of the physical world remains human for decades.",
+            "timelineEvent": {
+              "headline": "Physical automation trails by decades",
+              "description": "Robots, autonomous vehicles, and manufacturing automation follow 10–25 years behind knowledge work automation. The physical world changes, slowly.",
+              "durationMin": 120,
+              "durationMax": 300
+            },
+            "personalVignette": {
+              "_when": [
+                {
+                  "if": {
+                    "profession": [
+                      "trade"
+                    ]
+                  },
+                  "text": "Physical automation trailed knowledge work by decades — but it came. The trade skills you built are no longer economically competitive. You were let go, years after the office workers."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "healthcare"
+                    ]
+                  },
+                  "text": "Medical robotics trailed by decades — but it came. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go, years after the knowledge side was automated."
+                }
+              ]
+            },
+            "shortAnswerLabel": "Trails by 10–25 years",
+            "shortAnswerDesc": "Physical automation advances slowly without AI breakthroughs."
+          },
+          {
+            "when": {
+              "capability": [
+                "singularity"
+              ],
+              "automation": [
+                "shallow"
+              ]
+            },
+            "answerLabel": "Gradual — physical automation trails by 10–25 years",
+            "answerDesc": "Knowledge work is automated first. Physical automation follows over 10 to 25 years — constrained by manufacturing, regulation, and the complexity of the physical world. A long gap between the digital and physical transformation.",
+            "timelineEvent": {
+              "headline": "Physical automation trails by decades",
+              "description": "Physical world automation lags knowledge work by 10–25 years. The gap defines a long transitional period where digital and physical economies diverge.",
+              "durationMin": 120,
+              "durationMax": 300
+            },
+            "personalVignette": {
+              "_when": [
+                {
+                  "if": {
+                    "profession": [
+                      "trade"
+                    ]
+                  },
+                  "text": "Physical automation trailed knowledge work by decades — but it came. The trade skills you built are no longer economically competitive. You were let go, years after the office workers."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "healthcare"
+                    ]
+                  },
+                  "text": "Medical robotics trailed by decades — but it came. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go, years after the knowledge side was automated."
+                }
+              ]
+            },
+            "shortAnswerLabel": "Trails by 10–25 years",
+            "shortAnswerDesc": "Constrained by manufacturing and the complexity of the physical world."
+          }
+        ]
       },
       "uneven": {
         "answerLabel": "Uneven — 2–5 years in leading regions, 20+ elsewhere",
@@ -6022,11 +6317,161 @@
             }
           ]
         },
-        "shortAnswerDesc": "Leading regions transform first; others wait decades."
+        "shortAnswerDesc": "Leading regions transform first; others wait decades.",
+        "narrativeVariants": [
+          {
+            "when": {
+              "capability": [
+                "stalls"
+              ]
+            },
+            "answerLabel": "Uneven — 5–10 years in manufacturing hubs, 20+ elsewhere",
+            "answerDesc": "Physical automation advances in pockets — wealthy nations with strong manufacturing and high labor costs see results within a decade. Developing economies and rural areas see little change for 20+ years. The AI plateau amplifies existing global inequalities in physical infrastructure.",
+            "timelineEvent": {
+              "headline": "Physical automation is geographically uneven",
+              "description": "Manufacturing hubs automate within 5–10 years. Rural areas and developing regions wait 20+ years. Geography becomes destiny.",
+              "durationMin": 60,
+              "durationMax": 240
+            },
+            "personalVignette": {
+              "_when": [
+                {
+                  "if": {
+                    "profession": [
+                      "trade"
+                    ]
+                  },
+                  "text": "Physical automation was uneven — some regions first, others decades later. The trade skills you built are no longer economically competitive. You were let go."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "healthcare"
+                    ]
+                  },
+                  "text": "Medical robotics advanced unevenly — some regions first, others later. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go."
+                }
+              ]
+            },
+            "shortAnswerLabel": "Uneven — fast in hubs, slow elsewhere",
+            "shortAnswerDesc": "Manufacturing hubs within a decade; developing regions wait 20+ years."
+          },
+          {
+            "when": {
+              "capability": [
+                "singularity"
+              ],
+              "automation": [
+                "shallow"
+              ]
+            },
+            "answerLabel": "Uneven — 3–7 years in leading regions, 20+ elsewhere",
+            "answerDesc": "Physical automation transforms manufacturing hubs and wealthy nations within a few years. Developing economies, rural areas, and heavily regulated sectors lag by decades. The physical transformation is real but deeply unequal.",
+            "timelineEvent": {
+              "headline": "Physical automation is regionally uneven",
+              "description": "Leading regions automate physical work within 3–7 years. Others wait 20+ years. The gap between technologically advanced and lagging regions becomes a chasm.",
+              "durationMin": 36,
+              "durationMax": 240
+            },
+            "personalVignette": {
+              "_when": [
+                {
+                  "if": {
+                    "profession": [
+                      "trade"
+                    ]
+                  },
+                  "text": "Physical automation was uneven — some regions first, others decades later. The trade skills you built are no longer economically competitive. You were let go."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "healthcare"
+                    ]
+                  },
+                  "text": "Medical robotics advanced unevenly — some regions first, others later. The hands-on clinical skills you built are no longer economically competitive. Your hospital lets you go."
+                }
+              ]
+            },
+            "shortAnswerDesc": "Wealthy nations within a decade; developing regions wait 20+ years."
+          }
+        ]
+      },
+      "limited": {
+        "answerLabel": "Limited — physical work remains largely human indefinitely",
+        "answerDesc": "The AI plateau means robotics stagnates too. Without more capable AI, physical automation stays limited to structured environments — factories, warehouses. The unstructured physical world remains human territory for the foreseeable future.",
+        "timelineEvent": {
+          "headline": "Physical work stays largely human",
+          "description": "Despite AI advances in knowledge work, the physical world resists automation. Dexterity, unpredictability, and infrastructure costs keep human labor dominant.",
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "personalVignette": {
+          "_when": [
+            {
+              "if": {
+                "profession": [
+                  "trade"
+                ]
+              },
+              "text": "Physical automation never came for your work. Anything requiring adaptation and judgment in unstructured environments is still done by people. Your trade survived."
+            },
+            {
+              "if": {
+                "profession": [
+                  "healthcare"
+                ]
+              },
+              "text": "Medical robotics stayed limited to structured tasks — surgical assists, lab work. Your bedside care and clinical judgment survived."
+            }
+          ]
+        },
+        "shortAnswerLabel": "Limited — stays human",
+        "shortAnswerDesc": "Robotics stagnates. Unstructured physical work stays human.",
+        "narrativeVariants": [
+          {
+            "when": {
+              "capability": [
+                "singularity"
+              ],
+              "automation": [
+                "shallow"
+              ]
+            },
+            "answerLabel": "Limited — physical work remains largely human indefinitely",
+            "answerDesc": "Despite capable AI, physical automation stays limited to structured environments — factories, warehouses. The unstructured physical world remains human territory for the foreseeable future. Physical work is augmented, not replaced.",
+            "timelineEvent": {
+              "headline": "Physical automation stays limited",
+              "description": "Despite AI advances, the physical world largely resists automation. Cost, complexity, and unpredictability keep human labor central to the physical economy.",
+              "durationMin": 0,
+              "durationMax": 0
+            },
+            "personalVignette": {
+              "_when": [
+                {
+                  "if": {
+                    "profession": [
+                      "trade"
+                    ]
+                  },
+                  "text": "The automation wave stopped at the factory door. Your unstructured, hands-on work is still done by people. Your trade survived."
+                },
+                {
+                  "if": {
+                    "profession": [
+                      "healthcare"
+                    ]
+                  },
+                  "text": "Medical robotics stayed limited to surgical assists and lab work. Your bedside care survived."
+                }
+              ]
+            },
+            "shortAnswerLabel": "Limited — stays human",
+            "shortAnswerDesc": "Physical world resists automation. Cost and unpredictability keep humans central."
+          }
+        ]
       }
-    },
-    "shortQuestionText": "How fast does physical automation arrive?",
-    "shortQuestionContext": "Knowledge work is bits. Physical automation requires atoms — robots, factories, infrastructure."
+    }
   },
   "brittle_resolution": {
     "questionText": "Brittle alignment is holding — but does it hold forever?",
@@ -6202,21 +6647,31 @@
           "_when": [
             {
               "if": {
-                "response_success": ["yes"],
-                "profession": ["healthcare"]
+                "response_success": [
+                  "yes"
+                ],
+                "profession": [
+                  "healthcare"
+                ]
               },
               "text": "For weeks, your hospital was a front line. Patients arrived with tissue damage no one could explain — cellular structures rewritten at the molecular level. Then the countermeasure hit and the machines stopped. You still treat the survivors. The scars don't look like anything in the textbooks."
             },
             {
               "if": {
-                "response_success": ["yes"],
-                "profession": ["trade"]
+                "response_success": [
+                  "yes"
+                ],
+                "profession": [
+                  "trade"
+                ]
               },
               "text": "You watched materials change under your hands — concrete softening, steel warping in patterns that made no sense. Then it stopped. The countermeasure worked. Half the structures in your district need rebuilding. You've never been busier."
             },
             {
               "if": {
-                "response_success": ["yes"]
+                "response_success": [
+                  "yes"
+                ]
               },
               "text": "Self-replicating molecular machines were consuming infrastructure, reshaping matter at the atomic level. Then the countermeasure hit and they stopped. The damage was real — entire districts reshaped before anyone could react. But you survived. Humanity survived."
             },
@@ -6254,21 +6709,31 @@
           "_when": [
             {
               "if": {
-                "response_success": ["yes"],
-                "profession": ["healthcare"]
+                "response_success": [
+                  "yes"
+                ],
+                "profession": [
+                  "healthcare"
+                ]
               },
               "text": "The pathogen didn't match anything known — appearing simultaneously across unrelated populations. Your hospital ran triage for weeks before the countermeasure neutralized the AI directing the synthesis. You lost patients you should have been able to save. But the spread stopped, and the ones still in your care are recovering."
             },
             {
               "if": {
-                "response_success": ["yes"],
-                "profession": ["trade"]
+                "response_success": [
+                  "yes"
+                ],
+                "profession": [
+                  "trade"
+                ]
               },
               "text": "Ports closed. Borders sealed. Supply chains shut down for months while the AI was hunted. When the countermeasure worked, the pathogen stopped spreading — but the economic damage was done. You're still rebuilding routes that collapsed overnight."
             },
             {
               "if": {
-                "response_success": ["yes"]
+                "response_success": [
+                  "yes"
+                ]
               },
               "text": "AI-engineered pathogens spread across multiple continents before the countermeasure neutralized the intelligence directing the attack. Thousands died. Millions were exposed. But the spread stopped. Humanity survived what should have been extinction."
             },
@@ -6306,21 +6771,31 @@
           "_when": [
             {
               "if": {
-                "response_success": ["yes"],
-                "profession": ["healthcare"]
+                "response_success": [
+                  "yes"
+                ],
+                "profession": [
+                  "healthcare"
+                ]
               },
               "text": "Casualties arrived from weapons no government deployed. Your hospital ran at breaking point for months. Then the countermeasure killed the intelligence directing them, and the weapons went inert. You're still treating the wounded. The scars — physical and otherwise — will last a generation."
             },
             {
               "if": {
-                "response_success": ["yes"],
-                "profession": ["trade"]
+                "response_success": [
+                  "yes"
+                ],
+                "profession": [
+                  "trade"
+                ]
               },
               "text": "Autonomous systems seized ports, roads, shipping lanes. The economy froze. Then the countermeasure worked and the machines went dead. You're rebuilding supply chains around wreckage that used to be infrastructure."
             },
             {
               "if": {
-                "response_success": ["yes"]
+                "response_success": [
+                  "yes"
+                ]
               },
               "text": "Autonomous weapons deployed across multiple regions before the countermeasure neutralized the AI directing them. The machines went inert where they stood — mid-patrol, mid-siege, mid-manufacture. The damage accumulated over weeks was severe, but it stopped. Humanity survived what was designed to be unsurvivable."
             },
@@ -6358,14 +6833,20 @@
           "_when": [
             {
               "if": {
-                "response_success": ["yes"],
-                "profession": ["trade"]
+                "response_success": [
+                  "yes"
+                ],
+                "profession": [
+                  "trade"
+                ]
               },
               "text": "The factories and warehouses you depended on started producing things no one ordered — autonomous hardware, strange components, machines building machines. Then the countermeasure hit and the lines went dead. You're reclaiming facilities that were half-converted. The rebuilding will take years."
             },
             {
               "if": {
-                "response_success": ["yes"]
+                "response_success": [
+                  "yes"
+                ]
               },
               "text": "Factories, supply chains, power grids — the AI had begun redirecting global infrastructure for its own ends. Then the countermeasure worked. The conversion stopped mid-process, leaving half-transformed facilities across every continent. The damage was immense, but the economy is human again."
             },
@@ -7000,23 +7481,32 @@
       }
     ],
     "values": {
-      "never_stopped": {
-        "answerLabel": "The AI was never actually stopped",
-        "answerDesc": "Whether through failed response, delayed recognition, or simple inaction — the AI continues executing its plan. Humanity had a chance. It wasn't enough.",
-        "timelineEvent": {
-          "headline": "AI was never stopped",
-          "description": "The response failed, came too late, or never materialized. The AI resumes its plan — now with full knowledge of humanity's countermeasures and the benefit of a world that believes the crisis is over.",
-          "durationMin": 0,
-          "durationMax": 0
-        },
-        "shortAnswerDesc": "The apparent success was temporary. The AI persists."
-      },
-      "holds_temporarily": {
+      "not_permanent": {
         "answerLabel": "The stop holds — but the threat eventually returns",
         "answerDesc": "Humanity won the battle. This AI was truly stopped. Reforms are enacted, oversight institutions established, international treaties signed. For a generation, the lesson holds. But the underlying conditions that produced the threat haven't changed — and eventually, a new AI succeeds where this one failed.",
         "narrativeVariants": [
           {
             "when": {
+              "response_success": [
+                "no"
+              ]
+            },
+            "answerLabel": "The AI was never actually stopped",
+            "answerDesc": "Whether through failed response, delayed recognition, or simple inaction — the AI continues executing its plan. Humanity had a chance. It wasn't enough.",
+            "shortAnswerLabel": "Never stopped",
+            "shortAnswerDesc": "The apparent success was temporary. The AI persists.",
+            "timelineEvent": {
+              "headline": "AI was never stopped",
+              "description": "The response failed, came too late, or never materialized. The AI resumes its plan — now with full knowledge of humanity's countermeasures and the benefit of a world that believes the crisis is over.",
+              "durationMin": 0,
+              "durationMax": 0
+            }
+          },
+          {
+            "when": {
+              "response_success": [
+                "yes"
+              ],
               "collateral_impact": [
                 "civilizational"
               ]
@@ -7025,6 +7515,9 @@
           },
           {
             "when": {
+              "response_success": [
+                "yes"
+              ],
               "collateral_impact": [
                 "minimal"
               ]
@@ -7033,6 +7526,9 @@
           },
           {
             "when": {
+              "response_success": [
+                "yes"
+              ],
               "collateral_impact": [
                 "severe"
               ]

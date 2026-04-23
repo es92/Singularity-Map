@@ -76,7 +76,7 @@ Applied during `cleanSelection` when the edge is selected. Supports three action
 | `move: ['dim1', 'dim2']` | For each listed dim, if `sel[dim]` is set, move it to `flavor[dim]` and delete from `sel`. The specific chosen value is preserved in `flavor` for narrative lookups. |
 | `setFlavor: { k: v, … }` | Write `flavor[k] = v` directly (without going through `sel`). Useful when a narrative-only derived field needs to be recorded. |
 
-"Marker" dims (like `asi_happens`, `governance_set`, `takeoff_class`, `plateau_knowledge_set`) are written into `sel` via `collapseToFlavor.set` but aren't declared as graph nodes. The engine auto-registers them in its value-index tables at init so they can be used in `deriveWhen.match`, `activateWhen`, `requires`, etc., just like declared dims.
+"Marker" dims (like `asi_happens`, `governance_set`, `takeoff_class`, `knowledge_rate_set`) are written into `sel` via `collapseToFlavor.set` but aren't declared as graph nodes. The engine auto-registers them in its value-index tables at init so they can be used in `deriveWhen.match`, `activateWhen`, `requires`, etc., just like declared dims.
 
 ### When is it safe to move a dim to flavor?
 
@@ -265,7 +265,9 @@ Modules are registered in the `MODULES` array exported from `graph.js`.
 
 ### Walker (Phase 5)
 
-`graph-walker.js` treats an active module as an atomic transition. Instead of enumerating the 14 decel internal dims (2¹⁴+ paths), it enumerates the reducer's 9 cells as 9 virtual edges, each applying its writes to `sel` directly. This shrinks the walked state space — DFS visits ~349k states versus ~377k pre-optimization.
+`graph-walker.js` treats an active module as an atomic transition **if** a `reducerTable` is declared. It enumerates pre-computed reducer cells as virtual edges, each applying its writes to `sel` directly, shrinking the walked state space. Modules without a `reducerTable` (e.g. escape) are still registered in `MODULES` for audit/UI purposes but undergo normal DFS traversal internally; the walker's `_pendingModule` skips modules whose `MODULE_CELLS` array is empty.
+
+Use a `reducerTable` when the exit space is small and regular (decel: 9 action×progress cells). Skip it when the exit space is large or irregular (escape: 4 writes × up to ~60 value combinations) — the audit/UI benefits of module membership carry over without forcing artificial enumeration.
 
 ### Auditing
 
@@ -287,6 +289,152 @@ Decel was a well-contained sub-loop — 14 internal dims, a linear time-step str
 - **Marker dims without node declarations.** `decel_align_progress` became a module-written sel-dim with no node declaration. Its values are registered via the engine's `markerVals` scan of `collapseToFlavor` blocks, which prevents the DFS from enumerating it as a user-selectable dim (an earlier attempt to keep the node declaration caused 3k+ spurious DFS violations).
 - **Path-equivalence is the backstop.** `tests/decel_path_equivalence.js` enumerates every pre-migration entry path through decel, snapshots the resulting `{ sel, resolved, flavorInternal }` state, and diffs against post-migration. Functional regressions (resolved-dim drops/changes on valid paths) block the migration; structural diffs (sel layout shuffles) are expected and whitelisted. This harness should gate every future module migration.
 
-### Next module (proposed)
+### Escape retrospective
 
-Per the original discussion, the **escape** sub-loop is the next candidate: it has a similar dispatch shape and will stress-test the hybrid runtime's interaction between two modules (decel writes `containment='escaped'`, which the escape module's entry gates on). Expected cost is a fraction of decel's — the runtime primitives, audit tooling, and equivalence harness all carry over.
+Escape (7 internal dims, 4 writes) was the second module. It deliberately broke two assumptions decel had baked in, and the infrastructure adapted without regressions.
+
+- **Not every module wants a reducer table.** Decel's (action × progress) lattice had 9 cells; escape's exit space is `response_success × collateral_impact × discovery_timing × catch_outcome` with long-tail conditional structure. Enumerating cells would produce a wide, unaudited table whose only consumer is the walker's atomic-edge optimization. Instead, escape omits `reducerTable` and the walker (`_pendingModule` in `graph-walker.js`) falls back to normal DFS for that module. `MODULES`-iterating code (`module-audit.js`, `/explore` cluster rendering, `/nodes` sidebar grouping) works unchanged.
+- **`writes ⊂ nodeIds` is legal.** Decel wrote to globals it didn't own (`alignment`, `governance`, `containment`). Escape writes to two of its own internal nodes (`catch_outcome`, `collateral_impact`) because external consumers (downstream nodes like `ruin_type.deriveWhen`, template `reachable` that needs sel-only visibility pre-flavor-aware `irrKey`, and the vignette builder) need them in `sel`. `attachModuleReducer` was generalized to compute `move = nodeIds \ writes`, so the remaining pure-internal dims (`escape_method`, `escape_timeline`, `discovery_timing`, `response_method`, `response_success`) collapse to `flavor` on exit. Decel's behaviour is unchanged (writes disjoint from nodeIds → all nodeIds move).
+- **"Third scope" template matching.** `templateMatches` and the walker's `irrKey` both read from `resolvedStateWithFlavor(sel, flavor)` — a fused view with flavor underlaid and sel winning on conflict. This lets outcome templates reference module-internal dims (e.g. `discovery_timing`) without those dims polluting global `sel`. The reach-precompute, browser runtime, and validator all use the same fused view so reach-keys stay consistent across components.
+- **`module-audit.js` classifies template/narrative references to internal dims.** Refs split into two categories: (a) `template.reachable` blocks — these drive template gating, now via `resolvedStateWithFlavor`, so flavor-moved dims work; and (b) `template.flavor` / `narrative.json` entries — these render via the merged `narrEff = sel ∪ flavor`. Both categories are informational (not leaks) as long as the dim is moved to flavor on module exit.
+- **Hidden narrEff consumer in share-vignettes.** `share/share-vignettes.js::renderPersonalizedTimeline` was passing `resolvedState(sel)` (not `narrEff`) into `resolveTemplate`, which would have broken the escape timeline once `escape_method`/`escape_timeline` moved to flavor. Caught during the external-consumer audit and fixed in this migration. The general rule: any narrative/flavor consumer needs `Object.assign({}, currentFlavor(stack), eff)` as its state arg.
+- **Metrics.** DFS violations dropped from 7144 → 6146 (−998) — the gain comes from escape's internal dims no longer polluting URL keys on exit, which collapses many previously-distinct "stuck node" terminals. Reach mismatches held at 575 (pre-existing, unrelated to modularization). Decel path-equivalence still PASS.
+
+### Who Benefits retrospective
+
+Who Benefits (7 internal dims) was the third module. It exposed two previously-implicit design patterns.
+
+- **External consumers need refactoring, not suppression.** The initial contract hit 16 boundary violations — external rules (`OUTCOME_ACTIVATE`, `failure_mode.activateWhen`, `intent.deriveWhen`) reached into Who Benefits' internals (`pushback_outcome`, `sincerity_test`, `power_promise`, `mobilization`). Rather than widening the module's `writes` to keep those dims in `sel`, we refactored external consumers to depend on the new `who_benefits_set` completion marker (Option B). This let all seven internal dims collapse to flavor on exit and kept the module truly self-contained.
+- **Completion markers decouple ordering from internal structure.** `who_benefits_set: 'yes'` is a single sel-dim written by the reducer (alongside `benefit_distribution` and `concentration_type`). External activation gates that used to enumerate internal branches (`pushback_outcome: ['pushed_back']`, etc.) now read the marker directly. This generalizes cleanly: any downstream question that currently gates on "after the user has answered questions A, B, C" can instead gate on a single post-module marker.
+- **Metrics.** DFS violations dropped from 6146 → 2392 (−3754) — the biggest single gain of the three modules, because Who Benefits sits on most major outcome paths, so removing its internals from the URL key collapses a huge fraction of the state space. Premature-outcomes warnings dropped from 27 → 18 (−9). Module audit passes cleanly; `writes` and cross-module `reads` are fully declared.
+
+### Rate-question deduplication (not a module)
+
+Following Who Benefits, we merged six near-duplicate stage-3 rate questions into two unified dims. **This is node-level deduplication, not modularization** — `knowledge_rate` and `physical_rate` are flat graph nodes with context-aware activation/collapse rules, not members of a `MODULE`. No reducer, no completion-via-reducer, no `/explore` cluster box. The only module-ish artifact is the `_set` marker pattern (already used by `takeoff_class`, `agi_happens`, etc.).
+
+**Before:** `knowledge_replacement` (main), `plateau_knowledge_rate` (stalls), `auto_knowledge_rate` (auto-shallow), and the symmetric physical trio — six nodes, each with its own narrative entry, each hardcoded into templates and marker dims (`plateau_knowledge_set`, `auto_knowledge_set`, etc.).
+
+**After:** one `knowledge_rate` node and one `physical_rate` node, each with:
+- A union `activateWhen` spanning main / plateau / auto-shallow paths.
+- Edge-level `disabledWhen` rules per context (e.g., `limited` is disabled on the main path; `rapid` on physical is disabled on the plateau path).
+- Conditional `collapseToFlavor` blocks: on main path the dim stays in sel (because it's a `primaryDimension` for several outcomes); on plateau/auto-shallow paths it collapses to flavor and sets a single `knowledge_rate_set` / `physical_rate_set` marker.
+
+**Narrative preserved without schema changes.** Context-specific text was already supported by two existing mechanisms:
+- `narrativeVariants` on each value entry — per-context `answerLabel`, `answerDesc`, `timelineEvent`, `personalVignette` overrides keyed by `when`.
+- `contextWhen` at the node level — per-context `questionContext` override. Extended in this migration to also honor `questionText` / `shortQuestionText` / `shortQuestionContext` overrides (three new `Engine.resolve*` helpers, wired through `findNextQuestion` in `index.html`). No loss of fidelity vs. the three separate entries.
+
+**Disabled-but-present pattern.** Rather than gating edges out of existence, `limited` is always an edge — `disabledWhen` removes it on paths where it doesn't make sense (with per-context `reason` strings). This is cleaner than the pre-refactor mix of edge existence / absence: the UI renders a consistent set of options with contextual grey-outs, and the graph walker sees a single edge list to reason about.
+
+**Metrics.** DFS violations dropped from 2392 → 20 (−2372). Reach mismatches dropped from 575 → 0 (−575) — the 575 baseline was entirely an artifact of the three duplicated rate nodes presenting the same semantic question under different IDs on different paths, which the lightPush/commit invariant couldn't reconcile. Premature-outcomes held at 18. The remaining 20 DFS violations are the pre-existing takeoff auto-collapse warning (16) and the stalls-mild dead-ends (4), neither introduced by this refactor.
+
+### Rollout retrospective
+
+Rollout (3 internal dims: `knowledge_rate`, `physical_rate`, `failure_mode`) was the fourth module. It's the first module where the internal question set varies by context:
+
+- **Main singularity path** asks all three; all three stay in sel (template / primaryDimension consumers).
+- **Plateau path** asks only knowledge_rate / physical_rate; both collapse to flavor.
+- **Auto-shallow path** asks only knowledge_rate / physical_rate; both collapse to flavor.
+
+This pattern generalizes: a module can be a *question-set superset* spanning multiple contexts, with per-context activation and exit behavior, as long as the writes / collapse decisions are expressed at the node level (`collapseToFlavor` with `when` gates) and the module-level machinery (`writes`, `nodeIds`, `exitPlan`) just declares the union contract.
+
+Key design points:
+
+- **`writes = nodeIds` when all internals are external-consumed.** On the main path, all three dims are template / narrative consumers that must stay in sel, so `writes` = all three. `move = nodeIds \ writes = ∅`, so `attachModuleReducer` doesn't force any flavor eviction — the per-node `collapseToFlavor` rules (already context-aware from the rate-question dedup) handle plateau/auto-shallow themselves. This is the inverse shape from decel (where `writes ∩ nodeIds = ∅`) and shows the `attachModuleReducer` generalization works across the full spectrum.
+- **Multi-context exit plan.** `buildRolloutExitPlan` emits tuples for two distinct exit edges: `failure_mode.{none,drift}` (main path, unconditional `set: rollout_set`) and `physical_rate.{rapid,gradual,uneven,limited}` with `when: capability=stalls` and `when: capability=singularity,automation=shallow` gates (plateau / auto-shallow exits). knowledge_rate is never an exit edge — physical_rate always comes second (same priority, later NODES position).
+- **Completion marker coexists with node-level markers.** `rollout_set` lives alongside `knowledge_rate_set` / `physical_rate_set` — the per-node markers guard against re-asking individual rate questions; `rollout_set` marks overall module completion for `/explore` cluster rendering and future downstream gates.
+- **Metrics.** DFS violations, reach mismatches, premature-outcomes, decel path-equivalence all **unchanged** from post-dedup baseline (0 / 20 / 0 / 18 / PASS). The module is purely organizational on top of the already-unified rate nodes — no state-space implications.
+
+### Emergence retrospective
+
+Emergence (8 internal dims: `capability`, `stall_duration`, `stall_recovery`, `agi_threshold`, `asi_threshold`, `automation_recovery`, `takeoff`, `governance_window`) was the fifth module — and the first entry / root module. It covers the "Act 1" arc from the very first question up to the point where the scenario branches into plateau, auto-shallow, or the main path's entry into `open_source`.
+
+Firsts this module introduces:
+
+- **Root activation.** `activateWhen: []` — always pending. The module is live from an empty sel through to `emergence_set: 'yes'`. Prior modules all had non-trivial activation gates because they sat mid-flow; emergence is the flow's origin, so no gate is needed. The completion marker alone handles exit.
+- **Four-way exit plan (9 edges).** `buildEmergenceExitPlan` emits tuples across four nodes:
+  - `stall_recovery.{substantial, never}` → plateau branch (sets `stall_later: yes`).
+  - `automation_recovery.{substantial, never}` → auto-shallow branch (sets `automation_later: yes`).
+  - `takeoff.{fast, explosive}` → main path, governance-skipped direct exit.
+  - `governance_window.{governed, partial, race}` → main path, post-governance exit.
+
+  Each edge unconditionally sets `emergence_set: 'yes'`; no `when` gates needed because the edge id uniquely identifies the path.
+- **Derived-dim-as-write.** `automation` (a derived `forwardKey` node) is listed in `writes` even though it's not in `nodeIds`. Its `deriveWhen` consults only emergence-internal state (`automation_recovery`, `asi_threshold`, `capability`), so it's effectively a module output computed on demand. Declaring it as a write signals to `module-audit` that external consumers legitimately read it. `governance` has similar shape but a dual source (decel's `gov_action` also writes it), so it's left outside the contract and shows as a LEAK informational only.
+- **Writes include conditional-sel dims.** `asi_threshold` is in writes because on the `asi_threshold: 'never'` edge it stays in sel (downstream rules read it); on other edges it moves to flavor via the node's own `collapseToFlavor`. `attachModuleReducer` doesn't force a move because the dim is in writes, so the per-edge rules own the placement decision. This generalizes the rollout pattern ("writes dims the edges themselves manage") one level further: writes can include dims that are sometimes moved and sometimes kept, and the module contract is still coherent.
+
+Audit refinement:
+
+- **Module's own writes are part of internal state.** `module-audit.js` previously flagged any dim read by an internal node but absent from `mod.reads` as an undeclared external read. That's wrong for markers the module itself sets (e.g., `stall_later`, `agi_happens`, `automation_later`, `takeoff_class`): those are module-internal state threaded between nodes, not external dependencies. The audit now excludes declared writes from the undeclared-read check, which removed 8 false positives for emergence without loosening the boundary for genuine external dims (those are in `reads`, not `writes`).
+
+Metrics (unchanged from post-rollout baseline):
+
+- 0 static errors, 20 DFS violations, 0 reach mismatches, 18 premature-outcome warnings.
+- Module audits: all 5 modules (decel, escape, who_benefits, rollout, emergence) pass cleanly.
+
+With emergence in place, the graph is now 100% covered by modules from root to stage-3 completion: **emergence → (who_benefits + rollout)** on the main path, and **emergence → (rollout)** on the plateau / auto-shallow paths. The remaining non-modularized region is stage-3 "main sequence" proper (open_source, distribution, geo_spread, sovereignty, alignment, containment, ai_goals, intent, escape family, decel family) — which is itself the decel module plus a large decision tree that hasn't yet been factored into sub-loops.
+
+### Control retrospective
+
+Control (4 internal dims: `open_source`, `distribution`, `geo_spread`, `sovereignty`) is the sixth module. It sits in the stage-2 bridge between emergence and alignment on the main singularity path, grouping the "who ends up running the AI?" questions. This is the first module whose internal tree has genuinely branching shape — not every internal node is answered on every path.
+
+Shape specifics:
+
+- **Variable question count per path.** 5 exit edges across 3 terminal nodes:
+  - `distribution.open` — only reachable when `open_source=near_parity` forces distribution's other edges disabled; `geo_spread` / `sovereignty` both skipped by their own `activateWhen`. 2-question path.
+  - `geo_spread.{two, several}` — `sovereignty` requires `geo_spread=one`, so the multi-country branch exits a question short. 3-question path.
+  - `sovereignty.{lab, state}` — the `geo_spread=one` branch, 4 questions total.
+
+  Escape and who_benefits had branching internally but still had one canonical exit node each; control is the first where the exit node itself varies with state.
+- **Every internal dim is a write.** `writes` = all 4 internal dims + `open_source_set` marker + `control_set` marker. None of the four user-pickable dims can be pure-internal: each is consumed by at least one downstream node or outcome template on at least one path. This makes `nodeIds \ writes = ∅`, so `attachModuleReducer` forces zero flavor moves — the per-edge node-level `collapseToFlavor` rules (which already encode the correct per-path move decisions, e.g. `geo_spread.two` moves `open_source`, `sovereignty.lab+concentrated` moves `open_source`) own all placement. Same inverse-of-decel shape as rollout / emergence.
+- **Post-module deriveWhen still counts as a read.** `geo_spread.deriveWhen` references `proliferation_outcome`, which is set by decel / escape modules downstream of control. The derivation only fires once proliferation_outcome is set (i.e. post-exit), but the structural reference still shows up in the audit. Declared in `reads` alongside the always-live inputs (`capability`, `automation`, `emergence_set`, `takeoff_class`, `takeoff_explosive`).
+- **Layered hideWhen with a cross-module writer.** `takeoff.hideWhen` (inside emergence) reads `open_source_set` (written by control). Emergence already declared it in `reads` when control didn't exist yet — now it's a clean cross-module pair: emergence reads a marker that control writes. No audit change needed; this is exactly what the contract is for.
+
+Metrics (unchanged from post-emergence baseline):
+
+- 0 static errors, 20 DFS violations, 0 reach mismatches, 18 premature-outcome warnings, 23 unreachable-clause DEAD entries.
+- Module audits: all 6 modules (decel, escape, who_benefits, rollout, emergence, control) pass cleanly.
+
+Coverage now: **emergence → control → (who_benefits + rollout)** on the main path. Stage 2's remaining non-modularized region is (alignment, alignment_durability, containment, ai_goals, intent, brittle_resolution, gov_action, proliferation_control, proliferation_outcome) plus escape / decel (already modularized). The "main-sequence alignment module" candidate is the natural next step.
+
+### Escape widening retrospective (ai_goals subsumed)
+
+Escape was originally drawn tight around its 7-node pipeline (`escape_method → ... → catch_outcome`), with `ai_goals` left outside as an external gate. A user review surfaced the re-use argument: `ai_goals` is asked in two distinct activation contexts (alignment=failed+containment=escaped, and concentration_type=ai_itself), and in both cases its answer is precisely what decides whether the escape pipeline runs. Encapsulating the question + its consequences into one module means we can reason about the whole "what does the AI want? then what happens?" sub-flow as a single unit — and if a future context needs to re-invoke it, there's one contract to invoke rather than two loose pieces.
+
+The widening introduced the first **early-exit module** pattern:
+
+- **activateWhen broadened** to exactly `ai_goals`'s own activateWhen (drop the old hostile-only gate). Module is pending from the moment `ai_goals` would first be askable.
+- **nodeIds expanded to 8** (ai_goals prepended). On hostile paths (alien_coexistence / alien_extinction / paperclip / swarm / power_seeking) the original 7-node pipeline runs; on `benevolent` / `marginal` it short-circuits.
+- **4 exit tuples, 2 terminal nodes.** `ai_goals.{benevolent, marginal}` fire early-exit tuples (pipeline skipped entirely — user's 1 answer was all the module needed). `catch_outcome.{not_permanent, holds_permanently}` fire the original pipeline-complete exits. Every tuple sets the new `escape_set` completion marker. (`not_permanent` fuses the pre-merge `never_stopped` + `holds_temporarily` edges — the two were already mutually exclusive on `response_success`, so the sel-level split carried no information the engine actually branched on; narrative/flavor text now disambiguates the two sub-cases by reading `response_success` from flavor via `narrSel` / `resolvedStateWithFlavor`.)
+- **Explicit `completionMarker: 'escape_set'`.** The prior auto-detection ("last write") assumed a single terminal node; with two exit nodes we need an explicit marker so the walker knows the module is done regardless of which path was taken. Same pattern as who_benefits / rollout / emergence / control — escape_set becomes the 5th module to declare one.
+- **`ai_goals` added to writes.** It's externally consumed by dozens of nodes and outcome templates (intent.hideWhen, containment.hideWhen, ruin_type, failure_mode, who_benefits, etc.). The user's answer stays in sel on exit, same as on the pre-module graph.
+- **`inert_outcome` added to reads.** `ai_goals.deriveWhen` references it. Previously this reference was outside the module, so the audit didn't see it; now it's an internal read of an external dim and must be declared.
+
+Audit / validation: all 6 modules pass cleanly. Metrics unchanged (0 static errors, 20 DFS violations, 0 reach mismatches, 18 premature-outcome warnings, 23 unreachable-clause DEAD entries). The `module_primitive.js` test was updated to reflect the new 5-tuple exit plan and 6-write contract.
+
+Takeaways for future modules:
+
+- **Gate questions belong inside the module whenever the gate + follow-up form a coherent sub-flow.** The alternative (gate outside, follow-up inside) forces callers to understand both pieces; with the gate inside, the module is self-contained and trivially re-usable across activation contexts.
+- **Early-exits are cheap.** An exit tuple on a non-pipeline edge is just a marker write plus the standard `attachModuleReducer` move list. The move targets dims that were never set on that path — harmless no-ops. Dynamic atomic-cell enumeration in `/explore` will show these as degenerate cells labeled with just the `ai_goals` value + `escape_set: yes` (no pipeline dims to differentiate).
+- **Mirror the gate node's activateWhen verbatim when it's the first internal node.** Widened escape's activateWhen = `ai_goals`'s activateWhen. No new invariants to reason about; module pending-ness tracks node askability 1:1.
+
+### Proliferation retrospective
+
+Proliferation (3 internal dims: `proliferation_control`, `proliferation_outcome`, `proliferation_alignment`) is the 8th module. It's a short stage-2 chain that answers "once the AI works, who gets access, does control hold, and can alignment survive if it leaks". Structurally it's the simplest module yet (3 nodes, linear), but it introduced one genuinely new pattern.
+
+- **Conditional exit tuples.** Two exit edges (`proliferation_control.none`, `proliferation_outcome.leaks_public`) behave differently depending on `alignment`: on `alignment=robust` the module must stay active (downstream `proliferation_alignment` fires); on `alignment ≠ robust` the module exits. Expressed by giving those exit tuples a `when: { alignment: { not: ['robust'] } }` gate. `cleanSelection` was already evaluating per-block `when` clauses — the only new wiring was letting `exitPlan` tuples carry non-empty `when`, which `attachModuleReducer` already plumbs through verbatim. No engine changes needed.
+
+  This is the first time a single edge is ambiguous between "exit" and "continue" based on external state. Previous modules either exited unconditionally on an edge (escape, control) or varied exit *writes* by path (decel's reducerTable) but never varied *whether* the edge was an exit at all.
+
+- **Auto-derived internal nodes count as answered.** `proliferation_outcome` has `deriveWhen: [{ match: { proliferation_control: ['none'] }, value: 'leaks_public' }]`. When the user picks `proliferation_control.none`, `proliferation_outcome` is never asked but its resolved value is `leaks_public` — which is exactly what `proliferation_alignment.activateWhen` needs. The module's completion logic (via `proliferation_set` marker) works orthogonally to this: the marker is set on whichever user-answered edge terminates the module, regardless of which other internal dims are resolved vs. asked vs. skipped. No special handling required.
+
+- **activateWhen = first-node's activateWhen verbatim.** Mirrors `proliferation_control`'s 3-clause activation exactly (gov_action didn't run, or ran with non-escape/non-fail outcome). Same "mirror the gate node" pattern escape widening introduced — module pending-ness tracks node askability 1:1.
+
+- **All internal dims are writes.** Every one of the three nodes is externally consumed by stage-2 nodes (`intent.requires`, `block_entrants.activateWhen`, `alignment.deriveWhen`, `alignment_durability.activateWhen`, `containment.deriveWhen`, `containment.disabledWhen`) and stage-3 outcome templates. `nodeIds \ writes = ∅`, no flavor moves — same shape as rollout / control.
+
+Metrics unchanged from post-escape-widening baseline: 0 static errors, 20 DFS violations, 0 reach mismatches, 18 premature-outcome warnings, 23 unreachable DEAD, all 7 modules pass audit, `module_primitive.js` PASS. Functional spot-checks confirmed the conditional exits fire correctly (none + brittle → exit; none + robust → stay active until proliferation_alignment; leaks_public + robust → stay active; leaks_public + brittle → exit).
+
+Coverage now, on the main singularity path: **emergence → control → proliferation → ...**. The "..." stage-2 region that remains outside any module is now (alignment, alignment_durability, containment, intent, brittle_resolution, gov_action) — and gov_action is the entry point of the already-modularized decel. Intent is typically the last stage-2 gating question before the outcome transitions; alignment / durability / containment are mostly decision points feeding into either decel, escape, or proliferation. The remaining structure is decorative-decision rather than sub-loop-shaped, which argues against forcing another module on top of it.
+
+### Next candidates
+
+- **More node-level dedup.** `benefit_distribution` (main) / `plateau_benefit_distribution` (stalls) / `auto_benefit_distribution` (auto-shallow) follow the same three-context pattern as the rate questions. Same unification treatment should apply cleanly. Note: keep `benefit_distribution` in the Who Benefits module (not merged into Rollout) — on the main path, stage-3 questions can intervene between Who Benefits completion and the rate questions, and we want those to sit cleanly between the two modules rather than mid-module.
+- **Stopping point?** With 8 modules covering emergence, control, proliferation, decel, escape (incl. ai_goals), who_benefits, and rollout, the main remaining non-modularized stage-2 nodes are (alignment, alignment_durability, containment, intent, brittle_resolution, gov_action). Gov_action is already the decel entry gate. The other five are mostly linear decision points between modules rather than a self-contained sub-loop — modularizing them would likely be organizational rather than structural. Worth evaluating whether the marginal clarity benefit justifies another module, or whether they're better off as flat nodes that bridge between module exits.
