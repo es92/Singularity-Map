@@ -392,7 +392,12 @@ function setTemplates(templates) {
                 if (k === '_not' || k.startsWith('_')) continue;
                 reads.add(k);
             }
-            if (cond._not) for (const k of Object.keys(cond._not)) reads.add(k);
+            if (cond._not) {
+                const entries = Array.isArray(cond._not) ? cond._not : [cond._not];
+                for (const entry of entries) {
+                    if (entry && typeof entry === 'object') for (const k of Object.keys(entry)) reads.add(k);
+                }
+            }
         }
         if (t.primaryDimension && t.variants && Object.keys(t.variants).length > 0) {
             reads.add(t.primaryDimension);

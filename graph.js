@@ -480,7 +480,21 @@ const NODES = [
         {
           id: 'contained',
           label: 'Contained',
-          requires: { distribution: ['concentrated', 'monopoly'] },
+          // Normal flow: containment is chosen on the post-alignment-
+          // failure branch only when distribution is narrow enough to
+          // keep the AI under wraps. Also reachable via ESCAPE's
+          // post_catch=contained collapse (AI escaped, was caught, and
+          // is now held) — that path sets both dims simultaneously,
+          // so we OR in the post_catch=contained marker. Without this
+          // disjunction, cleanSelection re-evaluates the edge, finds
+          // distribution=open (a legitimate pre-escape state), marks
+          // the edge disabled, and drops sel.containment — breaking
+          // downstream rollout gating for alien-coexistence /
+          // hostile-contained states.
+          requires: [
+            { distribution: ['concentrated', 'monopoly'] },
+            { post_catch: ['contained'] }
+          ],
           disabledWhen: [
             { alignment_durability: ['breaks'], reason: 'Brittle alignment broke — the AI is already operating freely' }
           ]
@@ -1934,6 +1948,10 @@ const WHO_BENEFITS_NODE_IDS = [
 // sense on this path. Listed here to document the cross-module output;
 // the audit only cares about node-id writes, so this is informational.
 const WHO_BENEFITS_WRITES = [
+    // Benefit distribution is read by every sel-only outcome match
+    // (the-gilded / the-new-hierarchy / the-flourishing / the-capture /
+    // the-mosaic). Must persist to sel post-exit for validate2.js.
+    'benefit_distribution',
     'concentration_type',
     'delivery_ask_eligible',
     // Completion marker — must be in `writes` so `captureExitResult`
@@ -2070,12 +2088,14 @@ const WHO_BENEFITS_MODULE = {
 //   * capability='agi' (AGI-only / auto-shallow) — same as plateau: only
 //     knowledge/physical, exit on physical_rate.
 //
-// Writes: [] — no dim needs to persist globally. All three rollout dims
-// have zero external sel-only gate readers; every consumer (outcome
-// templates, narrative flavors / contextWhen) resolves via fused state
-// (sel ∪ flavor via resolvedStateWithFlavor / narrEff). The module exit
-// tuples set `rollout_set: 'yes'` and attachModuleReducer auto-moves
-// nodeIds \ writes = all 3 dims to flavor.
+// Writes: [failure_mode, knowledge_rate, physical_rate, rollout_set].
+// All three question dims now persist globally — outcome reachable
+// clauses gate on `failure_mode` (the-failure / the-flourishing /
+// the-new-hierarchy / the-gilded-singularity / etc.), and the sel-only
+// validator (validate2.js) needs the dims present in sel to evaluate
+// those gates. Previously these moved to flavor on exit and outcomes
+// resolved via fused state; switching to sel-only matching requires
+// persistence.
 //
 // Post-exit self-hide: each of the 3 nodes adds `{ rollout_set: ['yes'] }`
 // to hideWhen so findNextQ doesn't re-offer them once their dim sits in
@@ -2097,23 +2117,28 @@ const ROLLOUT_NODE_IDS = [
     'failure_mode',
 ];
 
-// Only the completion marker propagates globally — all narrative dims
-// move to flavor on exit. See `rolloutReduce` comment.
-const ROLLOUT_WRITES = ['rollout_set'];
+// All three question dims persist globally so sel-only outcome matching
+// can read them. The completion marker `rollout_set` is set via exit-
+// tuple `set:` blocks.
+const ROLLOUT_WRITES = ['failure_mode', 'knowledge_rate', 'physical_rate', 'rollout_set'];
 
 function rolloutReduce(_local) {
-    // All rollout dims move to flavor on module exit — nothing persists
-    // globally. The module's only sel-level output is the `rollout_set`
-    // completion marker (set via exit-tuple `set:` blocks, not via this
-    // reducer).
+    // Values are already in sel via user picks on each node — no reducer
+    // transformation needed. All question dims are in writes, so
+    // attachModuleReducer leaves them in sel on exit.
     return {};
 }
 
 // Exit tuples:
-//   * failure_mode.{none, drift} — main path exit, always. No `when` gate.
-//   * physical_rate.{rapid, gradual, uneven, limited} — plateau and
-//     AGI-only exits. Gate on capability ∈ {plateau, agi} so these don't
-//     fire on the main ASI path (where failure_mode is the real exit).
+//   * failure_mode.{none, drift} — main ASI path exit when
+//     delivery_ask_eligible ≠ no. No `when` gate needed (failure_mode
+//     only activates on the eligible ASI path).
+//   * physical_rate.{rapid, gradual, uneven, limited}:
+//     - plateau exit (capability=plateau)
+//     - auto-shallow exit (capability=agi)
+//     - ASI-capture exit (capability=asi + delivery_ask_eligible=no) —
+//       failure_mode is hidden on this path, so physical_rate is the
+//       terminal question and must close the module.
 function buildRolloutExitPlan() {
     const plan = [];
     const fm = NODE_MAP.failure_mode;
@@ -2134,7 +2159,7 @@ function buildRolloutExitPlan() {
             plan.push({
                 nodeId: 'physical_rate',
                 edgeId: e.id,
-                when: { capability: ['stalls'] },
+                when: { capability: ['plateau'] },
                 set: { rollout_set: 'yes' },
             });
             // Auto-shallow exit
@@ -2143,6 +2168,18 @@ function buildRolloutExitPlan() {
                 edgeId: e.id,
                 when: { capability: ['agi'] },
                 set: { rollout_set: 'yes' },
+            });
+            // ASI-capture exit — failure_mode is hidden on
+            // delivery_ask_eligible=no paths (no delivery question =>
+            // no delivery failure mode). physical_rate is the last
+            // question and must close the module. Set failure_mode='none'
+            // so sel-only outcome matching (the-new-hierarchy / the-capture
+            // gates requiring failure_mode=none) succeeds.
+            plan.push({
+                nodeId: 'physical_rate',
+                edgeId: e.id,
+                when: { capability: ['asi'], delivery_ask_eligible: ['no'] },
+                set: { rollout_set: 'yes', failure_mode: 'none' },
             });
         }
     }
@@ -2178,6 +2215,16 @@ const ROLLOUT_MODULE = {
         // Shared rollout hideWhen (uncaught bad-escape cut) +
         // failure_mode.hideWhen.
         'ai_goals', 'containment',
+        // Transitive read: containment.contained edge requires
+        // distribution ∈ {concentrated, monopoly}. Without distribution
+        // in the projection, cleanSelection drops sel.containment on
+        // post_catch=contained paths (ESCAPE pre-sets both post_catch
+        // and containment, but the edge re-validation fails if
+        // distribution isn't carried through). That cascade makes
+        // rollout's hideWhen lose its containment=contained override
+        // and hide knowledge_rate/physical_rate for alien-ai / hostile-
+        // contained states.
+        'distribution',
         // Main-path activation marker + delivery-eligibility marker.
         // failure_mode activates on who_benefits_set=yes when
         // delivery_ask_eligible is not 'no' (set by WHO_BENEFITS on
@@ -2834,6 +2881,13 @@ const INTENT_MODULE = {
         'proliferation_control', 'proliferation_outcome',
         // intent.edges.requires + tail hideWhen chains
         'distribution', 'geo_spread', 'alignment_durability',
+        // Transitive read: distribution.edges[*].requires references
+        // open_source. Without this in reads, projectReads drops
+        // open_source, then cleanSelection drops distribution (edge
+        // requires fail), then drops intent (intent.coexistence requires
+        // reference distribution). Net effect: intent vanishes from sel
+        // on module exit even though the user picked it.
+        'open_source',
     ],
     writes: INTENT_WRITES,
     nodeIds: INTENT_NODE_IDS,
@@ -2914,17 +2968,24 @@ function warReduce(local) {
 // All set `war_set: 'yes'`.
 function buildWarExitPlan() {
     const plan = [];
-    // Peaceful WAR exits override intent → 'coexistence'. Replaces
-    // the former intent.deriveWhen rules; WAR is the rightful writer
-    // of escalation_outcome / post_war_aims, so it owns the override.
-    const PEACEFUL_OVERRIDE = {
-        escalation_outcome: new Set(['agreement']),
-        post_war_aims: new Set(['human_centered']),
+    // Peaceful WAR exits override intent. Replaces the former
+    // intent.deriveWhen rules; WAR is the rightful writer of
+    // escalation_outcome / post_war_aims, so it owns the override.
+    //
+    // Intent mapping (informs which outcome template matches):
+    //   escalation_outcome=agreement  → intent='international'
+    //     (forced deterrence treaty → the-flourishing "Global Compact")
+    //   post_war_aims=human_centered  → intent='coexistence'
+    //     (post-victory rebuild → the-mosaic's reconciliation framing)
+    const INTENT_OVERRIDE = {
+        escalation_outcome: { agreement: 'international' },
+        post_war_aims: { human_centered: 'coexistence' },
     };
     const buildSet = (nodeId, edgeId) => {
         const set = { war_set: 'yes' };
-        if (PEACEFUL_OVERRIDE[nodeId] && PEACEFUL_OVERRIDE[nodeId].has(edgeId)) {
-            set.intent = 'coexistence';
+        const mapping = INTENT_OVERRIDE[nodeId];
+        if (mapping && mapping[edgeId]) {
+            set.intent = mapping[edgeId];
         }
         return set;
     };

@@ -348,262 +348,28 @@
           "capability": [
             "asi"
           ],
-          "alignment": [
-            "robust"
-          ],
-          "intent": [
-            "international",
-            "coexistence"
+          "benefit_distribution": [
+            "unequal"
           ],
           "failure_mode": [
             "none"
           ],
-          "benefit_distribution": [
-            "unequal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "intent": [
-            "international",
-            "coexistence"
-          ],
-          "failure_mode": [
-            "none"
-          ],
-          "benefit_distribution": [
-            "unequal"
-          ],
-          "brittle_resolution": [
-            "solved",
-            "sufficient"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "contained"
-          ],
-          "intent": [
-            "international",
-            "coexistence"
-          ],
-          "failure_mode": [
-            "none"
-          ],
-          "benefit_distribution": [
-            "unequal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "robust"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ],
-          "benefit_distribution": [
-            "unequal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ],
-          "benefit_distribution": [
-            "unequal"
-          ],
-          "brittle_resolution": [
-            "solved",
-            "sufficient"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "contained"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ],
-          "benefit_distribution": [
-            "unequal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "escaped"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ],
-          "benefit_distribution": [
-            "unequal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "robust"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "self_interest"
-          ],
-          "benefit_distribution": [
-            "unequal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "self_interest"
-          ],
-          "benefit_distribution": [
-            "unequal"
-          ],
-          "brittle_resolution": [
-            "solved",
-            "sufficient"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "contained"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "self_interest"
-          ],
-          "benefit_distribution": [
-            "unequal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "escaped"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "self_interest"
-          ],
-          "benefit_distribution": [
-            "unequal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "intent": [
-            "international",
-            "coexistence"
-          ],
-          "failure_mode": [
-            "none"
-          ],
-          "benefit_distribution": [
-            "unequal"
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            },
+            {
+              "conflict_result": [
+                "destruction"
+              ]
+            },
+            {
+              "containment": [
+                "escaped"
+              ]
+            }
           ]
         }
       ],
@@ -785,213 +551,42 @@
           "capability": [
             "asi"
           ],
-          "alignment": [
-            "robust"
+          "benefit_distribution": [
+            "extreme"
           ],
-          "intent": [
-            "international",
-            "coexistence"
+          "concentration_type": [
+            "elites"
           ],
           "failure_mode": [
             "none"
           ],
-          "benefit_distribution": [
-            "extreme"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "intent": [
-            "international",
-            "coexistence"
-          ],
-          "failure_mode": [
-            "none"
-          ],
-          "benefit_distribution": [
-            "extreme"
-          ],
-          "brittle_resolution": [
-            "solved",
-            "sufficient"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "contained"
-          ],
-          "intent": [
-            "international",
-            "coexistence"
-          ],
-          "failure_mode": [
-            "none"
-          ],
-          "benefit_distribution": [
-            "extreme"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "robust"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ],
-          "benefit_distribution": [
-            "extreme"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ],
-          "benefit_distribution": [
-            "extreme"
-          ],
-          "brittle_resolution": [
-            "solved",
-            "sufficient"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "contained"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ],
-          "benefit_distribution": [
-            "extreme"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "escaped"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ],
-          "benefit_distribution": [
-            "extreme"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "intent": [
-            "international",
-            "coexistence"
-          ],
-          "failure_mode": [
-            "none"
-          ],
-          "benefit_distribution": [
-            "extreme"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            },
+            {
+              "conflict_result": [
+                "destruction"
+              ]
+            },
+            {
+              "containment": [
+                "escaped"
+              ]
+            },
+            {
+              "intent": [
+                "self_interest"
+              ]
+            },
+            {
+              "post_war_aims": [
+                "self_interest"
+              ]
+            }
+          ]
         }
       ],
       "story": [],
@@ -1331,258 +926,31 @@
           "capability": [
             "asi"
           ],
-          "alignment": [
-            "robust"
-          ],
-          "intent": [
-            "international"
+          "benefit_distribution": [
+            "equal"
           ],
           "failure_mode": [
             "none"
           ],
-          "benefit_distribution": [
-            "equal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "brittle"
-          ],
           "intent": [
             "international"
           ],
-          "failure_mode": [
-            "none"
-          ],
-          "benefit_distribution": [
-            "equal"
-          ],
-          "brittle_resolution": [
-            "solved",
-            "sufficient"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "contained"
-          ],
-          "intent": [
-            "international"
-          ],
-          "failure_mode": [
-            "none"
-          ],
-          "benefit_distribution": [
-            "equal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "robust"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ],
-          "benefit_distribution": [
-            "equal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ],
-          "benefit_distribution": [
-            "equal"
-          ],
-          "brittle_resolution": [
-            "solved",
-            "sufficient"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "contained"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ],
-          "benefit_distribution": [
-            "equal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "escaped"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "human_centered"
-          ],
-          "benefit_distribution": [
-            "equal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "robust"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "self_interest"
-          ],
-          "benefit_distribution": [
-            "equal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "self_interest"
-          ],
-          "benefit_distribution": [
-            "equal"
-          ],
-          "brittle_resolution": [
-            "solved",
-            "sufficient"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "contained"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "self_interest"
-          ],
-          "benefit_distribution": [
-            "equal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "escaped"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "self_interest"
-          ],
-          "benefit_distribution": [
-            "equal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "intent": [
-            "international"
-          ],
-          "failure_mode": [
-            "none"
-          ],
-          "benefit_distribution": [
-            "equal"
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            },
+            {
+              "conflict_result": [
+                "destruction"
+              ]
+            },
+            {
+              "containment": [
+                "escaped"
+              ]
+            }
           ]
         }
       ],
@@ -1770,166 +1138,116 @@
           "capability": [
             "asi"
           ],
-          "alignment": [
-            "robust"
+          "benefit_distribution": [
+            "extreme"
+          ],
+          "concentration_type": [
+            "inner_circle"
+          ],
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            },
+            {
+              "conflict_result": [
+                "destruction"
+              ]
+            },
+            {
+              "containment": [
+                "escaped"
+              ]
+            }
+          ]
+        },
+        {
+          "capability": [
+            "asi"
+          ],
+          "benefit_distribution": [
+            "extreme"
+          ],
+          "concentration_type": [
+            "singleton"
+          ],
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            },
+            {
+              "conflict_result": [
+                "destruction"
+              ]
+            },
+            {
+              "containment": [
+                "escaped"
+              ]
+            }
+          ]
+        },
+        {
+          "capability": [
+            "asi"
+          ],
+          "benefit_distribution": [
+            "extreme"
+          ],
+          "geo_spread": [
+            "one"
           ],
           "intent": [
             "self_interest"
           ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            },
+            {
+              "conflict_result": [
+                "destruction"
+              ]
+            },
+            {
+              "containment": [
+                "escaped"
+              ]
+            }
+          ]
         },
         {
           "capability": [
             "asi"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "intent": [
-            "self_interest"
-          ],
-          "brittle_resolution": [
-            "solved",
-            "sufficient"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "contained"
-          ],
-          "intent": [
-            "self_interest"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "robust"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "self_interest"
           ],
           "benefit_distribution": [
             "extreme"
           ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
           "post_war_aims": [
             "self_interest"
           ],
-          "benefit_distribution": [
-            "extreme"
-          ],
-          "brittle_resolution": [
-            "solved",
-            "sufficient"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "contained"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "self_interest"
-          ],
-          "benefit_distribution": [
-            "extreme"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "escaped"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "victory"
-          ],
-          "post_war_aims": [
-            "self_interest"
-          ],
-          "benefit_distribution": [
-            "extreme"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            },
+            {
+              "conflict_result": [
+                "destruction"
+              ]
+            },
+            {
+              "containment": [
+                "escaped"
+              ]
+            }
+          ]
         }
       ],
       "story": [],
@@ -2139,135 +1457,29 @@
           "capability": [
             "asi"
           ],
-          "alignment": [
-            "robust"
-          ],
           "escalation_outcome": [
             "standoff"
           ],
-          "benefit_distribution": [
-            "equal",
-            "unequal",
-            "extreme"
+          "rollout_set": [
+            "yes"
           ],
-          "knowledge_rate": [
-            "rapid",
-            "gradual",
-            "uneven"
-          ],
-          "physical_rate": [
-            "rapid",
-            "gradual",
-            "uneven"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "escalation_outcome": [
-            "standoff"
-          ],
-          "brittle_resolution": [
-            "solved",
-            "sufficient"
-          ],
-          "benefit_distribution": [
-            "equal",
-            "unequal",
-            "extreme"
-          ],
-          "knowledge_rate": [
-            "rapid",
-            "gradual",
-            "uneven"
-          ],
-          "physical_rate": [
-            "rapid",
-            "gradual",
-            "uneven"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "contained"
-          ],
-          "escalation_outcome": [
-            "standoff"
-          ],
-          "benefit_distribution": [
-            "equal",
-            "unequal",
-            "extreme"
-          ],
-          "knowledge_rate": [
-            "rapid",
-            "gradual",
-            "uneven"
-          ],
-          "physical_rate": [
-            "rapid",
-            "gradual",
-            "uneven"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "containment": [
-            "escaped"
-          ],
-          "escalation_outcome": [
-            "standoff"
-          ],
-          "benefit_distribution": [
-            "equal",
-            "unequal",
-            "extreme"
-          ],
-          "knowledge_rate": [
-            "rapid",
-            "gradual",
-            "uneven"
-          ],
-          "physical_rate": [
-            "rapid",
-            "gradual",
-            "uneven"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            },
+            {
+              "conflict_result": [
+                "destruction"
+              ]
+            },
+            {
+              "containment": [
+                "escaped"
+              ]
+            }
+          ]
         }
       ],
       "story": [],
@@ -2372,77 +1584,23 @@
           "capability": [
             "asi"
           ],
-          "alignment": [
-            "robust"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "destruction"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "destruction"
-          ],
-          "brittle_resolution": [
-            "solved",
-            "sufficient"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "contained"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "destruction"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "escalation_outcome": [
-            "conflict"
-          ],
-          "conflict_result": [
-            "destruction"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
           "post_catch": [
             "ruined"
+          ]
+        },
+        {
+          "capability": [
+            "asi"
+          ],
+          "conflict_result": [
+            "destruction"
+          ],
+          "_not": [
+            {
+              "containment": [
+                "escaped"
+              ]
+            }
           ]
         }
       ],
@@ -2622,78 +1780,31 @@
           "capability": [
             "asi"
           ],
-          "alignment": [
-            "robust"
-          ],
-          "intent": [
-            "coexistence"
+          "benefit_distribution": [
+            "equal"
           ],
           "failure_mode": [
             "none"
           ],
-          "benefit_distribution": [
-            "equal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "brittle"
-          ],
           "intent": [
             "coexistence"
           ],
-          "failure_mode": [
-            "none"
-          ],
-          "benefit_distribution": [
-            "equal"
-          ],
-          "brittle_resolution": [
-            "solved",
-            "sufficient"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "contained"
-          ],
-          "intent": [
-            "coexistence"
-          ],
-          "failure_mode": [
-            "none"
-          ],
-          "benefit_distribution": [
-            "equal"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "intent": [
-            "coexistence"
-          ],
-          "failure_mode": [
-            "none"
-          ],
-          "benefit_distribution": [
-            "equal"
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            },
+            {
+              "conflict_result": [
+                "destruction"
+              ]
+            },
+            {
+              "containment": [
+                "escaped"
+              ]
+            }
           ]
         }
       ],
@@ -2823,91 +1934,66 @@
           "capability": [
             "asi"
           ],
-          "alignment": [
-            "robust"
-          ],
-          "intent": [
-            "international",
-            "coexistence"
-          ],
           "failure_mode": [
             "drift"
           ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "brittle"
-          ],
-          "intent": [
-            "international",
-            "coexistence"
-          ],
-          "failure_mode": [
-            "drift"
-          ],
-          "brittle_resolution": [
-            "solved",
-            "sufficient"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "contained"
-          ],
-          "intent": [
-            "international",
-            "coexistence"
-          ],
-          "failure_mode": [
-            "drift"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "ai_goals": [
-            "marginal"
-          ],
-          "inert_stays": [
-            "yes"
-          ],
-          "intent": [
-            "international",
-            "coexistence"
-          ],
-          "failure_mode": [
-            "drift"
-          ],
-          "_not": {
-            "concentration_type": [
-              "ai_itself"
-            ]
-          }
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            },
+            {
+              "conflict_result": [
+                "destruction"
+              ]
+            },
+            {
+              "containment": [
+                "escaped"
+              ]
+            },
+            {
+              "escalation_outcome": [
+                "standoff"
+              ]
+            },
+            {
+              "benefit_distribution": [
+                "extreme"
+              ],
+              "concentration_type": [
+                "inner_circle"
+              ]
+            },
+            {
+              "benefit_distribution": [
+                "extreme"
+              ],
+              "concentration_type": [
+                "singleton"
+              ]
+            },
+            {
+              "benefit_distribution": [
+                "extreme"
+              ],
+              "geo_spread": [
+                "one"
+              ],
+              "intent": [
+                "self_interest"
+              ]
+            },
+            {
+              "benefit_distribution": [
+                "extreme"
+              ],
+              "post_war_aims": [
+                "self_interest"
+              ]
+            }
+          ]
         }
       ],
       "story": [],
@@ -2955,7 +2041,14 @@
           "not_permanent": {
             "_default": "The Warning",
             "_when": [
-              { "if": { "response_success": ["no"] }, "text": "The Deception" }
+              {
+                "if": {
+                  "response_success": [
+                    "no"
+                  ]
+                },
+                "text": "The Deception"
+              }
             ]
           }
         },
@@ -3142,130 +2235,42 @@
           "capability": [
             "asi"
           ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "escaped"
-          ],
           "ai_goals": [
             "paperclip",
             "power_seeking"
           ],
-          "post_catch": [
-            "loose"
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            }
           ]
         },
         {
           "capability": [
             "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "escaped"
-          ],
-          "ai_goals": [
-            "paperclip",
-            "power_seeking"
-          ],
-          "discovery_timing": [
-            "never"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "escaped"
-          ],
-          "ai_goals": [
-            "paperclip",
-            "power_seeking"
-          ],
-          "war_survivors": [
-            "none"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "escaped"
           ],
           "ai_goals": [
             "benevolent"
           ],
-          "benefit_distribution": [
-            "equal",
-            "unequal",
-            "extreme"
+          "containment": [
+            "escaped"
           ],
-          "knowledge_rate": [
-            "rapid",
-            "gradual",
-            "uneven"
+          "rollout_set": [
+            "yes"
           ],
-          "physical_rate": [
-            "rapid",
-            "gradual",
-            "uneven"
-          ]
-        },
-        {
-          "concentration_type": [
-            "ai_itself"
-          ],
-          "ai_goals": [
-            "paperclip",
-            "power_seeking"
-          ],
-          "post_catch": [
-            "loose"
-          ]
-        },
-        {
-          "concentration_type": [
-            "ai_itself"
-          ],
-          "ai_goals": [
-            "paperclip",
-            "power_seeking"
-          ],
-          "discovery_timing": [
-            "never"
-          ]
-        },
-        {
-          "concentration_type": [
-            "ai_itself"
-          ],
-          "ai_goals": [
-            "benevolent"
-          ],
-          "benefit_distribution": [
-            "equal",
-            "unequal",
-            "extreme"
-          ],
-          "knowledge_rate": [
-            "rapid",
-            "gradual",
-            "uneven"
-          ],
-          "physical_rate": [
-            "rapid",
-            "gradual",
-            "uneven"
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            },
+            {
+              "conflict_result": [
+                "destruction"
+              ]
+            }
           ]
         }
       ],
@@ -3304,7 +2309,14 @@
           "not_permanent": {
             "_default": "The Warning",
             "_when": [
-              { "if": { "response_success": ["no"] }, "text": "The Intervention" }
+              {
+                "if": {
+                  "response_success": [
+                    "no"
+                  ]
+                },
+                "text": "The Intervention"
+              }
             ]
           }
         },
@@ -3419,78 +2431,30 @@
           "capability": [
             "asi"
           ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "escaped"
-          ],
           "ai_goals": [
-            "alien_coexistence",
             "alien_extinction"
           ],
-          "post_catch": [
-            "loose"
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            }
           ]
         },
         {
           "capability": [
             "asi"
           ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "escaped"
-          ],
           "ai_goals": [
-            "alien_coexistence",
-            "alien_extinction"
+            "alien_coexistence"
           ],
-          "discovery_timing": [
-            "never"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "escaped"
-          ],
-          "ai_goals": [
-            "alien_coexistence",
-            "alien_extinction"
-          ],
-          "war_survivors": [
-            "none"
-          ]
-        },
-        {
-          "concentration_type": [
-            "ai_itself"
-          ],
-          "ai_goals": [
-            "alien_coexistence",
-            "alien_extinction"
-          ],
-          "post_catch": [
-            "loose"
-          ]
-        },
-        {
-          "concentration_type": [
-            "ai_itself"
-          ],
-          "ai_goals": [
-            "alien_coexistence",
-            "alien_extinction"
-          ],
-          "discovery_timing": [
-            "never"
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            }
           ]
         }
       ],
@@ -3518,7 +2482,14 @@
           "not_permanent": {
             "_default": "The Warning",
             "_when": [
-              { "if": { "response_success": ["no"] }, "text": "The Swarm" }
+              {
+                "if": {
+                  "response_success": [
+                    "no"
+                  ]
+                },
+                "text": "The Swarm"
+              }
             ]
           }
         },
@@ -3652,51 +2623,15 @@
           "capability": [
             "asi"
           ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "escaped"
-          ],
           "ai_goals": [
             "swarm"
           ],
-          "post_catch": [
-            "loose"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "escaped"
-          ],
-          "ai_goals": [
-            "swarm"
-          ],
-          "discovery_timing": [
-            "never"
-          ]
-        },
-        {
-          "capability": [
-            "asi"
-          ],
-          "alignment": [
-            "failed"
-          ],
-          "containment": [
-            "escaped"
-          ],
-          "ai_goals": [
-            "swarm"
-          ],
-          "war_survivors": [
-            "none"
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            }
           ]
         }
       ],

@@ -706,6 +706,29 @@ function resolvedStateWithFlavor(sel, flavor) {
 // Template matching
 // ════════════════════════════════════════════════════════
 
+// _not accepts two shapes:
+//   - dict form {k: [excluded]}: reject if state[k] ∈ excluded for ANY key (disjunctive)
+//   - array form [{k1: [v], k2: [v]}, ...]: reject if EVERY k in an entry matches
+//     state (conjunctive). Used for "NOT (A AND B)" exclusions like
+//     "NOT (containment=escaped AND ai_goals ∈ HOSTILE)".
+function _notRejects(notSpec, state) {
+    if (!notSpec) return false;
+    if (Array.isArray(notSpec)) {
+        for (const conj of notSpec) {
+            let allMatch = true;
+            for (const [k, vals] of Object.entries(conj)) {
+                if (!state[k] || !vals.includes(state[k])) { allMatch = false; break; }
+            }
+            if (allMatch) return true;
+        }
+        return false;
+    }
+    for (const [k, excluded] of Object.entries(notSpec)) {
+        if (state[k] && excluded.includes(state[k])) return true;
+    }
+    return false;
+}
+
 function templateMatches(t, state) {
     if (!t.reachable) return true;
     return t.reachable.some(cond => {
@@ -713,11 +736,7 @@ function templateMatches(t, state) {
             if (k === '_not') continue;
             if (!state[k] || !allowed.includes(state[k])) return false;
         }
-        if (cond._not) {
-            for (const [k, excluded] of Object.entries(cond._not)) {
-                if (state[k] && excluded.includes(state[k])) return false;
-            }
-        }
+        if (_notRejects(cond._not, state)) return false;
         return true;
     });
 }
@@ -729,11 +748,7 @@ function templatePartialMatch(t, state) {
             if (k === '_not') continue;
             if (state[k] && !allowed.includes(state[k])) return false;
         }
-        if (cond._not) {
-            for (const [k, excluded] of Object.entries(cond._not)) {
-                if (state[k] && excluded.includes(state[k])) return false;
-            }
-        }
+        if (_notRejects(cond._not, state)) return false;
         return true;
     });
 }

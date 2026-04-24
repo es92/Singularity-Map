@@ -87,21 +87,37 @@
             border: 1px solid var(--border); border-radius: 8px;
             padding: 12px 12px 10px; margin-bottom: 14px;
             background: var(--bg-soft);
+            transition: border-color 100ms;
+        }
+        #nodes-root .ng-module.is-active {
+            border-color: var(--accent, #6b9bd1);
+            background: rgba(107,155,209,0.06);
         }
         #nodes-root .ng-module-head {
             margin-bottom: 10px;
         }
-        #nodes-root .ng-module-title {
+        #nodes-root a.ng-module-title {
             font-weight: 600; font-size: 13px;
             font-family: ui-monospace, monospace;
             color: var(--accent, #6b9bd1);
+            text-decoration: none; cursor: pointer;
+            display: inline-block;
         }
+        #nodes-root a.ng-module-title:hover { text-decoration: underline; }
         #nodes-root .ng-module-contract {
             font-size: 10px; color: var(--text-muted);
             margin-top: 3px; line-height: 1.5;
             font-family: ui-monospace, monospace;
         }
         #nodes-root .ng-module-contract b { color: var(--text); font-weight: 600; }
+        #nodes-root .ng-module-contract a.ng-contract-dim {
+            color: var(--text); text-decoration: none;
+            border-bottom: 1px dotted var(--text-muted);
+        }
+        #nodes-root .ng-module-contract a.ng-contract-dim:hover {
+            color: var(--accent, #6b9bd1);
+            border-bottom-color: var(--accent, #6b9bd1);
+        }
         #nodes-root .ng-grid {
             display: grid; gap: 6px;
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -610,19 +626,28 @@
         // reads/writes contract right under the header.
         html += `<div class="ng-section">`;
         html += `<h3 class="ng-section-head">Modules</h3>`;
+        const dimLinkList = (dims) => {
+            if (!dims || !dims.length) return '—';
+            return dims.map(d => {
+                const href = `#/nodes?n=${encodeURIComponent(d)}`;
+                return `<a class="ng-contract-dim" href="${href}">${esc(d)}</a>`;
+            }).join(', ');
+        };
         for (const m of MODULES) {
             const items = (m.nodeIds || []).map(id => NODE_MAP[id]).filter(Boolean);
             if (!items.length) continue;
-            const reads = (m.reads || []).join(', ') || '—';
-            const writes = (m.writes || []).join(', ') || '—';
-            const internalMarkers = (m.internalMarkers || []).join(', ');
-            html += `<div class="ng-module" id="ng-module-${esc(m.id)}">`;
+            const readsHtml = dimLinkList(m.reads);
+            const writesHtml = dimLinkList(m.writes);
+            const markersHtml = m.internalMarkers && m.internalMarkers.length
+                ? dimLinkList(m.internalMarkers) : '';
+            const modActive = selected.moduleId === m.id ? ' is-active' : '';
+            html += `<div class="ng-module${modActive}" id="ng-module-${esc(m.id)}" data-module-id="${esc(m.id)}">`;
             html += `<div class="ng-module-head">`;
-            html += `<div class="ng-module-title">${esc(m.id)}</div>`;
+            html += `<a class="ng-module-title" href="#/nodes?m=${encodeURIComponent(m.id)}">${esc(m.id)}</a>`;
             html += `<div class="ng-module-contract">`
-                 + `<div><b>reads</b> <code>${esc(reads)}</code></div>`
-                 + `<div><b>writes</b> <code>${esc(writes)}</code></div>`
-                 + (internalMarkers ? `<div><b>internal markers</b> <code>${esc(internalMarkers)}</code></div>` : '')
+                 + `<div><b>reads</b> <code>${readsHtml}</code></div>`
+                 + `<div><b>writes</b> <code>${writesHtml}</code></div>`
+                 + (markersHtml ? `<div><b>internal markers</b> <code>${markersHtml}</code></div>` : '')
                  + `</div>`;
             html += `</div>`;
             html += `<div class="ng-grid">`;
@@ -1112,7 +1137,99 @@
         return html;
     }
 
+    function renderModuleDetail(moduleId) {
+        const NODE_MAP = window.Engine.NODE_MAP;
+        const MODULE_MAP = (window.Graph && window.Graph.MODULE_MAP) || {};
+        const m = MODULE_MAP[moduleId];
+        if (!m) return `<div class="nodes-detail-empty">Unknown module: ${esc(moduleId)}</div>`;
+
+        const nodeIds = (m.nodeIds || []).filter(id => NODE_MAP[id]);
+        const reads = m.reads || [];
+        const writes = m.writes || [];
+        const internals = m.internalMarkers || [];
+        const activateWhen = m.activateWhen || [];
+
+        const tags = [];
+        tags.push(`${nodeIds.length} node${nodeIds.length === 1 ? '' : 's'}`);
+        if (m.completionMarker) tags.push(`exit: ${m.completionMarker}`);
+        if (typeof m.reduce === 'function') tags.push('has reduce()');
+        if (m.reducerTable) tags.push('has reducerTable');
+
+        let html = `
+            <h2 class="nd-title"><span class="nd-id">${esc(m.id)}</span><span style="color: var(--text-muted); font-weight: 400;">(module)</span></h2>
+            <div class="nd-subtitle">A module: a group of nodes with a shared activation gate and a reducer that commits a bounded slice of dims to <code>sel</code> at exit.</div>
+            <div class="nd-meta">${tags.map(t => `<span class="nd-tag">${esc(t)}</span>`).join('')}</div>
+        `;
+
+        html += `<div class="nd-section"><h3>activateWhen</h3>`;
+        if (!activateWhen.length) {
+            html += `<div class="nd-empty">(no gate — always active)</div>`;
+        } else {
+            activateWhen.forEach((c, i) => {
+                html += `<div class="nd-site">
+                    <div class="nd-site-head">clause ${i}</div>
+                    <pre class="nd-json">${esc(JSON.stringify(c, null, 2))}</pre>
+                </div>`;
+            });
+        }
+        html += `</div>`;
+
+        html += `<div class="nd-section"><h3>Reads (external dims)</h3>`;
+        if (!reads.length) html += `<div class="nd-empty">(none)</div>`;
+        else {
+            html += `<div class="nd-chip-row">`;
+            [...reads].forEach(d => { html += dimChip(d); });
+            html += `</div>`;
+        }
+        html += `</div>`;
+
+        html += `<div class="nd-section"><h3>Writes (dims committed to sel at exit)</h3>`;
+        if (!writes.length) html += `<div class="nd-empty">(none)</div>`;
+        else {
+            html += `<div class="nd-chip-row">`;
+            [...writes].forEach(d => { html += dimChip(d); });
+            html += `</div>`;
+        }
+        html += `</div>`;
+
+        if (internals.length) {
+            html += `<div class="nd-section"><h3>Internal markers</h3>`;
+            html += `<div class="nd-subtitle" style="margin-bottom: 8px;">Written to sel mid-tick so internal gates can observe them, then moved to flavor at module exit.</div>`;
+            html += `<div class="nd-chip-row">`;
+            [...internals].forEach(d => { html += dimChip(d); });
+            html += `</div>`;
+            html += `</div>`;
+        }
+
+        if (m.completionMarker) {
+            html += `<div class="nd-section"><h3>Completion marker</h3>`;
+            html += `<div class="nd-chip-row">${dimChip(m.completionMarker)}</div>`;
+            html += `</div>`;
+        }
+
+        html += `<div class="nd-section"><h3>Nodes</h3>`;
+        if (!nodeIds.length) html += `<div class="nd-empty">(no nodes)</div>`;
+        else {
+            html += `<div class="nd-chip-row">`;
+            for (const id of nodeIds) html += dimChip(id);
+            html += `</div>`;
+        }
+        html += `</div>`;
+
+        // Exit plan (if exposed) — summarize without dumping the full object.
+        let exitPlan = null;
+        try { exitPlan = m.exitPlan; } catch (_) { exitPlan = null; }
+        if (exitPlan) {
+            html += `<div class="nd-section"><h3>Exit plan</h3>`;
+            html += `<pre class="nd-json">${esc(JSON.stringify(exitPlan, null, 2))}</pre>`;
+            html += `</div>`;
+        }
+
+        return html;
+    }
+
     function renderDetail(selection) {
+        if (selection.moduleId) return renderModuleDetail(selection.moduleId);
         if (selection.nodeId) return renderNodeDetail(selection.nodeId);
         if (selection.outcomeId) return renderOutcomeDetail(selection.outcomeId);
         return `<div class="nodes-detail-empty">
@@ -1177,7 +1294,7 @@
                 params[decodeURIComponent(k)] = decodeURIComponent(v || '');
             });
         }
-        return { nodeId: params.n || '', outcomeId: params.o || '' };
+        return { nodeId: params.n || '', outcomeId: params.o || '', moduleId: params.m || '' };
     }
 
     async function render(app) {
@@ -1208,16 +1325,22 @@
             // Update is-active class on grid cells without rerendering them.
             const pane = root.querySelector('.nodes-grid-pane');
             if (pane) {
-                pane.querySelectorAll('.ng-cell.is-active').forEach(c => c.classList.remove('is-active'));
-                const nodeHref = sel.nodeId ? `#/nodes?n=${encodeURIComponent(sel.nodeId)}` : null;
-                const outHref = sel.outcomeId ? `#/nodes?o=${encodeURIComponent(sel.outcomeId)}` : null;
-                if (nodeHref) {
-                    const cell = pane.querySelector(`.ng-cell[href="${nodeHref}"]`);
-                    if (cell) cell.classList.add('is-active');
-                } else if (outHref) {
-                    const cell = pane.querySelector(`.ng-cell[href="${outHref}"]`);
-                    if (cell) cell.classList.add('is-active');
-                }
+            pane.querySelectorAll('.ng-cell.is-active').forEach(c => c.classList.remove('is-active'));
+            pane.querySelectorAll('.ng-module.is-active').forEach(c => c.classList.remove('is-active'));
+            const nodeHref = sel.nodeId ? `#/nodes?n=${encodeURIComponent(sel.nodeId)}` : null;
+            const outHref = sel.outcomeId ? `#/nodes?o=${encodeURIComponent(sel.outcomeId)}` : null;
+            if (sel.moduleId) {
+                const cards = pane.querySelectorAll('.ng-module');
+                cards.forEach(c => {
+                    if (c.dataset.moduleId === sel.moduleId) c.classList.add('is-active');
+                });
+            } else if (nodeHref) {
+                const cell = pane.querySelector(`.ng-cell[href="${nodeHref}"]`);
+                if (cell) cell.classList.add('is-active');
+            } else if (outHref) {
+                const cell = pane.querySelector(`.ng-cell[href="${outHref}"]`);
+                if (cell) cell.classList.add('is-active');
+            }
             }
         }
 
@@ -1229,7 +1352,7 @@
         // URL manually via history.replaceState, then repaint only the
         // detail pane — preserving the grid's scroll position exactly.
         root.addEventListener('click', (e) => {
-            const a = e.target.closest && e.target.closest('a.ng-cell, a.nd-chip');
+            const a = e.target.closest && e.target.closest('a.ng-cell, a.nd-chip, a.ng-contract-dim, a.ng-module-title');
             if (!a) return;
             const href = a.getAttribute('href') || '';
             if (!href.startsWith('#/nodes')) return;
