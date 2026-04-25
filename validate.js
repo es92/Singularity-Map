@@ -1,54 +1,90 @@
 #!/usr/bin/env node
-// validate2.js — Graph validator using equivalence-class superposition DFS
+'use strict';
+
+// validate.js — Graph integrity checks powered by graph-io.js's
+// engine-equivalent traversal.
 //
-// Phase 1: Static analysis (structure, references, dead edges, circular deps)
-// Phase 2: DFS traversal with per-state invariant checks
-// Phase 3: Personal vignette validation
+// Two-phase structure:
+//   1. Static schema   — pure data checks (unknown node refs, dead edges,
+//                        outcome template refs). Fast (<1s).
+//   2. Live propagation — runs the same set-wise enumeration that drives
+//                        /explore (every state reachable by any valid
+//                        path from emergence), then checks invariants
+//                        on the result.
 //
 // Usage:
-//   node validate2.js          — run all phases
-//   node validate2.js --quick  — phase 1 only
+//   node validate.js          full check (~30-60s on first run)
+//   node validate.js --quick  static phase only
+//
+// Exits 0 on clean, 1 on any failure. Failures are grouped by category
+// and displayed with sample sels (URL-shaped) so you can paste them
+// into the live map for debugging.
 
 const fs = require('fs');
 const path = require('path');
-const { NODES, NODE_MAP, MODULES } = require('./graph.js');
-const {
-    matchCondition, resolvedVal, resolvedState: engineResolvedState, resolvedStateWithFlavor,
-    isNodeVisible, isNodeActivatedByRules, isNodeLocked, isEdgeDisabled,
-    templateMatches,
-    createStack, push, currentState, currentFlavor, stackHas, displayOrder
-} = require('./engine.js');
-const { walk, resolvedState, dimOrder, classes, derivedDimSet, setTemplates, irrKey, safePushDims } = require('./graph-walker.js');
-const { cleanSelection } = require('./engine.js');
-const { resolvePersonalVignetteText, getCountryBucket } = require('./milestone-utils.js');
 
-let _outcomes, _narrative, _personalData, _defaultTemplates;
-function _loadData() {
-    if (!_outcomes) {
-        _outcomes = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/outcomes.json'), 'utf8'));
-        _narrative = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/narrative.json'), 'utf8'));
-        _personalData = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/personal.json'), 'utf8'));
-        _defaultTemplates = _outcomes.templates;
-    }
-}
+// ────────────────────────────────────────────────────────────────
+// Browser-shim setup
+// ────────────────────────────────────────────────────────────────
+// graph-io.js + nodes.js are written as IIFEs that attach to `window`.
+// engine.js + graph.js are CommonJS-friendly. To run them under Node
+// we mount a minimal window/document shim, then load the IIFEs into
+// it. This is the same pattern used by the /tmp/sm-* probe scripts.
 
-// ════════════════════════════════════════════════════════
-// Phase 1 — Static Analysis (ported from validate.js)
-// ════════════════════════════════════════════════════════
+global.window = {
+    requestAnimationFrame: () => 0,
+    addEventListener: () => {},
+    location: { hash: '' },
+};
+global.document = {
+    addEventListener: () => {},
+    readyState: 'complete',
+    getElementById: () => null,
+    querySelector: () => null,
+};
 
-function runStaticAnalysis(templates) {
-    if (!templates) { _loadData(); templates = _defaultTemplates; }
+const ROOT = __dirname;
+const Graph = require(path.join(ROOT, 'graph.js'));
+global.window.Graph = Graph;
+const Engine = require(path.join(ROOT, 'engine.js'));
+global.window.Engine = Engine;
+new Function('window', fs.readFileSync(path.join(ROOT, 'graph-io.js'), 'utf8'))(global.window);
+new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 'utf8'))(global.window, global.document);
+
+const GraphIO = global.window.GraphIO;
+const FLOW_DAG = global.window.Nodes.FLOW_DAG;
+const NODES = Engine.NODES || Graph.NODES;
+const NODE_MAP = {};
+for (const n of NODES) NODE_MAP[n.id] = n;
+const outcomesData = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/outcomes.json'), 'utf8'));
+const TEMPLATES = outcomesData.templates;
+GraphIO.registerOutcomes(TEMPLATES);
+
+// PROPAGATE_TARGETS mirrors explore.js — keep in sync if either is
+// extended to a new slot. Includes every non-outcome / non-deadend
+// slot in FLOW_DAG; emergence is the implicit seed.
+const PROPAGATE_TARGETS = new Set([
+    'plateau_bd', 'auto_bd', 'rollout_early', 'control', 'alignment', 'decel',
+    'escape_early', 'proliferation', 'escape_early_alt', 'intent', 'war',
+    'who_benefits', 'inert_stays', 'brittle', 'escape_late', 'rollout',
+]);
+
+// ────────────────────────────────────────────────────────────────
+// Phase 1 — Static schema checks (no traversal)
+// ────────────────────────────────────────────────────────────────
+//
+// Verifies that every condition (activateWhen, hideWhen, requires,
+// disabledWhen, deriveWhen, outcome.reachable) refers to dims/values
+// that actually exist in the graph. Synthetic dims/values produced
+// by collapseToFlavor.set or deriveWhen.value(Map) are accepted.
+//
+// Also detects "dead edges" — edges whose `requires` is fully
+// implied by their `disabledWhen`, meaning the edge can never fire.
+
+function runStaticAnalysis() {
     const errors = [];
-    const metaNodes = new Set(NODES.map(d => d.id));
 
-    // Synthetic dims + values are written via `collapseToFlavor.set` and
-    // `deriveWhen.value/.valueMap` — they exist at runtime without being
-    // declared as graph nodes or edges. Collect both so conditions that
-    // reference them (`hideWhen: { open_source_set: ['yes'] }`,
-    // `requires: { geo_spread: ['multiple'] }`, etc.) don't false-flag.
-    //   metaNodes              — valid dim keys (real nodes ∪ marker dims)
-    //   extraValuesByDim[dim]  — values that aren't edge ids but are
-    //                            produced by collapseToFlavor.set or derive.
+    const metaNodes = new Set(NODES.map(n => n.id));
     const extraValuesByDim = new Map();
     const addExtra = (dim, val) => {
         if (val == null) return;
@@ -56,8 +92,6 @@ function runStaticAnalysis(templates) {
         extraValuesByDim.get(dim).add(val);
     };
     for (const node of NODES) {
-        // deriveWhen on this node can set its own value to a non-edge string
-        // (e.g. geo_spread derives to 'multiple').
         if (node.deriveWhen) {
             for (const rule of node.deriveWhen) {
                 if (rule.value !== undefined) addExtra(node.id, rule.value);
@@ -80,70 +114,62 @@ function runStaticAnalysis(templates) {
         }
     }
 
-    // Return the set of runtime-valid values for a dim (edges ∪ extras).
-    // Returns null for pure marker dims that have no edges — callers should
-    // skip value validation in that case (we accept any value for them).
     function validValuesFor(dimId) {
         const refNode = NODE_MAP[dimId];
         const extras = extraValuesByDim.get(dimId);
-        if (!refNode || !refNode.edges) {
-            return extras ? new Set(extras) : null; // null = skip value check
-        }
+        if (!refNode || !refNode.edges) return extras ? new Set(extras) : null;
         const s = new Set(refNode.edges.map(v => v.id));
         if (extras) for (const e of extras) s.add(e);
         return s;
     }
 
-    function validateCondition(cond, nodeId, label) {
+    function validateCondition(cond, ctx, label) {
         for (const [k, vals] of Object.entries(cond)) {
             if (k === 'reason' || k.startsWith('_')) continue;
             if (!metaNodes.has(k)) {
-                errors.push(`[${label}] "${nodeId}" references unknown node "${k}"`);
+                errors.push(`[${label}] "${ctx}" references unknown node "${k}"`);
                 continue;
             }
             if (vals === true || vals === false) continue;
             const validIds = validValuesFor(k);
-            if (!validIds) continue; // pure marker dim — accept any value
+            if (!validIds) continue;
             if (vals && typeof vals === 'object' && !Array.isArray(vals) && vals.not) {
                 for (const v of vals.not) {
-                    if (!validIds.has(v)) errors.push(`[${label}] "${nodeId}" references unknown edge "${k}=${v}" in not`);
+                    if (!validIds.has(v)) {
+                        errors.push(`[${label}] "${ctx}" references unknown edge "${k}=${v}" in not`);
+                    }
                 }
                 continue;
             }
             const arr = Array.isArray(vals) ? vals : [vals];
             for (const v of arr) {
-                if (!validIds.has(v)) errors.push(`[${label}] "${nodeId}" references unknown edge "${k}=${v}"`);
+                if (!validIds.has(v)) {
+                    errors.push(`[${label}] "${ctx}" references unknown edge "${k}=${v}"`);
+                }
             }
         }
     }
 
-    // 1. Node structure
     for (const node of NODES) {
         if (!node.id) errors.push(`[structure] Node missing id`);
-        if (!node.edges || node.edges.length === 0) errors.push(`[structure] "${node.id}" has no edges`);
-        if (node.activateWhen) {
-            for (const cond of node.activateWhen) validateCondition(cond, node.id, 'activateWhen');
+        if (!node.edges || node.edges.length === 0) {
+            errors.push(`[structure] "${node.id}" has no edges`);
         }
-        if (node.hideWhen) {
-            for (const cond of node.hideWhen) validateCondition(cond, node.id, 'hideWhen');
-        }
+        if (node.activateWhen) for (const c of node.activateWhen) validateCondition(c, node.id, 'activateWhen');
+        if (node.hideWhen)     for (const c of node.hideWhen)     validateCondition(c, node.id, 'hideWhen');
     }
 
-    // 2. Requires and disabledWhen validation
     for (const node of NODES) {
         if (!node.edges) continue;
         for (const v of node.edges) {
             if (v.requires) {
                 const condSets = Array.isArray(v.requires) ? v.requires : [v.requires];
-                for (const cond of condSets) validateCondition(cond, `${node.id}.${v.id}`, 'requires');
+                for (const c of condSets) validateCondition(c, `${node.id}.${v.id}`, 'requires');
             }
-            if (v.disabledWhen) {
-                for (const cond of v.disabledWhen) validateCondition(cond, `${node.id}.${v.id}`, 'disabledWhen');
-            }
+            if (v.disabledWhen) for (const c of v.disabledWhen) validateCondition(c, `${node.id}.${v.id}`, 'disabledWhen');
         }
     }
 
-    // 3. deriveWhen validation
     for (const node of NODES) {
         if (!node.deriveWhen) continue;
         const ownValues = validValuesFor(node.id) || new Set();
@@ -176,13 +202,15 @@ function runStaticAnalysis(templates) {
             if (rule.valueMap) {
                 for (const [from, to] of Object.entries(rule.valueMap)) {
                     if (!ownValues.has(from)) errors.push(`[derivations] "${node.id}" valueMap unknown input "${from}"`);
-                    if (!ownValues.has(to)) errors.push(`[derivations] "${node.id}" valueMap unknown output "${to}"`);
+                    if (!ownValues.has(to))   errors.push(`[derivations] "${node.id}" valueMap unknown output "${to}"`);
                 }
             }
         }
     }
 
-    // 4. Dead edge detection: requires contradicted by disabledWhen
+    // Dead edges: edge.requires fully implied by edge.disabledWhen.
+    // Such edges can never satisfy both at once → they're unreachable
+    // even via the optimizer, never mind the user.
     for (const node of NODES) {
         if (!node.edges) continue;
         for (const edge of node.edges) {
@@ -205,643 +233,395 @@ function runStaticAnalysis(templates) {
                 if (!blocked) { allBlocked = false; break; }
             }
             if (allBlocked) {
-                errors.push(`[dead-edge] "${node.id}" edge "${edge.id}": every requires contradicted by disabledWhen`);
+                errors.push(`[dead-edge] "${node.id}.${edge.id}" requires fully blocked by disabledWhen`);
             }
         }
     }
 
-    // 5. Outcome template references
-    for (const t of templates) {
+    // Outcome template references. `_not` carries an array of full
+    // condition objects (each one a subselection that disqualifies the
+    // outcome), so recursively validate them like any other condition.
+    for (const t of TEMPLATES) {
         if (!t.reachable) continue;
         for (const cond of (Array.isArray(t.reachable) ? t.reachable : [t.reachable])) {
             for (const [dk, dv] of Object.entries(cond)) {
                 if (dk === '_not') {
-                    for (const nk of Object.keys(dv)) {
-                        if (!metaNodes.has(nk)) errors.push(`[outcome] "${t.id}" references unknown node "${nk}" in _not`);
+                    const subs = Array.isArray(dv) ? dv : [dv];
+                    for (const sub of subs) validateCondition(sub, t.id, 'outcome._not');
+                    continue;
+                }
+                if (!metaNodes.has(dk)) {
+                    errors.push(`[outcome] "${t.id}" references unknown node "${dk}"`);
+                    continue;
+                }
+                if (dv === true || dv === false) continue;
+                const validIds = validValuesFor(dk);
+                if (!validIds) continue;
+                if (dv && typeof dv === 'object' && !Array.isArray(dv) && dv.not) {
+                    for (const v of dv.not) {
+                        if (!validIds.has(v)) errors.push(`[outcome] "${t.id}" references unknown edge "${dk}=${v}" in not`);
                     }
                     continue;
                 }
-                if (!metaNodes.has(dk)) errors.push(`[outcome] "${t.id}" references unknown node "${dk}"`);
+                const arr = Array.isArray(dv) ? dv : [dv];
+                for (const v of arr) {
+                    if (!validIds.has(v)) errors.push(`[outcome] "${t.id}" references unknown edge "${dk}=${v}"`);
+                }
             }
         }
     }
 
-    return { errors };
+    return errors;
 }
 
-function selToUrl(sel) {
-    const params = Object.entries(sel).filter(([, v]) => v != null).map(([k, v]) => `${k}=${v}`).join('&');
-    return `http://localhost:3000/#/explore${params ? '?' + params : ''}`;
-}
+// ────────────────────────────────────────────────────────────────
+// Phase 2 — Live propagation (mirrors /explore)
+// ────────────────────────────────────────────────────────────────
+//
+// Runs the same set-wise enumeration that buildReachByKey runs in
+// explore.js. Each parent's outputs are routed to its children via
+// engine-equivalent priority pick: every output goes to exactly one
+// child — the accepting child whose lowest-priority internal node
+// has the smallest priority value. This matches what the navigator
+// would do at runtime (a single sel never appears in two downstream
+// slots' input sets).
+//
+// Returns:
+//   inputsBySlot      Map<slotKey, sel[]>   sels routed INTO each slot
+//   routedBySlot      Map<slotKey, sel[]>   sels routed FROM each parent
+//                                           (i.e. parent outputs that found
+//                                           a child) — used for edge cov.
+//   routedToChild     Map<parentKey, Map<childKey, count>>
+//                                           per-edge routed counts
+//                                           (edge-coverage check)
+//   deadBySlot        Map<slotKey, sel[]>   parent outputs no child accepts
+//   acceptedBySlot    Map<slotKey, number>  inputs accepted by slot
+//   matchedBySlot     Map<slotKey, number>  outputs siphoned to outcomes
+//   outcomeAgg        Map<oid, number>      outputs siphoned to each outcome
+//   parentsOf         Map<slotKey, slotKey[]>
+//   childrenOf        Map<slotKey, slotKey[]>
 
-// ════════════════════════════════════════════════════════
-// Phase 2 — DFS Traversal with Invariant Checks
-// ════════════════════════════════════════════════════════
+function runPropagation() {
+    const parentsOf = new Map();
+    const childrenOf = new Map();
+    for (const e of FLOW_DAG.edges) {
+        const [p, c, kind] = e;
+        if (kind === 'placement-outcome' || kind === 'placement-deadend') continue;
+        if (kind === 'outcome-link') continue;
+        if (String(c).startsWith('outcome:') || c === 'deadend') continue;
+        if (!PROPAGATE_TARGETS.has(c)) continue;
+        if (!parentsOf.has(c)) parentsOf.set(c, []);
+        parentsOf.get(c).push(p);
+        if (!childrenOf.has(p)) childrenOf.set(p, []);
+        childrenOf.get(p).push(c);
+    }
+    const allKeys = new Set([...PROPAGATE_TARGETS, 'emergence']);
+    const inDeg = new Map();
+    for (const k of allKeys) inDeg.set(k, 0);
+    for (const [c, ps] of parentsOf) inDeg.set(c, ps.filter(p => allKeys.has(p)).length);
+    const order = [];
+    const queue = ['emergence'];
+    while (queue.length) {
+        const k = queue.shift();
+        order.push(k);
+        for (const c of (childrenOf.get(k) || [])) {
+            if (!allKeys.has(c)) continue;
+            inDeg.set(c, inDeg.get(c) - 1);
+            if (inDeg.get(c) === 0) queue.push(c);
+        }
+    }
 
-function runTraversal(templates, opts = {}) {
-    if (!templates) { _loadData(); templates = _defaultTemplates; }
-    setTemplates(templates);
-    const quiet = opts.quiet || false;
-    const violations = {
-        deadEnd: [],
-        reDerivedDeadEnd: [],
-        ambiguous: [],
-        stuck: [],
-        singleOption: [],
-        clickErased: new Map(),
-        stackIntegrity: [],
+    const rowToSel = (row) => {
+        const sel = {};
+        for (const k of Object.keys(row)) if (row[k] !== GraphIO.UNSET) sel[k] = row[k];
+        return sel;
     };
-    const seenStackKeys = new Set();
-    const edgesReached = new Set();
+    const emergence = FLOW_DAG.nodes.find(n => n.key === 'emergence');
+    const eW = GraphIO.cartesianWriteRows(emergence);
+    const emergenceOutputs = eW.rows.map(rowToSel);
 
-    function onVisit(sel, stk, { ck, nextNode, enabled }) {
-        for (const node of NODES) {
-            if (sel[node.id]) {
-                edgesReached.add(`${node.id}=${sel[node.id]}`);
+    // Engine-equivalent slot priority — see buildReachByKey in
+    // explore.js for the explanation. Lower value wins.
+    const slotEffectivePriority = (slot) => {
+        if (!slot) return Infinity;
+        if (slot.kind === 'node') {
+            const n = Engine.NODE_MAP[slot.id];
+            return n && n.priority !== undefined ? n.priority : 0;
+        }
+        if (slot.kind === 'module') {
+            const m = Engine.MODULE_MAP[slot.id];
+            if (!m) return 0;
+            let minP = Infinity;
+            for (const nid of (m.nodeIds || [])) {
+                const n = Engine.NODE_MAP[nid];
+                if (!n) continue;
+                const p = n.priority !== undefined ? n.priority : 0;
+                if (p < minP) minP = p;
             }
-            if (node.deriveWhen) {
-                const eff = resolvedVal(sel, node.id);
-                if (eff) edgesReached.add(`${node.id}=${eff}`);
-            }
+            return Number.isFinite(minP) ? minP : 0;
+        }
+        return Infinity;
+    };
+
+    const inputsBySlot = new Map();
+    const routedBySlot = new Map();   // parentKey → sels that found a child
+    const deadBySlot = new Map();     // parentKey → sels with no accepting child
+    const routedToChild = new Map();  // parentKey → Map<childKey, count>
+    const acceptedBySlot = new Map();
+    const matchedBySlot = new Map();
+    const outcomeAgg = new Map();
+
+    for (const slotKey of order) {
+        const slot = FLOW_DAG.nodes.find(n => n.key === slotKey);
+        if (!slot) continue;
+
+        let outputs;
+        if (slotKey === 'emergence') {
+            outputs = emergenceOutputs;
+        } else {
+            const upstream = inputsBySlot.get(slotKey);
+            if (!upstream || !upstream.length) continue;
+            const full = GraphIO.reachableFullSelsFromInputs(slot, upstream);
+            if (!full) continue;
+            acceptedBySlot.set(slotKey, full.acceptedInputs.length);
+            outputs = full.outputs;
         }
 
-        // Stack integrity: displayOrder's answered section must match stack order
-        const order = displayOrder(stk);
-        const expectedIds = stk
-            .filter(e => e.nodeId && NODE_MAP[e.nodeId] && !NODE_MAP[e.nodeId].derived)
-            .map(e => e.nodeId);
-        let seenUnanswered = false, ansIdx = 0, integrityBroken = false;
-        for (const node of order) {
-            const onStack = stackHas(stk, node.id);
-            if (onStack) {
-                if (seenUnanswered || expectedIds[ansIdx] !== node.id) {
-                    integrityBroken = true;
-                    break;
-                }
-                ansIdx++;
+        const childKeys = childrenOf.get(slotKey) || [];
+        const childSlots = childKeys
+            .map(k => FLOW_DAG.nodes.find(n => n.key === k))
+            .filter(Boolean);
+
+        const routedHere = [];
+        const deadHere = [];
+        const perChildCount = new Map();
+        let matched = 0;
+
+        for (const sel of outputs) {
+            const hits = GraphIO.matchOutcomes(sel);
+            if (hits.length > 0) {
+                matched++;
+                for (const oid of hits) outcomeAgg.set(oid, (outcomeAgg.get(oid) || 0) + 1);
+                continue;
+            }
+            let bestChild = null;
+            let bestPri = Infinity;
+            for (const child of childSlots) {
+                if (!_slotAccepts(child, sel)) continue;
+                const p = slotEffectivePriority(child);
+                if (p < bestPri) { bestPri = p; bestChild = child; }
+            }
+            if (bestChild) {
+                let arr = inputsBySlot.get(bestChild.key);
+                if (!arr) { arr = []; inputsBySlot.set(bestChild.key, arr); }
+                arr.push(sel);
+                routedHere.push(sel);
+                perChildCount.set(bestChild.key, (perChildCount.get(bestChild.key) || 0) + 1);
             } else {
-                seenUnanswered = true;
+                deadHere.push(sel);
             }
         }
-        if (integrityBroken) {
-            const sk = Object.entries(sel).filter(([,v]) => v != null).sort(([a],[b]) => a.localeCompare(b)).map(([k,v]) => `${k}=${v}`).join('&');
-            if (!seenStackKeys.has(sk)) {
-                seenStackKeys.add(sk);
-                violations.stackIntegrity.push({
-                    expected: expectedIds,
-                    actual: order.filter(n => stackHas(stk, n.id)).map(n => n.id),
-                    sel: { ...sel },
-                    url: selToUrl(sel),
-                });
-            }
-        }
-
-        if (!nextNode) return;
-
-        for (const n of NODES) {
-            if (n.derived) continue;
-            if (sel[n.id]) continue;
-            if (!isNodeVisible(sel, n)) continue;
-            if (isNodeLocked(sel, n) !== null) continue;
-            if (!n.edges || n.edges.length === 0) continue;
-            const ena = n.edges.filter(e => !isEdgeDisabled(sel, n, e));
-            if (ena.length === 0) {
-                violations.stuck.push({ node: n.id, sel: { ...sel }, url: selToUrl(sel) });
-            }
-        }
-
-        if (nextNode && enabled.length === 1 && isNodeLocked(sel, nextNode) === null) {
-            violations.singleOption.push({ node: nextNode.id, edge: enabled[0].id, url: selToUrl(sel) });
-        }
-
-        if (nextNode) {
-            for (const edge of enabled) {
-                const vk = `${nextNode.id}:${edge.id}`;
-                if (violations.clickErased.has(vk)) continue;
-                const testState = currentState(push(stk, nextNode.id, edge.id));
-                if (!testState[nextNode.id]) {
-                    violations.clickErased.set(vk, { node: nextNode.id, edge: edge.id, url: selToUrl(sel) });
-                }
-            }
-        }
+        matchedBySlot.set(slotKey, matched);
+        routedBySlot.set(slotKey, routedHere);
+        if (deadHere.length) deadBySlot.set(slotKey, deadHere);
+        routedToChild.set(slotKey, perChildCount);
     }
-
-    function onPush(sel, nodeId, edgeId) {
-        edgesReached.add(`${nodeId}=${edgeId}`);
-    }
-
-    function isTerminal(sel, flavor) {
-        const state = resolvedStateWithFlavor(sel, flavor);
-        const matched = templates.filter(t => templateMatches(t, state));
-        if (matched.length > 1) {
-            violations.ambiguous.push({ outcomes: matched.map(t => t.id), sel: { ...sel }, url: selToUrl(sel) });
-        }
-        return matched.length > 0;
-    }
-
-    const result = walk({ isTerminal, onVisit, onPush, quiet });
-
-    for (const de of result.deadEnds) {
-        violations.deadEnd.push({ ...de, url: selToUrl(de.sel) });
-    }
-
-    // Re-derived dead end: at dead ends, check if overriding derivations reveals hidden questions
-    for (const de of result.deadEnds) {
-        const sel = de.sel;
-        const splits = [];
-        for (const node of NODES) {
-            if (!node.deriveWhen) continue;
-            const raw = sel[node.id];
-            if (!raw) continue;
-            const eff = resolvedVal(sel, node.id);
-            if (eff && eff !== raw) splits.push({ node: node.id, raw, eff });
-        }
-        if (splits.length > 0) {
-            const effSel = Object.assign({}, sel);
-            for (const s of splits) effSel[s.node] = s.eff;
-            let next = null;
-            for (const node of NODES) {
-                if (node.derived) continue;
-                if (!isNodeVisible(effSel, node)) continue;
-                if (isNodeLocked(effSel, node) !== null) continue;
-                if (effSel[node.id]) continue;
-                next = node;
-                break;
-            }
-            if (next) {
-                violations.reDerivedDeadEnd.push({
-                    splits: splits.map(s => `${s.node}: ${s.raw}→${s.eff}`),
-                    hiddenQuestion: next.id,
-                    sel: { ...sel },
-                    url: selToUrl(sel),
-                });
-            }
-        }
-    }
-
-    return { violations, edgesReached, ...result };
-}
-
-// ════════════════════════════════════════════════════════
-// Phase 4 — Browser reach-set invariant
-// ════════════════════════════════════════════════════════
-//
-// Audits the consistency between what the browser's `wouldReachOutcome`
-// advertises (via `reachSet.has(irrKey(lightPush(sel, n, e)))`) and the
-// state the user actually lands in after `Engine.push` (which is how the
-// UI commits a click).
-//
-// For every reach set in data/reach/*.json:
-//   FP (dead-end): lightKey ∈ reachSet but commitKey ∉ reachSet
-//                  → UI says "reachable", click lands in a dead end.
-//   FN (hidden):   lightKey ∉ reachSet but commitKey ∈ reachSet
-//                  → UI hides a path that is actually reachable.
-//
-// Bounded DFS (default 100k states) — hitting the cap still gives useful
-// partial coverage; we flag truncation in the report.
-
-function runReachInvariantCheck(templates, opts = {}) {
-    if (!templates) { _loadData(); templates = _defaultTemplates; }
-    setTemplates(templates);
-
-    const maxStates = opts.maxStates || 100000;
-    const samplePerBucket = opts.samplePerBucket || 5;
-
-    const reachDir = path.join(__dirname, 'data/reach');
-    const reachSets = [];
-    if (fs.existsSync(reachDir)) {
-        const files = fs.readdirSync(reachDir)
-            .filter(f => f.endsWith('.json') && !f.endsWith('.gz'))
-            .sort();
-        for (const f of files) {
-            const id = f.replace(/\.json$/, '');
-            const arr = JSON.parse(fs.readFileSync(path.join(reachDir, f), 'utf8'));
-            reachSets.push({ id, set: new Set(arr) });
-        }
-    }
-    if (reachSets.length === 0) {
-        return { skipped: true, reason: 'No data/reach/*.json files found (run: node precompute-reachability.js)' };
-    }
-
-    function doLightPush(sel, flavor, nodeId, edgeId) {
-        const next = Object.assign({}, sel);
-        next[nodeId] = edgeId;
-        let nextFlavor = flavor ? Object.assign({}, flavor) : {};
-        if (!safePushDims.has(nodeId)) {
-            const r = cleanSelection(next, nextFlavor);
-            nextFlavor = r.flavor || nextFlavor;
-        }
-        return { sel: next, flavor: nextFlavor };
-    }
-
-    function selKey(sel) {
-        const parts = [];
-        for (const n of NODES) if (sel[n.id] != null) parts.push(n.id + '=' + sel[n.id]);
-        return parts.join('|');
-    }
-
-    // Advance past forced/locked nodes the same way the browser's
-    // findNextQuestion does, and return the first real decision point
-    // (unanswered, visible, enabled.length >= 1).
-    function nextDecision(stack) {
-        while (true) {
-            const sel = currentState(stack);
-            let advanced = false;
-            let decision = null;
-            for (const node of displayOrder(stack)) {
-                const locked = isNodeLocked(sel, node);
-                if (locked !== null) {
-                    if (!stackHas(stack, node.id)) {
-                        stack = push(stack, node.id, locked);
-                        advanced = true;
-                        break;
-                    }
-                    continue;
-                }
-                if (stackHas(stack, node.id)) continue;
-                if (sel[node.id]) continue;
-                if (!node.edges || node.edges.length === 0) continue;
-                const enabled = node.edges.filter(e => !isEdgeDisabled(sel, node, e));
-                if (enabled.length === 0) continue;
-                decision = { node, enabled, sel, stack };
-                break;
-            }
-            if (decision) return decision;
-            if (!advanced) return null;
-        }
-    }
-
-    const perOutcome = {};
-    for (const { id } of reachSets) {
-        perOutcome[id] = { fp: [], fn: [], fpCount: 0, fnCount: 0, checked: 0 };
-    }
-
-    const seen = new Set();
-    const t0 = Date.now();
-    let visited = 0;
-    let decisions = 0;
-    let edgesChecked = 0;
-    let truncated = false;
-
-    function dfs(stk) {
-        if (truncated) return;
-        const sel = currentState(stk);
-        const sk = selKey(sel);
-        if (seen.has(sk)) return;
-        seen.add(sk);
-        visited++;
-        if (visited >= maxStates) { truncated = true; return; }
-
-        const decision = nextDecision(stk);
-        if (!decision) return;
-        decisions++;
-        const { node, enabled, sel: decSel, stack: decStack } = decision;
-
-        for (const edge of enabled) {
-            if (truncated) return;
-            const decFlavor = currentFlavor(decStack);
-            const { sel: lightSel, flavor: lightFlavor } = doLightPush(decSel, decFlavor, node.id, edge.id);
-            const lightKey = irrKey(lightSel, lightFlavor);
-
-            const childStack = push(decStack, node.id, edge.id);
-            const commitSel = currentState(childStack);
-            const commitFlavor = currentFlavor(childStack);
-            const commitKey = irrKey(commitSel, commitFlavor);
-            edgesChecked++;
-
-            for (const rs of reachSets) {
-                const o = perOutcome[rs.id];
-                o.checked++;
-                const lightReach = rs.set.has(lightKey);
-                const commitReach = rs.set.has(commitKey);
-                if (lightReach === commitReach) continue;
-                if (lightReach && !commitReach) {
-                    o.fpCount++;
-                    if (o.fp.length < samplePerBucket) {
-                        o.fp.push({ at: decSel, node: node.id, edge: edge.id, lightKey, commitKey, commitSel });
-                    }
-                } else {
-                    o.fnCount++;
-                    if (o.fn.length < samplePerBucket) {
-                        o.fn.push({ at: decSel, node: node.id, edge: edge.id, lightKey, commitKey, commitSel });
-                    }
-                }
-            }
-
-            dfs(childStack);
-        }
-    }
-
-    dfs(createStack());
-
-    const elapsed = Date.now() - t0;
-    let totalFP = 0, totalFN = 0;
-    for (const o of Object.values(perOutcome)) { totalFP += o.fpCount; totalFN += o.fnCount; }
 
     return {
-        reachSetIds: reachSets.map(r => r.id),
-        visited, decisions, edgesChecked,
-        truncated, maxStates,
-        totalFP, totalFN,
-        perOutcome, elapsed,
+        inputsBySlot, routedBySlot, deadBySlot, routedToChild,
+        acceptedBySlot, matchedBySlot, outcomeAgg,
+        parentsOf, childrenOf, order,
     };
 }
 
-// ════════════════════════════════════════════════════════
-// Phase 3 — Personal Vignette Validation
-// ════════════════════════════════════════════════════════
+// ────────────────────────────────────────────────────────────────
+// Phase 3 — Dead-end detection
+// ────────────────────────────────────────────────────────────────
+//
+// A continuing output is "stuck" if:
+//   - it didn't match any outcome (so propagation tried to forward it),
+//   - and no child slot's activateWhen / hideWhen accepts it.
+//
+// At runtime this would manifest as a user reaching a state with no
+// next slot to advance into AND no outcome to terminate at.
+//
+// `outputsBySlot` here lists *continuing* sels (post outcome-siphon).
+// At runtime, a continuing sel that no child slot accepts has nowhere
+// to go — that's the dead-end signal we surface. No exemption for
+// terminal slots: rollout's "leftover" outputs (those not matching any
+// outcome) are themselves dead ends, the same as anywhere else.
 
-const TEST_PERSONAS = [
-    { profession: 'software', country: 'United States', is_ai_geo: 'yes' },
-    { profession: 'healthcare', country: 'Germany', is_ai_geo: 'no' },
-    { profession: 'trade', country: 'Nigeria', is_ai_geo: 'no' },
-    { profession: 'government', country: 'China', is_ai_geo: 'yes' },
-];
+function _slotAccepts(slot, sel) {
+    if (!slot) return false;
+    if (slot.kind === 'outcome') return false;
+    const target = slot.kind === 'module'
+        ? Engine.MODULE_MAP && Engine.MODULE_MAP[slot.id]
+        : (slot.kind === 'node' ? Engine.NODE_MAP && Engine.NODE_MAP[slot.id] : null);
+    if (!target) return false;
+    const aw = target.activateWhen, hw = target.hideWhen;
+    if (aw && aw.length && !aw.some(c => Engine.matchCondition(sel, c))) return false;
+    if (hw && hw.length && hw.some(c => Engine.matchCondition(sel, c))) return false;
+    return true;
+}
 
-function runVignetteValidation() {
-    _loadData();
-    const narrative = _narrative, personalData = _personalData;
+function detectDeadEnds(prop) {
     const errors = [];
-    const warnings = [];
-
-    // _when condition validation
-    for (const [nodeId, node] of Object.entries(narrative)) {
-        if (!node.values) continue;
-        for (const [edgeId, edge] of Object.entries(node.values)) {
-            const pv = edge.personalVignette;
-            if (!pv) continue;
-            if (pv._when) {
-                for (let i = 0; i < pv._when.length; i++) {
-                    const rule = pv._when[i];
-                    if (!rule.if) { errors.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: missing "if" condition`); continue; }
-                    if (!rule.text && rule.text !== null) errors.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: missing "text" field`);
-                    const validKeys = new Set(['profession', 'country_bucket', 'is_ai_geo', ...NODES.map(n => n.id)]);
-                    for (const [k, vals] of Object.entries(rule.if)) {
-                        if (!validKeys.has(k)) warnings.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: condition key "${k}" is not a known dimension`);
-                        if (!Array.isArray(vals)) errors.push(`[vignettes] ${nodeId}.${edgeId} _when[${i}]: condition "${k}" must be an array`);
-                    }
-                }
+    for (const [slotKey, outs] of prop.outputsBySlot) {
+        if (!outs.length) continue;
+        const childKeys = prop.childrenOf.get(slotKey) || [];
+        const childSlots = childKeys
+            .map(k => FLOW_DAG.nodes.find(n => n.key === k))
+            .filter(Boolean);
+        if (!childSlots.length) {
+            errors.push(`[deadend] Slot "${slotKey}" has ${outs.length} continuing outputs but no children to consume them`);
+            continue;
+        }
+        let stuck = 0;
+        const samples = [];
+        for (const sel of outs) {
+            let accepted = false;
+            for (const child of childSlots) {
+                if (_slotAccepts(child, sel)) { accepted = true; break; }
             }
-            if (!pv._default && (!pv._when || pv._when.length === 0) && typeof pv !== 'string') {
-                errors.push(`[vignettes] ${nodeId}.${edgeId}: personalVignette has no _default and no _when rules`);
+            if (!accepted) {
+                stuck++;
+                if (samples.length < 3) samples.push(_selUrl(sel));
             }
         }
-    }
-
-    // Resolution completeness across test personas
-    let totalVignettes = 0, withWhen = 0;
-    const nullResolutions = [];
-    for (const [nodeId, node] of Object.entries(narrative)) {
-        if (!node.values) continue;
-        for (const [edgeId, edge] of Object.entries(node.values)) {
-            const pv = edge.personalVignette;
-            if (!pv) continue;
-            totalVignettes++;
-            if (pv._when && pv._when.length > 0) withWhen++;
-            for (const persona of TEST_PERSONAS) {
-                const bucket = getCountryBucket(persona.country, personalData);
-                const ctx = { profession: persona.profession, country_bucket: bucket, is_ai_geo: persona.is_ai_geo };
-                const text = resolvePersonalVignetteText(pv, ctx);
-                if (!text) nullResolutions.push({ node: nodeId, edge: edgeId, persona: `${persona.profession} in ${persona.country}` });
-            }
+        if (stuck > 0) {
+            errors.push(`[deadend] Slot "${slotKey}": ${stuck}/${outs.length} continuing outputs accepted by no child`);
+            for (const u of samples) errors.push(`           sample: ${u}`);
         }
     }
+    return errors;
+}
 
-    // Token validation
-    for (const [nodeId, node] of Object.entries(narrative)) {
-        if (!node.values) continue;
-        for (const [edgeId, edge] of Object.entries(node.values)) {
-            const pv = edge.personalVignette;
-            if (!pv) continue;
-            const texts = [];
-            if (pv._default) texts.push(pv._default);
-            if (pv._when) for (const rule of pv._when) if (rule.text) texts.push(rule.text);
-            if (typeof pv === 'string') texts.push(pv);
-            for (const text of texts) {
-                const tokens = text.match(/\{[^}]+\}/g) || [];
-                for (const token of tokens) {
-                    if (token !== '{country}' && token !== '{profession}') {
-                        errors.push(`[vignettes] ${nodeId}.${edgeId}: unknown token "${token}" in text`);
-                    }
-                }
+// ────────────────────────────────────────────────────────────────
+// Phase 4 — Edge coverage
+// ────────────────────────────────────────────────────────────────
+//
+// Every placement edge (parent → child) in FLOW_DAG should carry at
+// least one sel: i.e., at least one of parent's continuing outputs
+// satisfies child's activateWhen / hideWhen. An edge that nothing
+// crosses is either dead code (remove it) or a missed condition
+// (the gate is too tight).
+
+function checkEdgeCoverage(prop) {
+    const errors = [];
+    for (const [parentKey, childKeys] of prop.childrenOf) {
+        const outs = prop.outputsBySlot.get(parentKey) || [];
+        for (const childKey of childKeys) {
+            const childSlot = FLOW_DAG.nodes.find(n => n.key === childKey);
+            if (!childSlot) continue;
+            let count = 0;
+            for (const sel of outs) {
+                if (_slotAccepts(childSlot, sel)) { count++; break; }
+            }
+            if (count === 0) {
+                errors.push(`[edge] "${parentKey}" → "${childKey}": parent has ${outs.length} continuing outputs but child accepts none`);
             }
         }
     }
-
-    // Coverage
-    const nodesWithVignettes = new Set();
-    const nodesWithoutVignettes = new Set();
-    for (const node of NODES) {
-        if (node.derived) continue;
-        if (!node.edges) continue;
-        let hasAny = false;
-        for (const edge of node.edges) {
-            const narr = narrative[node.id];
-            if (narr && narr.values && narr.values[edge.id] && narr.values[edge.id].personalVignette) { hasAny = true; break; }
-        }
-        (hasAny ? nodesWithVignettes : nodesWithoutVignettes).add(node.id);
-    }
-
-    return { errors, warnings, totalVignettes, withWhen, nodesWithVignettes, nodesWithoutVignettes };
+    return errors;
 }
 
-// ════════════════════════════════════════════════════════
-// Reporting
-// ════════════════════════════════════════════════════════
+// ────────────────────────────────────────────────────────────────
+// Phase 5 — Outcome reachability
+// ────────────────────────────────────────────────────────────────
+//
+// Every outcome template should have at least one path that reaches
+// it. An outcome with zero reach is either (a) over-constrained in
+// its `reachable` clauses, or (b) the dim values it requires aren't
+// produced anywhere by the graph.
 
-function printPhase1({ errors }) {
-    if (errors.length === 0) {
-        console.log('  OK — All static checks passed');
-    } else {
-        console.log(`  ${errors.length} error(s):`);
-        for (const e of errors) console.log('    ' + e);
-    }
-}
-
-function printPhase2(result) {
-    const { violations, edgesReached, visited, terminals, deadEnds, elapsed } = result;
-
-    const cats = [
-        { name: 'Dead ends (no outcome)', items: violations.deadEnd },
-        { name: 'Re-derived dead ends (derivation reveals question)', items: violations.reDerivedDeadEnd },
-        { name: 'Ambiguous (multiple outcomes)', items: violations.ambiguous },
-        { name: 'Stuck nodes (visible, 0 enabled edges)', items: violations.stuck },
-        { name: 'Single option (not locked)', items: violations.singleOption },
-        { name: 'Click erased', items: [...violations.clickErased.values()] },
-        { name: 'Stack integrity (displayOrder != stack order)', items: violations.stackIntegrity },
-    ];
-
-    let total = 0;
-    for (const cat of cats) {
-        if (cat.items.length === 0) continue;
-        total += cat.items.length;
-        console.log(`\n  ${cat.name}: ${cat.items.length}`);
-        const shown = cat.items.slice(0, 5);
-        for (const item of shown) {
-            if (item.hiddenQuestion) {
-                console.log(`    splits: ${item.splits.join(', ')} → hidden: ${item.hiddenQuestion}`);
-            } else if (item.expected) {
-                console.log(`    expected: [${item.expected.join(', ')}]`);
-                console.log(`    actual:   [${item.actual.join(', ')}]`);
-            } else if (item.node && item.edge) {
-                console.log(`    ${item.node} -> ${item.edge}`);
-            } else if (item.outcomes) {
-                console.log(`    outcomes: ${item.outcomes.join(', ')}`);
-            } else if (item.sel) {
-                const rs = resolvedState(item.sel);
-                const parts = [];
-                for (const dim of dimOrder) {
-                    const v = rs[dim];
-                    if (v === undefined) continue;
-                    if (item.superSet && item.superSet.has(dim)) { parts.push(`${dim}=*`); continue; }
-                    parts.push(`${dim}=${v}`);
-                }
-                console.log(`    ${parts.join(', ').substring(0, 120)}...`);
-            }
-            if (item.url) console.log(`    ${item.url}`);
-        }
-        if (cat.items.length > 5) console.log(`    ... and ${cat.items.length - 5} more`);
-    }
-
-    // Edge coverage
-    let totalEdges = 0, reached = 0;
-    const unreached = [];
-    for (const node of NODES) {
-        if (!node.edges) continue;
-        for (const edge of node.edges) {
-            totalEdges++;
-            if (edgesReached.has(`${node.id}=${edge.id}`)) reached++;
-            else unreached.push({ node: node.id, edge: edge.id, derived: !!node.derived });
+function checkOutcomeReach(prop) {
+    const errors = [];
+    for (const t of TEMPLATES) {
+        if (!t.reachable) continue;
+        const count = prop.outcomeAgg.get(t.id) || 0;
+        if (count === 0) {
+            errors.push(`[outcome-unreached] "${t.id}" — no path from emergence siphons to this outcome`);
         }
     }
-    console.log(`\n  Edge coverage: ${reached}/${totalEdges} (${(100*reached/totalEdges).toFixed(1)}%)`);
-    const unreachedChoice = unreached.filter(u => !u.derived);
-    if (unreachedChoice.length > 0 && unreachedChoice.length <= 20) {
-        console.log(`  Unreached non-derived edges (${unreachedChoice.length}):`);
-        for (const u of unreachedChoice) console.log(`    ${u.node} -> ${u.edge}`);
-    } else if (unreachedChoice.length > 20) {
-        console.log(`  Unreached non-derived edges: ${unreachedChoice.length} (too many to list)`);
-    }
-
-    if (total === 0) {
-        console.log('\n  OK — No violations found');
-    }
-    return total;
+    return errors;
 }
 
-function printPhase3(result) {
-    if (result.errors.length === 0 && result.warnings.length === 0) {
-        console.log('  OK — All vignette checks passed');
-    }
-    for (const e of result.errors) console.log(`  ERROR: ${e}`);
-    for (const w of result.warnings) console.log(`  WARN: ${w}`);
-    console.log(`\n  Personal vignettes: ${result.totalVignettes} total (${result.withWhen} customized)`);
-    console.log(`  Nodes with vignettes: ${result.nodesWithVignettes.size} / ${result.nodesWithVignettes.size + result.nodesWithoutVignettes.size}`);
-    if (result.nodesWithoutVignettes.size > 0 && result.nodesWithoutVignettes.size <= 30) {
-        console.log(`  Nodes without: ${[...result.nodesWithoutVignettes].join(', ')}`);
-    }
+// ────────────────────────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────────────────────────
+
+function _selUrl(sel) {
+    const params = Object.entries(sel)
+        .filter(([, v]) => v != null)
+        .map(([k, v]) => `${k}=${v}`)
+        .join('&');
+    return `http://localhost:2500/#/explore${params ? '?' + params : ''}`;
 }
 
-function printPhase4(result) {
-    if (result.skipped) {
-        console.log(`  SKIP — ${result.reason}`);
-        return 0;
-    }
-    const { visited, decisions, edgesChecked, truncated, maxStates, totalFP, totalFN, perOutcome, elapsed } = result;
-    const truncNote = truncated ? ` (truncated at ${maxStates} states)` : '';
-    console.log(`  ${visited} states, ${decisions} decisions, ${edgesChecked} edges checked in ${(elapsed/1000).toFixed(1)}s${truncNote}`);
-    console.log(`  Reach sets loaded: ${result.reachSetIds.length}`);
+function fmtCount(n) { return Number(n).toLocaleString(); }
 
-    if (totalFP === 0 && totalFN === 0) {
-        console.log('\n  OK — No FP/FN mismatches found');
-        return 0;
-    }
-
-    console.log(`\n  Mismatches: FP=${totalFP} (dead-end: UI says reachable, click lands in dead end)`);
-    console.log(`              FN=${totalFN} (hidden path: UI hides a reachable path)`);
-
-    const withIssues = Object.entries(perOutcome)
-        .filter(([, o]) => o.fpCount || o.fnCount)
-        .sort((a, b) => (b[1].fpCount + b[1].fnCount) - (a[1].fpCount + a[1].fnCount));
-
-    for (const [id, o] of withIssues) {
-        console.log(`\n  ── ${id}  FP=${o.fpCount}  FN=${o.fnCount} ──`);
-        for (const bucket of ['fp', 'fn']) {
-            const label = bucket.toUpperCase();
-            for (const rec of o[bucket]) {
-                console.log(`    ${label}: ${rec.node}=${rec.edge}`);
-                console.log(`      at: ${selToUrl(rec.at)}&locked=${id}`);
-                console.log(`      after click: ${selToUrl(rec.commitSel)}&locked=${id}`);
-            }
-            const extra = o[bucket + 'Count'] - o[bucket].length;
-            if (extra > 0) console.log(`    ... and ${extra} more ${label}`);
-        }
-    }
-    return totalFP + totalFN;
-}
-
-// ════════════════════════════════════════════════════════
-// Exports
-// ════════════════════════════════════════════════════════
-
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { runStaticAnalysis, runTraversal, runVignetteValidation, runReachInvariantCheck };
-}
-
-// ════════════════════════════════════════════════════════
+// ────────────────────────────────────────────────────────────────
 // Main
-// ════════════════════════════════════════════════════════
+// ────────────────────────────────────────────────────────────────
 
-if (require.main === module) {
+const QUICK = process.argv.includes('--quick');
 
-_loadData();
-const templates = _defaultTemplates;
-const arg = process.argv[2];
+const sections = [];
 
-console.log('Singularity Map — Validation Report');
-console.log('═'.repeat(50));
-console.log(`${NODES.length} nodes, ${templates.length} outcome templates\n`);
+console.log('Phase 1: static schema');
+const t1 = Date.now();
+const staticErrors = runStaticAnalysis();
+console.log(`  ${staticErrors.length === 0 ? 'OK' : `FAIL (${staticErrors.length})`}  ${Date.now() - t1}ms`);
+sections.push({ name: 'static schema', errors: staticErrors });
 
-// Phase 1
-const t0 = Date.now();
-const phase1 = runStaticAnalysis(templates);
-console.log(`Phase 1: Static Analysis (${Date.now() - t0}ms)`);
-printPhase1(phase1);
-console.log();
+if (!QUICK) {
+    console.log('\nPhase 2: live propagation (full tree)');
+    const t2 = Date.now();
+    const prop = runPropagation();
+    const inputsTotal = [...prop.acceptedBySlot.values()].reduce((a, b) => a + b, 0);
+    const matchedTotal = [...prop.matchedBySlot.values()].reduce((a, b) => a + b, 0);
+    console.log(`  propagated through ${prop.order.length} slots in ${Date.now() - t2}ms`);
+    console.log(`  ${fmtCount(inputsTotal)} inputs accepted across all slots`);
+    console.log(`  ${fmtCount(matchedTotal)} sels siphoned to outcomes`);
+    console.log(`  ${prop.outcomeAgg.size}/${TEMPLATES.length} outcome templates reached`);
 
-if (arg === '--quick') {
-    process.exit(phase1.errors.length ? 1 : 0);
+    console.log('\nPhase 3: dead-end detection');
+    const t3 = Date.now();
+    const deadErrors = detectDeadEnds(prop);
+    console.log(`  ${deadErrors.length === 0 ? 'OK' : `FAIL (${deadErrors.length})`}  ${Date.now() - t3}ms`);
+    sections.push({ name: 'dead ends', errors: deadErrors });
+
+    console.log('\nPhase 4: edge coverage');
+    const t4 = Date.now();
+    const edgeErrors = checkEdgeCoverage(prop);
+    console.log(`  ${edgeErrors.length === 0 ? 'OK' : `FAIL (${edgeErrors.length})`}  ${Date.now() - t4}ms`);
+    sections.push({ name: 'edge coverage', errors: edgeErrors });
+
+    console.log('\nPhase 5: outcome reachability');
+    const t5 = Date.now();
+    const outcomeErrors = checkOutcomeReach(prop);
+    console.log(`  ${outcomeErrors.length === 0 ? 'OK' : `FAIL (${outcomeErrors.length})`}  ${Date.now() - t5}ms`);
+    sections.push({ name: 'outcome reachability', errors: outcomeErrors });
 }
 
-// Phase 2
-console.log('Phase 2: DFS Traversal');
-const phase2 = runTraversal(templates);
-console.log(`  ${phase2.visited} states, ${phase2.terminals.length} terminals, ${(phase2.elapsed/1000).toFixed(1)}s`);
-const violationCount = printPhase2(phase2);
-console.log();
-
-// Phase 3
-const t3 = Date.now();
-const phase3 = runVignetteValidation();
-console.log(`Phase 3: Personal Vignette Validation (${Date.now() - t3}ms)`);
-printPhase3(phase3);
-console.log();
-
-// Phase 4
-const t4 = Date.now();
-console.log('Phase 4: Browser reach-set invariant (lightPush vs commit)');
-const phase4 = runReachInvariantCheck(templates);
-console.log(`  (${Date.now() - t4}ms)`);
-const reachMismatches = printPhase4(phase4);
-console.log();
-
-// Summary
-const totalIssues = phase1.errors.length + violationCount + phase3.errors.length + reachMismatches;
-if (totalIssues === 0) {
-    console.log('All checks passed!');
-} else {
-    console.log(`${phase1.errors.length} static error(s), ${violationCount} DFS violation(s), ${phase3.errors.length} vignette error(s), ${reachMismatches} reach mismatch(es)`);
+console.log('\n' + '═'.repeat(60));
+let totalErrors = 0;
+for (const s of sections) {
+    const status = s.errors.length === 0 ? 'PASS' : `FAIL (${s.errors.length})`;
+    console.log(`  ${s.name.padEnd(24)} ${status}`);
+    totalErrors += s.errors.length;
 }
-process.exit(totalIssues ? 1 : 0);
+console.log('─'.repeat(60));
+console.log(`  total: ${totalErrors === 0 ? 'PASS' : `${totalErrors} errors`}`);
 
+if (totalErrors > 0) {
+    console.log();
+    for (const s of sections) {
+        if (!s.errors.length) continue;
+        console.log(`── ${s.name} ──`);
+        for (const e of s.errors) console.log(`  ${e}`);
+        console.log();
+    }
 }
+
+process.exit(totalErrors === 0 ? 0 : 1);

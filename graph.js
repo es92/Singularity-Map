@@ -420,14 +420,8 @@ const NODES = [
       // Only alignment_durability.breaks remains as a derive (intra-module
       // — alignment_durability is an ALIGNMENT_MODULE internal dim, so
       // it can stay as a derive without creating a cross-module read).
-      // The marginal-path re-classification (failed → brittle when
-      // ai_goals=marginal) also stays; it's simplified (no longer guards
-      // on brittle_resolution≠solved — since brittle_resolution's own
-      // edge-level set writes alignment='robust' first, that value isn't
-      // in the valueMap so it's preserved).
       deriveWhen: [
         { match: { alignment_durability: ['breaks'] }, value: 'failed' },
-        { match: { ai_goals: ['marginal'] }, valueMap: { failed: 'brittle' } },
       ],
       edges: [
         { id: 'robust', label: 'Robust' },
@@ -468,10 +462,6 @@ const NODES = [
         {
           capability: ['asi'],
           alignment: ['failed']
-        },
-        {
-          capability: ['asi'],
-          ai_goals: ['marginal']
         }
       ],
       deriveWhen: [
@@ -504,11 +494,7 @@ const NODES = [
       ] },
     { id: 'ai_goals', label: 'AI Converges On', stage: 2, forwardKey: true,
       activateWhen: [
-        {
-          capability: ['asi'],
-          alignment: ['failed'],
-          containment: ['escaped']
-        },
+        { containment: ['escaped'] },
         { concentration_type: ['ai_itself'] }
       ],
       edges: [
@@ -518,14 +504,22 @@ const NODES = [
           ] },
         { id: 'alien_coexistence', label: 'Alien (tolerant)',
           disabledWhen: [
-            { war_survivors: ['none'], reason: 'Humanity is extinct — there is no one left to coexist with' }
+            { war_survivors: ['none'], reason: 'Humanity is extinct — there is no one left to coexist with' },
+            { proliferation_alignment: ['holds'], reason: 'Alignment is intrinsic — the AI\'s values held even under open weights' }
           ] },
-        { id: 'alien_extinction', label: 'Alien (total)' },
-        { id: 'paperclip', label: 'Arbitrary' },
+        { id: 'alien_extinction', label: 'Alien (total)', disabledWhen: [
+            { proliferation_alignment: ['holds'], reason: 'Alignment is intrinsic — the AI\'s values held even under open weights' }
+          ] },
+        { id: 'paperclip', label: 'Arbitrary', disabledWhen: [
+            { proliferation_alignment: ['holds'], reason: 'Alignment is intrinsic — the AI\'s values held even under open weights' }
+          ] },
         { id: 'swarm', label: 'Divergent', disabledWhen: [
-            { concentration_type: ['ai_itself'], reason: 'The AI took control from a singular power structure — it didn\'t fragment' }
+            { concentration_type: ['ai_itself'], reason: 'The AI took control from a singular power structure — it didn\'t fragment' },
+            { proliferation_alignment: ['holds'], reason: 'Alignment is intrinsic — the AI\'s values held even under open weights' }
           ] },
-        { id: 'power_seeking', label: 'Power accumulation' },
+        { id: 'power_seeking', label: 'Power accumulation', disabledWhen: [
+            { proliferation_alignment: ['holds'], reason: 'Alignment is intrinsic — the AI\'s values held even under open weights' }
+          ] },
         { id: 'marginal', label: 'Inert (for now)', disabledWhen: [
             { concentration_type: ['ai_itself'], reason: 'The AI already took control — it is not inert' },
             // Disables marginal during the ESCAPE_MODULE re-entry triggered
@@ -573,12 +567,9 @@ const NODES = [
       // Hide once the AI has escaped containment — the deceleration
       // decision is moot at that point, regardless of how the escape
       // pipeline resolved (hostile pipeline, benevolent/marginal
-      // early-exit, or inert_stays loop). The second clause catches
-      // the concentration_type=ai_itself hostile path where containment
-      // is never set but ai_goals is hostile.
+      // early-exit, or inert_stays loop).
       hideWhen: [
-        { containment: ['escaped'] },
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } }
+        { containment: ['escaped'] }
       ],
       // Decel is only coherent when some actor can actually enforce a slowdown
       // in the one-country-leads case:
@@ -607,7 +598,7 @@ const NODES = [
           collapseToFlavor: { move: ['open_source', 'takeoff_class'] } }
       ] },
     { id: 'decel_2mo_progress', label: '2 Months', stage: 2,
-      activateWhen: [{ capability: ['asi'], gov_action: ['decelerate'] }],
+      activateWhen: [{ gov_action: ['decelerate'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
@@ -616,7 +607,6 @@ const NODES = [
     { id: 'decel_2mo_action', label: '2mo Decision', stage: 2,
       activateWhen: [
         {
-          capability: ['asi'],
           decel_2mo_progress: ['robust', 'brittle', 'unsolved']
         }
       ],
@@ -627,7 +617,7 @@ const NODES = [
         { id: 'continue', label: 'Continue', requires: { decel_2mo_progress: ['brittle', 'unsolved'] } }
       ] },
     { id: 'decel_4mo_progress', label: '4 Months', stage: 2,
-      activateWhen: [{ capability: ['asi'], decel_2mo_action: ['continue'] }],
+      activateWhen: [{ decel_2mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
@@ -636,7 +626,6 @@ const NODES = [
     { id: 'decel_4mo_action', label: '4mo Decision', stage: 2,
       activateWhen: [
         {
-          capability: ['asi'],
           decel_4mo_progress: ['robust', 'brittle', 'unsolved']
         }
       ],
@@ -647,7 +636,7 @@ const NODES = [
         { id: 'continue', label: 'Continue', requires: { decel_4mo_progress: ['brittle', 'unsolved'] } }
       ] },
     { id: 'decel_6mo_progress', label: '6 Months', stage: 2,
-      activateWhen: [{ capability: ['asi'], decel_4mo_action: ['continue'] }],
+      activateWhen: [{ decel_4mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
@@ -656,7 +645,6 @@ const NODES = [
     { id: 'decel_6mo_action', label: '6mo Decision', stage: 2,
       activateWhen: [
         {
-          capability: ['asi'],
           decel_6mo_progress: ['robust', 'brittle', 'unsolved']
         }
       ],
@@ -685,7 +673,7 @@ const NODES = [
         }
       ] },
     { id: 'decel_9mo_progress', label: '9 Months', stage: 2,
-      activateWhen: [{ capability: ['asi'], decel_6mo_action: ['continue'] }],
+      activateWhen: [{ decel_6mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
@@ -694,7 +682,6 @@ const NODES = [
     { id: 'decel_9mo_action', label: '9mo Decision', stage: 2,
       activateWhen: [
         {
-          capability: ['asi'],
           decel_9mo_progress: ['robust', 'brittle', 'unsolved']
         }
       ],
@@ -705,7 +692,7 @@ const NODES = [
         { id: 'continue', label: 'Continue', requires: { decel_9mo_progress: ['brittle', 'unsolved'] } }
       ] },
     { id: 'decel_12mo_progress', label: '12 Months', stage: 2,
-      activateWhen: [{ capability: ['asi'], decel_9mo_action: ['continue'] }],
+      activateWhen: [{ decel_9mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
@@ -714,7 +701,6 @@ const NODES = [
     { id: 'decel_12mo_action', label: '12mo Decision', stage: 2,
       activateWhen: [
         {
-          capability: ['asi'],
           decel_12mo_progress: ['robust', 'brittle', 'unsolved']
         }
       ],
@@ -733,7 +719,7 @@ const NODES = [
         }
       ] },
     { id: 'decel_18mo_progress', label: '18 Months', stage: 2,
-      activateWhen: [{ capability: ['asi'], decel_12mo_action: ['continue'] }],
+      activateWhen: [{ decel_12mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
@@ -742,7 +728,6 @@ const NODES = [
     { id: 'decel_18mo_action', label: '18mo Decision', stage: 2,
       activateWhen: [
         {
-          capability: ['asi'],
           decel_18mo_progress: ['robust', 'brittle', 'unsolved']
         }
       ],
@@ -753,7 +738,7 @@ const NODES = [
         { id: 'continue', label: 'Continue', requires: { decel_18mo_progress: ['brittle', 'unsolved'] } }
       ] },
     { id: 'decel_24mo_progress', label: '24 Months', stage: 2,
-      activateWhen: [{ capability: ['asi'], decel_18mo_action: ['continue'] }],
+      activateWhen: [{ decel_18mo_action: ['continue'] }],
       edges: [
         { id: 'robust', label: 'Solved — robust' },
         { id: 'brittle', label: 'Solved — brittle / partial', shortLabel: 'Brittle / partial' },
@@ -762,16 +747,11 @@ const NODES = [
     { id: 'decel_24mo_action', label: '24mo Decision', stage: 2,
       activateWhen: [
         {
-          capability: ['asi'],
           decel_24mo_progress: ['robust', 'brittle', 'unsolved']
         }
       ],
       edges: [ { id: 'rival', label: 'Rival reaches parity' } ] },
     { id: 'proliferation_control', label: 'Proliferation Control', stage: 2,
-      hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } },
-        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] } }
-      ],
       // Simplified gate: ask about proliferation control whenever an ASI
       // exists and alignment hasn't catastrophically failed. Three post-decel
       // cells write alignment='failed' — (escapes, *) and (rival, unsolved)
@@ -789,10 +769,6 @@ const NODES = [
         { id: 'none', label: 'Open access' }
       ] },
     { id: 'proliferation_outcome', label: 'Control Outcome', stage: 2,
-      hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } },
-        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] } }
-      ],
       activateWhen: [
         {
           capability: ['asi'],
@@ -824,7 +800,11 @@ const NODES = [
         { id: 'breaks', label: 'Someone cracks it' }
       ] },
     { id: 'intent', label: 'Intent', stage: 2, forwardKey: true,
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } }],
+      // Hides the question on hostile-AI escape paths. The containment check
+      // is implied: ai_goals only gets a value when containment='escaped'
+      // (see ai_goals.activateWhen), so `ai_goals required: true` already
+      // narrows to escaped paths.
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true } }],
       // Mirrors INTENT_MODULE.activateWhen — intent is the module's entry
       // internal and fires only when rival-power dynamics are relevant:
       // proliferation actually ran (proliferation_set='yes') and the AI
@@ -845,75 +825,73 @@ const NODES = [
       // Same pattern as the prior moves of `pushback_outcome → international`
       // (deleted when who_benefits became a module) and `rival_dynamics →
       // intent` (now in INTENT_MODULE's rival_dynamics edges).
+      // Edges keyed off "who is acting":
+      //   * geo_spread=one + (state in control OR one lab in control) → a
+      //     single coherent actor → self_interest available.
+      //   * geo_spread=multiple → multi-country dynamics → coexistence /
+      //     escalation. Note: distribution=open paths arrive here with
+      //     geo_spread=multiple already set by PROLIFERATION_MODULE's exit
+      //     plan (every leaked-weights branch writes geo_spread='multiple'),
+      //     so no special-casing needed.
+      //   * international: catch-all, always available.
       edges: [
         {
           id: 'self_interest',
           label: 'Self-interest',
           requires: [
-          {
-            distribution: ['monopoly'],
-            geo_spread: ['one'],
-            proliferation_control: ['deny_rivals', 'secure_access']
-          },
-          {
-            distribution: ['concentrated'],
-            geo_spread: ['one'],
-            proliferation_control: ['deny_rivals', 'secure_access']
-          }
-        ]
+            { geo_spread: ['one'], sovereignty: ['state'] },
+            { geo_spread: ['one'], sovereignty: ['lab'], distribution: ['monopoly'] }
+          ]
         },
         {
           id: 'coexistence',
           label: 'Coexistence',
-          requires: [
-          { distribution: ['open'] },
-          { distribution: ['concentrated'], geo_spread: ['multiple'] }
-        ]
+          requires: { geo_spread: ['multiple'] }
         },
         {
           id: 'escalation',
           label: 'Escalation',
-          requires: [
-          { distribution: ['open'] },
-          { distribution: ['concentrated'], geo_spread: ['multiple'] }
-        ]
+          requires: { geo_spread: ['multiple'] }
         },
         { id: 'international', label: 'International' }
       ] },
+    // block_entrants / block_outcome / new_entrants: gated on
+    //   distribution ≠ open               (tech still bottled up)
+    //   intent ∈ {self_interest, international}  (controlling power exists)
+    //
+    // The gate is "is the tech still bottled up?" — not "is the AI aligned?".
+    // PROLIFERATION_MODULE's exit plan flips distribution to 'open' on every
+    // leaks_public-equivalent path, which is also the only way alignment
+    // flips to 'failed' before intent_loop. So distribution≠open already
+    // excludes all alignment=failed paths reachable at intent_loop entry.
+    // It also future-proofs the gate: an "escaped + inert + monopoly" path
+    // (alignment=failed, ai_goals=marginal, distribution=monopoly) should
+    // still admit block_entrants — the controlling power can still deny
+    // rivals — and the distribution-only gate handles that correctly.
     { id: 'block_entrants', label: 'Block New Entrants?', stage: 2,
-      hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } },
-        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] } }
-      ],
       activateWhen: [
         {
           capability: ['asi'],
-          alignment: ['robust', 'brittle'],
-          proliferation_control: ['secure_access'],
-          proliferation_outcome: ['holds'],
+          distribution: { not: ['open'] },
           intent: ['self_interest', 'international']
         }
       ],
       edges: [ { id: 'attempt', label: 'Attempt to block' }, { id: 'no_attempt', label: 'No attempt' } ] },
     { id: 'block_outcome', label: 'Blocking Outcome', stage: 2,
-      hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } },
-        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] } }
-      ],
       activateWhen: [{ capability: ['asi'], block_entrants: ['attempt'] }],
       edges: [ { id: 'holds', label: 'Holds' }, { id: 'fails', label: 'Fails' } ] },
     { id: 'new_entrants', label: 'New Entrants?', stage: 2,
-      hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } },
-        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] } }
-      ],
       activateWhen: [{ capability: ['asi'], block_entrants: ['no_attempt'] }],
       edges: [ { id: 'emerge', label: 'Emerge' }, { id: 'none', label: 'None' } ] },
     { id: 'rival_dynamics', label: 'Rival Dynamics', stage: 2,
-      hideWhen: [
-        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } },
-        { alignment_durability: ['breaks'], ai_goals: { not: ['marginal'] } }
-      ],
+      // Hides on hostile-AI escape paths (ai_goals set ⇒ containment='escaped',
+      // so the explicit containment check is redundant). The old
+      // `alignment_durability=breaks` clause was dead by transitivity:
+      // rival_dynamics requires block_entrants→{block_outcome,new_entrants},
+      // which requires alignment ∈ {robust, brittle}, but
+      // alignment_durability='breaks' derives alignment='failed', so this
+      // node never activates on those paths.
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true } }],
       activateWhen: [
         { capability: ['asi'], block_outcome: ['fails'] },
         { capability: ['asi'], new_entrants: ['emerge'] }
@@ -1106,27 +1084,27 @@ const NODES = [
     //
     // `rapid` on physical_rate is disabled on the plateau path (the original
     // plateau_physical_rate had no rapid edge).
+    // knowledge_rate / physical_rate: asi-only after the early-rollout
+    // split. Plateau / agi paths now go through early_knowledge_rate /
+    // early_physical_rate (separate nodes owned by EARLY_ROLLOUT_MODULE),
+    // which write the same canonical knowledge_rate / physical_rate dims
+    // via edge-level collapseToFlavor.set so outcome flavor lookups
+    // (the-plateau.knowledge_rate.*, the-agi-economy.physical_rate.*)
+    // continue to read the same dim names. The 'limited' edge dropped
+    // here was always disabled on asi anyway; it lives only on the early
+    // nodes now.
     { id: 'knowledge_rate', label: 'Knowledge Work', stage: 3, priority: 2,
       hideWhen: [
         { ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } },
         { rollout_set: ['yes'] }
       ],
       activateWhen: [
-        ...OUTCOME_ACTIVATE,
-        { capability: ['plateau'] },
-        { capability: ['agi'] }
+        ...OUTCOME_ACTIVATE
       ],
       edges: [
-        { id: 'rapid', label: 'Rapid',
-          disabledWhen: [{ capability: ['plateau'], stall_duration: ['hours', 'days'], reason: 'At this stall duration, rapid adoption isn\'t possible' }] },
-        { id: 'gradual', label: 'Gradual',
-          disabledWhen: [{ capability: ['plateau'], stall_duration: ['hours'], reason: 'The stall is too short for gradual rollout' }] },
-        { id: 'uneven', label: 'Uneven' },
-        { id: 'limited', label: 'Limited',
-          disabledWhen: [
-            { capability: ['asi'], reason: 'At this capability, AI displaces rather than augments knowledge work' },
-            { capability: ['plateau'], stall_duration: ['weeks', 'months'], reason: 'With a longer stall, AI has room to move beyond augmentation' }
-          ] }
+        { id: 'rapid', label: 'Rapid' },
+        { id: 'gradual', label: 'Gradual' },
+        { id: 'uneven', label: 'Uneven' }
       ] },
     { id: 'physical_rate', label: 'Physical Automation', stage: 3, priority: 2,
       hideWhen: [
@@ -1134,18 +1112,57 @@ const NODES = [
         { rollout_set: ['yes'] }
       ],
       activateWhen: [
-        ...OUTCOME_ACTIVATE,
+        ...OUTCOME_ACTIVATE
+      ],
+      edges: [
+        { id: 'rapid', label: 'Rapid' },
+        { id: 'gradual', label: 'Gradual' },
+        { id: 'uneven', label: 'Uneven' }
+      ] },
+    // early_knowledge_rate / early_physical_rate: plateau / agi versions
+    // of the rollout questions. Each edge writes the canonical
+    // knowledge_rate / physical_rate dim via collapseToFlavor.set so
+    // outcomes that key on those names work transparently. The early_*
+    // dims themselves are pure question-host nodes that move to flavor
+    // on EARLY_ROLLOUT_MODULE exit (nodeIds \ writes auto-eviction).
+    { id: 'early_knowledge_rate', label: 'Knowledge Work', stage: 3, priority: 2,
+      hideWhen: [{ early_rollout_set: ['yes'] }],
+      activateWhen: [
         { capability: ['plateau'] },
         { capability: ['agi'] }
       ],
       edges: [
         { id: 'rapid', label: 'Rapid',
+          collapseToFlavor: { set: { knowledge_rate: 'rapid' } },
+          disabledWhen: [{ capability: ['plateau'], stall_duration: ['hours', 'days'], reason: 'At this stall duration, rapid adoption isn\'t possible' }] },
+        { id: 'gradual', label: 'Gradual',
+          collapseToFlavor: { set: { knowledge_rate: 'gradual' } },
+          disabledWhen: [{ capability: ['plateau'], stall_duration: ['hours'], reason: 'The stall is too short for gradual rollout' }] },
+        { id: 'uneven', label: 'Uneven',
+          collapseToFlavor: { set: { knowledge_rate: 'uneven' } } },
+        { id: 'limited', label: 'Limited',
+          collapseToFlavor: { set: { knowledge_rate: 'limited' } },
+          disabledWhen: [
+            { capability: ['plateau'], stall_duration: ['weeks', 'months'], reason: 'With a longer stall, AI has room to move beyond augmentation' }
+          ] }
+      ] },
+    { id: 'early_physical_rate', label: 'Physical Automation', stage: 3, priority: 2,
+      hideWhen: [{ early_rollout_set: ['yes'] }],
+      activateWhen: [
+        { capability: ['plateau'] },
+        { capability: ['agi'] }
+      ],
+      edges: [
+        { id: 'rapid', label: 'Rapid',
+          collapseToFlavor: { set: { physical_rate: 'rapid' } },
           disabledWhen: [{ capability: ['plateau'], reason: 'Physical automation can\'t be rapid while AI itself is plateaued' }] },
         { id: 'gradual', label: 'Gradual',
+          collapseToFlavor: { set: { physical_rate: 'gradual' } },
           disabledWhen: [{ capability: ['plateau'], stall_duration: ['hours'], reason: 'The stall is too short for gradual rollout' }] },
-        { id: 'uneven', label: 'Uneven' },
+        { id: 'uneven', label: 'Uneven',
+          collapseToFlavor: { set: { physical_rate: 'uneven' } } },
         { id: 'limited', label: 'Limited',
-          disabledWhen: [{ capability: ['asi'], reason: 'At this capability, physical automation moves beyond augmentation' }] }
+          collapseToFlavor: { set: { physical_rate: 'limited' } } }
       ] },
     { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3, priority: 1,
       // Only hidden once the AI has already escaped — on an escape path the
@@ -1209,8 +1226,6 @@ const NODES = [
       hideWhen: [{ war_survivors: ['none'] }],
       activateWhen: [
         {
-          capability: ['asi'],
-          alignment: ['failed'],
           containment: ['escaped'],
           ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm', 'power_seeking']
         },
@@ -1233,8 +1248,6 @@ const NODES = [
       hideWhen: [{ war_survivors: ['none'] }],
       activateWhen: [
         {
-          capability: ['asi'],
-          alignment: ['failed'],
           containment: ['escaped'],
           ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm', 'power_seeking'],
           escape_method: ['nanotech', 'pathogens', 'autonomous_weapons', 'industrial']
@@ -1263,8 +1276,6 @@ const NODES = [
       hideWhen: [{ war_survivors: ['none'] }],
       activateWhen: [
         {
-          capability: ['asi'],
-          alignment: ['failed'],
           containment: ['escaped'],
           ai_goals: ['alien_coexistence', 'alien_extinction', 'paperclip', 'swarm', 'power_seeking'],
           escape_timeline: true
@@ -1587,7 +1598,6 @@ const DECEL_MODULE = {
     reads: [
         'gov_action',
         'open_source',     // decel_6mo_action + decel_12mo_action.escapes/continue/accelerate.requires
-        'capability',      // all progress/action activateWhen (capability='asi')
     ],
     // Globals the reducer commits to sel on exit. Only the three dims
     // below are read as sel by external gate logic (alignment by many
@@ -1816,18 +1826,17 @@ const ESCAPE_MODULE = {
     // from the moment ai_goals would first be askable through to either an
     // early-exit (benevolent/marginal) or pipeline completion (catch_outcome).
     activateWhen: [
-        {
-            capability: ['asi'],
-            alignment: ['failed'],
-            containment: ['escaped'],
-        },
+        { containment: ['escaped'] },
         { concentration_type: ['ai_itself'] },
     ],
     reads: [
         // Gates into the pipeline (escape_method.activateWhen, various
         // pipeline hideWhen/disabledWhen clauses)
-        'capability', 'alignment', 'containment',
+        'containment',
         'concentration_type', 'geo_spread',
+        // ai_goals hostile-edge disabledWhen — intrinsic alignment
+        // (proliferation_alignment='holds') rules out hostile goals.
+        'proliferation_alignment',
         // inert_stays.no re-triggers this module (evicts ai_goals + escape_set)
         // and is read by ai_goals.marginal.disabledWhen on re-entry.
         'inert_stays',
@@ -2088,46 +2097,116 @@ const WHO_BENEFITS_MODULE = {
 };
 
 // ════════════════════════════════════════════════════════
-// ROLLOUT_MODULE — the "how does the transformation play out?" sub-loop
+// EARLY_ROLLOUT_MODULE — the "plateau / agi rollout" sub-loop
 // ════════════════════════════════════════════════════════
 //
-// Groups the three stage-3 "rollout" questions:
+// Groups the two stage-3 rollout questions for plateau / agi paths:
+//   * early_knowledge_rate — pace of AI impact on knowledge work
+//   * early_physical_rate  — pace of AI impact on physical work
+//
+// Each early_* edge writes the canonical knowledge_rate / physical_rate
+// dim via collapseToFlavor.set so outcomes (the-plateau, the-agi-
+// economy, etc.) read the same dim names regardless of which module
+// asked the question. The early_* dims themselves are pure question
+// hosts — they move to flavor on module exit (nodeIds \ writes auto-
+// eviction in attachModuleReducer).
+//
+// Two contexts:
+//   * capability='plateau' — both questions asked, exit on
+//     early_physical_rate.*
+//   * capability='agi' (auto-shallow) — same shape, exit on
+//     early_physical_rate.*
+//
+// Completion marker: `early_rollout_set`. Set on every
+// early_physical_rate.* edge (the terminal question; early_knowledge_
+// rate is asked first by priority + position).
+
+const EARLY_ROLLOUT_NODE_IDS = [
+    'early_knowledge_rate',
+    'early_physical_rate',
+];
+
+// knowledge_rate / physical_rate persist globally (written by edge-
+// level collapseToFlavor.set). early_rollout_set is the EARLY_ROLLOUT
+// completion marker; rollout_set is the shared "rollout is complete"
+// marker that legacy outcome reachable clauses key on (the-plateau,
+// the-automation). Both are set on every exit tuple. The early_* node
+// dims themselves are NOT in writes, so attachModuleReducer auto-
+// evicts them to flavor on exit.
+const EARLY_ROLLOUT_WRITES = ['knowledge_rate', 'physical_rate', 'early_rollout_set', 'rollout_set'];
+
+function buildEarlyRolloutExitPlan() {
+    const plan = [];
+    const pr = NODE_MAP.early_physical_rate;
+    if (pr && pr.edges) {
+        for (const e of pr.edges) {
+            plan.push({
+                nodeId: 'early_physical_rate',
+                edgeId: e.id,
+                when: {},
+                set: { early_rollout_set: 'yes', rollout_set: 'yes' },
+            });
+        }
+    }
+    return plan;
+}
+
+const EARLY_ROLLOUT_MODULE = {
+    id: 'early_rollout',
+    activateWhen: [
+        // plateau_benefit_distribution / auto_benefit_distribution write
+        // the shared `who_benefits_set` marker; only activate this module
+        // once Who Benefits has resolved.
+        { capability: ['plateau'], who_benefits_set: ['yes'] },
+        { capability: ['agi'], who_benefits_set: ['yes'] },
+    ],
+    reads: [
+        // Activation gate.
+        'capability', 'who_benefits_set',
+        // Edge disabledWhen on early_knowledge_rate / early_physical_rate
+        // (plateau-specific stall-duration disables).
+        'stall_duration',
+        // Module's own completion marker is read by every internal node's
+        // hideWhen (post-answer re-ask guard).
+        'early_rollout_set',
+    ],
+    writes: EARLY_ROLLOUT_WRITES,
+    nodeIds: EARLY_ROLLOUT_NODE_IDS,
+    completionMarker: 'early_rollout_set',
+    get exitPlan() { return buildEarlyRolloutExitPlan(); },
+};
+
+// ════════════════════════════════════════════════════════
+// ROLLOUT_MODULE — the asi rollout sub-loop
+// ════════════════════════════════════════════════════════
+//
+// Groups the three stage-3 rollout questions for the ASI main path:
 //   * knowledge_rate — pace of AI impact on knowledge work
 //   * physical_rate  — pace of AI impact on physical work
 //   * failure_mode   — "Delivery": does the transformation match intent,
-//     or do the metrics diverge from reality? (only asked on main path)
+//     or do the metrics diverge from reality?
 //
-// Three contexts, keyed on the post-emergence `capability` value:
-//   * capability='asi' (+ outcome gates) — main path: all three asked; all
-//     three move to flavor on module exit (failure_mode.* edges).
-//   * capability='plateau' — only knowledge_rate and physical_rate asked;
-//     both move to flavor on module exit (physical_rate.* edges).
-//     failure_mode never activates (its activateWhen requires asi).
-//   * capability='agi' (AGI-only / auto-shallow) — same as plateau: only
-//     knowledge/physical, exit on physical_rate.
+// Plateau / agi paths are handled by EARLY_ROLLOUT_MODULE (separate
+// early_knowledge_rate / early_physical_rate nodes that write the same
+// canonical knowledge_rate / physical_rate dims via collapseToFlavor.set).
+//
+// Two ASI sub-contexts:
+//   * delivery_ask_eligible ≠ no — main ASI path: all three asked; exit
+//     on failure_mode.* edges.
+//   * delivery_ask_eligible = no — ASI-capture exit: failure_mode is
+//     hidden, physical_rate is the terminal question and must close the
+//     module (sets failure_mode='none' so sel-only outcome matching
+//     succeeds).
 //
 // Writes: [failure_mode, knowledge_rate, physical_rate, rollout_set].
-// All three question dims now persist globally — outcome reachable
-// clauses gate on `failure_mode` (the-failure / the-flourishing /
-// the-new-hierarchy / the-gilded-singularity / etc.), and the sel-only
-// validator (validate2.js) needs the dims present in sel to evaluate
-// those gates. Previously these moved to flavor on exit and outcomes
-// resolved via fused state; switching to sel-only matching requires
-// persistence.
+// All three question dims persist globally so sel-only outcome matching
+// (validate2.js + outcome reachable clauses keying on failure_mode) can
+// read them.
 //
 // Post-exit self-hide: each of the 3 nodes adds `{ rollout_set: ['yes'] }`
-// to hideWhen so findNextQ doesn't re-offer them once their dim sits in
-// flavor instead of sel.
+// to hideWhen so findNextQ doesn't re-offer them.
 //
-// Completion marker: `rollout_set`. Set on the last question of the
-// module per context:
-//   * main path: failure_mode edges (last question there)
-//   * plateau / auto-shallow: physical_rate edges (knowledge_rate is
-//     asked first by priority+position, physical_rate second and final)
-//
-// No reducerTable — exit space is three-way conditional with variable
-// question count; walker falls through to normal DFS like escape /
-// who_benefits.
+// Completion marker: `rollout_set`.
 
 const ROLLOUT_NODE_IDS = [
     'knowledge_rate',
@@ -2135,21 +2214,16 @@ const ROLLOUT_NODE_IDS = [
     'failure_mode',
 ];
 
-// All three question dims persist globally so sel-only outcome matching
-// can read them. The completion marker `rollout_set` is set via exit-
-// tuple `set:` blocks.
 const ROLLOUT_WRITES = ['failure_mode', 'knowledge_rate', 'physical_rate', 'rollout_set'];
 
 // Exit tuples:
 //   * failure_mode.{none, drift} — main ASI path exit when
-//     delivery_ask_eligible ≠ no. No `when` gate needed (failure_mode
-//     only activates on the eligible ASI path).
-//   * physical_rate.{rapid, gradual, uneven, limited}:
-//     - plateau exit (capability=plateau)
-//     - auto-shallow exit (capability=agi)
-//     - ASI-capture exit (capability=asi + delivery_ask_eligible=no) —
-//       failure_mode is hidden on this path, so physical_rate is the
-//       terminal question and must close the module.
+//     delivery_ask_eligible ≠ no.
+//   * physical_rate.* (capability=asi + delivery_ask_eligible=no) —
+//     ASI-capture exit; failure_mode is hidden, physical_rate closes
+//     the module. Set failure_mode='none' so sel-only outcome matching
+//     (the-new-hierarchy / the-capture gates requiring
+//     failure_mode=none) succeeds.
 function buildRolloutExitPlan() {
     const plan = [];
     const fm = NODE_MAP.failure_mode;
@@ -2166,26 +2240,6 @@ function buildRolloutExitPlan() {
     const pr = NODE_MAP.physical_rate;
     if (pr && pr.edges) {
         for (const e of pr.edges) {
-            // Plateau exit
-            plan.push({
-                nodeId: 'physical_rate',
-                edgeId: e.id,
-                when: { capability: ['plateau'] },
-                set: { rollout_set: 'yes' },
-            });
-            // Auto-shallow exit
-            plan.push({
-                nodeId: 'physical_rate',
-                edgeId: e.id,
-                when: { capability: ['agi'] },
-                set: { rollout_set: 'yes' },
-            });
-            // ASI-capture exit — failure_mode is hidden on
-            // delivery_ask_eligible=no paths (no delivery question =>
-            // no delivery failure mode). physical_rate is the last
-            // question and must close the module. Set failure_mode='none'
-            // so sel-only outcome matching (the-new-hierarchy / the-capture
-            // gates requiring failure_mode=none) succeeds.
             plan.push({
                 nodeId: 'physical_rate',
                 edgeId: e.id,
@@ -2200,50 +2254,29 @@ function buildRolloutExitPlan() {
 const ROLLOUT_MODULE = {
     id: 'rollout',
     activateWhen: [
-        // Main path — any condition under which failure_mode could eventually
-        // activate, or knowledge_rate / physical_rate activate via OUTCOME_ACTIVATE.
-        // OUTCOME_ACTIVATE is already gated on `who_benefits_set=yes` (or the
-        // benevolent / catch_holds bypasses), so the module only activates
-        // once Who Benefits has completed.
+        // ASI-only. OUTCOME_ACTIVATE covers all three ASI entry shapes
+        // (who_benefits_set=yes / ai_goals=benevolent / post_catch=contained).
         ...OUTCOME_ACTIVATE,
-        // Plateau / auto-shallow paths — plateau_benefit_distribution and
-        // auto_benefit_distribution now both write the shared
-        // `who_benefits_set` marker (unified with the main WHO_BENEFITS
-        // module). Capability keeps the contexts distinct.
-        { capability: ['plateau'], who_benefits_set: ['yes'] },
-        { capability: ['agi'], who_benefits_set: ['yes'] },
     ],
     reads: [
-        // Activation / gating across the three contexts. Post-emergence
-        // capability is one of {plateau, agi, asi} (or 'stalls' for the
-        // reserved short-stall dead-end). stall_duration is still read
-        // by some plateau narrative / reachable gates.
-        'capability', 'stall_duration',
-        // OUTCOME_ACTIVATE conditions (post-escape catch path) — single
-        // consolidated marker (replaces compound catch_outcome +
-        // collateral_impact).
+        // Activation.
+        'capability',
+        // OUTCOME_ACTIVATE conditions (post-escape catch path).
         'post_catch',
-        // Shared rollout hideWhen (uncaught bad-escape cut) +
-        // failure_mode.hideWhen.
+        // knowledge_rate / physical_rate / failure_mode hideWhen
+        // (uncaught bad-escape cut).
         'ai_goals', 'containment',
         // Transitive read: containment.contained edge requires
         // distribution ∈ {concentrated, monopoly}. Without distribution
         // in the projection, cleanSelection drops sel.containment on
-        // post_catch=contained paths (ESCAPE pre-sets both post_catch
-        // and containment, but the edge re-validation fails if
-        // distribution isn't carried through). That cascade makes
-        // rollout's hideWhen lose its containment=contained override
-        // and hide knowledge_rate/physical_rate for alien-ai / hostile-
-        // contained states.
+        // post_catch=contained paths.
         'distribution',
         // Main-path activation marker + delivery-eligibility marker.
         // failure_mode activates on who_benefits_set=yes when
-        // delivery_ask_eligible is not 'no' (set by WHO_BENEFITS on
-        // capture-shaped paths).
+        // delivery_ask_eligible ≠ 'no'.
         'who_benefits_set', 'delivery_ask_eligible',
-        // Module's own completion marker is read by every internal node's
-        // hideWhen (post-answer re-ask guard now that all 3 internal dims
-        // move to flavor on exit).
+        // Module's own completion marker — read by every internal node's
+        // hideWhen.
         'rollout_set',
     ],
     writes: ROLLOUT_WRITES,
@@ -2452,6 +2485,14 @@ const PROLIFERATION_WRITES = [
     // proliferation_alignment / proliferation_outcome.
     'alignment',
     'containment',
+    // PROLIFERATION overrides distribution='open' on every leaks_public-
+    // equivalent exit (proliferation_control.none, proliferation_outcome.
+    // leaks_public, proliferation_alignment.{holds,breaks}). Open weights
+    // ≡ open distribution; collapsing the two captures the narrative
+    // invariant declaratively so downstream gates can rely on a single
+    // dim instead of (distribution, proliferation_outcome) pairs. Not set
+    // on leaks_rivals (bilateral leak — distribution stays as picked).
+    'distribution',
 ];
 
 function buildProliferationExitPlan() {
@@ -2466,24 +2507,34 @@ function buildProliferationExitPlan() {
     // path (alignment robust gate), and its 'breaks' edge specifically
     // flips alignment/containment regardless of the prior alignment
     // value (though in practice robust is the only way to reach it).
-    const LEAKED = { proliferation_set: 'yes', geo_spread: 'multiple' };
-    const LEAKED_UNROBUST = {
-        proliferation_set: 'yes',
-        geo_spread: 'multiple',
+    // Three "leak shapes" for the exit set bundle:
+    //   * LEAKED            — bilateral leak to specific rivals. Tech is
+    //     spread across multiple states but distribution among labs stays
+    //     as the user picked it (typically concentrated/monopoly).
+    //   * LEAKED_OPEN       — open-weights leak. The "open" semantic now
+    //     overrides whatever the user picked for distribution: leaked
+    //     weights ≡ open distribution. alignment held under the leak.
+    //   * LEAKED_OPEN_UNROBUST — open-weights leak with alignment broken.
+    //     Adds the alignment/containment flip on top of LEAKED_OPEN.
+    const LEAKED       = { proliferation_set: 'yes', geo_spread: 'multiple' };
+    const LEAKED_OPEN  = { ...LEAKED, distribution: 'open' };
+    const LEAKED_OPEN_UNROBUST = {
+        ...LEAKED_OPEN,
         alignment: 'failed',
         containment: 'escaped',
     };
-    const HOLDS  = { proliferation_set: 'yes' };
+    const HOLDS = { proliferation_set: 'yes' };
 
     // proliferation_control.none: always a leaked-weights world with
     // alignment≠robust (if alignment=robust, proliferation_outcome derives
     // to leaks_public and proliferation_alignment activates — the module
-    // doesn't exit here). So always carries the full alignment override.
+    // doesn't exit here). So always carries the full alignment override
+    // and the open-distribution override.
     plan.push({
         nodeId: 'proliferation_control',
         edgeId: 'none',
         when: { alignment: { not: ['robust'] } },
-        set: LEAKED_UNROBUST,
+        set: LEAKED_OPEN_UNROBUST,
     });
     // proliferation_outcome terminal edges.
     const outNode = NODE_MAP.proliferation_outcome;
@@ -2496,16 +2547,19 @@ function buildProliferationExitPlan() {
                 });
             } else if (e.id === 'leaks_public') {
                 // Only exit here if proliferation_alignment won't activate
-                // (i.e. alignment≠robust). alignment/containment flip.
+                // (i.e. alignment≠robust). alignment/containment flip,
+                // distribution flips to open.
                 plan.push({
                     nodeId: 'proliferation_outcome', edgeId: e.id,
                     when: { alignment: { not: ['robust'] } },
-                    set: LEAKED_UNROBUST,
+                    set: LEAKED_OPEN_UNROBUST,
                 });
             } else {
-                // leaks_rivals: proliferation_alignment never activates
-                // (needs leaks_public). Old derives didn't flip alignment
-                // on leaks_rivals either, so keep LEAKED (geo_spread only).
+                // leaks_rivals: bilateral leak — distribution stays
+                // concentrated/monopoly among labs, but tech is now in
+                // multiple states' hands. proliferation_alignment never
+                // activates (needs leaks_public). Old derives didn't flip
+                // alignment on leaks_rivals either.
                 plan.push({
                     nodeId: 'proliferation_outcome', edgeId: e.id,
                     when: {}, set: LEAKED,
@@ -2514,13 +2568,14 @@ function buildProliferationExitPlan() {
         }
     }
     // proliferation_alignment terminal edges — only reached on a
-    // leaks_public path. 'breaks' flips alignment/containment (replaces
-    // the old proliferation_alignment=breaks deriveWhen); 'holds' keeps
-    // the pre-existing alignment (geo_spread override only).
+    // leaks_public path, so distribution=open in both branches. 'breaks'
+    // flips alignment/containment (replaces the old
+    // proliferation_alignment=breaks deriveWhen); 'holds' keeps the
+    // pre-existing alignment (geo_spread + distribution override only).
     const alignNode = NODE_MAP.proliferation_alignment;
     if (alignNode && alignNode.edges) {
         for (const e of alignNode.edges) {
-            const set = (e.id === 'breaks') ? LEAKED_UNROBUST : LEAKED;
+            const set = (e.id === 'breaks') ? LEAKED_OPEN_UNROBUST : LEAKED_OPEN;
             plan.push({
                 nodeId: 'proliferation_alignment',
                 edgeId: e.id,
@@ -2549,9 +2604,8 @@ const PROLIFERATION_MODULE = {
     reads: [
         // Activation gate
         'capability', 'alignment_set',
-        // Internal activateWhen / hideWhen clauses on proliferation_control /
-        // proliferation_outcome reference these
-        'alignment', 'ai_goals', 'containment', 'alignment_durability',
+        // Internal activateWhen on proliferation_control / proliferation_alignment
+        'alignment',
         // proliferation_control.edges[deny_rivals|secure_access].disabledWhen
         // reads distribution.
         'distribution',
@@ -2796,23 +2850,15 @@ function buildIntentExitPlan() {
         when: {}, set: { intent_set: 'yes' },
     });
     // intent: self_interest / international — enter tail IFF
-    // block_entrants activates (alignment ∈ (robust,brittle) AND
-    // proliferation_control=secure_access AND proliferation_outcome=holds).
-    // Exit here when ANY of those fails (three separate tuples = OR).
+    // block_entrants activates (distribution ≠ open). Exit here when that
+    // fails. distribution=open subsumes the old alignment≠{robust,brittle}
+    // clause: at intent_loop entry, alignment=failed implies distribution
+    // =open (PROLIFERATION's exit plan flips both together on every
+    // leaks_public-equivalent path), so this single tuple covers both.
     for (const edgeId of ['self_interest', 'international']) {
         plan.push({
             nodeId: 'intent', edgeId,
-            when: { alignment: { not: ['robust', 'brittle'], required: true } },
-            set: { intent_set: 'yes' },
-        });
-        plan.push({
-            nodeId: 'intent', edgeId,
-            when: { proliferation_control: { not: ['secure_access'], required: true } },
-            set: { intent_set: 'yes' },
-        });
-        plan.push({
-            nodeId: 'intent', edgeId,
-            when: { proliferation_outcome: { not: ['holds'], required: true } },
+            when: { distribution: ['open'] },
             set: { intent_set: 'yes' },
         });
     }
@@ -2865,22 +2911,19 @@ const INTENT_MODULE = {
         },
     ],
     reads: [
-        // Activation gate
+        // Activation gate (module + intent.activateWhen + intent.hideWhen +
+        // rival_dynamics.hideWhen). ai_goals carries the
+        // hostile/marginal/benevolent signal AND implies containment state
+        // (ai_goals only sets on containment='escaped'), so containment
+        // doesn't need a separate read.
         'capability', 'proliferation_set', 'ai_goals',
-        // Internal hideWhen clauses + narrative-variant gating still
-        // reference alignment / containment.
-        'alignment', 'containment',
-        // Tail gating (block_entrants.activateWhen)
-        'proliferation_control', 'proliferation_outcome',
-        // intent.edges.requires + tail hideWhen chains
-        'distribution', 'geo_spread', 'alignment_durability',
-        // Transitive read: distribution.edges[*].requires references
-        // open_source. Without this in reads, projectReads drops
-        // open_source, then cleanSelection drops distribution (edge
-        // requires fail), then drops intent (intent.coexistence requires
-        // reference distribution). Net effect: intent vanishes from sel
-        // on module exit even though the user picked it.
-        'open_source',
+        // intent.edges.requires + block_entrants.activateWhen
+        // (distribution≠open) + exit-plan early-exit `when`. distribution
+        // is the single "is the tech still bottled up?" signal —
+        // PROLIFERATION flips it to 'open' on every leaks_public-equivalent
+        // path, which subsumes the old (proliferation_control,
+        // proliferation_outcome, alignment) trio of guards.
+        'distribution', 'geo_spread', 'sovereignty',
     ],
     writes: INTENT_WRITES,
     nodeIds: INTENT_NODE_IDS,
@@ -3093,46 +3136,50 @@ const ALIGNMENT_WRITES = [
 ];
 
 // Exit edges:
-//   * alignment.robust — direct exit (durability/containment skip on
-//     this path; gov_action's own exit idempotently re-sets the marker
-//     if it activates).
+//   * alignment.robust — direct exit. (gov_action.decelerate is
+//     disabledWhen alignment=robust, so even if its gates match the
+//     only available edge is `accelerate` — no real decision left.)
 //   * alignment.{brittle, failed} — no exit (defer to the next
 //     internal node).
-//   * alignment_durability.{holds, breaks} — direct exits.
-//   * containment.{contained, escaped} — direct exits.
-//   * gov_action.{decelerate, accelerate} — direct exits (idempotent
-//     when reached after an earlier exit).
+//   * alignment_durability.breaks — direct exit (gov_action.deriveWhen
+//     auto-resolves to 'accelerate' on this path; nothing to ask).
+//   * alignment_durability.holds — CONDITIONAL exit: only when
+//     gov_action's activation gates wouldn't fire. Otherwise defer to
+//     gov_action so the decelerate-vs-accelerate decision is asked.
+//   * containment.escaped — direct exit (gov_action.hideWhen=escaped).
+//   * containment.contained — CONDITIONAL exit, same as durability.holds:
+//     defer to gov_action when its gates fire, otherwise direct exit.
+//   * gov_action.{decelerate, accelerate} — direct exits (catch the
+//     deferred holds/contained paths above).
 // All set `alignment_set: 'yes'`.
+//
+// gov_action.activateWhen reduces (within ASI) to:
+//   (geo_spread='one' AND sov='state') OR (geo_spread='one' AND dist='monopoly').
+// Its negation, expressed as two conjunctive `when` tuples:
+//   1. geo_spread != 'one'                                                (covers multiple)
+//   2. geo_spread = 'one' AND sov != 'state' AND dist != 'monopoly'        (covers dist=open
+//      with sov UNSET, and dist=concentrated + sov=lab — `{not:[v]}`
+//      passes for UNSET dims by engine convention)
 function buildAlignmentExitPlan() {
     const plan = [];
-    const addSome = (nodeId, edgeIds) => {
-        const n = NODE_MAP[nodeId];
-        if (!n || !n.edges) return;
-        const want = new Set(edgeIds);
-        for (const e of n.edges) {
-            if (!want.has(e.id)) continue;
-            plan.push({
-                nodeId, edgeId: e.id,
-                when: {},
-                set: { alignment_set: 'yes' },
-            });
-        }
+    const set = { alignment_set: 'yes' };
+    const tuple = (nodeId, edgeId, when = {}) => plan.push({ nodeId, edgeId, when, set });
+    // Conditional fallback: exit only when gov_action's gates wouldn't fire.
+    const govInert = (nodeId, edgeId) => {
+        tuple(nodeId, edgeId, { geo_spread: { not: ['one'] } });
+        tuple(nodeId, edgeId, {
+            geo_spread: ['one'],
+            sovereignty: { not: ['state'] },
+            distribution: { not: ['monopoly'] },
+        });
     };
-    const addAll = (nodeId) => {
-        const n = NODE_MAP[nodeId];
-        if (!n || !n.edges) return;
-        for (const e of n.edges) {
-            plan.push({
-                nodeId, edgeId: e.id,
-                when: {},
-                set: { alignment_set: 'yes' },
-            });
-        }
-    };
-    addSome('alignment', ['robust']);
-    addAll('alignment_durability');
-    addAll('containment');
-    addAll('gov_action');
+    tuple('alignment', 'robust');
+    tuple('alignment_durability', 'breaks');
+    govInert('alignment_durability', 'holds');
+    tuple('containment', 'escaped');
+    govInert('containment', 'contained');
+    const govAction = NODE_MAP.gov_action;
+    if (govAction && govAction.edges) for (const e of govAction.edges) tuple('gov_action', e.id);
     return plan;
 }
 
@@ -3162,9 +3209,6 @@ const ALIGNMENT_MODULE = {
         'capability',
         'control_set',
         'geo_spread', 'sovereignty', 'distribution',
-        // alignment.deriveWhen marginal-path re-classification; containment
-        // activateWhen clause 2 (ai_goals=marginal).
-        'ai_goals',
         // gov_action edge collapseToFlavor moves (pre-existing)
         'takeoff_class',
     ],
@@ -3174,7 +3218,7 @@ const ALIGNMENT_MODULE = {
     get exitPlan() { return buildAlignmentExitPlan(); },
 };
 
-const MODULES = [DECEL_MODULE, ESCAPE_MODULE, WHO_BENEFITS_MODULE, ROLLOUT_MODULE, EMERGENCE_MODULE, CONTROL_MODULE, PROLIFERATION_MODULE, INTENT_MODULE, WAR_MODULE, ALIGNMENT_MODULE];
+const MODULES = [DECEL_MODULE, ESCAPE_MODULE, WHO_BENEFITS_MODULE, EARLY_ROLLOUT_MODULE, ROLLOUT_MODULE, EMERGENCE_MODULE, CONTROL_MODULE, PROLIFERATION_MODULE, INTENT_MODULE, WAR_MODULE, ALIGNMENT_MODULE];
 const MODULE_MAP = {};
 for (const m of MODULES) MODULE_MAP[m.id] = m;
 

@@ -909,10 +909,10 @@
     <script src="graph.js"></script>
     <script src="engine.js"></script>
     <script src="graph-walker.js"></script>
+    <script src="graph-io.js"></script>
     <script src="timeline-animator.js"></script>
-    <script src="explore-tables.js"></script>
-    <script src="explore.js"></script>
     <script src="nodes.js"></script>
+    <script src="explore.js"></script>
     <script>
     (function () {
         'use strict';
@@ -1173,6 +1173,9 @@
             for (const t of templatesList) templatesMap[t.id] = t;
 
             GraphWalker.setTemplates(templatesList);
+            if (window.GraphIO && window.GraphIO.registerOutcomes) {
+                window.GraphIO.registerOutcomes(templatesList);
+            }
 
         }
 

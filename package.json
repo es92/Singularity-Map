@@ -2,8 +2,9 @@
   "name": "singularity-map",
   "private": true,
   "scripts": {
-    "test": "node test/run.js",
-    "validate": "node validate.js",
+    "test": "node --max-old-space-size=8192 validate.js",
+    "test:quick": "node validate.js --quick",
+    "test:legacy": "node test/run.js",
     "precompute-reach": "node precompute-reachability.js"
   },
   "dependencies": {

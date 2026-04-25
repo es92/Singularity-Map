@@ -1035,7 +1035,7 @@
             { key: 'emergence',        id: 'emergence',                    kind: 'module' },
             { key: 'plateau_bd',       id: 'plateau_benefit_distribution', kind: 'node',   note: 'if not asi' },
             { key: 'auto_bd',          id: 'auto_benefit_distribution',    kind: 'node',   note: 'if not asi' },
-            { key: 'rollout_early',    id: 'rollout',                      kind: 'module', note: 'early (plateau / automation)',
+            { key: 'rollout_early',    id: 'early_rollout',                kind: 'module', note: 'early (plateau / automation)',
               earlyExits: ['the-plateau', 'the-automation'] },
             { key: 'control',          id: 'control',                      kind: 'module' },
             { key: 'alignment',        id: 'alignment_loop',               kind: 'module' },
@@ -1099,6 +1099,12 @@
 
             ['inert_stays',   'escape_late'],
             ['brittle',       'escape_late'],
+            // brittle_resolution=solved/sufficient recovers alignment
+            // (containment stays contained) and bypasses the escape
+            // pipeline; only the brittle_resolution=escape branch
+            // needs escape_late to play out. Without this edge the
+            // recovered branch falls off the graph entirely.
+            ['brittle',       'rollout'],
 
             ['escape_late',   'rollout'],
         ],
@@ -1578,6 +1584,36 @@
             <div class="nd-meta">${tags.map(t => `<span class="nd-tag">${esc(t)}</span>`).join('')}</div>
         `;
 
+        // ─── Reads / writes summary (pulled from activateWhen, hideWhen,
+        //     edge requires / disabledWhen, deriveWhen.match,
+        //     collapseToFlavor.when / set / move).
+        const reads = A.nodeReads.get(nodeId) || new Set();
+        if (reads.size || writes.size || moves.size) {
+            html += `<div class="nd-section"><h3>Reads / writes</h3>`;
+            html += `<div class="nd-narr-hint" style="margin-bottom: 8px;">
+                <code>reads</code>: dims pulled from this node's activateWhen, hideWhen,
+                deriveWhen.match, and per-edge requires / disabledWhen / collapseToFlavor.when.
+                <code>writes (sel)</code>: collapseToFlavor.set targets.
+                <code>moves to flavor</code>: collapseToFlavor.move targets.
+            </div>`;
+            if (reads.size) {
+                html += `<div class="nd-row"><div class="nd-row-label">reads</div><div class="nd-row-body"><div class="nd-chip-row">`;
+                [...reads].sort().forEach(d => { html += dimChip(d); });
+                html += `</div></div></div>`;
+            }
+            if (writes.size) {
+                html += `<div class="nd-row"><div class="nd-row-label">writes (sel)</div><div class="nd-row-body"><div class="nd-chip-row">`;
+                [...writes].sort().forEach(d => { html += dimChip(d); });
+                html += `</div></div></div>`;
+            }
+            if (moves.size) {
+                html += `<div class="nd-row"><div class="nd-row-label">moves to flavor</div><div class="nd-row-body"><div class="nd-chip-row">`;
+                [...moves].sort().forEach(d => { html += dimChip(d); });
+                html += `</div></div></div>`;
+            }
+            html += `</div>`;
+        }
+
         html += renderNarrativePanel(node);
 
         // ─── Written by
@@ -1660,22 +1696,6 @@
                     }
                 }
                 html += `</div>`;
-            }
-            html += `</div>`;
-        }
-
-        // ─── Writes summary (dims this node commits at edge pick)
-        if (writes.size || moves.size) {
-            html += `<div class="nd-section"><h3>Writes summary</h3>`;
-            if (writes.size) {
-                html += `<div class="nd-row"><div class="nd-row-label">sets (sel)</div><div class="nd-row-body"><div class="nd-chip-row">`;
-                [...writes].sort().forEach(d => { html += dimChip(d); });
-                html += `</div></div></div>`;
-            }
-            if (moves.size) {
-                html += `<div class="nd-row"><div class="nd-row-label">moves to flavor</div><div class="nd-row-body"><div class="nd-chip-row">`;
-                [...moves].sort().forEach(d => { html += dimChip(d); });
-                html += `</div></div></div>`;
             }
             html += `</div>`;
         }
