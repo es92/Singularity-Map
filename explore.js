@@ -209,9 +209,9 @@
             stroke-width: 1.6;
             opacity: 0.85;
         }
-        /* Dead-end badge (count of stuck sels). Reuses the table-size
-         * pill but tinted red so it pops against the regular reach
-         * counters. */
+        /* Dead-end badge (count of dead-end sels). Reuses the table-
+         * size pill but tinted red so it pops against the regular
+         * reach counters. */
         #explore-root .ex-card-tablesize.ex-card-dead {
             color: #c54545;
             border-color: rgba(197,69,69,0.45);
@@ -563,7 +563,7 @@
     // the propagation algorithm itself changes (slotAccepts gating,
     // outcome partitioning rules, etc.) — the static-data hash won't
     // catch logic edits in this file or graph-io.js.
-    const REACH_VERSION = 2;
+    const REACH_VERSION = 4;
     const REACH_KEY_PREFIX = 'explore:reach:v';
 
     function _hashStr(s) {
@@ -685,8 +685,9 @@
             return '';
         }
 
-        // Dead-end card: aggregate count of sels stuck across all slots
-        // (continuing outputs no child accepts and no outcome siphons).
+        // Dead-end card: aggregate count of dead-end sels across all
+        // slots (continuing outputs no child accepts and no outcome
+        // siphons).
         if (isDeadend) {
             if (reach && reach.reach > 0) {
                 return `<span class="ex-card-tablesize ex-card-dead">reach: ${reach.reach}</span>`;
@@ -720,7 +721,7 @@
         let html = `${main} | ${bucketStr} | ${fullStr}`;
         // If any of this slot's full-sel exits matched a global
         // outcome's reachable clause OR landed in a dead end, surface
-        // the partition: matched / propagated / stuck. Engine only
+        // the partition: matched / propagated / dead. Engine only
         // tests outcomes after a slot exits, so the boundary aligns
         // with the first place a sel can become terminal.
         const hasSplit = reach.outcomeSelCount > 0 || reach.deadCount > 0;
@@ -990,7 +991,7 @@
                 .sort((a, b) => b[1] - a[1])
                 .map(([k, n]) => `<div><code>${esc(k)}</code> &mdash; <span class="ex-card-dead">${n}</span></div>`)
                 .join('');
-            html += sbSection(`stuck sels by source (total ${reach.reach})`, rows);
+            html += sbSection(`dead-end sels by source (total ${reach.reach})`, rows);
         }
         html += `</div>`;
         return html;
@@ -1236,49 +1237,58 @@
 
         const map = new Map();
         const outcomeAgg = new Map(); // oid → total sels across all upstream slots
-        const deadAgg = new Map();    // slotKey → stuck count from that slot
+        const deadAgg = new Map();    // slotKey → dead-end count from that slot
 
         const NODE_MAP = (window.Engine && window.Engine.NODE_MAP) || {};
         const MODULE_MAP = (window.Graph && window.Graph.MODULE_MAP) || {};
+        const matchCondition = window.Engine && window.Engine.matchCondition;
 
-        // Engine-equivalent acceptance check: same activateWhen /
-        // hideWhen gates the navigator uses to decide whether a slot
-        // is a viable next step.
-        const slotAccepts = (slot, sel) => {
-            if (!slot) return false;
-            if (slot.kind === 'outcome' || slot.kind === 'deadend') return false;
-            const target = slot.kind === 'module' ? MODULE_MAP[slot.id]
-                : (slot.kind === 'node' ? NODE_MAP[slot.id] : null);
-            if (!target) return false;
-            const aw = target.activateWhen, hw = target.hideWhen;
-            if (aw && aw.length && !aw.some(c => window.Engine.matchCondition(sel, c))) return false;
-            if (hw && hw.length && hw.some(c => window.Engine.matchCondition(sel, c))) return false;
+        // Engine-equivalent next-slot pick: returns the priority of
+        // the lowest-priority internal node that's actually askable
+        // for this sel — Infinity if no internal is askable. Returning
+        // Infinity is also our "slot rejects this sel" signal.
+        //
+        // This mirrors the engine's `_isModuleActivelyPending`: a
+        // module's module-level activateWhen / hideWhen + completion
+        // marker pass, AND at least one internal node's own
+        // activateWhen / hideWhen pass with that internal still unset
+        // and not derived. Without the per-internal check, modules
+        // like proliferation accept benevolent paths at the module
+        // level (`alignment_set=yes` matches) but the engine would
+        // skip them because every internal is hidden — leading the
+        // static analyzer to mis-route benevolent paths away from
+        // who_benefits.
+        const _isAskableInternal = (n, sel) => {
+            if (!n || n.derived) return false;
+            if (sel[n.id] !== undefined) return false;
+            if (n.activateWhen && n.activateWhen.length
+                && !n.activateWhen.some(c => matchCondition(sel, c))) return false;
+            if (n.hideWhen && n.hideWhen.length
+                && n.hideWhen.some(c => matchCondition(sel, c))) return false;
             return true;
         };
-
-        // Engine-equivalent slot priority: at runtime the navigator
-        // picks the next askable internal node by lowest priority
-        // value, so a slot's effective priority is the min of its
-        // internal nodes' priorities (graph.js's end-of-file loop
-        // already bakes module.internalPriority onto its nodes).
-        // For node-kind slots, that's just the node's own priority.
-        const slotEffectivePriority = (slot) => {
-            if (!slot) return Infinity;
+        const slotPickPriority = (slot, sel) => {
+            if (!slot || slot.kind === 'outcome' || slot.kind === 'deadend') return Infinity;
             if (slot.kind === 'node') {
                 const n = NODE_MAP[slot.id];
-                return n && n.priority !== undefined ? n.priority : 0;
+                if (!_isAskableInternal(n, sel)) return Infinity;
+                return n.priority !== undefined ? n.priority : 0;
             }
             if (slot.kind === 'module') {
                 const m = MODULE_MAP[slot.id];
-                if (!m) return 0;
+                if (!m) return Infinity;
+                if (m.completionMarker && sel[m.completionMarker] !== undefined) return Infinity;
+                const aw = m.activateWhen, hw = m.hideWhen;
+                if (aw && aw.length && !aw.some(c => matchCondition(sel, c))) return Infinity;
+                if (hw && hw.length && hw.some(c => matchCondition(sel, c))) return Infinity;
                 let minP = Infinity;
                 for (const nid of (m.nodeIds || [])) {
                     const n = NODE_MAP[nid];
-                    if (!n) continue;
+                    if (!_isAskableInternal(n, sel)) continue;
                     const p = n.priority !== undefined ? n.priority : 0;
                     if (p < minP) minP = p;
                 }
-                return Number.isFinite(minP) ? minP : 0;
+                return minP;
             }
             return Infinity;
         };
@@ -1338,8 +1348,7 @@
                 let bestChild = null;
                 let bestPri = Infinity;
                 for (const child of childSlots) {
-                    if (!slotAccepts(child, sel)) continue;
-                    const p = slotEffectivePriority(child);
+                    const p = slotPickPriority(child, sel);
                     // Strict < keeps the FLOW_DAG-order tiebreak: an
                     // earlier child of equal priority wins.
                     if (p < bestPri) { bestPri = p; bestChild = child; }
@@ -1373,7 +1382,7 @@
         for (const [oid, count] of outcomeAgg) {
             map.set('outcome:' + oid, { kind: 'outcome', reach: count });
         }
-        // Pin total stuck-sel count + per-source breakdown onto the
+        // Pin total dead-end count + per-source breakdown onto the
         // deadend node. The breakdown also drives the red flow-deadend
         // edges added in the init() pass.
         let deadTotal = 0;

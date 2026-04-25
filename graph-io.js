@@ -101,7 +101,7 @@
     // are persisted, so a format change makes every lookup miss → 0
     // outputs). Eligibility is gated by `slot.kind === 'module'` at
     // the call sites below; outcomes have no DFS to cache.
-    const PERSIST_VERSION = 3;
+    const PERSIST_VERSION = 4;
     const PERSIST_KEY_PREFIX = 'gio:writeRows:';
 
     let _domainsCache = null;
@@ -293,6 +293,31 @@
                 for (const e of (node.edges || [])) {
                     _collectCondDims(e.requires, dims);
                     _collectCondDims(e.disabledWhen, dims);
+                    // Also include collapseToFlavor effect dims (set /
+                    // setFlavor / move) in reads. This is what lets us
+                    // distinguish, in the per-edge projection key,
+                    // "edge X moved this dim" (UNSET) from "edge Y
+                    // didn't touch it" (value carried from start sel).
+                    // Without it, dims that are written by SOME edge
+                    // but untouched by OTHERS get a UNSET projection
+                    // for the untouched-edge case, which the
+                    // reconstruction in reachableFullSelsFromInputs
+                    // interprets as a deletion — silently dropping
+                    // the upstream value. Concretely: inert_stays.no
+                    // moves escape_set, but inert_stays.yes leaves it
+                    // intact; only by carrying escape_set through the
+                    // input bucket does the YES projection capture
+                    // the upstream 'yes' as a real value rather than
+                    // a spurious UNSET.
+                    if (!e.collapseToFlavor) continue;
+                    const blocks = Array.isArray(e.collapseToFlavor) ? e.collapseToFlavor : [e.collapseToFlavor];
+                    for (const b of blocks) {
+                        if (!b) continue;
+                        if (b.set) for (const k of Object.keys(b.set)) dims.add(k);
+                        if (b.setFlavor) for (const k of Object.keys(b.setFlavor)) dims.add(k);
+                        if (Array.isArray(b.move)) for (const k of b.move) dims.add(k);
+                        if (b.when) _collectCondDims([b.when], dims);
+                    }
                 }
             }
         } else if (slot.kind === 'outcome') {
@@ -447,6 +472,17 @@
                         if (!b) continue;
                         if (b.set) for (const k of Object.keys(b.set)) dims.add(k);
                         if (b.setFlavor) for (const k of Object.keys(b.setFlavor)) dims.add(k);
+                        // `move` dims are deleted from sel by _applyEdgeWrites;
+                        // we must include them in the projection so the
+                        // deletion is captured (as UNSET in the projKey) and
+                        // honored by reachableFullSelsFromInputs's
+                        // reconstruction. Otherwise these dims fall into the
+                        // pass-through bucket and the upstream sel's value
+                        // is silently preserved — e.g. inert_stays.no
+                        // (`move: ['ai_goals', 'escape_set']`) would leave
+                        // escape_set='yes' in the reconstructed output,
+                        // making escape_late look already-completed.
+                        if (Array.isArray(b.move)) for (const k of b.move) dims.add(k);
                     }
                 }
             }

@@ -1098,6 +1098,16 @@
             ['who_benefits',  'rollout'],
 
             ['inert_stays',   'escape_late'],
+            // inert_stays=no clears ai_goals + escape_set (collapseToFlavor.move)
+            // and re-routes through escape_late so the user picks a hostile goal
+            // and walks the escape pipeline a second time. inert_stays=yes is
+            // the legitimate "AI escaped but stayed inert forever" branch:
+            // escape is genuinely done (escape_set='yes' persists), so the
+            // engine yields directly to the next pending module — rollout. We
+            // mirror that by giving inert_stays a direct edge to rollout for
+            // the yes branch; priority routing picks escape_late when it can
+            // re-fire (no branch with markers cleared) and rollout otherwise.
+            ['inert_stays',   'rollout'],
             ['brittle',       'escape_late'],
             // brittle_resolution=solved/sufficient recovers alignment
             // (containment stays contained) and bypasses the escape

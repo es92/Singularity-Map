@@ -785,14 +785,28 @@ function resolvedStateWithFlavor(sel, flavor) {
 //   - dict form {k: [excluded]}: reject if state[k] ∈ excluded for ANY key (disjunctive)
 //   - array form [{k1: [v], k2: [v]}, ...]: reject if EVERY k in an entry matches
 //     state (conjunctive). Used for "NOT (A AND B)" exclusions like
-//     "NOT (containment=escaped AND ai_goals ∈ HOSTILE)".
+//     "NOT (containment=escaped AND inert_stays != yes)".
+//
+// Per-key value spec inside an array entry can be:
+//   - [v1, v2, ...]      → key matches when state[k] ∈ list
+//   - {not: [v1, v2,…]}  → key matches when state[k] ∉ list (and is set);
+//                          undefined state[k] also "matches" (i.e. counts
+//                          as not-in-list) so that escape-not-inert
+//                          rejects sels where inert_stays is unset.
 function _notRejects(notSpec, state) {
     if (!notSpec) return false;
     if (Array.isArray(notSpec)) {
         for (const conj of notSpec) {
             let allMatch = true;
-            for (const [k, vals] of Object.entries(conj)) {
-                if (!state[k] || !vals.includes(state[k])) { allMatch = false; break; }
+            for (const [k, spec] of Object.entries(conj)) {
+                const v = state[k];
+                if (Array.isArray(spec)) {
+                    if (!v || !spec.includes(v)) { allMatch = false; break; }
+                } else if (spec && spec.not) {
+                    if (v && spec.not.includes(v)) { allMatch = false; break; }
+                } else {
+                    allMatch = false; break;
+                }
             }
             if (allMatch) return true;
         }

@@ -340,25 +340,40 @@ function runPropagation() {
     const eW = GraphIO.cartesianWriteRows(emergence);
     const emergenceOutputs = eW.rows.map(rowToSel);
 
-    // Engine-equivalent slot priority — see buildReachByKey in
-    // explore.js for the explanation. Lower value wins.
-    const slotEffectivePriority = (slot) => {
-        if (!slot) return Infinity;
+    // Engine-equivalent next-slot pick — see buildReachByKey in
+    // explore.js for the full rationale. Returns Infinity for
+    // "rejected" / "no askable internal", numeric priority otherwise.
+    const _isAskableInternal = (n, sel) => {
+        if (!n || n.derived) return false;
+        if (sel[n.id] !== undefined) return false;
+        if (n.activateWhen && n.activateWhen.length
+            && !n.activateWhen.some(c => Engine.matchCondition(sel, c))) return false;
+        if (n.hideWhen && n.hideWhen.length
+            && n.hideWhen.some(c => Engine.matchCondition(sel, c))) return false;
+        return true;
+    };
+    const slotPickPriority = (slot, sel) => {
+        if (!slot || slot.kind === 'outcome' || slot.kind === 'deadend') return Infinity;
         if (slot.kind === 'node') {
             const n = Engine.NODE_MAP[slot.id];
-            return n && n.priority !== undefined ? n.priority : 0;
+            if (!_isAskableInternal(n, sel)) return Infinity;
+            return n.priority !== undefined ? n.priority : 0;
         }
         if (slot.kind === 'module') {
             const m = Engine.MODULE_MAP[slot.id];
-            if (!m) return 0;
+            if (!m) return Infinity;
+            if (m.completionMarker && sel[m.completionMarker] !== undefined) return Infinity;
+            const aw = m.activateWhen, hw = m.hideWhen;
+            if (aw && aw.length && !aw.some(c => Engine.matchCondition(sel, c))) return Infinity;
+            if (hw && hw.length && hw.some(c => Engine.matchCondition(sel, c))) return Infinity;
             let minP = Infinity;
             for (const nid of (m.nodeIds || [])) {
                 const n = Engine.NODE_MAP[nid];
-                if (!n) continue;
+                if (!_isAskableInternal(n, sel)) continue;
                 const p = n.priority !== undefined ? n.priority : 0;
                 if (p < minP) minP = p;
             }
-            return Number.isFinite(minP) ? minP : 0;
+            return minP;
         }
         return Infinity;
     };
@@ -407,8 +422,7 @@ function runPropagation() {
             let bestChild = null;
             let bestPri = Infinity;
             for (const child of childSlots) {
-                if (!_slotAccepts(child, sel)) continue;
-                const p = slotEffectivePriority(child);
+                const p = slotPickPriority(child, sel);
                 if (p < bestPri) { bestPri = p; bestChild = child; }
             }
             if (bestChild) {
@@ -438,18 +452,17 @@ function runPropagation() {
 // Phase 3 — Dead-end detection
 // ────────────────────────────────────────────────────────────────
 //
-// A continuing output is "stuck" if:
+// A continuing output is a dead end if:
 //   - it didn't match any outcome (so propagation tried to forward it),
 //   - and no child slot's activateWhen / hideWhen accepts it.
 //
 // At runtime this would manifest as a user reaching a state with no
 // next slot to advance into AND no outcome to terminate at.
 //
-// `outputsBySlot` here lists *continuing* sels (post outcome-siphon).
-// At runtime, a continuing sel that no child slot accepts has nowhere
-// to go — that's the dead-end signal we surface. No exemption for
-// terminal slots: rollout's "leftover" outputs (those not matching any
-// outcome) are themselves dead ends, the same as anywhere else.
+// In the priority-routing model, runPropagation already partitions
+// each slot's continuing outputs into routed (one accepting child won
+// the priority pick) vs. dead (no child accepts at all). We just
+// surface the dead bucket here.
 
 function _slotAccepts(slot, sel) {
     if (!slot) return false;
@@ -466,59 +479,116 @@ function _slotAccepts(slot, sel) {
 
 function detectDeadEnds(prop) {
     const errors = [];
-    for (const [slotKey, outs] of prop.outputsBySlot) {
-        if (!outs.length) continue;
+    for (const [slotKey, deadSels] of prop.deadBySlot) {
+        if (!deadSels.length) continue;
+        const routed = (prop.routedBySlot.get(slotKey) || []).length;
+        const totalOuts = deadSels.length + routed;
         const childKeys = prop.childrenOf.get(slotKey) || [];
-        const childSlots = childKeys
-            .map(k => FLOW_DAG.nodes.find(n => n.key === k))
-            .filter(Boolean);
-        if (!childSlots.length) {
-            errors.push(`[deadend] Slot "${slotKey}" has ${outs.length} continuing outputs but no children to consume them`);
+        if (!childKeys.length) {
+            errors.push(`[deadend] Slot "${slotKey}" has ${deadSels.length} continuing outputs but no children to consume them`);
             continue;
         }
-        let stuck = 0;
-        const samples = [];
-        for (const sel of outs) {
-            let accepted = false;
-            for (const child of childSlots) {
-                if (_slotAccepts(child, sel)) { accepted = true; break; }
-            }
-            if (!accepted) {
-                stuck++;
-                if (samples.length < 3) samples.push(_selUrl(sel));
-            }
+        const samples = deadSels.slice(0, 3).map(_selUrl);
+        errors.push(`[deadend] Slot "${slotKey}": ${deadSels.length}/${totalOuts} continuing outputs accepted by no child`);
+        for (const u of samples) errors.push(`           sample: ${u}`);
+    }
+    return errors;
+}
+
+// ────────────────────────────────────────────────────────────────
+// Phase 4 — Module gate vs. internal askability
+// ────────────────────────────────────────────────────────────────
+//
+// A module's activateWhen / hideWhen advertises which states the
+// module is willing to handle. If the gate accepts a sel but every
+// internal node is hidden, derived, or already set on that path, the
+// module would "enter" with no askable question — the engine would
+// silently fall through, producing a confusing experience and (in
+// the static analysis) often a dead end one slot upstream.
+//
+// This is always a graph-design bug: either the module gate is too
+// permissive, the internal hideWhen / activateWhen is too narrow, or
+// the missing exit / derivation that should resolve the module on
+// this path was forgotten. We surface it per (parent → module-child)
+// edge so the offending route is unambiguous.
+//
+// The check is independent of dead-end detection: even when the
+// priority race causes some other child to win the route at runtime,
+// a permissive gate is still misleading and worth fixing.
+
+function detectGateWithoutInternals(prop) {
+    const errors = [];
+
+    const gateAccepts = (m, sel) => {
+        if (m.completionMarker && sel[m.completionMarker] !== undefined) return false;
+        const aw = m.activateWhen, hw = m.hideWhen;
+        if (aw && aw.length && !aw.some(c => Engine.matchCondition(sel, c))) return false;
+        if (hw && hw.length && hw.some(c => Engine.matchCondition(sel, c))) return false;
+        return true;
+    };
+    const hasAskableInternal = (m, sel) => {
+        for (const nid of (m.nodeIds || [])) {
+            const n = Engine.NODE_MAP[nid];
+            if (!n || n.derived) continue;
+            if (sel[n.id] !== undefined) continue;
+            if (n.activateWhen && n.activateWhen.length
+                && !n.activateWhen.some(c => Engine.matchCondition(sel, c))) continue;
+            if (n.hideWhen && n.hideWhen.length
+                && n.hideWhen.some(c => Engine.matchCondition(sel, c))) continue;
+            return true;
         }
-        if (stuck > 0) {
-            errors.push(`[deadend] Slot "${slotKey}": ${stuck}/${outs.length} continuing outputs accepted by no child`);
-            for (const u of samples) errors.push(`           sample: ${u}`);
+        return false;
+    };
+
+    for (const [parentKey, childKeys] of prop.childrenOf) {
+        const outputs = [
+            ...(prop.routedBySlot.get(parentKey) || []),
+            ...(prop.deadBySlot.get(parentKey) || []),
+        ];
+        if (!outputs.length) continue;
+        for (const childKey of childKeys) {
+            const childSlot = FLOW_DAG.nodes.find(n => n.key === childKey);
+            if (!childSlot || childSlot.kind !== 'module') continue;
+            const m = Engine.MODULE_MAP[childSlot.id];
+            if (!m) continue;
+            let count = 0;
+            const samples = [];
+            for (const sel of outputs) {
+                if (!gateAccepts(m, sel)) continue;
+                if (hasAskableInternal(m, sel)) continue;
+                count++;
+                if (samples.length < 3) samples.push(sel);
+            }
+            if (count > 0) {
+                errors.push(`[gate-no-internals] "${parentKey}" → "${childSlot.id}": ${fmtCount(count)} sels pass module-level gate but no internal node is askable`);
+                for (const sel of samples) errors.push(`           sample: ${_selUrl(sel)}`);
+            }
         }
     }
     return errors;
 }
 
 // ────────────────────────────────────────────────────────────────
-// Phase 4 — Edge coverage
+// Phase 5 — Edge coverage
 // ────────────────────────────────────────────────────────────────
 //
-// Every placement edge (parent → child) in FLOW_DAG should carry at
-// least one sel: i.e., at least one of parent's continuing outputs
-// satisfies child's activateWhen / hideWhen. An edge that nothing
-// crosses is either dead code (remove it) or a missed condition
-// (the gate is too tight).
+// Every placement edge (parent → child) should carry traffic — i.e.,
+// at least one of parent's outputs must actually route through it.
+// An edge that nothing routes through is dead in practice: either
+// the child gate filters everything out, or a higher-priority
+// sibling always wins the engine's next-slot race. Both signal an
+// edge that should be removed or a gate that needs tightening.
 
 function checkEdgeCoverage(prop) {
     const errors = [];
     for (const [parentKey, childKeys] of prop.childrenOf) {
-        const outs = prop.outputsBySlot.get(parentKey) || [];
+        const counts = prop.routedToChild.get(parentKey) || new Map();
+        const totalOuts = (prop.routedBySlot.get(parentKey) || []).length
+            + (prop.deadBySlot.get(parentKey) || []).length;
         for (const childKey of childKeys) {
-            const childSlot = FLOW_DAG.nodes.find(n => n.key === childKey);
-            if (!childSlot) continue;
-            let count = 0;
-            for (const sel of outs) {
-                if (_slotAccepts(childSlot, sel)) { count++; break; }
-            }
-            if (count === 0) {
-                errors.push(`[edge] "${parentKey}" → "${childKey}": parent has ${outs.length} continuing outputs but child accepts none`);
+            const c = counts.get(childKey) || 0;
+            if (c === 0) {
+                errors.push(`[edge] "${parentKey}" → "${childKey}": parent has ${totalOuts} continuing outputs but ${childKey} routed none`);
             }
         }
     }
@@ -526,7 +596,7 @@ function checkEdgeCoverage(prop) {
 }
 
 // ────────────────────────────────────────────────────────────────
-// Phase 5 — Outcome reachability
+// Phase 6 — Outcome reachability
 // ────────────────────────────────────────────────────────────────
 //
 // Every outcome template should have at least one path that reaches
@@ -591,16 +661,22 @@ if (!QUICK) {
     console.log(`  ${deadErrors.length === 0 ? 'OK' : `FAIL (${deadErrors.length})`}  ${Date.now() - t3}ms`);
     sections.push({ name: 'dead ends', errors: deadErrors });
 
-    console.log('\nPhase 4: edge coverage');
+    console.log('\nPhase 4: module gate vs. internal askability');
     const t4 = Date.now();
+    const gateErrors = detectGateWithoutInternals(prop);
+    console.log(`  ${gateErrors.length === 0 ? 'OK' : `FAIL (${gateErrors.length})`}  ${Date.now() - t4}ms`);
+    sections.push({ name: 'module gate vs. internals', errors: gateErrors });
+
+    console.log('\nPhase 5: edge coverage');
+    const t5 = Date.now();
     const edgeErrors = checkEdgeCoverage(prop);
-    console.log(`  ${edgeErrors.length === 0 ? 'OK' : `FAIL (${edgeErrors.length})`}  ${Date.now() - t4}ms`);
+    console.log(`  ${edgeErrors.length === 0 ? 'OK' : `FAIL (${edgeErrors.length})`}  ${Date.now() - t5}ms`);
     sections.push({ name: 'edge coverage', errors: edgeErrors });
 
-    console.log('\nPhase 5: outcome reachability');
-    const t5 = Date.now();
+    console.log('\nPhase 6: outcome reachability');
+    const t6 = Date.now();
     const outcomeErrors = checkOutcomeReach(prop);
-    console.log(`  ${outcomeErrors.length === 0 ? 'OK' : `FAIL (${outcomeErrors.length})`}  ${Date.now() - t5}ms`);
+    console.log(`  ${outcomeErrors.length === 0 ? 'OK' : `FAIL (${outcomeErrors.length})`}  ${Date.now() - t6}ms`);
     sections.push({ name: 'outcome reachability', errors: outcomeErrors });
 }
 

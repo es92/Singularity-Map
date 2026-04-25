@@ -53,26 +53,26 @@ const SINGULARITY_DEFAULTS = [
 ];
 
 // Defaults for the plateau (long-stall) path. Plateau / agi rollouts go
-// through EARLY_ROLLOUT_MODULE, which sets BOTH `early_rollout_set` (its
-// own completion marker) and `rollout_set` (shared "rollout done"
-// marker that legacy outcomes key on). Both must be present to mirror
-// the actual post-exit state.
+// through EARLY_ROLLOUT_MODULE, whose completion marker is
+// `early_rollout_set`; that's the marker the-plateau / the-automation
+// reach clauses key on. The shared `rollout_set` marker is asi-only
+// and is intentionally absent here.
 const STALLS_DEFAULTS = [
     { capability: 'plateau', stall_duration: 'years',
       plateau_benefit_distribution: 'equal', knowledge_rate: 'gradual',
       physical_rate: 'gradual',
-      early_rollout_set: 'yes', rollout_set: 'yes',
+      early_rollout_set: 'yes',
       who_benefits_set: 'yes' },
 ];
 
 // Defaults for the AGI-only / auto-shallow path (asi_threshold='never',
 // recovery substantial/never). Module rewrites capability to 'agi' on
-// exit. Same dual-marker pattern as STALLS_DEFAULTS.
+// exit. Same single-marker pattern as STALLS_DEFAULTS.
 const AUTO_DEFAULTS = [
     { capability: 'agi', knowledge_rate: 'rapid',
       physical_rate: 'rapid', automation_recovery: 'substantial',
       benefit_distribution: 'equal', auto_benefit_distribution: 'equal',
-      early_rollout_set: 'yes', rollout_set: 'yes',
+      early_rollout_set: 'yes',
       who_benefits_set: 'yes' },
 ];
 

@@ -86,10 +86,7 @@
           "capability": [
             "plateau"
           ],
-          "who_benefits_set": [
-            "yes"
-          ],
-          "rollout_set": [
+          "early_rollout_set": [
             "yes"
           ]
         }
@@ -158,10 +155,7 @@
           "capability": [
             "agi"
           ],
-          "who_benefits_set": [
-            "yes"
-          ],
-          "rollout_set": [
+          "early_rollout_set": [
             "yes"
           ]
         }
@@ -368,7 +362,12 @@
             {
               "containment": [
                 "escaped"
-              ]
+              ],
+              "inert_stays": {
+                "not": [
+                  "yes"
+                ]
+              }
             }
           ]
         }
@@ -574,7 +573,12 @@
             {
               "containment": [
                 "escaped"
-              ]
+              ],
+              "inert_stays": {
+                "not": [
+                  "yes"
+                ]
+              }
             },
             {
               "intent": [
@@ -949,7 +953,12 @@
             {
               "containment": [
                 "escaped"
-              ]
+              ],
+              "inert_stays": {
+                "not": [
+                  "yes"
+                ]
+              }
             }
           ]
         }
@@ -1158,7 +1167,12 @@
             {
               "containment": [
                 "escaped"
-              ]
+              ],
+              "inert_stays": {
+                "not": [
+                  "yes"
+                ]
+              }
             }
           ]
         },
@@ -1186,7 +1200,12 @@
             {
               "containment": [
                 "escaped"
-              ]
+              ],
+              "inert_stays": {
+                "not": [
+                  "yes"
+                ]
+              }
             }
           ]
         },
@@ -1217,7 +1236,12 @@
             {
               "containment": [
                 "escaped"
-              ]
+              ],
+              "inert_stays": {
+                "not": [
+                  "yes"
+                ]
+              }
             }
           ]
         },
@@ -1245,7 +1269,12 @@
             {
               "containment": [
                 "escaped"
-              ]
+              ],
+              "inert_stays": {
+                "not": [
+                  "yes"
+                ]
+              }
             }
           ]
         }
@@ -1477,7 +1506,12 @@
             {
               "containment": [
                 "escaped"
-              ]
+              ],
+              "inert_stays": {
+                "not": [
+                  "yes"
+                ]
+              }
             }
           ]
         }
@@ -1599,7 +1633,17 @@
             {
               "containment": [
                 "escaped"
-              ]
+              ],
+              "inert_stays": {
+                "not": [
+                  "yes"
+                ]
+              },
+              "ai_goals": {
+                "not": [
+                  "benevolent"
+                ]
+              }
             }
           ]
         }
@@ -1803,7 +1847,12 @@
             {
               "containment": [
                 "escaped"
-              ]
+              ],
+              "inert_stays": {
+                "not": [
+                  "yes"
+                ]
+              }
             }
           ]
         }
@@ -1951,47 +2000,12 @@
             {
               "containment": [
                 "escaped"
-              ]
-            },
-            {
-              "escalation_outcome": [
-                "standoff"
-              ]
-            },
-            {
-              "benefit_distribution": [
-                "extreme"
               ],
-              "concentration_type": [
-                "inner_circle"
-              ]
-            },
-            {
-              "benefit_distribution": [
-                "extreme"
-              ],
-              "concentration_type": [
-                "singleton"
-              ]
-            },
-            {
-              "benefit_distribution": [
-                "extreme"
-              ],
-              "geo_spread": [
-                "one"
-              ],
-              "intent": [
-                "self_interest"
-              ]
-            },
-            {
-              "benefit_distribution": [
-                "extreme"
-              ],
-              "post_war_aims": [
-                "self_interest"
-              ]
+              "inert_stays": {
+                "not": [
+                  "yes"
+                ]
+              }
             }
           ]
         }
@@ -2448,6 +2462,9 @@
           ],
           "ai_goals": [
             "alien_coexistence"
+          ],
+          "rollout_set": [
+            "yes"
           ],
           "_not": [
             {

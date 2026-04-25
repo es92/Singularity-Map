@@ -12,39 +12,49 @@ const HOSTILE = ['paperclip', 'power_seeking', 'swarm', 'alien_coexistence', 'al
 
 // Shared _not blocks
 const HUMANITY_OK_NOT = { post_catch: ['ruined'], conflict_result: ['destruction'] };
-const AI_NOT_HOSTILE = [{ containment: ['escaped'], ai_goals: HOSTILE }];
+
+// "Escape doesn't matter if the AI stayed inert forever." Blocks any
+// containment=escaped sel UNLESS inert_stays=yes. Hostile- and benevolent-
+// escaped paths route to the-escape (their dedicated outcome); only the
+// marginal-escaped-then-inert path treats the escape as a background non-
+// event so the world-rollout outcomes (gilded / new-hierarchy / flourishing
+// / capture / standoff / mosaic / failure) can still match on their other
+// dims. the-ruin's destruction clause uses the same exclusion so a war-
+// destroyed civilization with a dormant escapee in the background still
+// lands in ruin (humans destroyed themselves over a non-threat).
+const ESCAPED_NOT_INERT = { containment: ['escaped'], inert_stays: { not: ['yes'] } };
 
 function humanityOk() { return { ...HUMANITY_OK_NOT }; }
 
-// Build _not combining dict-form HUMANITY_OK with array-form AI_NOT_HOSTILE.
+// Build _not combining dict-form HUMANITY_OK with array-form ESCAPED_NOT_INERT.
 // The matcher supports only ONE _not per clause — and conjunctive array vs
 // disjunctive dict can't cohabit directly. Strategy: when we need BOTH, use
 // array form and add single-key entries for HUMANITY_OK exclusions (each
 // single-key conjunction rejects whenever that dim hits the excluded value).
-function notBlock({ humanity = false, aiNotHostile = false } = {}) {
-    if (!humanity && !aiNotHostile) return undefined;
+function notBlock({ humanity = false, escapedNotInert = false } = {}) {
+    if (!humanity && !escapedNotInert) return undefined;
     // Always use array form for uniformity + mix.
     const entries = [];
     if (humanity) {
         entries.push({ post_catch: ['ruined'] });
         entries.push({ conflict_result: ['destruction'] });
     }
-    if (aiNotHostile) {
-        entries.push({ containment: ['escaped'], ai_goals: HOSTILE });
+    if (escapedNotInert) {
+        entries.push({ ...ESCAPED_NOT_INERT });
     }
     return entries;
 }
 
 // Add additional per-clause exclusions (e.g., intent:[self_interest] for
 // the-new-hierarchy) as single-key array entries.
-function notBlockWithExtras({ humanity = false, aiNotHostile = false, extras = {} } = {}) {
+function notBlockWithExtras({ humanity = false, escapedNotInert = false, extras = {} } = {}) {
     const entries = [];
     if (humanity) {
         entries.push({ post_catch: ['ruined'] });
         entries.push({ conflict_result: ['destruction'] });
     }
-    if (aiNotHostile) {
-        entries.push({ containment: ['escaped'], ai_goals: HOSTILE });
+    if (escapedNotInert) {
+        entries.push({ ...ESCAPED_NOT_INERT });
     }
     for (const [k, v] of Object.entries(extras)) {
         entries.push({ [k]: v });
@@ -54,17 +64,17 @@ function notBlockWithExtras({ humanity = false, aiNotHostile = false, extras = {
 
 const REACHABLE = {
     'the-plateau': [
-        { capability: ['plateau'], who_benefits_set: ['yes'], rollout_set: ['yes'] }
+        { capability: ['plateau'], early_rollout_set: ['yes'] }
     ],
     'the-automation': [
-        { capability: ['agi'], who_benefits_set: ['yes'], rollout_set: ['yes'] }
+        { capability: ['agi'], early_rollout_set: ['yes'] }
     ],
     'the-gilded-singularity': [
         {
             capability: ['asi'],
             benefit_distribution: ['unequal'],
             failure_mode: ['none'],
-            _not: notBlockWithExtras({ humanity: true, aiNotHostile: true })
+            _not: notBlockWithExtras({ humanity: true, escapedNotInert: true })
         }
     ],
     'the-new-hierarchy': [
@@ -75,7 +85,7 @@ const REACHABLE = {
             failure_mode: ['none'],
             _not: notBlockWithExtras({
                 humanity: true,
-                aiNotHostile: true,
+                escapedNotInert: true,
                 extras: {
                     intent: ['self_interest'],
                     post_war_aims: ['self_interest']
@@ -89,7 +99,7 @@ const REACHABLE = {
             benefit_distribution: ['equal'],
             failure_mode: ['none'],
             intent: ['international'],
-            _not: notBlockWithExtras({ humanity: true, aiNotHostile: true })
+            _not: notBlockWithExtras({ humanity: true, escapedNotInert: true })
         }
     ],
     'the-capture': [
@@ -97,26 +107,26 @@ const REACHABLE = {
             capability: ['asi'],
             benefit_distribution: ['extreme'],
             concentration_type: ['inner_circle'],
-            _not: notBlockWithExtras({ humanity: true, aiNotHostile: true })
+            _not: notBlockWithExtras({ humanity: true, escapedNotInert: true })
         },
         {
             capability: ['asi'],
             benefit_distribution: ['extreme'],
             concentration_type: ['singleton'],
-            _not: notBlockWithExtras({ humanity: true, aiNotHostile: true })
+            _not: notBlockWithExtras({ humanity: true, escapedNotInert: true })
         },
         {
             capability: ['asi'],
             benefit_distribution: ['extreme'],
             geo_spread: ['one'],
             intent: ['self_interest'],
-            _not: notBlockWithExtras({ humanity: true, aiNotHostile: true })
+            _not: notBlockWithExtras({ humanity: true, escapedNotInert: true })
         },
         {
             capability: ['asi'],
             benefit_distribution: ['extreme'],
             post_war_aims: ['self_interest'],
-            _not: notBlockWithExtras({ humanity: true, aiNotHostile: true })
+            _not: notBlockWithExtras({ humanity: true, escapedNotInert: true })
         }
     ],
     'the-standoff': [
@@ -124,7 +134,7 @@ const REACHABLE = {
             capability: ['asi'],
             escalation_outcome: ['standoff'],
             rollout_set: ['yes'],
-            _not: notBlockWithExtras({ humanity: true, aiNotHostile: true })
+            _not: notBlockWithExtras({ humanity: true, escapedNotInert: true })
         }
     ],
     'the-ruin': [
@@ -132,7 +142,22 @@ const REACHABLE = {
         {
             capability: ['asi'],
             conflict_result: ['destruction'],
-            _not: notBlockWithExtras({ aiNotHostile: true })
+            // Allow escape to land here when the escape itself wasn't the
+            // root cause of destruction:
+            //   - inert_stays=yes  → AI escaped but stayed dormant; humans
+            //                        destroyed themselves over a non-threat.
+            //   - ai_goals=benevolent → AI was actually benign; alignment
+            //                        broke / humans panicked / war was the
+            //                        tragedy of mistaken hostility.
+            // Hostile escapes route to the-escape instead — escape there
+            // IS the story.
+            _not: [
+                {
+                    containment: ['escaped'],
+                    inert_stays: { not: ['yes'] },
+                    ai_goals: { not: ['benevolent'] }
+                }
+            ]
         }
     ],
     'the-mosaic': [
@@ -141,14 +166,14 @@ const REACHABLE = {
             benefit_distribution: ['equal'],
             failure_mode: ['none'],
             intent: ['coexistence'],
-            _not: notBlockWithExtras({ humanity: true, aiNotHostile: true })
+            _not: notBlockWithExtras({ humanity: true, escapedNotInert: true })
         }
     ],
     'the-failure': [
         {
             capability: ['asi'],
             failure_mode: ['drift'],
-            _not: notBlockWithExtras({ humanity: true, aiNotHostile: true })
+            _not: notBlockWithExtras({ humanity: true, escapedNotInert: true })
         }
     ],
     'the-escape': [

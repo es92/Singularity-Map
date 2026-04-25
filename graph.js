@@ -752,21 +752,29 @@ const NODES = [
       ],
       edges: [ { id: 'rival', label: 'Rival reaches parity' } ] },
     { id: 'proliferation_control', label: 'Proliferation Control', stage: 2,
-      // Simplified gate: ask about proliferation control whenever an ASI
-      // exists and alignment hasn't catastrophically failed. Three post-decel
-      // cells write alignment='failed' — (escapes, *) and (rival, unsolved)
-      // — and are excluded uniformly; all other cells preserve or set
-      // alignment to robust/brittle and activate this question normally.
+      // The proliferation question is fundamentally about distribution
+      // — "did the weights stay bottled up?" — not about alignment.
+      // It's meaningful whenever an ASI exists, regardless of whether
+      // alignment held: even on failed-alignment paths, deny_rivals /
+      // secure_access vs. open release is a real choice with real
+      // narrative consequences. Edge-level disabledWhen handles the
+      // constraints:
+      //   * distribution=open forces 'none' (deny_rivals, secure_access
+      //     disabled — the tech is already out).
+      //   * alignment=failed + distribution≠open blocks 'none' —
+      //     deliberately releasing a misaligned model's weights is a
+      //     drastic story beat we don't model here; on failed-alignment
+      //     paths the question is restricted to whether your existing
+      //     controlled distribution held or leaked.
       activateWhen: [
-        {
-          capability: ['asi'],
-          alignment: { not: ['failed'] }
-        }
+        { capability: ['asi'] }
       ],
       edges: [
         { id: 'deny_rivals', label: 'Deny rivals', disabledWhen: [{ distribution: ['open'], reason: 'The technology is already openly distributed' }] },
         { id: 'secure_access', label: 'Secure access', disabledWhen: [{ distribution: ['open'], reason: 'The technology is already openly distributed' }] },
-        { id: 'none', label: 'Open access' }
+        { id: 'none', label: 'Open access', disabledWhen: [
+          { alignment: ['failed'], distribution: { not: ['open'] }, reason: 'Releasing the weights of a misaligned AI when you still had controlled distribution is a different, more drastic scenario than this question models' }
+        ] }
       ] },
     { id: 'proliferation_outcome', label: 'Control Outcome', stage: 2,
       activateWhen: [
@@ -2128,12 +2136,15 @@ const EARLY_ROLLOUT_NODE_IDS = [
 
 // knowledge_rate / physical_rate persist globally (written by edge-
 // level collapseToFlavor.set). early_rollout_set is the EARLY_ROLLOUT
-// completion marker; rollout_set is the shared "rollout is complete"
-// marker that legacy outcome reachable clauses key on (the-plateau,
-// the-automation). Both are set on every exit tuple. The early_* node
-// dims themselves are NOT in writes, so attachModuleReducer auto-
-// evicts them to flavor on exit.
-const EARLY_ROLLOUT_WRITES = ['knowledge_rate', 'physical_rate', 'early_rollout_set', 'rollout_set'];
+// completion marker, set on every exit tuple, and is what the
+// the-plateau / the-automation outcome reachable clauses key on
+// (paired with capability=plateau / capability=agi). The shared
+// `rollout_set` marker belongs to ROLLOUT_MODULE on the asi path
+// only — early_rollout deliberately does NOT write it, since no
+// plateau/agi-side reader needs it. The early_* node dims themselves
+// are NOT in writes, so attachModuleReducer auto-evicts them to
+// flavor on exit.
+const EARLY_ROLLOUT_WRITES = ['knowledge_rate', 'physical_rate', 'early_rollout_set'];
 
 function buildEarlyRolloutExitPlan() {
     const plan = [];
@@ -2144,7 +2155,7 @@ function buildEarlyRolloutExitPlan() {
                 nodeId: 'early_physical_rate',
                 edgeId: e.id,
                 when: {},
-                set: { early_rollout_set: 'yes', rollout_set: 'yes' },
+                set: { early_rollout_set: 'yes' },
             });
         }
     }
@@ -2589,21 +2600,32 @@ function buildProliferationExitPlan() {
 
 const PROLIFERATION_MODULE = {
     id: 'proliferation',
-    // Module-level gate: "narratively, we're past alignment." The
-    // per-path decision of whether proliferation actually asks anything
-    // is deferred to proliferation_control's own activateWhen, which
-    // still gates on `alignment: { not: ['failed'] }`. On failed-paths
-    // this module is "pending but inert" — no internal is askable, so
-    // _isModuleActivelyPending returns false and the module effectively
-    // skips. Precedence against sibling interrupt modules (decel /
-    // escape) is handled by `internalPriority: -1` on those modules
-    // rather than by coupling this gate to their state dims.
+    // Module-level gate enforces upstream ordering:
+    //   * alignment must be decided first (`alignment_set='yes'`).
+    //   * ai_goals, if it was going to be set, must not be `benevolent`
+    //     — benevolent paths short-circuit past the entire rivalry
+    //     pipeline (proliferation / intent / war) and route directly
+    //     from escape_early to who_benefits via the FLOW_DAG bypass
+    //     edge. Without this guard, priority routing would steal those
+    //     sels into proliferation, where the post-proliferation
+    //     downstream (escape_early_alt, intent) rejects benevolent
+    //     ai_goals and they dead-end. `{ not: ['benevolent'] }` allows
+    //     `ai_goals=null` (contained / pre-escape paths), so this only
+    //     filters the explicit benevolent escape branch.
+    // The meaningfulness question — "is proliferation_control worth
+    // asking on this path?" — is handled inside proliferation_control
+    // itself, which gates only on `capability: ['asi']` and uses
+    // edge-level disabledWhen to constrain the answer space (see
+    // proliferation_control above). Precedence against sibling
+    // interrupt modules (decel / escape) is handled by
+    // `internalPriority: -1` on those modules, separate from this
+    // gate.
     activateWhen: [
-        { capability: ['asi'], alignment_set: ['yes'] },
+        { capability: ['asi'], alignment_set: ['yes'], ai_goals: { not: ['benevolent'] } },
     ],
     reads: [
         // Activation gate
-        'capability', 'alignment_set',
+        'capability', 'alignment_set', 'ai_goals',
         // Internal activateWhen on proliferation_control / proliferation_alignment
         'alignment',
         // proliferation_control.edges[deny_rivals|secure_access].disabledWhen
