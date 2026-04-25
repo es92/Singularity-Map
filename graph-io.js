@@ -101,7 +101,7 @@
     // are persisted, so a format change makes every lookup miss → 0
     // outputs). Eligibility is gated by `slot.kind === 'module'` at
     // the call sites below; outcomes have no DFS to cache.
-    const PERSIST_VERSION = 4;
+    const PERSIST_VERSION = 5;
     const PERSIST_KEY_PREFIX = 'gio:writeRows:';
 
     let _domainsCache = null;
@@ -590,6 +590,13 @@
         //              singularity → asi sub-path emerges with
         //              stall_duration absent from sel.
         //   * `setFlavor` : flavor-only, never touches sel.
+        //
+        // Block ordering matters: each block's `when` is evaluated
+        // against the running `next`, so a later block can gate on a
+        // value an earlier block just `set` (e.g. concentration_type
+        // .ai_itself: block 1 sets inert_stays='no'; block 2 — gated
+        // on ai_goals=marginal from upstream — evicts ai_goals +
+        // escape_set, mirroring inert_stays.no's own block).
         const next = { ...sel, [node.id]: edge.id };
         if (!edge.collapseToFlavor) return next;
         const blocks = Array.isArray(edge.collapseToFlavor) ? edge.collapseToFlavor : [edge.collapseToFlavor];

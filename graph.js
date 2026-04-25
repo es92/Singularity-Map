@@ -1067,16 +1067,29 @@ const NODES = [
         { id: 'elites', label: 'A broad elite' },
         { id: 'inner_circle', label: 'A small inner circle' },
         { id: 'singleton', label: 'One person' },
-        // Symmetric to ai_goals.marginal.disabledWhen ({concentration_type:
-        // ai_itself}). When ai_goals=marginal is set FIRST (via escape_late
-        // / escape_re_entry) before who_benefits asks concentration_type,
-        // the user must not be allowed to pick ai_itself: a dormant AI
-        // can't simultaneously be running the world. Without this rule,
-        // who_benefits accepts the contradictory state and the path
-        // dead-ends with no matching outcome.
+        // ai_itself = the user picks "humans handed the world to the AI".
+        // Treated as a programmatic equivalent of inert_stays=no: a
+        // dormant AI can't actually be running the world, so picking
+        // ai_itself implicitly wakes it. Two collapseToFlavor blocks,
+        // applied in order:
+        //   1. set inert_stays='no' — the awake-AI signal. Stays in sel
+        //      (`.set` writes to sel; only `.move` evicts) so ESCAPE
+        //      and ai_goals.marginal.disabledWhen can read it.
+        //   2. when ai_goals=marginal, move ai_goals + escape_set —
+        //      mirrors the existing inert_stays.no.collapseToFlavor
+        //      block exactly. If the user reached who_benefits via a
+        //      prior marginal escape (ai_goals='marginal' in sel,
+        //      escape_set='yes' from escape_early's exit plan), this
+        //      evicts both so ESCAPE_MODULE looks pending again and
+        //      escape_after_who fires to re-ask ai_goals.
+        // The marginal+ai_itself path now unifies with the inert_stays
+        // =no path through the same eviction plumbing — replaces the
+        // old `disabledWhen: [{ ai_goals: ['marginal'] }]` rule that
+        // blocked the contradiction by veto rather than reconciliation.
         { id: 'ai_itself', label: 'The AI itself',
-          disabledWhen: [
-            { ai_goals: ['marginal'], reason: 'The AI is dormant — it can\'t be running the world' }
+          collapseToFlavor: [
+            { set: { inert_stays: 'no' } },
+            { when: { ai_goals: ['marginal'] }, move: ['ai_goals', 'escape_set'] }
           ] }
       ] },
     { id: 'power_use', label: 'The Wielding', stage: 3, priority: 2,
@@ -1091,13 +1104,17 @@ const NODES = [
       edges: [
         { id: 'generous', label: 'A golden world',
           // ai_itself + generous = AI runs the world and runs it well.
-          // Pre-set ai_goals='benevolent' so the ESCAPE_MODULE's
-          // activateWhen=concentration_type:ai_itself fires but ai_goals
-          // is already resolved, the benevolent short-circuit fires
-          // immediately, and the path lands in the-escape (benevolent)
-          // — same end-state as a benevolent runaway, reached via a
-          // soft-takeover door.
-          collapseToFlavor: { when: { concentration_type: ['ai_itself'] }, set: { ai_goals: 'benevolent' } } },
+          // Pre-resolve the ESCAPE module as a benevolent early-exit:
+          //   * ai_goals='benevolent' — the module's intended outcome
+          //     for this soft-takeover path.
+          //   * escape_set='yes' — completion marker. Mirrors what
+          //     ESCAPE_MODULE.exitPlan does on ai_goals.benevolent: marks
+          //     the module "done" so escape_after_who's `escape_set:not
+          //     yes` gate fails (otherwise the slot fires, ESCAPE is
+          //     pending, but no internal is askable — ai_goals already
+          //     set, catch pipeline gated on containment=escaped — and
+          //     the path dead-ends).
+          collapseToFlavor: { when: { concentration_type: ['ai_itself'] }, set: { ai_goals: 'benevolent', escape_set: 'yes' } } },
         { id: 'extractive', label: 'A tightening grip' },
         { id: 'indifferent', label: 'Their own project' }
       ] },
@@ -2072,6 +2089,24 @@ const WHO_BENEFITS_WRITES = [
     // override on the generous branch and the upstream value
     // (when present) on every other branch.
     'ai_goals',
+    // inert_stays is normally owned by the standalone inert_stays
+    // node-slot, but concentration_type.ai_itself's collapseToFlavor
+    // writes inert_stays='no' to treat the AI-soft-takeover path as
+    // "AI is awake and running the world". Without it in writes,
+    // cartesianWriteRows's output projection drops the derivation
+    // and downstream slot gates (escape_after_who's `escape_set:not
+    // yes` after the cascade-driven eviction; ai_goals.marginal's
+    // disabledWhen on inert_stays=no) can't see it. Same pattern
+    // as ai_goals above.
+    'inert_stays',
+    // escape_set is normally owned by ESCAPE_MODULE (it's its
+    // completionMarker), but power_use.generous's collapseToFlavor
+    // (gated on concentration_type=ai_itself) sets escape_set='yes'
+    // to signal "ESCAPE module pre-resolved as a benevolent early-
+    // exit". Without it in writes, cartesianWriteRows's projection
+    // drops the marker and escape_after_who fires uselessly downstream.
+    // Same cross-module-write pattern as ai_goals.
+    'escape_set',
     // Completion marker — must be in `writes` so `captureExitResult`
     // puts it into `setSel` (not setFlavor). Without this, the sel-only
     // outer DFS never sees the module as done and re-fires it.
@@ -2159,6 +2194,15 @@ const WHO_BENEFITS_MODULE = {
         // benefit_distribution activates via post_catch (the consolidated
         // escape-exit marker).
         'post_catch',
+        // escape_set is in `writes` because power_use.generous's
+        // collapseToFlavor (gated on ai_itself) writes 'yes' as a
+        // pre-resolved benevolent early-exit. It must also be in `reads`
+        // so the DFS input sel carries the upstream value: paths that
+        // came through escape_early already have escape_set='yes', and
+        // without it in reads cartesianReadRows projects it away,
+        // making the DFS start with escape_set undefined and the
+        // projection then override upstream's 'yes' with UNSET.
+        'escape_set',
     ],
     writes: WHO_BENEFITS_WRITES,
     nodeIds: WHO_BENEFITS_NODE_IDS,
