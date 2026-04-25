@@ -1155,6 +1155,7 @@
         'inert_stays',
         'brittle',
         'escape_late',
+        'escape_re_entry',
         'rollout',
     ]);
 

@@ -66,7 +66,7 @@ GraphIO.registerOutcomes(TEMPLATES);
 const PROPAGATE_TARGETS = new Set([
     'plateau_bd', 'auto_bd', 'rollout_early', 'control', 'alignment', 'decel',
     'escape_early', 'proliferation', 'escape_early_alt', 'intent', 'war',
-    'who_benefits', 'inert_stays', 'brittle', 'escape_late', 'rollout',
+    'who_benefits', 'inert_stays', 'brittle', 'escape_late', 'escape_re_entry', 'rollout',
 ]);
 
 // ────────────────────────────────────────────────────────────────

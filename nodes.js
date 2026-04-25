@@ -1053,6 +1053,16 @@
             { key: 'brittle',          id: 'brittle_resolution',           kind: 'node',   note: 'if not already escaped' },
             { key: 'escape_late',      id: 'escape',                       kind: 'module', note: 'late',
               earlyExits: ['the-ruin', 'the-escape', 'the-chaos', 'the-alien-ai'] },
+            // Second-position escape slot for the inert_stays=no re-entry.
+            // Same module spec as escape_late — backed by the SAME runtime
+            // experience (ESCAPE_MODULE re-pending after collapseToFlavor.move
+            // evicts ai_goals + escape_set). Split into its own FLOW_DAG slot
+            // so the back-edge from inert_stays=no doesn't form a topology
+            // cycle with escape_late's forward edge into inert_stays. At
+            // runtime users see one escape module either way; this is purely
+            // a static-analysis affordance for validate.js / /explore.
+            { key: 'escape_re_entry',  id: 'escape',                       kind: 'module', note: 'after inert=no',
+              earlyExits: ['the-ruin', 'the-escape', 'the-chaos', 'the-alien-ai'] },
             { key: 'rollout',          id: 'rollout',                      kind: 'module', note: 'terminal',
               earlyExits: [
                 'the-gilded-singularity', 'the-new-hierarchy', 'the-flourishing',
@@ -1097,16 +1107,18 @@
             ['who_benefits',  'brittle'],
             ['who_benefits',  'rollout'],
 
-            ['inert_stays',   'escape_late'],
             // inert_stays=no clears ai_goals + escape_set (collapseToFlavor.move)
-            // and re-routes through escape_late so the user picks a hostile goal
-            // and walks the escape pipeline a second time. inert_stays=yes is
-            // the legitimate "AI escaped but stayed inert forever" branch:
-            // escape is genuinely done (escape_set='yes' persists), so the
-            // engine yields directly to the next pending module — rollout. We
-            // mirror that by giving inert_stays a direct edge to rollout for
-            // the yes branch; priority routing picks escape_late when it can
+            // and re-routes through ESCAPE so the user picks a hostile goal
+            // and walks the escape pipeline a second time. The back-edge
+            // points to escape_re_entry rather than escape_late so the FLOW_DAG
+            // stays acyclic — escape_late is only the FIRST escape position
+            // (after a brittle exit), and the inert-loop second escape is its
+            // own slot. inert_stays=yes is the legitimate "AI escaped but
+            // stayed inert forever" branch: escape is genuinely done
+            // (escape_set='yes' persists), so the engine yields directly to
+            // rollout. Priority routing picks escape_re_entry when escape can
             // re-fire (no branch with markers cleared) and rollout otherwise.
+            ['inert_stays',   'escape_re_entry'],
             ['inert_stays',   'rollout'],
             ['brittle',       'escape_late'],
             // brittle_resolution=solved/sufficient recovers alignment
@@ -1116,7 +1128,21 @@
             // recovered branch falls off the graph entirely.
             ['brittle',       'rollout'],
 
+            // escape_late → inert_stays catches the brittle-escape narrative:
+            // brittle_resolution=escape sets containment=escaped + alignment=
+            // failed, then ESCAPE_MODULE asks ai_goals (only marginal/hostile
+            // are reachable now). For ai_goals=marginal the user still owes
+            // the inert-stays follow-up (does the dormant AI actually stay
+            // dormant?). The slot picker only routes here when inert_stays is
+            // askable (ai_goals=['marginal']), otherwise falls through to
+            // rollout. After the inert_stays=no re-entry through
+            // escape_re_entry, marginal is disabled (ai_goals.marginal.disabledWhen),
+            // so this back-edge is naturally not re-traversed — bounding the
+            // loop at one extra hop.
+            ['escape_late',   'inert_stays'],
             ['escape_late',   'rollout'],
+
+            ['escape_re_entry', 'rollout'],
         ],
     };
 
