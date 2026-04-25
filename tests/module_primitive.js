@@ -67,6 +67,10 @@ const toyModule = {
     reads: ['toy_gate'],
     writes: ['alignment'],
     nodeIds: ['toy_progress', 'toy_action'],
+    // reducerTable retained here (not on the real modules) only to
+    // exercise the attachModuleReducer path that was originally designed
+    // around it. The source of truth is still the exitPlan — the
+    // reducerTable is just a fixture convenience for this test.
     reducerTable: toyReducerTable,
     get exitPlan() { return buildToyExitPlan(); },
 };
@@ -107,10 +111,12 @@ console.log('toy module attachment: PASS');
 // 2. Decel module primitive self-consistency check.
 // ────────────────────────────────────────────────────────────
 //
-// We don't actually attach DECEL_MODULE here (Phase 4a does that). We just
-// verify that `decelReduce` is table-consistent with the exitPlan, so the
-// runtime attachment would be semantically identical whether we go through
-// the function or the static plan.
+// Verify the generic engine.reduceFromExitPlan helper is internally
+// consistent with decel's exitPlan. For each tuple, synthesize the
+// exact local state that matches it and assert the helper returns
+// that tuple's `set`. This is what the old bespoke `decelReduce`
+// function used to guarantee — now it's an invariant of any exitPlan
+// the engine can safely drive.
 
 const decel = MODULE_MAP.decel;
 assert(decel, 'decel module must exist');
@@ -119,7 +125,7 @@ const plan = decel.exitPlan;
 assert(Array.isArray(plan) && plan.length > 0, 'decel exitPlan should be non-empty');
 assert(plan.every(t => t.when && t.set), 'every tuple has when + set');
 
-// Every reducer-cell write dim is declared in writes or internalMarkers
+// Every exit-tuple write dim is declared in writes or internalMarkers
 // (internalMarkers are set into sel mid-tick then evicted to flavor on
 // module exit — they're module-internal routing, not external contract).
 const declaredWrites = new Set(decel.writes);
@@ -131,16 +137,18 @@ for (const t of plan) {
     }
 }
 
-// Table-vs-fn consistency: for each plan tuple, invoke reduce() on a
-// synthetic local state that sets only the pair's keys — compare bundles.
+// reduceFromExitPlan(decel, local) should pick the matching tuple and
+// return its set bundle. Synthesize local = { [nodeId]: edgeId } ∪
+// when-dim values and compare to the tuple's set.
+const engineLib = require('../engine.js');
 for (const t of plan) {
     const local = { [t.nodeId]: t.edgeId };
-    for (const [k, [v]] of Object.entries(t.when)) local[k] = v;
-    const fnBundle = decel.reduce(local);
+    for (const [k, v] of Object.entries(t.when)) local[k] = Array.isArray(v) ? v[0] : v;
+    const fnBundle = engineLib.reduceFromExitPlan(decel, local);
     assert.deepStrictEqual(fnBundle, t.set,
-        `reduce() vs exitPlan mismatch for ${JSON.stringify(t)}: got ${JSON.stringify(fnBundle)}`);
+        `reduceFromExitPlan() vs exitPlan mismatch for ${JSON.stringify(t)}: got ${JSON.stringify(fnBundle)}`);
 }
-console.log(`decel reducer <-> exitPlan consistency (${plan.length} cells): PASS`);
+console.log(`decel exitPlan self-consistency via reduceFromExitPlan (${plan.length} tuples): PASS`);
 
 // ────────────────────────────────────────────────────────────
 // 3. Engine integration — walk a full decel path via the real
@@ -278,27 +286,17 @@ for (const edgeId of ['benevolent', 'marginal']) {
         `ai_goals.${edgeId}: module-computed move list`);
 }
 
-// Pass-through reducer: only declared writes surface. catch_outcome +
-// collateral_impact are no longer writes, so they're filtered out.
-// post_catch is written by the exit-tuple `set` block, not the reducer,
-// so the reducer alone won't produce it either — the full bundle is
-// reducer-output ∪ tuple.set at engine runtime.
-const localFake = {
-    ai_goals: 'paperclip',
-    catch_outcome: 'holds_permanently',
-    collateral_impact: 'civilizational',
-    discovery_timing: 'early_execution',    // not a write — should be ignored
-    response_success: 'yes',                // not a write — should be ignored
-    escape_set: 'yes',
-    escape_method: 'nanotech',              // not a write — should be ignored
-};
-const escBundle = escape.reduce(localFake);
-assert.deepStrictEqual(escBundle, {
-    ai_goals: 'paperclip',
-    escape_set: 'yes',
-}, 'escape.reduce returns only declared writes (post_catch comes from exit tuples)');
+// Retired: the bespoke `escape.reduce()` pass-through test. Its job
+// was to verify that `escapeReduce(local)` projected local state down
+// to the declared writes. Post-migration, runtime writes go through
+// the collapseToFlavor blocks attached to each exit edge (validated
+// above), and the generic engine.reduceFromExitPlan no longer does a
+// writes-based pass-through — it just returns the matching exit
+// tuple's `set`. The equivalent runtime guarantee (escape commits
+// only declared writes to sel) is covered end-to-end by test #5
+// below.
 
-console.log('escape module contract (writes⊂nodeIds, pass-through): PASS');
+console.log('escape module contract (writes⊂nodeIds): PASS');
 
 // ────────────────────────────────────────────────────────────
 // 5. Escape engine integration — walk a full escape path and verify

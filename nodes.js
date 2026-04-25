@@ -167,6 +167,166 @@
             color: var(--text-muted); background: transparent;
         }
 
+        /* ─── Layout toggle (Modules ↔ Flow) ─────────────────── */
+        #nodes-root .ng-layout-toggle {
+            display: inline-flex; border: 1px solid var(--border);
+            border-radius: 4px; overflow: hidden;
+        }
+        #nodes-root .ng-layout-toggle button {
+            background: var(--bg); color: var(--text-muted);
+            border: none; padding: 4px 10px; cursor: pointer;
+            font-family: inherit; font-size: 11px; line-height: 1.5;
+        }
+        #nodes-root .ng-layout-toggle button:hover { color: var(--text); }
+        #nodes-root .ng-layout-toggle button.is-active {
+            background: var(--accent, #6b9bd1); color: #fff;
+        }
+
+        /* ─── Flow view (narrative chain, left-to-right) ─────── */
+        /* Pannable / zoomable canvas like /explore. */
+        #nodes-root .ng-flow-canvas {
+            position: relative; flex: 1;
+            overflow: hidden; background: var(--bg);
+            cursor: grab; user-select: none;
+        }
+        #nodes-root .ng-flow-canvas.dragging { cursor: grabbing; }
+        #nodes-root .ng-flow-viewport {
+            position: absolute; top: 0; left: 0;
+            transform-origin: 0 0; will-change: transform;
+            padding: 20px;
+        }
+        #nodes-root .ng-flow {
+            display: flex; gap: 60px; align-items: flex-start;
+            position: relative;
+        }
+        #nodes-root .ng-flow-col {
+            flex: 0 0 auto; width: 220px;
+            display: flex; flex-direction: column; gap: 24px;
+            position: relative;
+        }
+        #nodes-root .ng-flow-edges {
+            position: absolute; top: 0; left: 0;
+            pointer-events: none; overflow: visible;
+            color: var(--text-muted); z-index: 0;
+        }
+        #nodes-root .ng-flow-edges path {
+            fill: none; stroke: currentColor; stroke-width: 1.4;
+            opacity: 0.7;
+        }
+        #nodes-root .ng-flow-step {
+            border: 1px solid var(--border); border-radius: 5px;
+            padding: 7px 9px;
+            background: rgba(255,255,255,0.9);
+            text-decoration: none; color: var(--text);
+            display: block; transition: border-color 100ms;
+            position: relative; z-index: 1;
+        }
+        #nodes-root .ng-flow-step-title {
+            display: block; text-decoration: none; color: var(--text);
+        }
+        #nodes-root .ng-flow-step:hover { border-color: var(--accent, #6b9bd1); }
+        #nodes-root .ng-flow-step.is-active {
+            border-color: var(--accent, #6b9bd1);
+            background: rgba(107,155,209,0.20);
+        }
+        #nodes-root .ng-flow-step.is-opt {
+            border-style: dashed;
+            background: rgba(255,255,255,0.75);
+        }
+        #nodes-root .ng-flow-step-nodes {
+            display: flex; flex-direction: column; gap: 3px;
+            margin-top: 8px; padding-top: 7px;
+            border-top: 1px dashed var(--border);
+        }
+        #nodes-root .ng-flow-step-nodes-head {
+            font-size: 8px; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.08em;
+            margin-bottom: 3px;
+        }
+        #nodes-root a.ng-flow-node {
+            display: flex; align-items: baseline; gap: 6px;
+            padding: 3px 6px; border-radius: 3px;
+            background: var(--bg-soft); border: 1px solid transparent;
+            text-decoration: none; color: var(--text);
+            font-size: 10px; line-height: 1.3;
+        }
+        #nodes-root a.ng-flow-node:hover { border-color: var(--accent, #6b9bd1); }
+        #nodes-root a.ng-flow-node.is-active {
+            border-color: var(--accent, #6b9bd1);
+            background: rgba(107,155,209,0.12);
+        }
+        #nodes-root a.ng-flow-node.nl-derived .ng-flow-node-id { font-style: italic; }
+        #nodes-root .ng-flow-node-id {
+            font-family: ui-monospace, monospace; font-weight: 600;
+            flex: 0 0 auto;
+        }
+        #nodes-root .ng-flow-node-lbl {
+            color: var(--text-muted); font-size: 9px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            min-width: 0;
+        }
+
+        #nodes-root .ng-flow-toolbtn {
+            background: var(--bg); color: var(--text-muted);
+            border: 1px solid var(--border); border-radius: 4px;
+            padding: 3px 8px; cursor: pointer;
+            font-family: inherit; font-size: 11px; line-height: 1.5;
+        }
+        #nodes-root .ng-flow-toolbtn:hover { color: var(--text); }
+        #nodes-root .ng-flow-step-row {
+            display: flex; align-items: baseline; gap: 5px;
+            flex-wrap: wrap;
+        }
+        #nodes-root .ng-flow-step-id {
+            font-family: ui-monospace, monospace; font-weight: 600;
+            font-size: 11px; color: var(--text);
+        }
+        #nodes-root .ng-flow-step-kind {
+            font-size: 8px; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.08em;
+        }
+        #nodes-root .ng-flow-opt-badge {
+            font-size: 8px; padding: 1px 4px; border-radius: 2px;
+            background: rgba(179,137,94,0.15); color: #b3895e;
+            font-family: ui-monospace, monospace; font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+        #nodes-root .ng-flow-step-label {
+            font-size: 10px; color: var(--text-muted);
+            margin-top: 3px; line-height: 1.3;
+        }
+        #nodes-root .ng-flow-step-note {
+            font-size: 9px; color: var(--text-muted); font-style: italic;
+            margin-top: 4px; line-height: 1.3;
+        }
+        #nodes-root .ng-flow-outcomes {
+            display: flex; flex-direction: column; gap: 3px;
+            margin-top: 8px; padding: 7px 8px 4px 8px;
+            border-top: 1px dashed rgba(179,137,94,0.45);
+            background: rgba(179,137,94,0.06);
+            border-radius: 0 0 4px 4px;
+            margin-left: -9px; margin-right: -9px;
+            margin-bottom: -7px;
+        }
+        #nodes-root .ng-flow-outcomes-head {
+            font-size: 8px; color: #b3895e;
+            text-transform: uppercase; letter-spacing: 0.08em;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        #nodes-root a.ng-flow-outcome {
+            font-size: 10px; color: #b3895e; text-decoration: none;
+            padding: 1px 0; font-family: ui-monospace, monospace;
+            border-bottom: 1px dotted transparent;
+        }
+        #nodes-root a.ng-flow-outcome:hover {
+            border-bottom-color: rgba(179,137,94,0.5);
+        }
+        #nodes-root a.ng-flow-outcome.is-active {
+            color: var(--text); font-weight: 600;
+            border-bottom-color: var(--accent, #6b9bd1);
+        }
+
         #nodes-root .nodes-detail {
             flex: 1; overflow-y: auto; padding: 20px 28px;
         }
@@ -314,6 +474,33 @@
             font-size: 11px; margin-bottom: 4px;
         }
         #nodes-root .nd-site-body { font-family: ui-monospace, monospace; color: var(--text); }
+
+        /* ─── Exit-plan table ────────────────────────────────── */
+        #nodes-root table.nd-exitplan {
+            width: 100%; border-collapse: collapse; font-size: 12px;
+            margin: 4px 0 8px 0;
+        }
+        #nodes-root table.nd-exitplan th {
+            text-align: left; padding: 6px 8px;
+            border-bottom: 1px solid var(--border);
+            font-size: 10px; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.08em;
+            font-weight: 600;
+        }
+        #nodes-root table.nd-exitplan td {
+            padding: 8px; vertical-align: top;
+            border-bottom: 1px solid var(--border);
+            font-family: ui-monospace, monospace;
+        }
+        #nodes-root table.nd-exitplan tbody tr:last-child td { border-bottom: none; }
+        #nodes-root table.nd-exitplan td code {
+            background: var(--bg-soft); padding: 1px 4px;
+            border-radius: 3px; font-size: 11px;
+        }
+        #nodes-root .nd-exitplan-edges code { margin-right: 4px; }
+        #nodes-root .nd-empty-inline {
+            color: var(--text-muted); font-style: italic; font-family: inherit;
+        }
     `;
 
     function injectCss() {
@@ -366,6 +553,31 @@
             if (dimSet.has(k)) out.add(k);
             if (v && typeof v === 'object') collectDimRefs(v, dimSet, out);
         }
+    }
+
+    // Engine `_precompile()` mutates every condition / derivation rule in
+    // place to add compiled fast-path fields:
+    //   _ck/_ct/_cv/_direct  (conditions)
+    //   _mk/_mt/_mv/_direct  (derivation rules)
+    //   _dwLen               (derived-node rule count cache)
+    // They're noise for the reader — strip before JSON-dumping.
+    const COMPILED_KEYS = new Set([
+        '_ck', '_ct', '_cv', '_direct', '_mk', '_mt', '_mv', '_dwLen'
+    ]);
+    function stripCompiled(x) {
+        if (Array.isArray(x)) return x.map(stripCompiled);
+        if (x && typeof x === 'object') {
+            const out = {};
+            for (const [k, v] of Object.entries(x)) {
+                if (COMPILED_KEYS.has(k)) continue;
+                out[k] = stripCompiled(v);
+            }
+            return out;
+        }
+        return x;
+    }
+    function prettyJson(x) {
+        return JSON.stringify(stripCompiled(x), null, 2);
     }
 
     // Build analysis indices. Call once after load.
@@ -535,6 +747,210 @@
         })[c]);
     }
 
+    // Group an exit-plan tuple list by (nodeId, canonical when, canonical set),
+    // rolling multiple edge-ids onto one row. Canonicalize by stable
+    // JSON so equal objects compare equal.
+    function _groupExitPlan(plan) {
+        const groups = new Map();
+        for (const t of plan) {
+            const whenKey = JSON.stringify(t.when || {});
+            const setKey = JSON.stringify(t.set || {});
+            const key = `${t.nodeId}||${whenKey}||${setKey}`;
+            let g = groups.get(key);
+            if (!g) {
+                g = { nodeId: t.nodeId, when: t.when || {}, set: t.set || {}, edgeIds: [] };
+                groups.set(key, g);
+            }
+            g.edgeIds.push(t.edgeId);
+        }
+        return Array.from(groups.values());
+    }
+
+    // ────────────────────────────────────────────────────────────
+    // Deduced outcome table
+    //
+    // Pivots a module's exitPlan into a human-readable "what are this
+    // module's atomic outcomes?" view. There are two pivot modes; the
+    // function picks whichever is more informative for the given
+    // module:
+    //
+    //   pivot='set'  — groups tuples by their full write bundle.
+    //     One row per distinct bundle; exits are the (nodeId, edgeId)
+    //     pairs that produce it. This is the "what can this module
+    //     write to sel?" view. Used when the exitPlan has ≥2 distinct
+    //     bundles (decel, escape, emergence, rollout, proliferation,
+    //     intent_loop, war_loop).
+    //
+    //   pivot='node' — groups tuples by terminating nodeId.
+    //     One row per distinct nodeId. Used when every exit writes the
+    //     same bundle (who_benefits, control, alignment_loop) — in
+    //     that case only the completion marker is committed and the
+    //     interesting info is "which internal question actually ended
+    //     the module". Without this fallback those three modules
+    //     would display a single uninformative row.
+    //
+    // The bundle for each row is displayed verbatim, including the
+    // completion marker dim. For modules with a string completion
+    // marker (decel_set, escape_set, …) the marker is a boolean "am I
+    // done" flag that's constant across outcomes, so the renderer
+    // hides it from row labels. For modules with an object-form
+    // marker ({ dim, values }) the marker dim is semantically the
+    // output axis (emergence's `capability`), so the renderer keeps
+    // it visible.
+    //
+    // Exposed on window.Nodes so explore.js's "Show All Connections"
+    // overlay can render the same table inside module cards.
+    function computeModuleOutcomeTable(mod) {
+        if (!mod || !mod.exitPlan || !mod.exitPlan.length) {
+            return { pivot: 'set', outcomes: [], markerDim: null };
+        }
+        const cm = mod.completionMarker;
+        // Only hide string-form markers from labels — object-form markers
+        // carry the discriminating value and must stay visible.
+        const markerDim = typeof cm === 'string' ? cm : null;
+
+        const byBundle = new Map();
+        for (const t of mod.exitPlan) {
+            const key = JSON.stringify(t.set || {});
+            let g = byBundle.get(key);
+            if (!g) {
+                g = { setBundle: t.set || {}, exits: [] };
+                byBundle.set(key, g);
+            }
+            g.exits.push({ nodeId: t.nodeId, edgeId: t.edgeId, when: t.when || {} });
+        }
+
+        if (byBundle.size > 1) {
+            return {
+                pivot: 'set',
+                markerDim,
+                outcomes: Array.from(byBundle.values()),
+            };
+        }
+
+        // Trivial-bundle fallback: pivot by terminal nodeId so the user
+        // sees the 3-4 exit questions instead of one "completion only"
+        // row. setBundle is still carried (every row shares the same
+        // bundle) so the renderer can show it once at the top if it
+        // wants.
+        const soloBundle = Array.from(byBundle.values())[0].setBundle;
+        const byNode = new Map();
+        for (const t of mod.exitPlan) {
+            let g = byNode.get(t.nodeId);
+            if (!g) {
+                g = { nodeId: t.nodeId, setBundle: soloBundle, exits: [] };
+                byNode.set(t.nodeId, g);
+            }
+            g.exits.push({ nodeId: t.nodeId, edgeId: t.edgeId, when: t.when || {} });
+        }
+        return {
+            pivot: 'node',
+            markerDim,
+            outcomes: Array.from(byNode.values()),
+        };
+    }
+
+    // Human-readable label for an outcome's write bundle. `markerDim`
+    // is hidden (because it's constant per-module); everything else
+    // is rendered as `dim=value` joined with commas. If the result is
+    // empty (bundle contained only the marker), returns '(completion
+    // only)'.
+    function _fmtOutcomeBundle(bundle, markerDim) {
+        const entries = Object.entries(bundle || {})
+            .filter(([k]) => k !== markerDim);
+        if (!entries.length) return '';
+        return entries.map(([k, v]) =>
+            `<code>${esc(k)}</code>=<code>${esc(typeof v === 'object' ? JSON.stringify(v) : String(v))}</code>`
+        ).join(', ');
+    }
+
+    // Render the deduced outcome table. One row per outcome; the
+    // outcome's label comes from its set bundle (pivot='set') or its
+    // terminating nodeId (pivot='node'). Each row lists the
+    // (nodeId, edgeId) exits that produce that outcome, compacting
+    // edges that share a nodeId onto one line.
+    function _renderOutcomeTable(mod) {
+        const table = computeModuleOutcomeTable(mod);
+        if (!table.outcomes.length) return '';
+        const { pivot, markerDim, outcomes } = table;
+
+        let html = `<table class="nd-exitplan"><thead><tr>`;
+        html += pivot === 'set'
+            ? `<th>outcome (writes)</th><th>exits</th>`
+            : `<th>terminal question</th><th>edges</th>`;
+        html += `</tr></thead><tbody>`;
+
+        for (const o of outcomes) {
+            html += `<tr>`;
+            if (pivot === 'set') {
+                const label = _fmtOutcomeBundle(o.setBundle, markerDim);
+                html += `<td>${label || '<span class="nd-empty-inline">(completion only)</span>'}</td>`;
+            } else {
+                html += `<td>${dimChip(o.nodeId)}</td>`;
+            }
+            // Group edges by nodeId so "decel_2mo_action escapes / decel_4mo_action
+            // escapes / …" becomes one line per action-node.
+            const byNode = new Map();
+            for (const ex of o.exits) {
+                if (!byNode.has(ex.nodeId)) byNode.set(ex.nodeId, []);
+                byNode.get(ex.nodeId).push(ex.edgeId);
+            }
+            const parts = [];
+            for (const [nodeId, edgeIds] of byNode) {
+                if (pivot === 'node') {
+                    parts.push(edgeIds.map(e => `<code>${esc(e)}</code>`).join(' '));
+                } else {
+                    parts.push(`${dimChip(nodeId)} ${edgeIds.map(e => `<code>${esc(e)}</code>`).join(' ')}`);
+                }
+            }
+            html += `<td class="nd-exitplan-edges">${parts.join('<br>')}</td>`;
+            html += `</tr>`;
+        }
+        html += `</tbody></table>`;
+        return html;
+    }
+
+    function _renderExitPlanTable(plan) {
+        const rows = _groupExitPlan(plan);
+        let html = `<table class="nd-exitplan"><thead><tr>`
+                 + `<th>node</th><th>edges</th><th>when</th><th>set</th>`
+                 + `</tr></thead><tbody>`;
+        for (const r of rows) {
+            html += `<tr>`;
+            html += `<td>${dimChip(r.nodeId)}</td>`;
+            html += `<td class="nd-exitplan-edges">${r.edgeIds.map(e => `<code>${esc(e)}</code>`).join(' ')}</td>`;
+            const whenEmpty = !r.when || Object.keys(r.when).length === 0;
+            html += `<td>${whenEmpty ? '<span class="nd-empty-inline">—</span>' : `<code>${esc(prettyJson(r.when))}</code>`}</td>`;
+            const setEmpty = !r.set || Object.keys(r.set).length === 0;
+            html += `<td>${setEmpty ? '<span class="nd-empty-inline">—</span>' : _renderSetCell(r.set)}</td>`;
+            html += `</tr>`;
+        }
+        html += `</tbody></table>`;
+        return html;
+    }
+
+    function _renderSetCell(set) {
+        return Object.entries(set).map(([k, v]) =>
+            `<div><code>${esc(k)}</code>=<code>${esc(typeof v === 'object' ? JSON.stringify(v) : String(v))}</code></div>`
+        ).join('');
+    }
+
+    // Short human-readable form of a module's completionMarker. The
+    // marker is either a dim-name string ('escape_set'), or an object
+    // { dim, values } meaning "done when sel[dim] ∈ values" (only
+    // emergence uses the object form today — see graph.js).
+    function _fmtCompletionMarker(cm) {
+        if (!cm) return '';
+        if (typeof cm === 'string') return cm;
+        if (typeof cm === 'object' && cm.dim) {
+            const vals = Array.isArray(cm.values) ? cm.values : [];
+            return vals.length
+                ? `${cm.dim} ∈ {${vals.join(', ')}}`
+                : cm.dim;
+        }
+        return String(cm);
+    }
+
     function dimChip(dim, opts = {}) {
         const NODE_MAP = window.Engine.NODE_MAP;
         const node = NODE_MAP[dim];
@@ -607,20 +1023,310 @@
         </a>`;
     }
 
+    // ────────────────────────────────────────────────────────────
+    // Narrative flow DAG. Each entry is a distinct slot keyed by a
+    // unique `key` (a module may appear in multiple slots, e.g. escape
+    // has early / early-alt / late occurrences). Edges describe the
+    // expected narrative transitions; optional branches diverge from
+    // a parent and (sometimes) rejoin a later mainline node.
+    // ────────────────────────────────────────────────────────────
+    const FLOW_DAG = {
+        nodes: [
+            { key: 'emergence',        id: 'emergence',                    kind: 'module' },
+            { key: 'plateau_bd',       id: 'plateau_benefit_distribution', kind: 'node',   note: 'if not asi' },
+            { key: 'auto_bd',          id: 'auto_benefit_distribution',    kind: 'node',   note: 'if not asi' },
+            { key: 'rollout_early',    id: 'rollout',                      kind: 'module', note: 'early (plateau / automation)',
+              earlyExits: ['the-plateau', 'the-automation'] },
+            { key: 'control',          id: 'control',                      kind: 'module' },
+            { key: 'alignment',        id: 'alignment_loop',               kind: 'module' },
+            { key: 'decel',            id: 'decel',                        kind: 'module' },
+            { key: 'escape_early',     id: 'escape',                       kind: 'module', note: 'early',
+              earlyExits: ['the-ruin', 'the-escape', 'the-chaos', 'the-alien-ai'] },
+            { key: 'proliferation',    id: 'proliferation',                kind: 'module' },
+            { key: 'escape_early_alt', id: 'escape',                       kind: 'module', note: 'early-alt',
+              earlyExits: ['the-ruin', 'the-escape', 'the-chaos', 'the-alien-ai'] },
+            { key: 'intent',           id: 'intent_loop',                  kind: 'module' },
+            { key: 'war',              id: 'war_loop',                     kind: 'module', note: 'if escalates',
+              earlyExits: ['the-ruin'] },
+            { key: 'who_benefits',     id: 'who_benefits',                 kind: 'module' },
+            { key: 'inert_stays',      id: 'inert_stays',                  kind: 'node',   note: 'if escaped earlier & inert' },
+            { key: 'brittle',          id: 'brittle_resolution',           kind: 'node',   note: 'if not already escaped' },
+            { key: 'escape_late',      id: 'escape',                       kind: 'module', note: 'late',
+              earlyExits: ['the-ruin', 'the-escape', 'the-chaos', 'the-alien-ai'] },
+            { key: 'rollout',          id: 'rollout',                      kind: 'module', note: 'terminal',
+              earlyExits: [
+                'the-gilded-singularity', 'the-new-hierarchy', 'the-flourishing',
+                'the-capture', 'the-standoff', 'the-mosaic', 'the-failure',
+                'the-escape', 'the-alien-ai',
+              ] },
+        ],
+        edges: [
+            ['emergence',     'plateau_bd'],
+            ['emergence',     'auto_bd'],
+            ['emergence',     'control'],
+
+            ['plateau_bd',    'rollout_early'],
+            ['auto_bd',       'rollout_early'],
+
+            ['control',       'alignment'],
+
+            ['alignment',     'decel'],
+            ['alignment',     'escape_early'],
+            ['alignment',     'proliferation'],
+
+            ['decel',         'proliferation'],
+
+            ['escape_early',  'proliferation'],
+            // ai_goals=benevolent short-circuits the escape pipeline and
+            // skips straight past proliferation / intent / war to the
+            // who-benefits question.
+            ['escape_early',  'who_benefits'],
+
+            ['proliferation', 'escape_early_alt'],
+            ['proliferation', 'intent'],
+
+            ['escape_early_alt', 'intent'],
+            ['escape_early_alt', 'who_benefits'],
+
+            ['intent',        'war'],
+            ['intent',        'who_benefits'],
+
+            ['war',           'who_benefits'],
+
+            ['who_benefits',  'inert_stays'],
+            ['who_benefits',  'brittle'],
+            ['who_benefits',  'rollout'],
+
+            ['inert_stays',   'escape_late'],
+            ['brittle',       'escape_late'],
+
+            ['escape_late',   'rollout'],
+        ],
+    };
+
+    // Longest-path column assignment: every node's column is 1 +
+    // max(column of any parent). Roots (no incoming edges) are at 0.
+    function _computeFlowColumns(dag) {
+        const parentsOf = new Map();
+        for (const n of dag.nodes) parentsOf.set(n.key, []);
+        for (const [p, c] of dag.edges) {
+            if (parentsOf.has(c)) parentsOf.get(c).push(p);
+        }
+        const col = new Map();
+        const visit = (k, stack = new Set()) => {
+            if (col.has(k)) return col.get(k);
+            if (stack.has(k)) return 0; // cycle guard — shouldn't happen
+            stack.add(k);
+            const ps = parentsOf.get(k) || [];
+            const c = ps.length ? Math.max(...ps.map(p => visit(p, stack))) + 1 : 0;
+            stack.delete(k);
+            col.set(k, c);
+            return c;
+        };
+        for (const n of dag.nodes) visit(n.key);
+        return col;
+    }
+
+    function _flowStepHtml(slot, selected) {
+        const NODE_MAP = window.Engine.NODE_MAP;
+        const MODULE_MAP = (window.Graph && window.Graph.MODULE_MAP) || {};
+        const tplById = new Map(templates.map(t => [t.id, t]));
+
+        const isModule = slot.kind === 'module';
+        const titleHref = isModule
+            ? `#/nodes?m=${encodeURIComponent(slot.id)}&view=flow`
+            : `#/nodes?n=${encodeURIComponent(slot.id)}&view=flow`;
+        const active = isModule
+            ? selected.moduleId === slot.id
+            : selected.nodeId === slot.id;
+        const mod = isModule ? MODULE_MAP[slot.id] : null;
+        const label = isModule
+            ? ((mod && mod.label) || '')
+            : ((NODE_MAP[slot.id] && NODE_MAP[slot.id].label) || '');
+
+        const cls = 'ng-flow-step'
+            + (slot.opt ? ' is-opt' : '')
+            + (active ? ' is-active' : '');
+
+        let html = `<div class="${cls}" data-flow-key="${esc(slot.key)}">`;
+        html += `<a class="ng-flow-step-title" href="${titleHref}">`;
+        html += `<div class="ng-flow-step-row">`;
+        html += `<span class="ng-flow-step-id">${esc(slot.id)}</span>`;
+        html += `<span class="ng-flow-step-kind">${esc(slot.kind)}</span>`;
+        if (slot.opt) html += `<span class="ng-flow-opt-badge">opt</span>`;
+        html += `</div>`;
+        if (label) html += `<div class="ng-flow-step-label">${esc(label)}</div>`;
+        if (slot.note) html += `<div class="ng-flow-step-note">${esc(slot.note)}</div>`;
+        html += `</a>`;
+
+        // Module slots: list internal nodes inline so you can drill
+        // straight to a specific question without going through the
+        // module detail view first.
+        if (isModule && mod && mod.nodeIds && mod.nodeIds.length) {
+            const internals = mod.nodeIds.map(id => NODE_MAP[id]).filter(Boolean);
+            if (internals.length) {
+                html += `<div class="ng-flow-step-nodes">`;
+                html += `<div class="ng-flow-step-nodes-head">internal nodes</div>`;
+                for (const n of internals) {
+                    const href = `#/nodes?n=${encodeURIComponent(n.id)}&view=flow`;
+                    const isSel = selected.nodeId === n.id;
+                    const ncls = 'ng-flow-node'
+                        + (n.derived ? ' nl-derived' : '')
+                        + (isSel ? ' is-active' : '');
+                    html += `<a class="${ncls}" href="${href}" title="${esc(n.label || '')}">`
+                         + `<span class="ng-flow-node-id">${esc(n.id)}</span>`
+                         + (n.label ? `<span class="ng-flow-node-lbl">${esc(n.label)}</span>` : '')
+                         + `</a>`;
+                }
+                html += `</div>`;
+            }
+        }
+
+        // Nest early exits *inside* the module card so it's visually
+        // unambiguous which module each outcome attaches to. Styled as
+        // a warm-tinted footer strip flush with the card's bottom edge.
+        if (slot.earlyExits && slot.earlyExits.length) {
+            html += `<div class="ng-flow-outcomes">`;
+            html += `<div class="ng-flow-outcomes-head">outcomes</div>`;
+            for (const oid of slot.earlyExits) {
+                const t = tplById.get(oid);
+                const title = (t && t.title) || oid;
+                const isSel = selected.outcomeId === oid;
+                const oHref = `#/nodes?o=${encodeURIComponent(oid)}&view=flow`;
+                html += `<a class="ng-flow-outcome${isSel ? ' is-active' : ''}" href="${oHref}" title="${esc(title)}">${esc(oid)}</a>`;
+            }
+            html += `</div>`;
+        }
+
+        html += `</div>`;
+        return html;
+    }
+
+    function renderFlow(selected) {
+        const col = _computeFlowColumns(FLOW_DAG);
+        const byCol = new Map();
+        for (const n of FLOW_DAG.nodes) {
+            const c = col.get(n.key);
+            if (!byCol.has(c)) byCol.set(c, []);
+            byCol.get(c).push(n);
+        }
+        const maxCol = byCol.size ? Math.max(...byCol.keys()) : 0;
+
+        // SVG overlay lives above the columns but behind interactive
+        // cards (pointer-events: none). Size is set after mount.
+        let html = `<svg class="ng-flow-edges" xmlns="http://www.w3.org/2000/svg">`
+                 + `<defs>`
+                 + `<marker id="ng-flow-arrow" viewBox="0 0 10 10" refX="9" refY="5" `
+                 +         `markerWidth="7" markerHeight="7" orient="auto-start-reverse">`
+                 + `<path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>`
+                 + `</marker>`
+                 + `</defs>`
+                 + `</svg>`;
+        html += `<div class="ng-flow">`;
+        for (let c = 0; c <= maxCol; c++) {
+            const nodes = byCol.get(c) || [];
+            html += `<div class="ng-flow-col">`;
+            for (const slot of nodes) html += _flowStepHtml(slot, selected);
+            html += `</div>`;
+        }
+        html += `</div>`;
+        return html;
+    }
+
+    // Draws SVG arrows between flow DAG nodes after the DOM has been
+    // laid out. Coordinates are in the viewport's unscaled local space
+    // (SVG is inside the transformed viewport so arrows scale with the
+    // content). Parent right-edge midpoint → child left-edge midpoint,
+    // cubic bezier with horizontal tangents for a smooth curve.
+    function drawFlowEdges(root) {
+        const viewport = root.querySelector('.ng-flow-viewport');
+        const svg = root.querySelector('svg.ng-flow-edges');
+        if (!viewport || !svg) return;
+        // Temporarily clear the SVG's explicit size so it doesn't
+        // inflate the viewport during measurement.
+        svg.setAttribute('width', 0);
+        svg.setAttribute('height', 0);
+        // Measure via getBoundingClientRect relative to the viewport
+        // (accounting for the viewport's own transform, which at this
+        // point is still identity since fit() hasn't run yet).
+        const vRect = viewport.getBoundingClientRect();
+        const steps = viewport.querySelectorAll('[data-flow-key]');
+        const rects = new Map();
+        let maxRight = 0, maxBot = 0;
+        for (const el of steps) {
+            const r = el.getBoundingClientRect();
+            const x = r.left - vRect.left;
+            const y = r.top  - vRect.top;
+            const w = r.width, h = r.height;
+            rects.set(el.dataset.flowKey, { x, y, w, h });
+            if (x + w > maxRight) maxRight = x + w;
+            if (y + h > maxBot) maxBot = y + h;
+        }
+        const pad = 20;
+        const W = maxRight + pad, H = maxBot + pad;
+        svg.setAttribute('width', W);
+        svg.setAttribute('height', H);
+        svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+        const paths = [];
+        for (const [p, c] of FLOW_DAG.edges) {
+            const pr = rects.get(p), cr = rects.get(c);
+            if (!pr || !cr) continue;
+            const x1 = pr.x + pr.w;
+            const y1 = pr.y + pr.h / 2;
+            const x2 = cr.x;
+            const y2 = cr.y + cr.h / 2;
+            const dx = Math.max(40, (x2 - x1) / 2);
+            const d = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+            paths.push(`<path d="${d}" marker-end="url(#ng-flow-arrow)"/>`);
+        }
+        // Preserve the <defs> by only replacing after the defs block.
+        const defs = svg.querySelector('defs');
+        svg.innerHTML = '';
+        if (defs) svg.appendChild(defs);
+        svg.insertAdjacentHTML('beforeend', paths.join(''));
+    }
+
     function renderGrid(selected) {
         const NODES = window.Engine.NODES;
         const NODE_MAP = window.Engine.NODE_MAP;
         const MODULES = (window.Graph && window.Graph.MODULES) || [];
         const A = buildAnalysis();
 
+        const viewBtn = (id, label) =>
+            `<button data-view="${id}" class="${selected.view === id ? 'is-active' : ''}">${label}</button>`;
+
+        const resetBtn = selected.view === 'flow'
+            ? `<button class="ng-flow-toolbtn" data-flow-action="reset">Reset view</button>`
+            : '';
+        // Search filters the Modules grid only; omit it in flow mode.
+        const searchHtml = selected.view === 'flow' ? '' :
+            `<input type="text" class="nodes-search" placeholder="Search nodes / outcomes…" />`;
+
         let html = `
             <div class="ng-head">
                 <a href="#/explore">← explore</a>
-                <input type="text" class="nodes-search" placeholder="Search nodes / outcomes…" />
+                ${searchHtml}
+                <span class="ng-layout-toggle">
+                    ${viewBtn('modules', 'Modules')}
+                    ${viewBtn('flow', 'Flow')}
+                </span>
+                ${resetBtn}
                 <a href="#/map">map →</a>
             </div>
-            <div class="ng-body">
         `;
+
+        if (selected.view === 'flow') {
+            // Full-bleed canvas: drag-to-pan, wheel-to-zoom. Transform
+            // lives on .ng-flow-viewport; cells inside stay normal DOM.
+            html += `<div class="ng-flow-canvas">`
+                 + `<div class="ng-flow-viewport">`
+                 + renderFlow(selected)
+                 + `</div></div>`;
+            return html;
+        }
+
+        html += `<div class="ng-body">`;
 
         // Modules — one card per module, internal nodes in a grid, with the
         // reads/writes contract right under the header.
@@ -847,13 +1553,10 @@
             return `<div class="nodes-detail-empty">Unknown node: ${esc(nodeId)}</div>`;
         }
 
-        const reads     = A.nodeReads.get(nodeId) || new Set();
-        const readSites = A.nodeReadSites.get(nodeId) || [];
         const writes    = A.nodeWrites.get(nodeId) || new Set();
         const moves     = A.nodeMoves.get(nodeId) || new Set();
         const readBy    = A.readBy.get(nodeId) || [];
         const writtenBy = A.writtenBy.get(nodeId) || [];
-        const movedBy   = A.movedBy.get(nodeId) || [];
         const outcomes  = A.outcomesUsing.get(nodeId) || new Set();
 
         const tags = [];
@@ -897,6 +1600,86 @@
         }
         html += `</div>`;
 
+        // ─── When this question is active / hidden / auto-derived
+        const activateWhen = node.activateWhen || [];
+        const hideWhen = node.hideWhen || [];
+        const deriveWhen = node.deriveWhen || [];
+        const hasNodeGates = activateWhen.length || hideWhen.length || deriveWhen.length;
+        html += `<div class="nd-section"><h3>Activation & visibility</h3>`;
+        if (!hasNodeGates) {
+            html += `<div class="nd-empty">Always active once its stage is reached. Never hidden. User-answered (not derived).</div>`;
+        } else {
+            if (activateWhen.length) {
+                html += `<div class="nd-row"><div class="nd-row-label">activateWhen</div><div class="nd-row-body">`;
+                html += `<div class="nd-narr-hint" style="margin-bottom: 6px;">Node is inactive until any clause matches <code>sel</code>.</div>`;
+                activateWhen.forEach((c, i) => {
+                    html += `<pre class="nd-json">clause ${i}: ${esc(prettyJson(c))}</pre>`;
+                });
+                html += `</div></div>`;
+            }
+            if (hideWhen.length) {
+                html += `<div class="nd-row"><div class="nd-row-label">hideWhen</div><div class="nd-row-body">`;
+                html += `<div class="nd-narr-hint" style="margin-bottom: 6px;">Node is suppressed from the queue when any clause matches.</div>`;
+                hideWhen.forEach((c, i) => {
+                    html += `<pre class="nd-json">clause ${i}: ${esc(prettyJson(c))}</pre>`;
+                });
+                html += `</div></div>`;
+            }
+            if (deriveWhen.length) {
+                html += `<div class="nd-row"><div class="nd-row-label">deriveWhen</div><div class="nd-row-body">`;
+                html += `<div class="nd-narr-hint" style="margin-bottom: 6px;">Value is auto-computed instead of asked when a rule's <code>match</code> holds.</div>`;
+                deriveWhen.forEach((d, i) => {
+                    html += `<pre class="nd-json">rule ${i}: ${esc(prettyJson(d))}</pre>`;
+                });
+                html += `</div></div>`;
+            }
+        }
+        html += `</div>`;
+
+        // ─── Edges (per-edge gating)
+        if (node.edges && node.edges.length) {
+            html += `<div class="nd-section"><h3>Edges (per-option gating)</h3>`;
+            html += `<div class="nd-narr-hint" style="margin-bottom: 10px;"><code>requires</code>: edge is hidden unless the clause matches. <code>disabledWhen</code>: edge is shown but greyed out. <code>collapseToFlavor</code>: what happens to state when this edge is picked.</div>`;
+            for (const e of node.edges) {
+                html += `<div class="nd-site">`;
+                html += `<div class="nd-site-head">${esc(e.id)}${e.label ? ` — ${esc(e.label)}` : ''}</div>`;
+                const hasReq = e.requires && (Array.isArray(e.requires) ? e.requires.length : Object.keys(e.requires).length);
+                const hasDis = e.disabledWhen && e.disabledWhen.length;
+                const hasC2F = !!e.collapseToFlavor;
+                if (!hasReq && !hasDis && !hasC2F) {
+                    html += `<div class="nd-empty">Always shown. No collapse.</div>`;
+                } else {
+                    if (hasReq) {
+                        html += `<div class="nd-row"><div class="nd-row-label">requires</div><div class="nd-row-body"><pre class="nd-json">${esc(prettyJson(e.requires))}</pre></div></div>`;
+                    }
+                    if (hasDis) {
+                        html += `<div class="nd-row"><div class="nd-row-label">disabledWhen</div><div class="nd-row-body"><pre class="nd-json">${esc(prettyJson(e.disabledWhen))}</pre></div></div>`;
+                    }
+                    if (hasC2F) {
+                        html += `<div class="nd-row"><div class="nd-row-label">collapseToFlavor</div><div class="nd-row-body"><pre class="nd-json">${esc(prettyJson(e.collapseToFlavor))}</pre></div></div>`;
+                    }
+                }
+                html += `</div>`;
+            }
+            html += `</div>`;
+        }
+
+        // ─── Writes summary (dims this node commits at edge pick)
+        if (writes.size || moves.size) {
+            html += `<div class="nd-section"><h3>Writes summary</h3>`;
+            if (writes.size) {
+                html += `<div class="nd-row"><div class="nd-row-label">sets (sel)</div><div class="nd-row-body"><div class="nd-chip-row">`;
+                [...writes].sort().forEach(d => { html += dimChip(d); });
+                html += `</div></div></div>`;
+            }
+            if (moves.size) {
+                html += `<div class="nd-row"><div class="nd-row-label">moves to flavor</div><div class="nd-row-body"><div class="nd-chip-row">`;
+                [...moves].sort().forEach(d => { html += dimChip(d); });
+                html += `</div></div></div>`;
+            }
+            html += `</div>`;
+        }
+
         // ─── Read by (other nodes)
         html += `<div class="nd-section"><h3>Read by (nodes)</h3>`;
         if (!readByByNode.size) {
@@ -908,7 +1691,6 @@
                 html += dimChip(srcId, { count: wheres.length });
             }
             html += `</div>`;
-            // Also show each site
             html += `<div style="margin-top: 10px;">`;
             for (const [srcId, wheres] of sorted) {
                 const src = NODE_MAP[srcId];
@@ -916,7 +1698,7 @@
                 for (const site of sites) {
                     html += `<div class="nd-site">
                         <div class="nd-site-head">${esc(srcId)} · ${esc(site.where)}</div>
-                        <div class="nd-site-body"><pre class="nd-json">${esc(JSON.stringify(site.raw, null, 2))}</pre></div>
+                        <div class="nd-site-body"><pre class="nd-json">${esc(prettyJson(site.raw))}</pre></div>
                     </div>`;
                 }
             }
@@ -936,7 +1718,6 @@
                 html += outcomeChip(oid, tplById.get(oid));
             }
             html += `</div>`;
-            // Show where in each outcome
             html += `<div style="margin-top: 10px;">`;
             for (const oid of sortedOutcomes) {
                 const t = tplById.get(oid);
@@ -949,7 +1730,6 @@
                     inReach && 'reachable',
                     inFlavor && 'flavors'
                 ].filter(Boolean).join(' · ');
-                // Enumerate matching reachable clauses
                 const clauseHits = [];
                 if (inReach && t.reachable) {
                     t.reachable.forEach((c, i) => {
@@ -962,7 +1742,7 @@
                     <div class="nd-site-head">${esc(oid)} · ${esc(t && t.title || '')} · ${esc(where)}</div>`;
                 if (clauseHits.length) {
                     for (const h of clauseHits) {
-                        html += `<pre class="nd-json">reachable[${h.i}]: ${esc(JSON.stringify(h.c, null, 2))}</pre>`;
+                        html += `<pre class="nd-json">reachable[${h.i}]: ${esc(prettyJson(h.c))}</pre>`;
                     }
                 }
                 html += `</div>`;
@@ -970,61 +1750,6 @@
             html += `</div>`;
         }
         html += `</div>`;
-
-        // ─── What this node reads
-        html += `<div class="nd-section"><h3>Reads (upstream dependencies)</h3>`;
-        if (!reads.size) {
-            html += `<div class="nd-empty">This node has no reads on other dims.</div>`;
-        } else {
-            html += `<div class="nd-chip-row">`;
-            [...reads].sort().forEach(d => { html += dimChip(d); });
-            html += `</div>`;
-            html += `<div style="margin-top: 10px;">`;
-            for (const site of readSites) {
-                html += `<div class="nd-site">
-                    <div class="nd-site-head">${esc(site.where)} — refs: ${site.dims.map(d => esc(d)).join(', ')}</div>
-                    <pre class="nd-json">${esc(JSON.stringify(site.raw, null, 2))}</pre>
-                </div>`;
-            }
-            html += `</div>`;
-        }
-        html += `</div>`;
-
-        // ─── Writes / moves
-        if (writes.size || moves.size) {
-            html += `<div class="nd-section"><h3>Writes (via edges)</h3>`;
-            if (writes.size) {
-                html += `<div class="nd-row"><div class="nd-row-label">sets (sel)</div><div class="nd-row-body"><div class="nd-chip-row">`;
-                [...writes].sort().forEach(d => { html += dimChip(d); });
-                html += `</div></div></div>`;
-            }
-            if (moves.size) {
-                html += `<div class="nd-row"><div class="nd-row-label">moves to flavor</div><div class="nd-row-body"><div class="nd-chip-row">`;
-                [...moves].sort().forEach(d => { html += dimChip(d); });
-                html += `</div></div></div>`;
-            }
-            html += `</div>`;
-        }
-
-        // ─── Edges summary
-        if (node.edges && node.edges.length) {
-            html += `<div class="nd-section"><h3>Edges</h3>`;
-            for (const e of node.edges) {
-                html += `<div class="nd-site">
-                    <div class="nd-site-head">${esc(e.id)}${e.label ? ` — ${esc(e.label)}` : ''}</div>`;
-                const parts = {};
-                if (e.disabledWhen && e.disabledWhen.length) parts.disabledWhen = e.disabledWhen;
-                if (e.requires && e.requires.length) parts.requires = e.requires;
-                if (e.collapseToFlavor) parts.collapseToFlavor = e.collapseToFlavor;
-                if (Object.keys(parts).length) {
-                    html += `<pre class="nd-json">${esc(JSON.stringify(parts, null, 2))}</pre>`;
-                } else {
-                    html += `<div class="nd-empty">(no gates)</div>`;
-                }
-                html += `</div>`;
-            }
-            html += `</div>`;
-        }
 
         return html;
     }
@@ -1118,7 +1843,7 @@
             t.reachable.forEach((c, i) => {
                 html += `<div class="nd-site">
                     <div class="nd-site-head">clause ${i}</div>
-                    <pre class="nd-json">${esc(JSON.stringify(c, null, 2))}</pre>
+                    <pre class="nd-json">${esc(prettyJson(c))}</pre>
                 </div>`;
             });
             html += `</div>`;
@@ -1151,7 +1876,8 @@
 
         const tags = [];
         tags.push(`${nodeIds.length} node${nodeIds.length === 1 ? '' : 's'}`);
-        if (m.completionMarker) tags.push(`exit: ${m.completionMarker}`);
+        if (m.completionMarker) tags.push(`exit: ${_fmtCompletionMarker(m.completionMarker)}`);
+        if (m.internalPriority !== undefined) tags.push(`internal priority ${m.internalPriority}`);
         if (typeof m.reduce === 'function') tags.push('has reduce()');
         if (m.reducerTable) tags.push('has reducerTable');
 
@@ -1168,7 +1894,7 @@
             activateWhen.forEach((c, i) => {
                 html += `<div class="nd-site">
                     <div class="nd-site-head">clause ${i}</div>
-                    <pre class="nd-json">${esc(JSON.stringify(c, null, 2))}</pre>
+                    <pre class="nd-json">${esc(prettyJson(c))}</pre>
                 </div>`;
             });
         }
@@ -1201,9 +1927,24 @@
             html += `</div>`;
         }
 
+        if (m.internalPriority !== undefined) {
+            html += `<div class="nd-section"><h3>Internal priority</h3>`;
+            html += `<div class="nd-subtitle" style="margin-bottom: 8px;">Every internal node of this module is assigned <code>priority: ${esc(String(m.internalPriority))}</code> at build time (unless it sets its own <code>priority</code> explicitly). Lower number fires first: <code>-1</code> is interrupt-level (preempts the main chain), default <code>0</code> is the main chain, <code>1+</code> is late / post-main.</div>`;
+            html += `</div>`;
+        }
+
         if (m.completionMarker) {
             html += `<div class="nd-section"><h3>Completion marker</h3>`;
-            html += `<div class="nd-chip-row">${dimChip(m.completionMarker)}</div>`;
+            html += `<div class="nd-subtitle" style="margin-bottom: 8px;">The dim (and, when listed, the specific values) whose presence in <code>sel</code> signals the module is done.</div>`;
+            const cm = m.completionMarker;
+            if (typeof cm === 'string') {
+                html += `<div class="nd-chip-row">${dimChip(cm)}</div>`;
+            } else if (cm && typeof cm === 'object' && cm.dim) {
+                html += `<div class="nd-chip-row">${dimChip(cm.dim)}</div>`;
+                if (Array.isArray(cm.values) && cm.values.length) {
+                    html += `<div style="margin-top: 6px; font-size: 12px; color: var(--text-muted);">done when <code>${esc(cm.dim)}</code> ∈ {${cm.values.map(v => `<code>${esc(String(v))}</code>`).join(', ')}}</div>`;
+                }
+            }
             html += `</div>`;
         }
 
@@ -1216,12 +1957,34 @@
         }
         html += `</div>`;
 
-        // Exit plan (if exposed) — summarize without dumping the full object.
+        // Outcomes — the deduced "what can this module write?" table,
+        // pivoted from exitPlan. For modules with ≥2 distinct write
+        // bundles (decel, escape, emergence, rollout, proliferation,
+        // intent_loop, war_loop) each row is one bundle; for modules
+        // that only write their completion marker (who_benefits,
+        // control, alignment_loop) each row is one terminal question.
+        // See computeModuleOutcomeTable for the pivot logic.
+        //
+        // The raw exit-plan tuples are still available underneath,
+        // collapsed behind a <details> toggle for cross-referencing
+        // when debugging.
         let exitPlan = null;
         try { exitPlan = m.exitPlan; } catch (_) { exitPlan = null; }
-        if (exitPlan) {
-            html += `<div class="nd-section"><h3>Exit plan</h3>`;
-            html += `<pre class="nd-json">${esc(JSON.stringify(exitPlan, null, 2))}</pre>`;
+        if (exitPlan && exitPlan.length) {
+            const table = computeModuleOutcomeTable(m);
+            html += `<div class="nd-section"><h3>Outcomes</h3>`;
+            html += `<div class="nd-subtitle" style="margin-bottom: 8px;">`;
+            if (table.pivot === 'set') {
+                html += `The distinct write bundles this module can commit to <code>sel</code> on exit. Exits column lists the terminating <code>(node, edge)</code> pairs that produce each outcome.`;
+            } else {
+                html += `Every exit writes only the completion marker, so rows are pivoted by terminating question instead. Each row is one internal node whose edges can end the module.`;
+            }
+            html += `</div>`;
+            html += _renderOutcomeTable(m);
+            html += `<details style="margin-top: 10px;"><summary style="cursor: pointer; color: var(--text-muted); font-size: 12px;">raw exit plan (${exitPlan.length} tuple${exitPlan.length === 1 ? '' : 's'})</summary>`;
+            html += `<div style="margin-top: 8px;">`;
+            html += _renderExitPlanTable(exitPlan);
+            html += `</div></details>`;
             html += `</div>`;
         }
 
@@ -1294,7 +2057,22 @@
                 params[decodeURIComponent(k)] = decodeURIComponent(v || '');
             });
         }
-        return { nodeId: params.n || '', outcomeId: params.o || '', moduleId: params.m || '' };
+        const view = params.view === 'flow' ? 'flow' : 'modules';
+        return {
+            nodeId: params.n || '',
+            outcomeId: params.o || '',
+            moduleId: params.m || '',
+            view,
+        };
+    }
+
+    // Append `view=flow` to a selection href if the current view is
+    // flow, so clicking a cell/chip/module title keeps us in flow mode.
+    function _preserveViewHref(href, view) {
+        if (!href || !href.startsWith('#/nodes')) return href;
+        if (view !== 'flow') return href;
+        if (/([?&])view=/.test(href)) return href;
+        return href + (href.includes('?') ? '&' : '?') + 'view=flow';
     }
 
     async function render(app) {
@@ -1303,6 +2081,121 @@
 
         app.innerHTML = `<div id="nodes-root"></div>`;
         const root = app.querySelector('#nodes-root');
+
+        // ── Flow canvas state ──
+        // Persisted to localStorage so pan/zoom survives page reloads
+        // and view toggles. `flowView.dirty` means the user has nudged
+        // the view — skip the initial fit() on re-wire.
+        const FLOW_VIEW_LS_KEY = 'nodes-flow-view-v1';
+        const flowView = (() => {
+            try {
+                const raw = localStorage.getItem(FLOW_VIEW_LS_KEY);
+                if (raw) {
+                    const v = JSON.parse(raw);
+                    if (typeof v.x === 'number' && typeof v.y === 'number' && typeof v.s === 'number') {
+                        return { x: v.x, y: v.y, s: v.s, dirty: true };
+                    }
+                }
+            } catch (_e) { /* ignore */ }
+            return { x: 20, y: 20, s: 1, dirty: false };
+        })();
+        const saveFlowView = () => {
+            try {
+                localStorage.setItem(FLOW_VIEW_LS_KEY, JSON.stringify({
+                    x: flowView.x, y: flowView.y, s: flowView.s,
+                }));
+            } catch (_e) { /* ignore */ }
+        };
+        // Flag set while panning; cleared on mouseup. Used to swallow
+        // the click that would fire at the end of a pan drag.
+        let flowPanMoved = false;
+        // Set by wireFlowCanvas to its `fit()` closure so the toolbar
+        // "Reset view" button can re-run fit-to-content. Null when
+        // flow mode isn't mounted.
+        let flowFit = null;
+
+        function wireFlowCanvas() {
+            const canvas = root.querySelector('.ng-flow-canvas');
+            const viewport = root.querySelector('.ng-flow-viewport');
+            if (!canvas || !viewport) return;
+
+            // Size the SVG overlay and render arrows *before* fit() runs,
+            // so the viewport's scrollWidth/scrollHeight account for them.
+            drawFlowEdges(root);
+
+            const apply = () => {
+                viewport.style.transform =
+                    `translate(${flowView.x}px, ${flowView.y}px) scale(${flowView.s})`;
+            };
+
+            // Fit-to-content. Called on first paint (when the user hasn't
+            // pan/zoomed yet) and by the "Reset view" toolbar button. Also
+            // clears the saved view so subsequent re-mounts fit fresh.
+            const fit = () => {
+                viewport.style.transform = 'translate(0,0) scale(1)';
+                const cw = canvas.clientWidth, ch = canvas.clientHeight;
+                const vw = viewport.scrollWidth, vh = viewport.scrollHeight;
+                if (!cw || !vw) { apply(); return; }
+                const sx = (cw - 40) / vw;
+                const sy = (ch - 40) / vh;
+                flowView.s = Math.max(0.3, Math.min(1, Math.min(sx, sy)));
+                flowView.x = 20;
+                flowView.y = Math.max(20, (ch - vh * flowView.s) / 2);
+                flowView.dirty = false;
+                try { localStorage.removeItem(FLOW_VIEW_LS_KEY); } catch (_e) { /* ignore */ }
+                apply();
+            };
+            if (flowView.dirty) apply();
+            else fit();
+
+            let dragging = false, sx = 0, sy = 0, x0 = 0, y0 = 0;
+            canvas.addEventListener('mousedown', (e) => {
+                // Don't start a pan on an interactive anchor — let the
+                // click fall through to the normal selection handler.
+                if (e.target.closest && e.target.closest('a')) return;
+                if (e.button !== 0) return;
+                dragging = true; flowPanMoved = false;
+                sx = e.clientX; sy = e.clientY;
+                x0 = flowView.x; y0 = flowView.y;
+                canvas.classList.add('dragging');
+                e.preventDefault();
+            });
+            window.addEventListener('mousemove', (e) => {
+                if (!dragging) return;
+                const dx = e.clientX - sx, dy = e.clientY - sy;
+                if (!flowPanMoved && Math.hypot(dx, dy) > 3) flowPanMoved = true;
+                flowView.x = x0 + dx; flowView.y = y0 + dy;
+                flowView.dirty = true;
+                apply();
+            });
+            window.addEventListener('mouseup', () => {
+                if (!dragging) return;
+                dragging = false;
+                canvas.classList.remove('dragging');
+                if (flowPanMoved) saveFlowView();
+            });
+
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                const cx = e.clientX - rect.left;
+                const cy = e.clientY - rect.top;
+                const wx = (cx - flowView.x) / flowView.s;
+                const wy = (cy - flowView.y) / flowView.s;
+                const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
+                flowView.s = Math.max(0.2, Math.min(2.5, flowView.s * factor));
+                flowView.x = cx - wx * flowView.s;
+                flowView.y = cy - wy * flowView.s;
+                flowView.dirty = true;
+                apply();
+                saveFlowView();
+            }, { passive: false });
+
+            // Expose `fit()` so the toolbar "Reset view" click (handled
+            // by the single root-level click listener below) can invoke
+            // it without installing a duplicate listener per wire call.
+            flowFit = fit;
+        }
 
         // Full paint — only on first load or route change.
         function paintFull() {
@@ -1313,51 +2206,117 @@
             `;
             wireSearch(root);
             wireNarrative(root);
+            if (sel.view === 'flow') wireFlowCanvas();
         }
 
         // Cell-click repaints: refresh the detail pane + toggle the
         // is-active highlight, but keep both panes' scroll positions
         // untouched. Avoids jumping to the top of the grid every click.
+        // If the view mode changed (e.g. toggle click), do a full paint
+        // of the left pane since the layouts are structurally different.
+        let lastView = null;
         function paintSelectionChange() {
             const sel = parseSelection();
             const detail = root.querySelector('.nodes-detail');
             if (detail) detail.innerHTML = renderDetail(sel);
-            // Update is-active class on grid cells without rerendering them.
             const pane = root.querySelector('.nodes-grid-pane');
-            if (pane) {
+            if (!pane) return;
+            if (sel.view !== lastView) {
+                pane.innerHTML = renderGrid(sel);
+                wireSearch(root);
+                if (sel.view === 'flow') wireFlowCanvas();
+                lastView = sel.view;
+                return;
+            }
             pane.querySelectorAll('.ng-cell.is-active').forEach(c => c.classList.remove('is-active'));
             pane.querySelectorAll('.ng-module.is-active').forEach(c => c.classList.remove('is-active'));
-            const nodeHref = sel.nodeId ? `#/nodes?n=${encodeURIComponent(sel.nodeId)}` : null;
-            const outHref = sel.outcomeId ? `#/nodes?o=${encodeURIComponent(sel.outcomeId)}` : null;
+            pane.querySelectorAll('.ng-flow-step.is-active').forEach(c => c.classList.remove('is-active'));
+            pane.querySelectorAll('.ng-flow-node.is-active').forEach(c => c.classList.remove('is-active'));
+            pane.querySelectorAll('.ng-flow-outcome.is-active').forEach(c => c.classList.remove('is-active'));
+            // Match loosely: highlight any anchor whose target (n/m/o)
+            // equals our selection, regardless of extra params like view.
+            const markCellByHref = (selector, want) => {
+                if (!want) return;
+                pane.querySelectorAll(selector).forEach(a => {
+                    const h = a.getAttribute('href') || '';
+                    if (h.includes(want)) a.classList.add('is-active');
+                });
+            };
+            const markStepByTitleHref = (want) => {
+                if (!want) return;
+                pane.querySelectorAll('a.ng-flow-step-title').forEach(a => {
+                    const h = a.getAttribute('href') || '';
+                    if (!h.includes(want)) return;
+                    const step = a.closest('.ng-flow-step');
+                    if (step) step.classList.add('is-active');
+                });
+            };
             if (sel.moduleId) {
+                const wantM = `m=${encodeURIComponent(sel.moduleId)}`;
                 const cards = pane.querySelectorAll('.ng-module');
                 cards.forEach(c => {
                     if (c.dataset.moduleId === sel.moduleId) c.classList.add('is-active');
                 });
-            } else if (nodeHref) {
-                const cell = pane.querySelector(`.ng-cell[href="${nodeHref}"]`);
-                if (cell) cell.classList.add('is-active');
-            } else if (outHref) {
-                const cell = pane.querySelector(`.ng-cell[href="${outHref}"]`);
-                if (cell) cell.classList.add('is-active');
-            }
+                markStepByTitleHref(wantM);
+            } else if (sel.nodeId) {
+                const wantN = `n=${encodeURIComponent(sel.nodeId)}`;
+                markCellByHref('a.ng-cell', wantN);
+                markCellByHref('a.ng-flow-node', wantN);
+                markStepByTitleHref(wantN);
+            } else if (sel.outcomeId) {
+                const wantO = `o=${encodeURIComponent(sel.outcomeId)}`;
+                markCellByHref('a.ng-cell', wantO);
+                markCellByHref('a.ng-flow-outcome', wantO);
             }
         }
+        lastView = parseSelection().view;
 
         paintFull();
 
-        // Intercept cell clicks so the browser's default anchor
-        // navigation (which resets scroll to the nearest match or to
-        // the top of the scroll container) doesn't fire. We update the
-        // URL manually via history.replaceState, then repaint only the
-        // detail pane — preserving the grid's scroll position exactly.
+        // Intercept cell / chip / flow-step / flow-outcome clicks so
+        // the browser's default anchor navigation doesn't reset the
+        // scroll position. Update the URL manually and repaint only
+        // what's needed.
         root.addEventListener('click', (e) => {
-            const a = e.target.closest && e.target.closest('a.ng-cell, a.nd-chip, a.ng-contract-dim, a.ng-module-title');
+            // Flow toolbar: "Reset view" — re-fit the canvas.
+            const resetBtn = e.target.closest && e.target.closest('[data-flow-action="reset"]');
+            if (resetBtn) {
+                e.preventDefault();
+                if (flowFit) flowFit();
+                return;
+            }
+            // Layout-toggle buttons (Modules ↔ Flow): update `view` in
+            // the hash and repaint both panes.
+            const btn = e.target.closest && e.target.closest('.ng-layout-toggle button');
+            if (btn) {
+                e.preventDefault();
+                const view = btn.dataset.view || 'modules';
+                const cur = parseSelection();
+                if (view === cur.view) return;
+                const parts = [];
+                if (cur.moduleId) parts.push(`m=${encodeURIComponent(cur.moduleId)}`);
+                if (cur.nodeId) parts.push(`n=${encodeURIComponent(cur.nodeId)}`);
+                if (cur.outcomeId) parts.push(`o=${encodeURIComponent(cur.outcomeId)}`);
+                if (view === 'flow') parts.push('view=flow');
+                const next = '#/nodes' + (parts.length ? '?' + parts.join('&') : '');
+                history.replaceState(null, '', next);
+                paintSelectionChange();
+                return;
+            }
+
+            const a = e.target.closest && e.target.closest(
+                'a.ng-cell, a.nd-chip, a.ng-contract-dim, a.ng-module-title, '
+              + 'a.ng-flow-step-title, a.ng-flow-node, a.ng-flow-outcome'
+            );
             if (!a) return;
-            const href = a.getAttribute('href') || '';
-            if (!href.startsWith('#/nodes')) return;
+            // Suppress the click that fires at the end of a pan drag.
+            if (flowPanMoved) { flowPanMoved = false; e.preventDefault(); return; }
+            const rawHref = a.getAttribute('href') || '';
+            if (!rawHref.startsWith('#/nodes')) return;
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
             e.preventDefault();
+            const cur = parseSelection();
+            const href = _preserveViewHref(rawHref, cur.view);
             if (location.hash !== href) {
                 history.replaceState(null, '', href);
                 paintSelectionChange();
@@ -1372,5 +2331,14 @@
         });
     }
 
-    window.Nodes = { render };
+    // FLOW_DAG is exposed so other pages (currently: explore.js's
+    // "Show All Connections" debug overlay) can render the same
+    // narrative-flow graph. If you change its shape here, update the
+    // consumer too.
+    //
+    // computeModuleOutcomeTable is exposed so the same overlay can
+    // render the deduced outcome pivot inside its module cards (see
+    // step 1 of the exitPlan-as-source-of-truth refactor — graph.js
+    // comments near DECEL_REDUCER_TABLE explain where this is headed).
+    window.Nodes = { render, FLOW_DAG, computeModuleOutcomeTable };
 })();

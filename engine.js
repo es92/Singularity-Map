@@ -456,6 +456,66 @@ function _isModuleActivelyPending(sel, mod) {
     return false;
 }
 
+// Public helper: is ANY module currently mid-walk? Used to gate outcome
+// template matching so outcomes can't fire while the user is still inside
+// a module's internal question sequence (e.g. mid-escape, mid-decel). An
+// outcome's `reachable` clause may incidentally match with partial sel
+// (alignment='failed' + containment='contained' matches 'the-ruin' before
+// the escape pipeline even begins); this guard defers that match until
+// the active module commits its completionMarker and is no longer
+// actively pending.
+function anyModuleActivelyPending(sel) {
+    for (const mod of MODULES) {
+        if (_isModuleActivelyPending(sel, mod)) return true;
+    }
+    return false;
+}
+
+// Generic module reducer derived from the module's exitPlan. Replaces
+// the ten hand-written `*Reduce` functions that used to live in
+// graph.js (decelReduce, escapeReduce, whoBenefitsReduce, …). For a
+// given module-local state `local` (a sel-shaped object containing
+// the internal node answers + any `when`-gate dims), walks the
+// module's exitPlan in declaration order and returns the `set` bundle
+// of the first tuple whose (nodeId, edgeId, when) triple matches.
+// Returns `{}` if nothing matches (caller is outside an exit state).
+//
+// Not called by the runtime — the engine commits module output via
+// collapseToFlavor blocks installed by attachModuleReducer (graph.js).
+// This helper exists as a pure audit primitive for:
+//   * module_primitive.js — parity check between `reduce(local)` and
+//     the exitPlan tuple that maps to the same local state.
+//   * Future tooling (replay, test harnesses) that wants to ask
+//     "what WOULD this module commit if local state were X?"
+//     without running the whole engine pipeline.
+//
+// `when` clauses support the same value-shape grammar as
+// activateWhen: arrays (membership), `{ not: [...] }`, booleans for
+// existence, or bare scalars for equality.
+function reduceFromExitPlan(mod, local) {
+    if (!mod || !mod.exitPlan || !local) return {};
+    for (const t of mod.exitPlan) {
+        if (local[t.nodeId] !== t.edgeId) continue;
+        let whenOk = true;
+        for (const [k, cond] of Object.entries(t.when || {})) {
+            const cur = local[k];
+            if (Array.isArray(cond)) {
+                if (!cond.includes(cur)) { whenOk = false; break; }
+            } else if (cond && typeof cond === 'object' && Array.isArray(cond.not)) {
+                if (cond.not.includes(cur)) { whenOk = false; break; }
+            } else if (cond === true) {
+                if (!cur) { whenOk = false; break; }
+            } else if (cond === false) {
+                if (cur) { whenOk = false; break; }
+            } else if (cur !== cond) {
+                whenOk = false; break;
+            }
+        }
+        if (whenOk) return { ...t.set };
+    }
+    return {};
+}
+
 // Shallow askability — activate matched, hide not matched, unanswered,
 // has at least one enabled edge. NO recursion into isNodeVisible /
 // isNodeActivatedByRules (those would create mutual recursion through
@@ -464,6 +524,21 @@ function _shallowAskable(sel, n) {
     if (n.derived) return false;
     if (sel[n.id] !== undefined) return false;
     if (!n.edges || n.edges.length === 0) return false;
+    // Module-internal nodes of a completed module don't compete for
+    // priority. Without this check, internals whose answers got evicted to
+    // flavor on module exit (e.g. every decel_Nmo_progress after the rival
+    // exit's collapseToFlavor.move) keep looking shallow-askable — their
+    // own activateWhen still matches against live sel dims (gov_action,
+    // capability) — and their module-level internalPriority blocks
+    // main-chain modules forever. Uses the module's completionMarker so
+    // the check short-circuits without walking the whole module.
+    if (n.module) {
+        const mod = MODULE_MAP[n.module];
+        if (mod) {
+            const marker = _moduleCompletionMarkerOf(mod);
+            if (_isModuleDone(sel, marker)) return false;
+        }
+    }
     if (n.activateWhen && !n.activateWhen.some(c => matchCondition(sel, c))) return false;
     if (n.hideWhen && n.hideWhen.some(c => matchCondition(sel, c))) return false;
     if (!n.edges.some(e => !isEdgeDisabled(sel, n, e))) return false;
@@ -921,14 +996,14 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = { NODES, NODE_MAP, MODULES, MODULE_MAP,
         matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeActivatedByRules, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         cleanSelection, resolvedState, resolvedStateWithFlavor,
-        templateMatches, templatePartialMatch, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
+        templateMatches, templatePartialMatch, anyModuleActivelyPending, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
         createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas, displayOrder };
 }
 if (typeof window !== 'undefined') {
     window.Engine = { NODES, NODE_MAP, MODULES, MODULE_MAP,
         matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         cleanSelection, resolvedState, resolvedStateWithFlavor,
-        templateMatches, templatePartialMatch, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
+        templateMatches, templatePartialMatch, anyModuleActivelyPending, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
         createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas, displayOrder };
 }
 

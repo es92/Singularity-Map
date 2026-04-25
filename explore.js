@@ -201,6 +201,241 @@
         }
         #explore-root .explore-copy-btn:hover { background: var(--bg-hover, rgba(255,255,255,0.05)); }
         #explore-root .explore-copy-btn.is-copied { color: var(--accent, #6b9bd1); border-color: var(--accent, #6b9bd1); }
+
+        /* ─── Show All Connections overlay ──────────────────────────
+         * Full-bleed flow-DAG view (reuses window.Nodes.FLOW_DAG). Sits
+         * on top of the normal path-exploration canvas, toggled by the
+         * toolbar button. Separate localStorage key for pan/zoom so it
+         * doesn't clash with the path explorer or with /nodes Flow.
+         * Cards use the .ec-* prefix ("explore-connections").          */
+        #explore-root .explore-connections {
+            position: absolute; inset: 0; z-index: 5;
+            background: var(--bg);
+            overflow: hidden; cursor: grab;
+        }
+        #explore-root .explore-connections.dragging { cursor: grabbing; }
+        #explore-root .explore-connections-viewport {
+            position: absolute; top: 0; left: 0;
+            transform-origin: 0 0; will-change: transform;
+        }
+        #explore-root .ec-flow {
+            display: flex; gap: 64px; padding: 32px;
+            align-items: flex-start;
+        }
+        #explore-root .ec-col {
+            display: flex; flex-direction: column; gap: 40px;
+        }
+        #explore-root svg.ec-edges {
+            position: absolute; top: 0; left: 0; overflow: visible;
+            pointer-events: none; color: var(--border);
+        }
+        /* Direct-child selector (>) so this rule doesn't reach into
+         * the <marker> triangles inside <defs> — they need to keep
+         * their hardcoded fill so colored arrowheads actually render
+         * as solid triangles instead of empty currentColor outlines. */
+        #explore-root svg.ec-edges > path {
+            fill: none; stroke: currentColor; stroke-width: 1.5;
+        }
+        #explore-root svg.ec-edges path.is-outcome-link {
+            stroke: #b3895e; stroke-dasharray: 6 4; stroke-width: 2;
+            opacity: 0.9;
+        }
+        /* Live arrow: from a committed cell row to its currently-active
+         * downstream slot — the "path you've walked" in the guided
+         * traversal. The stroke color is set inline per-arrow (see
+         * EC_LIVE_PALETTE) so simultaneous picks each get their own
+         * hue; stroke-width/opacity stay in CSS as shared defaults. */
+        #explore-root svg.ec-edges path.is-live {
+            stroke-width: 2.5; opacity: 0.95;
+        }
+        /* Fan-out: the secondary arrows inside a downstream card,
+         * landing point → each cell row this pick specifically
+         * unlocks. Same color as the main arrow, thinner and more
+         * transparent so the primary card-to-card arrow still reads
+         * as the dominant visual. */
+        #explore-root svg.ec-edges path.is-live-fanout {
+            stroke-width: 1.25; opacity: 0.8;
+        }
+        /* Faded = a base FLOW_DAG arrow whose parent has a committed
+         * cell AND whose child is active — the live arrow takes over
+         * that visual channel, so the base arrow fades back. */
+        #explore-root svg.ec-edges path.is-faded {
+            opacity: 0.2;
+        }
+
+        /* Outer card: mirrors .explore-node visual weight so module
+         * cards read as the same object as in the path explorer. The
+         * inner HTML reuses .explore-module-io / .explore-edge-row so
+         * it inherits all the regular-explore module styling for free.
+         * The path explorer's .explore-node is absolute-positioned, so
+         * .ec-card is a new wrapper with flex-friendly layout.            */
+        #explore-root .ec-card {
+            min-width: 240px; max-width: 280px;
+            border: 1px solid var(--border); border-radius: 8px;
+            background: var(--bg-soft);
+            padding: 10px 12px 0;
+            font-size: 12px; line-height: 1.35;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        /* Module cards: purple double-border signals "this is a module"
+         * without tinting the background — otherwise, since most slots in
+         * FLOW_DAG are modules, the whole overlay would read as a wall of
+         * purple. Keep the background neutral (same as plain nodes) so
+         * cards look like normal modules, just pre-instantiated. */
+        #explore-root .ec-card.is-module {
+            border-color: #8a6bbf;
+            border-style: double; border-width: 3px; padding: 8px 10px 0;
+        }
+        #explore-root .ec-card.is-node { border-color: var(--border); }
+        #explore-root .ec-card-head {
+            display: flex; gap: 6px; align-items: baseline; margin-bottom: 4px;
+        }
+        #explore-root .ec-card-title {
+            font-weight: 600; font-size: 13px; color: var(--text);
+        }
+        #explore-root .ec-card.is-module .ec-card-title { color: #b99ef0; }
+        #explore-root .ec-card-slotnote {
+            font-size: 10px; color: var(--text-muted); margin-left: auto;
+            font-style: italic;
+        }
+        #explore-root .ec-card-label {
+            font-size: 11px; color: var(--text-muted); margin-bottom: 4px;
+        }
+        #explore-root .ec-stepinto {
+            display: block; margin: 4px 0 6px;
+            font-size: 11px; color: #b99ef0; text-decoration: none;
+            padding: 3px 6px; border-radius: 4px;
+            border: 1px dashed rgba(138,107,191,0.5);
+            background: rgba(138,107,191,0.08);
+        }
+        #explore-root .ec-stepinto:hover {
+            background: rgba(138,107,191,0.18); color: #d5c2f5;
+            border-color: rgba(138,107,191,0.75);
+        }
+        #explore-root .ec-node-link {
+            display: inline-block; font-size: 11px;
+            color: var(--text-muted); text-decoration: none;
+            padding: 2px 6px; border-radius: 4px;
+            border: 1px solid var(--border); margin: 2px 0;
+        }
+        #explore-root .ec-node-link:hover { color: var(--text); background: var(--bg); }
+        #explore-root .ec-outcomes {
+            margin: 8px -12px 0; padding: 6px 10px 8px;
+            border-top: 1px dashed rgba(179,137,94,0.5);
+            background: rgba(179,137,94,0.08);
+            border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;
+        }
+        #explore-root .ec-outcomes-head {
+            font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em;
+            color: #c9a473; margin-bottom: 4px;
+        }
+        #explore-root .ec-outcome {
+            display: inline-block;
+            font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+            font-size: 10px;
+            padding: 2px 6px; margin: 1px 2px 1px 0;
+            border-radius: 4px;
+            background: rgba(179,137,94,0.18);
+            color: #c9a473; cursor: pointer;
+            border: 1px solid transparent;
+        }
+        #explore-root .ec-outcome:hover {
+            background: rgba(179,137,94,0.32);
+            border-color: rgba(179,137,94,0.55);
+        }
+        #explore-root .ec-outcome.is-selected {
+            background: #b3895e; color: #fff; font-weight: 600;
+            border-color: #d9ae82;
+        }
+        #explore-root .ec-outcome.is-linked {
+            background: rgba(179,137,94,0.55); color: #fff;
+            border-color: rgba(179,137,94,0.75);
+        }
+        /* Narrative outcome pill matched by the current sel's reachable
+         * clause — the guided traversal has committed the user into
+         * this terminal narrative state. */
+        #explore-root .ec-outcome.is-reached {
+            background: #5f8a52; color: #fff;
+            border-color: #7cae6b; font-weight: 600;
+        }
+        /* Dim non-linked cards when an outcome is selected, to draw the
+         * eye to the connected ones. Applied on the container via
+         * [data-ec-selected] attribute. */
+        #explore-root .explore-connections[data-ec-selected] .ec-card:not(.has-linked) {
+            opacity: 0.45;
+        }
+        /* Inactive card = slot whose activateWhen isn't satisfied by
+         * the overlay's current sel AND hasn't been walked through yet.
+         * Visible but muted so the reachable-from-here cards stand out. */
+        #explore-root .ec-card.is-inactive { opacity: 0.4; }
+        /* Visited = at least one cell on this card has been committed.
+         * Just a subtle accent — doesn't compete with is-committed on
+         * the row itself. */
+        #explore-root .ec-card.is-visited {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15), 0 0 0 1px rgba(107,155,209,0.35);
+        }
+        /* A committed cell row — the user clicked it, its writes are
+         * in state.sel. */
+        #explore-root .ec-cell-row.is-committed {
+            background: rgba(107,155,209,0.22);
+            color: var(--text);
+            font-weight: 600;
+        }
+        #explore-root .ec-cell-row.is-committed .explore-edge-chevron {
+            color: var(--accent, #6b9bd1);
+        }
+        #explore-root .ec-cell-row:hover {
+            background: rgba(255,255,255,0.06);
+        }
+        /* Outcome card: terminal narrative endings (the-ruin, the-plateau,
+         * etc) get their own visual node with arrows from the slots whose
+         * earlyExits list them. Copper accent matches the legacy outcome-pill
+         * palette so the visual identity carries over. */
+        #explore-root .ec-card.is-outcome {
+            min-width: 180px; max-width: 220px;
+            border-color: rgba(179,137,94,0.6);
+            background: rgba(179,137,94,0.08);
+        }
+        #explore-root .ec-card.is-outcome .ec-card-title { color: #c9a473; }
+        #explore-root .ec-card.is-outcome.is-reached {
+            border-color: #7cae6b;
+            background: rgba(95,138,82,0.18);
+        }
+        #explore-root .ec-card.is-outcome.is-reached .ec-card-title {
+            color: #b6d3a8;
+        }
+        /* Dead-end card: catch-all for branches whose derived sel matches
+         * no outcome template AND has no askable next question. Single
+         * shared node, lit up only when at least one branch lands here. */
+        #explore-root .ec-card.is-deadend {
+            min-width: 180px; max-width: 220px;
+            border-color: rgba(180,90,90,0.55);
+            background: rgba(180,90,90,0.08);
+        }
+        #explore-root .ec-card.is-deadend .ec-card-title { color: #d28a8a; }
+        #explore-root .ec-card.is-deadend.is-reached {
+            border-color: #d96b6b;
+            background: rgba(217,107,107,0.18);
+        }
+        #explore-root .ec-toolbar {
+            position: absolute; top: 12px; right: 12px; z-index: 10;
+            display: flex; gap: 8px; align-items: center;
+            background: var(--bg); padding: 6px 10px; border-radius: 6px;
+            border: 1px solid var(--border);
+            font-size: 11px; color: var(--text-muted);
+        }
+        #explore-root .ec-toolbar button {
+            background: transparent; color: var(--text-muted);
+            border: 1px solid var(--border); border-radius: 4px;
+            padding: 3px 8px; font-size: 11px; cursor: pointer;
+        }
+        #explore-root .ec-toolbar button:hover {
+            color: var(--text); border-color: var(--text-muted);
+        }
+        #explore-root .ec-toolbar button:disabled {
+            opacity: 0.4; cursor: default;
+        }
     `;
 
     function injectCSS() {
@@ -279,9 +514,31 @@
     function _buildModuleSyntheticNode(mod) {
         const edges = [];
         if (mod.reducerTable) {
+            // The completion marker isn't part of the reducerTable's
+            // raw `set` blocks — it's only added inside the module's
+            // exitPlan (`buildDecelExitPlan` etc.). The /explore overlay
+            // bypasses the exitPlan and reads the reducerTable directly,
+            // so without re-adding the marker here the cell's writes
+            // would commit `{alignment, governance, decel_align_progress}`
+            // and leave `decel_set` unset. That makes downstream priority-
+            // winner DFS (`isNodeVisible` doesn't check completion) keep
+            // surfacing already-answered internals like `decel_2mo_progress`
+            // as the "next" pick, so live arrows never draw to the actual
+            // next module. String markers commit "yes" by convention; object
+            // markers ({dim, values}) commit the first allowed value.
+            const marker = mod.completionMarker;
+            const markerDim = typeof marker === 'string'
+                ? marker
+                : (marker && marker.dim) || null;
+            const markerValue = typeof marker === 'string'
+                ? 'yes'
+                : (marker && marker.values && marker.values[0]) || null;
             for (const [action, progressMap] of Object.entries(mod.reducerTable)) {
                 for (const [progress, cell] of Object.entries(progressMap)) {
                     const writes = {};
+                    if (markerDim && markerValue && cell[markerDim] === undefined) {
+                        writes[markerDim] = markerValue;
+                    }
                     for (const k of Object.keys(cell)) {
                         if (k.startsWith('_')) continue;
                         writes[k] = cell[k];
@@ -320,6 +577,17 @@
         _MODULE_COMPLETION_MARKER[m.id] = _moduleCompletionMarker(m);
         _MODULE_SYNTHETIC_NODES[m.id] = _buildModuleSyntheticNode(m);
     }
+
+    // Exposed so explore-tables.js can route module slots to the same
+    // synthetic-node / dynamic-DFS enumerators the path explorer uses,
+    // without duplicating the (non-trivial) reducer-marker bookkeeping
+    // and dim-projection logic. Static across the page lifetime; both
+    // entries hand back data structures (edges array / cells Map) that
+    // ExploreTables caches per-slot.
+    window._ExploreInternals = {
+        buildModuleSyntheticNode: _buildModuleSyntheticNode,
+        dynamicCellEnumerate: _dynamicCellEnumerate,
+    };
 
     // Every node id that belongs to SOME module's internal walk. Used by
     // findNextQ to identify "flat" nodes — questions that live outside
@@ -462,6 +730,23 @@
     // semantics as decel's reducer cells — atomic = no flavor narrative).
     const _dynamicCellCache = new Map();
 
+    const _moduleOwnedDimsCache = new Map();
+    function _ecModuleOwnedDims(mod) {
+        let owned = _moduleOwnedDimsCache.get(mod.id);
+        if (owned) return owned;
+        owned = new Set();
+        for (const d of (mod.writes || [])) owned.add(d);
+        for (const d of (mod.nodeIds || [])) owned.add(d);
+        for (const d of (mod.internalMarkers || [])) owned.add(d);
+        if (typeof mod.completionMarker === 'string') {
+            owned.add(mod.completionMarker);
+        } else if (mod.completionMarker && mod.completionMarker.dim) {
+            owned.add(mod.completionMarker.dim);
+        }
+        _moduleOwnedDimsCache.set(mod.id, owned);
+        return owned;
+    }
+
     function _dynamicCellEnumerate(mod, inputSel) {
         if (mod.reducerTable) return new Map();
         const E = window.Engine;
@@ -471,38 +756,27 @@
         const results = new Map();
         if (!E) { _dynamicCellCache.set(cacheKey, results); return results; }
         const marker = _MODULE_COMPLETION_MARKER[mod.id];
+        const debug = (typeof window !== 'undefined') && (window.__EC_DEBUG_DFS__ === mod.id);
         const seen = new Set();
         const stack = [{ ...inputSel }];
         const MAX = 10000;
         let count = 0;
+        if (debug) {
+            console.groupCollapsed('[ec-dfs:' + mod.id + '] inputSel ' + selKey(inputSel));
+        }
         while (stack.length && count++ < MAX) {
             const sel = stack.pop();
             const k = selKey(sel);
             if (seen.has(k)) continue;
             seen.add(k);
-            if (_isMarkerSatisfied(marker, sel) && !_isMarkerSatisfied(marker, inputSel)) {
-                // Exit — capture ALL sel deltas from inputSel, not just
-                // `mod.writes`. Internal per-node completion markers
-                // (e.g., `asi_happens`) live outside
-                // `writes` but are required to hide internal nodes when
-                // the cell is applied; without them findNextQ would
-                // re-activate the first internal node after the click.
-                const bundle = {};
-                const deltaKeys = new Set([...Object.keys(sel), ...Object.keys(inputSel)]);
-                for (const k of deltaKeys) {
-                    if (sel[k] !== undefined && sel[k] !== inputSel[k]) bundle[k] = sel[k];
-                }
-                const bundleKey = selKey(bundle);
-                const cellId = '__dyn__' + bundleKey;
-                if (!results.has(cellId)) {
-                    results.set(cellId, {
-                        id: cellId,
-                        label: _formatDynamicCellLabel(bundle, marker),
-                        _moduleWrites: bundle,
-                    });
-                }
-                continue;
-            }
+            // Find next askable internal node BEFORE checking exit — some
+            // exit tuples are idempotent (e.g. `gov_action.{accelerate,
+            // decelerate}` fires after an earlier alignment/containment
+            // exit has already set `alignment_set`). Exiting on first
+            // marker satisfaction would skip those trailing nodes and
+            // drop real user-visible cells (`gov_action=accelerate` vs
+            // `decelerate`). Only exit when the pipeline is fully walked
+            // (no more active questions) AND the marker is satisfied.
             let nextNode = null;
             for (const nid of mod.nodeIds || []) {
                 const node = E.NODE_MAP[nid];
@@ -512,13 +786,79 @@
                 nextNode = node;
                 break;
             }
-            if (!nextNode || !nextNode.edges) continue;
+            if (!nextNode || !nextNode.edges) {
+                if (_isMarkerSatisfied(marker, sel) && !_isMarkerSatisfied(marker, inputSel)) {
+                    // Exit — capture sel deltas from inputSel, but restrict
+                    // to dims this module actually owns. Without the
+                    // restriction, `cleanSelection` side effects from
+                    // foreign modules leak in: e.g. `attachModuleReducer`
+                    // installs `collapseToFlavor.set: { alignment_set:
+                    // 'yes' }` on `containment.contained`, so any rollout
+                    // DFS whose inputSel still carries
+                    // `containment=contained` would spuriously mint cells
+                    // prefixed with `alignment_set=yes`, doubling the cell
+                    // count on (distribution ∈ {concentrated, monopoly})
+                    // branches. Own-dims = writes ∪ nodeIds ∪
+                    // internalMarkers — covers external writes, answered
+                    // internal questions, and internal markers (e.g.
+                    // `asi_happens`) needed to hide internal nodes after
+                    // the click.
+                    const ownedDims = _ecModuleOwnedDims(mod);
+                    const bundle = {};
+                    const deltaKeys = new Set([...Object.keys(sel), ...Object.keys(inputSel)]);
+                    for (const k2 of deltaKeys) {
+                        if (!ownedDims.has(k2)) continue;
+                        if (sel[k2] !== undefined && sel[k2] !== inputSel[k2]) bundle[k2] = sel[k2];
+                    }
+                    const bundleKey = selKey(bundle);
+                    const cellId = '__dyn__' + bundleKey;
+                    if (debug) {
+                        const dropped = [];
+                        for (const dk of deltaKeys) {
+                            if (ownedDims.has(dk)) continue;
+                            if (sel[dk] !== undefined && sel[dk] !== inputSel[dk]) {
+                                dropped.push(dk + '=' + sel[dk]);
+                            }
+                        }
+                        console.log('EXIT sel=' + k + ' bundle=' + bundleKey
+                            + (dropped.length ? ' droppedForeign=' + dropped.join(',') : ''));
+                    }
+                    if (!results.has(cellId)) {
+                        results.set(cellId, {
+                            id: cellId,
+                            label: _formatDynamicCellLabel(bundle, marker),
+                            _moduleWrites: bundle,
+                        });
+                    }
+                } else if (debug) {
+                    console.log('STUCK sel=' + k + ' (no nextNode)');
+                }
+                continue;
+            }
             for (const edge of nextNode.edges) {
                 if (E.isEdgeDisabled(sel, nextNode, edge)) continue;
                 const ns = { ...sel, [nextNode.id]: edge.id };
                 const { sel: cleaned } = E.cleanSelection(ns, {});
+                if (debug) {
+                    const added = [];
+                    for (const k of Object.keys(cleaned)) {
+                        if (k === nextNode.id) continue;
+                        if (sel[k] !== cleaned[k]) added.push(k + '=' + cleaned[k]);
+                    }
+                    const lost = [];
+                    for (const k of Object.keys(sel)) {
+                        if (cleaned[k] === undefined) lost.push(k);
+                    }
+                    console.log('STEP ' + nextNode.id + '=' + edge.id
+                        + (added.length ? ' +' + added.join(',') : '')
+                        + (lost.length ? ' -' + lost.join(',') : ''));
+                }
                 stack.push(cleaned);
             }
+        }
+        if (debug) {
+            console.log('results: ' + results.size + ' cells');
+            console.groupEnd();
         }
         _dynamicCellCache.set(cacheKey, results);
         return results;
@@ -1552,7 +1892,7 @@
                 <div class="explore-toolbar">
                     <button data-action="reset">Reset view</button>
                     <button data-action="unpin">Unpin all</button>
-                    <button data-action="expand-early">Expand to Open Source</button>
+                    <button data-action="show-connections">Show All Connections</button>
                     <button data-action="clear">Clear expansions</button>
                     <button data-action="back">← Back to map</button>
                     <span class="explore-stats"></span>
@@ -1847,63 +2187,8 @@
             }
             refresh();
         });
-        root.querySelector('[data-action="expand-early"]').addEventListener('click', () => {
-            // BFS-expand every enabled edge from the current frontier, stopping
-            // descent as soon as a node is terminal (outcome/dead-end) OR its
-            // next question is `open_source`. The open_source node itself is
-            // rendered as a leaf but not expanded.
-            const STOP_AT = 'open_source';
-            const MAX_NODES = 500;
-            // Snapshot existing keys so we can unpin everything created by this
-            // expansion and let the barycenter auto-layout place them without
-            // sibling overlap.
-            const preexisting = new Set(dag.nodes.keys());
-            const queue = [dag.nodes.get(dag.rootKey)];
-            const seen = new Set();
-            while (queue.length && dag.nodes.size < MAX_NODES) {
-                const node = queue.shift();
-                if (!node || seen.has(node.key)) continue;
-                seen.add(node.key);
-                if (node.nq.terminal) continue;
-                if (node.nq.node.id === STOP_AT) continue;
-                if (node.isHub && node.inputs) {
-                    // Fan out every logical hub edge for every input that can
-                    // reach it (cells) or for every input (enter). Uses the
-                    // composite storage id so each branch is persistable.
-                    const mod = node.nq.module;
-                    for (const edge of node.nq.node.edges) {
-                        for (const [inputKey, input] of node.inputs) {
-                            if (edge._moduleWrites && !cellReachableFromSel(input.sel, mod, edge)) continue;
-                            const composite = edge.id + '@' + inputKey;
-                            if (!node.outgoing.has(composite)) toggleEdge(dag, node, composite);
-                            const info = node.outgoing.get(composite);
-                            if (!info) continue;
-                            const child = dag.nodes.get(info.childKey);
-                            if (child && !seen.has(child.key)) queue.push(child);
-                            if (dag.nodes.size >= MAX_NODES) break;
-                        }
-                        if (dag.nodes.size >= MAX_NODES) break;
-                    }
-                    continue;
-                }
-                for (const edge of node.nq.node.edges) {
-                    if (window.Engine.isEdgeDisabled(node.sel, node.nq.node, edge)) continue;
-                    if (!node.outgoing.has(edge.id)) {
-                        toggleEdge(dag, node, edge.id);
-                    }
-                    const info = node.outgoing.get(edge.id);
-                    if (!info) continue;
-                    const child = dag.nodes.get(info.childKey);
-                    if (child && !seen.has(child.key)) queue.push(child);
-                }
-            }
-            // Unpin newly created nodes so layout() spreads them vertically
-            // using the same barycenter logic used elsewhere. Pre-existing
-            // (user-dragged) nodes keep their pinned positions.
-            for (const n of dag.nodes.values()) {
-                if (!preexisting.has(n.key)) n.pinned = false;
-            }
-            refresh();
+        root.querySelector('[data-action="show-connections"]').addEventListener('click', () => {
+            toggleConnectionsOverlay(root);
         });
         root.querySelector('[data-action="clear"]').addEventListener('click', () => {
             const rootSel = dag.nodes.get(dag.rootKey).sel;
@@ -1913,6 +2198,11 @@
             selectedKey = null;
             clearSavedOpens();
             refresh();
+            // Also reset the connections overlay if it's open, so
+            // "clear expansions" behaves as a single start-over for
+            // both views. If the overlay is closed we still purge its
+            // persisted picks so a subsequent open starts fresh.
+            _ecResetConnectionsState(root);
         });
         root.querySelector('[data-action="back"]').addEventListener('click', () => {
             location.hash = '/map';
@@ -1926,6 +2216,1270 @@
         } else {
             fitToContent();
         }
+        // Auto-reopen the Show-All-Connections overlay if it was open
+        // before the refresh. Its traversal state (sel + committed) is
+        // already persisted via EC_STATE_LS_KEY and will be picked up
+        // inside toggleConnectionsOverlay when it re-enters.
+        if (_ecLoadState().open) {
+            toggleConnectionsOverlay(root);
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // "Show All Connections" overlay
+    //
+    // A debug view that renders the full narrative-flow DAG (borrowed
+    // from window.Nodes.FLOW_DAG) as a single pannable/zoomable canvas,
+    // layered on top of the normal path-exploration view. The primary
+    // debug affordance: clicking an outcome in any module's outcome
+    // strip highlights every other module where that same outcome
+    // appears, and draws dashed copper arrows between all occurrences.
+    //
+    // Not a replacement for the path explorer — it's read-only, static
+    // (no sel / flavor), and exists purely to answer "which modules
+    // can produce outcome X?" at a glance.
+    // ════════════════════════════════════════════════════════════════
+
+    const EC_LS_KEY = 'explore-connections-view-v1';
+    // Separate key from the pan/zoom view so traversal state survives
+    // even if the user clears the view (and vice-versa). Shape:
+    //   { open: boolean, sel: object, committed: [{slotKey, cellId, label, writes}, ...] }
+    const EC_STATE_LS_KEY = 'explore-connections-state-v1';
+
+    // Minimal HTML escaper for the connections view. Inputs are all
+    // controlled constants (node ids, labels) but strict escaping keeps
+    // us honest in case someone adds a label with a stray `<` later.
+    function esc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function _ecLoadView() {
+        try {
+            const raw = localStorage.getItem(EC_LS_KEY);
+            if (raw) {
+                const v = JSON.parse(raw);
+                if (typeof v.x === 'number' && typeof v.y === 'number' && typeof v.s === 'number') {
+                    return { x: v.x, y: v.y, s: v.s, dirty: true };
+                }
+            }
+        } catch (_e) { /* ignore */ }
+        return { x: 20, y: 20, s: 1, dirty: false };
+    }
+    function _ecSaveView(v) {
+        try { localStorage.setItem(EC_LS_KEY, JSON.stringify({ x: v.x, y: v.y, s: v.s })); }
+        catch (_e) { /* ignore */ }
+    }
+
+    // Persistence for the overlay's open flag + traversal state. Kept
+    // defensive: any schema mismatch falls back to a closed/empty state
+    // rather than blowing up the page.
+    function _ecLoadState() {
+        try {
+            const raw = localStorage.getItem(EC_STATE_LS_KEY);
+            if (!raw) return { open: false, committed: [] };
+            const v = JSON.parse(raw);
+            if (!v || typeof v !== 'object') return { open: false, committed: [] };
+            return {
+                open: !!v.open,
+                committed: Array.isArray(v.committed) ? v.committed : [],
+            };
+        } catch (_e) {
+            return { open: false, committed: [] };
+        }
+    }
+    function _ecSaveState(open, state) {
+        try {
+            localStorage.setItem(EC_STATE_LS_KEY, JSON.stringify({
+                open: !!open,
+                committed: state.committed || [],
+            }));
+        } catch (_e) { /* ignore */ }
+    }
+
+    // Start-over helper shared between the explorer's "Clear expansions"
+    // button and anything else that wants to wipe the connections
+    // overlay's traversal. Clears the committed picks AND the persisted
+    // copy so a later open (or a page refresh) restarts from empty;
+    // live overlays, if present, rerender in place.
+    function _ecResetConnectionsState(exploreRoot) {
+        const overlay = exploreRoot && exploreRoot.querySelector('.explore-connections');
+        if (overlay && overlay._ecState) {
+            overlay._ecState.committed = [];
+            _ecSaveState(true, overlay._ecState);
+            if (typeof overlay._ecRerender === 'function') overlay._ecRerender();
+            return;
+        }
+        // Overlay closed: purge persisted picks (but preserve whatever
+        // `open` flag was there — the user's next open should still
+        // respect whether they'd asked the overlay to auto-reopen).
+        const prev = _ecLoadState();
+        _ecSaveState(prev.open, { committed: [] });
+    }
+
+    // Longest-path column assignment (same algorithm as the /nodes Flow
+    // view). Every node's column is 1 + max(column of any parent); roots
+    // sit at 0. Guards against cycles (shouldn't occur) by treating a
+    // re-entry as column 0.
+    function _ecComputeColumns(dag) {
+        const parentsOf = new Map();
+        for (const n of dag.nodes) parentsOf.set(n.key, []);
+        for (const [p, c] of dag.edges) {
+            if (parentsOf.has(c)) parentsOf.get(c).push(p);
+        }
+        const col = new Map();
+        const visit = (k, stack = new Set()) => {
+            if (col.has(k)) return col.get(k);
+            if (stack.has(k)) return 0;
+            stack.add(k);
+            const ps = parentsOf.get(k) || [];
+            const c = ps.length ? Math.max(...ps.map(p => visit(p, stack))) + 1 : 0;
+            stack.delete(k);
+            col.set(k, c);
+            return c;
+        };
+        for (const n of dag.nodes) visit(n.key);
+        return col;
+    }
+
+    // Augment FLOW_DAG with virtual terminal slots so outcomes and
+    // dead-ends render as their own visual cards instead of being
+    // collapsed into pill-strips inside their source cards.
+    //
+    // Outcome slots: one per unique id in any slot's `earlyExits`,
+    // with virtual edges from every source slot. We deliberately add
+    // a placement edge from the rightmost regular slot to every
+    // outcome and to the dead-end as well — that way longest-path
+    // column assignment parks ALL terminal sinks one column past the
+    // rightmost real slot, clustering them in a clean terminal column
+    // instead of scattering each outcome at (max source col + 1).
+    // The placement edges are visually skipped in the base-arrow
+    // pass (see `c === 'deadend'` and the outcome-from-rightmost
+    // skip there); only the real source edges render.
+    //
+    // Dead-end slot: single shared `deadend` slot. It lights up
+    // dynamically when a branch's findNextQ resolves to
+    // `kind: 'deadend'` (no askable + no template match).
+    // Memoize by base-dag identity. FLOW_DAG is loaded once and reused
+    // forever, so the augmented dag (with virtual outcome / deadend
+    // sinks + their column-pinning placement edges) only ever needs to
+    // be built once. Saves a per-render `_ecComputeColumns` walk + a
+    // double allocation of the entire node/edge arrays.
+    const _ecExtendedDagCache = new WeakMap();
+    function _ecBuildExtendedDag(dag) {
+        const cached = _ecExtendedDagCache.get(dag);
+        if (cached) return cached;
+        const outcomeMap = new Map();
+        for (const n of dag.nodes) {
+            if (!n.earlyExits || !n.earlyExits.length) continue;
+            for (const oid of n.earlyExits) {
+                if (!outcomeMap.has(oid)) {
+                    outcomeMap.set(oid, {
+                        key: 'outcome:' + oid,
+                        id: oid,
+                        kind: 'outcome',
+                        sources: [],
+                    });
+                }
+                outcomeMap.get(oid).sources.push(n.key);
+            }
+        }
+        const outcomeNodes = [...outcomeMap.values()];
+        const extraEdges = [];
+        for (const o of outcomeNodes) {
+            for (const src of o.sources) extraEdges.push([src, o.key]);
+        }
+        // Park dead-end + every outcome one column past the rightmost
+        // real slot via a placement edge from rightmost. Together
+        // with the per-source outcome edges above, longest-path lifts
+        // every terminal sink to (rightmostCol + 1).
+        const baseCols = _ecComputeColumns(dag);
+        let rightmost = null;
+        let rightmostCol = -1;
+        for (const n of dag.nodes) {
+            const c = baseCols.get(n.key) || 0;
+            if (c > rightmostCol) { rightmostCol = c; rightmost = n.key; }
+        }
+        const deadEndNode = { key: 'deadend', id: 'deadend', kind: 'deadend' };
+        if (rightmost) {
+            extraEdges.push([rightmost, 'deadend']);
+            for (const o of outcomeNodes) {
+                if (!o.sources.includes(rightmost)) {
+                    extraEdges.push([rightmost, o.key]);
+                }
+            }
+        }
+        const out = {
+            nodes: [...dag.nodes, ...outcomeNodes, deadEndNode],
+            edges: [...dag.edges, ...extraEdges],
+        };
+        _ecExtendedDagCache.set(dag, out);
+        return out;
+    }
+
+    // The base-arrow pass should skip placement-only edges (rightmost
+    // → deadend, rightmost → outcome:* when the source isn't a real
+    // earlyExits source). This helper centralises that check so the
+    // _ecDrawEdges pass only needs to know "is this a real edge".
+    function _ecIsRealFlowEdge(p, c, outcomeSourceMap) {
+        if (c === 'deadend') return false;
+        if (typeof c === 'string' && c.startsWith('outcome:')) {
+            const sources = outcomeSourceMap && outcomeSourceMap.get(c);
+            return !!(sources && sources.includes(p));
+        }
+        return true;
+    }
+
+    // Renders one slot (module, standalone node, outcome, or dead-end)
+    // as an .ec-card. The card's outcome list is reachability-filtered
+    // across every branch implied by `state.committed` (multi-pick
+    // model) and rows already committed on this slot render as selected.
+    //
+    //   * module slots: purple double-border card with reads/writes
+    //     contract and an "Atomic outcomes" list of reachable exit
+    //     cells. Empty list → "awaiting inputs" placeholder.
+    //   * node slots (inert_stays, brittle_resolution): plain card
+    //     with the node's own clickable edges as outcomes.
+    //   * outcome slots: terminal narrative endings (the-ruin etc),
+    //     wired in via _ecBuildExtendedDag. Receive arrows from each
+    //     source slot whose `earlyExits` lists them.
+    //   * dead-end slot: catch-all terminal for branches that resolve
+    //     to no outcome and no askable next question.
+    //
+    // Every clickable row carries `data-slot-key` + `data-cell-id`
+    // so the overlay's single click handler can find it.
+    function _ecRenderCard(slot, state) {
+        if (slot.kind === 'outcome') return _ecRenderOutcomeCard(slot, state);
+        if (slot.kind === 'deadend') return _ecRenderDeadEndCard(slot, state);
+        const NODE_MAP = window.Engine.NODE_MAP;
+        const MODULE_MAP = (window.Graph && window.Graph.MODULE_MAP) || {};
+        const isModule = slot.kind === 'module';
+        const mod = isModule ? MODULE_MAP[slot.id] : null;
+        const node = !isModule ? NODE_MAP[slot.id] : null;
+        const label = isModule ? ((mod && mod.label) || '') : ((node && node.label) || '');
+        const committedHere = state.committed.filter(c => c.slotKey === slot.key);
+        const committedCellIds = new Set(committedHere.map(c => c.cellId));
+        const hasCommit = committedHere.length > 0;
+        // Multi-branch activation: this slot is "live" if ANY branch
+        // built from commits on OTHER slots makes its activateWhen pass.
+        // Cell enumeration likewise unions the reachable cells across
+        // those branches, so picking multiple outcomes upstream exposes
+        // every downstream option that any of them would unlock.
+        const isActive = _ecAnyBranchActivates(slot, state.committed);
+
+        let cls = 'ec-card ' + (isModule ? 'is-module' : 'is-node');
+        if (!isActive && !hasCommit) cls += ' is-inactive';
+        if (hasCommit) cls += ' is-visited';
+
+        let html = `<div class="${cls}" data-ec-key="${esc(slot.key)}">`;
+
+        const title = isModule ? ((mod && mod.label) || slot.id) + ' loop' : (label || slot.id);
+        html += `<div class="ec-card-head">`
+             + `<span class="ec-card-title">${esc(title)}</span>`
+             + (slot.note ? `<span class="ec-card-slotnote">${esc(slot.note)}</span>` : '')
+             + `</div>`;
+
+        if (isModule && mod) {
+            const reads = (mod.reads || []).join(', ');
+            const writes = (mod.writes || []).join(', ');
+            html += `<div class="explore-module-io">`
+                 + `<span class="explore-module-badge">module</span>`
+                 + `<div>reads: <code>${esc(reads)}</code></div>`
+                 + `<div>writes: <code>${esc(writes)}</code></div>`
+                 + `</div>`;
+        }
+
+        // Atomic outcomes: reachable cells unioned across every branch
+        // that doesn't pass through this slot. Inactive slots show a
+        // muted placeholder instead of enumerating their full outcome
+        // table — the point of this overlay is to only expose what's
+        // actually reachable from the path(s) built so far, starting
+        // with an empty sel (only `emergence` is active).
+        //
+        // Why union-of-branches (not a single accumulated sel): the
+        // user can pick multiple outcomes on any slot, each of which
+        // seeds its own branch. A downstream slot stays visible while
+        // ANY of those branches could reach it, and every alternative
+        // remains clickable so the user can fork or toggle picks
+        // without losing previous choices.
+        if (isActive) {
+            const cells = _ecUnionCellsAcrossBranches(slot, state.committed);
+            if (cells.length) {
+                html += `<div class="explore-node-edges" style="margin-top:6px;">`
+                     + `<div class="explore-edge-subhead">Atomic outcomes</div>`;
+                for (const cell of cells) {
+                    const isCommitted = committedCellIds.has(cell.id);
+                    const rowCls = 'explore-edge-row ec-cell-row' + (isCommitted ? ' is-committed' : '');
+                    html += `<div class="${rowCls}" data-slot-key="${esc(slot.key)}" data-cell-id="${esc(cell.id)}">`
+                         + `<span class="explore-edge-chevron">${isCommitted ? '▾' : '▸'}</span>`
+                         + `<span class="explore-edge-label">${esc(cell.label)}</span>`
+                         + `</div>`;
+                }
+                html += `</div>`;
+            } else {
+                html += `<div class="ec-card-label" style="margin-top:6px;font-style:italic;">no reachable outcomes from current path</div>`;
+            }
+        } else {
+            html += `<div class="ec-card-label" style="margin-top:6px;font-style:italic;">awaiting inputs</div>`;
+        }
+
+        // Narrative outcomes (slot.earlyExits) and dead-ends are now
+        // rendered as their own cards via _ecBuildExtendedDag — see
+        // _ecRenderOutcomeCard / _ecRenderDeadEndCard. The static
+        // pill-strip is gone; arrows from this card's cell rows to the
+        // outcome cards carry that visual relationship instead.
+
+        html += `</div>`;
+        return html;
+    }
+
+    // Outcome card: a terminal narrative bucket (the-ruin, the-plateau,
+    // etc) wired in by _ecBuildExtendedDag. Inactive (muted) until at
+    // least one branch's derived state matches the outcome's template,
+    // at which point it lights up green to mirror the legacy
+    // `is-reached` pill highlight. Has no cells of its own — it's a
+    // pure sink, reached via live arrows from upstream cell commits.
+    function _ecRenderOutcomeCard(slot, state) {
+        const oid = slot.id;
+        const tpl = (templates || []).find(t => t.id === oid);
+        const title = tpl && tpl.title ? tpl.title : oid;
+        const reached = _ecOutcomeReached(oid, state.committed);
+        let cls = 'ec-card is-outcome';
+        if (reached) cls += ' is-reached';
+        else cls += ' is-inactive';
+        let html = `<div class="${cls}" data-ec-key="${esc(slot.key)}">`;
+        html += `<div class="ec-card-head">`
+             + `<span class="ec-card-title">${esc(title)}</span>`
+             + `<span class="ec-card-slotnote">outcome</span>`
+             + `</div>`;
+        html += `<div class="ec-card-label" style="font-family:ui-monospace,'SF Mono',Consolas,monospace;font-size:10px;">${esc(oid)}</div>`;
+        html += `</div>`;
+        return html;
+    }
+
+    // Dead-end card: single shared sink for branches that resolve to
+    // `kind: 'deadend'` (no askable next question, no template match).
+    // Rendered red-tinted when at least one branch lands here so the
+    // user can see at a glance that part of their picks lead nowhere.
+    function _ecRenderDeadEndCard(slot, state) {
+        const reached = _ecAnyBranchDeadEnds(state.committed);
+        let cls = 'ec-card is-deadend';
+        if (reached) cls += ' is-reached';
+        else cls += ' is-inactive';
+        let html = `<div class="${cls}" data-ec-key="${esc(slot.key)}">`;
+        html += `<div class="ec-card-head">`
+             + `<span class="ec-card-title">Dead end</span>`
+             + `<span class="ec-card-slotnote">terminal</span>`
+             + `</div>`;
+        html += `<div class="ec-card-label">${reached ? 'at least one branch lands here' : 'no branch dead-ends here yet'}</div>`;
+        html += `</div>`;
+        return html;
+    }
+
+    // Derived states per branch, memoized for the render cycle.
+    // `_ecOutcomeReached` is called once per outcome pill across every
+    // card, and `resolvedStateWithFlavor` is the dominant cost per
+    // branch (it walks every NODE with visibility + deriveWhen +
+    // locked checks). Computing it once per unique branch sel and
+    // reusing across all outcomes turns the hot path from
+    // O(branches × outcomes) resolutions into O(branches).
+    //
+    // We also dedupe post-derivation — the (k+1)^n optional-subset
+    // branch explosion produces many branches that differ only on
+    // dims that don't survive `resolvedState` (e.g. two variants of
+    // an optional commit on a slot whose writes get derived away).
+    // Template matching cares only about derived state, so collapsing
+    // duplicates here cuts the `templateMatches` loop by a further
+    // constant factor without any semantic change.
+    let _ecDerivedStatesCache = null;
+    function _ecDerivedStates(committed) {
+        if (_ecDerivedStatesCache) return _ecDerivedStatesCache;
+        const E = window.Engine;
+        const branches = _ecBranches(committed);
+        const out = [];
+        const seen = new Set();
+        for (const b of branches) {
+            let state;
+            try {
+                state = E && E.resolvedStateWithFlavor
+                    ? E.resolvedStateWithFlavor(b.sel, {}) : b.sel;
+            } catch (_e) {
+                state = b.sel;
+            }
+            const k = selKey(state);
+            if (seen.has(k)) continue;
+            seen.add(k);
+            out.push(state);
+        }
+        _ecDerivedStatesCache = out;
+        return out;
+    }
+
+    // Does the given narrative outcome template match ANY branch?
+    // A pill is "reached" if at least one branch's accumulated sel
+    // satisfies the template — useful when the user has multiple
+    // selections active and wants to see which outcomes any of them
+    // lands on. Uses engine.templateMatches against (sel, derivedState).
+    // `templates` is the module-scoped list loaded via ensureLoaded().
+    function _ecOutcomeReached(outcomeId, committed) {
+        const E = window.Engine;
+        if (!E || !E.templateMatches || !templates || !templates.length) return false;
+        const tpl = templates.find(t => t.id === outcomeId);
+        if (!tpl) return false;
+        const states = _ecDerivedStates(committed);
+        for (const state of states) {
+            try {
+                if (E.templateMatches(tpl, state)) return true;
+            } catch (_e) { /* ignore individual branch failures */ }
+        }
+        return false;
+    }
+
+    // Does ANY branch from the current commits resolve to a dead-end
+    // (no askable next question + no outcome template match)? Drives
+    // the dead-end card's "reached" highlight. Mirrors the engine's
+    // findNextQ terminal branch — kind === 'deadend'.
+    //
+    // Uses the dedup'd, render-cached derived-state list shared with
+    // `_ecOutcomeReached` so we resolve each unique branch state at
+    // most once per render. Inlining the template-match + askable-
+    // node loop here (rather than calling `findNextQ` per branch)
+    // skips the per-call `resolvedState` walk that findNextQ would
+    // otherwise repeat — a 2k-branch render previously cost ~2s of
+    // redundant resolution. With the local cache, it's bounded by
+    // unique derived states (typically <100 even for deep paths).
+    function _ecAnyBranchDeadEnds(committed) {
+        if (!committed || !committed.length) return false;
+        const E = window.Engine;
+        if (!E) return false;
+        const states = _ecDerivedStates(committed);
+        const tpls = templates || [];
+        for (const state of states) {
+            let matched = false;
+            for (const t of tpls) {
+                try {
+                    if (E.templateMatches(t, state)) { matched = true; break; }
+                } catch (_e) { /* ignore */ }
+            }
+            if (matched) continue;
+            let askable = false;
+            for (const node of E.NODES) {
+                if (node.derived) continue;
+                if (state[node.id] !== undefined) continue;
+                try {
+                    if (!E.isNodeVisible(state, node)) continue;
+                } catch (_e) { continue; }
+                askable = true;
+                break;
+            }
+            if (!askable) return true;
+        }
+        return false;
+    }
+
+    function _ecRenderFlowHtml(state) {
+        // Reset per-render caches: every card and arrow check goes
+        // through _ecSlotActive / _ecSlotCells / _ecBranches, so
+        // clearing here covers both the card pass (this function)
+        // and the subsequent _ecDrawEdges pass fired from rAF.
+        _ecResetRenderCache();
+        const baseDag = window.Nodes && window.Nodes.FLOW_DAG;
+        if (!baseDag) return '<div style="padding:20px;color:var(--text-muted)">FLOW_DAG not available — make sure nodes.js loaded first.</div>';
+        // Augmented DAG with virtual outcome + dead-end slots so they
+        // render as their own cards alongside modules. The base DAG
+        // is left untouched; downstream lookups all go through this
+        // local `dag`.
+        const dag = _ecBuildExtendedDag(baseDag);
+        const col = _ecComputeColumns(dag);
+        const byCol = new Map();
+        for (const n of dag.nodes) {
+            const c = col.get(n.key);
+            if (!byCol.has(c)) byCol.set(c, []);
+            byCol.get(c).push(n);
+        }
+        const maxCol = byCol.size ? Math.max(...byCol.keys()) : 0;
+        let html = `<svg class="ec-edges" xmlns="http://www.w3.org/2000/svg">`
+                 + `<defs>`
+                 + `<marker id="ec-arrow" viewBox="0 0 10 10" refX="9" refY="5" `
+                 +         `markerWidth="7" markerHeight="7" orient="auto-start-reverse">`
+                 + `<path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>`
+                 + `</marker>`
+                 + `<marker id="ec-arrow-outcome" viewBox="0 0 10 10" refX="9" refY="5" `
+                 +         `markerWidth="7" markerHeight="7" orient="auto-start-reverse">`
+                 + `<path d="M 0 0 L 10 5 L 0 10 z" fill="#b3895e"/>`
+                 + `</marker>`
+                 // Single universal marker for every live arrow — uses
+                 // fill="context-stroke" so the arrowhead colors itself
+                 // from whatever stroke the path carries (palette color
+                 // or a blended average when multiple picks converge
+                 // on the same fan-out destination). Replaces the old
+                 // one-marker-per-palette-slot scheme, which couldn't
+                 // express blended colors.
+                 //
+                 // markerUnits="userSpaceOnUse" keeps the arrowhead a
+                 // fixed visual size (5px) instead of scaling with the
+                 // path's stroke-width — otherwise the primary (2.5-wide)
+                 // and fan-out (1.25-wide) arrows would get wildly
+                 // different arrowheads despite sharing this marker.
+                 // refX="0" pins the BACK of the triangle to the line
+                 // endpoint, so the triangle sits forward of where the
+                 // line stops instead of overlapping it.
+                 + `<marker id="ec-arrow-live" viewBox="0 0 10 10" refX="0" refY="5" `
+                 +         `markerUnits="userSpaceOnUse" `
+                 +         `markerWidth="5" markerHeight="5" orient="auto-start-reverse">`
+                 + `<path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke"/>`
+                 + `</marker>`
+                 + `</defs>`
+                 + `</svg>`;
+        html += `<div class="ec-flow">`;
+        for (let c = 0; c <= maxCol; c++) {
+            const nodes = byCol.get(c) || [];
+            html += `<div class="ec-col">`;
+            for (const slot of nodes) html += _ecRenderCard(slot, state);
+            html += `</div>`;
+        }
+        html += `</div>`;
+        return html;
+    }
+
+    // Measures every card + every outcome pill under the given viewport,
+    // then redraws the SVG with:
+    //   * base parent→child FLOW_DAG arrows (faint, grey)
+    //   * live arrows from each committed cell row to its downstream
+    //     slots that are active under that pick's own post-sel (the
+    //     "path you've walked" highlight, computed per-pick so
+    //     parallel picks on the same slot each draw their own fan-out)
+    //   * dashed copper pill-to-pill links when a narrative outcome
+    //     pill is selected (legacy "where else does this outcome
+    //     appear?" interaction)
+    function _ecDrawEdges(overlay, selectedOutcomeId) {
+        const viewport = overlay.querySelector('.explore-connections-viewport');
+        const svg = overlay.querySelector('svg.ec-edges');
+        const baseDag = window.Nodes && window.Nodes.FLOW_DAG;
+        if (!viewport || !svg || !baseDag) return;
+        // Use the same augmented DAG that the render pass laid out, so
+        // virtual outcome / dead-end slots participate in static base
+        // arrows, slot lookups, and child-key resolution below.
+        const dag = _ecBuildExtendedDag(baseDag);
+        const state = overlay._ecState || { committed: [] };
+        const committed = state.committed || [];
+        svg.setAttribute('width', 0);
+        svg.setAttribute('height', 0);
+        // Measure in pre-transform coordinates. getBoundingClientRect
+        // returns post-transform DOM pixels, so once the viewport has
+        // been scaled by fit()/wheel zoom, those rects are compressed
+        // by view.s — and feeding them into the SVG's internal coord
+        // system (which is itself inside the scaled viewport) would
+        // compress arrow endpoints a second time, pulling everything
+        // toward (0,0). offsetLeft/Top/Width/Height are resolved
+        // against the viewport (the nearest positioned ancestor) in
+        // layout pixels, unaffected by CSS transforms.
+        // Helper: walk up offsetParents until we hit the viewport.
+        const offsetWithin = (el) => {
+            let x = 0, y = 0, cur = el;
+            while (cur && cur !== viewport) {
+                x += cur.offsetLeft;
+                y += cur.offsetTop;
+                cur = cur.offsetParent;
+            }
+            return { x, y, w: el.offsetWidth, h: el.offsetHeight };
+        };
+        const rects = new Map();
+        let maxRight = 0, maxBot = 0;
+        for (const el of viewport.querySelectorAll('[data-ec-key]')) {
+            const r = offsetWithin(el);
+            rects.set(el.dataset.ecKey, r);
+            if (r.x + r.w > maxRight) maxRight = r.x + r.w;
+            if (r.y + r.h > maxBot) maxBot = r.y + r.h;
+        }
+        // Per-cell-row rects keyed by "slotKey|cellId" — used as the
+        // emanation point for live arrows so the path visual starts
+        // right where the click landed.
+        const cellRects = new Map();
+        for (const el of viewport.querySelectorAll('.ec-cell-row[data-cell-id]')) {
+            cellRects.set(el.dataset.slotKey + '|' + el.dataset.cellId, offsetWithin(el));
+        }
+        const outcomeRects = [];
+        for (const el of viewport.querySelectorAll('.ec-outcome')) {
+            const r = offsetWithin(el);
+            outcomeRects.push({ oid: el.dataset.outcomeId, ...r });
+        }
+        const pad = 20;
+        const W = maxRight + pad, H = maxBot + pad;
+        svg.setAttribute('width', W);
+        svg.setAttribute('height', H);
+        svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+        // Each commit emits arrows under its own post-sel — that way
+        // two commits on the same slot (say "substantial" + "never" on
+        // emergence) each drive independent downstream highlights,
+        // rather than the last one winning. Post-sel for a (parent,
+        // child) pair excludes BOTH the parent's and the child's own
+        // commits before merging the parent's writes — otherwise the
+        // child's own collapseToFlavor writes (e.g. who_benefits_set
+        // from plateau_benefit_distribution edges) retroactively
+        // trigger its hideWhen and hide the arrow into it.
+        const childPostSels = (commit, childKey) => {
+            const childSlot = dag.nodes.find(n => n.key === childKey);
+            const rel = childSlot ? _ecRelevantDims(childSlot) : null;
+            const others = committed.filter(
+                c => c.slotKey !== commit.slotKey && c.slotKey !== childKey,
+            );
+            // Branches over the child's relevant dims only — an
+            // unrelated sibling pick on a different fork that writes
+            // disjoint dims can't affect the child's activation or
+            // cell enumeration, so folding those commits out keeps the
+            // Cartesian product bounded. Parent writes are re-merged
+            // on top (they're the whole point of this arrow check).
+            return _ecBranches(others, undefined, rel).map(b => _ecCommit(b.sel, commit.writes));
+        };
+
+        // Priority filter — for a given commit, returns the subset of
+        // its DAG children that are the engine's actual *next* pick
+        // (first visible-unanswered node in NODES order, factoring in
+        // `isNodeActivatedByRules` priority deferral via isNodeVisible).
+        // Without this filter, an alignment commit on (brittle, breaks)
+        // draws arrows into BOTH escape_early and proliferation; the
+        // engine would only enter one of them at a time. Once the user
+        // commits the active one, the next becomes the priority winner
+        // and gets its own arrow.
+        const E = window.Engine;
+        const NODES = (E && E.NODES) || [];
+        const MODULE_MAP = (window.Graph && window.Graph.MODULE_MAP) || {};
+        const priorityWinnersByCommit = new Map();
+        const computePriorityWinners = (commit) => {
+            const candidates = _ecChildSlotKeys(commit.slotKey);
+            const candSet = new Set(candidates);
+            const nodeToSlot = new Map();
+            for (const key of candidates) {
+                const slot = dag.nodes.find(n => n.key === key);
+                if (!slot) continue;
+                if (slot.kind === 'module') {
+                    const mod = MODULE_MAP[slot.id];
+                    if (!mod) continue;
+                    for (const nid of mod.nodeIds || []) {
+                        if (!nodeToSlot.has(nid)) nodeToSlot.set(nid, key);
+                    }
+                } else if (!nodeToSlot.has(slot.id)) {
+                    nodeToSlot.set(slot.id, key);
+                }
+            }
+            // Branch over commits that aren't on a candidate child
+            // (those would mask their own activation). The branch
+            // enumerator further excludes the parent's own slot via
+            // excludeSlotKey — `commit.writes` is layered on top per
+            // branch, so we want exactly THIS commit's writes from the
+            // parent, not other multi-picks on the same slot.
+            //
+            // Why branches instead of one merged sel: when the parent
+            // has cousins with mutually-exclusive picks (e.g. multiple
+            // emergence cells: asi vs plateau vs agi), Object.assign-
+            // merging just keeps the last one's `capability`, which can
+            // hide the candidate child's activateWhen on every branch
+            // (alignment_loop needs capability='asi'; if last emergence
+            // commit was capability='plateau', alignment never wins).
+            // Per-branch the engine sees a self-consistent sel.
+            //
+            // Passing parent's slotKey as excludeSlotKey gives this
+            // call a unique cache key — childPostSels uses
+            // (undefined, rel), so without this we'd alias to its
+            // cached result over a different `others` filter.
+            const others = committed.filter(c => !candSet.has(c.slotKey));
+            const branches = _ecBranches(others, commit.slotKey, null);
+            const winners = new Set();
+            const firstVisibleByBranch = [];
+            for (const b of branches) {
+                const sel = _ecCommit(b.sel, commit.writes);
+                let firstVisible = null;
+                for (const node of NODES) {
+                    if (node.derived) continue;
+                    if (sel[node.id] !== undefined) continue;
+                    // Skip internals of modules already completed in this
+                    // sel. `isNodeVisible` only checks activate/hideWhen
+                    // — it doesn't know about completion markers, so a
+                    // committed module's internal (e.g. decel_2mo_progress
+                    // after `decel|accelerate__robust` commits decel_set
+                    // =yes) keeps looking visible because its own
+                    // activateWhen still matches against live sel dims
+                    // (capability, gov_action). Its slot is excluded
+                    // from candidates here (we're computing winners FOR
+                    // its own commit, or emergence's commit downstream
+                    // of it), so the loop never finds a mapped winner
+                    // and `winners=[<none>]` — no live arrow draws.
+                    // Mirrors `_shallowAskable`'s module-done short-
+                    // circuit inside `isNodeActivatedByRules`.
+                    if (node.module) {
+                        const marker = _MODULE_COMPLETION_MARKER[node.module];
+                        if (_isMarkerSatisfied(marker, sel)) continue;
+                    }
+                    if (!E.isNodeVisible(sel, node)) continue;
+                    firstVisible = node.id;
+                    const slotKey = nodeToSlot.get(node.id);
+                    if (slotKey) winners.add(slotKey);
+                    break;
+                }
+                if (firstVisible) {
+                    firstVisibleByBranch.push(firstVisible);
+                } else {
+                    // Branch is terminal: either the engine would now
+                    // emit an outcome (template match against derived
+                    // sel) or a dead-end (no askable + no match). Map
+                    // those to the virtual outcome / deadend slots so
+                    // they show up as winners and get live arrows just
+                    // like regular DAG children. Cells-empty branches
+                    // (askable internal node but DFS finds no exit) are
+                    // rerouted to the dead-end sink in the live-arrow
+                    // pass below — that's a per-postSel check, much
+                    // cheaper than running cell enumeration per
+                    // priority-winner branch.
+                    let matched = null;
+                    try {
+                        const nq = findNextQ(sel);
+                        if (nq && nq.terminal) {
+                            if (nq.kind === 'outcome' && nq.outcome) {
+                                matched = 'outcome:' + nq.outcome.id;
+                            } else if (nq.kind === 'deadend') {
+                                matched = 'deadend';
+                            }
+                        }
+                    } catch (_e) { /* ignore branch-specific failure */ }
+                    if (matched) {
+                        winners.add(matched);
+                        firstVisibleByBranch.push('<' + matched + '>');
+                    }
+                }
+            }
+            if (window.__EC_DEBUG_WINNERS__ !== false) {
+                // On by default — set window.__EC_DEBUG_WINNERS__=false
+                // in the console to silence. Logs the union of "next
+                // pick" nodes across all branches for this commit.
+                const uniqFirst = [...new Set(firstVisibleByBranch)];
+                // eslint-disable-next-line no-console
+                console.log(
+                    `[ec-winners] commit=${commit.slotKey}|${commit.cellId} `
+                    + `candidates=[${candidates.join(',')}] `
+                    + `branches=${branches.length} `
+                    + `firstVisible=[${uniqFirst.join(',') || '<none>'}] `
+                    + `→ winners=[${[...winners].join(',') || '<none>'}]`,
+                );
+            }
+            return winners;
+        };
+        const priorityWinners = (commit) => {
+            const k = commit.slotKey + '|' + commit.cellId;
+            let w = priorityWinnersByCommit.get(k);
+            if (!w) {
+                w = computePriorityWinners(commit);
+                priorityWinnersByCommit.set(k, w);
+            }
+            return w;
+        };
+
+        // Active AND has at least one reachable exit cell — mirrors
+        // the "askable-but-empty → terminal" check in priority winners
+        // so the live arrow only draws when the user could actually
+        // pass through this slot. Otherwise the arrow would point at
+        // a card stamped "no reachable outcomes from current path".
+        const _slotLiveUnder = (childSlot, postSels) => postSels.some(
+            s => _ecSlotActive(childSlot, s) && _ecSlotCells(childSlot, s).length > 0,
+        );
+        const liveSlotPairs = new Set();
+        for (const commit of committed) {
+            const winners = priorityWinners(commit);
+            // Regular DAG children — same activation gating as before.
+            for (const child of _ecChildSlotKeys(commit.slotKey)) {
+                if (!winners.has(child)) continue;
+                const childSlot = dag.nodes.find(n => n.key === child);
+                if (!childSlot) continue;
+                const postSels = childPostSels(commit, child);
+                if (_slotLiveUnder(childSlot, postSels)) {
+                    liveSlotPairs.add(commit.slotKey + '|' + child);
+                }
+            }
+            // Terminal winners (outcome:* / deadend) don't have an
+            // activateWhen — they're terminal sinks. If the priority
+            // pass added them as a winner for this commit, the live
+            // arrow always draws and the base arrow (if any) fades.
+            for (const w of winners) {
+                if (w === 'deadend' || (typeof w === 'string' && w.startsWith('outcome:'))) {
+                    liveSlotPairs.add(commit.slotKey + '|' + w);
+                }
+            }
+        }
+        // Build a quick lookup of "real" outcome source slots so the
+        // base-arrow pass can skip the synthetic placement edges
+        // (rightmost → outcome:*, rightmost → deadend) added by
+        // _ecBuildExtendedDag for column-pinning.
+        const outcomeSourceMap = new Map();
+        for (const n of dag.nodes) {
+            if (n.kind !== 'outcome') continue;
+            outcomeSourceMap.set(n.key, n.sources || []);
+        }
+        const paths = [];
+        for (const [p, c] of dag.edges) {
+            if (!_ecIsRealFlowEdge(p, c, outcomeSourceMap)) continue;
+            const pr = rects.get(p), cr = rects.get(c);
+            if (!pr || !cr) continue;
+            const x1 = pr.x + pr.w, y1 = pr.y + pr.h / 2;
+            const x2 = cr.x, y2 = cr.y + cr.h / 2;
+            const dx = Math.max(40, (x2 - x1) / 2);
+            const d = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+            const cls = liveSlotPairs.has(p + '|' + c) ? ' class="is-faded"' : '';
+            paths.push(`<path${cls} d="${d}" marker-end="url(#ec-arrow)"/>`);
+        }
+
+        // Live arrows — main + fan-out, emitted in two passes:
+        //
+        // 1. MAIN arrows (committed cell → downstream card): one per
+        //    (commit, child) pair. Each commit's cell row is a unique
+        //    source position, so these don't visually duplicate even
+        //    when two picks converge on the same child.
+        //
+        // 2. FAN-OUT arrows (child's left-center → specific outcome
+        //    row): all fan-outs for a given child share the SAME start
+        //    point (the landing point on the card's left edge), so
+        //    multiple picks unlocking the same row would otherwise
+        //    stack identical lines. We dedupe by "childKey|cellId" and
+        //    blend contributing colors into a single arrow — gives the
+        //    user a visual cue that several picks converge there,
+        //    without the overdraw.
+        //
+        // style="stroke:..." (not the stroke ATTRIBUTE) — the general
+        // svg.ec-edges path { stroke: currentColor } CSS rule has
+        // higher specificity than any SVG presentation attribute and
+        // would otherwise paint every arrow grey. Inline style beats
+        // it. The universal marker uses context-stroke, so the
+        // arrowhead color follows the path's stroke automatically.
+        const fanoutByDest = new Map();
+        for (const commit of committed) {
+            const cellR = cellRects.get(commit.slotKey + '|' + commit.cellId);
+            if (!cellR) continue;
+            const colorIdx = _ecColorIdx(commit.slotKey, commit.cellId);
+            const color = EC_LIVE_PALETTE[colorIdx];
+            const winners = priorityWinners(commit);
+            // Iterate winners directly so terminal sinks (outcome:* /
+            // deadend) get their main arrow alongside regular DAG
+            // children. Terminal sinks have no cells of their own, so
+            // they skip the activateWhen check and the fan-out pass.
+            for (const ck of winners) {
+                const childSlot = dag.nodes.find(n => n.key === ck);
+                if (!childSlot) continue;
+                const isTerminal = childSlot.kind === 'outcome' || childSlot.kind === 'deadend';
+                let postSels = null;
+                let drawKey = ck;
+                let drawTerminal = isTerminal;
+                if (!isTerminal) {
+                    postSels = childPostSels(commit, ck);
+                    if (!_slotLiveUnder(childSlot, postSels)) {
+                        // Askable-but-uncompletable: priority winners
+                        // picked this slot because the engine has a
+                        // visible internal node, but `_dynamicCellEnumerate`
+                        // finds no exit cells under this commit's pre-
+                        // sel — every internal walk dead-ends. Reroute
+                        // the live arrow to the dead-end card so the
+                        // user doesn't see an arrow pointing into a
+                        // card stamped "no reachable outcomes from
+                        // current path".
+                        if (!dag.nodes.find(n => n.key === 'deadend')) continue;
+                        drawKey = 'deadend';
+                        drawTerminal = true;
+                    }
+                }
+                const cr = rects.get(drawKey);
+                if (!cr) continue;
+                const x1 = cellR.x + cellR.w, y1 = cellR.y + cellR.h / 2;
+                const x2 = cr.x, y2 = cr.y + cr.h / 2;
+                const dx = Math.max(40, (x2 - x1) / 2);
+                const d = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+                paths.push(`<path class="is-live" d="${d}" style="stroke:${color}" `
+                         + `marker-end="url(#ec-arrow-live)"/>`);
+
+                if (drawTerminal) continue;
+
+                // Collect fan-out contributions per destination —
+                // emit later once per unique (childKey, cellId).
+                const unlocked = new Set();
+                for (const s of postSels) {
+                    if (!_ecSlotActive(childSlot, s)) continue;
+                    for (const cell of _ecSlotCells(childSlot, s)) {
+                        unlocked.add(cell.id);
+                    }
+                }
+                for (const cellId of unlocked) {
+                    const rowR = cellRects.get(ck + '|' + cellId);
+                    if (!rowR) continue;
+                    const destKey = ck + '|' + cellId;
+                    let entry = fanoutByDest.get(destKey);
+                    if (!entry) {
+                        // Start at the card's left edge (landing point
+                        // of the main arrow, = this child's left-
+                        // center) and end at the cell row's left edge.
+                        // Both points live inside the card, so the
+                        // curve span is short — a small Bezier keeps
+                        // the path from snapping to a straight line.
+                        const fx1 = x2, fy1 = y2;
+                        const fx2 = rowR.x, fy2 = rowR.y + rowR.h / 2;
+                        const fdx = Math.max(12, (fx2 - fx1) / 2);
+                        const d2 = `M ${fx1} ${fy1} C ${fx1 + fdx} ${fy1}, `
+                                 + `${fx2 - fdx} ${fy2}, ${fx2} ${fy2}`;
+                        entry = { d: d2, colors: [] };
+                        fanoutByDest.set(destKey, entry);
+                    }
+                    entry.colors.push(color);
+                }
+            }
+        }
+        for (const { d: fd, colors } of fanoutByDest.values()) {
+            // Dedupe contributing colors before blending — two picks
+            // that happen to hash to the same palette slot shouldn't
+            // bias the average, since the final stroke would be the
+            // same color anyway.
+            const uniq = [...new Set(colors)];
+            const stroke = _ecBlendColors(uniq);
+            paths.push(`<path class="is-live-fanout" d="${fd}" `
+                     + `style="stroke:${stroke}" `
+                     + `marker-end="url(#ec-arrow-live)"/>`);
+        }
+
+        if (selectedOutcomeId) {
+            // Link every pair of same-id outcome pills with a curved dashed
+            // copper arc. Going pill-to-pill (rather than card-to-card)
+            // makes the visual answer to "where else does this appear?"
+            // land on the exact row the user clicked.
+            const matches = outcomeRects.filter(r => r.oid === selectedOutcomeId);
+            for (let i = 0; i < matches.length; i++) {
+                for (let j = i + 1; j < matches.length; j++) {
+                    const a = matches[i], b = matches[j];
+                    const ax = a.x + a.w / 2, ay = a.y + a.h / 2;
+                    const bx = b.x + b.w / 2, by = b.y + b.h / 2;
+                    // Arc up-and-over so the connection line doesn't
+                    // hide behind the intervening cards. Control points
+                    // are offset vertically by half the pair's span.
+                    const span = Math.max(80, Math.abs(bx - ax) / 3);
+                    const midY = Math.min(ay, by) - span;
+                    const d = `M ${ax} ${ay} C ${ax} ${midY}, ${bx} ${midY}, ${bx} ${by}`;
+                    paths.push(`<path class="is-outcome-link" d="${d}" marker-end="url(#ec-arrow-outcome)"/>`);
+                }
+            }
+        }
+        const defs = svg.querySelector('defs');
+        svg.innerHTML = '';
+        if (defs) svg.appendChild(defs);
+        svg.insertAdjacentHTML('beforeend', paths.join(''));
+        _ecFlushBranchDebug();
+    }
+
+    // Emit a grouped console summary of every unique _ecBranches query
+    // that was executed during this render (via the per-render debug
+    // accumulator). Enabled by default; set
+    // window.__EC_DEBUG_BRANCHES__=false to silence. Each render logs a
+    // single collapsed group with a table showing which slots produced
+    // the most branches and how long the render took.
+    function _ecFlushBranchDebug() {
+        const dbg = _ecBranchDebug;
+        if (!dbg) return;
+        _ecBranchDebug = null;
+        const rows = [...dbg.byKey.entries()]
+            .map(([key, v]) => ({
+                query: v.excludeSlotKey ? `exclude:${v.excludeSlotKey}` : 'full',
+                dims: v.relevantDims ? v.relevantDims.join(',') : '(all)',
+                contribSlots: v.contributingSlots.length,
+                contribPicks: v.contributingPicks,
+                mand: v.mandatorySlots,
+                opt: v.optionalSlots,
+                branches: v.branchCount,
+                capped: v.capped,
+            }))
+            .sort((a, b) => b.branches - a.branches);
+        const dtMs = (performance.now() - dbg.t0).toFixed(1);
+        const derivedCount = _ecDerivedStatesCache ? _ecDerivedStatesCache.length : 0;
+        // eslint-disable-next-line no-console
+        console.groupCollapsed(
+            `[ec-branches] ${rows.length} unique queries, `
+            + `${dbg.calls} total calls, `
+            + `${derivedCount} unique derived states, `
+            + `${dtMs}ms`,
+        );
+        // eslint-disable-next-line no-console
+        if (rows.length) console.table(rows);
+        // eslint-disable-next-line no-console
+        console.groupEnd();
+    }
+
+    function _ecApplyHighlights(overlay, selectedOutcomeId) {
+        if (selectedOutcomeId) overlay.setAttribute('data-ec-selected', selectedOutcomeId);
+        else overlay.removeAttribute('data-ec-selected');
+        overlay.querySelectorAll('.ec-outcome').forEach(el => {
+            const oid = el.dataset.outcomeId;
+            el.classList.remove('is-selected', 'is-linked');
+            if (!selectedOutcomeId) return;
+            if (oid === selectedOutcomeId) {
+                el.classList.add(el._ecClicked ? 'is-selected' : 'is-linked');
+            }
+        });
+        overlay.querySelectorAll('.ec-card').forEach(card => {
+            card.classList.remove('has-linked');
+            if (!selectedOutcomeId) return;
+            if (card.querySelector(`.ec-outcome[data-outcome-id="${CSS.escape(selectedOutcomeId)}"]`)) {
+                card.classList.add('has-linked');
+            }
+        });
+    }
+
+    function toggleConnectionsOverlay(exploreRoot) {
+        const btn = exploreRoot.querySelector('[data-action="show-connections"]');
+        let overlay = exploreRoot.querySelector('.explore-connections');
+        if (overlay) {
+            // Persist the traversal state on close so reopening (or a
+            // full page refresh with the open flag still set in LS)
+            // resumes exactly where the user left off. `open: false`
+            // flips the auto-reopen bit; committed is preserved.
+            const existingState = overlay._ecState || { committed: [] };
+            _ecSaveState(false, existingState);
+            if (overlay._ecCleanup) overlay._ecCleanup();
+            overlay.remove();
+            if (btn) btn.textContent = 'Show All Connections';
+            return;
+        }
+        if (btn) btn.textContent = 'Hide Connections';
+        overlay = document.createElement('div');
+        overlay.className = 'explore-connections';
+
+        // Overlay state — guides the reachability-filtered traversal:
+        //   committed : array of { slotKey, cellId, label, writes } in
+        //               click order. Multiple entries may share the
+        //               same slotKey (multi-branch picks). Any "current
+        //               sel" is derived on the fly via _ecBranches so
+        //               each pick owns its own branch rather than
+        //               overwriting siblings.
+        // Persisted to localStorage (EC_STATE_LS_KEY) on every mutation
+        // so a page refresh with the overlay open restores both the
+        // open flag AND the walked path. Schema is kept defensive —
+        // bad reads fall back to an empty state, not a crash.
+        const persisted = _ecLoadState();
+        const state = {
+            committed: persisted.committed || [],
+        };
+        overlay._ecState = state;
+        // Persist the "open" bit right away so a refresh during the
+        // same session restores the overlay even if the user hasn't
+        // yet interacted with it.
+        _ecSaveState(true, state);
+        // Outcome-pill highlight id (see narrative outcome click handler
+        // at the bottom of this fn). Declared here so the rerender
+        // closure can pass it through to _ecDrawEdges/_ecApplyHighlights.
+        let selectedOutcomeId = null;
+
+        overlay.innerHTML = `<div class="explore-connections-viewport">${_ecRenderFlowHtml(state)}</div>`;
+        exploreRoot.appendChild(overlay);
+        const viewport = overlay.querySelector('.explore-connections-viewport');
+
+        // Toolbar: lives outside the pan/zoom transform so it stays
+        // fixed in the top-right corner. Currently just shows the
+        // traversal depth + a Reset button; extend here for future
+        // "load current path" / "export sel" controls.
+        const toolbar = document.createElement('div');
+        toolbar.className = 'ec-toolbar';
+        toolbar.innerHTML = `<span class="ec-toolbar-label"></span>`
+                          + `<button type="button" data-action="ec-reset">Reset path</button>`;
+        overlay.appendChild(toolbar);
+        const _updateToolbar = () => {
+            const label = toolbar.querySelector('.ec-toolbar-label');
+            const n = state.committed.length;
+            // Show the deduped (post-`resolvedState`) branch count —
+            // that's the number the outcome template matcher actually
+            // iterates, and two pre-derivation sels that collapse to
+            // the same derived state answer every downstream query
+            // identically. The raw `_ecBranches` size is still visible
+            // in the [ec-branches] console debug group if needed.
+            const derivedCount = n > 0 ? _ecDerivedStates(state.committed).length : 1;
+            const suffix = derivedCount > 1 ? `, ${derivedCount} branches` : '';
+            label.textContent = n === 0
+                ? 'empty path'
+                : `${n} pick${n === 1 ? '' : 's'}${suffix}`;
+            const resetBtn = toolbar.querySelector('[data-action="ec-reset"]');
+            resetBtn.disabled = n === 0;
+        };
+        _updateToolbar();
+
+        // Render pass: innerHTML rebuild from state, then redraw edges
+        // and reapply any outcome-pill highlight. Kept as a closure so
+        // both the cell click handler and the Reset button can call it.
+        const rerender = () => {
+            viewport.innerHTML = _ecRenderFlowHtml(state);
+            _updateToolbar();
+            // Redraw edges after layout settles so rect measurements
+            // pick up any card-size changes from commit highlighting.
+            requestAnimationFrame(() => {
+                _ecDrawEdges(overlay, selectedOutcomeId);
+                _ecApplyHighlights(overlay, selectedOutcomeId);
+            });
+        };
+        // Exposed so external actions (e.g. the explorer toolbar's
+        // "Clear expansions") can reset committed picks and trigger a
+        // repaint without having to re-enter toggleConnectionsOverlay.
+        overlay._ecRerender = rerender;
+
+        toolbar.addEventListener('click', (e) => {
+            if (e.target.closest('[data-action="ec-reset"]')) {
+                state.committed = [];
+                _ecSaveState(true, state);
+                rerender();
+            }
+        });
+
+        const view = _ecLoadView();
+        const apply = () => {
+            viewport.style.transform =
+                `translate(${view.x}px, ${view.y}px) scale(${view.s})`;
+        };
+        const fit = () => {
+            viewport.style.transform = 'translate(0,0) scale(1)';
+            const cw = overlay.clientWidth, ch = overlay.clientHeight;
+            const vw = viewport.scrollWidth, vh = viewport.scrollHeight;
+            if (!cw || !vw) { apply(); return; }
+            const sx = (cw - 40) / vw;
+            const sy = (ch - 40) / vh;
+            view.s = Math.max(0.3, Math.min(1, Math.min(sx, sy)));
+            view.x = 20;
+            view.y = Math.max(20, (ch - vh * view.s) / 2);
+            view.dirty = false;
+            try { localStorage.removeItem(EC_LS_KEY); } catch (_e) { /* ignore */ }
+            apply();
+        };
+        // Draw edges first (their SVG inflates viewport scrollWidth /
+        // scrollHeight, which fit() needs to measure accurately).
+        _ecDrawEdges(overlay, null);
+        if (view.dirty) apply(); else fit();
+
+        let dragging = false, sx = 0, sy = 0, x0 = 0, y0 = 0, moved = false;
+        // Set by onUp when a drag actually panned, consumed (and
+        // cleared) by the next click event to keep end-of-drag clicks
+        // from clearing the outcome selection / firing on a pill.
+        let suppressNextClick = false;
+        overlay.addEventListener('mousedown', (e) => {
+            if (e.target.closest && e.target.closest('.ec-outcome')) return;
+            if (e.target.closest && e.target.closest('.ec-cell-row')) return;
+            if (e.target.closest && e.target.closest('.ec-toolbar')) return;
+            if (e.button !== 0) return;
+            dragging = true; moved = false;
+            sx = e.clientX; sy = e.clientY;
+            x0 = view.x; y0 = view.y;
+            overlay.classList.add('dragging');
+            e.preventDefault();
+        });
+        const onMove = (e) => {
+            if (!dragging) return;
+            const dx = e.clientX - sx, dy = e.clientY - sy;
+            if (!moved && Math.hypot(dx, dy) > 3) moved = true;
+            view.x = x0 + dx; view.y = y0 + dy;
+            view.dirty = true;
+            apply();
+        };
+        const onUp = () => {
+            if (!dragging) return;
+            dragging = false;
+            overlay.classList.remove('dragging');
+            if (moved) { _ecSaveView(view); suppressNextClick = true; }
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+        overlay._ecCleanup = () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+        };
+        overlay.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const rect = overlay.getBoundingClientRect();
+            const cx = e.clientX - rect.left;
+            const cy = e.clientY - rect.top;
+            const wx = (cx - view.x) / view.s;
+            const wy = (cy - view.y) / view.s;
+            const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
+            view.s = Math.max(0.2, Math.min(2.5, view.s * factor));
+            view.x = cx - wx * view.s;
+            view.y = cy - wy * view.s;
+            view.dirty = true;
+            apply();
+            _ecSaveView(view);
+        }, { passive: false });
+
+        // Click dispatch: three independent click targets share the
+        // overlay, handled in priority order.
+        //   1. atomic-cell row → toggle this (slotKey, cellId) in
+        //      state.committed, rerender so downstream cards pick up
+        //      the updated union of reachable outcomes
+        //   2. narrative outcome pill → highlight all matching pills
+        //      across cards (unchanged legacy behaviour)
+        //   3. empty canvas → clear any outcome-pill highlight
+        // Toolbar clicks are handled by the toolbar's own listener so
+        // they don't reach this one.
+        overlay.addEventListener('click', (e) => {
+            if (suppressNextClick) { suppressNextClick = false; return; }
+            if (toolbar.contains(e.target)) return;
+
+            const cellRow = e.target.closest && e.target.closest('.ec-cell-row');
+            if (cellRow) {
+                const slotKey = cellRow.dataset.slotKey;
+                const cellId = cellRow.dataset.cellId;
+                // Multi-branch toggle: each (slotKey, cellId) is its own
+                // pick. Clicking an already-committed row removes just
+                // that one (downstream siblings survive). Clicking a
+                // fresh row appends it without touching existing picks,
+                // so the user can accumulate parallel outcomes from any
+                // slot — e.g. both "substantial" and "never" on
+                // emergence light up their respective downstream paths
+                // simultaneously.
+                const existingIdx = state.committed.findIndex(
+                    c => c.slotKey === slotKey && c.cellId === cellId
+                );
+                if (existingIdx !== -1) {
+                    state.committed.splice(existingIdx, 1);
+                    _ecSaveState(true, state);
+                    rerender();
+                    return;
+                }
+                const dag = window.Nodes && window.Nodes.FLOW_DAG;
+                const slot = dag && dag.nodes.find(n => n.key === slotKey);
+                if (!slot) return;
+                // Fresh pick: re-enumerate reachable cells under this
+                // slot's multi-branch pre-sel so we can copy the cell's
+                // writes and label verbatim (what the renderer showed).
+                const cells = _ecUnionCellsAcrossBranches(slot, state.committed);
+                const cell = cells.find(c => c.id === cellId);
+                if (!cell) return;
+                state.committed.push({
+                    slotKey, cellId,
+                    label: cell.label,
+                    writes: cell.writes,
+                });
+                _ecSaveState(true, state);
+                rerender();
+                return;
+            }
+
+            const pill = e.target.closest && e.target.closest('.ec-outcome');
+            if (!pill) {
+                if (selectedOutcomeId && !e.target.closest('.ec-card')) {
+                    overlay.querySelectorAll('.ec-outcome').forEach(el => { el._ecClicked = false; });
+                    selectedOutcomeId = null;
+                    _ecApplyHighlights(overlay, null);
+                    _ecDrawEdges(overlay, null);
+                }
+                return;
+            }
+            const oid = pill.dataset.outcomeId;
+            overlay.querySelectorAll('.ec-outcome').forEach(el => { el._ecClicked = false; });
+            if (selectedOutcomeId === oid) {
+                selectedOutcomeId = null;
+            } else {
+                selectedOutcomeId = oid;
+                pill._ecClicked = true;
+            }
+            _ecApplyHighlights(overlay, selectedOutcomeId);
+            _ecDrawEdges(overlay, selectedOutcomeId);
+        });
     }
 
     async function start(container, opts) {

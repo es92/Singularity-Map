@@ -910,6 +910,7 @@
     <script src="engine.js"></script>
     <script src="graph-walker.js"></script>
     <script src="timeline-animator.js"></script>
+    <script src="explore-tables.js"></script>
     <script src="explore.js"></script>
     <script src="nodes.js"></script>
     <script>
@@ -1981,9 +1982,19 @@
                 // layer reads nextQ==null as "show the matched outcome".
                 // Match against sel+flavor so module-internal dims exported only
                 // for outcome routing (via `collapseToFlavor.move`) remain matchable.
+                //
+                // Guard: never let an outcome fire while a module is still
+                // mid-walk (pending + has askable internals). A template's
+                // `reachable` clause may incidentally match partial state
+                // mid-module (e.g. alignment='failed' + containment='contained'
+                // can match 'the-ruin' before the escape pipeline walks), which
+                // would terminate the path prematurely. `anyModuleActivelyPending`
+                // defers until the active module commits its completionMarker.
                 const eff = Engine.resolvedStateWithFlavor(sel, Engine.currentFlavor(stack));
-                for (const t of templatesList) {
-                    if (Engine.templateMatches(t, eff)) return null;
+                if (!Engine.anyModuleActivelyPending(sel)) {
+                    for (const t of templatesList) {
+                        if (Engine.templateMatches(t, eff)) return null;
+                    }
                 }
                 for (const node of Engine.displayOrder(stack)) {
                     const locked = Engine.isNodeLocked(sel, node);
