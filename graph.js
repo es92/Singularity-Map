@@ -500,25 +500,31 @@ const NODES = [
       edges: [
         { id: 'benevolent', label: 'Benefit humanity',
           disabledWhen: [
-            { war_survivors: ['none'], reason: 'Humanity is extinct — there is no one left to benefit' }
+            { war_survivors: ['none'], reason: 'Humanity is extinct — there is no one left to benefit' },
+            { concentration_type: ['ai_itself'], power_use: ['extractive', 'indifferent'],
+              reason: 'The AI was already shown to wield power exploitatively — benevolent goals contradict that' }
           ] },
         { id: 'alien_coexistence', label: 'Alien (tolerant)',
           disabledWhen: [
             { war_survivors: ['none'], reason: 'Humanity is extinct — there is no one left to coexist with' },
-            { proliferation_alignment: ['holds'], reason: 'Alignment is intrinsic — the AI\'s values held even under open weights' }
+            { proliferation_alignment: ['holds'], reason: 'Alignment is intrinsic — the AI\'s values held even under open weights' },
+            { concentration_type: ['ai_itself'], power_use: ['generous'], reason: 'The AI was already shown to wield power generously — hostile goals contradict that' }
           ] },
         { id: 'alien_extinction', label: 'Alien (total)', disabledWhen: [
-            { proliferation_alignment: ['holds'], reason: 'Alignment is intrinsic — the AI\'s values held even under open weights' }
+            { proliferation_alignment: ['holds'], reason: 'Alignment is intrinsic — the AI\'s values held even under open weights' },
+            { concentration_type: ['ai_itself'], power_use: ['generous'], reason: 'The AI was already shown to wield power generously — hostile goals contradict that' }
           ] },
         { id: 'paperclip', label: 'Arbitrary', disabledWhen: [
-            { proliferation_alignment: ['holds'], reason: 'Alignment is intrinsic — the AI\'s values held even under open weights' }
+            { proliferation_alignment: ['holds'], reason: 'Alignment is intrinsic — the AI\'s values held even under open weights' },
+            { concentration_type: ['ai_itself'], power_use: ['generous'], reason: 'The AI was already shown to wield power generously — hostile goals contradict that' }
           ] },
         { id: 'swarm', label: 'Divergent', disabledWhen: [
             { concentration_type: ['ai_itself'], reason: 'The AI took control from a singular power structure — it didn\'t fragment' },
             { proliferation_alignment: ['holds'], reason: 'Alignment is intrinsic — the AI\'s values held even under open weights' }
           ] },
         { id: 'power_seeking', label: 'Power accumulation', disabledWhen: [
-            { proliferation_alignment: ['holds'], reason: 'Alignment is intrinsic — the AI\'s values held even under open weights' }
+            { proliferation_alignment: ['holds'], reason: 'Alignment is intrinsic — the AI\'s values held even under open weights' },
+            { concentration_type: ['ai_itself'], power_use: ['generous'], reason: 'The AI was already shown to wield power generously — hostile goals contradict that' }
           ] },
         { id: 'marginal', label: 'Inert (for now)', disabledWhen: [
             { concentration_type: ['ai_itself'], reason: 'The AI already took control — it is not inert' },
@@ -1061,12 +1067,37 @@ const NODES = [
         { id: 'elites', label: 'A broad elite' },
         { id: 'inner_circle', label: 'A small inner circle' },
         { id: 'singleton', label: 'One person' },
-        { id: 'ai_itself', label: 'The AI itself' }
+        // Symmetric to ai_goals.marginal.disabledWhen ({concentration_type:
+        // ai_itself}). When ai_goals=marginal is set FIRST (via escape_late
+        // / escape_re_entry) before who_benefits asks concentration_type,
+        // the user must not be allowed to pick ai_itself: a dormant AI
+        // can't simultaneously be running the world. Without this rule,
+        // who_benefits accepts the contradictory state and the path
+        // dead-ends with no matching outcome.
+        { id: 'ai_itself', label: 'The AI itself',
+          disabledWhen: [
+            { ai_goals: ['marginal'], reason: 'The AI is dormant — it can\'t be running the world' }
+          ] }
       ] },
     { id: 'power_use', label: 'The Wielding', stage: 3, priority: 2,
-      activateWhen: [{ concentration_type: ['singleton', 'inner_circle'] }],
+      // Originally a question for human concentrated control (singleton /
+      // inner_circle): "what does the person/group in charge do with the
+      // power?". Extended to ai_itself: when humans accidentally hand the
+      // AI everything, the same moral test applies — generous use is the
+      // benevolent-AI ending, extractive/indifferent use forks into the
+      // hostile-escape pipeline (ai_goals.benevolent disabled there to
+      // prevent contradiction with the established power_use stance).
+      activateWhen: [{ concentration_type: ['singleton', 'inner_circle', 'ai_itself'] }],
       edges: [
-        { id: 'generous', label: 'A golden world' },
+        { id: 'generous', label: 'A golden world',
+          // ai_itself + generous = AI runs the world and runs it well.
+          // Pre-set ai_goals='benevolent' so the ESCAPE_MODULE's
+          // activateWhen=concentration_type:ai_itself fires but ai_goals
+          // is already resolved, the benevolent short-circuit fires
+          // immediately, and the path lands in the-escape (benevolent)
+          // — same end-state as a benevolent runaway, reached via a
+          // soft-takeover door.
+          collapseToFlavor: { when: { concentration_type: ['ai_itself'] }, set: { ai_goals: 'benevolent' } } },
         { id: 'extractive', label: 'A tightening grip' },
         { id: 'indifferent', label: 'Their own project' }
       ] },
@@ -1848,6 +1879,13 @@ const ESCAPE_MODULE = {
         // inert_stays.no re-triggers this module (evicts ai_goals + escape_set)
         // and is read by ai_goals.marginal.disabledWhen on re-entry.
         'inert_stays',
+        // ai_goals.{benevolent,paperclip,power_seeking,alien_*}.disabledWhen
+        // gate on power_use to enforce the soft-takeover invariant:
+        //   * power_use=generous + ai_itself → only benevolent is enabled
+        //   * power_use=extractive/indifferent + ai_itself → benevolent disabled
+        // Without power_use in reads, cartesianWriteRows would generate
+        // contradictory output projections (e.g. generous + paperclip).
+        'power_use',
     ],
     writes: ESCAPE_WRITES,
     nodeIds: ESCAPE_NODE_IDS,
@@ -2014,6 +2052,26 @@ const WHO_BENEFITS_WRITES = [
     'benefit_distribution',
     'concentration_type',
     'delivery_ask_eligible',
+    // power_use must persist to sel post-exit for the ai_itself
+    // soft-takeover path: ai_goals.benevolent.disabledWhen reads
+    // power_use ∈ {extractive, indifferent} to gate out benevolent
+    // goals once the AI has been established as exploitative. (Was
+    // previously evicted to flavor — fine when power_use was only
+    // a singleton/inner_circle question with no external readers.)
+    'power_use',
+    // ai_goals is normally owned by ESCAPE_MODULE, but
+    // power_use.generous's collapseToFlavor (gated on
+    // concentration_type=ai_itself) writes ai_goals='benevolent' to
+    // pre-resolve the AI's stance for the soft-takeover-generous
+    // outcome. Without ai_goals in writes, cartesianWriteRows's
+    // output projection drops the override and any upstream
+    // ai_goals (e.g. =marginal from a brittle-then-inert path that
+    // also reaches who_benefits) flows through unchanged, producing
+    // the contradictory state ai_goals=marginal + power_use=generous.
+    // Including it in writes makes the projection capture the
+    // override on the generous branch and the upstream value
+    // (when present) on every other branch.
+    'ai_goals',
     // Completion marker — must be in `writes` so `captureExitResult`
     // puts it into `setSel` (not setFlavor). Without this, the sel-only
     // outer DFS never sees the module as done and re-fires it.
@@ -2043,10 +2101,14 @@ function buildWhoBenefitsExitPlan() {
     const ct = NODE_MAP.concentration_type;
     if (ct && ct.edges) {
         // power_use.activateWhen = { concentration_type:
-        // [singleton, inner_circle] }. Defer module exit on those two
-        // edges so power_use gets asked next; exit directly on
-        // {elites, ai_itself} which don't activate power_use.
-        const deferToPowerUse = new Set(['singleton', 'inner_circle']);
+        // [singleton, inner_circle, ai_itself] }. Defer module exit on
+        // those three edges so power_use gets asked next; exit directly
+        // on {elites} which doesn't activate power_use.
+        // (ai_itself is the AI-soft-takeover path — power_use becomes
+        // the moral test for what the AI does with the world it was
+        // handed; see power_use.generous.collapseToFlavor for how
+        // generous derives ai_goals=benevolent for that path.)
+        const deferToPowerUse = new Set(['singleton', 'inner_circle', 'ai_itself']);
         for (const e of ct.edges) {
             if (deferToPowerUse.has(e.id)) continue;
             plan.push({

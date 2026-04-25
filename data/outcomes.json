@@ -2286,6 +2286,35 @@
               ]
             }
           ]
+        },
+        {
+          "capability": [
+            "asi"
+          ],
+          "ai_goals": [
+            "benevolent"
+          ],
+          "concentration_type": [
+            "ai_itself"
+          ],
+          "power_use": [
+            "generous"
+          ],
+          "rollout_set": [
+            "yes"
+          ],
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            },
+            {
+              "conflict_result": [
+                "destruction"
+              ]
+            }
+          ]
         }
       ],
       "story": [],
@@ -2462,9 +2491,6 @@
           ],
           "ai_goals": [
             "alien_coexistence"
-          ],
-          "rollout_set": [
-            "yes"
           ],
           "_not": [
             {

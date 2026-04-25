@@ -66,7 +66,8 @@ GraphIO.registerOutcomes(TEMPLATES);
 const PROPAGATE_TARGETS = new Set([
     'plateau_bd', 'auto_bd', 'rollout_early', 'control', 'alignment', 'decel',
     'escape_early', 'proliferation', 'escape_early_alt', 'intent', 'war',
-    'who_benefits', 'inert_stays', 'brittle', 'escape_late', 'escape_re_entry', 'rollout',
+    'who_benefits', 'inert_stays', 'brittle', 'escape_late', 'escape_re_entry',
+    'escape_after_who', 'rollout',
 ]);
 
 // ────────────────────────────────────────────────────────────────
@@ -486,6 +487,8 @@ function detectDeadEnds(prop) {
         const childKeys = prop.childrenOf.get(slotKey) || [];
         if (!childKeys.length) {
             errors.push(`[deadend] Slot "${slotKey}" has ${deadSels.length} continuing outputs but no children to consume them`);
+            const samples = deadSels.slice(0, 3).map(_selUrl);
+            for (const u of samples) errors.push(`           sample: ${u}`);
             continue;
         }
         const samples = deadSels.slice(0, 3).map(_selUrl);

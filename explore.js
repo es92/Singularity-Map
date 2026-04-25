@@ -1156,6 +1156,7 @@
         'brittle',
         'escape_late',
         'escape_re_entry',
+        'escape_after_who',
         'rollout',
     ]);
 

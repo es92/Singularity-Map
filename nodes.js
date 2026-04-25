@@ -1063,6 +1063,26 @@
             // a static-analysis affordance for validate.js / /explore.
             { key: 'escape_re_entry',  id: 'escape',                       kind: 'module', note: 'after inert=no',
               earlyExits: ['the-ruin', 'the-escape', 'the-chaos', 'the-alien-ai'] },
+            // Third escape slot for the AI-soft-takeover path:
+            // who_benefits=concentration_type:ai_itself triggers
+            // ESCAPE_MODULE (its activateWhen includes
+            // concentration_type:'ai_itself') even though containment
+            // never broke. Same module spec as escape_late /
+            // escape_re_entry — split into its own FLOW_DAG slot to
+            // avoid topology cycles and to make this distinct entry
+            // point visible to validate.js / /explore. On this slot:
+            //   * power_use=generous pre-sets ai_goals=benevolent (via
+            //     edge collapseToFlavor) and exits the escape pipeline
+            //     immediately through the benevolent short-circuit —
+            //     lands in the-escape (benevolent).
+            //   * power_use=extractive/indifferent leaves ai_goals
+            //     unset; ESCAPE asks ai_goals with benevolent + swarm
+            //     + marginal disabled (the AI is established as
+            //     exploitative, concentrated, and active), forcing
+            //     paperclip / power_seeking / alien_* — lands in
+            //     the-escape (bad) / the-alien-ai.
+            { key: 'escape_after_who', id: 'escape',                       kind: 'module', note: 'after who=ai_itself',
+              earlyExits: ['the-ruin', 'the-escape', 'the-chaos', 'the-alien-ai'] },
             { key: 'rollout',          id: 'rollout',                      kind: 'module', note: 'terminal',
               earlyExits: [
                 'the-gilded-singularity', 'the-new-hierarchy', 'the-flourishing',
@@ -1143,6 +1163,18 @@
             ['escape_late',   'rollout'],
 
             ['escape_re_entry', 'rollout'],
+
+            // who_benefits → escape_after_who routes the AI-soft-takeover
+            // path through the escape pipeline (entered via
+            // concentration_type=ai_itself rather than containment=
+            // escaped). The slot picker only claims sels where ESCAPE's
+            // activateWhen matches AND escape_set isn't yet set —
+            // i.e. paths where the AI didn't escape earlier but
+            // who_benefits put it in charge anyway. All other
+            // who_benefits outputs route via the existing edges
+            // (inert_stays / brittle / rollout).
+            ['who_benefits',  'escape_after_who'],
+            ['escape_after_who', 'rollout'],
         ],
     };
 

@@ -188,6 +188,25 @@ const REACHABLE = {
             containment: ['escaped'],
             rollout_set: ['yes'],
             _not: notBlockWithExtras({ humanity: true })
+        },
+        // AI-soft-takeover entry: humans handed the AI the world
+        // (concentration_type=ai_itself) and it wields power
+        // generously (power_use=generous derives ai_goals=
+        // benevolent via collapseToFlavor on the power_use edge).
+        // Same end-state as a benevolent runaway, reached via a
+        // different door — flavor text already exists in the
+        // template's concentration_type.ai_itself entry.
+        // power_use=generous is included explicitly so the
+        // premature-outcomes audit sees the matched state as
+        // fully-pinned (without it the clause matches a sel
+        // where power_use is still askable).
+        {
+            capability: ['asi'],
+            ai_goals: ['benevolent'],
+            concentration_type: ['ai_itself'],
+            power_use: ['generous'],
+            rollout_set: ['yes'],
+            _not: notBlockWithExtras({ humanity: true })
         }
     ],
     'the-alien-ai': [
@@ -196,10 +215,15 @@ const REACHABLE = {
             ai_goals: ['alien_extinction'],
             _not: notBlockWithExtras({ extras: { post_catch: ['ruined'] } })
         },
+        // Hostile-coexistence escape: AI's goals dominate, humans
+        // are displaced rather than deployed-around. rollout's
+        // internals (knowledge_rate / physical_rate / failure_mode)
+        // are hidden for hostile-escaped AIs, so rollout_set never
+        // gets pinned — same shape as the-escape's paperclip /
+        // power_seeking clauses, which also omit it.
         {
             capability: ['asi'],
             ai_goals: ['alien_coexistence'],
-            rollout_set: ['yes'],
             _not: notBlockWithExtras({ extras: { post_catch: ['ruined'] } })
         }
     ],
