@@ -1355,13 +1355,22 @@ const NODES = [
         { discovery_timing: ['before_physical', 'early_execution', 'advanced_execution'] }
       ],
       edges: [
-        { id: 'digital_countermeasure', label: 'Targeted digital countermeasure', shortLabel: 'Digital counter' },
-        { id: 'infrastructure_shutdown', label: 'Infrastructure shutdown', shortLabel: 'Infra shutdown' },
-        { id: 'physical_strikes', label: 'Physical strikes on compute', shortLabel: 'Physical strikes' },
-        { id: 'emp', label: 'Electromagnetic pulse', shortLabel: 'EMP' },
+        { id: 'digital_countermeasure', label: 'Targeted digital countermeasure', shortLabel: 'Digital counter',
+          disabledWhen: [{ concentration_type: ['ai_itself'], reason: 'The AI controls the digital systems that would deploy a countermeasure' }] },
+        { id: 'infrastructure_shutdown', label: 'Infrastructure shutdown', shortLabel: 'Infra shutdown',
+          disabledWhen: [{ concentration_type: ['ai_itself'], reason: 'The AI runs the infrastructure — humans can\'t shut down what they don\'t control' }] },
+        { id: 'physical_strikes', label: 'Physical strikes on compute', shortLabel: 'Physical strikes',
+          disabledWhen: [{ concentration_type: ['ai_itself'], reason: 'The AI controls physical operations — strikes can\'t reach its compute' }] },
+        { id: 'emp', label: 'Electromagnetic pulse', shortLabel: 'EMP',
+          disabledWhen: [{ concentration_type: ['ai_itself'], reason: 'The AI commands the systems that would deploy an EMP' }] },
         { id: 'negotiation', label: 'Negotiation / containment', shortLabel: 'Negotiation' },
-        { id: 'competitive_paralysis', label: 'Competitive paralysis', shortLabel: 'Paralysis', disabledWhen: [{ geo_spread: ['one'], reason: 'Only one actor — no competitive dynamic' }] },
-        { id: 'institutional_indecisiveness', label: 'Institutional indecisiveness', shortLabel: 'Indecisiveness' }
+        { id: 'competitive_paralysis', label: 'Competitive paralysis', shortLabel: 'Paralysis',
+          disabledWhen: [
+            { geo_spread: ['one'], reason: 'Only one actor — no competitive dynamic' },
+            { concentration_type: ['ai_itself'], reason: 'No competing actors — the AI is the sole sovereign' }
+          ] },
+        { id: 'institutional_indecisiveness', label: 'Institutional indecisiveness', shortLabel: 'Indecisiveness',
+          disabledWhen: [{ concentration_type: ['ai_itself'], reason: 'No independent institutions remain — the AI runs them all' }] }
       ] },
     { id: 'response_success', label: 'Success?', stage: 3,
       hideWhen: [{ war_survivors: ['none'] }],
@@ -1369,8 +1378,10 @@ const NODES = [
         { response_method: ['digital_countermeasure', 'infrastructure_shutdown', 'physical_strikes', 'emp', 'negotiation'] }
       ],
       edges: [
-        { id: 'yes', label: 'Yes — AI actually neutralized', shortLabel: 'Yes — neutralized' },
-        { id: 'delayed', label: 'Delayed — AI disrupted but recovering', shortLabel: 'Delayed' },
+        { id: 'yes', label: 'Yes — AI actually neutralized', shortLabel: 'Yes — neutralized',
+          disabledWhen: [{ concentration_type: ['ai_itself'], reason: 'The AI controls the levers of any response — neutralization isn\'t possible' }] },
+        { id: 'delayed', label: 'Delayed — AI disrupted but recovering', shortLabel: 'Delayed',
+          disabledWhen: [{ concentration_type: ['ai_itself'], reason: 'The AI controls the levers of any response — even temporary disruption isn\'t possible' }] },
         { id: 'no', label: 'No — AI unaffected' }
       ] },
     { id: 'collateral_impact', label: 'Collateral', stage: 3,
@@ -1846,6 +1857,25 @@ function buildEscapeExitPlan() {
     plan.push({
         nodeId: 'catch_outcome', edgeId: 'not_permanent',
         when: {},
+        set: { escape_set: 'yes', post_catch: 'loose' },
+    });
+    // concentration_type=ai_itself early exits — when humans put the AI in
+    // charge, they can't catch it. The AI controls the response systems
+    // (only `negotiation` is enabled on response_method) and the response
+    // can't succeed (only `no` is enabled on response_success). Rather than
+    // forcing the user through the rest of the catch pipeline (collateral_
+    // impact + catch_outcome) where every choice would be a forced one,
+    // exit early at response_success.no with post_catch=loose. Same for
+    // discovery_timing.never (the AI's plan succeeded undetected — humans
+    // never even tried to respond).
+    plan.push({
+        nodeId: 'response_success', edgeId: 'no',
+        when: { concentration_type: ['ai_itself'] },
+        set: { escape_set: 'yes', post_catch: 'loose' },
+    });
+    plan.push({
+        nodeId: 'discovery_timing', edgeId: 'never',
+        when: { concentration_type: ['ai_itself'] },
         set: { escape_set: 'yes', post_catch: 'loose' },
     });
     // catch_outcome.holds_permanently — exits directly when

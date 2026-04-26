@@ -563,7 +563,7 @@
     // the propagation algorithm itself changes (slotAccepts gating,
     // outcome partitioning rules, etc.) — the static-data hash won't
     // catch logic edits in this file or graph-io.js.
-    const REACH_VERSION = 6;
+    const REACH_VERSION = 8;
     const REACH_KEY_PREFIX = 'explore:reach:v';
 
     function _hashStr(s) {

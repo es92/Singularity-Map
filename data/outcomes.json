@@ -2301,12 +2301,8 @@
             "paperclip",
             "power_seeking"
           ],
-          "_not": [
-            {
-              "post_catch": [
-                "ruined"
-              ]
-            }
+          "post_catch": [
+            "loose"
           ]
         },
         {
@@ -2525,12 +2521,8 @@
           "ai_goals": [
             "alien_extinction"
           ],
-          "_not": [
-            {
-              "post_catch": [
-                "ruined"
-              ]
-            }
+          "post_catch": [
+            "loose"
           ]
         },
         {
@@ -2540,12 +2532,8 @@
           "ai_goals": [
             "alien_coexistence"
           ],
-          "_not": [
-            {
-              "post_catch": [
-                "ruined"
-              ]
-            }
+          "post_catch": [
+            "loose"
           ]
         }
       ],
@@ -2717,12 +2705,8 @@
           "ai_goals": [
             "swarm"
           ],
-          "_not": [
-            {
-              "post_catch": [
-                "ruined"
-              ]
-            }
+          "post_catch": [
+            "loose"
           ]
         }
       ],
