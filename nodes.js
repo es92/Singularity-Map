@@ -1173,8 +1173,20 @@
             // who_benefits put it in charge anyway. All other
             // who_benefits outputs route via the existing edges
             // (inert_stays / brittle / rollout).
+            //
+            // No escape_after_who → rollout edge: every path that reaches
+            // this slot exits ESCAPE via response_success.no (the only
+            // edge enabled when concentration_type=ai_itself + power_use
+            // ∈ {extractive,indifferent}) with post_catch='loose' + a
+            // hostile ai_goals (paperclip / power_seeking / alien_*),
+            // which siphons immediately to the-escape / the-alien-ai —
+            // their reachable clauses don't require rollout_set, so
+            // the outputs never need to flow forward. The generous
+            // branch never reaches this slot at all (its who_benefits
+            // exit pre-sets escape_set='yes' which the slot picker
+            // rejects via the completionMarker check) — it routes
+            // who_benefits → rollout directly.
             ['who_benefits',  'escape_after_who'],
-            ['escape_after_who', 'rollout'],
         ],
     };
 

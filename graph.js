@@ -814,11 +814,14 @@ const NODES = [
         { id: 'breaks', label: 'Someone cracks it' }
       ] },
     { id: 'intent', label: 'Intent', stage: 2, forwardKey: true,
-      // Hides the question on hostile-AI escape paths. The containment check
-      // is implied: ai_goals only gets a value when containment='escaped'
-      // (see ai_goals.activateWhen), so `ai_goals required: true` already
-      // narrows to escaped paths.
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true } }],
+      // Hides the question on hostile-AI loose paths. The hostile AI is
+      // running geopolitics — there are no rival-power dynamics to ask
+      // about. Mirrors who_benefits internals (power_promise / mobilization /
+      // pushback_outcome / etc.): the `containment: { not: ['contained'] }`
+      // exception keeps the question available on hostile-AI-then-caught
+      // paths (escape pipeline ran, AI was contained — controlling powers
+      // are humans again, rival dynamics matter).
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } }],
       // Mirrors INTENT_MODULE.activateWhen — intent is the module's entry
       // internal and fires only when rival-power dynamics are relevant:
       // proliferation actually ran (proliferation_set='yes') and the AI
@@ -898,14 +901,11 @@ const NODES = [
       activateWhen: [{ capability: ['asi'], block_entrants: ['no_attempt'] }],
       edges: [ { id: 'emerge', label: 'Emerge' }, { id: 'none', label: 'None' } ] },
     { id: 'rival_dynamics', label: 'Rival Dynamics', stage: 2,
-      // Hides on hostile-AI escape paths (ai_goals set ⇒ containment='escaped',
-      // so the explicit containment check is redundant). The old
-      // `alignment_durability=breaks` clause was dead by transitivity:
-      // rival_dynamics requires block_entrants→{block_outcome,new_entrants},
-      // which requires alignment ∈ {robust, brittle}, but
-      // alignment_durability='breaks' derives alignment='failed', so this
-      // node never activates on those paths.
-      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true } }],
+      // Hides on hostile-AI loose paths. Same pattern as intent above:
+      // the `containment: { not: ['contained'] }` exception keeps the
+      // node available on hostile-AI-then-caught paths so contained
+      // hostile AIs flow through normal rival-dynamics resolution.
+      hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } }],
       activateWhen: [
         { capability: ['asi'], block_outcome: ['fails'] },
         { capability: ['asi'], new_entrants: ['emerge'] }
@@ -1087,10 +1087,30 @@ const NODES = [
         // =no path through the same eviction plumbing — replaces the
         // old `disabledWhen: [{ ai_goals: ['marginal'] }]` rule that
         // blocked the contradiction by veto rather than reconciliation.
+        //
+        // The third block handles the "humans accidentally put a previously-
+        // caught AI back in charge" path: if escape_early/escape_early_alt
+        // ran and produced post_catch='contained' (AI was caged), picking
+        // ai_itself opens the cage. Flip containment→'escaped' and
+        // post_catch→'loose' so downstream outcome clauses (the-alien-ai
+        // / the-escape / the-chaos, all keyed on post_catch='loose') match
+        // the now-released hostile AI.
         { id: 'ai_itself', label: 'The AI itself',
           collapseToFlavor: [
             { set: { inert_stays: 'no' } },
-            { when: { ai_goals: ['marginal'] }, move: ['ai_goals', 'escape_set'] }
+            { when: { ai_goals: ['marginal'] }, move: ['ai_goals', 'escape_set'] },
+            // Humans put a previously caged AI back in charge — flip
+            // containment/post_catch (cage opens, AI loose again) AND
+            // clear escape_set so the escape_after_who slot picker
+            // claims the path. Without the move, escape_set='yes'
+            // (set by the prior ESCAPE catch) blocks escape_after_who
+            // and the path dead-ends in rollout with a contradictory
+            // (containment=escaped, escape_set=yes) state.
+            {
+              when: { post_catch: ['contained'] },
+              set: { containment: 'escaped', post_catch: 'loose' },
+              move: ['escape_set']
+            }
           ] }
       ] },
     { id: 'power_use', label: 'The Wielding', stage: 3, priority: 2,
@@ -1258,7 +1278,25 @@ const NODES = [
         { id: 'sufficient', label: 'Brittle alignment holds', shortLabel: 'Brittle holds',
           collapseToFlavor: { set: { alignment: 'brittle' } } },
         { id: 'escape', label: 'AI eventually escapes', shortLabel: 'Escapes',
-          collapseToFlavor: { set: { alignment: 'failed', containment: 'escaped' } } }
+          // Re-entry trigger for ESCAPE_MODULE at the escape_late slot.
+          // The brittle alignment broke late (after who_benefits resolved);
+          // the AI is loose again. Mirrors the proliferation leak pattern:
+          // flip containment + reset post_catch=loose, and clear
+          // escape_set + ai_goals so ESCAPE re-fires and the user walks
+          // the catch pipeline again. (At escape_late, who_benefits_set
+          // ='yes' so catch_outcome WILL be asked — this is the "final
+          // say" slot.) ai_goals is moved alongside escape_set so that
+          // benevolent/marginal AIs whose alignment shattered get the
+          // chance to re-pick (alignment=brittle implied an assumption
+          // about the AI's stance; that assumption is gone now). Without
+          // moving ai_goals, paths with ai_goals already pinned arrive
+          // at escape_late with no askable internal and the module gets
+          // stuck pending — same eviction pattern as the proliferation
+          // leak tuples (LEAK_REENTRY_MOVE).
+          collapseToFlavor: {
+            set: { alignment: 'failed', containment: 'escaped', post_catch: 'loose' },
+            move: ['escape_set', 'ai_goals']
+          } }
       ] },
     { id: 'failure_mode', label: 'Delivery', stage: 3, priority: 2, forwardKey: true,
       hideWhen: [
@@ -1407,7 +1445,20 @@ const NODES = [
           ] }
       ] },
     { id: 'catch_outcome', label: 'Long-Term Outcome', stage: 3,
-      hideWhen: [{ war_survivors: ['none'] }],
+      // `who_benefits_set != yes` skips this question at the early-escape
+      // slots (escape_early, escape_early_alt) where downstream events
+      // (proliferation leak, brittle_resolution=escape, concentration_type
+      // =ai_itself) can re-trigger an escape and contradict a "permanent"
+      // commitment. At those slots the catch defaults to "caged for now"
+      // (post_catch=contained set on the collateral_impact early-exit
+      // tuples in buildEscapeExitPlan); the final "is the catch permanent?"
+      // question is asked at the truly-terminal escape slots
+      // (escape_late, escape_re_entry, escape_after_who) where
+      // who_benefits_set='yes'.
+      hideWhen: [
+        { war_survivors: ['none'] },
+        { who_benefits_set: { not: ['yes'] } }
+      ],
       activateWhen: [
         { collateral_impact: true },
         { response_method: ['competitive_paralysis', 'institutional_indecisiveness'] }
@@ -1435,8 +1486,18 @@ const NODES = [
     // produced the survivor count. Narrative is AI-catastrophe flavored,
     // distinct from the war_survivors node which stays war-flavored.
     { id: 'collateral_survivors', label: 'Humanity Survives?', stage: 3,
+      // Two activation paths:
+      //   1. Terminal escape slots (who_benefits_set=yes): fires when the
+      //      user explicitly committed catch_outcome=holds_permanently AND
+      //      collateral_impact=civilizational. Original behavior.
+      //   2. Early escape slots (who_benefits_set != yes): catch_outcome
+      //      is hidden, but the war_survivors flow still matters whenever
+      //      response_success=yes AND collateral_impact=civilizational —
+      //      the response wrecked civilization regardless of whether the
+      //      catch turns out to be "permanent" downstream.
       activateWhen: [
-        { catch_outcome: ['holds_permanently'], collateral_impact: ['civilizational'] }
+        { catch_outcome: ['holds_permanently'], collateral_impact: ['civilizational'] },
+        { response_success: ['yes'], collateral_impact: ['civilizational'], who_benefits_set: { not: ['yes'] } }
       ],
       edges: [
         { id: 'most', label: 'Most — devastated but recoverable', shortLabel: 'Most survive' },
@@ -1891,16 +1952,64 @@ function buildEscapeExitPlan() {
         // containment.deriveWhen { post_catch: 'contained' → 'contained' }).
         set: { escape_set: 'yes', post_catch: 'contained', containment: 'contained' },
     });
+    // Early-escape-slot exits (who_benefits_set != yes) — at escape_early
+    // and escape_early_alt, catch_outcome is hidden because downstream
+    // events can re-trigger an escape (proliferation leak,
+    // concentration_type=ai_itself, brittle_resolution=escape). The
+    // module exits one node earlier:
+    //   * collateral_impact.{minimal, severe} on response_success=yes
+    //     paths → "caged for now" (post_catch=contained,
+    //     containment=contained). Downstream may flip these back to
+    //     escaped/loose, in which case ESCAPE re-fires at the next slot.
+    //   * collateral_impact.{minimal, severe, civilizational} on
+    //     response_success.delayed paths → AI is recovering, treated
+    //     as not-really-caught (post_catch=loose). Mirrors the old
+    //     catch_outcome=not_permanent semantics for delayed responses.
+    //   * collateral_impact=civilizational on response_success=yes
+    //     paths defers to collateral_survivors (no early-slot tuple
+    //     matches here — its own early-slot tuples below take over).
+    for (const cImpact of ['minimal', 'severe']) {
+        plan.push({
+            nodeId: 'collateral_impact', edgeId: cImpact,
+            when: { who_benefits_set: { not: ['yes'] }, response_success: ['yes'] },
+            set: { escape_set: 'yes', post_catch: 'contained', containment: 'contained' },
+        });
+    }
+    for (const cImpact of ['minimal', 'severe', 'civilizational']) {
+        plan.push({
+            nodeId: 'collateral_impact', edgeId: cImpact,
+            when: { who_benefits_set: { not: ['yes'] }, response_success: ['delayed', 'no'] },
+            set: { escape_set: 'yes', post_catch: 'loose' },
+        });
+    }
     // collateral_survivors — tail exits for the civilizational branch.
     // post_catch=ruined. Each edge also writes its own value into the
-    // shared war_survivors dim.
+    // shared war_survivors dim. Two paths reach here:
+    //   1. Terminal slot, catch_outcome=holds_permanently (the original
+    //      "permanent ruin" path). containment was already flipped to
+    //      contained by catch_outcome.holds_permanently's exit tuple, but
+    //      that tuple's `when` excludes civilizational — so on this branch
+    //      containment is still escaped. The exit here doesn't override
+    //      it (matches the historical behavior).
+    //   2. Early slot, response_success=yes + collateral_impact
+    //      =civilizational (catch_outcome hidden). containment hasn't
+    //      been flipped yet — we explicitly set it to contained here so
+    //      downstream nodes see a coherent "AI was caught at the cost of
+    //      civilization" state. (If proliferation later leaks weights,
+    //      it'll flip containment back to escaped and clear escape_set,
+    //      same as on non-civilizational paths.)
     const cs = NODE_MAP.collateral_survivors;
     if (cs && cs.edges) {
         for (const e of cs.edges) {
             plan.push({
                 nodeId: 'collateral_survivors', edgeId: e.id,
-                when: {},
+                when: { catch_outcome: ['holds_permanently'] },
                 set: { escape_set: 'yes', post_catch: 'ruined', war_survivors: e.id },
+            });
+            plan.push({
+                nodeId: 'collateral_survivors', edgeId: e.id,
+                when: { who_benefits_set: { not: ['yes'] } },
+                set: { escape_set: 'yes', post_catch: 'ruined', war_survivors: e.id, containment: 'contained' },
             });
         }
     }
@@ -2001,7 +2110,16 @@ function attachModuleReducer(mod) {
     for (const tuple of mod.exitPlan) {
         const key = tuple.nodeId + '|' + tuple.edgeId;
         if (!byEdge.has(key)) byEdge.set(key, []);
-        byEdge.get(key).push({ when: tuple.when, set: tuple.set, move: moveDims.slice() });
+        // Per-tuple `move` augments the auto-computed base list. Used
+        // for re-fire patterns: a tuple that wants to clear a dim
+        // OWNED by another module (e.g. proliferation leak edges
+        // clearing `escape_set` so ESCAPE_MODULE re-fires for a
+        // second catch pipeline). The auto-list already covers
+        // `nodeIds \ writes`; per-tuple move adds extras.
+        const move = (tuple.move && tuple.move.length)
+            ? Array.from(new Set(moveDims.concat(tuple.move)))
+            : moveDims.slice();
+        byEdge.get(key).push({ when: tuple.when, set: tuple.set, move });
     }
     for (const [key, blocks] of byEdge) {
         const [nodeId, edgeId] = key.split('|');
@@ -2138,6 +2256,19 @@ const WHO_BENEFITS_WRITES = [
     // drops the marker and escape_after_who fires uselessly downstream.
     // Same cross-module-write pattern as ai_goals.
     'escape_set',
+    // containment / post_catch are normally owned by ESCAPE_MODULE,
+    // but concentration_type.ai_itself's collapseToFlavor (gated on
+    // post_catch='contained' — the AI was caught earlier) flips
+    // them back to ('escaped', 'loose') to model "humans accidentally
+    // put the caged AI back in charge, opening the cage". Without
+    // them in writes, cartesianWriteRows's output projection drops
+    // the override and the merged downstream sel retains the
+    // upstream ('contained', 'contained') values, dead-ending in
+    // rollout where no outcome clause matches the contradictory
+    // (concentration_type=ai_itself + post_catch=contained) state.
+    // Same cross-module-write pattern as ai_goals / inert_stays /
+    // escape_set above.
+    'containment', 'post_catch',
     // Completion marker — must be in `writes` so `captureExitResult`
     // puts it into `setSel` (not setFlavor). Without this, the sel-only
     // outer DFS never sees the module as done and re-fires it.
@@ -2625,6 +2756,24 @@ const PROLIFERATION_WRITES = [
     // Replaces the old geo_spread.deriveWhen rule so CONTROL_MODULE no
     // longer needs to read proliferation_outcome.
     'geo_spread',
+    // Leaked-weights exits clear `escape_set` + `ai_goals` (per-tuple
+    // `move`) and reset `post_catch='loose'` so ESCAPE_MODULE re-fires
+    // at the next slot (escape_early_alt) for a second catch pipeline,
+    // with `ai_goals` askable again. Listing them here ensures the
+    // static-analysis projection captures the deletion / override —
+    // without it, _writeDimsForSlot for the module wouldn't include
+    // them, and reachableFullSelsFromInputs would silently preserve
+    // the upstream values. Same pattern as containment / post_catch in
+    // WHO_BENEFITS_WRITES.
+    'escape_set',
+    'post_catch',
+    // ai_goals is normally owned by ESCAPE_MODULE, but leak-reentry
+    // tuples (proliferation_control.none, proliferation_outcome.
+    // leaks_public, proliferation_alignment.breaks — all when alignment
+    // ≠robust) move it to flavor so the user re-picks on the next
+    // ESCAPE pass. Same cross-module-write pattern as escape_set /
+    // post_catch above.
+    'ai_goals',
     // PROLIFERATION also overrides alignment='failed' + containment='escaped'
     // on leaked-weights exits where alignment isn't robust:
     //   * proliferation_alignment.breaks (any)
@@ -2668,11 +2817,34 @@ function buildProliferationExitPlan() {
     //     Adds the alignment/containment flip on top of LEAKED_OPEN.
     const LEAKED       = { proliferation_set: 'yes', geo_spread: 'multiple' };
     const LEAKED_OPEN  = { ...LEAKED, distribution: 'open' };
+    // LEAKED_OPEN_UNROBUST also flips containment back to escaped — and
+    // since the loose copies of the AI inherit the same hostile goals,
+    // this re-activates ESCAPE_MODULE downstream so the user gets to
+    // walk the catch pipeline again. To make ESCAPE re-fire, we must
+    // clear escape_set (the module's completion marker) via per-tuple
+    // `move`, and reset post_catch=loose so any prior catch state from
+    // an earlier ESCAPE pass doesn't bleed into the next slot's outcome
+    // matching. The `move: ['escape_set']` augments attachModuleReducer's
+    // auto-move list (escape_set is owned by ESCAPE_MODULE, not in
+    // PROLIFERATION's nodeIds, so it wouldn't be in the auto-list).
     const LEAKED_OPEN_UNROBUST = {
         ...LEAKED_OPEN,
         alignment: 'failed',
         containment: 'escaped',
+        post_catch: 'loose',
     };
+    // Also evict `ai_goals`: leaked weights mean copies of the AI are now in
+    // the wild and may evolve different objectives (or the user simply
+    // gets a fresh choice on the second escape pass). Without this, paths
+    // that took the early-exit at `ai_goals.{marginal,benevolent}` arrive
+    // at escape_early_alt with `ai_goals` already pinned and `escape_set`
+    // cleared — ESCAPE_MODULE's DFS skips the answered `ai_goals` node,
+    // finds no other internal askable, and the module is stuck pending
+    // (the "module gate vs internals" warning). Moving `ai_goals` lets
+    // the user re-pick: same value re-takes the early-exit (sets
+    // escape_set='yes', module done); a hostile pick walks the full
+    // catch pipeline.
+    const LEAK_REENTRY_MOVE = ['escape_set', 'ai_goals'];
     const HOLDS = { proliferation_set: 'yes' };
 
     // proliferation_control.none: always a leaked-weights world with
@@ -2685,6 +2857,7 @@ function buildProliferationExitPlan() {
         edgeId: 'none',
         when: { alignment: { not: ['robust'] } },
         set: LEAKED_OPEN_UNROBUST,
+        move: LEAK_REENTRY_MOVE,
     });
     // proliferation_outcome terminal edges.
     const outNode = NODE_MAP.proliferation_outcome;
@@ -2703,6 +2876,7 @@ function buildProliferationExitPlan() {
                     nodeId: 'proliferation_outcome', edgeId: e.id,
                     when: { alignment: { not: ['robust'] } },
                     set: LEAKED_OPEN_UNROBUST,
+                    move: LEAK_REENTRY_MOVE,
                 });
             } else {
                 // leaks_rivals: bilateral leak — distribution stays
@@ -2722,6 +2896,9 @@ function buildProliferationExitPlan() {
     // flips alignment/containment (replaces the old
     // proliferation_alignment=breaks deriveWhen); 'holds' keeps the
     // pre-existing alignment (geo_spread + distribution override only).
+    // 'breaks' is a re-entry trigger (containment flips to escaped) —
+    // clear escape_set so ESCAPE re-fires. 'holds' isn't (containment
+    // stays as it was), no re-entry needed.
     const alignNode = NODE_MAP.proliferation_alignment;
     if (alignNode && alignNode.edges) {
         for (const e of alignNode.edges) {
@@ -2731,6 +2908,7 @@ function buildProliferationExitPlan() {
                 edgeId: e.id,
                 when: {},
                 set,
+                move: (e.id === 'breaks') ? LEAK_REENTRY_MOVE : undefined,
             });
         }
     }
@@ -2770,6 +2948,19 @@ const PROLIFERATION_MODULE = {
         // proliferation_control.edges[deny_rivals|secure_access].disabledWhen
         // reads distribution.
         'distribution',
+        // Pass-through dims that PROLIFERATION_WRITES also includes.
+        // Required because non-leak paths (proliferation_outcome=holds,
+        // proliferation_alignment=holds, etc.) DON'T rewrite these dims —
+        // they pass the upstream value through. If they're in writes but
+        // not in reads, the DFS starts with them UNSET and the projection
+        // captures UNSET on the holds path, replacing legitimate upstream
+        // values (e.g. containment=escaped, escape_set=yes, post_catch=
+        // contained from a successful escape_early catch) with nothing
+        // and producing phantom states like ai_goals=alien_coexistence
+        // with containment=UNSET — a narratively impossible combination.
+        // Same pattern as INTENT_MODULE.reads (containment) and
+        // WHO_BENEFITS_MODULE.reads (containment, post_catch).
+        'containment', 'escape_set', 'post_catch',
     ],
     writes: PROLIFERATION_WRITES,
     nodeIds: PROLIFERATION_NODE_IDS,
@@ -3074,10 +3265,14 @@ const INTENT_MODULE = {
     reads: [
         // Activation gate (module + intent.activateWhen + intent.hideWhen +
         // rival_dynamics.hideWhen). ai_goals carries the
-        // hostile/marginal/benevolent signal AND implies containment state
-        // (ai_goals only sets on containment='escaped'), so containment
-        // doesn't need a separate read.
-        'capability', 'proliferation_set', 'ai_goals',
+        // hostile/marginal/benevolent signal; containment is now a separate
+        // axis on intent/rival_dynamics hideWhen because hostile-AI-then-
+        // caught paths (ai_goals=hostile + containment=contained) flow
+        // through normal rival dynamics — the controlling powers are
+        // humans again. Without `containment` in reads the projection
+        // drops it to UNSET and the hide fires unconditionally on hostile
+        // ai_goals, dead-ending caught-AI paths in the module gate.
+        'capability', 'proliferation_set', 'ai_goals', 'containment',
         // intent.edges.requires + block_entrants.activateWhen
         // (distribution≠open) + exit-plan early-exit `when`. distribution
         // is the single "is the tech still bottled up?" signal —
