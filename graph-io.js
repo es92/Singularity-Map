@@ -1,10 +1,9 @@
 // graph-io.js — static-analysis primitives for graph elements.
 //
-// Sits next to graph.js / engine.js / graph-walker.js as another
-// graph-data layer that the runtime engine doesn't need but tooling
-// and UI do. Stateless beyond a small lazy cache; every public call
-// is a pure function of the graph data + outcome templates + the
-// input slot.
+// Sits next to graph.js / engine.js as another graph-data layer that
+// the runtime engine doesn't need but tooling and UI do. Stateless
+// beyond a small lazy cache; every public call is a pure function of
+// the graph data + outcome templates + the input slot.
 //
 // Slot vocabulary: a slot is `{ key, id, kind }` where kind is one
 // of 'module' | 'node' | 'outcome'. Deadend slots have no I/O
@@ -568,6 +567,29 @@
             parts.push([d, v === undefined ? UNSET : v]);
         }
         return JSON.stringify(parts);
+    }
+
+    function _compactProjectKey(sel, dims) {
+        // Pipe-delimited values in the caller's dim order. Empty for
+        // unset dims (UNSET sentinel collapses to ''). Decoder must
+        // know the dim list, which precompute and runtime both
+        // derive from FLOW_DAG / MODULE_MAP — they never share a
+        // dim list with literal '|' values (verified at startup;
+        // see the slot-key audit in precompute-reachability.js).
+        //
+        // Used for emitting reach-set keys, where the JSON-array
+        // shape `_projectKey` produces is too verbose: each escape
+        // module state would otherwise carry ~600 bytes of
+        // [["dim","__GIO_UNSET__"],...] noise. Compact form is
+        // ~30 bytes for the same state, which gzips to roughly the
+        // same size but keeps the on-disk raw small enough to
+        // ship without a per-fetch decompression hop.
+        const parts = new Array(dims.length);
+        for (let i = 0; i < dims.length; i++) {
+            const v = sel[dims[i]];
+            parts[i] = (v === undefined || v === UNSET) ? '' : v;
+        }
+        return parts.join('|');
     }
 
     function _keyToRow(key) {
@@ -1174,5 +1196,29 @@
         reachableFullSelsFromInputs,
         registerOutcomes,
         matchOutcomes,
+        // Stable canonical key for a sel — sorted NUL-delimited
+        // <dim>\x00<value> pairs. Browser uses this to look up
+        // precomputed reach sets; precompute uses the same function so
+        // keys match by construction.
+        selKey: _selKey,
+        // Per-slot read/write dim discovery — exposed so the
+        // reachability precompute and the runtime gate can build the
+        // same projection keys without re-deriving the closure.
+        readDimsForSlot:  _readDimsForSlot,
+        writeDimsForSlot: _writeDimsForSlot,
+        // JSON-stringified [[dim, value-or-UNSET], …] projection used
+        // for reach keys. Same shape as `cartesianWriteRows.byInput`'s
+        // values, so map lookups land in the same key space.
+        projectKey:       _projectKey,
+        // Pipe-delimited compact projection — same dim-ordered
+        // semantics as projectKey but ~20× smaller on the wire.
+        // The reach precompute and runtime both call this when
+        // building the per-outcome reach map; projectKey stays
+        // for static-analysis byInput maps that round-trip through
+        // _keyToRow (which still expects the JSON-array shape).
+        compactProjectKey: _compactProjectKey,
+        // sel restricted to a sorted dim list, then `selKey`'d. Used
+        // to compute slot input bucket keys.
+        readSelKey:       _readSelKey,
     };
 })();

@@ -908,7 +908,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="graph.js"></script>
     <script src="engine.js"></script>
-    <script src="graph-walker.js"></script>
     <script src="graph-io.js"></script>
     <script src="timeline-animator.js"></script>
     <script src="nodes.js"></script>
@@ -1172,7 +1171,6 @@
             templatesList = oData.templates;
             for (const t of templatesList) templatesMap[t.id] = t;
 
-            GraphWalker.setTemplates(templatesList);
             if (window.GraphIO && window.GraphIO.registerOutcomes) {
                 window.GraphIO.registerOutcomes(templatesList);
             }
@@ -1919,8 +1917,23 @@
                 _reachSet = null;
                 if (!templateId) return;
                 _reachLoading = true;
-                fetch('data/reach/' + encodeURIComponent(templateId) + '.json')
-                    .then(r => r.json())
+                // Reach files ship gzipped only — the raw form was
+                // ~100× larger and never used at runtime. Modern
+                // browsers (Chrome 80+ / Firefox 113+ / Safari 16.4+)
+                // support DecompressionStream; older browsers degrade
+                // to "no greying" (wouldReachOutcome returns true
+                // when _reachSet is null), which is conservative.
+                fetch('data/reach/' + encodeURIComponent(templateId) + '.json.gz')
+                    .then(r => {
+                        if (!r.ok) throw new Error('reach fetch ' + r.status);
+                        if (typeof DecompressionStream === 'undefined' || !r.body) {
+                            throw new Error('DecompressionStream unavailable');
+                        }
+                        return new Response(
+                            r.body.pipeThrough(new DecompressionStream('gzip'))
+                        ).text();
+                    })
+                    .then(text => JSON.parse(text))
                     .then(arr => {
                         if (_reachSetId === templateId) {
                             _reachSet = new Set(arr);
@@ -1938,11 +1951,7 @@
                 // Mirrors Engine.push without committing to the stack: append
                 // the edge and run cleanSelection (now single-pass — applies
                 // each set node's collapseToFlavor blocks once, in NODES
-                // order, with no invalidation sweep). The pre-rewrite version
-                // skipped cleanSelection for dims in GraphWalker.safePushDims
-                // as a fast path; with the rewrite that branch saves nothing
-                // worth the divergence risk, so every push now goes through
-                // the same code as Engine.push.
+                // order, with no invalidation sweep).
                 const next = Object.assign({}, sel);
                 next[nodeId] = edgeId;
                 let nextFlavor = flavor ? Object.assign({}, flavor) : {};
@@ -1951,18 +1960,84 @@
                 return { sel: next, flavor: nextFlavor };
             }
 
+            // ─── Reach-key helpers (mirror precompute-reachability.js) ──
+            // The reach files are keyed by `<slotKey>|out:<projKey>` for
+            // post-edge sels at non-module nodes / freshly-exited modules,
+            // and `<slotKey>|in:<projKey>` for partial states inside an
+            // active module. We compute the same key the precompute
+            // emitted so a Set.has() lands on the right entry.
+            const _reachIndex = {
+                _built: false,
+                moduleOfNode: new Map(),
+                slotByKey:    new Map(),
+                innerDims:    new Map(),
+                build() {
+                    if (this._built) return;
+                    const FLOW_DAG = window.Nodes && window.Nodes.FLOW_DAG;
+                    if (!FLOW_DAG || !window.GraphIO) return;
+                    for (const m of (Engine.MODULES || [])) {
+                        for (const nid of (m.nodeIds || [])) this.moduleOfNode.set(nid, m);
+                    }
+                    for (const s of FLOW_DAG.nodes) this.slotByKey.set(s.key, s);
+                    // Modules can appear under a slot whose .key
+                    // differs from mod.id (alignment_loop →
+                    // 'alignment') or under multiple slots (escape
+                    // → 5 slots). Pick any matching slot — they
+                    // share the same mod object so reads/writes
+                    // are identical across them.
+                    for (const m of (Engine.MODULES || [])) {
+                        const slot = FLOW_DAG.nodes.find(n =>
+                            n && n.kind === 'module' && n.id === m.id);
+                        if (!slot) continue;
+                        const dims = [...new Set([
+                            ...window.GraphIO.readDimsForSlot(slot),
+                            ...(m.nodeIds || []),
+                        ])].sort();
+                        this.innerDims.set(m.id, dims);
+                    }
+                    this._built = true;
+                },
+            };
+
             function wouldReachOutcome(nodeId, edgeId) {
                 if (!_reachSet) return true;
                 if (!lockedId) return true;
                 // Under "outcomes are terminal" (SPEC.md), findNextQuestion
-                // never offers an edge from a state where any template already
-                // matches, so the reach-set lookup on the post-click state is
-                // sufficient — no template-match short-circuit is needed.
+                // never offers an edge from a state where any template
+                // already matches, so the reach-set lookup on the post-click
+                // state is sufficient — no template-match short-circuit
+                // needed.
+                _reachIndex.build();
+                if (!window.GraphIO) return true;
                 const sel = Engine.currentState(stack);
                 const flavor = Engine.currentFlavor(stack);
-                const { sel: childSel, flavor: childFlavor } = _lightPush(sel, flavor, nodeId, edgeId);
-                const ik = GraphWalker.irrKey(childSel, childFlavor);
-                return _reachSet.has(ik);
+                const { sel: childSel } = _lightPush(sel, flavor, nodeId, edgeId);
+
+                const owningModule = _reachIndex.moduleOfNode.get(nodeId);
+                let key;
+                if (owningModule) {
+                    // Module-internal click — including the
+                    // exit-triggering click. The precompute's inner
+                    // pass folds OR-of-outer-reach into the inner
+                    // mask at exit states, so a single inner-key
+                    // lookup covers both "still inside" and "just
+                    // exited" cases. (We can't always identify the
+                    // FLOW_DAG slot anyway: `escape` appears as 5
+                    // slots and the engine doesn't track which one
+                    // is active.) compactProjectKey on innerDims =
+                    // (mod.reads ∪ mod.nodeIds) captures both the
+                    // entry bucket and the answered internals.
+                    const innerDims = _reachIndex.innerDims.get(owningModule.id) || [];
+                    key = owningModule.id + '|i|' +
+                        window.GraphIO.compactProjectKey(childSel, innerDims);
+                } else {
+                    const slot = _reachIndex.slotByKey.get(nodeId);
+                    if (!slot) return true;
+                    const writeDims = window.GraphIO.writeDimsForSlot(slot);
+                    key = nodeId + '|o|' +
+                        window.GraphIO.compactProjectKey(childSel, writeDims);
+                }
+                return _reachSet.has(key);
             }
 
             function mutateStack(action, opts) {

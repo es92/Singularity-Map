@@ -7,6 +7,10 @@ tests/audit-report.json
 .claude
 .DS_Store
 .cursor
+# Reach files: only the gzipped form ships (~36MB total). The raw
+# .json was 200x larger with no UX gain — runtime fetches the .gz
+# and decompresses in-browser via DecompressionStream.
+data/reach/*.json
 research/*.pdf
 research/*.aux
 research/*.log
