@@ -600,85 +600,60 @@
     }
 
     function _applyEdgeWrites(sel, node, edge) {
-        // Returns a fresh sel with node.id=edge.id and any matching
-        // collapseToFlavor blocks applied. Mirrors engine.commitEdge
-        // for the sel-mutation portion:
-        //   * `set`  : write dim → value
-        //   * `move` : evict dim from sel (it's persisted to flavor
-        //              by the runtime — for our projection we just
-        //              delete it). Critical for cases like
-        //              stall_recovery.mild moving stall_duration to
-        //              flavor BEFORE the module exits, so the
-        //              singularity → asi sub-path emerges with
-        //              stall_duration absent from sel.
-        //   * `setFlavor` : flavor-only, never touches sel.
-        //
-        // Block ordering matters: each block's `when` is evaluated
-        // against the running `next`, so a later block can gate on a
-        // value an earlier block just `set` (e.g. concentration_type
-        // .ai_itself: block 1 sets inert_stays='no'; block 2 — gated
-        // on ai_goals=marginal from upstream — evicts ai_goals +
-        // escape_set, mirroring inert_stays.no's own block).
-        //
-        // INTENTIONALLY does NOT do cleanSelection's two extras
-        // (invalidation of stale answers + cascading re-fire of all
-        // answered edges' blocks). Probe-divergence.js identified
-        // 15 sites where AEW's single-pass differs from runtime
-        // cleanSelection; option (B) of using cleanSelection here
-        // worked but caused 11× propagation slowdown and 2M-sel
-        // cartesian inflation because evicted dims surface as UNSET
-        // for downstream slots' cart-prods. The 15 sites are being
-        // refactored individually so the rule fires from the edge
-        // whose push completes the conjunction (option A).
+        // Returns a fresh sel with node.id=edge.id and the edge's
+        // collapseToFlavor blocks applied. The block interpreter
+        // itself lives in engine.applyEdgeBlocks — calling it here
+        // (with flavor=null so `move` just deletes from sel) keeps
+        // static analysis byte-equivalent to the runtime per-edge
+        // pass that cleanSelection runs. The two used to be parallel
+        // implementations and accumulated 15 divergences before
+        // probe-divergence.js merged them; collapsing the call site
+        // to a shared helper keeps that class of bug closed by
+        // construction.
         const next = { ...sel, [node.id]: edge.id };
-        if (!edge.collapseToFlavor) return next;
-        const blocks = Array.isArray(edge.collapseToFlavor) ? edge.collapseToFlavor : [edge.collapseToFlavor];
-        for (const b of blocks) {
-            if (!b) continue;
-            if (b.when && !matchCondition(next, b.when)) continue;
-            if (b.set) for (const [k, v] of Object.entries(b.set)) next[k] = v;
-            if (Array.isArray(b.move)) for (const k of b.move) delete next[k];
-        }
+        window.Engine.applyEdgeBlocks(next, edge, null);
         return next;
     }
 
     function _findNextInternalNode(mod, sel) {
+        // Engine.isAskableInternal covers the gate side (unanswered +
+        // activate/hide). For DFS we additionally need at-least-one
+        // enabled edge — a node with all edges currently disabled has
+        // no traversable branch to recurse into, even though the
+        // runtime engine would still surface it as a question.
         const NM = NODE_MAP();
+        const Engine = window.Engine;
         const nodeIds = mod.nodeIds || [];
         let best = null;
         let bestPri = -Infinity;
         for (const nid of nodeIds) {
             const n = NM[nid];
-            if (!n) continue;
-            if (sel[n.id] !== undefined) continue;
-            if (n.activateWhen && n.activateWhen.length && !n.activateWhen.some(c => matchCondition(sel, c))) continue;
-            if (n.hideWhen && n.hideWhen.length && n.hideWhen.some(c => matchCondition(sel, c))) continue;
-            if (!n.edges || !n.edges.some(e => !window.Engine.isEdgeDisabled(sel, n, e))) continue;
+            if (!Engine.isAskableInternal(sel, n)) continue;
+            if (!n.edges || !n.edges.some(e => !Engine.isEdgeDisabled(sel, n, e))) continue;
             const pri = n.priority == null ? 0 : n.priority;
             if (pri > bestPri) { best = n; bestPri = pri; }
         }
         return best;
     }
 
-    function _isModuleDone(mod, sel) {
-        // Mirror engine._isModuleDone: completionMarker can be a bare
-        // dim name ("any value present"), an object { dim, values }
-        // (membership-tested), or absent (treat as "never internally
-        // done" — DFS still terminates when no node is askable).
-        const m = mod.completionMarker;
-        if (!m) return true;
-        if (typeof m === 'string') return sel[m] != null;
-        if (typeof m === 'object' && m.dim) {
-            const v = sel[m.dim];
-            if (v == null) return false;
-            if (Array.isArray(m.values)) return m.values.includes(v);
-            return true;
-        }
-        return true;
-    }
+    // Module is done iff its completionMarker is satisfied. Delegates to
+    // engine.isModuleDone so the runtime and the DFS use exactly the
+    // same definition. A module without a completionMarker is treated
+    // as "never internally done" by engine.isModuleDone — but for
+    // _dfsModuleOutputs we want such a module to terminate immediately
+    // (the DFS has nothing else to gate on). Caller handles that case
+    // (`!mod.completionMarker → terminate`) so this helper isn't
+    // needed here.
 
     function _dfsModuleOutputs(mod, startSel, outputs, ctx) {
         const writes = mod.writes || [];
+        // Pre-resolve the completion marker once. Modules without a
+        // marker have no done-state, so the DFS terminates only when
+        // no internal node is askable (handled below via the !node
+        // path). With a marker, we delegate the satisfaction check to
+        // engine.isModuleDone — same predicate the runtime uses.
+        const marker = mod.completionMarker || null;
+        const Engine = window.Engine;
 
         function walk(sel) {
             if (ctx.steps++ > STEP_CAP) { ctx.truncated = true; return; }
@@ -692,7 +667,7 @@
             // looping back through every internal pick — stack-blow on
             // any module whose action node is in the move list (decel,
             // who_benefits, etc.).
-            if (_isModuleDone(mod, sel)) {
+            if (marker && Engine.isModuleDone(sel, marker)) {
                 outputs.add(_projectKey(sel, writes));
                 return;
             }

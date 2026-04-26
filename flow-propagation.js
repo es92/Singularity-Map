@@ -93,21 +93,16 @@
     // already set are ineligible (they're "done"). Outcome / deadend
     // slots aren't candidates here — outcomes are siphoned by
     // GraphIO.matchOutcomes upstream.
-    function _isAskableInternal(Engine, n, sel) {
-        if (!n || n.derived) return false;
-        if (sel[n.id] !== undefined) return false;
-        if (n.activateWhen && n.activateWhen.length
-            && !n.activateWhen.some(c => Engine.matchCondition(sel, c))) return false;
-        if (n.hideWhen && n.hideWhen.length
-            && n.hideWhen.some(c => Engine.matchCondition(sel, c))) return false;
-        return true;
-    }
-
+    //
+    // Askability for individual nodes is delegated to
+    // Engine.isAskableInternal (the same predicate the runtime priority
+    // gate and graph-io's module DFS use), so the three callers stay
+    // in lockstep on the definition.
     function _slotPickPriority(Engine, slot, sel) {
         if (!slot || slot.kind === 'outcome' || slot.kind === 'deadend') return Infinity;
         if (slot.kind === 'node') {
             const n = Engine.NODE_MAP[slot.id];
-            if (!_isAskableInternal(Engine, n, sel)) return Infinity;
+            if (!Engine.isAskableInternal(sel, n)) return Infinity;
             return n.priority !== undefined ? n.priority : 0;
         }
         if (slot.kind === 'module') {
@@ -120,7 +115,7 @@
             let minP = Infinity;
             for (const nid of (m.nodeIds || [])) {
                 const n = Engine.NODE_MAP[nid];
-                if (!_isAskableInternal(Engine, n, sel)) continue;
+                if (!Engine.isAskableInternal(sel, n)) continue;
                 const p = n.priority !== undefined ? n.priority : 0;
                 if (p < minP) minP = p;
             }

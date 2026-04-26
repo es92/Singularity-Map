@@ -516,22 +516,44 @@ function reduceFromExitPlan(mod, local) {
     return {};
 }
 
-// Shallow askability — activate matched, hide not matched, unanswered,
-// has at least one enabled edge. NO recursion into isNodeVisible /
-// isNodeActivatedByRules (those would create mutual recursion through
-// the priority gate). Mirrors the gates `_isModuleActivelyPending` uses.
-function _shallowAskable(sel, n) {
-    if (n.derived) return false;
+// Base askability predicate — node is unanswered and its activate/hide
+// gates pass. Shared between the runtime priority gate (_shallowAskable,
+// below), static-analysis call sites in graph-io (module DFS internal
+// pick), and flow-propagation (slot priority pick) so all three see
+// the same gate definition.
+//
+// Two checks are NOT included here, by design:
+//   * has-an-enabled-edge — flow-propagation's slot priority pick
+//     mirrors the user-facing engine, which surfaces a question even
+//     if every edge is disabled (the user sees grey buttons). The
+//     runtime priority gate (_shallowAskable) and graph-io's DFS
+//     pick do want the check; they add it inline below.
+//   * module-completed short-circuit — runtime-only concern. The DFS
+//     in graph-io terminates the moment the completion marker fires
+//     so module-internals can't be re-asked from inside its walk;
+//     flow-propagation's _slotPickPriority handles completed modules
+//     at the slot level by returning Infinity.
+function isAskableInternal(sel, n) {
+    if (!n || n.derived) return false;
     if (sel[n.id] !== undefined) return false;
+    if (n.activateWhen && !n.activateWhen.some(c => matchCondition(sel, c))) return false;
+    if (n.hideWhen && n.hideWhen.some(c => matchCondition(sel, c))) return false;
+    return true;
+}
+
+// Runtime priority-gate askability: isAskableInternal PLUS at-least-one
+// enabled edge PLUS the module-completed short-circuit. Without the
+// module-done check, internals whose answers got evicted to flavor on
+// module exit (e.g. every decel_Nmo_progress after the rival exit's
+// collapseToFlavor.move) keep looking askable — their own activateWhen
+// still matches against live sel dims (gov_action, capability) — and
+// their module-level internalPriority blocks main-chain modules forever.
+// NO recursion into isNodeVisible / isNodeActivatedByRules (those would
+// create mutual recursion through the priority gate).
+function _shallowAskable(sel, n) {
+    if (!isAskableInternal(sel, n)) return false;
     if (!n.edges || n.edges.length === 0) return false;
-    // Module-internal nodes of a completed module don't compete for
-    // priority. Without this check, internals whose answers got evicted to
-    // flavor on module exit (e.g. every decel_Nmo_progress after the rival
-    // exit's collapseToFlavor.move) keep looking shallow-askable — their
-    // own activateWhen still matches against live sel dims (gov_action,
-    // capability) — and their module-level internalPriority blocks
-    // main-chain modules forever. Uses the module's completionMarker so
-    // the check short-circuits without walking the whole module.
+    if (!n.edges.some(e => !isEdgeDisabled(sel, n, e))) return false;
     if (n.module) {
         const mod = MODULE_MAP[n.module];
         if (mod) {
@@ -539,9 +561,6 @@ function _shallowAskable(sel, n) {
             if (_isModuleDone(sel, marker)) return false;
         }
     }
-    if (n.activateWhen && !n.activateWhen.some(c => matchCondition(sel, c))) return false;
-    if (n.hideWhen && n.hideWhen.some(c => matchCondition(sel, c))) return false;
-    if (!n.edges.some(e => !isEdgeDisabled(sel, n, e))) return false;
     return true;
 }
 
@@ -656,55 +675,63 @@ function getEdgeDisabledReason(sel, node, edge) {
 // State management
 // ════════════════════════════════════════════════════════
 
-// Apply each set node's edge `collapseToFlavor` blocks in NODES (topological)
-// order. Single pass, no invalidation sweep, no fixpoint loop.
+// Apply a single edge's `collapseToFlavor` blocks to `sel` in place.
+// This is the canonical block interpreter, shared between the runtime
+// (cleanSelection, below) and static analysis (graph-io._applyEdgeWrites).
 //
-// History: this function used to do a 6-pass fixpoint that interleaved an
-// invalidation sweep (evict any sel[X] whose edge had become disabled in the
-// fused view) with a collapse pass. That cascade had a parallel implementation
-// in graph-io._applyEdgeWrites for static analysis, and the two diverged.
-// `probe-divergence.js` enumerated 15 divergence patterns; each was fixed by
-// pulling the load-bearing effect into the originating edge's
-// `collapseToFlavor` block (with a `proliferation_set:false`-style one-shot
-// gate where the effect must fire exactly once). Once divergence hit zero
-// across 178k runtime-reachable pushes, the multi-pass loop became a proven
-// no-op for every runtime state and could be deleted. AEW (graph-io) and CS
-// (this function) are now intentionally identical except that CS persists
-// `move` dims to flavor while AEW just drops them (static-analysis projection
-// has no flavor channel).
+// Block semantics (per block, in order):
+//   when      — optional; matched against the running `sel`. Skip if false.
+//   set       — write dim → value in sel. Runs before move so blocks that
+//               derive a value from a dim they then move (e.g. read
+//               decel_Xmo_progress, set decel_align_progress, move
+//               decel_Xmo_progress) see the dim before eviction.
+//   setFlavor — write dim → value in flavor only (skipped if no flavor passed).
+//   move      — for each dim, copy sel[dim] → flavor[dim] (if flavor passed)
+//               and delete sel[dim]. Static analysis passes flavor=null and
+//               just drops the dim.
 //
-// Block semantics (per edge.collapseToFlavor block, in order):
-//   when     — optional; matched against post-edge `sel`. Skip if false.
-//   set      — write dim → value in sel. Runs before move so blocks that
-//              derive a value from a dim they then move (e.g. read
-//              decel_Xmo_progress, set decel_align_progress, move
-//              decel_Xmo_progress) see the dim before eviction.
-//   setFlavor — write dim → value in flavor only.
-//   move     — for each dim, copy sel[dim] → flavor[dim] and delete sel[dim].
+// History: cleanSelection used to do a 6-pass fixpoint that interleaved an
+// invalidation sweep (evict any sel[X] whose edge had become disabled in
+// the fused view) with a collapse pass. That cascade had a parallel
+// implementation in graph-io._applyEdgeWrites for static analysis, and the
+// two diverged. `probe-divergence.js` enumerated 15 divergence patterns;
+// each was fixed by pulling the load-bearing effect into the originating
+// edge's `collapseToFlavor` block (with a `proliferation_set:false`-style
+// one-shot gate where the effect must fire exactly once). Once divergence
+// hit zero across 178k runtime-reachable pushes, the multi-pass loop became
+// a proven no-op for every runtime state. The two implementations are now
+// folded into this single helper so they can never re-diverge.
+function applyEdgeBlocks(sel, edge, flavor) {
+    if (!edge || !edge.collapseToFlavor) return;
+    const blocks = Array.isArray(edge.collapseToFlavor) ? edge.collapseToFlavor : [edge.collapseToFlavor];
+    for (const c of blocks) {
+        if (c.when && !matchCondition(sel, c.when)) continue;
+        if (c.set) {
+            for (const k of Object.keys(c.set)) sel[k] = c.set[k];
+        }
+        if (c.setFlavor && flavor) {
+            for (const k of Object.keys(c.setFlavor)) flavor[k] = c.setFlavor[k];
+        }
+        if (c.move) {
+            for (const moveDim of c.move) {
+                if (sel[moveDim] === undefined) continue;
+                if (flavor) flavor[moveDim] = sel[moveDim];
+                delete sel[moveDim];
+            }
+        }
+    }
+}
+
+// Walk every set node in NODES (topological) order and apply its picked
+// edge's `collapseToFlavor` blocks. Single pass, no invalidation sweep,
+// no fixpoint loop. Persists evicted dims to `flavor` so narrative
+// resolution can still see them.
 function cleanSelection(sel, flavor) {
     if (!flavor) flavor = {};
     for (const node of NODES) {
         if (!sel[node.id]) continue;
         const edge = node.edges && node.edges.find(v => v.id === sel[node.id]);
-        if (!edge || !edge.collapseToFlavor) continue;
-        const blocks = Array.isArray(edge.collapseToFlavor) ? edge.collapseToFlavor : [edge.collapseToFlavor];
-        for (const c of blocks) {
-            if (c.when && !matchCondition(sel, c.when)) continue;
-            if (c.set) {
-                for (const k of Object.keys(c.set)) sel[k] = c.set[k];
-            }
-            if (c.setFlavor) {
-                for (const k of Object.keys(c.setFlavor)) flavor[k] = c.setFlavor[k];
-            }
-            if (c.move) {
-                for (const moveDim of c.move) {
-                    if (sel[moveDim] !== undefined) {
-                        flavor[moveDim] = sel[moveDim];
-                        delete sel[moveDim];
-                    }
-                }
-            }
-        }
+        applyEdgeBlocks(sel, edge, flavor);
     }
     return { sel, flavor };
 }
@@ -981,7 +1008,8 @@ function matchContextWhen(state, cond) {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { NODES, NODE_MAP, MODULES, MODULE_MAP,
         matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeActivatedByRules, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
-        cleanSelection, resolvedState, resolvedStateWithFlavor,
+        isAskableInternal,
+        applyEdgeBlocks, cleanSelection, resolvedState, resolvedStateWithFlavor,
         templateMatches, templatePartialMatch, anyModuleActivelyPending, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
         isModuleDone: _isModuleDone, isModulePending: _isModulePending,
         createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas, displayOrder };
@@ -989,7 +1017,8 @@ if (typeof module !== 'undefined' && module.exports) {
 if (typeof window !== 'undefined') {
     window.Engine = { NODES, NODE_MAP, MODULES, MODULE_MAP,
         matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
-        cleanSelection, resolvedState, resolvedStateWithFlavor,
+        isAskableInternal,
+        applyEdgeBlocks, cleanSelection, resolvedState, resolvedStateWithFlavor,
         templateMatches, templatePartialMatch, anyModuleActivelyPending, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
         isModuleDone: _isModuleDone, isModulePending: _isModulePending,
         createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas, displayOrder };
