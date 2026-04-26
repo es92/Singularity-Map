@@ -144,7 +144,7 @@ A state where any outcome template matches is **terminal**: the UI presents that
 
 Two consequences follow:
 
-1. **Reach-map shape.** The precompute (`graph-walker.js`) stops DFS at the first template match, so `reach/<outcome>.json` contains irrKeys only for states that are *not yet* terminal. The UI predicate `reachSet.has(irrKey(postClickState))` is correct because the browser never asks a question from a terminal state.
+1. **Reach-map shape.** The precompute (`precompute-reachability.js`) stops at the first siphon (template match) when walking the FLOW_DAG, so `reach/<outcome>.json` contains projection-keyed entries only for states that are *not yet* terminal. The UI predicate `reachSet.has(<slotKey>|out:<projKey>)` is correct because the browser never asks a question from a terminal state.
 2. **Authoring invariant.** If every path to outcome `B` transits a state where some other outcome `A` also matches, the user can never reach `B` — `A` terminates the path first. The existing `violations.ambiguous` check (no two templates match the same state) is strictly required for this invariant to hold; authors should treat it as a hard rule.
 
 ---
@@ -182,9 +182,11 @@ Singularity Map/
 ├── README.md                      ← project overview and setup
 ├── index.html                     ← main app (single-page, all UI logic)
 ├── graph.js                       ← decision graph — nodes, edges, conditions
-├── engine.js                      ← state machine — selection, resolution, display order
-├── graph-walker.js                ← DFS walker, equivalence classes, irrelevance, superposition
-├── precompute-reachability.js    ← builds per-outcome reach sets into data/reach/
+├── engine.js                      ← state machine — selection (single-pass cleanSelection), resolution, display order
+├── graph-io.js                    ← per-slot static-analysis primitives (cartesianWriteRows, reachableFullSelsFromInputs, _applyEdgeWrites, selKey, projectKey, read/writeDimsForSlot)
+├── flow-propagation.js            ← DAG-level driver composing graph-io primitives over FLOW_DAG (powers validate.js + reach precompute)
+├── nodes.js                       ← FLOW_DAG (slot inventory + parent/child edges) and /nodes view
+├── precompute-reachability.js     ← builds per-outcome reach sets into data/reach/ via FlowPropagation outer pass + per-module inner DFS, projection-keyed
 ├── timeline-animator.js           ← timeline rendering and animation
 ├── timeline.css                   ← all styles
 ├── milestone-utils.js             ← timeline event grouping helpers
@@ -260,11 +262,11 @@ Modules are registered in the `MODULES` array exported from `graph.js`.
 - **Exit.** On a terminating internal edge, the module's `reduce(local)` produces the write bundle, which is committed to global `sel` via `collapseToFlavor` installed by `attachModuleReducer(mod)`. Internal dims are moved to `flavor`.
 - **No `outcome` tag.** The decel module intentionally eliminates the intermediate `decel_outcome` dim that previously dispatched through a cascade of `deriveWhen` rules. Writes land directly on consumer globals — simpler, faster, easier to audit.
 
-### Walker (Phase 5)
+### Static analysis (Phase 5)
 
-`graph-walker.js` treats an active module as an atomic transition **if** a `reducerTable` is declared. It enumerates pre-computed reducer cells as virtual edges, each applying its writes to `sel` directly, shrinking the walked state space. Modules without a `reducerTable` (e.g. escape) are still registered in `MODULES` for audit/UI purposes but undergo normal DFS traversal internally; the walker's `_pendingModule` skips modules whose `MODULE_CELLS` array is empty.
+`graph-io.js` enumerates each module's exit space declaratively: `cartesianWriteRows(slot)` returns a `(bucketKey → projKeySet)` table where the bucket is the projection onto `module.reads` and each `projKey` is a JSON-stringified projection onto `module.writes`. `flow-propagation.js` composes those per-slot tables across the FLOW_DAG via topological propagation; `validate.js`, `precompute-reachability.js`, and `/explore` all share the same primitives. The runtime gate (`wouldReachOutcome` in `index.html`) computes the same `<slotKey>|out:<projKey>` keys against the precompute output, so static analysis and the live UI agree by construction.
 
-Use a `reducerTable` when the exit space is small and regular (decel: 9 action×progress cells). Skip it when the exit space is large or irregular (escape: 4 writes × up to ~60 value combinations) — the audit/UI benefits of module membership carry over without forcing artificial enumeration.
+Modules without an explicit reducer table fall through the same DFS — the table is now derived from `attachModuleReducer`'s exit-tuple installation rather than authored separately, so the question of whether to keep one is moot.
 
 ### Auditing
 
@@ -284,15 +286,14 @@ Decel was a well-contained sub-loop — 14 internal dims, a linear time-step str
 - **Reducer table as source of truth.** Keeping the (action × progress) → writes table as pure data enabled the boundary audit, the path-equivalence test, and the walker's atomic-edge optimization to all consume the same declaration without duplication.
 - **Direct writes beat intermediate dispatch dims.** Deleting `decel_outcome` removed a whole layer of `deriveWhen` chains and made downstream dependencies explicit. This is the pattern to replicate for future modules.
 - **Marker dims without node declarations.** `decel_align_progress` became a module-written sel-dim with no node declaration. Its values are registered via the engine's `markerVals` scan of `collapseToFlavor` blocks, which prevents the DFS from enumerating it as a user-selectable dim (an earlier attempt to keep the node declaration caused 3k+ spurious DFS violations).
-- **Path-equivalence is the backstop.** `tests/decel_path_equivalence.js` enumerates every pre-migration entry path through decel, snapshots the resulting `{ sel, resolved, flavorInternal }` state, and diffs against post-migration. Functional regressions (resolved-dim drops/changes on valid paths) block the migration; structural diffs (sel layout shuffles) are expected and whitelisted. This harness should gate every future module migration.
 
 ### Escape retrospective
 
 Escape (7 internal dims, 4 writes) was the second module. It deliberately broke two assumptions decel had baked in, and the infrastructure adapted without regressions.
 
-- **Not every module wants a reducer table.** Decel's (action × progress) lattice had 9 cells; escape's exit space is `response_success × collateral_impact × discovery_timing × catch_outcome` with long-tail conditional structure. Enumerating cells would produce a wide, unaudited table whose only consumer is the walker's atomic-edge optimization. Instead, escape omits `reducerTable` and the walker (`_pendingModule` in `graph-walker.js`) falls back to normal DFS for that module. `MODULES`-iterating code (`module-audit.js`, `/explore` cluster rendering, `/nodes` sidebar grouping) works unchanged.
-- **`writes ⊂ nodeIds` is legal.** Decel wrote to globals it didn't own (`alignment`, `governance`, `containment`). Escape writes to two of its own internal nodes (`catch_outcome`, `collateral_impact`) because external consumers (downstream nodes like `ruin_type.deriveWhen`, template `reachable` that needs sel-only visibility pre-flavor-aware `irrKey`, and the vignette builder) need them in `sel`. `attachModuleReducer` was generalized to compute `move = nodeIds \ writes`, so the remaining pure-internal dims (`escape_method`, `escape_timeline`, `discovery_timing`, `response_method`, `response_success`) collapse to `flavor` on exit. Decel's behaviour is unchanged (writes disjoint from nodeIds → all nodeIds move).
-- **"Third scope" template matching.** `templateMatches` and the walker's `irrKey` both read from `resolvedStateWithFlavor(sel, flavor)` — a fused view with flavor underlaid and sel winning on conflict. This lets outcome templates reference module-internal dims (e.g. `discovery_timing`) without those dims polluting global `sel`. The reach-precompute, browser runtime, and validator all use the same fused view so reach-keys stay consistent across components.
+- **Not every module wants an explicit reducer table.** Decel's (action × progress) lattice had 9 cells, fully written out; escape's exit space (`response_success × collateral_impact × discovery_timing × catch_outcome`) has long-tail conditional structure. The escape module relies on `attachModuleReducer` to derive its exit-tuple set from `exitPlan`, so the per-cell table is built lazily by `cartesianWriteRows` rather than authored by hand. `MODULES`-iterating code (`module-audit.js`, `/explore` cluster rendering, `/nodes` sidebar grouping) works the same regardless.
+- **`writes ⊂ nodeIds` is legal.** Decel wrote to globals it didn't own (`alignment`, `governance`, `containment`). Escape writes to two of its own internal nodes (`catch_outcome`, `collateral_impact`) because external consumers (downstream nodes like `ruin_type.deriveWhen`, template `reachable` clauses, and the vignette builder) need them in `sel`. `attachModuleReducer` was generalized to compute `move = nodeIds \ writes`, so the remaining pure-internal dims (`escape_method`, `escape_timeline`, `discovery_timing`, `response_method`, `response_success`) collapse to `flavor` on exit. Decel's behaviour is unchanged (writes disjoint from nodeIds → all nodeIds move).
+- **"Third scope" template matching.** `templateMatches` reads from `resolvedStateWithFlavor(sel, flavor)` — a fused view with flavor underlaid and sel winning on conflict — so outcome templates can reference module-internal dims (e.g. `discovery_timing`) without those dims polluting global `sel`. (The current FlowPropagation reach pipeline runs on `sel` only, but `cleanSelection` keeps `sel` faithful to the move list so the precompute and the live UI siphon at the same states.)
 - **`module-audit.js` classifies template/narrative references to internal dims.** Refs split into two categories: (a) `template.reachable` blocks — these drive template gating, now via `resolvedStateWithFlavor`, so flavor-moved dims work; and (b) `template.flavor` / `narrative.json` entries — these render via the merged `narrEff = sel ∪ flavor`. Both categories are informational (not leaks) as long as the dim is moved to flavor on module exit.
 - **Hidden narrEff consumer in share-vignettes.** `share/share-vignettes.js::renderPersonalizedTimeline` was passing `resolvedState(sel)` (not `narrEff`) into `resolveTemplate`, which would have broken the escape timeline once `escape_method`/`escape_timeline` moved to flavor. Caught during the external-consumer audit and fixed in this migration. The general rule: any narrative/flavor consumer needs `Object.assign({}, currentFlavor(stack), eff)` as its state arg.
 - **Metrics.** DFS violations dropped from 7144 → 6146 (−998) — the gain comes from escape's internal dims no longer polluting URL keys on exit, which collapses many previously-distinct "stuck node" terminals. Reach mismatches held at 575 (pre-existing, unrelated to modularization). Decel path-equivalence still PASS.

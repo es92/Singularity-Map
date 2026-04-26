@@ -1685,8 +1685,7 @@ const DECEL_MODULE_NODE_IDS = (function() {
 // pairs) into 63 exitPlan tuples — one per (action-node, action-edge)
 // carrying a `when:{progress-key:[progress]}` gate. `buildDecelReducerTable()`
 // pivots the same cells into the legacy 2D `{action:{progress:set}}`
-// audit view that explore.js / graph-walker.js / module-audit.js still
-// consume.
+// audit view that explore.js / module-audit.js still consume.
 //
 // This is the "exitPlan is source of truth" direction (step 2 of the
 // reducerTable → exitPlan migration). Pre-inversion, the 2D reducerTable
@@ -1742,10 +1741,9 @@ const DECEL_EXIT_CELLS = [
 
 // Derived: legacy 2D `{action:{progress:set}}` view of the cell list.
 // Kept exposed on DECEL_MODULE.reducerTable so explore.js's
-// `_buildModuleSyntheticNode`, graph-walker.js's `_buildModuleCells`,
-// and module-audit.js's reducer-cell audit all keep working without
-// migration. Consumers that want the exit plan instead can use
-// mod.exitPlan directly.
+// `_buildModuleSyntheticNode` and module-audit.js's reducer-cell audit
+// keep working without migration. Consumers that want the exit plan
+// instead can use mod.exitPlan directly.
 function buildDecelReducerTable() {
     const table = {};
     for (const { action, progress, set } of DECEL_EXIT_CELLS) {
@@ -1827,11 +1825,11 @@ const DECEL_MODULE = {
     // post-build loop at the bottom of this file.
     internalPriority: -1,
     // Derived 2D (action × progress) view of DECEL_EXIT_CELLS. Exposed
-    // for explore.js / graph-walker.js / module-audit.js — which still
-    // drive their "atomic outcome" synthetic nodes off the legacy
-    // reducerTable shape. NOT an authored primitive: changes to decel
-    // outcomes go in DECEL_EXIT_CELLS, which both this table and the
-    // exitPlan below derive from.
+    // for explore.js / module-audit.js — which still drive their
+    // "atomic outcome" synthetic nodes off the legacy reducerTable
+    // shape. NOT an authored primitive: changes to decel outcomes go
+    // in DECEL_EXIT_CELLS, which both this table and the exitPlan
+    // below derive from.
     reducerTable: DECEL_REDUCER_TABLE,
     get exitPlan() { return buildDecelExitPlan(); },
 };

@@ -404,10 +404,10 @@ console.log('engine escape module path integration: PASS');
 // ────────────────────────────────────────────────────────────
 // 5. Invariant: every module's string completionMarker must be in
 //    its `writes` list. Otherwise captureExitResult puts it in
-//    setFlavor, and a sel-only outer DFS (validate2, chain_order,
-//    reachability) will see the module as perpetually pending and
-//    re-fire it. Emergence uses a structured marker ({dim, values})
-//    — skipped here.
+//    setFlavor, and any sel-only outer DFS (validate.js Phase 2's
+//    FlowPropagation pass, the precompute reach pipeline, etc.) will
+//    see the module as perpetually pending and re-fire it. Emergence
+//    uses a structured marker ({dim, values}) — skipped here.
 // ────────────────────────────────────────────────────────────
 for (const mod of MODULES) {
     const cm = mod.completionMarker;

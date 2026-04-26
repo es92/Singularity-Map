@@ -32,7 +32,10 @@ Then open `http://localhost:3000`.
 index.html                    Main app (single-page, all UI logic)
 graph.js                      Decision graph — nodes, edges, conditions
 engine.js                     State machine — selection, resolution, display order
-graph-walker.js               DFS walker — reachability, equivalence classes, irrelevance
+graph-io.js                   Cartesian read/write enumeration + outcome matching primitives
+flow-propagation.js           Topological FLOW_DAG driver shared by validate / explore / precompute
+nodes.js                      /nodes view — graph debugger / inspector
+explore.js                    /explore view — module/card combinatorics surface
 precompute-reachability.js    Builds per-outcome reach sets into data/reach/
 timeline-animator.js          Timeline rendering and animation
 timeline.css                  All styles
@@ -45,13 +48,8 @@ data/
   personal.json         Profession list, country buckets
   reach/                Per-outcome reachability sets (JSON + gzipped)
 
-test/
-  run.js                Baseline-vs-optimized DFS comparison across test graphs
-  graphs/               Minimal graphs exercising each reduction
-  reach-browser-sim.js  Simulates the browser's wouldReachOutcome path
-  reach-table.js        Reach-map inspection CLI
-
 tests/
+  module_primitive.js   Module reducer / exit-plan parity check
   evaluate.js           LLM-based evaluation — persona simulation, audits, reports
   personas.json         Test personas for evaluation
 

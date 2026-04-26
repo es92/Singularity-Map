@@ -983,6 +983,7 @@ if (typeof module !== 'undefined' && module.exports) {
         matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeActivatedByRules, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         cleanSelection, resolvedState, resolvedStateWithFlavor,
         templateMatches, templatePartialMatch, anyModuleActivelyPending, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
+        isModuleDone: _isModuleDone, isModulePending: _isModulePending,
         createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas, displayOrder };
 }
 if (typeof window !== 'undefined') {
@@ -990,6 +991,7 @@ if (typeof window !== 'undefined') {
         matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         cleanSelection, resolvedState, resolvedStateWithFlavor,
         templateMatches, templatePartialMatch, anyModuleActivelyPending, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
+        isModuleDone: _isModuleDone, isModulePending: _isModulePending,
         createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas, displayOrder };
 }
 
