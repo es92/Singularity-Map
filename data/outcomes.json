@@ -821,7 +821,19 @@
           }
         },
         "conflict_result": {
-          "victory": "Flourishing emerged from the ashes of war. A decisive conflict left one power standing — and that power chose to rebuild rather than rule. The scars ran deep, but the reconstruction was guided by the same AI that won the war."
+          "victory": {
+            "_default": "Flourishing emerged from the ashes of war. A decisive conflict left one power standing — and that power chose to rebuild rather than rule. The scars ran deep, but the reconstruction was guided by the same AI that won the war.",
+            "_when": [
+              {
+                "if": {
+                  "post_war_aims": [
+                    "self_interest"
+                  ]
+                },
+                "text": "Flourishing emerged from the ashes of war — but not by the victor's design. They wanted to consolidate. The surviving population wouldn't let them. Through mobilization, organized pressure, and a successful second fight against the post-war order, the reconstruction served everyone. Not because the victor chose to. Because they lost the second war."
+              }
+            ]
+          }
         },
         "mobilization": {
           "strong": {
@@ -938,6 +950,42 @@
           ],
           "intent": [
             "international"
+          ],
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            },
+            {
+              "conflict_result": [
+                "destruction"
+              ]
+            },
+            {
+              "containment": [
+                "escaped"
+              ],
+              "inert_stays": {
+                "not": [
+                  "yes"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "capability": [
+            "asi"
+          ],
+          "benefit_distribution": [
+            "equal"
+          ],
+          "failure_mode": [
+            "none"
+          ],
+          "post_war_aims": [
+            "self_interest"
           ],
           "_not": [
             {

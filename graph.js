@@ -964,7 +964,8 @@ const NODES = [
       edges: [
         { id: 'for_everyone', label: 'This is for everyone',
           disabledWhen: [
-            { escalation_outcome: ['standoff'], reason: 'In a standoff between rival AI powers, the framing is security — not sharing' }
+            { escalation_outcome: ['standoff'], reason: 'In a standoff between rival AI powers, the framing is security — not sharing' },
+            { post_war_aims: ['self_interest'], reason: 'A victor consolidating power for themselves can\'t credibly frame the post-war order as "for everyone"' }
           ] },
         { id: 'keeping_safe', label: 'We\'re keeping you safe' },
         { id: 'best_will_rise', label: 'The market will decide', shortLabel: 'Market decides',
@@ -2189,8 +2190,10 @@ const WHO_BENEFITS_MODULE = {
         // Internal hideWhens gate on ai_goals/containment; benefit_distribution
         // disabledWhens reference intent; power_promise edge disabledWhens
         // reference escalation_outcome (standoff disables for_everyone /
-        // best_will_rise narrative framings).
-        'containment', 'intent', 'escalation_outcome',
+        // best_will_rise narrative framings) and post_war_aims (self_interest
+        // disables for_everyone — a victor consolidating power can't credibly
+        // promise inclusion).
+        'containment', 'intent', 'escalation_outcome', 'post_war_aims',
         // benefit_distribution activates via post_catch (the consolidated
         // escape-exit marker).
         'post_catch',
