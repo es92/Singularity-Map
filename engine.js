@@ -656,83 +656,55 @@ function getEdgeDisabledReason(sel, node, edge) {
 // State management
 // ════════════════════════════════════════════════════════
 
+// Apply each set node's edge `collapseToFlavor` blocks in NODES (topological)
+// order. Single pass, no invalidation sweep, no fixpoint loop.
+//
+// History: this function used to do a 6-pass fixpoint that interleaved an
+// invalidation sweep (evict any sel[X] whose edge had become disabled in the
+// fused view) with a collapse pass. That cascade had a parallel implementation
+// in graph-io._applyEdgeWrites for static analysis, and the two diverged.
+// `probe-divergence.js` enumerated 15 divergence patterns; each was fixed by
+// pulling the load-bearing effect into the originating edge's
+// `collapseToFlavor` block (with a `proliferation_set:false`-style one-shot
+// gate where the effect must fire exactly once). Once divergence hit zero
+// across 178k runtime-reachable pushes, the multi-pass loop became a proven
+// no-op for every runtime state and could be deleted. AEW (graph-io) and CS
+// (this function) are now intentionally identical except that CS persists
+// `move` dims to flavor while AEW just drops them (static-analysis projection
+// has no flavor channel).
+//
+// Block semantics (per edge.collapseToFlavor block, in order):
+//   when     — optional; matched against post-edge `sel`. Skip if false.
+//   set      — write dim → value in sel. Runs before move so blocks that
+//              derive a value from a dim they then move (e.g. read
+//              decel_Xmo_progress, set decel_align_progress, move
+//              decel_Xmo_progress) see the dim before eviction.
+//   setFlavor — write dim → value in flavor only.
+//   move     — for each dim, copy sel[dim] → flavor[dim] and delete sel[dim].
 function cleanSelection(sel, flavor) {
     if (!flavor) flavor = {};
-    for (let pass = 0; pass < 6; pass++) {
-        let changed = false;
-        // Edge-validity checks read from a fused view (flavor underlaid,
-        // sel wins). Once a dim is moved to flavor it's still a "locked-in
-        // answer" — downstream requires/disabledWhen that reference it must
-        // continue to evaluate against its known value, not treat it as
-        // undefined. Without this, moving e.g. response_success to flavor
-        // would delete catch_outcome from sel on the next pass because its
-        // requires clause references response_success.
-        const fused = {};
-        for (const k of Object.keys(flavor)) fused[k] = flavor[k];
-        for (const k of Object.keys(sel)) fused[k] = sel[k];
-        for (const node of NODES) {
-            if (!isNodeVisible(fused, node)) continue;
-            if (sel[node.id]) {
-                const edge = node.edges && node.edges.find(v => v.id === sel[node.id]);
-                if (edge && isEdgeDisabled(fused, node, edge)) {
-                    delete sel[node.id];
-                    changed = true;
-                }
+    for (const node of NODES) {
+        if (!sel[node.id]) continue;
+        const edge = node.edges && node.edges.find(v => v.id === sel[node.id]);
+        if (!edge || !edge.collapseToFlavor) continue;
+        const blocks = Array.isArray(edge.collapseToFlavor) ? edge.collapseToFlavor : [edge.collapseToFlavor];
+        for (const c of blocks) {
+            if (c.when && !matchCondition(sel, c.when)) continue;
+            if (c.set) {
+                for (const k of Object.keys(c.set)) sel[k] = c.set[k];
             }
-        }
-        // Apply collapseToFlavor: move certain dims from sel to flavor when
-        // an edge declares it. Narrative-preserving state collapse.
-        //
-        // An edge may declare either a single collapse block (object form) or
-        // an array of blocks, each with its own optional `when` gate. Array
-        // form is used when the collapse values depend on current sel (e.g.
-        // decel terminating edges that set decel_outcome based on the current
-        // decel_Xmo_progress value). Blocks are tried in order; each whose
-        // `when` matches applies its set/move/setFlavor independently.
-        for (const node of NODES) {
-            if (!sel[node.id]) continue;
-            const edge = node.edges && node.edges.find(v => v.id === sel[node.id]);
-            if (!edge || !edge.collapseToFlavor) continue;
-            const blocks = Array.isArray(edge.collapseToFlavor) ? edge.collapseToFlavor : [edge.collapseToFlavor];
-            for (const c of blocks) {
-                // Optional gate: collapse applies only when the current sel matches
-                // `when`. Used for subtree-conditional moves (e.g. move open_source
-                // to flavor only when distribution=concentrated at sovereignty.lab —
-                // preserves it in the distribution=monopoly subtree where decel
-                // chain still reads it).
-                if (c.when && !matchCondition(sel, c.when)) continue;
-                // set runs before move so that blocks which bake a derived
-                // value from a dim they then move (e.g. set decel_align_progress
-                // from decel_Xmo_progress, then move decel_Xmo_progress) read the
-                // dim while it's still in sel.
-                if (c.set) {
-                    for (const k of Object.keys(c.set)) {
-                        if (sel[k] !== c.set[k]) {
-                            sel[k] = c.set[k];
-                            changed = true;
-                        }
-                    }
-                }
-                if (c.setFlavor) {
-                    for (const k of Object.keys(c.setFlavor)) {
-                        if (flavor[k] !== c.setFlavor[k]) {
-                            flavor[k] = c.setFlavor[k];
-                            changed = true;
-                        }
-                    }
-                }
-                if (c.move) {
-                    for (const moveDim of c.move) {
-                        if (sel[moveDim] !== undefined) {
-                            flavor[moveDim] = sel[moveDim];
-                            delete sel[moveDim];
-                            changed = true;
-                        }
+            if (c.setFlavor) {
+                for (const k of Object.keys(c.setFlavor)) flavor[k] = c.setFlavor[k];
+            }
+            if (c.move) {
+                for (const moveDim of c.move) {
+                    if (sel[moveDim] !== undefined) {
+                        flavor[moveDim] = sel[moveDim];
+                        delete sel[moveDim];
                     }
                 }
             }
         }
-        if (!changed) break;
     }
     return { sel, flavor };
 }

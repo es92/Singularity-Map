@@ -351,7 +351,39 @@ const NODES = [
     { id: 'distribution', label: 'Frontier Labs', stage: 2,
       activateWhen: [{ capability: ['asi'] }],
       edges: [
-        { id: 'open', label: 'Distributed', requires: { open_source: ['near_parity'] }, disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this speed, only whoever gets there first has it' }] },
+        { id: 'open', label: 'Distributed',
+          // Both gates are scoped to the pre-leak window via
+          // `proliferation_set: false` (or, equivalently for `requires`,
+          // an OR-clause that auto-passes once proliferation_set='yes').
+          // Post-leak, "distribution" semantics flip: "open" now means
+          // "weights are loose in the wild, anyone can run a copy" —
+          // not "labs distributed openly". Both the original
+          // open_source=near_parity prerequisite and the explosive-
+          // takeoff disable apply only to the user's INITIAL pick;
+          // they're irrelevant once a leak has forced
+          // distribution='open' as a side effect.
+          //
+          // Without these gates, leak exit blocks set distribution='open'
+          // and the old multi-pass cleanSelection would invalidate it
+          // (requires fails on open_source=twenty_four_months, or
+          // disabledWhen fires on takeoff_class=explosive). The static
+          // analysis path (_applyEdgeWrites) never had an invalidation
+          // pass; the gates make both paths leave distribution='open'
+          // alone post-leak so they stay in sync.
+          // diverges from CS (probe-divergence sig distribution:open→∅
+          // on proliferation_outcome.leaks_public push, β category).
+          //
+          // requires uses OR semantics across array entries (any
+          // matching cond satisfies the requirement), so adding the
+          // proliferation_set='yes' clause lets the edge pass post-leak
+          // without weakening the original near_parity gate pre-leak.
+          requires: [
+            { open_source: ['near_parity'] },
+            { proliferation_set: ['yes'] }
+          ],
+          disabledWhen: [
+            { takeoff_class: ['explosive'], proliferation_set: false, reason: 'At this speed, only whoever gets there first has it' }
+          ] },
         { id: 'lagging', label: 'Many compete',
           disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this speed, only whoever gets there first has it' }, { open_source: ['near_parity'], reason: 'With open-source at parity, no one is lagging behind' }],
           collapseToFlavor: { set: { distribution: 'concentrated' }, setFlavor: { distribution_detail: 'lagging' } } },
@@ -477,9 +509,10 @@ const NODES = [
           // post_catch=contained collapse (AI escaped, was caught, and
           // is now held) — that path sets both dims simultaneously,
           // so we OR in the post_catch=contained marker. Without this
-          // disjunction, cleanSelection re-evaluates the edge, finds
-          // distribution=open (a legitimate pre-escape state), marks
-          // the edge disabled, and drops sel.containment — breaking
+          // disjunction, the old multi-pass cleanSelection would re-
+          // evaluate the edge, find distribution=open (a legitimate
+          // pre-escape state), mark the edge disabled, and drop
+          // sel.containment — breaking
           // downstream rollout gating for alien-coexistence /
           // hostile-contained states.
           requires: [
@@ -527,15 +560,31 @@ const NODES = [
             { concentration_type: ['ai_itself'], power_use: ['generous'], reason: 'The AI was already shown to wield power generously — hostile goals contradict that' }
           ] },
         { id: 'marginal', label: 'Inert (for now)', disabledWhen: [
-            { concentration_type: ['ai_itself'], reason: 'The AI already took control — it is not inert' },
+            // Same race as the inert_stays.no rule below — the
+            // `escape_set: false` gate ensures this disable doesn't fire
+            // before concentration_type.ai_itself's block-2 collapse has
+            // moved ai_goals + escape_set to flavor. Under the old
+            // multi-pass cleanSelection an invalidation sweep would have
+            // deleted sel.ai_goals before the move ran, the move's
+            // `when: { ai_goals: ['marginal'] }` would fail to match,
+            // and escape_set would be stranded in sel — exactly the
+            // race
+            // probe-divergence flagged on (concentration_type, ai_itself,
+            // sig escape_set:∅→yes).
+            //
+            // The gate semantics: at first-pass (ai_goals=marginal still
+            // in sel), escape_set is necessarily 'yes' (set by the
+            // prior ai_goals.marginal early-exit), so the disable does
+            // NOT fire — the move handles the eviction instead. On
+            // ESCAPE re-entry (after the move), both ai_goals and
+            // escape_set are gone, so the gate flips true and the disable
+            // correctly blocks the user from re-picking marginal.
+            { concentration_type: ['ai_itself'], escape_set: false, reason: 'The AI already took control — it is not inert' },
             // Disables marginal during the ESCAPE_MODULE re-entry triggered
-            // by inert_stays=no. The `escape_set: false` gate ensures this
-            // rule only fires AFTER the inert_stays.no collapseToFlavor has
-            // evicted `ai_goals` + `escape_set` to flavor. Without that
-            // gate, cleanSelection would delete sel.ai_goals before the
-            // move runs (disabledWhen fires earlier in the same pass than
-            // collapseToFlavor), and the move's `when: { ai_goals: ['marginal'] }`
-            // would then fail to match, leaving escape_set stuck.
+            // by inert_stays=no. Mirrors the gating pattern above: the
+            // `escape_set: false` clause ensures this rule only fires
+            // AFTER the inert_stays.no collapseToFlavor has evicted
+            // `ai_goals` + `escape_set` to flavor.
             { inert_stays: ['no'], escape_set: false, reason: 'You already chose "eventually develops goals" — the AI can\'t stay inert' }
           ] }
       ] },
@@ -562,7 +611,8 @@ const NODES = [
           //     scheduling then walks the full escape pipeline.
           // Gated by `when: ai_goals=['marginal']` so it only fires on
           // the initial transition — once the user re-picks a hostile
-          // goal, subsequent cleanSelection passes don't re-evict.
+          // goal, this block's `when` no longer matches so subsequent
+          // pushes' cleanSelection runs leave the new ai_goals alone.
           collapseToFlavor: { when: { ai_goals: ['marginal'] }, move: ['ai_goals', 'escape_set'] }
         }
       ] },
@@ -1136,8 +1186,21 @@ const NODES = [
           //     set, catch pipeline gated on containment=escaped — and
           //     the path dead-ends).
           collapseToFlavor: { when: { concentration_type: ['ai_itself'] }, set: { ai_goals: 'benevolent', escape_set: 'yes' } } },
-        { id: 'extractive', label: 'A tightening grip' },
-        { id: 'indifferent', label: 'Their own project' }
+        // ai_itself + extractive/indifferent = AI took control AND wields
+        // it badly. ai_goals.benevolent's disabledWhen
+        // ({concentration_type:ai_itself, power_use:[extractive,indifferent]})
+        // would have invalidated a stale ai_goals=benevolent under the
+        // old multi-pass cleanSelection. With CS now single-pass, the
+        // eviction lives here as an explicit move — runtime and static
+        // analysis agree without needing an invalidation sweep.
+        // ai_goals re-activates on concentration_type=ai_itself, so the
+        // user is re-asked and picks a hostile goal, with the prior
+        // value preserved in flavor for narrative continuity.
+        // Symmetric to the generous block above.
+        { id: 'extractive', label: 'A tightening grip',
+          collapseToFlavor: { when: { concentration_type: ['ai_itself'], ai_goals: ['benevolent'] }, move: ['ai_goals'] } },
+        { id: 'indifferent', label: 'Their own project',
+          collapseToFlavor: { when: { concentration_type: ['ai_itself'], ai_goals: ['benevolent'] }, move: ['ai_goals'] } }
       ] },
     // knowledge_rate / physical_rate — unified across three contexts
     // keyed on the post-emergence `capability` value:
@@ -2001,17 +2064,46 @@ function buildEscapeExitPlan() {
     const cs = NODE_MAP.collateral_survivors;
     if (cs && cs.edges) {
         for (const e of cs.edges) {
+            // war_set='yes' mirrors what WAR_MODULE.exitPlan sets on
+            // war_survivors edges directly. Since collateral_survivors
+            // writes to the shared war_survivors dim, the war pipeline
+            // is logically complete on this branch (the AI catastrophe
+            // resolved instead of an escalation war). Setting war_set
+            // explicitly here keeps the post-push state consistent
+            // between runtime and static analysis without depending on
+            // a multi-pass invalidation/cascade — both paths see
+            // war_set=yes in sel after the push.
             plan.push({
                 nodeId: 'collateral_survivors', edgeId: e.id,
                 when: { catch_outcome: ['holds_permanently'] },
-                set: { escape_set: 'yes', post_catch: 'ruined', war_survivors: e.id },
+                set: { escape_set: 'yes', post_catch: 'ruined', war_survivors: e.id, war_set: 'yes' },
             });
             plan.push({
                 nodeId: 'collateral_survivors', edgeId: e.id,
                 when: { who_benefits_set: { not: ['yes'] } },
-                set: { escape_set: 'yes', post_catch: 'ruined', war_survivors: e.id, containment: 'contained' },
+                set: { escape_set: 'yes', post_catch: 'ruined', war_survivors: e.id, containment: 'contained', war_set: 'yes' },
             });
         }
+        // Extinction (collateral_survivors='none') invalidates the
+        // pro-humanity ai_goals values via their disabledWhen rules
+        // (`war_survivors:['none']` evicts both benevolent and
+        // alien_coexistence — there's no humanity left to benefit or
+        // coexist with). The runtime cleanSelection function used to
+        // have a separate invalidation pass that did this implicitly,
+        // but it's been removed in favor of explicit push-time evictions
+        // so static analysis (graph-io._applyEdgeWrites) and runtime
+        // produce identical sels. The eviction now lives here as an
+        // explicit `move`: when ai_goals is one of the war_survivors-
+        // disabled values, move it to flavor.
+        // ai_goals re-activates downstream so the user picks a hostile
+        // value compatible with extinction (paperclip, power_seeking, or
+        // alien_coexistence's harsher cousins). Same pattern as the
+        // power_use.{extractive,indifferent} fix above.
+        plan.push({
+            nodeId: 'collateral_survivors', edgeId: 'none',
+            when: { ai_goals: ['benevolent', 'alien_coexistence'] },
+            move: ['ai_goals'],
+        });
     }
     return plan;
 }
@@ -2548,8 +2640,10 @@ const ROLLOUT_MODULE = {
         // (uncaught bad-escape cut).
         'ai_goals', 'containment',
         // Transitive read: containment.contained edge requires
-        // distribution ∈ {concentrated, monopoly}. Without distribution
-        // in the projection, cleanSelection drops sel.containment on
+        // distribution ∈ {concentrated, monopoly}. Listing it here keeps
+        // the static-analysis projection in step with runtime — without
+        // it, the cartesian projection loses distribution and the
+        // containment.contained edge looks unreachable on
         // post_catch=contained paths.
         'distribution',
         // Main-path activation marker + delivery-eligibility marker.
@@ -2852,10 +2946,23 @@ function buildProliferationExitPlan() {
     // to leaks_public and proliferation_alignment activates — the module
     // doesn't exit here). So always carries the full alignment override
     // and the open-distribution override.
+    //
+    // The `proliferation_set: false` gate makes this block fire EXACTLY
+    // ONCE — on the push that first sets proliferation_control=none.
+    // After the block runs, `proliferation_set='yes'` is in sel and the
+    // gate fails on every subsequent push's cleanSelection (which still
+    // iterates over all set nodes' edges, including this one). Without
+    // the gate, LEAK_REENTRY_MOVE (= [escape_set, ai_goals]) would re-
+    // evict the user's re-walked ESCAPE outcome on every later push:
+    // ai_goals.marginal's exit-plan SETs escape_set='yes', and the next
+    // push would fire this block again and move both away. The gate
+    // ensures both runtime and static analysis agree: fire once, evict
+    // the stale pre-leak ESCAPE state, then leave the re-walked ESCAPE
+    // outcome alone.
     plan.push({
         nodeId: 'proliferation_control',
         edgeId: 'none',
-        when: { alignment: { not: ['robust'] } },
+        when: { alignment: { not: ['robust'] }, proliferation_set: false },
         set: LEAKED_OPEN_UNROBUST,
         move: LEAK_REENTRY_MOVE,
     });
@@ -2872,11 +2979,34 @@ function buildProliferationExitPlan() {
                 // Only exit here if proliferation_alignment won't activate
                 // (i.e. alignment≠robust). alignment/containment flip,
                 // distribution flips to open.
+                //
+                // `proliferation_set: false` gate fires the block once on
+                // initial push — see proliferation_control.none above for
+                // the full rationale. Without the gate, LEAK_REENTRY_MOVE
+                // would re-fire on every subsequent push (cleanSelection
+                // re-iterates over all set nodes' edges) and erase the
+                // user's re-walked ESCAPE outcome.
                 plan.push({
                     nodeId: 'proliferation_outcome', edgeId: e.id,
-                    when: { alignment: { not: ['robust'] } },
+                    when: { alignment: { not: ['robust'] }, proliferation_set: false },
                     set: LEAKED_OPEN_UNROBUST,
                     move: LEAK_REENTRY_MOVE,
+                });
+                // secure_access becomes invalid the moment distribution
+                // flips to open (per its own disabledWhen). All
+                // leaks_public paths flip distribution to open eventually
+                // — here on alignment≠robust, downstream at
+                // proliferation_alignment on alignment=robust. Evict
+                // proliferation_control=secure_access here so the
+                // post-push sel doesn't carry a stale {distribution=open,
+                // proliferation_control=secure_access} pair. Under the
+                // old multi-pass cleanSelection an invalidation sweep
+                // would have caught this; the explicit move keeps runtime
+                // and static analysis aligned without that machinery.
+                plan.push({
+                    nodeId: 'proliferation_outcome', edgeId: e.id,
+                    when: { proliferation_control: ['secure_access'] },
+                    move: ['proliferation_control'],
                 });
             } else {
                 // leaks_rivals: bilateral leak — distribution stays
@@ -2899,16 +3029,24 @@ function buildProliferationExitPlan() {
     // 'breaks' is a re-entry trigger (containment flips to escaped) —
     // clear escape_set so ESCAPE re-fires. 'holds' isn't (containment
     // stays as it was), no re-entry needed.
+    //
+    // 'breaks' carries `proliferation_set: false` so LEAK_REENTRY_MOVE
+    // fires once on the originating push, not again on subsequent pushes
+    // (which re-iterate over all set nodes' edges) — see
+    // proliferation_control.none above for the full rationale. 'holds'
+    // is left ungated: its set bundle is fully idempotent and contains
+    // no moves, so re-firing on later pushes is harmless.
     const alignNode = NODE_MAP.proliferation_alignment;
     if (alignNode && alignNode.edges) {
         for (const e of alignNode.edges) {
-            const set = (e.id === 'breaks') ? LEAKED_OPEN_UNROBUST : LEAKED_OPEN;
+            const isBreaks = e.id === 'breaks';
+            const set = isBreaks ? LEAKED_OPEN_UNROBUST : LEAKED_OPEN;
             plan.push({
                 nodeId: 'proliferation_alignment',
                 edgeId: e.id,
-                when: {},
+                when: isBreaks ? { proliferation_set: false } : {},
                 set,
-                move: (e.id === 'breaks') ? LEAK_REENTRY_MOVE : undefined,
+                move: isBreaks ? LEAK_REENTRY_MOVE : undefined,
             });
         }
     }

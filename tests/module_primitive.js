@@ -225,14 +225,28 @@ assert.deepStrictEqual(escape.writes.slice().sort(), [
 ].sort(), 'escape.writes should be ai_goals + post_catch + war_survivors + containment + escape_set');
 
 const escPlan = escape.exitPlan;
-// 2 (ai_goals early) + 1 (catch_outcome.not_permanent) + 1 (catch_outcome.holds_permanently)
-// + 3 (collateral_survivors) = 7 tuples.
-assert(Array.isArray(escPlan) && escPlan.length === 7,
-    `escape exitPlan should have 7 tuples (2 ai_goals + 2 catch_outcome + 3 collateral_survivors); got ${escPlan.length}`);
+// Tuple breakdown (18 total):
+//   2  ai_goals early-exit (benevolent, marginal)
+//   2  catch_outcome (not_permanent, holds_permanently)
+//   1  response_success.no  gated on concentration_type=ai_itself
+//   1  discovery_timing.never gated on concentration_type=ai_itself
+//   5  collateral_impact early-slot exits (2 minimal/severe on
+//      response_success=yes; 3 minimal/severe/civilizational on
+//      response_success=delayed,no)
+//   7  collateral_survivors (3 edges × 2 tuples — terminal and early-slot,
+//      both setting war_set + war_survivors — plus 1 ai_goals-eviction
+//      tuple on collateral_survivors=none)
+assert(Array.isArray(escPlan) && escPlan.length === 18,
+    `escape exitPlan should have 18 tuples; got ${escPlan.length}`);
 const planByNode = {};
 for (const t of escPlan) {
-    assert(t.set && t.set.escape_set === 'yes', 'every escape exit sets escape_set=yes');
-    (planByNode[t.nodeId] = planByNode[t.nodeId] || []).push({ edgeId: t.edgeId, set: t.set, when: t.when });
+    // Most tuples set escape_set=yes; the collateral_survivors=none
+    // ai_goals-eviction tuple is purely a `move` (no `set`) — exempt it.
+    const isCsAiGoalsMove = t.nodeId === 'collateral_survivors' && t.edgeId === 'none' && !t.set;
+    if (!isCsAiGoalsMove) {
+        assert(t.set && t.set.escape_set === 'yes', 'every escape exit (except cs.none ai_goals move) sets escape_set=yes');
+    }
+    (planByNode[t.nodeId] = planByNode[t.nodeId] || []).push({ edgeId: t.edgeId, set: t.set, when: t.when, move: t.move });
 }
 assert.deepStrictEqual(planByNode.ai_goals.map(x => x.edgeId).sort(),
     ['benevolent', 'marginal'], 'ai_goals early-exit edges');
@@ -247,14 +261,29 @@ assert.strictEqual(catchTuples.holds_permanently.set.post_catch, 'contained',
 assert.deepStrictEqual(catchTuples.holds_permanently.when,
     { collateral_impact: { not: ['civilizational'] } },
     'catch_outcome.holds_permanently exit gated on collateral_impact≠civilizational');
-// collateral_survivors exits: each → ruined, and writes war_survivors.
+// collateral_survivors exits: 3 edges (most/remnants/none) × 2 tuples
+// (terminal vs. early-slot) → each terminal+early tuple → post_catch=ruined,
+// writes war_survivors=edgeId, and sets war_set=yes (mirrors WAR_MODULE
+// completion). Plus a 7th tuple on cs.none that's purely a move:[ai_goals]
+// to mirror cleanSelection's invalidation of pro-humanity ai_goals on
+// extinction.
 const csTuples = planByNode.collateral_survivors;
-assert.strictEqual(csTuples.length, 3, '3 collateral_survivors tuples');
-for (const t of csTuples) {
+assert.strictEqual(csTuples.length, 7, '7 collateral_survivors tuples (3 edges × 2 + 1 ai_goals move)');
+const csSetTuples = csTuples.filter(t => t.set);
+const csMoveTuples = csTuples.filter(t => !t.set);
+assert.strictEqual(csSetTuples.length, 6, '6 set-tuples (3 edges × 2)');
+assert.strictEqual(csMoveTuples.length, 1, '1 move-only tuple (cs.none ai_goals eviction)');
+assert.deepStrictEqual(csMoveTuples[0].move, ['ai_goals'],
+    'cs.none move-tuple evicts ai_goals');
+assert.strictEqual(csMoveTuples[0].edgeId, 'none',
+    'move-only tuple is on cs.none');
+for (const t of csSetTuples) {
     assert.strictEqual(t.set.post_catch, 'ruined',
         `collateral_survivors.${t.edgeId} → post_catch=ruined`);
     assert.strictEqual(t.set.war_survivors, t.edgeId,
         `collateral_survivors.${t.edgeId} writes war_survivors=${t.edgeId}`);
+    assert.strictEqual(t.set.war_set, 'yes',
+        `collateral_survivors.${t.edgeId} writes war_set=yes (mirrors WAR_MODULE completion)`);
 }
 
 // After attachModuleReducer ran at graph.js load, each exit edge should

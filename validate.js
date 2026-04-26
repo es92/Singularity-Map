@@ -50,8 +50,10 @@ const Engine = require(path.join(ROOT, 'engine.js'));
 global.window.Engine = Engine;
 new Function('window', fs.readFileSync(path.join(ROOT, 'graph-io.js'), 'utf8'))(global.window);
 new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 'utf8'))(global.window, global.document);
+new Function('window', fs.readFileSync(path.join(ROOT, 'flow-propagation.js'), 'utf8'))(global.window);
 
 const GraphIO = global.window.GraphIO;
+const FlowPropagation = global.window.FlowPropagation;
 const FLOW_DAG = global.window.Nodes.FLOW_DAG;
 const NODES = Engine.NODES || Graph.NODES;
 const NODE_MAP = {};
@@ -59,16 +61,6 @@ for (const n of NODES) NODE_MAP[n.id] = n;
 const outcomesData = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/outcomes.json'), 'utf8'));
 const TEMPLATES = outcomesData.templates;
 GraphIO.registerOutcomes(TEMPLATES);
-
-// PROPAGATE_TARGETS mirrors explore.js — keep in sync if either is
-// extended to a new slot. Includes every non-outcome / non-deadend
-// slot in FLOW_DAG; emergence is the implicit seed.
-const PROPAGATE_TARGETS = new Set([
-    'plateau_bd', 'auto_bd', 'rollout_early', 'control', 'alignment', 'decel',
-    'escape_early', 'proliferation', 'escape_early_alt', 'intent', 'war',
-    'who_benefits', 'inert_stays', 'brittle', 'escape_late', 'escape_re_entry',
-    'escape_after_who', 'rollout',
-]);
 
 // ────────────────────────────────────────────────────────────────
 // Phase 1 — Static schema checks (no traversal)
@@ -279,175 +271,11 @@ function runStaticAnalysis() {
 // Phase 2 — Live propagation (mirrors /explore)
 // ────────────────────────────────────────────────────────────────
 //
-// Runs the same set-wise enumeration that buildReachByKey runs in
-// explore.js. Each parent's outputs are routed to its children via
-// engine-equivalent priority pick: every output goes to exactly one
-// child — the accepting child whose lowest-priority internal node
-// has the smallest priority value. This matches what the navigator
-// would do at runtime (a single sel never appears in two downstream
-// slots' input sets).
-//
-// Returns:
-//   inputsBySlot      Map<slotKey, sel[]>   sels routed INTO each slot
-//   routedBySlot      Map<slotKey, sel[]>   sels routed FROM each parent
-//                                           (i.e. parent outputs that found
-//                                           a child) — used for edge cov.
-//   routedToChild     Map<parentKey, Map<childKey, count>>
-//                                           per-edge routed counts
-//                                           (edge-coverage check)
-//   deadBySlot        Map<slotKey, sel[]>   parent outputs no child accepts
-//   acceptedBySlot    Map<slotKey, number>  inputs accepted by slot
-//   matchedBySlot     Map<slotKey, number>  outputs siphoned to outcomes
-//   outcomeAgg        Map<oid, number>      outputs siphoned to each outcome
-//   parentsOf         Map<slotKey, slotKey[]>
-//   childrenOf        Map<slotKey, slotKey[]>
-
-function runPropagation() {
-    const parentsOf = new Map();
-    const childrenOf = new Map();
-    for (const e of FLOW_DAG.edges) {
-        const [p, c, kind] = e;
-        if (kind === 'placement-outcome' || kind === 'placement-deadend') continue;
-        if (kind === 'outcome-link') continue;
-        if (String(c).startsWith('outcome:') || c === 'deadend') continue;
-        if (!PROPAGATE_TARGETS.has(c)) continue;
-        if (!parentsOf.has(c)) parentsOf.set(c, []);
-        parentsOf.get(c).push(p);
-        if (!childrenOf.has(p)) childrenOf.set(p, []);
-        childrenOf.get(p).push(c);
-    }
-    const allKeys = new Set([...PROPAGATE_TARGETS, 'emergence']);
-    const inDeg = new Map();
-    for (const k of allKeys) inDeg.set(k, 0);
-    for (const [c, ps] of parentsOf) inDeg.set(c, ps.filter(p => allKeys.has(p)).length);
-    const order = [];
-    const queue = ['emergence'];
-    while (queue.length) {
-        const k = queue.shift();
-        order.push(k);
-        for (const c of (childrenOf.get(k) || [])) {
-            if (!allKeys.has(c)) continue;
-            inDeg.set(c, inDeg.get(c) - 1);
-            if (inDeg.get(c) === 0) queue.push(c);
-        }
-    }
-
-    const rowToSel = (row) => {
-        const sel = {};
-        for (const k of Object.keys(row)) if (row[k] !== GraphIO.UNSET) sel[k] = row[k];
-        return sel;
-    };
-    const emergence = FLOW_DAG.nodes.find(n => n.key === 'emergence');
-    const eW = GraphIO.cartesianWriteRows(emergence);
-    const emergenceOutputs = eW.rows.map(rowToSel);
-
-    // Engine-equivalent next-slot pick — see buildReachByKey in
-    // explore.js for the full rationale. Returns Infinity for
-    // "rejected" / "no askable internal", numeric priority otherwise.
-    const _isAskableInternal = (n, sel) => {
-        if (!n || n.derived) return false;
-        if (sel[n.id] !== undefined) return false;
-        if (n.activateWhen && n.activateWhen.length
-            && !n.activateWhen.some(c => Engine.matchCondition(sel, c))) return false;
-        if (n.hideWhen && n.hideWhen.length
-            && n.hideWhen.some(c => Engine.matchCondition(sel, c))) return false;
-        return true;
-    };
-    const slotPickPriority = (slot, sel) => {
-        if (!slot || slot.kind === 'outcome' || slot.kind === 'deadend') return Infinity;
-        if (slot.kind === 'node') {
-            const n = Engine.NODE_MAP[slot.id];
-            if (!_isAskableInternal(n, sel)) return Infinity;
-            return n.priority !== undefined ? n.priority : 0;
-        }
-        if (slot.kind === 'module') {
-            const m = Engine.MODULE_MAP[slot.id];
-            if (!m) return Infinity;
-            if (m.completionMarker && sel[m.completionMarker] !== undefined) return Infinity;
-            const aw = m.activateWhen, hw = m.hideWhen;
-            if (aw && aw.length && !aw.some(c => Engine.matchCondition(sel, c))) return Infinity;
-            if (hw && hw.length && hw.some(c => Engine.matchCondition(sel, c))) return Infinity;
-            let minP = Infinity;
-            for (const nid of (m.nodeIds || [])) {
-                const n = Engine.NODE_MAP[nid];
-                if (!_isAskableInternal(n, sel)) continue;
-                const p = n.priority !== undefined ? n.priority : 0;
-                if (p < minP) minP = p;
-            }
-            return minP;
-        }
-        return Infinity;
-    };
-
-    const inputsBySlot = new Map();
-    const routedBySlot = new Map();   // parentKey → sels that found a child
-    const deadBySlot = new Map();     // parentKey → sels with no accepting child
-    const routedToChild = new Map();  // parentKey → Map<childKey, count>
-    const acceptedBySlot = new Map();
-    const matchedBySlot = new Map();
-    const outcomeAgg = new Map();
-
-    for (const slotKey of order) {
-        const slot = FLOW_DAG.nodes.find(n => n.key === slotKey);
-        if (!slot) continue;
-
-        let outputs;
-        if (slotKey === 'emergence') {
-            outputs = emergenceOutputs;
-        } else {
-            const upstream = inputsBySlot.get(slotKey);
-            if (!upstream || !upstream.length) continue;
-            const full = GraphIO.reachableFullSelsFromInputs(slot, upstream);
-            if (!full) continue;
-            acceptedBySlot.set(slotKey, full.acceptedInputs.length);
-            outputs = full.outputs;
-        }
-
-        const childKeys = childrenOf.get(slotKey) || [];
-        const childSlots = childKeys
-            .map(k => FLOW_DAG.nodes.find(n => n.key === k))
-            .filter(Boolean);
-
-        const routedHere = [];
-        const deadHere = [];
-        const perChildCount = new Map();
-        let matched = 0;
-
-        for (const sel of outputs) {
-            const hits = GraphIO.matchOutcomes(sel);
-            if (hits.length > 0) {
-                matched++;
-                for (const oid of hits) outcomeAgg.set(oid, (outcomeAgg.get(oid) || 0) + 1);
-                continue;
-            }
-            let bestChild = null;
-            let bestPri = Infinity;
-            for (const child of childSlots) {
-                const p = slotPickPriority(child, sel);
-                if (p < bestPri) { bestPri = p; bestChild = child; }
-            }
-            if (bestChild) {
-                let arr = inputsBySlot.get(bestChild.key);
-                if (!arr) { arr = []; inputsBySlot.set(bestChild.key, arr); }
-                arr.push(sel);
-                routedHere.push(sel);
-                perChildCount.set(bestChild.key, (perChildCount.get(bestChild.key) || 0) + 1);
-            } else {
-                deadHere.push(sel);
-            }
-        }
-        matchedBySlot.set(slotKey, matched);
-        routedBySlot.set(slotKey, routedHere);
-        if (deadHere.length) deadBySlot.set(slotKey, deadHere);
-        routedToChild.set(slotKey, perChildCount);
-    }
-
-    return {
-        inputsBySlot, routedBySlot, deadBySlot, routedToChild,
-        acceptedBySlot, matchedBySlot, outcomeAgg,
-        parentsOf, childrenOf, order,
-    };
-}
+// The propagation pass itself lives in flow-propagation.js so the
+// precompute pipeline (and eventually browser runtime) can reuse the
+// exact same enumeration. validate.js stays the home of the
+// invariant-checking phases that consume the result (dead ends, gate
+// vs internals, edge coverage, outcome reachability).
 
 // ────────────────────────────────────────────────────────────────
 // Phase 3 — Dead-end detection
@@ -650,7 +478,7 @@ sections.push({ name: 'static schema', errors: staticErrors });
 if (!QUICK) {
     console.log('\nPhase 2: live propagation (full tree)');
     const t2 = Date.now();
-    const prop = runPropagation();
+    const prop = FlowPropagation.run();
     const inputsTotal = [...prop.acceptedBySlot.values()].reduce((a, b) => a + b, 0);
     const matchedTotal = [...prop.matchedBySlot.values()].reduce((a, b) => a + b, 0);
     console.log(`  propagated through ${prop.order.length} slots in ${Date.now() - t2}ms`);

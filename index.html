@@ -1935,13 +1935,19 @@
             }
 
             function _lightPush(sel, flavor, nodeId, edgeId) {
+                // Mirrors Engine.push without committing to the stack: append
+                // the edge and run cleanSelection (now single-pass — applies
+                // each set node's collapseToFlavor blocks once, in NODES
+                // order, with no invalidation sweep). The pre-rewrite version
+                // skipped cleanSelection for dims in GraphWalker.safePushDims
+                // as a fast path; with the rewrite that branch saves nothing
+                // worth the divergence risk, so every push now goes through
+                // the same code as Engine.push.
                 const next = Object.assign({}, sel);
                 next[nodeId] = edgeId;
                 let nextFlavor = flavor ? Object.assign({}, flavor) : {};
-                if (!GraphWalker.safePushDims.has(nodeId)) {
-                    const r = Engine.cleanSelection(next, nextFlavor);
-                    nextFlavor = r.flavor || nextFlavor;
-                }
+                const r = Engine.cleanSelection(next, nextFlavor);
+                nextFlavor = r.flavor || nextFlavor;
                 return { sel: next, flavor: nextFlavor };
             }
 

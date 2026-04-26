@@ -68,7 +68,7 @@ The decision state is split into two parallel bags:
 
 ### `collapseToFlavor`
 
-Applied during `cleanSelection` when the edge is selected. Supports three actions, any combination:
+Applied by `cleanSelection` for each set node, in `NODES` (topological) order. Supports three actions, any combination:
 
 | Key | Effect |
 |---|---|
@@ -96,10 +96,7 @@ If engine branching still needs *one bit* of information from the dim (e.g. "did
 
 1. The engine presents the first unanswered, visible, non-derived question (determined by `displayOrder`, which follows the node order in `graph.js`)
 2. The user picks an edge → `push()` sets `sel[nodeId] = edgeId`
-3. `cleanSelection()` runs, which can cascade state changes:
-   - **Retract** — if a previously-answered node is no longer activated (`activateWhen` fails), its answer is deleted
-   - **Invalidate** — if a previously-chosen edge is now disabled, that answer is deleted
-   - This runs as a fixpoint loop (up to 5 passes) since changes can cascade
+3. `cleanSelection()` runs in a single pass: for each node with a set edge (in `NODES` topological order), it applies that edge's `collapseToFlavor` blocks (`set` / `setFlavor` / `move`) whose `when` matches the current `sel`. No invalidation sweep, no fixpoint loop — every cascade effect that older versions of the engine derived multi-pass is now expressed as an explicit, gated `collapseToFlavor` block on the originating edge (one-shot gates like `proliferation_set: false` keep blocks idempotent across re-pushes). This makes runtime push behavior identical to the static `_applyEdgeWrites` projection used by `validate.js` and `precompute-reachability` — the two paths cannot drift apart.
 
    Note: when a node becomes **locked** (only one edge remains enabled), `cleanSelection` does *not* write that value into `sel` automatically. Instead, the UI detects locks via `Engine.isNodeLocked` and presents the node as a single-option "Continue" screen; the user commits it through the normal push flow like any other answer. Downstream code that needs the effective value (template matching, visibility in the resolved state) consults `resolvedState`/`isNodeLocked` directly.
 4. Derived dimensions are recomputed from the new state
@@ -108,7 +105,7 @@ If engine branching still needs *one bit* of information from the dim (e.g. "did
 ### Key Invariants
 
 - **No loops** — each step answers one new question. Once `sel[nodeId]` is set, that node is skipped. The walk is strictly forward (bounded by the number of nodes).
-- **`cleanSelection` can mutate arbitrarily** — answering question X can retract, force, or invalidate answers to other questions. But the resulting state is deterministic given the inputs.
+- **`cleanSelection` is local** — every state mutation happens in the just-pushed edge's `collapseToFlavor` blocks; the function does not invalidate or retract answers it didn't directly write. The resulting state is deterministic given the inputs and identical to what static analysis (`graph-io._applyEdgeWrites`) computes for the same push.
 - **State equivalence** — two states with identical `sel` values will have identical derived values, identical visibility, and identical reachability to any template. This makes state-based caching sound.
 
 ### Condition System
@@ -419,7 +416,7 @@ Takeaways for future modules:
 
 Proliferation (3 internal dims: `proliferation_control`, `proliferation_outcome`, `proliferation_alignment`) is the 8th module. It's a short stage-2 chain that answers "once the AI works, who gets access, does control hold, and can alignment survive if it leaks". Structurally it's the simplest module yet (3 nodes, linear), but it introduced one genuinely new pattern.
 
-- **Conditional exit tuples.** Two exit edges (`proliferation_control.none`, `proliferation_outcome.leaks_public`) behave differently depending on `alignment`: on `alignment=robust` the module must stay active (downstream `proliferation_alignment` fires); on `alignment ≠ robust` the module exits. Expressed by giving those exit tuples a `when: { alignment: { not: ['robust'] } }` gate. `cleanSelection` was already evaluating per-block `when` clauses — the only new wiring was letting `exitPlan` tuples carry non-empty `when`, which `attachModuleReducer` already plumbs through verbatim. No engine changes needed.
+- **Conditional exit tuples.** Two exit edges (`proliferation_control.none`, `proliferation_outcome.leaks_public`) behave differently depending on `alignment`: on `alignment=robust` the module must stay active (downstream `proliferation_alignment` fires); on `alignment ≠ robust` the module exits. Expressed by giving those exit tuples a `when: { alignment: { not: ['robust'] } }` gate. The runtime `cleanSelection` step evaluates per-block `when` clauses against the post-edge `sel` — the only new wiring was letting `exitPlan` tuples carry non-empty `when`, which `attachModuleReducer` already plumbs through verbatim. No engine changes needed.
 
   This is the first time a single edge is ambiguous between "exit" and "continue" based on external state. Previous modules either exited unconditionally on an edge (escape, control) or varied exit *writes* by path (decel's reducerTable) but never varied *whether* the edge was an exit at all.
 

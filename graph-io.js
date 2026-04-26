@@ -597,6 +597,17 @@
         // .ai_itself: block 1 sets inert_stays='no'; block 2 — gated
         // on ai_goals=marginal from upstream — evicts ai_goals +
         // escape_set, mirroring inert_stays.no's own block).
+        //
+        // INTENTIONALLY does NOT do cleanSelection's two extras
+        // (invalidation of stale answers + cascading re-fire of all
+        // answered edges' blocks). Probe-divergence.js identified
+        // 15 sites where AEW's single-pass differs from runtime
+        // cleanSelection; option (B) of using cleanSelection here
+        // worked but caused 11× propagation slowdown and 2M-sel
+        // cartesian inflation because evicted dims surface as UNSET
+        // for downstream slots' cart-prods. The 15 sites are being
+        // refactored individually so the rule fires from the edge
+        // whose push completes the conjunction (option A).
         const next = { ...sel, [node.id]: edge.id };
         if (!edge.collapseToFlavor) return next;
         const blocks = Array.isArray(edge.collapseToFlavor) ? edge.collapseToFlavor : [edge.collapseToFlavor];
