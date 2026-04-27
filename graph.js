@@ -1817,6 +1817,40 @@ const DECEL_MODULE_NODE_IDS = (function() {
 // emerged and leave alignment alone so proliferation_control can still
 // activate on the (rival, unsolved) cell (which otherwise would have
 // alignment='failed' blocking it).
+// Flavor-moved on every DECEL exit (per-tuple `move:`). Both dims are
+// pre-existing sel writes from earlier modules — gov_action lives in
+// ALIGNMENT_WRITES (durably in sel through alignment_loop exit so
+// DECEL.activateWhen can fire), open_source lives in CONTROL_WRITES
+// (read by DECEL's internal decel_6mo_action / decel_12mo_action.requires
+// clauses on twelve_months / twenty_four_months timelines). After DECEL
+// exits, both dims have zero post-DECEL sel readers:
+//   * No downstream activateWhen / hideWhen / edge.requires / edge.
+//     disabledWhen / module.reads / module.exitPlan.when references.
+//   * gov_action has one deriveWhen rule (governance.deriveWhen line
+//     1687: `gov_action: ['accelerate'] -> 'race'`) but that rule only
+//     fires on the accelerate path, which SKIPS DECEL entirely (DECEL.
+//     activateWhen requires gov_action='decelerate'). On accelerate,
+//     gov_action stays in sel via the normal alignment_loop exit and
+//     governance derives correctly. On decelerate, DECEL fires, evicts
+//     gov_action here, and DECEL_EXIT_CELLS pre-write sel.governance
+//     directly ('race' / 'slowdown') so the deriveWhen rule's fall-
+//     through to sel.governance returns the committed value.
+//   * open_source already moves on the gov_action.accelerate edge
+//     (collapseToFlavor.move: ['open_source', 'takeoff_class']) — this
+//     is the symmetric move for the decelerate path so cart-prod
+//     converges on every decel exit regardless of the chosen action.
+//   * Outcome `reachable` clauses: zero references to either dim.
+//     Outcome `flavors._when` blocks (outcomes.json:226, 677 for
+//     open_source; 1122, 1133 for gov_action) and narrative `when`
+//     clauses are flavor-safe — all rendered through fused state
+//     (resolvedStateWithFlavor / narrativeState).
+// Net cart-prod savings: gov_action × open_source = 2 × 4 = 8x reduction
+// across the 11 forward-reachable slots from decel (escape, proliferation,
+// intent, war, who_benefits, brittle, inert_stays, escape_late,
+// escape_re_entry, rollout_early, rollout). Same pattern as
+// WHO_BENEFITS_EXIT_FLAVOR_MOVE.
+const DECEL_EXIT_FLAVOR_MOVE = ['gov_action', 'open_source'];
+
 const DECEL_EXIT_CELLS = [
     { action: 'escapes',    progress: 'robust',   set: { alignment: 'failed', governance: 'slowdown', containment: 'escaped', decel_align_progress: 'robust'   } },
     { action: 'escapes',    progress: 'brittle',  set: { alignment: 'failed', governance: 'slowdown', containment: 'escaped', decel_align_progress: 'brittle'  } },
@@ -1872,6 +1906,12 @@ function buildDecelExitPlan() {
                 edgeId: action,
                 when: { [pKey]: [progress] },
                 set: { decel_set: 'yes', ...set },
+                // Per-tuple flavor-move (gov_action + open_source). See
+                // DECEL_EXIT_FLAVOR_MOVE comment block above for the
+                // full audit. attachModuleReducer merges this into the
+                // auto-computed moveDims (nodeIds \ writes ∪
+                // internalMarkers).
+                move: DECEL_EXIT_FLAVOR_MOVE,
             });
         }
     }
@@ -1883,8 +1923,16 @@ const DECEL_MODULE = {
     activateWhen: [{ gov_action: ['decelerate'] }],
     // Globals the module's internals may reference.
     reads: [
+        // Both `gov_action` and `open_source` are flavor-moved on every
+        // DECEL exit via DECEL_EXIT_FLAVOR_MOVE (see comment above
+        // DECEL_EXIT_CELLS). Listed here because they're read DURING the
+        // module — gov_action by DECEL.activateWhen + the gov_action
+        // node itself, open_source by decel_6mo_action /
+        // decel_12mo_action.{escapes, continue, accelerate}.requires.
+        // The eviction fires on exit (after every internal read), so
+        // module-internal logic still sees them in sel as expected.
         'gov_action',
-        'open_source',     // decel_6mo_action + decel_12mo_action.escapes/continue/accelerate.requires
+        'open_source',
     ],
     // Globals the reducer commits to sel on exit. Only the three dims
     // below are read as sel by external gate logic (alignment by many
