@@ -1398,11 +1398,33 @@ const NODES = [
       // alignment='robust', 'escape' flips to alignment='failed' +
       // containment='escaped', and 'sufficient' keeps alignment='brittle'
       // (no-op, written explicitly for clarity).
+      //
+      // Every edge moves both `alignment` and `brittle_resolution` to
+      // flavor. By engine block ordering (set → setFlavor → move per
+      // applyEdgeBlocks), `set: { alignment: X }` runs first, populating
+      // sel.alignment with the final value; then `move: ['alignment']`
+      // evicts that just-set value to flavor. Net: post-edge state is
+      // sel.alignment=undefined, flavor.alignment=X. Same pattern for
+      // brittle_resolution itself (which has 0 sel readers and 0 outcome
+      // refs anywhere — purely narrative-only after the edge fires).
+      // alignment has 0 outcome `reachable` refs and is absent from
+      // ESCAPE_MODULE.reads / ROLLOUT_MODULE.reads, so no post-brittle
+      // sel gate consumes it. Narrative refs (4 templates' headings +
+      // 4 `_when` conditionals) resolve via fused state. Saves cart-prod
+      // (alignment×4 × brittle_resolution×4 ≈ 16×) on every push through
+      // the post-brittle slots (escape_late / escape_re_entry /
+      // escape_after_who / rollout) on brittle-asked paths.
       edges: [
         { id: 'solved', label: 'Alignment fully solved', shortLabel: 'Fully solved',
-          collapseToFlavor: { set: { alignment: 'robust' } } },
+          collapseToFlavor: {
+            set: { alignment: 'robust' },
+            move: ['alignment', 'brittle_resolution']
+          } },
         { id: 'sufficient', label: 'Brittle alignment holds', shortLabel: 'Brittle holds',
-          collapseToFlavor: { set: { alignment: 'brittle' } } },
+          collapseToFlavor: {
+            set: { alignment: 'brittle' },
+            move: ['alignment', 'brittle_resolution']
+          } },
         { id: 'escape', label: 'AI eventually escapes', shortLabel: 'Escapes',
           // Re-entry trigger for ESCAPE_MODULE at the escape_late slot.
           // The brittle alignment broke late (after who_benefits resolved);
@@ -1419,9 +1441,14 @@ const NODES = [
           // at escape_late with no askable internal and the module gets
           // stuck pending — same eviction pattern as the proliferation
           // leak tuples (LEAK_REENTRY_MOVE).
+          //
+          // alignment / brittle_resolution also move here (set+move
+          // pattern documented above) — same rationale as the other two
+          // edges. containment STAYS in sel (it IS read post-brittle by
+          // ESCAPE.reads / ROLLOUT.reads) — only alignment evicts.
           collapseToFlavor: {
             set: { alignment: 'failed', containment: 'escaped', post_catch: 'loose' },
-            move: ['escape_set', 'ai_goals']
+            move: ['escape_set', 'ai_goals', 'alignment', 'brittle_resolution']
           } }
       ] },
     { id: 'failure_mode', label: 'Delivery', stage: 3, priority: 2, forwardKey: true,

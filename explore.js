@@ -1,10 +1,12 @@
 // /explore — narrative-flow card layout.
 //
 // Renders the same FLOW_DAG used by /nodes flow mode, but each card is
-// the explore-focused summary of a slot: its reads, its writes, the
-// outcomes that can fire at that slot, and a (currently disabled)
-// "Step through" affordance. Layout, edge drawing, and pan/zoom mirror
-// nodes.js's flow canvas so the two views feel like the same map.
+// the explore-focused summary of a slot: its reads, its writes, its
+// "moves to flavor" set (sel→flavor evictions on exit, only shown when
+// non-empty), the outcomes that can fire at that slot, and a
+// (currently disabled) "Step through" affordance. Layout, edge
+// drawing, and pan/zoom mirror nodes.js's flow canvas so the two views
+// feel like the same map.
 
 (function () {
     'use strict';
@@ -415,14 +417,24 @@
         loadedData = true;
     }
 
-    // ─── Reads / writes derivation for non-module nodes ─────────────
+    // ─── Reads / writes / moves-to-flavor derivation for non-module nodes
     // Modules expose `reads` / `writes` directly. Flat nodes don't, so
     // we walk the same condition / edge structures the engine and
-    // module-audit do. The set returned for `writes` always includes
-    // the node's own dim id (the user pick), plus any dim written by
-    // collapseToFlavor.set / setFlavor; `move` lists are read-then-
-    // shifted-to-flavor, so we surface them under reads (engineering
-    // intent: "this slot consumes the listed dim").
+    // module-audit do. Three disjoint(ish) categories:
+    //   * reads  — strict gate-read set (activateWhen, hideWhen,
+    //              disabledWhen, deriveWhen, edge.requires, and
+    //              collapseToFlavor.when conditions).
+    //   * writes — dims this slot leaves in sel post-edge: the node's
+    //              own pick (unless that pick is also moved out), plus
+    //              every collapseToFlavor.set key that ISN'T also in a
+    //              move list (set+move on the same dim = the value was
+    //              committed to sel mid-tick then evicted to flavor on
+    //              the same edge — engine ordering is set→setFlavor→
+    //              move per applyEdgeBlocks).
+    //   * moves to flavor — dims evicted from sel into flavor: every
+    //              collapseToFlavor.move entry plus every
+    //              collapseToFlavor.setFlavor key. These are the dims
+    //              this slot stops carrying in sel.
     const STRUCT_KEYS = new Set([
         'reason', '_ck', '_ct', '_cv', '_direct', 'required', 'not',
         'match', 'value', 'valueMap', 'if', 'text', '_default', '_when',
@@ -474,23 +486,50 @@
                 for (const b of blocks) {
                     if (!b) continue;
                     if (b.when) refsFromCondition(b.when, refs);
-                    if (Array.isArray(b.move)) for (const m of b.move) refs.add(m);
+                    // `move` and `setFlavor` are NOT reads — they're sel→
+                    // flavor evictions. Surfaced separately under
+                    // collectNodeMoves / movesForSlot.
                 }
             }
         }
         return refs;
     }
 
-    function collectNodeWrites(node) {
-        const refs = new Set();
-        refs.add(node.id);
+    function collectNodeMoves(node) {
+        const moves = new Set();
         if (node.edges) for (const e of node.edges) {
             if (!e.collapseToFlavor) continue;
             const blocks = Array.isArray(e.collapseToFlavor) ? e.collapseToFlavor : [e.collapseToFlavor];
             for (const b of blocks) {
                 if (!b) continue;
-                if (b.set && typeof b.set === 'object') for (const k of Object.keys(b.set)) refs.add(k);
-                if (b.setFlavor && typeof b.setFlavor === 'object') for (const k of Object.keys(b.setFlavor)) refs.add(k);
+                if (Array.isArray(b.move)) for (const m of b.move) moves.add(m);
+                if (b.setFlavor && typeof b.setFlavor === 'object') {
+                    for (const k of Object.keys(b.setFlavor)) moves.add(k);
+                }
+            }
+        }
+        return moves;
+    }
+
+    function collectNodeWrites(node) {
+        const moveSet = collectNodeMoves(node);
+        const refs = new Set();
+        // node.id stays in sel after the edge fires unless it's also in
+        // a move list (e.g., brittle_resolution moves itself on every
+        // edge, so it shows under "moves to flavor" rather than writes).
+        if (!moveSet.has(node.id)) refs.add(node.id);
+        if (node.edges) for (const e of node.edges) {
+            if (!e.collapseToFlavor) continue;
+            const blocks = Array.isArray(e.collapseToFlavor) ? e.collapseToFlavor : [e.collapseToFlavor];
+            for (const b of blocks) {
+                if (!b || !b.set || typeof b.set !== 'object') continue;
+                for (const k of Object.keys(b.set)) {
+                    // set + move on the same dim = the value was committed
+                    // to sel then evicted to flavor on the same edge. Net
+                    // post-exit state is in flavor, not sel — surface it
+                    // under "moves to flavor" only, not writes.
+                    if (!moveSet.has(k)) refs.add(k);
+                }
             }
         }
         return refs;
@@ -516,6 +555,39 @@
         }
         const n = NODE_MAP[slot.id];
         return n ? Array.from(collectNodeWrites(n)).sort() : [];
+    }
+
+    // movesForSlot — the dims this slot stops carrying in sel on exit
+    // (sel→flavor evictions). For modules this is the same set
+    // attachModuleReducer auto-installs on every exit edge: nodeIds \
+    // writes (pure-internal question dims) ∪ internalMarkers (mid-module
+    // marker dims that aren't external writes). Per-tuple `move` lists
+    // (e.g. WHO_BENEFITS_EXIT_FLAVOR_MOVE on every who_benefits exit, or
+    // LEAK_REENTRY_MOVE on proliferation leak tuples) get unioned in too
+    // so explicit per-edge moves surface in the display. For nodes:
+    // every collapseToFlavor.move + setFlavor entry across the node's
+    // edges (collectNodeMoves).
+    function movesForSlot(slot) {
+        const NODE_MAP = window.Engine.NODE_MAP;
+        const MODULE_MAP = (window.Graph && window.Graph.MODULE_MAP) || {};
+        if (slot.kind === 'module') {
+            const m = MODULE_MAP[slot.id];
+            if (!m) return [];
+            const writes = new Set(m.writes || []);
+            const moves = new Set(
+                (m.nodeIds || []).filter(d => !writes.has(d))
+            );
+            for (const d of (m.internalMarkers || [])) moves.add(d);
+            const exitPlan = m.exitPlan;
+            if (Array.isArray(exitPlan)) {
+                for (const t of exitPlan) {
+                    if (Array.isArray(t.move)) for (const d of t.move) moves.add(d);
+                }
+            }
+            return [...moves].sort();
+        }
+        const n = NODE_MAP[slot.id];
+        return n ? Array.from(collectNodeMoves(n)).sort() : [];
     }
 
     // ─── HTML helpers ───────────────────────────────────────────────
@@ -745,6 +817,7 @@
 
         const reads = readsForSlot(slot);
         const writes = writesForSlot(slot);
+        const moves = movesForSlot(slot);
 
         const cls = 'ex-card' + (isModule ? ' is-module' : '');
 
@@ -769,6 +842,13 @@
         html += `<div class="ex-block-head">writes</div>`;
         html += dimListHtml(writes);
         html += `</div>`;
+
+        if (moves.length) {
+            html += `<div class="ex-block">`;
+            html += `<div class="ex-block-head">moves to flavor</div>`;
+            html += dimListHtml(moves);
+            html += `</div>`;
+        }
 
         html += `<div class="ex-foot">`;
         html += `<button class="ex-step-btn" disabled title="Coming soon">Step through</button>`;
@@ -859,6 +939,7 @@
             : ((NODE_MAP[slot.id] && NODE_MAP[slot.id].label) || '');
         const reads = readsForSlot(slot);
         const writes = writesForSlot(slot);
+        const moves = movesForSlot(slot);
 
         let html = `<div class="ex-sb">`;
         html += `<div class="ex-sb-head">`;
@@ -870,6 +951,9 @@
 
         html += sbSection('reads', sbDimList(reads));
         html += sbSection('writes', sbDimList(writes));
+        if (moves.length) {
+            html += sbSection('moves to flavor', sbDimList(moves));
+        }
 
         if (slot.earlyExits && slot.earlyExits.length) {
             html += sbSection('early exits', sbDimList(slot.earlyExits));
