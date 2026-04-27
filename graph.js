@@ -1266,20 +1266,24 @@ const NODES = [
           collapseToFlavor: { when: { concentration_type: ['ai_itself'], ai_goals: ['benevolent'] }, move: ['ai_goals'] } }
       ] },
     // knowledge_rate / physical_rate — unified across three contexts
-    // keyed on the post-emergence `capability` value:
+    // keyed on the post-emergence `capability` value. In all three:
+    // knowledge_rate persists in sel (it's the primaryDimension for
+    // several outcome variants — the-gilded-singularity /
+    // the-new-hierarchy / the-flourishing on asi; the-plateau /
+    // the-automation on plateau/agi — and precompute variant resolution
+    // is sel-only). physical_rate evicts to flavor at module exit
+    // (no sel-only consumer; only outcome flavor blocks read it via
+    // fused state). 4× cart-prod reduction at rollout-slot output.
     //   • capability='asi' (main singularity path) — rollout exits on
-    //       failure_mode.*; failure_mode persists in sel (read by
-    //       outcome reachable clauses). knowledge_rate + physical_rate
-    //       both auto-move to flavor via attachModuleReducer's
-    //       `nodeIds \ writes` rule — neither has any outcome reachable
-    //       / graph gate sel-reader; only outcome flavor blocks read
-    //       them (via fused state). 16× cart-prod reduction at
-    //       rollout-slot output.
+    //       failure_mode.*; failure_mode + knowledge_rate persist in
+    //       sel via writes. physical_rate auto-moves to flavor via
+    //       attachModuleReducer's `nodeIds \ writes` rule.
     //   • capability='plateau' — rollout exits on early_physical_rate.*;
-    //       knowledge_rate + physical_rate evict to flavor via
-    //       EARLY_ROLLOUT internalMarkers (mid-module set by edge
-    //       collapseToFlavor; moved on exit by attachModuleReducer's
-    //       exit block). Same flavor-only rationale as the asi path.
+    //       knowledge_rate is in EARLY_ROLLOUT writes and persists.
+    //       physical_rate is set into sel mid-module by the picked
+    //       early_physical_rate.* edge's collapseToFlavor.set, then
+    //       evicted to flavor on exit via EARLY_ROLLOUT internalMarkers
+    //       (attachModuleReducer's exit block moves it).
     //   • capability='agi' (AGI-only / auto-shallow) — same as plateau.
     //
     // The `rollout_set` completion marker (set by every module exit tuple)
@@ -2667,21 +2671,25 @@ const EARLY_ROLLOUT_NODE_IDS = [
     'early_physical_rate',
 ];
 
-// knowledge_rate / physical_rate are both set into sel mid-module via
-// early_knowledge_rate.* / early_physical_rate.* edges'
-// collapseToFlavor.set, then evicted to flavor on every exit (declared
-// in internalMarkers below). Outcome flavor blocks read both via fused
-// state, and no graph gate / outcome reachable clause reads either,
-// so flavor is sufficient. early_rollout_set is the EARLY_ROLLOUT
-// completion marker, set on every exit tuple, and is what the
-// the-plateau / the-automation outcome reachable clauses key on
+// knowledge_rate is durable: it's the primaryDimension for several
+// outcome variants (the-gilded-singularity / the-new-hierarchy /
+// the-flourishing on the asi path; the-plateau / the-automation on
+// plateau/agi). Variant resolution in precompute-reachability.js uses
+// Engine.resolvedVal(sel, primaryDim), which is sel-only — so
+// knowledge_rate must stay in sel for those variants to resolve.
+// physical_rate has no such reader (no outcome reachable / graph gate
+// reads it; only outcome flavor blocks read it via fused state), so
+// it's evicted to flavor on every exit via internalMarkers below. 4×
+// cart-prod reduction at rollout-slot output. early_rollout_set is the
+// EARLY_ROLLOUT completion marker, set on every exit tuple, and is what
+// the the-plateau / the-automation outcome reachable clauses key on
 // (paired with capability=plateau / capability=agi). The shared
 // `rollout_set` marker belongs to ROLLOUT_MODULE on the asi path
 // only — early_rollout deliberately does NOT write it, since no
 // plateau/agi-side reader needs it. The early_* node dims themselves
 // are NOT in writes, so attachModuleReducer auto-evicts them to
 // flavor on exit.
-const EARLY_ROLLOUT_WRITES = ['early_rollout_set'];
+const EARLY_ROLLOUT_WRITES = ['knowledge_rate', 'early_rollout_set'];
 
 function buildEarlyRolloutExitPlan() {
     const plan = [];
@@ -2720,17 +2728,19 @@ const EARLY_ROLLOUT_MODULE = {
     ],
     writes: EARLY_ROLLOUT_WRITES,
     nodeIds: EARLY_ROLLOUT_NODE_IDS,
-    // knowledge_rate / physical_rate are set into sel mid-module via
-    // the early_*.* edges' collapseToFlavor.set, then evicted to flavor
-    // on exit. Listed here (rather than in writes) because they have no
-    // sel-only consumers post-exit — outcome reachable clauses don't
-    // reference them; only outcome flavor blocks read them (via fused
-    // state). Engine applies edge collapseToFlavor blocks in order:
-    // the picked early_*.* edge's `set` block fires first
-    // (e.g. sel.physical_rate='rapid'), then attachModuleReducer's exit
-    // block fires with these dims in `move`, moving them to flavor.
-    // Net effect: 4×4 = 16× cart-prod reduction at rollout-slot output.
-    internalMarkers: ['knowledge_rate', 'physical_rate'],
+    // physical_rate is set into sel mid-module via early_physical_rate.*
+    // edges' collapseToFlavor.set, then evicted to flavor on exit.
+    // Listed here (rather than in writes) because no outcome reachable
+    // clause / graph gate reads it from sel; only outcome flavor blocks
+    // read it (via fused state). Engine applies edge collapseToFlavor
+    // blocks in order: the picked early_physical_rate.* edge's `set`
+    // block fires first (sel.physical_rate='rapid'), then
+    // attachModuleReducer's exit block fires with this dim in `move`,
+    // moving it to flavor. 4× cart-prod reduction at rollout-slot
+    // output. knowledge_rate stays in sel (it's in writes) because
+    // it's a primaryDimension for outcome variants — see EARLY_ROLLOUT_
+    // WRITES comment.
+    internalMarkers: ['physical_rate'],
     completionMarker: 'early_rollout_set',
     get exitPlan() { return buildEarlyRolloutExitPlan(); },
 };
@@ -2757,13 +2767,17 @@ const EARLY_ROLLOUT_MODULE = {
 //     module (sets failure_mode='none' so sel-only outcome matching
 //     succeeds).
 //
-// Writes: [failure_mode, rollout_set]. failure_mode persists globally
-// so sel-only outcome matching (outcome reachable clauses keying on
-// failure_mode) can read it. knowledge_rate / physical_rate are in
-// nodeIds but NOT writes → auto-move to flavor on every ROLLOUT exit
-// via attachModuleReducer's `nodeIds \ writes` rule. No outcome
-// reachable clause / graph gate reads either of them from sel; only
-// outcome flavor blocks read them (via fused state). 16× cart-prod
+// Writes: [knowledge_rate, failure_mode, rollout_set]. failure_mode and
+// knowledge_rate persist globally so sel-only outcome matching can read
+// them — failure_mode for outcome reachable clauses (the-failure /
+// the-capture / the-new-hierarchy gates), knowledge_rate as the
+// primaryDimension for the-gilded-singularity / the-new-hierarchy /
+// the-flourishing variants (precompute-reachability.js variant resolution
+// uses Engine.resolvedVal(sel, primaryDim), which is sel-only).
+// physical_rate is in nodeIds but NOT writes → auto-moves to flavor on
+// every ROLLOUT exit via attachModuleReducer's `nodeIds \ writes` rule.
+// No outcome reachable clause / graph gate reads physical_rate from sel;
+// only outcome flavor blocks read it (via fused state). 4× cart-prod
 // reduction at rollout-slot output.
 //
 // Post-exit self-hide: each of the 3 nodes adds `{ rollout_set: ['yes'] }`
@@ -2777,7 +2791,7 @@ const ROLLOUT_NODE_IDS = [
     'failure_mode',
 ];
 
-const ROLLOUT_WRITES = ['failure_mode', 'rollout_set'];
+const ROLLOUT_WRITES = ['knowledge_rate', 'failure_mode', 'rollout_set'];
 
 // Exit tuples:
 //   * failure_mode.{none, drift} — main ASI path exit when
