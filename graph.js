@@ -2415,6 +2415,28 @@ const WHO_BENEFITS_WRITES = [
 // edge so completionMarker detects the module as done regardless of
 // which path was taken. No `when` gates — the edge id carries the
 // distinction.
+//
+// Every exit also evicts the WAR-set power_promise disable markers
+// to flavor. They were placed in sel by buildWarExitPlan so
+// power_promise.disabledWhen (sel-only via matchCondition) could
+// fire correctly DURING WHO_BENEFITS, but past this exit nothing
+// reads them: 0 outside-module gate readers, 0 outcome `reachable`
+// refs, 0 narrative refs. Keeping them in sel post-exit would carry
+// dead binary dims through every downstream slot's cart-prod for
+// no benefit. Earlier eviction (e.g. at WAR exit) is unsafe because
+// matchCondition reads sel only — flavor-moved markers wouldn't
+// be visible to power_promise.disabledWhen and disable behavior
+// would silently break.
+//
+// Markers aren't node ids (synthetic dims set via collapseToFlavor.
+// set in buildWarExitPlan), so they're outside WHO_BENEFITS_NODE_IDS
+// and attachModuleReducer's auto-move list (nodeIds \ writes) won't
+// pick them up — explicit per-tuple `move` is required. applyEdge
+// Blocks treats `move` as a no-op when sel[dim] is undefined, so
+// non-WAR / benevolent-short-circuit paths (where the markers were
+// never set) pass through cleanly.
+const WHO_BENEFITS_EXIT_FLAVOR_MOVE = ['for_everyone_blocked', 'best_will_rise_blocked'];
+
 function buildWhoBenefitsExitPlan() {
     const plan = [];
     const bd = NODE_MAP.benefit_distribution;
@@ -2428,6 +2450,7 @@ function buildWhoBenefitsExitPlan() {
                 edgeId: e.id,
                 when: {},
                 set: { who_benefits_set: 'yes' },
+                move: WHO_BENEFITS_EXIT_FLAVOR_MOVE,
             });
         }
     }
@@ -2449,6 +2472,7 @@ function buildWhoBenefitsExitPlan() {
                 edgeId: e.id,
                 when: {},
                 set: { who_benefits_set: 'yes' },
+                move: WHO_BENEFITS_EXIT_FLAVOR_MOVE,
             });
         }
     }
@@ -2461,6 +2485,7 @@ function buildWhoBenefitsExitPlan() {
                 edgeId: e.id,
                 when: {},
                 set: { who_benefits_set: 'yes' },
+                move: WHO_BENEFITS_EXIT_FLAVOR_MOVE,
             });
         }
     }
@@ -2492,6 +2517,9 @@ const WHO_BENEFITS_MODULE = {
         // the wide escalation_outcome (4 vals) + post_war_aims (3 vals)
         // dims they encode — 3× cart-prod reduction. Both source dims
         // stay in sel via WAR_WRITES for outcome matching and narrative.
+        // Markers themselves are evicted to flavor on every WHO_BENEFITS
+        // exit (see buildWhoBenefitsExitPlan / WHO_BENEFITS_EXIT_FLAVOR_
+        // MOVE) — past this module nothing reads them.
         'for_everyone_blocked', 'best_will_rise_blocked',
         // benefit_distribution activates via post_catch (the consolidated
         // escape-exit marker).
@@ -3564,6 +3592,14 @@ const WAR_WRITES = [
     // escalation_outcome / post_war_aims remain in sel for outcome
     // matching (the-standoff keys on escalation_outcome=standoff;
     // several outcomes reference post_war_aims).
+    //
+    // Markers stay in sel from WAR exit through every WHO_BENEFITS
+    // internal slot (so power_promise.disabledWhen — which uses sel-
+    // only matchCondition — sees them), then get evicted to flavor on
+    // every WHO_BENEFITS exit via WHO_BENEFITS_EXIT_FLAVOR_MOVE.
+    // Earlier eviction would silently break disable behavior; later
+    // would carry dead binary dims through every downstream slot's
+    // cart-prod for no benefit. See buildWhoBenefitsExitPlan.
     'for_everyone_blocked',
     'best_will_rise_blocked',
 ];
