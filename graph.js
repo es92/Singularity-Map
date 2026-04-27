@@ -1028,15 +1028,28 @@ const NODES = [
         { capability: ['asi'], intent_set: ['yes'] },
       ],
       edges: [
+        // Disable markers `for_everyone_blocked` / `best_will_rise_blocked`
+        // are pre-set by WAR's exit plan on standoff & self_interest exits
+        // (see buildWarExitPlan). Reading those binary markers instead of
+        // the wide escalation_outcome (4 vals) + post_war_aims (3 vals)
+        // dims keeps who_benefits's cart-prod 3× smaller (12-row gate
+        // factor → 4-row gate factor) without changing any disable
+        // semantics.
+        //   * standoff   → both markers set (security framing displaces
+        //                  both inclusive AND meritocratic narratives)
+        //   * self_interest → for_everyone_blocked only (a power-
+        //                     consolidating victor can still credibly
+        //                     defer to "the market")
+        // Disable reasons resolved at render time from the underlying
+        // escalation_outcome / post_war_aims values still in sel.
         { id: 'for_everyone', label: 'This is for everyone',
           disabledWhen: [
-            { escalation_outcome: ['standoff'], reason: 'In a standoff between rival AI powers, the framing is security — not sharing' },
-            { post_war_aims: ['self_interest'], reason: 'A victor consolidating power for themselves can\'t credibly frame the post-war order as "for everyone"' }
+            { for_everyone_blocked: ['yes'], reason: 'A security-framed standoff or a self-interest victor can\'t credibly promise inclusion' }
           ] },
         { id: 'keeping_safe', label: 'We\'re keeping you safe' },
         { id: 'best_will_rise', label: 'The market will decide', shortLabel: 'Market decides',
           disabledWhen: [
-            { escalation_outcome: ['standoff'], reason: 'In a standoff between rival AI powers, the framing is security — not meritocracy' }
+            { best_will_rise_blocked: ['yes'], reason: 'In a standoff between rival AI powers, the framing is security — not meritocracy' }
           ] }
       ] },
     { id: 'mobilization', label: 'Mobilization', stage: 3,
@@ -2449,12 +2462,14 @@ const WHO_BENEFITS_MODULE = {
         // Activation gate (module-level + power_promise mirrors intent_set)
         'intent_set', 'ai_goals',
         // Internal hideWhens gate on ai_goals/containment; benefit_distribution
-        // disabledWhens reference intent; power_promise edge disabledWhens
-        // reference escalation_outcome (standoff disables for_everyone /
-        // best_will_rise narrative framings) and post_war_aims (self_interest
-        // disables for_everyone — a victor consolidating power can't credibly
-        // promise inclusion).
-        'containment', 'intent', 'escalation_outcome', 'post_war_aims',
+        // disabledWhens reference intent.
+        'containment', 'intent',
+        // power_promise edge disabledWhens read these binary markers (set
+        // by WAR's exit plan on standoff/self_interest tuples) instead of
+        // the wide escalation_outcome (4 vals) + post_war_aims (3 vals)
+        // dims they encode — 3× cart-prod reduction. Both source dims
+        // stay in sel via WAR_WRITES for outcome matching and narrative.
+        'for_everyone_blocked', 'best_will_rise_blocked',
         // benefit_distribution activates via post_catch (the consolidated
         // escape-exit marker).
         'post_catch',
@@ -3482,6 +3497,23 @@ const WAR_WRITES = [
     // at inert_stays (inert_stays.earlyExits = ['the-ruin']). Hostile-AI
     // destruction paths siphon escape outcomes upstream at escape_late.
     'who_benefits_set',
+    // power_promise (in who_benefits) edge disable markers. Pre-set by
+    // war's exit plan so who_benefits doesn't have to read the wide
+    // escalation_outcome (4 vals) + post_war_aims (3 vals) dims for its
+    // gate logic — they'd 12× the cart-prod of who_benefits's
+    // read closure. These narrow binary markers preserve the same disable
+    // behavior:
+    //   * for_everyone_blocked='yes' on standoff & self_interest exits —
+    //     a security-framed standoff or a self-interest victor can't
+    //     credibly promise inclusion.
+    //   * best_will_rise_blocked='yes' on standoff exit only — security
+    //     framing displaces market-decides rhetoric. (Self-interest
+    //     victors can still narratively defer to "the market".)
+    // escalation_outcome / post_war_aims remain in sel for outcome
+    // matching (the-standoff keys on escalation_outcome=standoff;
+    // several outcomes reference post_war_aims).
+    'for_everyone_blocked',
+    'best_will_rise_blocked',
 ];
 
 // 7 exit edges:
@@ -3522,6 +3554,18 @@ function buildWarExitPlan() {
         // for the marginal-AI tail; the-ruin matches at inert_stays.
         if (nodeId === 'war_survivors') {
             set.who_benefits_set = 'yes';
+        }
+        // power_promise edge disable markers (see WAR_WRITES comment).
+        // Encoded here rather than as power_promise.disabledWhen reads on
+        // escalation_outcome / post_war_aims so who_benefits doesn't pull
+        // those wide dims into its cartesian read closure (3× cart-prod
+        // reduction; 138k → 46k for who_benefits).
+        if (nodeId === 'escalation_outcome' && edgeId === 'standoff') {
+            set.for_everyone_blocked = 'yes';
+            set.best_will_rise_blocked = 'yes';
+        }
+        if (nodeId === 'post_war_aims' && edgeId === 'self_interest') {
+            set.for_everyone_blocked = 'yes';
         }
         return set;
     };
