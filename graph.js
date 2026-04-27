@@ -2453,15 +2453,6 @@ const WHO_BENEFITS_MODULE = {
         // benefit_distribution activates via post_catch (the consolidated
         // escape-exit marker).
         'post_catch',
-        // escape_set is in `writes` because power_use.generous's
-        // collapseToFlavor (gated on ai_itself) writes 'yes' as a
-        // pre-resolved benevolent early-exit. It must also be in `reads`
-        // so the DFS input sel carries the upstream value: paths that
-        // came through escape_early already have escape_set='yes', and
-        // without it in reads cartesianReadRows projects it away,
-        // making the DFS start with escape_set undefined and the
-        // projection then override upstream's 'yes' with UNSET.
-        'escape_set',
     ],
     writes: WHO_BENEFITS_WRITES,
     nodeIds: WHO_BENEFITS_NODE_IDS,
@@ -3089,19 +3080,6 @@ const PROLIFERATION_MODULE = {
         // proliferation_control.edges[deny_rivals|secure_access].disabledWhen
         // reads distribution.
         'distribution',
-        // Pass-through dims that PROLIFERATION_WRITES also includes.
-        // Required because non-leak paths (proliferation_outcome=holds,
-        // proliferation_alignment=holds, etc.) DON'T rewrite these dims —
-        // they pass the upstream value through. If they're in writes but
-        // not in reads, the DFS starts with them UNSET and the projection
-        // captures UNSET on the holds path, replacing legitimate upstream
-        // values (e.g. containment=escaped, escape_set=yes, post_catch=
-        // contained from a successful escape_early catch) with nothing
-        // and producing phantom states like ai_goals=alien_coexistence
-        // with containment=UNSET — a narratively impossible combination.
-        // Same pattern as INTENT_MODULE.reads (containment) and
-        // WHO_BENEFITS_MODULE.reads (containment, post_catch).
-        'containment', 'escape_set', 'post_catch',
     ],
     writes: PROLIFERATION_WRITES,
     nodeIds: PROLIFERATION_NODE_IDS,

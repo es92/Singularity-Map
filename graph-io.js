@@ -283,6 +283,57 @@
                 for (const d of (mod.reads || [])) dims.add(d);
                 _collectCondDims(mod.activateWhen, dims);
                 _collectCondDims(mod.hideWhen, dims);
+                // Auto-include `move` dims from every internal-node edge
+                // and from the module's exit-plan tuples — but only
+                // EXTERNAL dims (those NOT owned by this module's own
+                // nodeIds). UNSET in a module's output projKey can mean
+                // two distinct things:
+                //   1. an internal `move` (or exit-plan `move`) ran and
+                //      deleted the dim — the post-DFS state has it unset
+                //      and the merged downstream sel must drop the
+                //      upstream value too.
+                //   2. the DFS path never touched the dim — the merged
+                //      downstream sel must carry the upstream value
+                //      through (pass-through).
+                // The two are indistinguishable from the projKey alone,
+                // so reachableFullSelsFromInputs disambiguates by
+                // checking readSet: dims in readSet treat UNSET as
+                // "delete from output" (case 1), dims outside readSet
+                // treat UNSET as "pass through" (case 2). For that to
+                // be correct, every EXTERNAL dim a module can move must
+                // be in readSet (to disambiguate "moved" from
+                // "passthrough" upstream value). Internal-node dims
+                // (mod.nodeIds) are unset in upstream sel anyway —
+                // including them in reads is wasteful (cartesian-
+                // explosion) and gains nothing because the upstream
+                // bucket can never carry a value for them.
+                const ownNodeIds = new Set(mod.nodeIds || []);
+                const NM = NODE_MAP();
+                for (const nid of (mod.nodeIds || [])) {
+                    const node = NM[nid];
+                    if (!node) continue;
+                    for (const e of (node.edges || [])) {
+                        if (!e.collapseToFlavor) continue;
+                        const blocks = Array.isArray(e.collapseToFlavor) ? e.collapseToFlavor : [e.collapseToFlavor];
+                        for (const b of blocks) {
+                            if (b && Array.isArray(b.move)) {
+                                for (const k of b.move) {
+                                    if (!ownNodeIds.has(k)) dims.add(k);
+                                }
+                            }
+                        }
+                    }
+                }
+                const exitPlan = mod.exitPlan;
+                if (Array.isArray(exitPlan)) {
+                    for (const tuple of exitPlan) {
+                        if (tuple && Array.isArray(tuple.move)) {
+                            for (const k of tuple.move) {
+                                if (!ownNodeIds.has(k)) dims.add(k);
+                            }
+                        }
+                    }
+                }
             }
         } else if (slot.kind === 'node') {
             const node = NODE_MAP()[slot.id];
@@ -1050,11 +1101,17 @@
         const stuckInputs = [];
         const outByKey = new Map();
         if (byInput) {
-            const writeDims = (writeResult && Array.isArray(writeResult.dims))
-                ? writeResult.dims
-                : [];
             const readSet = new Set(reads);
-            const writeSet = new Set(writeDims);
+
+            // Pass-through is decided per-projKey, not globally:
+            // module.writes is a declarative superset that includes
+            // dims only some exit paths write. PROLIFERATION lists
+            // `geo_spread` in writes, but only the leak exits actually
+            // set it; the holds path leaves it untouched and must
+            // carry the upstream value through. The merge below makes
+            // that distinction by treating each projKey's UNSET
+            // entries as "DFS didn't touch this dim" (when the dim
+            // isn't in reads), letting pass-through fill the gap.
 
             // Group inputs by (bucketKey, ptKey). Also pick a
             // representative restricted-bucket sel per bucketKey to
@@ -1073,9 +1130,15 @@
                     repBucketSel.set(bk, bs);
                 }
 
+                // ptDims = every dim of this input not in reads. This
+                // includes both true pass-throughs (dims the slot
+                // doesn't touch at all) AND conditionally-written
+                // dims (dims some projKeys override and others leave
+                // alone). The per-projKey merge below decides which
+                // wins on a case-by-case basis.
                 const ptDims = [];
                 for (const d of Object.keys(sel)) {
-                    if (!readSet.has(d) && !writeSet.has(d)) ptDims.push(d);
+                    if (!readSet.has(d)) ptDims.push(d);
                 }
                 ptDims.sort();
                 const ptParts = new Array(ptDims.length * 2);
@@ -1095,10 +1158,7 @@
             // For each (bucket, projKey) precompute fixedSel (the
             // post-write sel restricted to read+write dims) and a
             // sorted parts array for fast key-merging.
-            // fixedByBucket: Map<bucketKey, Array<{ projSet entries → fp }>>
-            // — implemented as a nested Map<bucketKey, Map<projKey, fp>>
-            // so the inner loop avoids string concatenation just to
-            // index into the cache.
+            // fixedByBucket: Map<bucketKey, Map<projKey, fp>>.
             const fixedByBucket = new Map();
             for (const [bk, projSet] of byInput) {
                 const bucketSel = repBucketSel.get(bk);
@@ -1110,8 +1170,16 @@
                     for (const d of Object.keys(bucketSel)) fixedSel[d] = bucketSel[d];
                     const writes = JSON.parse(ok);
                     for (const [d, v] of writes) {
-                        if (v === UNSET) delete fixedSel[d];
-                        else fixedSel[d] = v;
+                        if (v === UNSET) {
+                            // Delete only if d is in reads — i.e. the
+                            // bucket actually carried d. For dims not
+                            // in reads, UNSET means "DFS didn't touch
+                            // it" and the pass-through path should
+                            // carry the upstream value.
+                            if (readSet.has(d)) delete fixedSel[d];
+                        } else {
+                            fixedSel[d] = v;
+                        }
                     }
                     const dims = Object.keys(fixedSel).sort();
                     const fixedParts = new Array(dims.length * 2);
@@ -1127,6 +1195,11 @@
             // Inner loop: emit merged sels. Linear merge of two
             // pre-sorted halves yields the canonical mergedKey
             // directly. Build the merged sel object only on miss.
+            //
+            // Equal-dim collisions (fixed and pt both carry the same
+            // dim — happens when a projKey writes a dim that's also
+            // in the input sel and not in reads) resolve in favour
+            // of fixed: explicit writes override pass-through.
             for (const { bk, ptSel, ptParts } of groups.values()) {
                 const inner = fixedByBucket.get(bk);
                 if (!inner) continue;
@@ -1137,14 +1210,21 @@
                     let i = 0, j = 0, m = 0;
                     const out = new Array(flen + plen);
                     while (i < flen && j < plen) {
-                        if (fixedParts[i] < ptParts[j]) {
-                            out[m++] = fixedParts[i];
+                        const fd = fixedParts[i];
+                        const pd = ptParts[j];
+                        if (fd < pd) {
+                            out[m++] = fd;
                             out[m++] = fixedParts[i + 1];
                             i += 2;
-                        } else {
-                            out[m++] = ptParts[j];
+                        } else if (pd < fd) {
+                            out[m++] = pd;
                             out[m++] = ptParts[j + 1];
                             j += 2;
+                        } else {
+                            // Same dim in both halves: fixed wins.
+                            out[m++] = fd;
+                            out[m++] = fixedParts[i + 1];
+                            i += 2; j += 2;
                         }
                     }
                     while (i < flen) {
@@ -1157,9 +1237,13 @@
                         out[m++] = ptParts[j + 1];
                         j += 2;
                     }
+                    out.length = m;
                     const mk = out.join('\x00');
                     if (!outByKey.has(mk)) {
-                        outByKey.set(mk, { ...fp.fixedSel, ...ptSel });
+                        // Spread order matters: ptSel first, then
+                        // fixedSel — explicit writes override the
+                        // pass-through value on the same dim.
+                        outByKey.set(mk, { ...ptSel, ...fp.fixedSel });
                     }
                 }
             }

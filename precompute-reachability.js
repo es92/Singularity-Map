@@ -79,14 +79,14 @@ const TEMPLATES = outcomesData.templates;
 GraphIO.registerOutcomes(TEMPLATES);
 
 // ─── Outcome entries (variant-aware) ──────────────────────────────
-const entries = [];
+    const entries = [];
 for (const t of TEMPLATES) {
     const variantKeys = (t.variants && typeof t.variants === 'object')
         ? Object.keys(t.variants) : [];
     if (variantKeys.length > 0 && t.primaryDimension) {
         for (const vk of variantKeys) {
-            entries.push({
-                id: t.id + '--' + vk,
+                entries.push({
+                    id: t.id + '--' + vk,
                 templateId: t.id,
                 primaryDim: t.primaryDimension,
                 variantKey: vk,
@@ -612,7 +612,7 @@ async function writeReachFile(entry) {
     await pipeline(
         Readable.from(jsonChunks(), { objectMode: false }),
         createGzip(),
-        fs.createWriteStream(gzPath)
+            fs.createWriteStream(gzPath)
     );
     const gzSize = fs.statSync(gzPath).size;
     return { gzSize, count };
