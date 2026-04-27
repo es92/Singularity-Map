@@ -588,8 +588,8 @@
               ]
             },
             {
-              "post_war_aims": [
-                "self_interest"
+              "self_interest_aims_set": [
+                "yes"
               ]
             }
           ]
@@ -987,8 +987,8 @@
           "failure_mode": [
             "none"
           ],
-          "post_war_aims": [
-            "self_interest"
+          "self_interest_aims_set": [
+            "yes"
           ],
           "_not": [
             {
@@ -1353,8 +1353,8 @@
           "benefit_distribution": [
             "extreme"
           ],
-          "post_war_aims": [
-            "self_interest"
+          "self_interest_aims_set": [
+            "yes"
           ],
           "failure_mode": [
             "none"

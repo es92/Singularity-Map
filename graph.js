@@ -1268,17 +1268,24 @@ const NODES = [
     // knowledge_rate / physical_rate — unified across three contexts
     // keyed on the post-emergence `capability` value:
     //   • capability='asi' (main singularity path) — rollout exits on
-    //       failure_mode.*; all three rollout dims (knowledge_rate,
-    //       physical_rate, failure_mode) move to flavor via the module
-    //       exit tuple.
-    //   • capability='plateau' — rollout exits on physical_rate.*; both
-    //       dims move to flavor via the module exit tuple (same mechanism).
+    //       failure_mode.*; failure_mode persists in sel (read by
+    //       outcome reachable clauses). knowledge_rate + physical_rate
+    //       both auto-move to flavor via attachModuleReducer's
+    //       `nodeIds \ writes` rule — neither has any outcome reachable
+    //       / graph gate sel-reader; only outcome flavor blocks read
+    //       them (via fused state). 16× cart-prod reduction at
+    //       rollout-slot output.
+    //   • capability='plateau' — rollout exits on early_physical_rate.*;
+    //       knowledge_rate + physical_rate evict to flavor via
+    //       EARLY_ROLLOUT internalMarkers (mid-module set by edge
+    //       collapseToFlavor; moved on exit by attachModuleReducer's
+    //       exit block). Same flavor-only rationale as the asi path.
     //   • capability='agi' (AGI-only / auto-shallow) — same as plateau.
     //
     // The `rollout_set` completion marker (set by every module exit tuple)
     // doubles as the post-answer hide for all three nodes. Narrative /
-    // templates read the dim via fused state (sel ∪ flavor), so moving
-    // to flavor on exit is narrative-safe.
+    // templates read the flavor-side dims via fused state (sel ∪ flavor),
+    // so moving them to flavor on exit is narrative-safe.
     //
     // `limited` is always present as an edge (per user: "always have limited
     // as an option, it just gets disabled sometimes"). It's disabled
@@ -2592,8 +2599,11 @@ const WHO_BENEFITS_MODULE = {
     // to completion), OR on the benevolent-AI short-circuit (ai_goals=
     // 'benevolent' routes past proliferation / intent / war straight here
     // — see the `escape_early → who_benefits` arrow in the flow DAG).
-    // Internals still reference alignment / ai_goals / post_war_aims /
-    // escalation_outcome for their own activateWhen + hideWhen gates.
+    // Internals still reference alignment / ai_goals for their own
+    // activateWhen + hideWhen gates; the wider escalation_outcome /
+    // post_war_aims dims they used to consult were replaced with the
+    // for_everyone_blocked / best_will_rise_blocked binary markers
+    // (set by WAR's exit plan).
     activateWhen: [
         { capability: ['asi'], intent_set: ['yes'] },
         { capability: ['asi'], ai_goals: ['benevolent'] },
@@ -2609,7 +2619,10 @@ const WHO_BENEFITS_MODULE = {
         // by WAR's exit plan on standoff/self_interest tuples) instead of
         // the wide escalation_outcome (4 vals) + post_war_aims (3 vals)
         // dims they encode — 3× cart-prod reduction. Both source dims
-        // stay in sel via WAR_WRITES for outcome matching and narrative.
+        // are now flavor-only past WAR exit (auto-evicted; their post-
+        // exit outcome consumers were migrated to standoff_reached /
+        // self_interest_aims_set markers, and outcome flavor blocks see
+        // them via fused state).
         // Markers themselves are evicted to flavor on every WHO_BENEFITS
         // exit (see buildWhoBenefitsExitPlan / WHO_BENEFITS_EXIT_FLAVOR_
         // MOVE) — past this module nothing reads them.
@@ -2654,8 +2667,12 @@ const EARLY_ROLLOUT_NODE_IDS = [
     'early_physical_rate',
 ];
 
-// knowledge_rate / physical_rate persist globally (written by edge-
-// level collapseToFlavor.set). early_rollout_set is the EARLY_ROLLOUT
+// knowledge_rate / physical_rate are both set into sel mid-module via
+// early_knowledge_rate.* / early_physical_rate.* edges'
+// collapseToFlavor.set, then evicted to flavor on every exit (declared
+// in internalMarkers below). Outcome flavor blocks read both via fused
+// state, and no graph gate / outcome reachable clause reads either,
+// so flavor is sufficient. early_rollout_set is the EARLY_ROLLOUT
 // completion marker, set on every exit tuple, and is what the
 // the-plateau / the-automation outcome reachable clauses key on
 // (paired with capability=plateau / capability=agi). The shared
@@ -2664,7 +2681,7 @@ const EARLY_ROLLOUT_NODE_IDS = [
 // plateau/agi-side reader needs it. The early_* node dims themselves
 // are NOT in writes, so attachModuleReducer auto-evicts them to
 // flavor on exit.
-const EARLY_ROLLOUT_WRITES = ['knowledge_rate', 'physical_rate', 'early_rollout_set'];
+const EARLY_ROLLOUT_WRITES = ['early_rollout_set'];
 
 function buildEarlyRolloutExitPlan() {
     const plan = [];
@@ -2703,6 +2720,17 @@ const EARLY_ROLLOUT_MODULE = {
     ],
     writes: EARLY_ROLLOUT_WRITES,
     nodeIds: EARLY_ROLLOUT_NODE_IDS,
+    // knowledge_rate / physical_rate are set into sel mid-module via
+    // the early_*.* edges' collapseToFlavor.set, then evicted to flavor
+    // on exit. Listed here (rather than in writes) because they have no
+    // sel-only consumers post-exit — outcome reachable clauses don't
+    // reference them; only outcome flavor blocks read them (via fused
+    // state). Engine applies edge collapseToFlavor blocks in order:
+    // the picked early_*.* edge's `set` block fires first
+    // (e.g. sel.physical_rate='rapid'), then attachModuleReducer's exit
+    // block fires with these dims in `move`, moving them to flavor.
+    // Net effect: 4×4 = 16× cart-prod reduction at rollout-slot output.
+    internalMarkers: ['knowledge_rate', 'physical_rate'],
     completionMarker: 'early_rollout_set',
     get exitPlan() { return buildEarlyRolloutExitPlan(); },
 };
@@ -2729,10 +2757,14 @@ const EARLY_ROLLOUT_MODULE = {
 //     module (sets failure_mode='none' so sel-only outcome matching
 //     succeeds).
 //
-// Writes: [failure_mode, knowledge_rate, physical_rate, rollout_set].
-// All three question dims persist globally so sel-only outcome matching
-// (validate2.js + outcome reachable clauses keying on failure_mode) can
-// read them.
+// Writes: [failure_mode, rollout_set]. failure_mode persists globally
+// so sel-only outcome matching (outcome reachable clauses keying on
+// failure_mode) can read it. knowledge_rate / physical_rate are in
+// nodeIds but NOT writes → auto-move to flavor on every ROLLOUT exit
+// via attachModuleReducer's `nodeIds \ writes` rule. No outcome
+// reachable clause / graph gate reads either of them from sel; only
+// outcome flavor blocks read them (via fused state). 16× cart-prod
+// reduction at rollout-slot output.
 //
 // Post-exit self-hide: each of the 3 nodes adds `{ rollout_set: ['yes'] }`
 // to hideWhen so findNextQ doesn't re-offer them.
@@ -2745,7 +2777,7 @@ const ROLLOUT_NODE_IDS = [
     'failure_mode',
 ];
 
-const ROLLOUT_WRITES = ['failure_mode', 'knowledge_rate', 'physical_rate', 'rollout_set'];
+const ROLLOUT_WRITES = ['failure_mode', 'rollout_set'];
 
 // Exit tuples:
 //   * failure_mode.{none, drift} — main ASI path exit when
@@ -3625,13 +3657,13 @@ const INTENT_MODULE = {
 //                          └── destruction → war_survivors.* → exit
 //
 // External contract:
-//   * writes = [post_war_aims, war_survivors] plus the binary
-//     markers (intent override, who_benefits_set,
-//     for_everyone_blocked, best_will_rise_blocked, standoff_reached)
-//     — every dim is consumed by at least one outside-WAR sel reader
-//     (outcome templates, ruin_type.deriveWhen via war_survivors,
-//     collateral_impact / catch_outcome / inert_stays gates via
-//     war_survivors, etc.).
+//   * writes = [war_survivors] plus the binary markers (intent
+//     override, who_benefits_set, for_everyone_blocked,
+//     best_will_rise_blocked, standoff_reached,
+//     self_interest_aims_set) — every dim is consumed by at least
+//     one outside-WAR sel reader (outcome templates,
+//     ruin_type.deriveWhen via war_survivors, collateral_impact /
+//     catch_outcome / inert_stays gates via war_survivors, etc.).
 //   * escalation_outcome is in nodeIds but NOT writes → auto-moves
 //     to flavor on every WAR exit via attachModuleReducer's
 //     `nodeIds \ writes` rule. The single post-exit sel reader was
@@ -3685,13 +3717,23 @@ const WAR_WRITES = [
     // intent override mapping) fire BEFORE the auto-move so they still
     // see escalation_outcome in sel.
     //
+    // post_war_aims auto-moves to flavor on every WAR exit (also in
+    // WAR_NODE_IDS, also omitted from writes). The three post-exit sel
+    // readers (one positive reachable in `the-self-interest` plus two
+    // `_not` exclusions, including `the-flourishing`) all gated on the
+    // single value `self_interest`; they're now migrated to the
+    // narrow `self_interest_aims_set` binary marker (see below). The
+    // `post_war_aims=human_centered → intent='coexistence'` override
+    // in INTENT_OVERRIDE reads post_war_aims AT exit (in buildSet,
+    // before auto-move) so it's unaffected. Outcome flavor blocks
+    // and narrative.json `when` clauses keep working via fused state.
+    //
     // conflict_result auto-moves to flavor on every WAR exit (it's in
     // WAR_NODE_IDS but deliberately omitted from writes). See module-
     // block comment above for rationale — no outside-WAR sel readers
     // remain after the war_survivors-keyed rewrites of ruin_type /
     // the-ruin / outcome _not clauses; only narrative refs remain
     // (resolved via fused state).
-    'post_war_aims',
     'war_survivors',
     'war_set',
     // WAR overrides intent on peaceful exits (escalation_outcome=agreement
@@ -3719,8 +3761,6 @@ const WAR_WRITES = [
     //   * best_will_rise_blocked='yes' on standoff exit only — security
     //     framing displaces market-decides rhetoric. (Self-interest
     //     victors can still narratively defer to "the market".)
-    // post_war_aims remains in sel for outcome matching (several
-    // outcomes' reachable clauses reference it).
     //
     // Markers stay in sel from WAR exit through every WHO_BENEFITS
     // internal slot (so power_promise.disabledWhen — which uses sel-
@@ -3740,6 +3780,22 @@ const WAR_WRITES = [
     // gate. Outcome flavor blocks still see escalation_outcome via
     // fused state.
     'standoff_reached',
+    // self_interest_aims_set='yes' is pre-set on the
+    // post_war_aims.self_interest exit edge (see buildWarExitPlan).
+    // Replaces the three post-WAR-exit sel readers of post_war_aims:
+    //   * the-self-interest.reachable (positive: post_war_aims=self_interest)
+    //   * the-flourishing._not (exclusion: post_war_aims=self_interest)
+    //   * a second `_not` exclusion in another self-interest-shaped
+    //     outcome variant.
+    // All three gate on the same single value `self_interest`, so a
+    // single 1-bit marker covers them. Lets post_war_aims auto-move
+    // to flavor at WAR exit (it's a WAR_NODE_ID with no entry in
+    // writes) — saves a 3× cart-prod factor across who_benefits →
+    // brittle → escape_after_who → escape_late → inert_stays →
+    // escape_re_entry → rollout. Outcome flavor blocks and
+    // narrative.json `when` clauses still see post_war_aims via
+    // fused state.
+    'self_interest_aims_set',
 ];
 
 // 6 exit edges:
@@ -3783,17 +3839,23 @@ function buildWarExitPlan() {
         if (nodeId === 'war_survivors') {
             set.who_benefits_set = 'yes';
         }
-        // power_promise edge disable markers (see WAR_WRITES comment).
-        // Encoded here rather than as power_promise.disabledWhen reads on
-        // escalation_outcome / post_war_aims so who_benefits doesn't pull
-        // those wide dims into its cartesian read closure (3× cart-prod
-        // reduction; 138k → 46k for who_benefits).
-        //
-        // standoff_reached='yes' is the 1-bit replacement for the
-        // post-WAR-exit `escalation_outcome=standoff` sel read by
-        // the-standoff.reachable. Pre-setting it here lets us drop
-        // escalation_outcome from WAR_WRITES (auto-evicted to flavor)
-        // without losing the standoff outcome gate.
+    // power_promise edge disable markers (see WAR_WRITES comment).
+    // Encoded here rather than as power_promise.disabledWhen reads on
+    // escalation_outcome / post_war_aims so who_benefits doesn't pull
+    // those wide dims into its cartesian read closure (3× cart-prod
+    // reduction; 138k → 46k for who_benefits).
+    //
+    // standoff_reached='yes' is the 1-bit replacement for the
+    // post-WAR-exit `escalation_outcome=standoff` sel read by
+    // the-standoff.reachable. Pre-setting it here lets us drop
+    // escalation_outcome from WAR_WRITES (auto-evicted to flavor)
+    // without losing the standoff outcome gate.
+    //
+    // self_interest_aims_set='yes' is the 1-bit replacement for the
+    // three post-WAR-exit `post_war_aims=self_interest` sel reads in
+    // outcome reachable / _not clauses. Pre-setting it on the self-
+    // interest edge lets us drop post_war_aims from WAR_WRITES (auto-
+    // evicted to flavor) without losing those outcome gates.
         if (nodeId === 'escalation_outcome' && edgeId === 'standoff') {
             set.for_everyone_blocked = 'yes';
             set.best_will_rise_blocked = 'yes';
@@ -3801,6 +3863,14 @@ function buildWarExitPlan() {
         }
         if (nodeId === 'post_war_aims' && edgeId === 'self_interest') {
             set.for_everyone_blocked = 'yes';
+            // self_interest_aims_set='yes' is the 1-bit replacement for the
+            // post-WAR-exit `post_war_aims=self_interest` sel reads in the
+            // outcome layer (one positive reachable in the-self-interest
+            // and two _not exclusions, including the-flourishing). Pre-
+            // setting it here lets us drop post_war_aims from WAR_WRITES
+            // (auto-evicted to flavor at every WAR exit) — saves a 3×
+            // cart-prod factor across the 7 slots between WAR and rollout.
+            set.self_interest_aims_set = 'yes';
         }
         return set;
     };
