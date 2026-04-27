@@ -94,7 +94,7 @@ If engine branching still needs *one bit* of information from the dim (e.g. "did
 
 ### How a Path Progresses
 
-1. The engine presents the first unanswered, visible, non-derived question (determined by `displayOrder`, which follows the node order in `graph.js`)
+1. The engine presents the next question by calling `FlowPropagation.flowNext(sel)` — the same primitive `validate.js` and `/explore` use. `flowNext` walks `FLOW_DAG.nodes` in topological order, finds the first slot whose activate gate / completion marker accepts the current `sel`, and (for module slots) returns the lowest-priority askable internal node. Outcome matching is suppressed whenever a slot still owns the sel; only `flowNext` returning `kind: 'open'` allows templates to fire
 2. The user picks an edge → `push()` sets `sel[nodeId] = edgeId`
 3. `cleanSelection()` runs in a single pass: for each node with a set edge (in `NODES` topological order), it applies that edge's `collapseToFlavor` blocks (`set` / `setFlavor` / `move`) whose `when` matches the current `sel`. No invalidation sweep, no fixpoint loop — every cascade effect that older versions of the engine derived multi-pass is now expressed as an explicit, gated `collapseToFlavor` block on the originating edge (one-shot gates like `proliferation_set: false` keep blocks idempotent across re-pushes). This makes runtime push behavior identical to the static `_applyEdgeWrites` projection used by `validate.js` and `precompute-reachability` — the two paths cannot drift apart.
 

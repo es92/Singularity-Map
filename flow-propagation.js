@@ -24,6 +24,10 @@
 //     inputsBySlot   Map<slotKey, sel[]>      sels routed INTO each slot
 //     routedBySlot   Map<slotKey, sel[]>      parent outputs that found a child
 //     deadBySlot     Map<slotKey, sel[]>      parent outputs no child accepts
+//     stuckBySlot    Map<slotKey, sel[]>      inputs the slot accepted but whose
+//                                              own DFS yielded zero outputs
+//                                              (runtime would render the slot
+//                                              with nothing to advance into).
 //     routedToChild  Map<parentKey, Map<childKey, count>>
 //     acceptedBySlot Map<slotKey, number>     inputs accepted by slot
 //     matchedBySlot  Map<slotKey, number>     outputs siphoned to outcomes
@@ -190,6 +194,7 @@
         const inputsBySlot   = new Map();
         const routedBySlot   = new Map();
         const deadBySlot     = new Map();
+        const stuckBySlot    = new Map();
         const routedToChild  = new Map();
         const acceptedBySlot = new Map();
         const matchedBySlot  = new Map();
@@ -208,6 +213,9 @@
                 const full = GraphIO.reachableFullSelsFromInputs(slot, upstream);
                 if (!full) continue;
                 acceptedBySlot.set(slotKey, full.acceptedInputs.length);
+                if (full.stuckInputs && full.stuckInputs.length) {
+                    stuckBySlot.set(slotKey, full.stuckInputs);
+                }
                 outputs = full.outputs;
             }
 
@@ -257,7 +265,7 @@
         }
 
         return {
-            inputsBySlot, routedBySlot, deadBySlot, routedToChild,
+            inputsBySlot, routedBySlot, deadBySlot, stuckBySlot, routedToChild,
             acceptedBySlot, matchedBySlot, outcomeAgg,
             parentsOf, childrenOf, order,
         };
@@ -273,7 +281,79 @@
         return _slotPickPriority(Engine, slot, sel);
     }
 
+    // ─── Single-step navigation (runtime + static unified) ──────────
+    //
+    // Given a sel, returns what the user-facing engine should do next:
+    //
+    //   { kind: 'question', node, slotKey }
+    //       Render this node as the current question. Outcomes are
+    //       suppressed because some FLOW_DAG slot still owns the sel.
+    //
+    //   { kind: 'stuck', slotKey }
+    //       A FLOW_DAG slot accepts the sel but no internal node is
+    //       runtime-askable (TIGHT — has activate/hide passing AND at
+    //       least one enabled edge). The engine has nothing to ask
+    //       AND outcomes are suppressed. This is always a graph bug
+    //       (validate.js Phase 6 reports it). Browser callers should
+    //       fall through to a "stuck" UI; they shouldn't fire an
+    //       outcome here because static analysis didn't grant one.
+    //
+    //   { kind: 'open' }
+    //       No FLOW_DAG slot owns the sel. The engine should attempt
+    //       outcome matching. If no outcome matches, the sel is at a
+    //       terminal but unmapped state — also a graph bug, but a
+    //       different category.
+    //
+    // This is the single source of truth for "what does the navigator
+    // do next?". Used by:
+    //   * index.html findNextQuestion() — runtime UI driver.
+    //   * validate.js (indirectly via FlowPropagation.run) — same
+    //     slot-pick semantics drive the propagation pass.
+    //   * /explore — same slot-pick semantics drive the visual graph.
+    //   * precompute-reachability.js — same.
+    //
+    // Slot ownership uses LOOSE askability (Engine.isAskableInternal,
+    // 4-check) — mirroring how FLOW_DAG was designed (modules are
+    // contiguous; "module owns this sel" = "any internal could
+    // conceivably answer"). Within an owning module, the next render
+    // node is picked using TIGHT askability (4-check + at-least-one
+    // enabled edge) and lowest-priority-wins (matching what the
+    // user-facing engine surfaces).
+    function flowNext(sel) {
+        const Engine = _Engine();
+        const flowDag = _FlowDag();
+        if (!Engine || !flowDag) return { kind: 'open' };
+
+        for (const slot of flowDag.nodes) {
+            if (!slot || slot.key === 'emergence') continue;
+            if (slot.kind === 'outcome' || slot.kind === 'deadend') continue;
+            if (_slotPickPriority(Engine, slot, sel) === Infinity) continue;
+
+            // Slot owns this sel — outcomes suppressed.
+            if (slot.kind === 'node') {
+                const n = Engine.NODE_MAP[slot.id];
+                return { kind: 'question', node: n, slotKey: slot.key };
+            }
+            if (slot.kind === 'module') {
+                const m = Engine.MODULE_MAP[slot.id];
+                if (!m) return { kind: 'stuck', slotKey: slot.key };
+                let best = null;
+                let bestP = Infinity;
+                for (const nid of (m.nodeIds || [])) {
+                    const n = Engine.NODE_MAP[nid];
+                    if (!Engine.isAskableInternal(sel, n)) continue;
+                    if (!n.edges || !n.edges.some(e => !Engine.isEdgeDisabled(sel, n, e))) continue;
+                    const p = n.priority == null ? 0 : n.priority;
+                    if (p < bestP) { best = n; bestP = p; }
+                }
+                if (best) return { kind: 'question', node: best, slotKey: slot.key };
+                return { kind: 'stuck', slotKey: slot.key };
+            }
+        }
+        return { kind: 'open' };
+    }
+
     if (typeof window !== 'undefined') {
-        window.FlowPropagation = { run, slotPickPriority };
+        window.FlowPropagation = { run, slotPickPriority, flowNext };
     }
 })();

@@ -1977,7 +1977,6 @@
         const tags = [];
         tags.push(`${nodeIds.length} node${nodeIds.length === 1 ? '' : 's'}`);
         if (m.completionMarker) tags.push(`exit: ${_fmtCompletionMarker(m.completionMarker)}`);
-        if (m.internalPriority !== undefined) tags.push(`internal priority ${m.internalPriority}`);
         if (typeof m.reduce === 'function') tags.push('has reduce()');
         if (m.reducerTable) tags.push('has reducerTable');
 
@@ -2024,12 +2023,6 @@
             html += `<div class="nd-chip-row">`;
             [...internals].forEach(d => { html += dimChip(d); });
             html += `</div>`;
-            html += `</div>`;
-        }
-
-        if (m.internalPriority !== undefined) {
-            html += `<div class="nd-section"><h3>Internal priority</h3>`;
-            html += `<div class="nd-subtitle" style="margin-bottom: 8px;">Every internal node of this module is assigned <code>priority: ${esc(String(m.internalPriority))}</code> at build time (unless it sets its own <code>priority</code> explicitly). Lower number fires first: <code>-1</code> is interrupt-level (preempts the main chain), default <code>0</code> is the main chain, <code>1+</code> is late / post-main.</div>`;
             html += `</div>`;
         }
 

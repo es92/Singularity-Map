@@ -434,43 +434,6 @@ function _isModulePending(sel, mod) {
     return conds.some(c => matchCondition(sel, c));
 }
 
-// "Actively pending" = module pending AND at least one internal is
-// currently askable (passes its own activateWhen + hideWhen). A module
-// can be in a pending state but have no internals askable right now
-// (e.g. waiting on a derived dim from another module); in that case
-// it doesn't block external nodes.
-//
-// Uses a shallow activation check (activateWhen + hideWhen only, no
-// priority-gate, no isNodeVisible recursion) to avoid infinite loops
-// when `isNodeActivatedByRules` calls back here.
-function _isModuleActivelyPending(sel, mod) {
-    if (!_isModulePending(sel, mod)) return false;
-    for (const nid of (mod.nodeIds || [])) {
-        const n = NODE_MAP[nid];
-        if (!n || n.derived) continue;
-        if (sel[n.id] !== undefined) continue;
-        if (n.activateWhen && !n.activateWhen.some(c => matchCondition(sel, c))) continue;
-        if (n.hideWhen && n.hideWhen.some(c => matchCondition(sel, c))) continue;
-        return true;
-    }
-    return false;
-}
-
-// Public helper: is ANY module currently mid-walk? Used to gate outcome
-// template matching so outcomes can't fire while the user is still inside
-// a module's internal question sequence (e.g. mid-escape, mid-decel). An
-// outcome's `reachable` clause may incidentally match with partial sel
-// (alignment='failed' + containment='contained' matches 'the-ruin' before
-// the escape pipeline even begins); this guard defers that match until
-// the active module commits its completionMarker and is no longer
-// actively pending.
-function anyModuleActivelyPending(sel) {
-    for (const mod of MODULES) {
-        if (_isModuleActivelyPending(sel, mod)) return true;
-    }
-    return false;
-}
-
 // Generic module reducer derived from the module's exitPlan. Replaces
 // the ten hand-written `*Reduce` functions that used to live in
 // graph.js (decelReduce, escapeReduce, whoBenefitsReduce, …). For a
@@ -517,22 +480,21 @@ function reduceFromExitPlan(mod, local) {
 }
 
 // Base askability predicate — node is unanswered and its activate/hide
-// gates pass. Shared between the runtime priority gate (_shallowAskable,
-// below), static-analysis call sites in graph-io (module DFS internal
-// pick), and flow-propagation (slot priority pick) so all three see
-// the same gate definition.
+// gates pass. Shared by every askability call site:
+//   * static-analysis (graph-io's DFS internal pick)
+//   * flow-propagation's _slotPickPriority + flowNext
+//   * runtime UI (via isNodeVisible / findNextQuestion's flowNext)
 //
 // Two checks are NOT included here, by design:
 //   * has-an-enabled-edge — flow-propagation's slot priority pick
 //     mirrors the user-facing engine, which surfaces a question even
-//     if every edge is disabled (the user sees grey buttons). The
-//     runtime priority gate (_shallowAskable) and graph-io's DFS
-//     pick do want the check; they add it inline below.
-//   * module-completed short-circuit — runtime-only concern. The DFS
-//     in graph-io terminates the moment the completion marker fires
-//     so module-internals can't be re-asked from inside its walk;
-//     flow-propagation's _slotPickPriority handles completed modules
-//     at the slot level by returning Infinity.
+//     if every edge is disabled (the user sees greyed buttons).
+//     graph-io's DFS pick + flowNext's internal pick add it inline
+//     where they want the strictness.
+//   * module-completed short-circuit — runtime-only concern handled
+//     at the slot level by flow-propagation (returns Infinity for
+//     completed modules) and by graph-io's DFS terminating on the
+//     completion marker.
 function isAskableInternal(sel, n) {
     if (!n || n.derived) return false;
     if (sel[n.id] !== undefined) return false;
@@ -541,67 +503,19 @@ function isAskableInternal(sel, n) {
     return true;
 }
 
-// Runtime priority-gate askability: isAskableInternal PLUS at-least-one
-// enabled edge PLUS the module-completed short-circuit. Without the
-// module-done check, internals whose answers got evicted to flavor on
-// module exit (e.g. every decel_Nmo_progress after the rival exit's
-// collapseToFlavor.move) keep looking askable — their own activateWhen
-// still matches against live sel dims (gov_action, capability) — and
-// their module-level internalPriority blocks main-chain modules forever.
-// NO recursion into isNodeVisible / isNodeActivatedByRules (those would
-// create mutual recursion through the priority gate).
-function _shallowAskable(sel, n) {
-    if (!isAskableInternal(sel, n)) return false;
-    if (!n.edges || n.edges.length === 0) return false;
-    if (!n.edges.some(e => !isEdgeDisabled(sel, n, e))) return false;
-    if (n.module) {
-        const mod = MODULE_MAP[n.module];
-        if (mod) {
-            const marker = _moduleCompletionMarkerOf(mod);
-            if (_isModuleDone(sel, marker)) return false;
-        }
-    }
-    return true;
-}
-
-function isNodeActivatedByRules(sel, node) {
-    if (!node.activateWhen) return true;
-    if (!node.activateWhen.some(c => matchCondition(sel, c))) return false;
-
-    const pri = node.priority || 0;
-    const imAModuleInternal = !!node.module;
-
-    // Priority-first scheduling, ties → modules:
-    //   - Defer if ANY shallow-askable node has STRICTLY LOWER priority
-    //     number (lower pri# = fires first).
-    //   - At the same priority, a flat (non-module) node defers to any
-    //     active-module-internal (tie goes to modules). Module walks
-    //     stay contiguous at their priority level because nothing inside
-    //     the module has a lower priority, and same-priority externals
-    //     defer to the module.
-    //
-    // Uses shallow askability (no isNodeVisible recursion) to avoid
-    // mutual recursion through this priority gate.
-    for (const mid of NODES) {
-        if (mid === node) continue;
-        if (!_shallowAskable(sel, mid)) continue;
-        const midPri = mid.priority || 0;
-        if (midPri < pri) return false;
-        if (midPri === pri && !imAModuleInternal && mid.module) {
-            const otherMod = MODULE_MAP[mid.module];
-            if (otherMod && _isModulePending(sel, otherMod)) return false;
-        }
-    }
-    return true;
-}
-
+// Pure activate/hide check — no priority gating, no askability. Used
+// by isNodeVisible and resolvedState to decide whether a node's
+// preconditions are met under the given sel. Navigation order
+// (which node fires next) lives entirely in FLOW_DAG via
+// FlowPropagation.flowNext.
 function isNodeActivated(sel, node) {
     if (node.hideWhen) {
         for (const cond of node.hideWhen) {
             if (matchCondition(sel, cond)) return false;
         }
     }
-    return isNodeActivatedByRules(sel, node);
+    if (!node.activateWhen) return true;
+    return node.activateWhen.some(c => matchCondition(sel, c));
 }
 
 function isNodeVisible(sel, node) {
@@ -910,30 +824,6 @@ function stackHas(stack, nodeId) {
     return stack.some(e => e.nodeId === nodeId);
 }
 
-function displayOrder(stack) {
-    const state = currentState(stack);
-    const answered = [];
-    const answeredSet = new Set();
-
-    for (const entry of stack) {
-        if (!entry.nodeId) continue;
-        const node = NODE_MAP[entry.nodeId];
-        if (!node || node.derived) continue;
-        answered.push(node);
-        answeredSet.add(entry.nodeId);
-    }
-
-    const unanswered = [];
-    for (const node of NODES) {
-        if (node.derived || !isNodeVisible(state, node) || answeredSet.has(node.id)) continue;
-        unanswered.push(node);
-    }
-
-    return answered.concat(unanswered);
-}
-
-// Legacy wrappers kept for validator internals
-
 // ════════════════════════════════════════════════════════
 // Narrative resolution
 // ════════════════════════════════════════════════════════
@@ -1007,21 +897,21 @@ function matchContextWhen(state, cond) {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { NODES, NODE_MAP, MODULES, MODULE_MAP,
-        matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeActivatedByRules, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
+        matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         isAskableInternal,
         applyEdgeBlocks, cleanSelection, resolvedState, resolvedStateWithFlavor,
-        templateMatches, templatePartialMatch, anyModuleActivelyPending, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
+        templateMatches, templatePartialMatch, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
         isModuleDone: _isModuleDone, isModulePending: _isModulePending,
-        createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas, displayOrder };
+        createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas };
 }
 if (typeof window !== 'undefined') {
     window.Engine = { NODES, NODE_MAP, MODULES, MODULE_MAP,
-        matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
+        matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         isAskableInternal,
         applyEdgeBlocks, cleanSelection, resolvedState, resolvedStateWithFlavor,
-        templateMatches, templatePartialMatch, anyModuleActivelyPending, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
+        templateMatches, templatePartialMatch, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
         isModuleDone: _isModuleDone, isModulePending: _isModulePending,
-        createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas, displayOrder };
+        createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas };
 }
 
 })();

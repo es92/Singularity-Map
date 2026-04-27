@@ -973,7 +973,7 @@
     // shape to feed back into another reachability call for chained
     // propagation through the DAG.
     function reachableFullSelsFromInputs(slot, inputSels) {
-        const empty = { acceptedInputs: [], outputs: [], truncated: false };
+        const empty = { acceptedInputs: [], outputs: [], stuckInputs: [], truncated: false };
         if (!slot || !Array.isArray(inputSels)) return empty;
         if (slot.kind === 'deadend') return empty;
         if (!window.Engine || !window.Engine.matchCondition) return empty;
@@ -996,6 +996,7 @@
             return {
                 acceptedInputs: [...acceptedByKey.values()],
                 outputs: [],
+                stuckInputs: [],
                 truncated: false,
             };
         }
@@ -1038,6 +1039,15 @@
         //
         // Together these turn a 1.26M × O(dim×log(dim)) loop into a
         // ~50K × O(dim) loop — the dominant cost on escape_late.
+        // Stuck inputs: accepted sels whose bucketKey isn't in
+        // `byInput` are ones the slot's gate let through but whose
+        // internal DFS / edge-enable lookup yielded zero output rows.
+        // The runtime engine would route to this slot, render its UI,
+        // and then have nothing to advance into — a true stuck state.
+        // Captured here so validate.js can surface them as a separate
+        // diagnostic. If `byInput` is null (slot has no write rows at
+        // all), every accepted input is stuck.
+        const stuckInputs = [];
         const outByKey = new Map();
         if (byInput) {
             const writeDims = (writeResult && Array.isArray(writeResult.dims))
@@ -1053,7 +1063,7 @@
             const repBucketSel = new Map();  // bk → sel restricted to readDims
             for (const sel of acceptedByKey.values()) {
                 const bk = _readSelKey(sel, reads);
-                if (!byInput.has(bk)) continue;
+                if (!byInput.has(bk)) { stuckInputs.push(sel); continue; }
 
                 if (!repBucketSel.has(bk)) {
                     const bs = {};
@@ -1155,9 +1165,14 @@
             }
         }
 
+        if (!byInput) {
+            for (const sel of acceptedByKey.values()) stuckInputs.push(sel);
+        }
+
         return {
             acceptedInputs: [...acceptedByKey.values()],
             outputs: [...outByKey.values()],
+            stuckInputs,
             truncated,
         };
     }

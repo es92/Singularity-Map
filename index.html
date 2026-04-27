@@ -911,6 +911,7 @@
     <script src="graph-io.js"></script>
     <script src="timeline-animator.js"></script>
     <script src="nodes.js"></script>
+    <script src="flow-propagation.js"></script>
     <script src="explore.js"></script>
     <script>
     (function () {
@@ -2061,126 +2062,83 @@
                 // Narrative-match view: sel + flavor so edge narrativeVariants
                 // can observe flavor-moved dims (e.g., stall_recovery='mild').
                 const narrSel = Engine.narrativeState(stack);
-                // Outcomes are terminal (SPEC.md): once any template matches,
-                // the path is complete and we stop asking questions. The render
-                // layer reads nextQ==null as "show the matched outcome".
-                // Match against sel+flavor so module-internal dims exported only
-                // for outcome routing (via `collapseToFlavor.move`) remain matchable.
-                //
-                // Guard: never let an outcome fire while a module is still
-                // mid-walk (pending + has askable internals). A template's
-                // `reachable` clause may incidentally match partial state
-                // mid-module (e.g. alignment='failed' + containment='contained'
-                // can match 'the-ruin' before the escape pipeline walks), which
-                // would terminate the path prematurely. `anyModuleActivelyPending`
-                // defers until the active module commits its completionMarker.
                 const eff = Engine.resolvedStateWithFlavor(sel, Engine.currentFlavor(stack));
-                if (!Engine.anyModuleActivelyPending(sel)) {
+
+                // FLOW_DAG-driven navigation (single source of truth, shared
+                // with validate.js / explore / precompute-reachability):
+                //
+                //   * 'question' — render that node; outcomes deferred.
+                //   * 'stuck'    — FLOW_DAG slot owns the sel but nothing's
+                //                  askable (validate.js Phase 6 surfaces
+                //                  this; treat as no-question and let the
+                //                  outcome zone stay empty).
+                //   * 'open'     — no slot owns the sel; outcome matching
+                //                  is allowed.
+                const flow = window.FlowPropagation.flowNext(sel);
+                if (flow.kind === 'open') {
                     for (const t of templatesList) {
                         if (Engine.templateMatches(t, eff)) return null;
                     }
+                    return null;
                 }
-                for (const node of Engine.displayOrder(stack)) {
-                    const locked = Engine.isNodeLocked(sel, node);
-                    if (locked !== null) {
-                        if (!Engine.stackHas(stack, node.id)) {
-                            const options = node.edges.map(v => {
-                                const disabled = Engine.isEdgeDisabled(sel, node, v);
-                                const reason = Engine.getEdgeDisabledReason(sel, node, v);
-                                const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, narrSel) : null;
-                                return {
-                                    value: v.id, label: v.label, shortLabel: v.shortLabel,
-                                    answerLabel: (variant && variant.answerLabel) || v.answerLabel || v.label,
-                                    answerDesc: (variant && variant.answerDesc) || v.answerDesc || '',
-                                    shortAnswerLabel: (variant && variant.shortAnswerLabel) || v.shortAnswerLabel || null,
-                                    shortAnswerDesc: (variant && variant.shortAnswerDesc) || v.shortAnswerDesc || null,
-                                    nodeId: node.id,
-                                    reachable: !disabled,
-                                    disabled,
-                                    disabledReason: reason,
-                                };
-                            });
-                            return { node, options, isForced: true, forcedValue: locked };
-                        }
-                        continue;
-                    }
-                    if (Engine.stackHas(stack, node.id)) continue;
-                    if (sel[node.id]) continue;
-                    const options = node.edges
-                        .map(v => {
-                            const disabled = Engine.isEdgeDisabled(sel, node, v);
-                            const reason = Engine.getEdgeDisabledReason(sel, node, v);
-                            const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, narrSel) : null;
-                            return {
-                                value: v.id,
-                                label: v.label,
-                                shortLabel: v.shortLabel,
-                                answerLabel: (variant && variant.answerLabel) || v.answerLabel || v.label,
-                                answerDesc: (variant && variant.answerDesc) || v.answerDesc || '',
-                                shortAnswerLabel: (variant && variant.shortAnswerLabel) || v.shortAnswerLabel || null,
-                                shortAnswerDesc: (variant && variant.shortAnswerDesc) || v.shortAnswerDesc || null,
-                                nodeId: node.id,
-                                reachable: disabled ? false : wouldReachOutcome(node.id, v.id),
-                                disabled,
-                                disabledReason: reason,
-                            };
-                        });
-                    if (options.some(o => !o.disabled)) return { node, options };
+                if (flow.kind === 'stuck') return null;
+
+                const node = flow.node;
+
+                // Forced-pick: every other edge of the next node is currently
+                // disabled, so isNodeLocked auto-resolves to a single value.
+                // The UI surfaces it as a one-option "Continue" question;
+                // the engine commits the locked answer instead of branching.
+                const locked = Engine.isNodeLocked(sel, node);
+                if (locked !== null && !Engine.stackHas(stack, node.id)) {
+                    const options = node.edges.map(v => {
+                        const disabled = Engine.isEdgeDisabled(sel, node, v);
+                        const reason = Engine.getEdgeDisabledReason(sel, node, v);
+                        const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, narrSel) : null;
+                        return {
+                            value: v.id, label: v.label, shortLabel: v.shortLabel,
+                            answerLabel: (variant && variant.answerLabel) || v.answerLabel || v.label,
+                            answerDesc: (variant && variant.answerDesc) || v.answerDesc || '',
+                            shortAnswerLabel: (variant && variant.shortAnswerLabel) || v.shortAnswerLabel || null,
+                            shortAnswerDesc: (variant && variant.shortAnswerDesc) || v.shortAnswerDesc || null,
+                            nodeId: node.id,
+                            reachable: !disabled,
+                            disabled,
+                            disabledReason: reason,
+                        };
+                    });
+                    return { node, options, isForced: true, forcedValue: locked };
                 }
-                return null;
+
+                const options = node.edges.map(v => {
+                    const disabled = Engine.isEdgeDisabled(sel, node, v);
+                    const reason = Engine.getEdgeDisabledReason(sel, node, v);
+                    const variant = v.narrativeVariants ? resolveNarrativeVariant(v.narrativeVariants, narrSel) : null;
+                    return {
+                        value: v.id,
+                        label: v.label,
+                        shortLabel: v.shortLabel,
+                        answerLabel: (variant && variant.answerLabel) || v.answerLabel || v.label,
+                        answerDesc: (variant && variant.answerDesc) || v.answerDesc || '',
+                        shortAnswerLabel: (variant && variant.shortAnswerLabel) || v.shortAnswerLabel || null,
+                        shortAnswerDesc: (variant && variant.shortAnswerDesc) || v.shortAnswerDesc || null,
+                        nodeId: node.id,
+                        reachable: disabled ? false : wouldReachOutcome(node.id, v.id),
+                        disabled,
+                        disabledReason: reason,
+                    };
+                });
+                return { node, options };
             }
 
             function buildTimelineEvents(nextQ) {
                 const sel = Engine.currentState(stack);
                 const narrSel = Engine.narrativeState(stack);
                 const events = [];
-                let foundFrontier = false;
 
-                for (const node of Engine.displayOrder(stack)) {
-                    if (!fullQuestions && foundFrontier) break;
+                const renderedIds = new Set();
 
-                    const locked = Engine.isNodeLocked(sel, node);
-                    const inStack = Engine.stackHas(stack, node.id);
-
-                    if (nextQ && nextQ.isForced && node.id === nextQ.node.id) {
-                        if (!fullQuestions) {
-                            foundFrontier = true;
-                            // Show all options (including disabled siblings) so
-                            // the forced case reads the same as a 2+ option row
-                            // — just with only one pill clickable.
-                            const siblings = nextQ.options.map(o => ({
-                                value: o.value, label: o.label, shortLabel: o.shortLabel,
-                                nodeId: o.nodeId,
-                                reachable: o.value === nextQ.forcedValue ? true : o.reachable,
-                                disabled: o.value === nextQ.forcedValue ? false : o.disabled,
-                            }));
-                            events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: node.stage, year: '', paramLabel: '', nodeLabel: node.label, nodeId: node.id, selectedValue: null, siblings, isFrontier: true });
-                        }
-                        continue;
-                    }
-
-                    if (locked !== null && !inStack) continue;
-                    const stackEntry = inStack && stack.find(e => e.nodeId === node.id);
-                    // Prefer the user's raw pick (stackEntry) over sel — sel may
-                    // have been rewritten by collapseToFlavor (e.g., capability
-                    // 'stalls' → 'singularity'). Timeline should show what the
-                    // user actually answered.
-                    const value = (stackEntry && stackEntry.edgeId) || sel[node.id] || locked;
-                    const isLockedNode = locked !== null && !stackEntry;
-
-                    if (!value) {
-                        if (!fullQuestions && nextQ && nextQ.node.id === node.id) {
-                            foundFrontier = true;
-                            const siblings = nextQ.options.map(o => ({
-                                value: o.value, label: o.label, shortLabel: o.shortLabel,
-                                nodeId: o.nodeId, reachable: o.reachable,
-                                disabled: o.disabled,
-                            }));
-                            events.push({ headline: '', description: '', durationMin: 0, durationMax: 0, stage: node.stage, year: '', paramLabel: '', nodeLabel: node.label, nodeId: node.id, selectedValue: null, siblings, isFrontier: true });
-                        }
-                        continue;
-                    }
-
+                const pushAnswered = (node, value, isLockedNode) => {
                     const narr = nodeNarrativeFor(node.id, value, narrSel);
                     const nodeEdge = node.edges.find(v => v.id === value);
                     const paramLabel = nodeEdge ? nodeEdge.label : value;
@@ -2197,7 +2155,60 @@
                         nodeLabel: node.label, nodeId: node.id, selectedValue: value,
                         siblings, isFrontier: false, isLocked: isLockedNode
                     });
+                };
+
+                // 1) Stack-order answered events. Prefer the user's raw pick
+                //    (stackEntry.edgeId) over sel — sel may have been rewritten
+                //    by collapseToFlavor (e.g., capability 'stalls' →
+                //    'singularity'). Timeline should show what the user
+                //    actually answered.
+                for (const entry of stack) {
+                    if (!entry.nodeId) continue;
+                    const node = Engine.NODE_MAP[entry.nodeId];
+                    if (!node || node.derived) continue;
+                    if (renderedIds.has(node.id)) continue;
+                    const value = entry.edgeId || sel[node.id];
+                    if (!value) continue;
+                    renderedIds.add(node.id);
+                    pushAnswered(node, value, false);
                 }
+
+                // 2) Non-stack nodes whose value was set by an upstream
+                //    collapseToFlavor.set / exitPlan.set write — these are
+                //    real "answered" events that just didn't come from a
+                //    direct user click. Iterated in NODES order for stable
+                //    visual placement.
+                for (const node of Engine.NODES) {
+                    if (node.derived) continue;
+                    if (renderedIds.has(node.id)) continue;
+                    if (sel[node.id] === undefined) continue;
+                    if (Engine.isNodeLocked(sel, node) !== null) continue;
+                    renderedIds.add(node.id);
+                    pushAnswered(node, sel[node.id], false);
+                }
+
+                // 3) Compact mode (!fullQuestions): render the frontier inline
+                //    as a final pill-row event. Full mode renders the frontier
+                //    separately via the question card.
+                if (!fullQuestions && nextQ) {
+                    const node = nextQ.node;
+                    const siblings = nextQ.options.map(o => ({
+                        value: o.value, label: o.label, shortLabel: o.shortLabel,
+                        nodeId: o.nodeId,
+                        reachable: nextQ.isForced
+                            ? (o.value === nextQ.forcedValue ? true : o.reachable)
+                            : o.reachable,
+                        disabled: nextQ.isForced
+                            ? (o.value === nextQ.forcedValue ? false : o.disabled)
+                            : o.disabled,
+                    }));
+                    events.push({
+                        headline: '', description: '', durationMin: 0, durationMax: 0,
+                        stage: node.stage, year: '', paramLabel: '', nodeLabel: node.label,
+                        nodeId: node.id, selectedValue: null, siblings, isFrontier: true,
+                    });
+                }
+
                 return events;
             }
 

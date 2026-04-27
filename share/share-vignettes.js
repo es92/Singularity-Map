@@ -240,20 +240,21 @@
         ]);
 
         const vignettes = [];
-        for (const node of Engine.displayOrder(stack)) {
+        const seen = new Set();
+        const collectVignette = (node) => {
             const value = sel[node.id];
-            if (!value) continue;
+            if (!value) return;
             const edge = node.edges && node.edges.find(e => e.id === value);
-            if (!edge) continue;
+            if (!edge) return;
             let pv = null;
             if (edge.narrativeVariants && sel) {
                 const variant = resolveNarrativeVariant(edge.narrativeVariants, sel);
                 if (variant && variant.personalVignette) pv = variant.personalVignette;
             }
             if (!pv && edge.personalVignette) pv = edge.personalVignette;
-            if (!pv) continue;
+            if (!pv) return;
             const text = resolvePersonalVignetteText(pv, ctx);
-            if (!text) continue;
+            if (!text) return;
 
             const dateInfo = dateMap && dateMap[node.id] ? dateMap[node.id] : null;
             vignettes.push({
@@ -262,6 +263,24 @@
                 dateInfo,
                 text: tokenReplace(text),
             });
+        };
+        // Stack-order first (chronological), then NODES-order for any extras
+        // set via collapseToFlavor / exitPlan writes the user didn't directly
+        // pick.
+        for (const entry of stack) {
+            if (!entry.nodeId) continue;
+            const node = Engine.NODE_MAP[entry.nodeId];
+            if (!node || node.derived) continue;
+            if (seen.has(node.id)) continue;
+            seen.add(node.id);
+            collectVignette(node);
+        }
+        for (const node of Engine.NODES) {
+            if (node.derived) continue;
+            if (seen.has(node.id)) continue;
+            if (sel[node.id] === undefined) continue;
+            seen.add(node.id);
+            collectVignette(node);
         }
 
         const latePersonalNodes = new Set(['power_use']);
@@ -307,13 +326,8 @@
         const Engine = window.Engine;
         const sel = Engine.currentState(stack);
         const events = [];
-        for (const node of Engine.displayOrder(stack)) {
-            const locked = Engine.isNodeLocked(sel, node);
-            const inStack = Engine.stackHas(stack, node.id);
-            if (locked !== null && !inStack) continue;
-            const stackEntry = inStack && stack.find(e => e.nodeId === node.id);
-            const value = sel[node.id] || locked || (stackEntry && stackEntry.edgeId);
-            if (!value) continue;
+        const seen = new Set();
+        const pushEvent = (node, value) => {
             const narr = nodeNarrativeFor(node.id, value, sel);
             events.push({
                 nodeId: node.id,
@@ -321,6 +335,29 @@
                 durationMax: narr.durationMax != null ? narr.durationMax : null,
                 stage: narr.stage || node.stage,
             });
+        };
+        // Stack-order first (chronological).
+        for (const entry of stack) {
+            if (!entry.nodeId) continue;
+            const node = Engine.NODE_MAP[entry.nodeId];
+            if (!node || node.derived) continue;
+            if (seen.has(node.id)) continue;
+            const value = entry.edgeId || sel[node.id];
+            if (!value) continue;
+            seen.add(node.id);
+            pushEvent(node, value);
+        }
+        // NODES-order for any non-stack nodes whose value was set by an
+        // upstream collapseToFlavor / exitPlan write. Skip locked auto-fills
+        // (matches the legacy displayOrder behavior — locked-not-in-stack
+        // never rendered).
+        for (const node of Engine.NODES) {
+            if (node.derived) continue;
+            if (seen.has(node.id)) continue;
+            if (sel[node.id] === undefined) continue;
+            if (Engine.isNodeLocked(sel, node) !== null) continue;
+            seen.add(node.id);
+            pushEvent(node, sel[node.id]);
         }
         return events;
     }

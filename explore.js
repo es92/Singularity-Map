@@ -601,7 +601,6 @@
                     id: m.id, nodeIds: m.nodeIds,
                     completionMarker: m.completionMarker,
                     exitPlan: m.exitPlan,
-                    internalPriority: m.internalPriority,
                 })),
                 flow: { nodes: FLOW.nodes, edges: FLOW.edges },
                 templates: tplDigest,

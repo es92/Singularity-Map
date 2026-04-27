@@ -8,6 +8,26 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const { NODES, NODE_MAP } = require('../graph.js');
 const Engine = require('../engine.js');
 
+// Shim window so the IIFE-style modules (graph-io.js, nodes.js,
+// flow-propagation.js) can attach to it. Mirrors validate.js /
+// precompute-reachability.js so flowNext() is the same primitive used by
+// the runtime UI and the static-analysis pipeline.
+const ROOT = path.join(__dirname, '..');
+global.window = {
+    location: { search: '', hash: '' },
+    Graph: require('../graph.js'),
+    Engine,
+};
+global.document = {
+    createElement: () => ({ style: {}, classList: { add: () => {}, remove: () => {} }, appendChild: () => {} }),
+    body: { appendChild: () => {} },
+    addEventListener: () => {},
+};
+new Function('window', fs.readFileSync(path.join(ROOT, 'graph-io.js'), 'utf8'))(global.window);
+new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 'utf8'))(global.window, global.document);
+new Function('window', fs.readFileSync(path.join(ROOT, 'flow-propagation.js'), 'utf8'))(global.window);
+const FlowPropagation = global.window.FlowPropagation;
+
 const outcomes = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'outcomes.json'), 'utf8'));
 const narrative = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'narrative.json'), 'utf8'));
 const personalData = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'personal.json'), 'utf8'));
@@ -297,14 +317,14 @@ function resolveTemplate(templateId, state) {
 // ── DAG walking ──
 
 function getNextNode(sel) {
-    for (const node of NODES) {
-        if (node.derived) continue;
-        if (!Engine.isNodeVisible(sel, node)) continue;
-        if (Engine.isNodeLocked(sel, node) !== null) continue;
-        if (sel[node.id]) continue;
-        return node;
-    }
-    return null;
+    // FLOW_DAG-driven: same primitive the runtime UI uses
+    // (index.html/findNextQuestion). Skip locked auto-fills since the
+    // persona-eval loop only asks the LLM about real branching choices.
+    const flow = FlowPropagation.flowNext(sel);
+    if (flow.kind !== 'question') return null;
+    const node = flow.node;
+    if (Engine.isNodeLocked(sel, node) !== null) return null;
+    return node;
 }
 
 async function simulatePath(persona, mode, { deterministic = false } = {}) {

@@ -125,9 +125,9 @@ const NODES = [
       ] },
     // The unified knowledge_rate and physical_rate nodes (defined near the
     // end of NODES, after who_benefits) serve plateau, auto-shallow, and
-    // main singularity paths. On plateau, they fire here in displayOrder
-    // after plateau_benefit_distribution — activation is driven entirely
-    // by the node's multi-path activateWhen, not position.
+    // main singularity paths. On plateau, they fire after
+    // plateau_benefit_distribution per FLOW_DAG topology — activation
+    // is driven entirely by the node's multi-path activateWhen.
     { id: 'agi_threshold', label: 'Human-Competitive AI', stage: 1,
       activateWhen: [{ capability: ['singularity'] }],
       // Answering agi_threshold always sets a 1-bit sel marker `agi_happens`
@@ -1818,12 +1818,9 @@ const DECEL_MODULE = {
     //     for snapshot tests and possible future narrative use.
     internalMarkers: ['rival_emerges', 'governance', 'decel_align_progress'],
     nodeIds: DECEL_MODULE_NODE_IDS,
-    // Interrupt-level precedence: once gov_action=decelerate is set, every
-    // decel internal preempts same-priority main-chain questions
-    // (proliferation_control, etc.) so the decel pipeline runs
-    // contiguously. Applied to each internal node's `priority` in the
-    // post-build loop at the bottom of this file.
-    internalPriority: -1,
+    // Module-internal contiguity is now enforced by FLOW_DAG navigation
+    // (FlowPropagation.flowNext): once a module owns the sel, only its
+    // own internals are surfaced until completionMarker fires.
     // Derived 2D (action × progress) view of DECEL_EXIT_CELLS. Exposed
     // for explore.js / module-audit.js — which still drive their
     // "atomic outcome" synthetic nodes off the legacy reducerTable
@@ -2137,12 +2134,9 @@ const ESCAPE_MODULE = {
     writes: ESCAPE_WRITES,
     nodeIds: ESCAPE_NODE_IDS,
     completionMarker: 'escape_set',
-    // Interrupt-level precedence: once an escape path is triggered, every
-    // escape internal preempts same-priority main-chain questions
-    // (proliferation_control, etc.) so the escape pipeline runs
-    // contiguously. Applied to each internal node's `priority` in the
-    // post-build loop at the bottom of this file.
-    internalPriority: -1,
+    // Module-internal contiguity is enforced by FLOW_DAG navigation
+    // (FlowPropagation.flowNext): once escape owns the sel, only escape
+    // internals are surfaced until escape_set fires.
     get exitPlan() { return buildEscapeExitPlan(); },
 };
 
@@ -3070,9 +3064,9 @@ const PROLIFERATION_MODULE = {
     // itself, which gates only on `capability: ['asi']` and uses
     // edge-level disabledWhen to constrain the answer space (see
     // proliferation_control above). Precedence against sibling
-    // interrupt modules (decel / escape) is handled by
-    // `internalPriority: -1` on those modules, separate from this
-    // gate.
+    // modules (decel / escape) is handled by FLOW_DAG topology
+    // (FlowPropagation.flowNext picks the first slot that owns the
+    // sel), separate from this gate.
     activateWhen: [
         { capability: ['asi'], alignment_set: ['yes'], ai_goals: { not: ['benevolent'] } },
     ],
@@ -3554,13 +3548,9 @@ const WAR_MODULE = {
     writes: WAR_WRITES,
     nodeIds: WAR_NODE_IDS,
     completionMarker: 'war_set',
-    // Interrupt-level precedence — same treatment as decel / escape. Once
-    // intent=escalation fires the war pipeline, each war internal preempts
-    // same-priority main-chain questions (who_benefits, rollout internals)
-    // so the war walk runs contiguously. Propagated to each internal node's
-    // `priority` at build time (post-MODULES loop at the bottom of this
-    // file).
-    internalPriority: -1,
+    // Module-internal contiguity is enforced by FLOW_DAG navigation
+    // (FlowPropagation.flowNext): once war owns the sel, only war
+    // internals are surfaced until war_set fires.
     get exitPlan() { return buildWarExitPlan(); },
 };
 
@@ -3728,23 +3718,6 @@ for (const m of MODULES) {
             throw new Error(`Node "${nid}" claimed by both modules "${n.module}" and "${m.id}"`);
         }
         n.module = m.id;
-    }
-}
-
-// Propagate module-level `internalPriority` onto every internal node
-// that doesn't already have an explicit `priority`. Used by DECEL_MODULE
-// and ESCAPE_MODULE to mark their internals as interrupt-level (pri=-1),
-// ensuring mid-pipeline questions preempt same-priority main-chain
-// modules (proliferation_control, intent_loop internals, etc.).
-// Explicit per-node `priority` always wins — the propagation is a
-// convenience, not an override.
-for (const m of MODULES) {
-    if (m.internalPriority === undefined) continue;
-    for (const nid of (m.nodeIds || [])) {
-        const n = NODE_MAP[nid];
-        if (!n) continue;
-        if (n.priority !== undefined) continue;
-        n.priority = m.internalPriority;
     }
 }
 

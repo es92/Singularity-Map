@@ -427,7 +427,42 @@ function checkEdgeCoverage(prop) {
 }
 
 // ────────────────────────────────────────────────────────────────
-// Phase 6 — Outcome reachability
+// Phase 6 — Stuck inputs
+// ────────────────────────────────────────────────────────────────
+//
+// A stuck input is a sel that flow-prop pushed into a slot, the
+// slot's gate accepted, but the slot's own DFS / write table
+// produced zero output rows. At runtime this would mean: the engine
+// routes the user into the slot, renders its UI, and then has no
+// edge to take and no outcome to terminate at — a true stuck state
+// that's invisible to dead-end detection because the sel never
+// becomes a parent output (it dies inside the slot).
+//
+// Common causes:
+//   * Module entered with all internal nodes hidden, derived, or
+//     answered, but the completion marker isn't set yet.
+//   * Module entered where every askable internal has all edges
+//     blocked by `disabledWhen` for this sel.
+//   * Node slot whose every edge is blocked by `disabledWhen`.
+//
+// The fix is always at the graph-design level: tighten the slot's
+// activateWhen / hideWhen, add the missing exit transition, or
+// derive the completion marker on this path.
+
+function detectStuckInputs(prop) {
+    const errors = [];
+    for (const [slotKey, stuckSels] of prop.stuckBySlot) {
+        if (!stuckSels.length) continue;
+        const accepted = prop.acceptedBySlot.get(slotKey) || 0;
+        const samples = stuckSels.slice(0, 3).map(_selUrl);
+        errors.push(`[stuck] Slot "${slotKey}": ${fmtCount(stuckSels.length)}/${fmtCount(accepted)} accepted inputs produced zero outputs (engine would render slot with nothing to advance into)`);
+        for (const u of samples) errors.push(`           sample: ${u}`);
+    }
+    return errors;
+}
+
+// ────────────────────────────────────────────────────────────────
+// Phase 7 — Outcome reachability
 // ────────────────────────────────────────────────────────────────
 //
 // Every outcome template should have at least one path that reaches
@@ -504,10 +539,16 @@ if (!QUICK) {
     console.log(`  ${edgeErrors.length === 0 ? 'OK' : `FAIL (${edgeErrors.length})`}  ${Date.now() - t5}ms`);
     sections.push({ name: 'edge coverage', errors: edgeErrors });
 
-    console.log('\nPhase 6: outcome reachability');
+    console.log('\nPhase 6: stuck inputs');
     const t6 = Date.now();
+    const stuckErrors = detectStuckInputs(prop);
+    console.log(`  ${stuckErrors.length === 0 ? 'OK' : `FAIL (${stuckErrors.length})`}  ${Date.now() - t6}ms`);
+    sections.push({ name: 'stuck inputs', errors: stuckErrors });
+
+    console.log('\nPhase 7: outcome reachability');
+    const t7 = Date.now();
     const outcomeErrors = checkOutcomeReach(prop);
-    console.log(`  ${outcomeErrors.length === 0 ? 'OK' : `FAIL (${outcomeErrors.length})`}  ${Date.now() - t6}ms`);
+    console.log(`  ${outcomeErrors.length === 0 ? 'OK' : `FAIL (${outcomeErrors.length})`}  ${Date.now() - t7}ms`);
     sections.push({ name: 'outcome reachability', errors: outcomeErrors });
 }
 
