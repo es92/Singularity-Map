@@ -865,7 +865,30 @@ const NODES = [
           requires: { proliferation_control: ['deny_rivals', 'secure_access'] }
         },
         { id: 'leaks_rivals', label: 'Leaks to rivals', disabledWhen: [{ proliferation_control: ['none'], reason: 'The technology is already openly available — there are no restrictions to leak past' }] },
-        { id: 'leaks_public', label: 'Leaks publicly' }
+        { id: 'leaks_public', label: 'Leaks publicly',
+          // Mid-module bookkeeping: secure_access becomes invalid the
+          // moment distribution flips to open (per its own disabledWhen).
+          // All leaks_public paths flip distribution to open eventually
+          // — at module exit on alignment≠robust (LEAKED_OPEN_UNROBUST),
+          // or one slot later via proliferation_alignment on alignment
+          // =robust (LEAKED_OPEN). Evict proliferation_control=secure_access
+          // here so the post-push sel doesn't carry a stale {distribution
+          // =open, proliferation_control=secure_access} pair on the
+          // alignment=robust path (where the module hasn't exited yet
+          // and proliferation_control remains in sel until the exit
+          // tuple's auto-move fires on the proliferation_alignment edge).
+          //
+          // Lives as a direct edge-level block (not in buildProliferation
+          // ExitPlan) because the module DOESN'T exit on alignment=robust
+          // here — it continues to proliferation_alignment. attachModule
+          // Reducer's auto-move list (proliferation_control, proliferation
+          // _outcome) attaches only to exit-plan tuples; this block stays
+          // out of that path. attachModuleReducer merges via existing.
+          // concat(blocks), so this block runs first.
+          collapseToFlavor: [
+            { when: { proliferation_control: ['secure_access'] }, move: ['proliferation_control'] }
+          ]
+        }
       ] },
     { id: 'proliferation_alignment', label: 'Alignment Under Open Weights', stage: 2,
       activateWhen: [
@@ -2845,12 +2868,36 @@ const CONTROL_MODULE = {
 // layer.
 //
 // External contract:
-//   * writes = all 3 internal dims + completion marker. Every internal dim
-//     is externally consumed by stage-2 and stage-3 nodes (intent.requires,
-//     block_entrants.activateWhen, alignment.deriveWhen,
-//     alignment_durability.activateWhen, containment.deriveWhen, etc.), so
-//     all stay in sel on exit. `nodeIds \ writes = ∅` means no flavor
-//     moves, same pattern as control / rollout / emergence.
+//   * writes = proliferation_alignment + completion marker + the cross-
+//     module overrides (geo_spread, distribution, alignment, containment,
+//     escape_set, post_catch, ai_goals). proliferation_control and
+//     proliferation_outcome are NOT in writes — both are mid-module-only
+//     gate readers (proliferation_control drives proliferation_outcome's
+//     activateWhen / deriveWhen / requires; proliferation_outcome drives
+//     proliferation_alignment.activateWhen). Past module exit, neither
+//     dim is read by any sel-only gate — only by outcome flavor blocks
+//     in outcomes.json (~7 references) and one containment.contextWhen
+//     entry, both of which read via fused state. So `nodeIds \ writes =
+//     { proliferation_control, proliferation_outcome }` and attachModule
+//     Reducer auto-moves both to flavor on every exit tuple. Same shape
+//     as the rollout/who_benefits flavor-move pattern.
+//
+//     proliferation_alignment STAYS in writes because ai_goals.{alien_
+//     coexistence, alien_extinction, paperclip, swarm, power_seeking}.
+//     disabledWhen all gate-read `proliferation_alignment: ['holds']` on
+//     escape paths post-PROLIFERATION exit.
+//
+//     LEAKED_OPEN explicitly sets `proliferation_outcome: 'leaks_public'`
+//     so the proliferation_control=none + alignment≠robust exit (where
+//     proliferation_outcome was only resolved via deriveWhen, never set
+//     in sel) still has a value to flavor-move at exit.
+//
+//     The proliferation_outcome.leaks_public.collapseToFlavor on the
+//     edge itself (the secure_access mid-module eviction) lives outside
+//     buildProliferationExitPlan precisely so it does NOT receive the
+//     auto-move list — it fires on the alignment=robust path where the
+//     module hasn't exited yet and proliferation_outcome must stay in
+//     sel for proliferation_alignment.activateWhen.
 //   * activateWhen mirrors proliferation_control's activateWhen verbatim —
 //     module is pending exactly while proliferation_control is askable.
 //
@@ -2865,8 +2912,8 @@ const PROLIFERATION_NODE_IDS = [
 ];
 
 const PROLIFERATION_WRITES = [
-    'proliferation_control',
-    'proliferation_outcome',
+    // proliferation_control + proliferation_outcome auto-move to flavor
+    // on every exit (nodeIds \ writes). See module-block comment above.
     'proliferation_alignment',
     'proliferation_set',
     // PROLIFERATION overrides geo_spread='multiple' on any leaked-weights
@@ -2935,7 +2982,20 @@ function buildProliferationExitPlan() {
     //   * LEAKED_OPEN_UNROBUST — open-weights leak with alignment broken.
     //     Adds the alignment/containment flip on top of LEAKED_OPEN.
     const LEAKED       = { proliferation_set: 'yes', geo_spread: 'multiple' };
-    const LEAKED_OPEN  = { ...LEAKED, distribution: 'open' };
+    // `proliferation_outcome: 'leaks_public'` is written explicitly here
+    // (not just left to deriveWhen) because proliferation_outcome and
+    // proliferation_control auto-move to flavor on every exit (per
+    // nodeIds \ writes). On the proliferation_control=none + alignment
+    // ≠robust exit, the user was never asked proliferation_outcome — its
+    // value was only resolved via deriveWhen (`proliferation_control:
+    // ['none']` → 'leaks_public'). Once auto-move evicts proliferation
+    // _control to flavor, that deriveWhen no longer fires (deriveWhen
+    // reads sel only). Writing 'leaks_public' here, then letting auto
+    // -move shuttle it sel→flavor, preserves the post-exit narrative
+    // read (containment.contextWhen, outcomes.json flavor blocks).
+    // Idempotent on every other LEAKED_OPEN/LEAKED_OPEN_UNROBUST exit
+    // (sel.proliferation_outcome='leaks_public' is already set there).
+    const LEAKED_OPEN  = { ...LEAKED, distribution: 'open', proliferation_outcome: 'leaks_public' };
     // LEAKED_OPEN_UNROBUST also flips containment back to escaped — and
     // since the loose copies of the AI inherit the same hostile goals,
     // this re-activates ESCAPE_MODULE downstream so the user gets to
@@ -3017,22 +3077,14 @@ function buildProliferationExitPlan() {
                     set: LEAKED_OPEN_UNROBUST,
                     move: LEAK_REENTRY_MOVE,
                 });
-                // secure_access becomes invalid the moment distribution
-                // flips to open (per its own disabledWhen). All
-                // leaks_public paths flip distribution to open eventually
-                // — here on alignment≠robust, downstream at
-                // proliferation_alignment on alignment=robust. Evict
-                // proliferation_control=secure_access here so the
-                // post-push sel doesn't carry a stale {distribution=open,
-                // proliferation_control=secure_access} pair. Under the
-                // old multi-pass cleanSelection an invalidation sweep
-                // would have caught this; the explicit move keeps runtime
-                // and static analysis aligned without that machinery.
-                plan.push({
-                    nodeId: 'proliferation_outcome', edgeId: e.id,
-                    when: { proliferation_control: ['secure_access'] },
-                    move: ['proliferation_control'],
-                });
+                // (secure_access mid-module eviction is on the edge
+                // itself — see proliferation_outcome.leaks_public.
+                // collapseToFlavor in the node definition. Lives there
+                // because that block must NOT receive the auto-move
+                // list — it fires on the alignment=robust path where
+                // the module hasn't exited yet and proliferation_outcome
+                // must remain in sel for proliferation_alignment.
+                // activateWhen.)
             } else {
                 // leaks_rivals: bilateral leak — distribution stays
                 // concentrated/monopoly among labs, but tech is now in
