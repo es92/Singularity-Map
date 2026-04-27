@@ -319,36 +319,51 @@
     // node is picked using TIGHT askability (4-check + at-least-one
     // enabled edge) and lowest-priority-wins (matching what the
     // user-facing engine surfaces).
+    //
+    // Across slots, the owning slot is the one whose
+    // _slotPickPriority is lowest — the same signal
+    // FlowPropagation.run uses to route a parent's outputs to one of
+    // its children. This makes runtime (flowNext) and static analysis
+    // (run) agree on a single criterion. When two slots tie on
+    // priority, FLOW_DAG.nodes order is the tie-breaker (first wins).
+    // Because FLOW_DAG.nodes is hand-authored in topological order,
+    // this matches the parent-edge-decl tie-break in run() in every
+    // case where one parent has multiple equally-prioritized
+    // accepting children.
     function flowNext(sel) {
         const Engine = _Engine();
         const flowDag = _FlowDag();
         if (!Engine || !flowDag) return { kind: 'open' };
 
+        let bestSlot = null;
+        let bestP = Infinity;
         for (const slot of flowDag.nodes) {
             if (!slot || slot.key === 'emergence') continue;
             if (slot.kind === 'outcome' || slot.kind === 'deadend') continue;
-            if (_slotPickPriority(Engine, slot, sel) === Infinity) continue;
+            const p = _slotPickPriority(Engine, slot, sel);
+            if (p === Infinity) continue;
+            if (p < bestP) { bestSlot = slot; bestP = p; }
+        }
+        if (!bestSlot) return { kind: 'open' };
 
-            // Slot owns this sel — outcomes suppressed.
-            if (slot.kind === 'node') {
-                const n = Engine.NODE_MAP[slot.id];
-                return { kind: 'question', node: n, slotKey: slot.key };
+        if (bestSlot.kind === 'node') {
+            const n = Engine.NODE_MAP[bestSlot.id];
+            return { kind: 'question', node: n, slotKey: bestSlot.key };
+        }
+        if (bestSlot.kind === 'module') {
+            const m = Engine.MODULE_MAP[bestSlot.id];
+            if (!m) return { kind: 'stuck', slotKey: bestSlot.key };
+            let bestNode = null;
+            let bestNodeP = Infinity;
+            for (const nid of (m.nodeIds || [])) {
+                const n = Engine.NODE_MAP[nid];
+                if (!Engine.isAskableInternal(sel, n)) continue;
+                if (!n.edges || !n.edges.some(e => !Engine.isEdgeDisabled(sel, n, e))) continue;
+                const p = n.priority == null ? 0 : n.priority;
+                if (p < bestNodeP) { bestNode = n; bestNodeP = p; }
             }
-            if (slot.kind === 'module') {
-                const m = Engine.MODULE_MAP[slot.id];
-                if (!m) return { kind: 'stuck', slotKey: slot.key };
-                let best = null;
-                let bestP = Infinity;
-                for (const nid of (m.nodeIds || [])) {
-                    const n = Engine.NODE_MAP[nid];
-                    if (!Engine.isAskableInternal(sel, n)) continue;
-                    if (!n.edges || !n.edges.some(e => !Engine.isEdgeDisabled(sel, n, e))) continue;
-                    const p = n.priority == null ? 0 : n.priority;
-                    if (p < bestP) { best = n; bestP = p; }
-                }
-                if (best) return { kind: 'question', node: best, slotKey: slot.key };
-                return { kind: 'stuck', slotKey: slot.key };
-            }
+            if (bestNode) return { kind: 'question', node: bestNode, slotKey: bestSlot.key };
+            return { kind: 'stuck', slotKey: bestSlot.key };
         }
         return { kind: 'open' };
     }

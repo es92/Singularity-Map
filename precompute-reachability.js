@@ -31,7 +31,7 @@
 // non-module clicks and module-exit clicks land on outer keys,
 // mid-module clicks land on inner keys.
 //
-// Run: `npm run precompute-reach` (~8 min on a fast laptop, mostly
+// Run: `npm run precompute-reach` (~3 min on a fast laptop, mostly
 // in pass 1's `rollout` slot which fans out to ~200k inputs). Bumps
 // node's heap limit because the topo pass holds ~4.5M output sels
 // in flight. Pre-launch flags: invoke as
@@ -557,55 +557,99 @@ allEntries.sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0);
 console.log(`  ${allEntries.length} total entries sorted in ${((Date.now() - tFlat) / 1000).toFixed(1)}s.`);
 
 console.log(`\nWriting ${entries.length} files…`);
+const tWrite = Date.now();
 
 let totalGz  = 0;
 let totalKeys = 0;
 
+// ~64KB target per gzip write — large enough to amortize the JS↔stream
+// crossing (the generator-per-entry shape leaves zlib starved on a
+// single CPU at ~30%), small enough to keep the in-flight buffer trim
+// across the 4-way worker pool.
+const CHUNK_TARGET = 64 * 1024;
+
 async function writeReachFile(entry) {
     const gzPath = path.join(outDir, entry.id + '.json.gz');
     const bit = entry.bit;
+    let count = 0;
 
     // Stream JSON array shape: '[' + key1 + ',' + key2 + ... + ']'.
     // Feed straight into gzip — no raw `.json` ever materialized.
+    // Batch entries into ~CHUNK_TARGET-byte string chunks before
+    // yielding so the gzip stream consumes one Buffer per ~thousand
+    // keys instead of one per key.
     function* jsonChunks() {
-        yield '[';
+        let buf = '[';
         let first = true;
-        let count = 0;
         for (let i = 0; i < allEntries.length; i++) {
             const e = allEntries[i];
             if (!(e[1] & bit)) continue;
-            if (!first) yield ',';
-            yield JSON.stringify(e[0]);
-            first = false;
+            if (first) {
+                buf += JSON.stringify(e[0]);
+                first = false;
+            } else {
+                buf += ',' + JSON.stringify(e[0]);
+            }
             count++;
+            if (buf.length >= CHUNK_TARGET) {
+                yield buf;
+                buf = '';
+            }
         }
-        yield ']';
-        writeReachFile._lastCount = count;
+        buf += ']';
+        if (buf.length) yield buf;
     }
 
     // Readable.from(generator) defaults to objectMode:true, which
     // gzip refuses (it wants bytes). Force a byte stream by passing
     // { objectMode: false } so each yielded string is emitted as
     // a Buffer chunk on the wire.
+    //
+    // Default gzip level (6) is used: level 9 spends ~3-4× the CPU
+    // for <2% additional compression on this corpus. zlib runs on
+    // libuv worker threads, so multiple in-flight gzip streams (see
+    // `runPool` below) actually parallelize across cores.
     await pipeline(
         Readable.from(jsonChunks(), { objectMode: false }),
-        createGzip({ level: 9 }),
+        createGzip(),
         fs.createWriteStream(gzPath)
     );
     const gzSize = fs.statSync(gzPath).size;
-    return { gzSize, count: writeReachFile._lastCount };
+    return { gzSize, count };
+}
+
+// Bounded-concurrency worker pool. gzip is CPU-bound and Node releases
+// the libuv worker between chunks, so 4 in flight saturates a typical
+// laptop without thrashing.
+async function runPool(items, concurrency, fn) {
+    const results = new Array(items.length);
+    let next = 0;
+    async function worker() {
+        while (true) {
+            const i = next++;
+            if (i >= items.length) return;
+            results[i] = await fn(items[i], i);
+        }
+    }
+    const workers = [];
+    for (let w = 0; w < concurrency; w++) workers.push(worker());
+    await Promise.all(workers);
+    return results;
 }
 
 (async () => {
-    let zero = 0;
-    for (const entry of entries) {
+    const results = await runPool(entries, 4, async (entry) => {
         const { gzSize, count } = await writeReachFile(entry);
-        totalGz += gzSize;
-        totalKeys += count;
-        if (count === 0) zero++;
         console.log(`  ${entry.id}: ${count} keys, ${(gzSize / 1024).toFixed(1)}KB gz`);
+        return { entry, gzSize, count };
+    });
+    let zero = 0;
+    for (const r of results) {
+        totalGz += r.gzSize;
+        totalKeys += r.count;
+        if (r.count === 0) zero++;
     }
-    console.log(`\nDone. ${entries.length} files written.`);
+    console.log(`\nDone. ${entries.length} files written in ${((Date.now() - tWrite) / 1000).toFixed(1)}s.`);
     console.log(`  Gzipped total: ${(totalGz / 1024).toFixed(1)}KB across ${totalKeys} key emissions.`);
     if (zero > 0) {
         console.warn(`  WARN: ${zero} entries have empty reach sets — outcome unreachable`);

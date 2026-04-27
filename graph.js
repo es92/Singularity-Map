@@ -475,18 +475,31 @@ const NODES = [
           containment: { not: ['escaped'] }
         }
       ],
-      edges: [ { id: 'holds', label: 'Holds for now' }, { id: 'breaks', label: 'Breaks' } ] },
+      edges: [
+        { id: 'holds', label: 'Holds for now' },
+        // breaks ≡ "AI escaped containment because brittle alignment broke,
+        // and the path was on the accelerator (no governance brake)". Both
+        // consequences are written here so they're visible to static
+        // analysis (graph-io's reachableFullSelsFromInputs uses raw sel for
+        // bucket keys). Previously these were encoded as cross-cutting
+        // deriveWhen rules on `containment` and `gov_action`, which
+        // matched at runtime via resolvedVal but were invisible to the
+        // bucket-key projection — making these states look stuck at
+        // escape_early. Same observable behavior either way.
+        { id: 'breaks', label: 'Breaks',
+          collapseToFlavor: { set: { containment: 'escaped', gov_action: 'accelerate' } } }
+      ] },
     { id: 'containment', label: 'Containment', stage: 2, forwardKey: true,
-      // hideWhen / activateWhen / deriveWhen / disabledWhen trimmed:
-      // rules formerly keyed on external writer dims (brittle_resolution,
-      // proliferation_alignment, proliferation_outcome, post_catch) are
-      // gone. Those modules / nodes now pre-write containment directly
-      // via collapseToFlavor.set (ESCAPE.post_catch=contained,
-      // PROLIFERATION.{leaked-exits}, brittle_resolution.escape), so
-      // containment is already set in sel on those paths — the node's
-      // own activation and rendering auto-skip without needing guards
-      // here. alignment_durability.breaks remains (intra-module — it's
-      // an ALIGNMENT_MODULE internal node).
+      // hideWhen / activateWhen / disabledWhen trimmed: rules formerly keyed
+      // on external writer dims (brittle_resolution, proliferation_alignment,
+      // proliferation_outcome, post_catch) are gone. Those modules / nodes
+      // now pre-write containment directly via collapseToFlavor.set
+      // (ESCAPE.post_catch=contained, PROLIFERATION.{leaked-exits},
+      // brittle_resolution.escape), so containment is already set in sel on
+      // those paths — the node's own activation and rendering auto-skip
+      // without needing guards here. alignment_durability.breaks also
+      // pre-writes containment='escaped' on its edge so the dim is visible
+      // to bucket-key projection (no deriveWhen detour).
       hideWhen: [
         { alignment_durability: ['breaks'] }
       ],
@@ -495,9 +508,6 @@ const NODES = [
           capability: ['asi'],
           alignment: ['failed']
         }
-      ],
-      deriveWhen: [
-        { match: { alignment_durability: ['breaks'] }, value: 'escaped' }
       ],
       edges: [
         {
@@ -637,7 +647,8 @@ const NODES = [
         { capability: ['asi'], geo_spread: ['one'], sovereignty: ['state'] },
         { capability: ['asi'], geo_spread: ['one'], distribution: ['monopoly'] }
       ],
-      deriveWhen: [{ match: { alignment_durability: ['breaks'] }, value: 'accelerate' }],
+      // alignment_durability.breaks now pre-writes gov_action='accelerate'
+      // on its edge (visible to bucket-key projection). No deriveWhen needed.
       // By this point all sel readers of `takeoff_class` have fired
       // (governance_window activate, takeoff self-hide, open_source /
       // distribution / geo_spread / sovereignty disable clauses, and this
@@ -3623,8 +3634,10 @@ const ALIGNMENT_WRITES = [
 //     only available edge is `accelerate` — no real decision left.)
 //   * alignment.{brittle, failed} — no exit (defer to the next
 //     internal node).
-//   * alignment_durability.breaks — direct exit (gov_action.deriveWhen
-//     auto-resolves to 'accelerate' on this path; nothing to ask).
+//   * alignment_durability.breaks — direct exit. The edge itself
+//     pre-writes containment='escaped' and gov_action='accelerate', so
+//     gov_action has nothing left to ask (its hideWhen on
+//     containment='escaped' would skip it anyway).
 //   * alignment_durability.holds — CONDITIONAL exit: only when
 //     gov_action's activation gates wouldn't fire. Otherwise defer to
 //     gov_action so the decelerate-vs-accelerate decision is asked.
