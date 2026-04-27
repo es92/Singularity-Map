@@ -1009,6 +1009,42 @@
               }
             }
           ]
+        },
+        {
+          "capability": [
+            "asi"
+          ],
+          "benefit_distribution": [
+            "equal"
+          ],
+          "failure_mode": [
+            "none"
+          ],
+          "intent": [
+            "self_interest"
+          ],
+          "_not": [
+            {
+              "post_catch": [
+                "ruined"
+              ]
+            },
+            {
+              "conflict_result": [
+                "destruction"
+              ]
+            },
+            {
+              "containment": [
+                "escaped"
+              ],
+              "inert_stays": {
+                "not": [
+                  "yes"
+                ]
+              }
+            }
+          ]
         }
       ],
       "story": [],
