@@ -3577,11 +3577,24 @@ const INTENT_MODULE = {
 //                          └── destruction → war_survivors.* → exit
 //
 // External contract:
-//   * writes = [escalation_outcome, post_war_aims, war_survivors] —
-//     every dim is consumed by at least one outside-WAR sel reader
+//   * writes = [post_war_aims, war_survivors] plus the binary
+//     markers (intent override, who_benefits_set,
+//     for_everyone_blocked, best_will_rise_blocked, standoff_reached)
+//     — every dim is consumed by at least one outside-WAR sel reader
 //     (outcome templates, ruin_type.deriveWhen via war_survivors,
 //     collateral_impact / catch_outcome / inert_stays gates via
 //     war_survivors, etc.).
+//   * escalation_outcome is in nodeIds but NOT writes → auto-moves
+//     to flavor on every WAR exit via attachModuleReducer's
+//     `nodeIds \ writes` rule. The single post-exit sel reader was
+//     the-standoff.reachable, which now keys on the narrow
+//     `standoff_reached` binary marker WAR pre-sets on its
+//     standoff exit edge. Other historical consumers were already
+//     migrated to in-exit-plan rewrites (intent.deriveWhen →
+//     INTENT_OVERRIDE) and to existing binary markers
+//     (power_promise.disabledWhen → for_everyone_blocked /
+//     best_will_rise_blocked). escalation_outcome remains
+//     visible to outcome flavor blocks via fused state.
 //   * conflict_result is in nodeIds but NOT writes → auto-moves to
 //     flavor on every WAR exit via attachModuleReducer's
 //     `nodeIds \ writes` rule. After the war_survivors `most` edge
@@ -3615,7 +3628,15 @@ const WAR_NODE_IDS = [
 ];
 
 const WAR_WRITES = [
-    'escalation_outcome',
+    // escalation_outcome auto-moves to flavor on every WAR exit (it's
+    // in WAR_NODE_IDS but deliberately omitted from writes). The single
+    // post-exit sel reader was the-standoff.reachable, now migrated to
+    // the narrow `standoff_reached` binary marker (see below).
+    // escalation_outcome stays available for outcome flavor blocks via
+    // fused state. All in-WAR gate readers (conflict_result.activateWhen,
+    // intent override mapping) fire BEFORE the auto-move so they still
+    // see escalation_outcome in sel.
+    //
     // conflict_result auto-moves to flavor on every WAR exit (it's in
     // WAR_NODE_IDS but deliberately omitted from writes). See module-
     // block comment above for rationale — no outside-WAR sel readers
@@ -3650,9 +3671,8 @@ const WAR_WRITES = [
     //   * best_will_rise_blocked='yes' on standoff exit only — security
     //     framing displaces market-decides rhetoric. (Self-interest
     //     victors can still narratively defer to "the market".)
-    // escalation_outcome / post_war_aims remain in sel for outcome
-    // matching (the-standoff keys on escalation_outcome=standoff;
-    // several outcomes reference post_war_aims).
+    // post_war_aims remains in sel for outcome matching (several
+    // outcomes' reachable clauses reference it).
     //
     // Markers stay in sel from WAR exit through every WHO_BENEFITS
     // internal slot (so power_promise.disabledWhen — which uses sel-
@@ -3663,6 +3683,15 @@ const WAR_WRITES = [
     // cart-prod for no benefit. See buildWhoBenefitsExitPlan.
     'for_everyone_blocked',
     'best_will_rise_blocked',
+    // standoff_reached='yes' is pre-set on the escalation_outcome.standoff
+    // exit edge (see buildWarExitPlan). Replaces the only post-WAR-exit
+    // sel reader of escalation_outcome — the-standoff.reachable, which
+    // now gates on this 1-bit marker instead of the wide 3-value dim.
+    // Lets escalation_outcome auto-move to flavor at WAR exit (it's a
+    // WAR_NODE_ID with no entry in writes) without losing the standoff
+    // gate. Outcome flavor blocks still see escalation_outcome via
+    // fused state.
+    'standoff_reached',
 ];
 
 // 6 exit edges:
@@ -3711,9 +3740,16 @@ function buildWarExitPlan() {
         // escalation_outcome / post_war_aims so who_benefits doesn't pull
         // those wide dims into its cartesian read closure (3× cart-prod
         // reduction; 138k → 46k for who_benefits).
+        //
+        // standoff_reached='yes' is the 1-bit replacement for the
+        // post-WAR-exit `escalation_outcome=standoff` sel read by
+        // the-standoff.reachable. Pre-setting it here lets us drop
+        // escalation_outcome from WAR_WRITES (auto-evicted to flavor)
+        // without losing the standoff outcome gate.
         if (nodeId === 'escalation_outcome' && edgeId === 'standoff') {
             set.for_everyone_blocked = 'yes';
             set.best_will_rise_blocked = 'yes';
+            set.standoff_reached = 'yes';
         }
         if (nodeId === 'post_war_aims' && edgeId === 'self_interest') {
             set.for_everyone_blocked = 'yes';

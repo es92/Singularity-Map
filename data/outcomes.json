@@ -1591,8 +1591,8 @@
           "capability": [
             "asi"
           ],
-          "escalation_outcome": [
-            "standoff"
+          "standoff_reached": [
+            "yes"
           ],
           "rollout_set": [
             "yes"
