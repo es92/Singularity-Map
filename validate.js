@@ -483,6 +483,33 @@ function checkOutcomeReach(prop) {
 }
 
 // ────────────────────────────────────────────────────────────────
+// Phase 8 — Unauthorized siphons
+// ────────────────────────────────────────────────────────────────
+//
+// FLOW_DAG annotates each slot with `earlyExits` — the outcomes this
+// slot may legitimately terminate at. Anything matchOutcomes hits at
+// a slot whose earlyExits doesn't list the oid is either a clause
+// leak (the outcome's reachable clauses match a sel produced by a
+// slot not designed to terminate at it) or an annotation gap (the
+// slot really should terminate at this outcome and earlyExits needs
+// extending). Either way it inflates the reach masks the runtime
+// ships and should be fixed.
+
+function checkUnauthorizedSiphons(prop) {
+    const errors = [];
+    const slotKeys = [...prop.unauthorizedBySlot.keys()].sort();
+    for (const sk of slotKeys) {
+        const perSlot = prop.unauthorizedBySlot.get(sk);
+        const oids = [...perSlot.keys()].sort();
+        for (const oid of oids) {
+            const c = perSlot.get(oid);
+            errors.push(`[unauthorized-siphon] ${sk} → ${oid} (${fmtCount(c)} sel${c === 1 ? '' : 's'} — not in slot.earlyExits)`);
+        }
+    }
+    return errors;
+}
+
+// ────────────────────────────────────────────────────────────────
 // Helpers
 // ────────────────────────────────────────────────────────────────
 
@@ -550,6 +577,12 @@ if (!QUICK) {
     const outcomeErrors = checkOutcomeReach(prop);
     console.log(`  ${outcomeErrors.length === 0 ? 'OK' : `FAIL (${outcomeErrors.length})`}  ${Date.now() - t7}ms`);
     sections.push({ name: 'outcome reachability', errors: outcomeErrors });
+
+    console.log('\nPhase 8: unauthorized siphons');
+    const t8 = Date.now();
+    const unauthErrors = checkUnauthorizedSiphons(prop);
+    console.log(`  ${unauthErrors.length === 0 ? 'OK' : `FAIL (${unauthErrors.length})`}  ${Date.now() - t8}ms`);
+    sections.push({ name: 'unauthorized siphons', errors: unauthErrors });
 }
 
 console.log('\n' + '═'.repeat(60));

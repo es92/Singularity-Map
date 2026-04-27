@@ -108,11 +108,22 @@ for (let i = 0; i < entries.length; i++) {
     entryByTemplate.get(e.templateId).push(e);
 }
 
-function siphonBitsFor(sel) {
+function siphonBitsFor(sel, earlyExitsSet, slotKey, unauthorizedAcc) {
     const hits = GraphIO.matchOutcomes(sel);
     if (!hits.length) return { bits: 0, terminal: false };
     let bits = 0;
     for (const oid of hits) {
+        // Annotation gap / clause leak: matchOutcomes hit an oid the
+        // slot's earlyExits doesn't authorize. Accumulate per
+        // (slotKey, oid) so the precompute can fail loudly at the
+        // end — the runtime would still surface this oid (precompute
+        // mask includes its bit), but the FLOW_DAG annotation says
+        // this slot wasn't designed to terminate at it.
+        if (earlyExitsSet && !earlyExitsSet.has(oid)) {
+            let perSlot = unauthorizedAcc.get(slotKey);
+            if (!perSlot) { perSlot = new Map(); unauthorizedAcc.set(slotKey, perSlot); }
+            perSlot.set(oid, (perSlot.get(oid) || 0) + 1);
+        }
         const es = entryByTemplate.get(oid);
         if (!es) continue;
         for (const e of es) {
@@ -132,6 +143,15 @@ function siphonBitsFor(sel) {
     // walk, so the static analysis must too.
     return { bits, terminal: true };
 }
+
+// Per-slot earlyExits as Set<oid> — populated once, queried per
+// output sel by the forward sweep.
+const earlyExitsBySlot = new Map();
+for (const node of FLOW_DAG.nodes) {
+    if (!node || !node.key) continue;
+    earlyExitsBySlot.set(node.key, new Set(node.earlyExits || []));
+}
+const unauthorizedSiphons = new Map(); // slotKey → Map<oid, count>
 
 // ─── Module ownership index ───────────────────────────────────────
 // Map each internal node id to the module that owns it. Lets the
@@ -285,7 +305,8 @@ for (let oi = 0; oi < order.length; oi++) {
 
             if (outSiphon.has(ok) || outRouted.has(ok)) continue;
 
-            const { bits, terminal } = siphonBitsFor(o);
+            const ee = earlyExitsBySlot.get(slotKey);
+            const { bits, terminal } = siphonBitsFor(o, ee, slotKey, unauthorizedSiphons);
             if (terminal) {
                 outSiphon.set(ok, bits);
                 continue;
@@ -314,6 +335,34 @@ for (let oi = 0; oi < order.length; oi++) {
 
 console.log(`  forward done in ${((Date.now() - t0) / 1000).toFixed(1)}s.`);
 console.log(`  distinct output sels: ${outProv.size}`);
+
+// FLOW_DAG.earlyExits ground-truth check. Any matchOutcomes hit at a
+// slot whose earlyExits doesn't list the oid is either a clause leak
+// (the outcome's reachable clauses are loose enough to match a sel
+// produced by a slot not designed to terminate at it) or an
+// annotation gap (the slot really should be a terminus and earlyExits
+// needs extending). Either way it inflates the reach masks the
+// runtime ships and should be fixed before publish.
+if (unauthorizedSiphons.size > 0) {
+    let total = 0;
+    let pairs = 0;
+    console.error('\nERROR: unauthorized siphons (oid not in slot.earlyExits):');
+    const slotKeys = [...unauthorizedSiphons.keys()].sort();
+    for (const sk of slotKeys) {
+        const perSlot = unauthorizedSiphons.get(sk);
+        const oids = [...perSlot.keys()].sort();
+        for (const oid of oids) {
+            const c = perSlot.get(oid);
+            console.error(`  ${sk}  →  ${oid}   (${c} sel${c === 1 ? '' : 's'})`);
+            total += c;
+            pairs++;
+        }
+    }
+    console.error(`  ${pairs} (slot, outcome) pair(s); ${total} sel-match(es) total.`);
+    console.error('  Resolution: tighten the outcome\'s reachable clauses, or extend');
+    console.error('  FLOW_DAG.nodes[<slot>].earlyExits if this slot is a legit terminus.');
+    process.exitCode = 1;
+}
 
 // Backward sweep — same shape as the previous version, but we drop
 // each slot's inputMap as soon as its mask is computed so the peak

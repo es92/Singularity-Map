@@ -32,6 +32,13 @@
 //     acceptedBySlot Map<slotKey, number>     inputs accepted by slot
 //     matchedBySlot  Map<slotKey, number>     outputs siphoned to outcomes
 //     outcomeAgg     Map<oid, number>         outputs siphoned to each outcome
+//     unauthorizedBySlot
+//                    Map<slotKey, Map<oid, count>>
+//                                              matchOutcomes hits at
+//                                              slotKey for outcomes
+//                                              NOT in slot.earlyExits.
+//                                              Non-empty = clause leak
+//                                              or missing annotation.
 //     parentsOf      Map<slotKey, slotKey[]>
 //     childrenOf     Map<slotKey, slotKey[]>
 //     order          slotKey[]                topo order
@@ -59,6 +66,20 @@
 //                                              For sels matching multiple
 //                                              outcomes, fires once per
 //                                              outcome.
+//     onUnauthorizedSiphon? (outcomeId, sel, slotKey) => void
+//                                              called when matchOutcomes
+//                                              hits at `slotKey` but
+//                                              the slot's `earlyExits`
+//                                              doesn't list `outcomeId`.
+//                                              The sel is still siphoned
+//                                              (routing semantics are
+//                                              unchanged); this hook
+//                                              exists purely to flag
+//                                              annotation gaps or
+//                                              clause leaks (the
+//                                              outcome's clause matches
+//                                              at a slot that wasn't
+//                                              meant to terminate at it).
 //
 // Dependencies (read off `window` lazily so load-order is forgiving):
 //   window.GraphIO     — cartesianWriteRows, reachableFullSelsFromInputs,
@@ -172,8 +193,18 @@
         }
 
         const propagateTargets = opts.propagateTargets || _defaultPropagateTargets(flowDag);
-        const onSlotOutput   = typeof opts.onSlotOutput   === 'function' ? opts.onSlotOutput   : null;
-        const onOutcomeMatch = typeof opts.onOutcomeMatch === 'function' ? opts.onOutcomeMatch : null;
+        const onSlotOutput        = typeof opts.onSlotOutput        === 'function' ? opts.onSlotOutput        : null;
+        const onOutcomeMatch      = typeof opts.onOutcomeMatch      === 'function' ? opts.onOutcomeMatch      : null;
+        const onUnauthorizedSiphon = typeof opts.onUnauthorizedSiphon === 'function' ? opts.onUnauthorizedSiphon : null;
+
+        // Per-slot earlyExits as Set<oid> for O(1) membership tests.
+        // Slots without earlyExits get an empty set — every match at
+        // such a slot is unauthorized.
+        const earlyExitsBySlot = new Map();
+        for (const node of flowDag.nodes) {
+            if (!node || !node.key) continue;
+            earlyExitsBySlot.set(node.key, new Set(node.earlyExits || []));
+        }
 
         const { parentsOf, childrenOf, order } = _buildTopo(flowDag, propagateTargets);
 
@@ -191,14 +222,18 @@
         const eW = GraphIO.cartesianWriteRows(emergence);
         const emergenceOutputs = eW.rows.map(rowToSel);
 
-        const inputsBySlot   = new Map();
-        const routedBySlot   = new Map();
-        const deadBySlot     = new Map();
-        const stuckBySlot    = new Map();
-        const routedToChild  = new Map();
-        const acceptedBySlot = new Map();
-        const matchedBySlot  = new Map();
-        const outcomeAgg     = new Map();
+        const inputsBySlot       = new Map();
+        const routedBySlot       = new Map();
+        const deadBySlot         = new Map();
+        const stuckBySlot        = new Map();
+        const routedToChild      = new Map();
+        const acceptedBySlot     = new Map();
+        const matchedBySlot      = new Map();
+        const outcomeAgg         = new Map();
+        // Per-(slotKey, oid) counts of matches that fired but weren't
+        // listed in slot.earlyExits and therefore weren't siphoned.
+        // Surfaces clause leaks and annotation gaps.
+        const unauthorizedBySlot = new Map();
 
         for (const slotKey of order) {
             const slot = flowDag.nodes.find(n => n.key === slotKey);
@@ -229,15 +264,29 @@
             const perChildCnt  = new Map();
             let matched = 0;
 
+            const ee = earlyExitsBySlot.get(slotKey) || new Set();
+
             for (const sel of outputs) {
                 if (onSlotOutput) onSlotOutput(slotKey, sel);
 
+                // Siphon every matchOutcomes hit (routing semantics
+                // unchanged). For each hit additionally check whether
+                // the slot's `earlyExits` lists the outcome; if not,
+                // bookkeep + fire onUnauthorizedSiphon so callers
+                // (precompute, validate, this-test) can surface the
+                // annotation gap / clause leak.
                 const hits = GraphIO.matchOutcomes(sel);
                 if (hits.length > 0) {
                     matched++;
                     for (const oid of hits) {
                         outcomeAgg.set(oid, (outcomeAgg.get(oid) || 0) + 1);
                         if (onOutcomeMatch) onOutcomeMatch(oid, sel, slotKey);
+                        if (!ee.has(oid)) {
+                            let perSlot = unauthorizedBySlot.get(slotKey);
+                            if (!perSlot) { perSlot = new Map(); unauthorizedBySlot.set(slotKey, perSlot); }
+                            perSlot.set(oid, (perSlot.get(oid) || 0) + 1);
+                            if (onUnauthorizedSiphon) onUnauthorizedSiphon(oid, sel, slotKey);
+                        }
                     }
                     continue;
                 }
@@ -266,7 +315,7 @@
 
         return {
             inputsBySlot, routedBySlot, deadBySlot, stuckBySlot, routedToChild,
-            acceptedBySlot, matchedBySlot, outcomeAgg,
+            acceptedBySlot, matchedBySlot, outcomeAgg, unauthorizedBySlot,
             parentsOf, childrenOf, order,
         };
     }
