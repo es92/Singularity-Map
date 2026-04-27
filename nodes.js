@@ -1049,7 +1049,8 @@
             { key: 'war',              id: 'war_loop',                     kind: 'module', note: 'if escalates',
               earlyExits: ['the-ruin'] },
             { key: 'who_benefits',     id: 'who_benefits',                 kind: 'module' },
-            { key: 'inert_stays',      id: 'inert_stays',                  kind: 'node',   note: 'if escaped earlier & inert' },
+            { key: 'inert_stays',      id: 'inert_stays',                  kind: 'node',   note: 'if escaped earlier & inert',
+              earlyExits: ['the-ruin'] },
             { key: 'brittle',          id: 'brittle_resolution',           kind: 'node',   note: 'if not already escaped' },
             { key: 'escape_late',      id: 'escape',                       kind: 'module', note: 'late',
               earlyExits: ['the-ruin', 'the-escape', 'the-chaos', 'the-alien-ai'] },
@@ -1122,6 +1123,15 @@
             ['intent',        'who_benefits'],
 
             ['war',           'who_benefits'],
+            // Destruction-by-war bypass: WHO_BENEFITS_MODULE.hideWhen
+            // fires on conflict_result='destruction' so the user isn't
+            // asked economic-control questions about the post-war world.
+            // The marginal-AI tail still needs the inert_stays question
+            // (does what's left of the AI become a non-actor?) — the-ruin
+            // then matches at inert_stays via its earlyExits annotation.
+            // Hostile-AI destruction paths siphon to escape outcomes at
+            // escape_late upstream, so they never reach this edge.
+            ['war',           'inert_stays'],
 
             ['who_benefits',  'inert_stays'],
             ['who_benefits',  'brittle'],

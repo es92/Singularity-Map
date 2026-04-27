@@ -2,9 +2,9 @@
   "name": "singularity-map",
   "private": true,
   "scripts": {
-    "test": "node --max-old-space-size=8192 validate.js",
+    "test": "node --max-old-space-size=16384 validate.js",
     "test:quick": "node validate.js --quick",
-    "precompute-reach": "node --max-old-space-size=8192 precompute-reachability.js"
+    "precompute-reach": "node --max-old-space-size=16384 precompute-reachability.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

@@ -1237,6 +1237,9 @@
           "concentration_type": [
             "inner_circle"
           ],
+          "failure_mode": [
+            "none"
+          ],
           "_not": [
             {
               "post_catch": [
@@ -1269,6 +1272,9 @@
           ],
           "concentration_type": [
             "singleton"
+          ],
+          "failure_mode": [
+            "none"
           ],
           "_not": [
             {
@@ -1306,6 +1312,9 @@
           "intent": [
             "self_interest"
           ],
+          "failure_mode": [
+            "none"
+          ],
           "_not": [
             {
               "post_catch": [
@@ -1338,6 +1347,9 @@
           ],
           "post_war_aims": [
             "self_interest"
+          ],
+          "failure_mode": [
+            "none"
           ],
           "_not": [
             {
@@ -2339,6 +2351,9 @@
           ],
           "post_catch": [
             "loose"
+          ],
+          "escape_set": [
+            "yes"
           ]
         },
         {
@@ -2559,6 +2574,9 @@
           ],
           "post_catch": [
             "loose"
+          ],
+          "escape_set": [
+            "yes"
           ]
         },
         {
@@ -2570,6 +2588,9 @@
           ],
           "post_catch": [
             "loose"
+          ],
+          "escape_set": [
+            "yes"
           ]
         }
       ],
@@ -2743,6 +2764,9 @@
           ],
           "post_catch": [
             "loose"
+          ],
+          "escape_set": [
+            "yes"
           ]
         }
       ],

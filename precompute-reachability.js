@@ -67,6 +67,7 @@ new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 
 new Function('window', fs.readFileSync(path.join(ROOT, 'flow-propagation.js'), 'utf8'))(global.window);
 
 const GraphIO = global.window.GraphIO;
+GraphIO.setStrictTruncation(true);
 const FlowPropagation = global.window.FlowPropagation;
 const FLOW_DAG = global.window.Nodes.FLOW_DAG;
 const NODES = Engine.NODES;

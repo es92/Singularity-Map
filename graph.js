@@ -604,6 +604,11 @@ const NODES = [
       // resolved. Without this gate, inert_stays becomes askable as
       // soon as ai_goals='marginal' is set (at escape module exit),
       // which would jump it ahead of who_benefits on some paths.
+      // On the destruction path who_benefits_set is pre-set to 'yes'
+      // by WAR_MODULE's exit plan (skipping who_benefits as a no-op),
+      // so this single activateWhen still fires the inert_stays tail
+      // for the marginal-AI destruction case — and the-ruin then
+      // matches at inert_stays via its earlyExits annotation.
       activateWhen: [{ capability: ['asi'], ai_goals: ['marginal'], who_benefits_set: ['yes'] }],
       edges: [
         { id: 'yes', label: 'Yes — remains inert' },
@@ -2625,6 +2630,17 @@ const ROLLOUT_MODULE = {
         // (who_benefits_set=yes / ai_goals=benevolent / post_catch=contained).
         ...OUTCOME_ACTIVATE,
     ],
+    // Mirror the internal hideWhen on knowledge_rate / physical_rate /
+    // failure_mode: when the AI is loose with hostile goals, those
+    // questions don't apply (the world ended in an escape outcome). Without
+    // this gate, who_benefits's ai_itself+extractive/indifferent outputs
+    // (which uncage the AI by clearing escape_set) would pass the
+    // module-level activateWhen but find no askable internal — leaving
+    // routing to fall through to rollout when escape_after_who is the
+    // narratively correct next stop.
+    hideWhen: [
+        { ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } },
+    ],
     reads: [
         // Activation.
         'capability',
@@ -3458,6 +3474,14 @@ const WAR_WRITES = [
     // buildWarExitPlan exit edges. Replaces the old intent.deriveWhen
     // rules so INTENT_MODULE no longer needs to read war-internal dims.
     'intent',
+    // Destruction-by-war (conflict_result='destruction') pre-sets
+    // who_benefits_set='yes' so the slot picker skips WHO_BENEFITS_MODULE
+    // — asking economic-control questions about a destroyed world adds
+    // narrative noise. The marginal-AI tail still fires via inert_stays
+    // (its existing who_benefits_set activateWhen), and the-ruin matches
+    // at inert_stays (inert_stays.earlyExits = ['the-ruin']). Hostile-AI
+    // destruction paths siphon escape outcomes upstream at escape_late.
+    'who_benefits_set',
 ];
 
 // 7 exit edges:
@@ -3488,6 +3512,16 @@ function buildWarExitPlan() {
         const mapping = INTENT_OVERRIDE[nodeId];
         if (mapping && mapping[edgeId]) {
             set.intent = mapping[edgeId];
+        }
+        // war_survivors edges only fire on the destruction tail
+        // (conflict_result='destruction' gates war_survivors.activateWhen).
+        // Pre-setting who_benefits_set='yes' here makes the slot picker
+        // skip WHO_BENEFITS_MODULE on destruction — the war IS the
+        // outcome, so asking about post-war economic distribution would
+        // be narrative noise. inert_stays still fires off this marker
+        // for the marginal-AI tail; the-ruin matches at inert_stays.
+        if (nodeId === 'war_survivors') {
+            set.who_benefits_set = 'yes';
         }
         return set;
     };

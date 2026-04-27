@@ -93,6 +93,20 @@
     const UNSET = '__GIO_UNSET__';
     const MAX_ROWS = 200000;
 
+    // Strict-truncation mode: when on, hitting MAX_ROWS in any cart-prod
+    // or DFS throws a diagnostic error rather than silently capping the
+    // result. validate.js / precompute-reachability.js enable this so
+    // explosions in read-projection size or DFS state-space surface
+    // immediately (silent truncation produces wrong propagation
+    // results). The browser leaves it off — MAX_ROWS is a safety net
+    // there to keep the page responsive.
+    let STRICT_TRUNCATION = false;
+    function setStrictTruncation(on) { STRICT_TRUNCATION = !!on; }
+    function _truncationError(where, info) {
+        const detail = info ? ' ' + JSON.stringify(info) : '';
+        throw new Error(`[graph-io] truncation hit MAX_ROWS=${MAX_ROWS} in ${where}${detail}. Read/write set is too wide — narrow it (drop a dim from reads, or split the slot).`);
+    }
+
     // Every module's write-row DFS persists across refreshes. Bump
     // PERSIST_VERSION when the DFS algorithm or its helpers change in
     // a way that could affect output rows OR when the
@@ -475,6 +489,15 @@
         let preFilterTotal = 1;
         for (const vs of valuesPerDim) preFilterTotal *= vs.length;
         const truncated = preFilterTotal > MAX_ROWS;
+        if (truncated && STRICT_TRUNCATION) {
+            _truncationError('cartesianReadRows', {
+                slot: slot.key,
+                kind: slot.kind,
+                dims,
+                preFilterTotal,
+                valuesPerDim: dims.map((d, i) => ({ dim: d, count: valuesPerDim[i].length })),
+            });
+        }
 
         const rows = [];
         const idxs = new Array(dims.length).fill(0);
@@ -707,8 +730,16 @@
         const Engine = window.Engine;
 
         function walk(sel) {
-            if (ctx.steps++ > STEP_CAP) { ctx.truncated = true; return; }
-            if (outputs.size > MAX_ROWS) { ctx.truncated = true; return; }
+            if (ctx.steps++ > STEP_CAP) {
+                ctx.truncated = true;
+                if (STRICT_TRUNCATION) _truncationError('_dfsModuleOutputs (STEP_CAP)', { module: mod.id, steps: ctx.steps, stepCap: STEP_CAP });
+                return;
+            }
+            if (outputs.size > MAX_ROWS) {
+                ctx.truncated = true;
+                if (STRICT_TRUNCATION) _truncationError('_dfsModuleOutputs (output rows)', { module: mod.id, outputs: outputs.size });
+                return;
+            }
             // Done-check FIRST — once the completion marker has fired,
             // the runtime engine stops asking the module's internal
             // nodes, and so should we. Without this guard, the auto-
@@ -739,11 +770,19 @@
 
     function _dfsNodeOutputs(node, startSel, dims, outputs, ctx) {
         for (const edge of (node.edges || [])) {
-            if (ctx.steps++ > STEP_CAP) { ctx.truncated = true; return; }
+            if (ctx.steps++ > STEP_CAP) {
+                ctx.truncated = true;
+                if (STRICT_TRUNCATION) _truncationError('_dfsNodeOutputs (STEP_CAP)', { node: node.id, steps: ctx.steps, stepCap: STEP_CAP });
+                return;
+            }
             if (window.Engine.isEdgeDisabled(startSel, node, edge)) continue;
             const next = _applyEdgeWrites(startSel, node, edge);
             outputs.add(_projectKey(next, dims));
-            if (outputs.size > MAX_ROWS) { ctx.truncated = true; return; }
+            if (outputs.size > MAX_ROWS) {
+                ctx.truncated = true;
+                if (STRICT_TRUNCATION) _truncationError('_dfsNodeOutputs (output rows)', { node: node.id, outputs: outputs.size });
+                return;
+            }
         }
     }
 
@@ -1264,6 +1303,13 @@
     window.GraphIO = {
         UNSET,
         dimDomain,
+        // Toggle strict truncation: when true, any cart-prod / DFS that
+        // would exceed MAX_ROWS throws with diagnostic context (slot id,
+        // dims, sizes) instead of silently capping. Used by validate.js
+        // and precompute-reachability.js so design changes that explode
+        // the read/write closure surface immediately as a failure rather
+        // than as silently-wrong propagation results.
+        setStrictTruncation,
         cartesianReadRows,
         cartesianWriteRows,
         reachableCountsFromInputs,
