@@ -131,7 +131,7 @@ function siphonBitsFor(sel, earlyExitsSet, slotKey, unauthorizedAcc) {
             if (!e.primaryDim) { bits |= e.bit; continue; }
             // primaryDim can be a derived dim (e.g. `ruin_type` is
             // not a sel value but resolves from `post_catch` /
-            // `conflict_result` via deriveWhen). Match on
+            // `war_survivors` via deriveWhen). Match on
             // `resolvedVal` so derived variants attribute to the
             // right bit. Falls back to sel[…] when there's no
             // derive table.

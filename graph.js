@@ -1015,12 +1015,23 @@ const NODES = [
     // ESCAPE_MODULE), which writes to the same `war_survivors` sel dim
     // so downstream consumers (outcome templates, ruin_type) are unaware
     // of the split.
+    //
+    // Edges: only `remnants` and `none`. The earlier `most` edge ("most
+    // devastated but recoverable") was dropped: war_survivors only fires
+    // on conflict_result=destruction, and a destruction war narratively
+    // implies civilization-ending collapse — "most survive a mutual
+    // destruction" is a contradiction, not a recoverable outcome.
+    // Most-survive collateral is still possible via the ESCAPE pipeline
+    // (collateral_survivors=most + post_catch=ruined → routes to the-
+    // ruin variant=self_inflicted), where the framing is "AI catastrophe
+    // wrecked civilization but most people physically survived" — which
+    // is coherent. The two pipelines stay distinct narratively even
+    // though they share the war_survivors sel dim.
     { id: 'war_survivors', label: 'Humanity Survives?', stage: 3,
       activateWhen: [
         { conflict_result: ['destruction'] }
       ],
       edges: [
-        { id: 'most', label: 'Most — devastated but recoverable', shortLabel: 'Most survive' },
         { id: 'remnants', label: 'Remnants — civilization collapses', shortLabel: 'Remnants' },
         { id: 'none', label: 'None — extinction' }
       ] },
@@ -1659,9 +1670,16 @@ const NODES = [
     // engine registers 'rival_emerges' as a marker dim on first
     // collapseToFlavor.set encounter.
     { id: 'ruin_type', label: 'Ruin Cause', derived: true,
+      // `war` derives on war_survivors ∈ {remnants, none} rather than
+      // conflict_result=destruction. The war pipeline now only emits
+      // those two edges (war_survivors's `most` was dropped — see node
+      // definition), so the two formulations are equivalent on the war
+      // pipeline. Reading war_survivors directly is more semantically
+      // accurate: ruin_type means "this is a ruin outcome", and
+      // remnants|none is precisely the "civilization-ending" subset.
       deriveWhen: [
         { match: { post_catch: ['ruined'] }, value: 'self_inflicted' },
-        { match: { conflict_result: ['destruction'] }, value: 'war' }
+        { match: { war_survivors: ['remnants', 'none'] }, value: 'war' }
       ],
       edges: [{ id: 'war' }, { id: 'self_inflicted' }] }
 ];
@@ -3532,12 +3550,23 @@ const INTENT_MODULE = {
 //                          └── destruction → war_survivors.* → exit
 //
 // External contract:
-//   * writes = [escalation_outcome, conflict_result, post_war_aims,
-//     war_survivors] — every dim is consumed by at least one outside
-//     consumer (intent.deriveWhen, power_promise.activateWhen/hideWhen,
-//     outcome templates, ruin_type.deriveWhen, collateral_impact and
-//     catch_outcome hideWhen via war_survivors). Nothing evicts to
-//     flavor; moveDims = nodeIds \ writes = [].
+//   * writes = [escalation_outcome, post_war_aims, war_survivors] —
+//     every dim is consumed by at least one outside-WAR sel reader
+//     (outcome templates, ruin_type.deriveWhen via war_survivors,
+//     collateral_impact / catch_outcome / inert_stays gates via
+//     war_survivors, etc.).
+//   * conflict_result is in nodeIds but NOT writes → auto-moves to
+//     flavor on every WAR exit via attachModuleReducer's
+//     `nodeIds \ writes` rule. After the war_survivors `most` edge
+//     was dropped (see node definition) and ruin_type.deriveWhen +
+//     the-ruin.reachable + 14 outcome `_not` clauses were rewritten
+//     to read war_survivors instead, conflict_result has zero
+//     outside-WAR sel readers and zero outcome `reachable` refs;
+//     it's narrative-only past WAR exit (3 templates' flavor /
+//     flavorHeading entries, resolved via fused state). The two
+//     internal gate readers (war_survivors.activateWhen,
+//     post_war_aims.activateWhen) fire DURING the module — before
+//     the auto-move — so they still see conflict_result in sel.
 //   * war_survivors is the shared dim with ESCAPE_MODULE's
 //     collateral_survivors. Both modules are mutually exclusive at
 //     activation time (the war path requires intent=escalation on the
@@ -3560,7 +3589,12 @@ const WAR_NODE_IDS = [
 
 const WAR_WRITES = [
     'escalation_outcome',
-    'conflict_result',
+    // conflict_result auto-moves to flavor on every WAR exit (it's in
+    // WAR_NODE_IDS but deliberately omitted from writes). See module-
+    // block comment above for rationale — no outside-WAR sel readers
+    // remain after the war_survivors-keyed rewrites of ruin_type /
+    // the-ruin / outcome _not clauses; only narrative refs remain
+    // (resolved via fused state).
     'post_war_aims',
     'war_survivors',
     'war_set',
@@ -3604,13 +3638,15 @@ const WAR_WRITES = [
     'best_will_rise_blocked',
 ];
 
-// 7 exit edges:
+// 6 exit edges:
 //   * escalation_outcome.{standoff, agreement} — direct exits.
 //   * escalation_outcome.conflict — no exit (continues to conflict_result).
 //   * conflict_result.victory — no exit (continues to post_war_aims).
 //   * conflict_result.destruction — no exit (continues to war_survivors).
 //   * post_war_aims.{human_centered, self_interest} — exits.
-//   * war_survivors.{most, remnants, none} — exits.
+//   * war_survivors.{remnants, none} — exits. (`most` was dropped:
+//     see war_survivors node definition; mutual-destruction wars
+//     narratively imply civilization-ending collapse.)
 // All set `war_set: 'yes'`.
 function buildWarExitPlan() {
     const plan = [];

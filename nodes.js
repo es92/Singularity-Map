@@ -1123,10 +1123,12 @@
             ['intent',        'who_benefits'],
 
             ['war',           'who_benefits'],
-            // Destruction-by-war bypass: WHO_BENEFITS_MODULE.hideWhen
-            // fires on conflict_result='destruction' so the user isn't
-            // asked economic-control questions about the post-war world.
-            // The marginal-AI tail still needs the inert_stays question
+            // Destruction-by-war bypass: buildWarExitPlan pre-sets
+            // who_benefits_set='yes' on the war_survivors.{remnants,
+            // none} exit edges, so the slot picker skips WHO_BENEFITS_
+            // MODULE — asking economic-control questions about a
+            // destroyed post-war world adds narrative noise. The
+            // marginal-AI tail still needs the inert_stays question
             // (does what's left of the AI become a non-actor?) — the-ruin
             // then matches at inert_stays via its earlyExits annotation.
             // Hostile-AI destruction paths siphon to escape outcomes at

@@ -355,8 +355,9 @@
               ]
             },
             {
-              "conflict_result": [
-                "destruction"
+              "war_survivors": [
+                "remnants",
+                "none"
               ]
             },
             {
@@ -566,8 +567,9 @@
               ]
             },
             {
-              "conflict_result": [
-                "destruction"
+              "war_survivors": [
+                "remnants",
+                "none"
               ]
             },
             {
@@ -958,8 +960,9 @@
               ]
             },
             {
-              "conflict_result": [
-                "destruction"
+              "war_survivors": [
+                "remnants",
+                "none"
               ]
             },
             {
@@ -994,8 +997,9 @@
               ]
             },
             {
-              "conflict_result": [
-                "destruction"
+              "war_survivors": [
+                "remnants",
+                "none"
               ]
             },
             {
@@ -1030,8 +1034,9 @@
               ]
             },
             {
-              "conflict_result": [
-                "destruction"
+              "war_survivors": [
+                "remnants",
+                "none"
               ]
             },
             {
@@ -1247,8 +1252,9 @@
               ]
             },
             {
-              "conflict_result": [
-                "destruction"
+              "war_survivors": [
+                "remnants",
+                "none"
               ]
             },
             {
@@ -1283,8 +1289,9 @@
               ]
             },
             {
-              "conflict_result": [
-                "destruction"
+              "war_survivors": [
+                "remnants",
+                "none"
               ]
             },
             {
@@ -1322,8 +1329,9 @@
               ]
             },
             {
-              "conflict_result": [
-                "destruction"
+              "war_survivors": [
+                "remnants",
+                "none"
               ]
             },
             {
@@ -1358,8 +1366,9 @@
               ]
             },
             {
-              "conflict_result": [
-                "destruction"
+              "war_survivors": [
+                "remnants",
+                "none"
               ]
             },
             {
@@ -1595,8 +1604,9 @@
               ]
             },
             {
-              "conflict_result": [
-                "destruction"
+              "war_survivors": [
+                "remnants",
+                "none"
               ]
             },
             {
@@ -1722,8 +1732,9 @@
           "capability": [
             "asi"
           ],
-          "conflict_result": [
-            "destruction"
+          "war_survivors": [
+            "remnants",
+            "none"
           ],
           "_not": [
             {
@@ -1936,8 +1947,9 @@
               ]
             },
             {
-              "conflict_result": [
-                "destruction"
+              "war_survivors": [
+                "remnants",
+                "none"
               ]
             },
             {
@@ -2089,8 +2101,9 @@
               ]
             },
             {
-              "conflict_result": [
-                "destruction"
+              "war_survivors": [
+                "remnants",
+                "none"
               ]
             },
             {
@@ -2376,8 +2389,9 @@
               ]
             },
             {
-              "conflict_result": [
-                "destruction"
+              "war_survivors": [
+                "remnants",
+                "none"
               ]
             }
           ]
@@ -2405,8 +2419,9 @@
               ]
             },
             {
-              "conflict_result": [
-                "destruction"
+              "war_survivors": [
+                "remnants",
+                "none"
               ]
             }
           ]
