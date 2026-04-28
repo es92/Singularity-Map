@@ -478,8 +478,18 @@ const NODES = [
         // matched at runtime via resolvedVal but were invisible to the
         // bucket-key projection — making these states look stuck at
         // escape_early. Same observable behavior either way.
+        //
+        // The second block inlines the cascade that gov_action.accelerate
+        // would fire under cleanSelection's topo re-walk. push() now uses
+        // single-edge applyEdgeEffects (no re-walk), so any sibling-edge
+        // write that needs downstream effects must declare them locally.
+        // Mirrors gov_action.accelerate.effects ({ setFlavor governance,
+        // move open_source/takeoff_class }) — keep the two in sync.
         { id: 'breaks', label: 'Breaks',
-          effects: { set: { alignment: 'failed', containment: 'escaped', gov_action: 'accelerate' } } }
+          effects: [
+            { set: { alignment: 'failed', containment: 'escaped', gov_action: 'accelerate' } },
+            { setFlavor: { governance: 'race' }, move: ['open_source', 'takeoff_class'] },
+          ] }
       ] },
     { id: 'containment', label: 'Containment', stage: 2, forwardKey: true,
       // hideWhen / activateWhen / disabledWhen trimmed: rules formerly keyed
@@ -617,9 +627,11 @@ const NODES = [
           //     _isModulePending returns true again; module-first
           //     scheduling then walks the full escape pipeline.
           // Gated by `when: ai_goals=['marginal']` so it only fires on
-          // the initial transition — once the user re-picks a hostile
-          // goal, this block's `when` no longer matches so subsequent
-          // pushes' cleanSelection runs leave the new ai_goals alone.
+          // the initial transition (when concentration_type=ai_itself is
+          // first picked while ai_goals=marginal). Once the user re-picks
+          // a hostile goal via the re-asked ai_goals node, this block
+          // doesn't run again — push() is edge-local and only applies
+          // the just-picked edge's effects.
           effects: { when: { ai_goals: ['marginal'] }, move: ['ai_goals', 'escape_set'] }
         }
       ] },
@@ -3073,7 +3085,7 @@ const CONTROL_MODULE = {
 //   * alignment = robust → DON'T exit; module continues to
 //     proliferation_alignment
 // Expressed by giving those exit tuples a `when: { alignment: { not:
-// ['robust'] } }` gate. `cleanSelection` evaluates block-array `when`
+// ['robust'] } }` gate. `applyEdgeEffects` evaluates block-array `when`
 // clauses per block; when none match, the edge emits no marker and the
 // module stays active. Same mechanism that decel's reducerTable uses for
 // its action/progress conditional rules, now exposed at the exit-plan
@@ -3244,18 +3256,14 @@ function buildProliferationExitPlan() {
     // here). So always carries the full alignment override and the
     // open-distribution override.
     //
-    // The `proliferation_set: false` gate makes this block fire EXACTLY
-    // ONCE — on the push that first sets proliferation_control=none.
-    // After the block runs, `proliferation_set='yes'` is in sel and the
-    // gate fails on every subsequent push's cleanSelection (which still
-    // iterates over all set nodes' edges, including this one). Without
-    // the gate, LEAK_REENTRY_MOVE (= [escape_set, ai_goals]) would re-
-    // evict the user's re-walked ESCAPE outcome on every later push:
-    // ai_goals.marginal's exit-plan SETs escape_set='yes', and the next
-    // push would fire this block again and move both away. The gate
-    // ensures both runtime and static analysis agree: fire once, evict
-    // the stale pre-leak ESCAPE state, then leave the re-walked ESCAPE
-    // outcome alone.
+    // The `proliferation_set: false` gate is now redundant under the
+    // edge-local push model (the block only fires when this edge is
+    // picked, never re-walked on subsequent pushes). Kept for defense
+    // in depth and to mirror the static analysis path, where it was
+    // historically required because cleanSelection re-walked every
+    // set node's edges and would otherwise re-fire LEAK_REENTRY_MOVE
+    // and erase the user's re-walked ESCAPE outcome on every later
+    // push. Functionally a no-op now.
     plan.push({
         nodeId: 'proliferation_control',
         edgeId: 'none',
@@ -3277,12 +3285,9 @@ function buildProliferationExitPlan() {
                 // (i.e. alignment≠robust). alignment/containment flip,
                 // distribution flips to open.
                 //
-                // `proliferation_set: false` gate fires the block once on
-                // initial push — see proliferation_control.none above for
-                // the full rationale. Without the gate, LEAK_REENTRY_MOVE
-                // would re-fire on every subsequent push (cleanSelection
-                // re-iterates over all set nodes' edges) and erase the
-                // user's re-walked ESCAPE outcome.
+                // `proliferation_set: false` gate — see proliferation_control.none
+                // above. Now redundant under edge-local push (no re-walk),
+                // kept as a defensive no-op.
                 plan.push({
                     nodeId: 'proliferation_outcome', edgeId: e.id,
                     when: { alignment: { not: ['robust'] }, proliferation_set: false },

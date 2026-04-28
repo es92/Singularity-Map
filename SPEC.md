@@ -67,7 +67,7 @@ The decision state is split into two parallel bags:
 
 ### `effects`
 
-Applied by `cleanSelection` for each set node, in `NODES` (topological) order. Supports three actions, any combination:
+Applied by `applyEdgeEffects` on the just-picked edge — and ONLY that edge. The runtime model is strictly edge-local: `state(N) = applyEdgeEffects(state(N-1), edge_N)`. Prior pushes' effects are not re-walked, so any cross-edge state mutation (one edge's pick implying another's downstream effects) must be inlined as a block on the originating edge. Supports three actions, any combination:
 
 | Key | Effect |
 |---|---|
@@ -95,16 +95,16 @@ If engine branching still needs *one bit* of information from the dim (e.g. "did
 
 1. The engine presents the next question by calling `FlowPropagation.flowNext(sel)` — the same primitive `validate.js` and `/explore` use. `flowNext` picks the slot with the lowest `_slotPickPriority` among every slot whose activate gate / completion marker accepts the current `sel`, breaking ties on `FLOW_DAG.nodes` order (first wins). The same criterion drives `FlowPropagation.run`'s sibling routing, so runtime and static analysis agree on a single signal. For module slots, the next render node is the lowest-priority askable internal. Outcome matching is suppressed whenever a slot still owns the sel; only `flowNext` returning `kind: 'open'` allows templates to fire
 2. The user picks an edge → `push()` sets `sel[nodeId] = edgeId`
-3. `cleanSelection()` runs in a single pass: for each node with a set edge (in `NODES` topological order), it applies that edge's `effects` blocks (`set` / `setFlavor` / `move`) whose `when` matches the current `sel`. No invalidation sweep, no fixpoint loop — every cascade effect that older versions of the engine derived multi-pass is now expressed as an explicit, gated `effects` block on the originating edge (one-shot gates like `proliferation_set: false` keep blocks idempotent across re-pushes). This makes runtime push behavior identical to the static `_applyEdgeWrites` projection used by `validate.js` and `precompute-reachability` — the two paths cannot drift apart.
+3. `push()` calls `applyEdgeEffects` on JUST the picked edge: each block (`set` / `setFlavor` / `move`) whose `when` matches the current `sel` fires, in declaration order. No multi-edge re-walk, no transitive cascade — if picking edge A implies that edge B's effects should also fire (because A's `effects.set` writes a dim that B owns), B's effects must be inlined as additional blocks on A. This makes runtime push behavior identical to the static `_applyEdgeWrites` projection used by `validate.js` and `precompute-reachability`; the two share `applyEdgeEffects` directly and cannot drift.
 
-   Note: when a node becomes **locked** (only one edge remains enabled), `cleanSelection` does *not* write that value into `sel` automatically. Instead, the UI detects locks via `Engine.isNodeLocked` and presents the node as a single-option "Continue" screen; the user commits it through the normal push flow like any other answer. Downstream code that needs the effective value (template matching, visibility in the resolved state) consults `resolvedState`/`isNodeLocked` directly.
+   Note: when a node becomes **locked** (only one edge remains enabled), the engine does *not* write that value into `sel` automatically. Instead, the UI detects locks via `Engine.isNodeLocked` and presents the node as a single-option "Continue" screen; the user commits it through the normal push flow like any other answer. Downstream code that needs the effective value (template matching, visibility in the resolved state) consults `resolvedState`/`isNodeLocked` directly.
 4. Derived dimensions are recomputed from the new state
 5. Repeat from step 1 until the template matches or no unanswered questions remain
 
 ### Key Invariants
 
 - **No loops** — each step answers one new question. Once `sel[nodeId]` is set, that node is skipped. The walk is strictly forward (bounded by the number of nodes).
-- **`cleanSelection` is local** — every state mutation happens in the just-pushed edge's `effects` blocks; the function does not invalidate or retract answers it didn't directly write. The resulting state is deterministic given the inputs and identical to what static analysis (`graph-io._applyEdgeWrites`) computes for the same push.
+- **`push` is edge-local** — every state mutation happens in the just-picked edge's `effects` blocks; the function does not re-apply prior pushes' effects, invalidate, or retract answers it didn't directly write. The resulting state is deterministic given the inputs and identical to what static analysis (`graph-io._applyEdgeWrites`) computes for the same push.
 - **State equivalence** — two states with identical `sel` values will have identical derived values, identical visibility, and identical reachability to any template. This makes state-based caching sound.
 
 ### Condition System
@@ -174,7 +174,7 @@ Singularity Map/
 ├── README.md                      ← project overview and setup
 ├── index.html                     ← main app (single-page, all UI logic)
 ├── graph.js                       ← decision graph — nodes, edges, conditions
-├── engine.js                      ← state machine — selection (single-pass cleanSelection), resolution, display order
+├── engine.js                      ← state machine — edge-local push via applyEdgeEffects, resolution, display order
 ├── graph-io.js                    ← per-slot static-analysis primitives (cartesianWriteRows, reachableFullSelsFromInputs, _applyEdgeWrites, selKey, projectKey, read/writeDimsForSlot)
 ├── flow-propagation.js            ← DAG-level driver composing graph-io primitives over FLOW_DAG (powers validate.js + reach precompute)
 ├── nodes.js                       ← FLOW_DAG (slot inventory + parent/child edges) and /nodes view
@@ -216,7 +216,7 @@ Singularity Map/
 - **Question depth per path?** Varies (3–12 questions depending on the branch).
 - **Answers per question?** 2–7, flexible per question.
 - **Tone?** Conversational enough to be accessible, journalistic enough to feel authoritative.
-- **Back button?** Yes. Full back navigation — users can revisit and change any previous answer, which updates the path forward via `cleanSelection`.
+- **Back button?** Yes. Full back navigation — users can revisit and change any previous answer; `push()` then re-applies just the new edge's effects via `applyEdgeEffects`.
 
 ---
 
@@ -409,7 +409,7 @@ Takeaways for future modules:
 
 Proliferation (3 internal dims: `proliferation_control`, `proliferation_outcome`, `proliferation_alignment`) is the 8th module. It's a short stage-2 chain that answers "once the AI works, who gets access, does control hold, and can alignment survive if it leaks". Structurally it's the simplest module yet (3 nodes, linear), but it introduced one genuinely new pattern.
 
-- **Conditional exit tuples.** Two exit edges (`proliferation_control.none`, `proliferation_outcome.leaks_public`) behave differently depending on `alignment`: on `alignment=robust` the module must stay active (downstream `proliferation_alignment` fires); on `alignment ≠ robust` the module exits. Expressed by giving those exit tuples a `when: { alignment: { not: ['robust'] } }` gate. The runtime `cleanSelection` step evaluates per-block `when` clauses against the post-edge `sel` — the only new wiring was letting `exitPlan` tuples carry non-empty `when`, which `attachModuleReducer` already plumbs through verbatim. No engine changes needed.
+- **Conditional exit tuples.** Two exit edges (`proliferation_control.none`, `proliferation_outcome.leaks_public`) behave differently depending on `alignment`: on `alignment=robust` the module must stay active (downstream `proliferation_alignment` fires); on `alignment ≠ robust` the module exits. Expressed by giving those exit tuples a `when: { alignment: { not: ['robust'] } }` gate. `applyEdgeEffects` evaluates per-block `when` clauses against the post-edge `sel` — the only new wiring was letting `exitPlan` tuples carry non-empty `when`, which `attachModuleReducer` already plumbs through verbatim. No engine changes needed.
 
   This is the first time a single edge is ambiguous between "exit" and "continue" based on external state. Previous modules either exited unconditionally on an edge (escape, control) or varied exit *writes* by path (decel's reducerTable) but never varied *whether* the edge was an exit at all.
 

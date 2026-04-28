@@ -291,8 +291,14 @@ function getEdgeDisabledReason(sel, node, edge) {
 // ════════════════════════════════════════════════════════
 
 // Apply a single edge's `effects` blocks to `sel` in place.
-// This is the canonical block interpreter, shared between the runtime
-// (cleanSelection, below) and static analysis (graph-io._applyEdgeWrites).
+// This is the SOLE state-mutation primitive — used by Engine.push at
+// runtime and by graph-io._applyEdgeWrites in static analysis. The
+// runtime model is strictly edge-local: state(N) = applyEdgeEffects(
+// state(N-1), edge_N). No multi-edge re-walk, no transitive cascade.
+// Any cross-edge state mutation must be expressed as a block on the
+// originating edge (e.g. alignment_durability.breaks inlines
+// gov_action.accelerate's flavor write because picking breaks
+// implicitly commits to the accelerate path).
 //
 // Block semantics (per block, in order):
 //   when      — optional; matched against the running `sel`. Skip if false.
@@ -304,18 +310,6 @@ function getEdgeDisabledReason(sel, node, edge) {
 //   move      — for each dim, copy sel[dim] → flavor[dim] (if flavor passed)
 //               and delete sel[dim]. Static analysis passes flavor=null and
 //               just drops the dim.
-//
-// History: cleanSelection used to do a 6-pass fixpoint that interleaved an
-// invalidation sweep (evict any sel[X] whose edge had become disabled in
-// the fused view) with a collapse pass. That cascade had a parallel
-// implementation in graph-io._applyEdgeWrites for static analysis, and the
-// two diverged. `probe-divergence.js` enumerated 15 divergence patterns;
-// each was fixed by pulling the load-bearing effect into the originating
-// edge's `effects` block (with a `proliferation_set:false`-style
-// one-shot gate where the effect must fire exactly once). Once divergence
-// hit zero across 178k runtime-reachable pushes, the multi-pass loop became
-// a proven no-op for every runtime state. The two implementations are now
-// folded into this single helper so they can never re-diverge.
 function applyEdgeEffects(sel, edge, flavor) {
     if (!edge || !edge.effects) return;
     const effects = Array.isArray(edge.effects) ? edge.effects : [edge.effects];
@@ -335,20 +329,6 @@ function applyEdgeEffects(sel, edge, flavor) {
             }
         }
     }
-}
-
-// Walk every set node in NODES (topological) order and apply its picked
-// edge's `effects` blocks. Single pass, no invalidation sweep, no
-// fixpoint loop. Persists evicted dims to `flavor` so narrative
-// resolution can still see them.
-function cleanSelection(sel, flavor) {
-    if (!flavor) flavor = {};
-    for (const node of NODES) {
-        if (!sel[node.id]) continue;
-        const edge = node.edges && node.edges.find(v => v.id === sel[node.id]);
-        applyEdgeEffects(sel, edge, flavor);
-    }
-    return { sel, flavor };
 }
 
 
@@ -485,11 +465,18 @@ function templatePartialMatch(t, state) {
 // every helper that consults frames short-circuits and just reads globals.
 // Frame shape (Phase 3 will instantiate these): { moduleId, local: {sel, flavor}, entryIndex }
 function createStack() {
-    const state = {};
-    const { flavor } = cleanSelection(state);
-    return [{ nodeId: null, edgeId: null, state, flavor, moduleStack: [] }];
+    return [{ nodeId: null, edgeId: null, state: {}, flavor: {}, moduleStack: [] }];
 }
 
+// Edge-local push: stamps the picked edge id into sel, then applies
+// JUST that edge's effects blocks via applyEdgeEffects. Prior pushes'
+// effects are NOT re-walked — every edge owns its full effect locally.
+//
+// This means an edge that needs to fire downstream-edge effects (i.e.
+// effects.set writes a dim whose own picked edge has further effects)
+// must inline those cascade blocks into its own effects list. The
+// runtime state model is strictly: state(N) = applyEdge(state(N-1),
+// edge_N). No transitive re-walk, no implicit cascade.
 function push(stack, nodeId, edgeId) {
     const existingIdx = stack.findIndex(e => e.nodeId === nodeId);
     const base = existingIdx > 0 ? stack.slice(0, existingIdx) : stack;
@@ -497,9 +484,11 @@ function push(stack, nodeId, edgeId) {
     const prev = base[base.length - 1].state;
     const prevFlavor = base[base.length - 1].flavor || {};
     const prevModuleStack = base[base.length - 1].moduleStack || [];
-    const next = { ...prev };
-    next[nodeId] = edgeId;
-    const { flavor } = cleanSelection(next, { ...prevFlavor });
+    const next = { ...prev, [nodeId]: edgeId };
+    const flavor = { ...prevFlavor };
+    const node = NODE_MAP[nodeId];
+    const edge = node && node.edges && node.edges.find(e => e.id === edgeId);
+    if (edge) applyEdgeEffects(next, edge, flavor);
     return [...base, { nodeId, edgeId, state: next, flavor, moduleStack: prevModuleStack }];
 }
 
@@ -620,7 +609,7 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = { NODES, NODE_MAP, MODULES, MODULE_MAP,
         matchCondition, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         isAskableInternal,
-        applyEdgeEffects, cleanSelection, resolvedState, resolvedStateWithFlavor,
+        applyEdgeEffects, resolvedState, resolvedStateWithFlavor,
         templateMatches, templatePartialMatch, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
         isModuleDone: _isModuleDone, isModulePending: _isModulePending,
         createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas };
@@ -629,7 +618,7 @@ if (typeof window !== 'undefined') {
     window.Engine = { NODES, NODE_MAP, MODULES, MODULE_MAP,
         matchCondition, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         isAskableInternal,
-        applyEdgeEffects, cleanSelection, resolvedState, resolvedStateWithFlavor,
+        applyEdgeEffects, resolvedState, resolvedStateWithFlavor,
         templateMatches, templatePartialMatch, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
         isModuleDone: _isModuleDone, isModulePending: _isModulePending,
         createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas };

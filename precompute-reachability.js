@@ -470,10 +470,10 @@ function _findNextInternal(mod, sel) {
 // UI's outer-vs-inner key choice.
 const _isModuleDone = (mod, sel) => Engine.isModuleDone(sel, mod.completionMarker);
 
-// applyEdgeWrites mirroring graph-io._applyEdgeWrites — single-pass
-// effects application, no cleanSelection cascade. The
-// 178k-push divergence probe (see engine.cleanSelection comment)
-// proved this is equivalent on every runtime-reachable state.
+// applyEdgeWrites mirroring graph-io._applyEdgeWrites — single-edge
+// effects application identical to engine.push at runtime. Both call
+// the same block interpreter (engine.applyEdgeEffects under the hood),
+// so static and runtime cannot drift.
 function _applyEdgeWrites(sel, node, edge) {
     const next = { ...sel, [node.id]: edge.id };
     if (!edge.effects) return next;

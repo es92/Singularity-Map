@@ -114,7 +114,7 @@
     // are persisted, so a format change makes every lookup miss → 0
     // outputs). Eligibility is gated by `slot.kind === 'module'` at
     // the call sites below; outcomes have no DFS to cache.
-    const PERSIST_VERSION = 16;
+    const PERSIST_VERSION = 17;
     const PERSIST_KEY_PREFIX = 'gio:writeRows:';
 
     let _domainsCache = null;
@@ -675,15 +675,13 @@
 
     function _applyEdgeWrites(sel, node, edge) {
         // Returns a fresh sel with node.id=edge.id and the edge's
-        // effects blocks applied. The block interpreter
-        // itself lives in engine.applyEdgeEffects — calling it here
-        // (with flavor=null so `move` just deletes from sel) keeps
-        // static analysis byte-equivalent to the runtime per-edge
-        // pass that cleanSelection runs. The two used to be parallel
-        // implementations and accumulated 15 divergences before
-        // probe-divergence.js merged them; collapsing the call site
-        // to a shared helper keeps that class of bug closed by
-        // construction.
+        // effects blocks applied. The block interpreter itself lives
+        // in engine.applyEdgeEffects — calling it here (with
+        // flavor=null so `move` just deletes from sel) keeps static
+        // analysis byte-equivalent to the runtime push, since
+        // engine.push is just `applyEdgeEffects` on the picked edge
+        // too. The two paths share a single block interpreter and
+        // cannot drift.
         const next = { ...sel, [node.id]: edge.id };
         window.Engine.applyEdgeEffects(next, edge, null);
         return next;

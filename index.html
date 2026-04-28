@@ -1949,15 +1949,15 @@
             }
 
             function _lightPush(sel, flavor, nodeId, edgeId) {
-                // Mirrors Engine.push without committing to the stack: append
-                // the edge and run cleanSelection (now single-pass — applies
-                // each set node's effects blocks once, in NODES
-                // order, with no invalidation sweep).
-                const next = Object.assign({}, sel);
-                next[nodeId] = edgeId;
-                let nextFlavor = flavor ? Object.assign({}, flavor) : {};
-                const r = Engine.cleanSelection(next, nextFlavor);
-                nextFlavor = r.flavor || nextFlavor;
+                // Mirrors Engine.push without committing to the stack: stamp
+                // the edge id into sel and apply only that edge's effects
+                // blocks via applyEdgeEffects. Edge-local model — no
+                // multi-edge re-walk over already-set nodes.
+                const next = Object.assign({}, sel, { [nodeId]: edgeId });
+                const nextFlavor = flavor ? Object.assign({}, flavor) : {};
+                const node = Engine.NODE_MAP[nodeId];
+                const edge = node && node.edges && node.edges.find(e => e.id === edgeId);
+                if (edge) Engine.applyEdgeEffects(next, edge, nextFlavor);
                 return { sel: next, flavor: nextFlavor };
             }
 

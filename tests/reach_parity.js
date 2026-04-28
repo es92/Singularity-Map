@@ -12,9 +12,10 @@
 // Two failure modes this guards against:
 //   1. Precompute emits keys in form X but runtime computes form Y →
 //      every UI gate returns false, every post-lock answer is hidden.
-//   2. cleanSelection at runtime ≠ _applyEdgeWrites in precompute →
+//   2. runtime push diverges from _applyEdgeWrites in precompute →
 //      a post-edge sel projects to a different bucket than the one
 //      the precompute recorded; gate returns false on a real path.
+//      (Single shared block interpreter prevents this in practice.)
 
 const fs = require('fs');
 const path = require('path');
@@ -71,11 +72,12 @@ for (const m of (Engine.MODULES || [])) {
 
 // Mirror of `_lightPush` + key construction in index.html.
 function lightPush(sel, flavor, nodeId, edgeId) {
-    const next = Object.assign({}, sel);
-    next[nodeId] = edgeId;
-    let nextFlavor = flavor ? Object.assign({}, flavor) : {};
-    const r = Engine.cleanSelection(next, nextFlavor);
-    return { sel: next, flavor: r.flavor || nextFlavor };
+    const next = Object.assign({}, sel, { [nodeId]: edgeId });
+    const nextFlavor = flavor ? Object.assign({}, flavor) : {};
+    const node = Engine.NODE_MAP[nodeId];
+    const edge = node && node.edges && node.edges.find(e => e.id === edgeId);
+    if (edge) Engine.applyEdgeEffects(next, edge, nextFlavor);
+    return { sel: next, flavor: nextFlavor };
 }
 
 function reachKey(childSel, nodeId) {
