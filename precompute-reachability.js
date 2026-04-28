@@ -476,29 +476,12 @@ const innerReach = new Map();
 console.log('Pass 2 (inner): per-module DFS…');
 const t2 = Date.now();
 
-function _isAskableInternal(n, sel) {
-    if (!n || n.derived) return false;
-    if (sel[n.id] !== undefined) return false;
-    if (n.activateWhen && n.activateWhen.length
-        && !n.activateWhen.some(c => Engine.matchCondition(sel, c))) return false;
-    if (n.hideWhen && n.hideWhen.length
-        && n.hideWhen.some(c => Engine.matchCondition(sel, c))) return false;
-    return true;
-}
-
-function _findNextInternal(mod, sel) {
-    let best = null;
-    let bestPri = -Infinity;
-    for (const nid of (mod.nodeIds || [])) {
-        const n = NODE_MAP[nid];
-        if (!n) continue;
-        if (!_isAskableInternal(n, sel)) continue;
-        if (!n.edges || !n.edges.some(e => !Engine.isEdgeDisabled(sel, n, e))) continue;
-        const pri = n.priority == null ? 0 : n.priority;
-        if (pri > bestPri) { best = n; bestPri = pri; }
-    }
-    return best;
-}
+// Inner-DFS pick: delegated to GraphIO.findNextInternalNode so the
+// per-module DFS here, graph-io's own _dfsModuleOutputs, and any
+// future tooling all share one definition of "what would the engine
+// ask next inside this module?". The askability gate inside it
+// delegates further to Engine.isAskableInternal — same predicate the
+// runtime navigator and FlowPropagation use.
 
 // Shared completion-marker check (engine.js); returns true iff the
 // module's marker dim has a value AND that value is in the marker's
@@ -620,7 +603,7 @@ for (const mod of MODULES) {
                 mask |= outerReach.get(s.key + '|o|' + pk) || 0;
             }
         } else {
-            const n = _findNextInternal(mod, sel);
+            const n = GraphIO.findNextInternalNode(mod, sel);
             if (n) {
                 for (const edge of n.edges) {
                     if (Engine.isEdgeDisabled(sel, n, edge)) continue;

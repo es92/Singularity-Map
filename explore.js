@@ -621,17 +621,19 @@
     // ─── Reach-map cross-refresh cache ─────────────────────────────────
     // The full propagation chain (~21s on a cold run) is the dominant
     // cost on /explore. Its output `_reachByKey` depends only on
-    // static graph data — NODES, MODULES, FLOW_DAG, outcome templates,
-    // PROPAGATE_TARGETS — so we can persist it to localStorage,
-    // fingerprinted on those inputs, and skip the work entirely on
-    // refresh.
+    // static graph data — NODES, MODULES, FLOW_DAG, outcome templates
+    // — so we can persist it to localStorage, fingerprinted on those
+    // inputs, and skip the work entirely on refresh. (Propagation
+    // targets are now derived from FLOW_DAG.nodes by
+    // `FlowPropagation`, so any change to the target set is already
+    // captured by the `flow` field below.)
     //
     // Invalidation: any change to fingerprint inputs produces a new
     // hash → new key → cache miss → recompute. Bump REACH_VERSION when
     // the propagation algorithm itself changes (slotAccepts gating,
     // outcome partitioning rules, etc.) — the static-data hash won't
     // catch logic edits in this file or graph-io.js.
-    const REACH_VERSION = 15;
+    const REACH_VERSION = 16;
     const REACH_KEY_PREFIX = 'explore:reach:v';
 
     function _hashStr(s) {
@@ -672,7 +674,6 @@
                 })),
                 flow: { nodes: FLOW.nodes, edges: FLOW.edges },
                 templates: tplDigest,
-                targets: [...PROPAGATE_TARGETS].sort(),
             };
             return _hashStr(JSON.stringify(data));
         } catch (_e) { return null; }
@@ -1214,253 +1215,104 @@
         return sel;
     }
 
-    // Set of slot keys we propagate reachability into. Add a key here
-    // (and make sure its parents are also in the set) to extend the
-    // propagation chain. Right now: emergence's three direct children
-    // plus alignment (control's child).
-    const PROPAGATE_TARGETS = new Set([
-        'plateau_bd',
-        'auto_bd',
-        'rollout_early',
-        'control',
-        'alignment',
-        'decel',
-        'escape_early',
-        'proliferation',
-        'escape_early_alt',
-        'intent',
-        'war',
-        'who_benefits',
-        'inert_stays',
-        'brittle',
-        'escape_late',
-        'escape_re_entry',
-        'escape_after_who',
-        'rollout',
-    ]);
-
-    // Build the per-slot reachability map for the badges. Topological
-    // propagation through the DAG starting at the root (emergence):
-    // each slot's full-sel outputs become its children's upstream
-    // sels. For every slot in PROPAGATE_TARGETS we record TWO views:
+    // Build the per-slot reachability map for the badges.
+    //
+    // Propagation itself (topo walk + slot-priority routing + outcome
+    // siphoning) is delegated to `FlowPropagation.run` — the same
+    // primitive validate.js and precompute-reachability.js use, so
+    // explore's badges and the engine's static analysis can never
+    // disagree on what's reachable. The hook `onOutcomeMatch` lets us
+    // tally per-(slot, outcome) reach without re-walking; everything
+    // else falls out of the propagation result directly.
+    //
+    // For each slot we record TWO views:
     //
     //   * bucket  — counts of distinct read-projections in / write-
     //               projections out, matching the slot's own table
-    //               columns. (`reachableCountsFromInputs`)
-    //   * fullSel — counts of distinct full sels in / out, which can
-    //               exceed the bucket counts because pass-through dims
-    //               (not in slot.reads / slot.writes) ride through
+    //               columns. (`reachableCountsFromInputs`, called per
+    //               slot here because `FlowPropagation.run` only
+    //               tracks full-sel counts.)
+    //   * fullSel — counts of distinct full sels in / out, derived
+    //               from FlowPropagation (`acceptedBySlot`,
+    //               `routed + matched + dead`). Can exceed the bucket
+    //               counts because pass-through dims ride through
     //               unchanged and split otherwise-collapsing buckets.
-    //               (`reachableFullSelsFromInputs`)
-    //
-    // Pure table lookups via cartesianWriteRows.byInput — no DFS at
-    // call time once the standalone tables are built.
     function buildReachByKey(dag) {
         if (!window.GraphIO || !window.GraphIO.cartesianWriteRows
             || !window.GraphIO.reachableCountsFromInputs
-            || !window.GraphIO.reachableFullSelsFromInputs) return null;
+            || !window.FlowPropagation) return null;
         const emergence = dag.nodes.find(n => n.key === 'emergence');
         if (!emergence) return null;
         const eW = window.GraphIO.cartesianWriteRows(emergence);
         if (!eW || !Array.isArray(eW.rows)) return null;
 
-        // Adjacency restricted to flow edges into propagation targets.
-        // Outcome / deadend placement edges don't carry flow, so skip
-        // them; outcome-link edges are derived and shouldn't drive
-        // reachability either.
-        const parentsOf = new Map();
-        const childrenOf = new Map();
-        for (const e of dag.edges) {
-            const [p, c, kind] = e;
-            if (kind === 'placement-outcome' || kind === 'placement-deadend') continue;
-            if (kind === 'outcome-link') continue;
-            if (String(c).startsWith('outcome:') || c === 'deadend') continue;
-            if (!PROPAGATE_TARGETS.has(c)) continue;
-            if (!parentsOf.has(c)) parentsOf.set(c, []);
-            parentsOf.get(c).push(p);
-            if (!childrenOf.has(p)) childrenOf.set(p, []);
-            childrenOf.get(p).push(c);
-        }
-
-        // Topological order (Kahn) over the propagation subgraph,
-        // seeded from emergence. Slots whose parents aren't all
-        // resolvable to outputs yet stay queued.
-        const inDeg = new Map();
-        const allKeys = new Set([...PROPAGATE_TARGETS, 'emergence']);
-        for (const k of allKeys) inDeg.set(k, 0);
-        for (const [c, ps] of parentsOf) {
-            inDeg.set(c, ps.filter(p => allKeys.has(p)).length);
-        }
-        const order = [];
-        const queue = ['emergence'];
-        while (queue.length) {
-            const k = queue.shift();
-            order.push(k);
-            for (const c of (childrenOf.get(k) || [])) {
-                if (!allKeys.has(c)) continue;
-                inDeg.set(c, inDeg.get(c) - 1);
-                if (inDeg.get(c) === 0) queue.push(c);
-            }
-        }
-
-        // inputsBySlot[key] = array of full sels routed INTO that slot
-        // by its parents' priority-pick step. Each parent output goes
-        // to exactly one child — the accepting child whose lowest-
-        // priority internal node has the smallest priority value (the
-        // node the engine would actually fire next). Tiebreak by
-        // FLOW_DAG order. This matches engine semantics: a single
-        // sel never propagates to multiple downstream slots.
-        const inputsBySlot = new Map();
-
-        const matchOutcomes = (window.GraphIO && window.GraphIO.matchOutcomes)
-            ? window.GraphIO.matchOutcomes
-            : () => [];
+        // Per-(slot, outcome) reach: captured via the onOutcomeMatch
+        // hook because FlowPropagation aggregates `outcomeAgg`
+        // globally but not the per-slot breakdown.
+        const perSlotOutcomes = new Map();
+        const prop = window.FlowPropagation.run({
+            onOutcomeMatch: (oid, _sel, slotKey) => {
+                let m = perSlotOutcomes.get(slotKey);
+                if (!m) { m = new Map(); perSlotOutcomes.set(slotKey, m); }
+                m.set(oid, (m.get(oid) || 0) + 1);
+            },
+        });
 
         const map = new Map();
-        const outcomeAgg = new Map(); // oid → total sels across all upstream slots
-        const deadAgg = new Map();    // slotKey → dead-end count from that slot
+        const deadAgg = new Map(); // slotKey → dead-end count from that slot
 
-        const NODE_MAP = (window.Engine && window.Engine.NODE_MAP) || {};
-        const MODULE_MAP = (window.Graph && window.Graph.MODULE_MAP) || {};
-        const matchCondition = window.Engine && window.Engine.matchCondition;
-
-        // Engine-equivalent next-slot pick: returns the priority of
-        // the lowest-priority internal node that's actually askable
-        // for this sel — Infinity if no internal is askable. Returning
-        // Infinity is also our "slot rejects this sel" signal.
-        //
-        // This mirrors the engine's `_isModuleActivelyPending`: a
-        // module's module-level activateWhen / hideWhen + completion
-        // marker pass, AND at least one internal node's own
-        // activateWhen / hideWhen pass with that internal still unset
-        // and not derived. Without the per-internal check, modules
-        // like proliferation accept benevolent paths at the module
-        // level (`alignment_set=yes` matches) but the engine would
-        // skip them because every internal is hidden — leading the
-        // static analyzer to mis-route benevolent paths away from
-        // who_benefits.
-        const _isAskableInternal = (n, sel) => {
-            if (!n || n.derived) return false;
-            if (sel[n.id] !== undefined) return false;
-            if (n.activateWhen && n.activateWhen.length
-                && !n.activateWhen.some(c => matchCondition(sel, c))) return false;
-            if (n.hideWhen && n.hideWhen.length
-                && n.hideWhen.some(c => matchCondition(sel, c))) return false;
-            return true;
-        };
-        const slotPickPriority = (slot, sel) => {
-            if (!slot || slot.kind === 'outcome' || slot.kind === 'deadend') return Infinity;
-            if (slot.kind === 'node') {
-                const n = NODE_MAP[slot.id];
-                if (!_isAskableInternal(n, sel)) return Infinity;
-                return n.priority !== undefined ? n.priority : 0;
-            }
-            if (slot.kind === 'module') {
-                const m = MODULE_MAP[slot.id];
-                if (!m) return Infinity;
-                if (m.completionMarker && sel[m.completionMarker] !== undefined) return Infinity;
-                const aw = m.activateWhen, hw = m.hideWhen;
-                if (aw && aw.length && !aw.some(c => matchCondition(sel, c))) return Infinity;
-                if (hw && hw.length && hw.some(c => matchCondition(sel, c))) return Infinity;
-                let minP = Infinity;
-                for (const nid of (m.nodeIds || [])) {
-                    const n = NODE_MAP[nid];
-                    if (!_isAskableInternal(n, sel)) continue;
-                    const p = n.priority !== undefined ? n.priority : 0;
-                    if (p < minP) minP = p;
-                }
-                return minP;
-            }
-            return Infinity;
-        };
-
-        // Per-slot processing in topo order:
-        //   1. Get the slot's outputs (DFS from its routed-in inputs;
-        //      emergence is the special case — its inputs are empty
-        //      and we use cartesianWriteRows directly).
-        //   2. For each output, in this order:
-        //      a. Outcome match (engine tests outcomes after slot
-        //         exit, before considering downstream slots) →
-        //         siphoned to that outcome card.
-        //      b. Find every accepting child and pick the ONE with
-        //         the lowest effective priority (engine semantics).
-        //         Push the sel into that child's inputsBySlot.
-        //      c. No accepting child → dead.
-        //   3. Save reach data for the badge.
-        const emergenceOutputs = eW.rows.map(rowToSel);
-        for (const slotKey of order) {
+        for (const slotKey of prop.order) {
             const slot = dag.nodes.find(n => n.key === slotKey);
             if (!slot) continue;
 
-            let outputs, bucket, full;
+            let bucket, fullInputs;
             if (slotKey === 'emergence') {
-                outputs = emergenceOutputs;
-                bucket = { reachableInputs: 1, reachableOutputs: eW.rows.length, truncated: !!eW.truncated };
-                full = { acceptedInputs: [{}], outputs: emergenceOutputs, truncated: !!eW.truncated };
+                // Emergence is the seed: outputs come from
+                // cartesianWriteRows directly, not from upstream
+                // inputs. FlowPropagation skips its accept tracking.
+                bucket = {
+                    reachableInputs: 1,
+                    reachableOutputs: eW.rows.length,
+                    truncated: !!eW.truncated,
+                };
+                fullInputs = 1;
             } else {
-                const upstream = inputsBySlot.get(slotKey);
+                const upstream = prop.inputsBySlot.get(slotKey);
                 if (!upstream || !upstream.length) continue;
                 bucket = window.GraphIO.reachableCountsFromInputs(slot, upstream);
-                full = window.GraphIO.reachableFullSelsFromInputs(slot, upstream);
-                if (!bucket || !full) continue;
-                outputs = full.outputs;
+                if (!bucket) continue;
+                fullInputs = prop.acceptedBySlot.get(slotKey) || 0;
             }
 
-            const outcomeReach = new Map();
-            let matchedSelCount = 0;
-            let routedCount = 0;
-            let deadCount = 0;
+            const matched = prop.matchedBySlot.get(slotKey) || 0;
+            const routed  = (prop.routedBySlot.get(slotKey) || []).length;
+            const dead    = (prop.deadBySlot.get(slotKey)   || []).length;
+            // Every output a slot produces is routed-to-child,
+            // siphoned-to-outcome, or dead — exact identity.
+            // (`reachableCountsFromInputs` and `reachableFullSelsFrom-
+            // Inputs` both derive `truncated` from the same
+            // `cartesianWriteRows(slot).truncated`, so the bucket
+            // flag is the canonical truncation signal here.)
+            const fullOutputs = matched + routed + dead;
 
-            const childKeys = childrenOf.get(slotKey) || [];
-            const childSlots = childKeys
-                .map(k => dag.nodes.find(n => n.key === k))
-                .filter(Boolean);
-
-            for (const sel of outputs) {
-                const hits = matchOutcomes(sel);
-                if (hits.length > 0) {
-                    matchedSelCount += 1;
-                    for (const oid of hits) {
-                        outcomeReach.set(oid, (outcomeReach.get(oid) || 0) + 1);
-                        outcomeAgg.set(oid, (outcomeAgg.get(oid) || 0) + 1);
-                    }
-                    continue;
-                }
-                let bestChild = null;
-                let bestPri = Infinity;
-                for (const child of childSlots) {
-                    const p = slotPickPriority(child, sel);
-                    // Strict < keeps the FLOW_DAG-order tiebreak: an
-                    // earlier child of equal priority wins.
-                    if (p < bestPri) { bestPri = p; bestChild = child; }
-                }
-                if (bestChild) {
-                    let arr = inputsBySlot.get(bestChild.key);
-                    if (!arr) { arr = []; inputsBySlot.set(bestChild.key, arr); }
-                    arr.push(sel);
-                    routedCount += 1;
-                } else {
-                    deadCount += 1;
-                }
-            }
-            if (deadCount > 0) deadAgg.set(slotKey, deadCount);
+            if (dead > 0) deadAgg.set(slotKey, dead);
 
             map.set(slotKey, {
                 bucketInputs: bucket.reachableInputs,
                 bucketOutputs: bucket.reachableOutputs,
-                fullInputs: full.acceptedInputs.length,
-                fullOutputs: full.outputs.length,
-                truncated: !!(bucket.truncated || full.truncated),
-                outcomeReach,
-                outcomeSelCount: matchedSelCount,
-                propagatedCount: routedCount,
-                deadCount,
+                fullInputs,
+                fullOutputs,
+                truncated: !!bucket.truncated,
+                outcomeReach: perSlotOutcomes.get(slotKey) || new Map(),
+                outcomeSelCount: matched,
+                propagatedCount: routed,
+                deadCount: dead,
             });
         }
 
         // Pin per-outcome totals onto outcome keys so outcome cards can
         // render their incoming reach without re-walking the graph.
-        for (const [oid, count] of outcomeAgg) {
+        for (const [oid, count] of prop.outcomeAgg) {
             map.set('outcome:' + oid, { kind: 'outcome', reach: count });
         }
         // Pin total dead-end count + per-source breakdown onto the

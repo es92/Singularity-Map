@@ -1367,6 +1367,15 @@
         // precompute-reachability.js (write side), index.html
         // wouldReachOutcome (read side), tests/reach_parity.js mirror.
         innerDimsForSlot: _innerDimsForSlot,
+        // Inner-DFS pick: picks the (priority-highest) askable internal
+        // node of `mod` that has at least one enabled edge under `sel`,
+        // or null if none. Used by graph-io's own _dfsModuleOutputs and
+        // by precompute-reachability.js's per-module DFS so the two
+        // share one definition of "what would the engine ask next
+        // inside this module?". Askability gate is delegated to
+        // Engine.isAskableInternal for parity with the runtime
+        // navigator and FlowPropagation.
+        findNextInternalNode: _findNextInternalNode,
         // JSON-stringified [[dim, value-or-UNSET], …] projection used
         // for reach keys. Same shape as `cartesianWriteRows.byInput`'s
         // values, so map lookups land in the same key space.
