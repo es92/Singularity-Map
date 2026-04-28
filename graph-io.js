@@ -731,17 +731,28 @@
         // enabled edge — a node with all edges currently disabled has
         // no traversable branch to recurse into, even though the
         // runtime engine would still surface it as a question.
+        //
+        // Tiebreak: LOWEST priority wins, matching FlowPropagation's
+        // `_slotPickPriority` module branch and `flowNext`'s
+        // module-internal branch — the same signal the runtime
+        // navigator uses to decide which internal to surface next.
+        // Default priority for an unset value is 0. The choice only
+        // matters when ≥2 internal nodes of a module are
+        // simultaneously askable with different priorities; the
+        // current graph has activate clauses that prevent that
+        // co-firing, so this tiebreak is presently invariant — it's
+        // the future-proof shape.
         const NM = NODE_MAP();
         const Engine = window.Engine;
         const nodeIds = mod.nodeIds || [];
         let best = null;
-        let bestPri = -Infinity;
+        let bestPri = Infinity;
         for (const nid of nodeIds) {
             const n = NM[nid];
             if (!Engine.isAskableInternal(sel, n)) continue;
             if (!n.edges || !n.edges.some(e => !Engine.isEdgeDisabled(sel, n, e))) continue;
             const pri = n.priority == null ? 0 : n.priority;
-            if (pri > bestPri) { best = n; bestPri = pri; }
+            if (pri < bestPri) { best = n; bestPri = pri; }
         }
         return best;
     }

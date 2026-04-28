@@ -369,20 +369,57 @@
     // enabled edge) and lowest-priority-wins (matching what the
     // user-facing engine surfaces).
     //
-    // Across slots, the owning slot is the one whose
-    // _slotPickPriority is lowest — the same signal
-    // FlowPropagation.run uses to route a parent's outputs to one of
-    // its children. This makes runtime (flowNext) and static analysis
-    // (run) agree on a single criterion. When two slots tie on
-    // priority, FLOW_DAG.nodes order is the tie-breaker (first wins).
-    // Because FLOW_DAG.nodes is hand-authored in topological order,
-    // this matches the parent-edge-decl tie-break in run() in every
-    // case where one parent has multiple equally-prioritized
-    // accepting children.
+    // ─── Module atomicity ──────────────────────────────────────────
+    // If any module has been ENTERED (≥1 internal answered) and not
+    // yet EXITED (completion marker unset), it owns the next pick
+    // exclusively — no other slot can preempt. This prevents
+    // mid-module interruption when a downstream module's gate happens
+    // to activate on a value just written by the current module. (E.g.
+    // who_benefits writes `concentration_type=ai_itself`, which also
+    // satisfies escape's gate; without this rule, escape would steal
+    // the next question before who_benefits asks `power_use`.) Mirrors
+    // FlowPropagation.run, which is inherently atomic per-slot via
+    // the inner-DFS in `reachableFullSelsFromInputs`.
+    //
+    // If two modules are simultaneously mid-flow (rare; can only
+    // happen via legacy state captured before this rule existed), the
+    // FIRST in FLOW_DAG order wins.
+    //
+    // ─── Cross-slot pick (no module mid-flow) ──────────────────────
+    // The owning slot is the one whose _slotPickPriority is lowest —
+    // the same signal FlowPropagation.run uses to route a parent's
+    // outputs to one of its children. This makes runtime (flowNext)
+    // and static analysis (run) agree on a single criterion. When two
+    // slots tie on priority, FLOW_DAG.nodes order is the tie-breaker
+    // (first wins). Because FLOW_DAG.nodes is hand-authored in
+    // topological order, this matches the parent-edge-decl tie-break
+    // in run() in every case where one parent has multiple
+    // equally-prioritized accepting children.
     function flowNext(sel) {
         const Engine = _Engine();
         const flowDag = _FlowDag();
         if (!Engine || !flowDag) return { kind: 'open' };
+
+        for (const slot of flowDag.nodes) {
+            if (!slot || slot.kind !== 'module' || slot.key === 'emergence') continue;
+            const m = Engine.MODULE_MAP[slot.id];
+            if (!m) continue;
+            if (m.completionMarker && sel[m.completionMarker] !== undefined) continue;
+            let entered = false;
+            for (const nid of (m.nodeIds || [])) {
+                if (sel[nid] !== undefined) { entered = true; break; }
+            }
+            if (!entered) continue;
+            const next = _pickModuleInternal(Engine, m, sel);
+            if (next) return { kind: 'question', node: next, slotKey: slot.key };
+            // No askable internal. With a completionMarker, this is a
+            // stuck state (the marker should have been set by an exit
+            // edge but wasn't — graph bug; validate.js's stuck-inputs
+            // phase surfaces it). Without a marker, the module simply
+            // ran out of questions — that IS its terminal state, so
+            // fall through to the global pick.
+            if (m.completionMarker) return { kind: 'stuck', slotKey: slot.key };
+        }
 
         let bestSlot = null;
         let bestP = Infinity;
@@ -402,19 +439,27 @@
         if (bestSlot.kind === 'module') {
             const m = Engine.MODULE_MAP[bestSlot.id];
             if (!m) return { kind: 'stuck', slotKey: bestSlot.key };
-            let bestNode = null;
-            let bestNodeP = Infinity;
-            for (const nid of (m.nodeIds || [])) {
-                const n = Engine.NODE_MAP[nid];
-                if (!Engine.isAskableInternal(sel, n)) continue;
-                if (!n.edges || !n.edges.some(e => !Engine.isEdgeDisabled(sel, n, e))) continue;
-                const p = n.priority == null ? 0 : n.priority;
-                if (p < bestNodeP) { bestNode = n; bestNodeP = p; }
-            }
-            if (bestNode) return { kind: 'question', node: bestNode, slotKey: bestSlot.key };
+            const next = _pickModuleInternal(Engine, m, sel);
+            if (next) return { kind: 'question', node: next, slotKey: bestSlot.key };
             return { kind: 'stuck', slotKey: bestSlot.key };
         }
         return { kind: 'open' };
+    }
+
+    // Lowest-priority TIGHT-askable internal of `mod` for this `sel`.
+    // Shared between the module-atomicity override above and the
+    // cross-slot fallback below it.
+    function _pickModuleInternal(Engine, mod, sel) {
+        let bestNode = null;
+        let bestNodeP = Infinity;
+        for (const nid of (mod.nodeIds || [])) {
+            const n = Engine.NODE_MAP[nid];
+            if (!Engine.isAskableInternal(sel, n)) continue;
+            if (!n.edges || !n.edges.some(e => !Engine.isEdgeDisabled(sel, n, e))) continue;
+            const p = n.priority == null ? 0 : n.priority;
+            if (p < bestNodeP) { bestNode = n; bestNodeP = p; }
+        }
+        return bestNode;
     }
 
     if (typeof window !== 'undefined') {
