@@ -518,14 +518,16 @@
         }
 
         const sel = Engine.currentState(stack);
-        // Module exits move dims like escape_method/escape_timeline/response_method
-        // into flavor. Template match + timeline resolution both need sel + flavor
-        // so module-exported flavor dims remain visible.
+        // Template matching reads `sel` only — outcome `reachable` clauses
+        // are sel-only by contract (see Engine.templateMatches). Narrative
+        // resolution still needs the fused `sel ∪ flavor` view so module-
+        // exported flavor dims (escape_method/escape_timeline/etc.) remain
+        // visible to flavor blocks and timeline events.
         const narrEff = Engine.resolvedStateWithFlavor(sel, Engine.currentFlavor(stack));
 
         const templatesMap = {};
         for (const t of outcomes.templates) templatesMap[t.id] = t;
-        const matched = outcomes.templates.filter(t => Engine.templateMatches(t, narrEff));
+        const matched = outcomes.templates.filter(t => Engine.templateMatches(t, sel));
         if (matched.length === 0) return;
         const resolved = resolveTemplate(templatesMap, matched[0].id, narrEff);
         if (!resolved) return;

@@ -1323,8 +1323,11 @@ const NODES = [
     //
     // The `rollout_set` completion marker (set by every module exit tuple)
     // doubles as the post-answer hide for all three nodes. Narrative /
-    // templates read the flavor-side dims via fused state (sel ∪ flavor),
-    // so moving them to flavor on exit is narrative-safe.
+    // flavor blocks read the flavor-side dims via narrEff (sel ∪ flavor),
+    // so moving them to flavor on exit is narrative-safe. Outcome
+    // `reachable` clauses are sel-only by contract and reference only
+    // dims that stay in sel post-exit (knowledge_rate, failure_mode,
+    // rollout_set).
     //
     // `limited` is always present as an edge (per user: "always have limited
     // as an option, it just gets disabled sometimes"). It's disabled
@@ -1725,11 +1728,11 @@ const NODES = [
       //     non-accelerate cells) directly into sel.
       //   * `governance_window.{governed, partial, race}` edges write
       //     `governance` into flavor via setFlavor.
-      // Outcome templates consume `governance` through
-      // resolvedStateWithFlavor (sel ∪ flavor underlay), so the
-      // setFlavor writes are visible to template matching. No
-      // matchCondition in the graph reads `governance` directly, so no
-      // sel-only consumer needs a fallback.
+      // No outcome reachable clause references `governance` (verified
+      // against data/outcomes.json), so the sel-vs-flavor split is
+      // template-matching-safe; the fused-only writes are read solely
+      // by narrative / flavor blocks (which resolve via narrEff). No
+      // matchCondition in the graph reads `governance` directly either.
       edges: [{ id: 'race' }, { id: 'slowdown' }, { id: 'governed' }, { id: 'partial' }] },
     // Phase 4a: rival_emerges derived node deleted. Decel module writes
     // rival_emerges='yes' directly on (rival, *) cells. Other consumers
@@ -2070,12 +2073,11 @@ const DECEL_MODULE = {
 //     All stay in sel post-exit.
 //   * The remaining internal dims (escape_method, escape_timeline,
 //     discovery_timing, response_method, response_success,
-//     collateral_survivors) are pure flavor — nothing outside the
-//     module reads them from sel. Templates and narrative variants
-//     that reference them go through resolvedStateWithFlavor /
-//     narrativeState, so flavor lookups work. attachModuleReducer
-//     auto-computes move = nodeIds \ writes and evicts them to flavor
-//     on exit.
+//     collateral_survivors) are pure narrative — no outcome reachable
+//     clause or graph gate reads them from sel. Outcome flavor blocks
+//     and narrative variants reference them via narrEff (sel ∪ flavor),
+//     so flavor lookups work. attachModuleReducer auto-computes
+//     move = nodeIds \ writes and evicts them to flavor on exit.
 //   * completionMarker: `escape_set`. The auto-detection (last write)
 //     would pick war_survivors which is only set on one tail branch, so
 //     we declare an explicit marker and set it on every exit tuple.
@@ -2437,22 +2439,26 @@ function attachModuleReducer(mod) {
 //     {singleton, inner_circle} → power_use.* — exits after power_use
 //
 // External contract:
-//   * writes = [concentration_type] — only dim with an external sel-only
-//     gate reader (ai_goals / escape_method / escape_timeline /
-//     discovery_timing all gate on concentration_type=ai_itself in
-//     activateWhen). concentration_type is only written on the extreme
-//     path; on the equal/unequal exits it's undefined in sel, which
-//     is correct (its own activateWhen gates on
-//     benefit_distribution=extreme).
-//   * benefit_distribution is NOT in writes: its only sel-level reader
-//     is concentration_type (internal). Templates / narrative read it
-//     through the fused view (resolvedStateWithFlavor / narrEff), so
-//     it safely collapses to flavor on module exit via the standard
-//     nodeIds \ writes auto-eviction in attachModuleReducer.
-//   * nodeIds = all 8 dims. Move list (nodeIds \ writes) = the 7
-//     non-concentration_type dims — all of them are flavor-only
-//     external consumers (template flavors/reachables, narrative
-//     contextWhen) rendered via narrEff, so they safely evict on exit.
+//   * writes (see WHO_BENEFITS_WRITES below) carries every dim with a
+//     post-exit consumer that reads from sel:
+//       - concentration_type: external activateWhen gates (ai_goals /
+//         escape_method / escape_timeline / discovery_timing all gate
+//         on concentration_type=ai_itself).
+//       - benefit_distribution: outcome reachable clauses on the-gilded
+//         / the-new-hierarchy / the-flourishing / the-capture / the-
+//         mosaic. Outcome matching is sel-only by contract, so it must
+//         persist to sel post-exit.
+//       - delivery_ask_eligible: ROLLOUT's failure_mode.activateWhen.
+//       - power_use: ai_goals.benevolent.disabledWhen on the soft-
+//         takeover path.
+//     concentration_type is only written on the extreme path; on the
+//     equal/unequal exits it's undefined in sel, which is correct (its
+//     own activateWhen gates on benefit_distribution=extreme).
+//   * The remaining nodeIds (power_promise, mobilization, sincerity_
+//     test, pushback_outcome, coalition_outcome) move to flavor on exit
+//     via nodeIds \ writes auto-eviction. They have no sel-only readers
+//     post-exit; only outcome flavors and narrative blocks read them,
+//     which resolve via narrEff (sel ∪ flavor).
 //
 // Completion marker:
 //   The auto-detection (`writes[-1]` = concentration_type) would
@@ -2485,12 +2491,6 @@ const WHO_BENEFITS_NODE_IDS = [
     'power_use',
 ];
 
-// Note: `benefit_distribution` is read only by WHO_BENEFITS-internal
-// nodes (concentration_type.activateWhen) and by templates / narrative,
-// which resolve through fused state (sel ∪ flavor). Nothing outside the
-// module gates on it, so it's safe to move to flavor on module exit
-// (via nodeIds \ writes auto-eviction in attachModuleReducer).
-//
 // `delivery_ask_eligible` is a synthetic marker (no host node) set by
 // benefit_distribution edges via `effects.set` to signal to
 // failure_mode in ROLLOUT whether the delivery-drift question makes

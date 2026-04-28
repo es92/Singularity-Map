@@ -2062,7 +2062,6 @@
                 // Narrative-match view: sel + flavor so edge narrativeVariants
                 // can observe flavor-moved dims (e.g., stall_recovery='mild').
                 const narrSel = Engine.narrativeState(stack);
-                const eff = Engine.resolvedStateWithFlavor(sel, Engine.currentFlavor(stack));
 
                 // FLOW_DAG-driven navigation (single source of truth, shared
                 // with validate.js / explore / precompute-reachability):
@@ -2076,8 +2075,13 @@
                 //                  is allowed.
                 const flow = window.FlowPropagation.flowNext(sel);
                 if (flow.kind === 'open') {
+                    // Outcome matching reads only sel — flavor is for
+                    // narrative rendering, not template gating. Any dim
+                    // referenced by a `reachable` clause must be in some
+                    // mod.writes (e.g., WHO_BENEFITS_WRITES carries
+                    // benefit_distribution forward for this reason).
                     for (const t of templatesList) {
-                        if (Engine.templateMatches(t, eff)) return null;
+                        if (Engine.templateMatches(t, sel)) return null;
                     }
                     return null;
                 }
@@ -2285,11 +2289,13 @@
             }
 
             function getOutcomeShareInfo() {
-                // For narrative resolution (subtitle, flavor text) and template
-                // matching alike, underlay flavor beneath resolvedState so
-                // module-exported flavor dims remain visible to both.
-                const narrEff = Engine.resolvedStateWithFlavor(Engine.currentState(stack), Engine.currentFlavor(stack));
-                const matched = templatesList.filter(t => Engine.templateMatches(t, narrEff));
+                // Template matching reads `sel` only; narrative resolution
+                // (subtitle, flavor text) reads the fused `sel ∪ flavor`
+                // view so module-exported flavor dims remain visible to
+                // narrative blocks.
+                const sel = Engine.currentState(stack);
+                const narrEff = Engine.resolvedStateWithFlavor(sel, Engine.currentFlavor(stack));
+                const matched = templatesList.filter(t => Engine.templateMatches(t, sel));
                 let url = location.origin + location.pathname + location.hash;
                 let title = '';
                 if (matched.length > 0) {
@@ -2319,11 +2325,13 @@
             }
 
             function buildOutcomeSectionHtml() {
-                // Merged view for narrative resolution (flavors, flavor headings,
-                // conditional text) and template matching — flavor-moved dims
-                // need to be visible to both.
-                const narrEff = Engine.resolvedStateWithFlavor(Engine.currentState(stack), Engine.currentFlavor(stack));
-                const matched = templatesList.filter(t => Engine.templateMatches(t, narrEff));
+                // Template matching reads `sel` only; narrative resolution
+                // (flavors, flavor headings, conditional text) reads the
+                // fused `sel ∪ flavor` view so flavor-moved dims remain
+                // visible to narrative blocks.
+                const sel = Engine.currentState(stack);
+                const narrEff = Engine.resolvedStateWithFlavor(sel, Engine.currentFlavor(stack));
+                const matched = templatesList.filter(t => Engine.templateMatches(t, sel));
                 if (matched.length === 0) return '';
 
                 const t = matched[0];
@@ -2942,8 +2950,9 @@
                             });
                         }
                         wireRatingSection(outcomeZone);
-                        const narrEff = Engine.resolvedStateWithFlavor(Engine.currentState(stack), Engine.currentFlavor(stack));
-                        const matchedT = templatesList.filter(t => Engine.templateMatches(t, narrEff));
+                        const sel = Engine.currentState(stack);
+                        const narrEff = Engine.resolvedStateWithFlavor(sel, Engine.currentFlavor(stack));
+                        const matchedT = templatesList.filter(t => Engine.templateMatches(t, sel));
                         if (matchedT.length > 0) {
                             const resolved = resolveTemplate(matchedT[0].id, narrEff);
                             const dateMap = buildTimelineDateMap();

@@ -371,11 +371,17 @@ function resolvedState(sel) {
     return d;
 }
 
-// State used for template `reachable` matching. Underlays flavor beneath
-// resolvedState so dims moved to flavor by `effects.move` (e.g.
-// module-internal dims exported only for outcome routing) remain matchable
-// without needing to live in sel. sel wins on conflict — flavor is a
+// Fused state for narrative / flavor rendering. Underlays flavor beneath
+// resolvedState so flavor blocks, narrative variants, and conditional
+// text can read dims that the user picked but were later moved to flavor
+// by `effects.move` (e.g. module-internal dims like escape_method,
+// discovery_timing, response_method). sel wins on conflict — flavor is a
 // fallback layer, not an override.
+//
+// NOT used for template matching — `templateMatches` is sel-only by
+// contract (see comment on that function). The two callers that mattered
+// (index.html, share/share-vignettes.js) keep this view for narrative
+// resolution but pass `sel` to `templateMatches`.
 function resolvedStateWithFlavor(sel, flavor) {
     const base = resolvedState(sel);
     if (!flavor) return base;
@@ -426,6 +432,26 @@ function _notRejects(notSpec, state) {
     return false;
 }
 
+// Template `reachable` clauses match against `sel` only — never the fused
+// `sel ∪ flavor` view. This keeps the runtime UI, the precompute
+// (precompute-reachability.js), validate.js, and FlowPropagation all
+// observing outcomes at the same states, and gives a single clean
+// contract for graph authors:
+//
+//   "Any dim referenced by an outcome `reachable` clause must be
+//    present in `sel` at outcome-match time. If the producing module
+//    moves the dim to flavor on exit, add it to that module's `writes`
+//    list (e.g. WHO_BENEFITS_WRITES carries benefit_distribution
+//    forward; ESCAPE_WRITES carries ruin_type forward)."
+//
+// Flavor is for narrative / flavor rendering only — see
+// `resolvedStateWithFlavor`. Mixing the two in a single matcher
+// previously created a silent inconsistency: the runtime UI would
+// match outcomes the precompute couldn't reach, leaving locked-mode
+// reach lookups wrong without any test-visible failure. Static and
+// runtime audits before this change found 0 outcome reachable clauses
+// that depended on flavor-only dims, so this is a no-op for current
+// behavior; it just removes the footgun.
 function templateMatches(t, state) {
     if (!t.reachable) return true;
     return t.reachable.some(cond => {
