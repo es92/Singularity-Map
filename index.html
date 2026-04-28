@@ -1985,16 +1985,16 @@
                     // 'alignment') or under multiple slots (escape
                     // → 5 slots). Pick any matching slot — they
                     // share the same mod object so reads/writes
-                    // are identical across them.
+                    // are identical across them. innerDims recipe
+                    // (readDims ∪ nodeIds ∪ writeDims minus the
+                    // completionMarker) lives in GraphIO so this site,
+                    // the precompute writer, and the reach_parity test
+                    // cannot drift.
                     for (const m of (Engine.MODULES || [])) {
                         const slot = FLOW_DAG.nodes.find(n =>
                             n && n.kind === 'module' && n.id === m.id);
                         if (!slot) continue;
-                        const dims = [...new Set([
-                            ...window.GraphIO.readDimsForSlot(slot),
-                            ...(m.nodeIds || []),
-                        ])].sort();
-                        this.innerDims.set(m.id, dims);
+                        this.innerDims.set(m.id, window.GraphIO.innerDimsForSlot(slot));
                     }
                     this._built = true;
                 },

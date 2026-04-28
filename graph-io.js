@@ -114,7 +114,7 @@
     // are persisted, so a format change makes every lookup miss → 0
     // outputs). Eligibility is gated by `slot.kind === 'module'` at
     // the call sites below; outcomes have no DFS to cache.
-    const PERSIST_VERSION = 17;
+    const PERSIST_VERSION = 18;
     const PERSIST_KEY_PREFIX = 'gio:writeRows:';
 
     let _domainsCache = null;
@@ -563,6 +563,44 @@
         const out = [...dims].sort();
         _writeDimsCache.set(slot.key, out);
         return out;
+    }
+
+    // ─── Inner-DFS projection dims (module slots only) ──────────────
+    // Single source of truth for the per-module "inner key" projection
+    // used by precompute-reachability.js (writing) and the runtime
+    // wouldReachOutcome gate / reach_parity test (reading). The three
+    // call-sites used to mirror this recipe locally; centralizing it
+    // here makes drift impossible.
+    //
+    // Recipe: readDims ∪ nodeIds ∪ writeDims, minus the module's
+    // completionMarker dim.
+    //   * readDims  — entry-bucket dims (what differentiates inputs).
+    //   * nodeIds   — module-internal answered-so-far state.
+    //   * writeDims — dims the module CAN commit on exit. Inclusion is
+    //     required because some writeDims (e.g. decel.geo_spread,
+    //     decel.alignment, decel.containment) are pass-through: written
+    //     by SOME exit cells but not all, so the upstream value matters
+    //     for differentiating which outer-reach key the exit lands on.
+    //     Without these dims the inner key collapses across pass-
+    //     through-dim variants and the precompute either misses every
+    //     outer lookup (pre-Option D bug — zero decel|i| keys) or over-
+    //     marks via OR-folding (Option 3 — false positives on outcomes
+    //     gated by pass-through dims like the-capture's geo_spread=one).
+    //   * completionMarker.dim is excluded from inner inputs because
+    //     it's set on exit, never on entry. It still belongs in the
+    //     projection (so the marker's value differentiates "module
+    //     done" from "still inside" states), but it's filtered out
+    //     where input enumeration is concerned.
+    function _innerDimsForSlot(slot) {
+        if (!slot || slot.kind !== 'module') return [];
+        const mod = MODULE_MAP()[slot.id];
+        if (!mod) return [];
+        const dims = new Set([
+            ..._readDimsForSlot(slot),
+            ...(mod.nodeIds || []),
+            ..._writeDimsForSlot(slot),
+        ]);
+        return [...dims].sort();
     }
 
     // ─── Internal DFS through a slot ────────────────────────────────
@@ -1324,6 +1362,11 @@
         // same projection keys without re-deriving the closure.
         readDimsForSlot:  _readDimsForSlot,
         writeDimsForSlot: _writeDimsForSlot,
+        // Single source of truth for the per-module inner-key projection
+        // dim list — see comments at _innerDimsForSlot. Call sites:
+        // precompute-reachability.js (write side), index.html
+        // wouldReachOutcome (read side), tests/reach_parity.js mirror.
+        innerDimsForSlot: _innerDimsForSlot,
         // JSON-stringified [[dim, value-or-UNSET], …] projection used
         // for reach keys. Same shape as `cartesianWriteRows.byInput`'s
         // values, so map lookups land in the same key space.

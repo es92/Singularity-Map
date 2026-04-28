@@ -56,18 +56,16 @@ for (const s of FLOW_DAG.nodes) slotByKey.set(s.key, s);
 // FLOW_DAG slot.key ≠ mod.id in several cases (alignment_loop →
 // 'alignment', intent_loop → 'intent', war_loop → 'war',
 // early_rollout → 'rollout_early') and the escape module appears
-// as 5 distinct slots. Pick any matching slot for read/write dim
-// derivation — they share the same mod.
+// as 5 distinct slots. Pick any matching slot for inner-dim
+// derivation — they share the same mod. innerDimsForSlot is the
+// shared recipe (readDims ∪ nodeIds ∪ writeDims) used by both the
+// precompute writer and the runtime reader.
 const innerDimsByModule = new Map();
 for (const m of (Engine.MODULES || [])) {
     const slot = FLOW_DAG.nodes.find(n =>
         n && n.kind === 'module' && n.id === m.id);
     if (!slot) continue;
-    const dims = [...new Set([
-        ...GraphIO.readDimsForSlot(slot),
-        ...(m.nodeIds || []),
-    ])].sort();
-    innerDimsByModule.set(m.id, dims);
+    innerDimsByModule.set(m.id, GraphIO.innerDimsForSlot(slot));
 }
 
 // Mirror of `_lightPush` + key construction in index.html.
@@ -126,7 +124,14 @@ const RUIN_PATH = [
     ['alignment', 'brittle'],
     ['alignment_durability', 'holds'],
     ['gov_action', 'decelerate'],
-    ['decel_2mo_progress', 'unsolved'],
+    // decel_2mo_progress.unsolved is `disabledWhen alignment=['brittle']`
+    // (graph.js: "Alignment is already partially solved"). On this
+    // alignment.brittle path the runtime UI would never offer it, so
+    // walk via .brittle instead — the action step's outcome routing
+    // (decel.escapes triggers the decel reducer → alignment=failed,
+    // containment=escaped, en route to post_catch=ruined →
+    // ruin_type=self_inflicted) is identical for either progress value.
+    ['decel_2mo_progress', 'brittle'],
     ['decel_2mo_action', 'escapes'],
     ['ai_goals', 'paperclip'],
     ['escape_method', 'nanotech'],

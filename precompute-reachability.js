@@ -240,6 +240,18 @@ const outRouted    = new Map(); // selKey    → childSlotKey
 const outProv      = new Map(); // selKey    → string ("<slotKey>|o|<projKey>")
 const inputsBySlot = new Map(); // slotKey   → sel[]   (accumulated by parents)
 
+// Set of slot keys that own a module — Pass 2 needs these slots'
+// input sels retained past the backward sweep to use as DFS seeds.
+// Using the actual upstream-deduped sels (rather than synthesizing
+// cart-prod rows) keeps the DFS state space bounded to states
+// actually reachable at runtime — no impossible pass-through-dim
+// variants — and avoids blowing V8's per-Map size cap on big modules.
+const MODULE_SLOT_KEYS = new Set();
+for (const n of FLOW_DAG.nodes) {
+    if (n && n.kind === 'module') MODULE_SLOT_KEYS.add(n.key);
+}
+const moduleSlotInputs = new Map(); // slotKey → Map<inputSelKey, sel>
+
 console.log(`Pass 1 (outer): forward over ${order.length} slots…`);
 const t0 = Date.now();
 
@@ -399,7 +411,13 @@ for (let oi = order.length - 1; oi >= 0; oi--) {
         inputMask.set(inputKey, (inputMask.get(inputKey) || 0) | m);
     }
 
-    // Slot done — drop its input map and per-input output sets.
+    // Slot done — drop its per-input output sets. The input map
+    // itself is retained ONLY for module slots (Pass 2 seeds the
+    // inner DFS from real upstream sels); for non-module slots we
+    // drop both maps as before.
+    if (MODULE_SLOT_KEYS.has(slotKey)) {
+        moduleSlotInputs.set(slotKey, slotInputs.get(slotKey));
+    }
     slotInputs.delete(slotKey);
     inputToOuts.delete(slotKey);
 }
@@ -417,15 +435,30 @@ inputMask.clear();
 //
 // For every module M and every input bucket the outer pass touched
 // M with, walk the internal-node DFS the engine would walk at run
-// time. Each visited partial state is keyed
-// `<M.key>|in:<projection-onto-(M.reads ∪ M.nodeIds)>` and gets a
-// mask = OR over (terminal exits reachable from this state) of the
-// outer mask at the corresponding `<M.key>|out:<exitProj>`.
+// time. Each visited partial state is keyed `<M.id>|i|<innerProj>`
+// where innerProj projects sel onto innerDimsForSlot (readDims ∪
+// nodeIds ∪ writeDims). The per-state mask is the OR over
+// (terminal exits reachable from this state) of the outer mask at
+// the corresponding `<slot>|o|<exitProj>`.
 //
-// We seed the DFS from cartesianReadRows(M) (every cart-prod input
-// row that passes M's entry filter), so we naturally visit every
-// bucket without having to round-trip through the outer pass's
-// per-bucket sel reps.
+// We seed the DFS from the actual upstream-pass slot inputs (Pass 1
+// retains `slotInputs` for module slots in `moduleSlotInputs`).
+// These are the deduped set of sels that ACTUALLY arrive at the
+// module's entry at runtime — narrower and more correct than a
+// synthetic cartesian product, since it never visits impossible
+// pass-through-dim variants and never over-counts dead branches.
+// emergence is the one exception: it's the root slot whose Pass 1
+// "inputs" are actually its own outputs (special-cased upstream),
+// so we seed it with the empty sel.
+//
+// Two-stage dedupe inside Pass 2:
+//   1. Seed dedupe by innerDims projection — two upstream sels
+//      that agree on all innerDims behave identically through the
+//      DFS (innerDims captures every dim that affects DFS branching
+//      AND exit projection by construction).
+//   2. DFS memoization keyed on innerDims projection (not full
+//      selKey) — bounds the per-module memo Map well under V8's
+//      ~16.7M-entry cap even for the largest module (escape).
 //
 // The ordering inside the DFS mirrors `_dfsModuleOutputs` /
 // `engine.findNextQ`: pick the highest-priority askable internal
@@ -481,6 +514,7 @@ function _applyEdgeWrites(sel, node, edge) {
     return next;
 }
 
+
 for (const mod of MODULES) {
     // FLOW_DAG slot.key is NOT the same as mod.id. Most modules are
     // 1:1 (slot.key='decel', id='decel'), but some have a single slot
@@ -504,21 +538,69 @@ for (const mod of MODULES) {
     if (!slots.length) continue;
     const slot = slots[0];
 
-    const innerDims = [...new Set([
-        ...GraphIO.readDimsForSlot(slot),
-        ...(mod.nodeIds || []),
-    ])].sort();
+    // innerDims includes module writeDims so the inner key
+    // differentiates pass-through-dim variants (e.g. decel paths that
+    // don't write geo_spread inherit it from upstream and need
+    // separate inner-keys per geo_spread value to match outer-reach
+    // entries precisely). See GraphIO.innerDimsForSlot for the recipe.
+    const innerDims = GraphIO.innerDimsForSlot(slot);
     const writeDims = GraphIO.writeDimsForSlot(slot);
 
-    const inputRows = GraphIO.cartesianReadRows(slot);
-    if (!inputRows || !inputRows.rows.length) continue;
+    // Seed the DFS from the actual upstream-pass slot inputs (Pass 1
+    // collected and deduped these as `<slotKey> → Map<selKey,sel>`).
+    // Using real upstream sels keeps the DFS state space bounded to
+    // states reachable at runtime — no impossible pass-through-dim
+    // combinations — and provides per-variant inputs (e.g.
+    // geo_spread=one vs geo_spread=multiple) so the inner DFS visits
+    // them as distinct DFS states whose exits land on distinct outer-
+    // reach keys. Multi-slot modules (escape) OR over every slot's
+    // input set since the runtime can't tell which slot routed the
+    // user in.
+    //
+    // Dedupe seeds by their innerDims projection: two upstream sels
+    // that agree on all innerDims behave identically through the DFS
+    // (innerDims captures everything that affects DFS traversal AND
+    // exit projection by construction — readDims gate condition
+    // evaluation, nodeIds carry internal answers, writeDims carry
+    // pass-through dims that route the exit). Variation on dims
+    // OUTSIDE innerDims contributes nothing, so collapsing to one
+    // representative per innerKey halves DFS work for modules whose
+    // upstream sels carry lots of orthogonal context.
+    //
+    // emergence is the root slot — Pass 1 special-cases it by feeding
+    // emergence's own *outputs* (cartesianWriteRows) back as its
+    // "inputs" so downstream slots see the correct post-exit sels.
+    // Those post-exit sels are NOT valid pre-entry seeds for the
+    // inner DFS (they'd short-circuit to module-done immediately),
+    // so we seed emergence with the empty sel — the actual runtime
+    // entry state.
+    const seedByInnerKey = new Map();
+    if (mod.id === 'emergence') {
+        seedByInnerKey.set('', {});
+    } else {
+        for (const s of slots) {
+            const im = moduleSlotInputs.get(s.key);
+            if (!im) continue;
+            for (const sel of im.values()) {
+                const ik = GraphIO.compactProjectKey(sel, innerDims);
+                if (!seedByInnerKey.has(ik)) seedByInnerKey.set(ik, sel);
+            }
+        }
+    }
+    if (seedByInnerKey.size === 0) continue;
 
     let visited = 0;
     let withMask = 0;
-    const memoMask = new Map(); // selKey → mask, scoped to this module
+    // Memoize on the innerDims projection (NOT full selKey). Two DFS
+    // states differing only outside innerDims produce identical
+    // sub-trees (DFS branching depends only on readDims; exit
+    // projection only on writeDims; both are subsets of innerDims).
+    // Smaller key set keeps the per-module memo well under V8's
+    // ~16.7M-entry per-Map cap for big modules like escape.
+    const memoMask = new Map();
 
     function dfs(sel) {
-        const sk = GraphIO.selKey(sel);
+        const sk = GraphIO.compactProjectKey(sel, innerDims);
         if (memoMask.has(sk)) return memoMask.get(sk);
 
         let mask = 0;
@@ -560,10 +642,12 @@ for (const mod of MODULES) {
         return mask;
     }
 
-    for (const row of inputRows.rows) {
-        const startSel = rowToSel(row);
+    for (const startSel of seedByInnerKey.values()) {
         dfs(startSel);
     }
+    // Free this module's input cache before moving on — escape's 287k
+    // input sels are the largest concurrent allocation in Pass 2.
+    for (const s of slots) moduleSlotInputs.delete(s.key);
 
     console.log(`  ${mod.id}: visited ${visited} states, ${withMask} non-empty`);
 }
