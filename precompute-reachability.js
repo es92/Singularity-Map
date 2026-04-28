@@ -471,13 +471,13 @@ function _findNextInternal(mod, sel) {
 const _isModuleDone = (mod, sel) => Engine.isModuleDone(sel, mod.completionMarker);
 
 // applyEdgeWrites mirroring graph-io._applyEdgeWrites — single-pass
-// collapseToFlavor application, no cleanSelection cascade. The
+// effects application, no cleanSelection cascade. The
 // 178k-push divergence probe (see engine.cleanSelection comment)
 // proved this is equivalent on every runtime-reachable state.
 function _applyEdgeWrites(sel, node, edge) {
     const next = { ...sel, [node.id]: edge.id };
-    if (!edge.collapseToFlavor) return next;
-    const blocks = Array.isArray(edge.collapseToFlavor) ? edge.collapseToFlavor : [edge.collapseToFlavor];
+    if (!edge.effects) return next;
+    const blocks = Array.isArray(edge.effects) ? edge.effects : [edge.effects];
     for (const b of blocks) {
         if (!b) continue;
         if (b.when && !Engine.matchCondition(next, b.when)) continue;

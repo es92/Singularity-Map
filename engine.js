@@ -12,7 +12,7 @@ const { SCENARIO, NODES, NODE_MAP, MODULES, MODULE_MAP } = (typeof module !== 'u
 // ════════════════════════════════════════════════════════
 //
 // Conditions (activateWhen / hideWhen / disabledWhen / requires /
-// collapseToFlavor.when / template `reachable`) are pre-compiled to a
+// effects.when / template `reachable`) are pre-compiled to a
 // flat (keys, types, vals) triple so matchCondition's hot path is a
 // switched index lookup. With deriveWhen gone, every read is a direct
 // `sel[k]` so there's no indirect/derived branch — every matcher is
@@ -145,7 +145,7 @@ function _isModulePending(sel, mod) {
 // Returns `{}` if nothing matches (caller is outside an exit state).
 //
 // Not called by the runtime — the engine commits module output via
-// collapseToFlavor blocks installed by attachModuleReducer (graph.js).
+// effects blocks installed by attachModuleReducer (graph.js).
 // This helper exists as a pure audit primitive for:
 //   * module_primitive.js — parity check between `reduce(local)` and
 //     the exitPlan tuple that maps to the same local state.
@@ -290,7 +290,7 @@ function getEdgeDisabledReason(sel, node, edge) {
 // State management
 // ════════════════════════════════════════════════════════
 
-// Apply a single edge's `collapseToFlavor` blocks to `sel` in place.
+// Apply a single edge's `effects` blocks to `sel` in place.
 // This is the canonical block interpreter, shared between the runtime
 // (cleanSelection, below) and static analysis (graph-io._applyEdgeWrites).
 //
@@ -311,15 +311,15 @@ function getEdgeDisabledReason(sel, node, edge) {
 // implementation in graph-io._applyEdgeWrites for static analysis, and the
 // two diverged. `probe-divergence.js` enumerated 15 divergence patterns;
 // each was fixed by pulling the load-bearing effect into the originating
-// edge's `collapseToFlavor` block (with a `proliferation_set:false`-style
+// edge's `effects` block (with a `proliferation_set:false`-style
 // one-shot gate where the effect must fire exactly once). Once divergence
 // hit zero across 178k runtime-reachable pushes, the multi-pass loop became
 // a proven no-op for every runtime state. The two implementations are now
 // folded into this single helper so they can never re-diverge.
-function applyEdgeBlocks(sel, edge, flavor) {
-    if (!edge || !edge.collapseToFlavor) return;
-    const blocks = Array.isArray(edge.collapseToFlavor) ? edge.collapseToFlavor : [edge.collapseToFlavor];
-    for (const c of blocks) {
+function applyEdgeEffects(sel, edge, flavor) {
+    if (!edge || !edge.effects) return;
+    const effects = Array.isArray(edge.effects) ? edge.effects : [edge.effects];
+    for (const c of effects) {
         if (c.when && !matchCondition(sel, c.when)) continue;
         if (c.set) {
             for (const k of Object.keys(c.set)) sel[k] = c.set[k];
@@ -338,15 +338,15 @@ function applyEdgeBlocks(sel, edge, flavor) {
 }
 
 // Walk every set node in NODES (topological) order and apply its picked
-// edge's `collapseToFlavor` blocks. Single pass, no invalidation sweep,
-// no fixpoint loop. Persists evicted dims to `flavor` so narrative
+// edge's `effects` blocks. Single pass, no invalidation sweep, no
+// fixpoint loop. Persists evicted dims to `flavor` so narrative
 // resolution can still see them.
 function cleanSelection(sel, flavor) {
     if (!flavor) flavor = {};
     for (const node of NODES) {
         if (!sel[node.id]) continue;
         const edge = node.edges && node.edges.find(v => v.id === sel[node.id]);
-        applyEdgeBlocks(sel, edge, flavor);
+        applyEdgeEffects(sel, edge, flavor);
     }
     return { sel, flavor };
 }
@@ -355,7 +355,7 @@ function cleanSelection(sel, flavor) {
 function resolvedState(sel) {
     const d = {};
     // Pass through sel keys that aren't declared nodes — these are
-    // collapse/gating markers written by `collapseToFlavor.set` (e.g.
+    // collapse/gating markers written by `effects.set` (e.g.
     // `asi_happens`, `rollout_set`, `who_benefits_set`). Outcome
     // `reachable` clauses may reference them.
     for (const k of Object.keys(sel)) {
@@ -372,7 +372,7 @@ function resolvedState(sel) {
 }
 
 // State used for template `reachable` matching. Underlays flavor beneath
-// resolvedState so dims moved to flavor by `collapseToFlavor.move` (e.g.
+// resolvedState so dims moved to flavor by `effects.move` (e.g.
 // module-internal dims exported only for outcome routing) remain matchable
 // without needing to live in sel. sel wins on conflict — flavor is a
 // fallback layer, not an override.
@@ -507,7 +507,7 @@ function currentModuleFrame(stack) {
 
 // Merged view for narrative resolution: sel wins on conflict (engine state
 // is the source of truth). Flavor contributes the dims that were moved out
-// of sel by collapseToFlavor — purely cosmetic lookups that matter only for
+// of sel by effects — purely cosmetic lookups that matter only for
 // flavor text / heading / edge narrativeVariants.
 function narrativeState(stack) {
     const sel = currentState(stack);
@@ -594,7 +594,7 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = { NODES, NODE_MAP, MODULES, MODULE_MAP,
         matchCondition, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         isAskableInternal,
-        applyEdgeBlocks, cleanSelection, resolvedState, resolvedStateWithFlavor,
+        applyEdgeEffects, cleanSelection, resolvedState, resolvedStateWithFlavor,
         templateMatches, templatePartialMatch, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
         isModuleDone: _isModuleDone, isModulePending: _isModulePending,
         createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas };
@@ -603,7 +603,7 @@ if (typeof window !== 'undefined') {
     window.Engine = { NODES, NODE_MAP, MODULES, MODULE_MAP,
         matchCondition, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         isAskableInternal,
-        applyEdgeBlocks, cleanSelection, resolvedState, resolvedStateWithFlavor,
+        applyEdgeEffects, cleanSelection, resolvedState, resolvedStateWithFlavor,
         templateMatches, templatePartialMatch, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
         isModuleDone: _isModuleDone, isModulePending: _isModulePending,
         createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas };

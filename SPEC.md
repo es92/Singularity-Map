@@ -45,12 +45,12 @@ Each node in `graph.js` represents a question (dimension). Each node has:
 - **`edges`** — possible answers, each with an `id` (the value set in `sel`)
 - **`activateWhen`** *(optional)* — conditions that must be met for this question to appear
 - **`hideWhen`** *(optional)* — conditions that hide this node even if `activateWhen` passes (replaces the old global `hideConditions` + per-node flags)
-- **`derived: true`** — marks the node as purely derived (never presented as a question, invisible to the priority system). The dim's value lands in `sel`/`flavor` from upstream edges' `collapseToFlavor.set` / `setFlavor` writes (or from a module exit plan), not from a per-node derivation rule.
+- **`derived: true`** — marks the node as purely derived (never presented as a question, invisible to the priority system). The dim's value lands in `sel`/`flavor` from upstream edges' `effects.set` / `setFlavor` writes (or from a module exit plan), not from a per-node derivation rule.
 - **`priority`** *(optional, default 0)* — controls question ordering; nodes with higher priority are deferred until all lower-priority visible questions are answered (replaces the old `terminal` flag; `priority: 2` = terminal)
 Edges can have:
 - **`requires`** — conditions that must be met for this edge to be available
 - **`disabledWhen`** — conditions under which this edge is disabled
-- **`collapseToFlavor`** — state-shrinking rules applied when this edge is selected (see below)
+- **`effects`** — state-shrinking rules applied when this edge is selected (see below)
 
 ### State Split: `sel` vs `flavor`
 
@@ -65,7 +65,7 @@ The decision state is split into two parallel bags:
 1. **Convergence.** If five `agi_threshold` answers (`twenty_four_hours` … `ten_plus_years`) all lead to the same downstream decisions, moving the specific value to `flavor` lets them collapse to a single `sel` — crucial for `/explore`'s DAG convergence and for keeping the reachability / precompute tables small.
 2. **Narrative fidelity.** The specific value is still available to narrative text even when engine-level state has been deduplicated ("you chose 'week-long tasks'" can still show up in the story).
 
-### `collapseToFlavor`
+### `effects`
 
 Applied by `cleanSelection` for each set node, in `NODES` (topological) order. Supports three actions, any combination:
 
@@ -75,27 +75,27 @@ Applied by `cleanSelection` for each set node, in `NODES` (topological) order. S
 | `move: ['dim1', 'dim2']` | For each listed dim, if `sel[dim]` is set, move it to `flavor[dim]` and delete from `sel`. The specific chosen value is preserved in `flavor` for narrative lookups. |
 | `setFlavor: { k: v, … }` | Write `flavor[k] = v` directly (without going through `sel`). Useful when a narrative-only derived field needs to be recorded. |
 
-"Marker" dims (like `asi_happens`, `emergence_set`, `takeoff_class`, `rollout_set`) are written into `sel` via `collapseToFlavor.set` but aren't declared as graph nodes. The engine auto-registers them in its value-index tables at init so they can be used in `activateWhen`, `requires`, etc., just like declared dims.
+"Marker" dims (like `asi_happens`, `emergence_set`, `takeoff_class`, `rollout_set`) are written into `sel` via `effects.set` but aren't declared as graph nodes. The engine auto-registers them in its value-index tables at init so they can be used in `activateWhen`, `requires`, etc., just like declared dims.
 
 ### When is it safe to move a dim to flavor?
 
-A dim can be moved to `flavor` (via `collapseToFlavor.move`) **only if no downstream rule reads its specific value from `sel`**. Specifically, check all of the following across the rest of the graph:
+A dim can be moved to `flavor` (via `effects.move`) **only if no downstream rule reads its specific value from `sel`**. Specifically, check all of the following across the rest of the graph:
 
 - `activateWhen`
 - `hideWhen`
 - `requires`
 - `disabledWhen`
-- `collapseToFlavor.when`
+- `effects.when`
 
 If only **`primaryDimension` (outcome variants)**, **narrative `contextWhen`**, or **outcome `flavors._when` / `_default`** lookups reference it, it's fair game — those all resolve through `narrativeState`, which sees flavor.
 
-If engine branching still needs *one bit* of information from the dim (e.g. "did AGI happen at all?" vs. specific timing), introduce a marker dim via `collapseToFlavor.set` that captures that bit, update the downstream rules to gate on the marker, and move the original dim to flavor. See `agi_threshold` → `agi_happens` for a worked example.
+If engine branching still needs *one bit* of information from the dim (e.g. "did AGI happen at all?" vs. specific timing), introduce a marker dim via `effects.set` that captures that bit, update the downstream rules to gate on the marker, and move the original dim to flavor. See `agi_threshold` → `agi_happens` for a worked example.
 
 ### How a Path Progresses
 
 1. The engine presents the next question by calling `FlowPropagation.flowNext(sel)` — the same primitive `validate.js` and `/explore` use. `flowNext` picks the slot with the lowest `_slotPickPriority` among every slot whose activate gate / completion marker accepts the current `sel`, breaking ties on `FLOW_DAG.nodes` order (first wins). The same criterion drives `FlowPropagation.run`'s sibling routing, so runtime and static analysis agree on a single signal. For module slots, the next render node is the lowest-priority askable internal. Outcome matching is suppressed whenever a slot still owns the sel; only `flowNext` returning `kind: 'open'` allows templates to fire
 2. The user picks an edge → `push()` sets `sel[nodeId] = edgeId`
-3. `cleanSelection()` runs in a single pass: for each node with a set edge (in `NODES` topological order), it applies that edge's `collapseToFlavor` blocks (`set` / `setFlavor` / `move`) whose `when` matches the current `sel`. No invalidation sweep, no fixpoint loop — every cascade effect that older versions of the engine derived multi-pass is now expressed as an explicit, gated `collapseToFlavor` block on the originating edge (one-shot gates like `proliferation_set: false` keep blocks idempotent across re-pushes). This makes runtime push behavior identical to the static `_applyEdgeWrites` projection used by `validate.js` and `precompute-reachability` — the two paths cannot drift apart.
+3. `cleanSelection()` runs in a single pass: for each node with a set edge (in `NODES` topological order), it applies that edge's `effects` blocks (`set` / `setFlavor` / `move`) whose `when` matches the current `sel`. No invalidation sweep, no fixpoint loop — every cascade effect that older versions of the engine derived multi-pass is now expressed as an explicit, gated `effects` block on the originating edge (one-shot gates like `proliferation_set: false` keep blocks idempotent across re-pushes). This makes runtime push behavior identical to the static `_applyEdgeWrites` projection used by `validate.js` and `precompute-reachability` — the two paths cannot drift apart.
 
    Note: when a node becomes **locked** (only one edge remains enabled), `cleanSelection` does *not* write that value into `sel` automatically. Instead, the UI detects locks via `Engine.isNodeLocked` and presents the node as a single-option "Continue" screen; the user commits it through the normal push flow like any other answer. Downstream code that needs the effective value (template matching, visibility in the resolved state) consults `resolvedState`/`isNodeLocked` directly.
 4. Derived dimensions are recomputed from the new state
@@ -104,7 +104,7 @@ If engine branching still needs *one bit* of information from the dim (e.g. "did
 ### Key Invariants
 
 - **No loops** — each step answers one new question. Once `sel[nodeId]` is set, that node is skipped. The walk is strictly forward (bounded by the number of nodes).
-- **`cleanSelection` is local** — every state mutation happens in the just-pushed edge's `collapseToFlavor` blocks; the function does not invalidate or retract answers it didn't directly write. The resulting state is deterministic given the inputs and identical to what static analysis (`graph-io._applyEdgeWrites`) computes for the same push.
+- **`cleanSelection` is local** — every state mutation happens in the just-pushed edge's `effects` blocks; the function does not invalidate or retract answers it didn't directly write. The resulting state is deterministic given the inputs and identical to what static analysis (`graph-io._applyEdgeWrites`) computes for the same push.
 - **State equivalence** — two states with identical `sel` values will have identical derived values, identical visibility, and identical reachability to any template. This makes state-based caching sound.
 
 ### Condition System
@@ -122,9 +122,9 @@ All conditions (`activateWhen`, `requires`, `disabledWhen`, `hideWhen`) use a un
 
 ### Edge-local writes replace lazy derivation
 
-Every change to `sel` / `flavor` is committed by the edge that fires (directly via its `collapseToFlavor.set` / `setFlavor` blocks, or via a module's exit plan installed by `attachModuleReducer`). There is no separate derivation pass — `resolvedVal(sel, dim)` is now a direct `sel[dim]` lookup, and `matchCondition` reads `sel[k]` directly (no recursion, no JIT derivation tables).
+Every change to `sel` / `flavor` is committed by the edge that fires (directly via its `effects.set` / `setFlavor` blocks, or via a module's exit plan installed by `attachModuleReducer`). There is no separate derivation pass — `resolvedVal(sel, dim)` is now a direct `sel[dim]` lookup, and `matchCondition` reads `sel[k]` directly (no recursion, no JIT derivation tables).
 
-Dims that the user never picks (e.g. `ruin_type`, `governance`, `alignment` on the `alignment_durability=breaks` shortcut) are still kept `derived: true` so the priority system / question UI never surfaces them; their values land in `sel` via `collapseToFlavor.set` writes from the edges that own the upstream signal. To trace where a dim is written, walk every edge's `collapseToFlavor.set` and every `module.exitPlan[*].set` — that's the complete authoring contract.
+Dims that the user never picks (e.g. `ruin_type`, `governance`, `alignment` on the `alignment_durability=breaks` shortcut) are still kept `derived: true` so the priority system / question UI never surfaces them; their values land in `sel` via `effects.set` writes from the edges that own the upstream signal. To trace where a dim is written, walk every edge's `effects.set` and every `module.exitPlan[*].set` — that's the complete authoring contract.
 
 ### Template Matching
 
@@ -251,7 +251,7 @@ Modules are registered in the `MODULES` array exported from `graph.js`.
 ### Runtime
 
 - **Entry.** When a module's `activateWhen` fires, the engine pushes a frame onto `stack.moduleStack` and scopes `findNextQ` to the module's internal dims.
-- **Exit.** On a terminating internal edge, the module's `reduce(local)` produces the write bundle, which is committed to global `sel` via `collapseToFlavor` installed by `attachModuleReducer(mod)`. Internal dims are moved to `flavor`.
+- **Exit.** On a terminating internal edge, the module's `reduce(local)` produces the write bundle, which is committed to global `sel` via `effects` installed by `attachModuleReducer(mod)`. Internal dims are moved to `flavor`.
 - **No `outcome` tag.** The decel module intentionally eliminates the intermediate `decel_outcome` dim that previously dispatched through a cascade of derivation rules. Writes land directly on consumer globals — simpler, faster, easier to audit.
 
 ### Static analysis (Phase 5)
@@ -277,7 +277,7 @@ Decel was a well-contained sub-loop — 14 internal dims, a linear time-step str
 
 - **Reducer table as source of truth.** Keeping the (action × progress) → writes table as pure data enabled the boundary audit, the path-equivalence test, and the walker's atomic-edge optimization to all consume the same declaration without duplication.
 - **Direct writes beat intermediate dispatch dims.** Deleting `decel_outcome` removed a whole layer of derivation chains and made downstream dependencies explicit. This is the pattern to replicate for future modules.
-- **Marker dims without node declarations.** `decel_align_progress` became a module-written sel-dim with no node declaration. Its values are registered via the engine's `markerVals` scan of `collapseToFlavor` blocks, which prevents the DFS from enumerating it as a user-selectable dim (an earlier attempt to keep the node declaration caused 3k+ spurious DFS violations).
+- **Marker dims without node declarations.** `decel_align_progress` became a module-written sel-dim with no node declaration. Its values are registered via the engine's `markerVals` scan of `effects` blocks, which prevents the DFS from enumerating it as a user-selectable dim (an earlier attempt to keep the node declaration caused 3k+ spurious DFS violations).
 
 ### Escape retrospective
 
@@ -347,8 +347,8 @@ Firsts this module introduces:
   - `governance_window.{governed, partial, race}` → main path, post-governance exit.
 
   Each edge unconditionally sets `emergence_set: 'yes'`; no `when` gates needed because the edge id uniquely identifies the path.
-- **Derived-dim-as-write.** `automation` (a derived `forwardKey` node) is listed in `writes` even though it's not in `nodeIds`. Its value is committed by emergence-internal edges (`automation_recovery.*`, `asi_threshold.*`) via `collapseToFlavor.set`, so it's effectively a module output written from inside the DFS. Declaring it as a write signals to `module-audit` that external consumers legitimately read it. `governance` has similar shape but a dual source (decel's `gov_action` also writes it on the accelerate path, plus the `gov_action.accelerate` edge writes `governance='race'` to flavor), so it's left outside the contract and shows as a LEAK informational only.
-- **Writes include conditional-sel dims.** `asi_threshold` is in writes because on the `asi_threshold: 'never'` edge it stays in sel (downstream rules read it); on other edges it moves to flavor via the node's own `collapseToFlavor`. `attachModuleReducer` doesn't force a move because the dim is in writes, so the per-edge rules own the placement decision. This generalizes the rollout pattern ("writes dims the edges themselves manage") one level further: writes can include dims that are sometimes moved and sometimes kept, and the module contract is still coherent.
+- **Derived-dim-as-write.** `automation` (a derived `forwardKey` node) is listed in `writes` even though it's not in `nodeIds`. Its value is committed by emergence-internal edges (`automation_recovery.*`, `asi_threshold.*`) via `effects.set`, so it's effectively a module output written from inside the DFS. Declaring it as a write signals to `module-audit` that external consumers legitimately read it. `governance` has similar shape but a dual source (decel's `gov_action` also writes it on the accelerate path, plus the `gov_action.accelerate` edge writes `governance='race'` to flavor), so it's left outside the contract and shows as a LEAK informational only.
+- **Writes include conditional-sel dims.** `asi_threshold` is in writes because on the `asi_threshold: 'never'` edge it stays in sel (downstream rules read it); on other edges it moves to flavor via the node's own `effects`. `attachModuleReducer` doesn't force a move because the dim is in writes, so the per-edge rules own the placement decision. This generalizes the rollout pattern ("writes dims the edges themselves manage") one level further: writes can include dims that are sometimes moved and sometimes kept, and the module contract is still coherent.
 
 Audit refinement:
 
@@ -373,7 +373,7 @@ Shape specifics:
   - `sovereignty.{lab, state}` — the `geo_spread=one` branch, 4 questions total.
 
   Escape and who_benefits had branching internally but still had one canonical exit node each; control is the first where the exit node itself varies with state.
-- **Every internal dim is a write.** `writes` = all 4 internal dims + `open_source_set` marker + `control_set` marker. None of the four user-pickable dims can be pure-internal: each is consumed by at least one downstream node or outcome template on at least one path. This makes `nodeIds \ writes = ∅`, so `attachModuleReducer` forces zero flavor moves — the per-edge node-level `collapseToFlavor` rules (which already encode the correct per-path move decisions, e.g. `geo_spread.two` moves `open_source`, `sovereignty.lab+concentrated` moves `open_source`) own all placement. Same inverse-of-decel shape as rollout / emergence.
+- **Every internal dim is a write.** `writes` = all 4 internal dims + `open_source_set` marker + `control_set` marker. None of the four user-pickable dims can be pure-internal: each is consumed by at least one downstream node or outcome template on at least one path. This makes `nodeIds \ writes = ∅`, so `attachModuleReducer` forces zero flavor moves — the per-edge node-level `effects` rules (which already encode the correct per-path move decisions, e.g. `geo_spread.two` moves `open_source`, `sovereignty.lab+concentrated` moves `open_source`) own all placement. Same inverse-of-decel shape as rollout / emergence.
 - **Cross-module overrides count as reads.** `geo_spread` is overwritten by PROLIFERATION's exit plan whenever the leaked-weights path fires (proliferation_outcome=leaks_*); control reads `proliferation_outcome` indirectly through that downstream override path, so the dim is declared in `reads` alongside the always-live inputs (`capability`, `takeoff_class`).
 - **Layered hideWhen with a cross-module writer.** `takeoff.hideWhen` (inside emergence) reads `open_source_set` (written by control). Emergence already declared it in `reads` when control didn't exist yet — now it's a clean cross-module pair: emergence reads a marker that control writes. No audit change needed; this is exactly what the contract is for.
 
@@ -395,7 +395,7 @@ The widening introduced the first **early-exit module** pattern:
 - **4 exit tuples, 2 terminal nodes.** `ai_goals.{benevolent, marginal}` fire early-exit tuples (pipeline skipped entirely — user's 1 answer was all the module needed). `catch_outcome.{not_permanent, holds_permanently}` fire the original pipeline-complete exits. Every tuple sets the new `escape_set` completion marker. (`not_permanent` fuses the pre-merge `never_stopped` + `holds_temporarily` edges — the two were already mutually exclusive on `response_success`, so the sel-level split carried no information the engine actually branched on; narrative/flavor text now disambiguates the two sub-cases by reading `response_success` from flavor via `narrSel` / `resolvedStateWithFlavor`.)
 - **Explicit `completionMarker: 'escape_set'`.** The prior auto-detection ("last write") assumed a single terminal node; with two exit nodes we need an explicit marker so the walker knows the module is done regardless of which path was taken. Same pattern as who_benefits / rollout / emergence / control — escape_set becomes the 5th module to declare one.
 - **`ai_goals` added to writes.** It's externally consumed by dozens of nodes and outcome templates (intent.hideWhen, containment.hideWhen, ruin_type, failure_mode, who_benefits, etc.). The user's answer stays in sel on exit, same as on the pre-module graph.
-- **`inert_outcome` node removed.** The inert-wakes path now re-asks `ai_goals` inside the escape module (instead of asking a near-duplicate `inert_outcome` node). `inert_stays.no.collapseToFlavor.move` evicts the `marginal` pick; `ai_goals.marginal.disabledWhen` blocks re-choosing it; the escape pipeline runs as normal via `ai_goals ∈ hostile`. All external references that used to read `inert_outcome` (hideWhen `inert_outcome: false`, activateWhen `inert_outcome: true`, conditional matches) now read `inert_stays` directly.
+- **`inert_outcome` node removed.** The inert-wakes path now re-asks `ai_goals` inside the escape module (instead of asking a near-duplicate `inert_outcome` node). `inert_stays.no.effects.move` evicts the `marginal` pick; `ai_goals.marginal.disabledWhen` blocks re-choosing it; the escape pipeline runs as normal via `ai_goals ∈ hostile`. All external references that used to read `inert_outcome` (hideWhen `inert_outcome: false`, activateWhen `inert_outcome: true`, conditional matches) now read `inert_stays` directly.
 
 Audit / validation: all 6 modules pass cleanly. Metrics unchanged (0 static errors, 20 DFS violations, 0 reach mismatches, 18 premature-outcome warnings, 23 unreachable-clause DEAD entries). The `module_primitive.js` test was updated to reflect the new 5-tuple exit plan and 6-write contract.
 
@@ -413,11 +413,11 @@ Proliferation (3 internal dims: `proliferation_control`, `proliferation_outcome`
 
   This is the first time a single edge is ambiguous between "exit" and "continue" based on external state. Previous modules either exited unconditionally on an edge (escape, control) or varied exit *writes* by path (decel's reducerTable) but never varied *whether* the edge was an exit at all.
 
-- **Edge-local writes set internal-only dims without asking.** The `proliferation_control.none` edge writes `proliferation_outcome: 'leaks_public'` via `collapseToFlavor.set`. When the user picks that edge, `proliferation_outcome` is committed to `sel` mid-module — `proliferation_alignment.activateWhen` sees `proliferation_outcome=leaks_public` and fires (or doesn't), exactly as if the user had answered. The module's completion logic (via `proliferation_set` marker) works orthogonally to this: the marker is set on whichever user-answered edge terminates the module, regardless of which other internal dims are written by upstream edges vs. asked vs. skipped. No special handling required.
+- **Edge-local writes set internal-only dims without asking.** The `proliferation_control.none` edge writes `proliferation_outcome: 'leaks_public'` via `effects.set`. When the user picks that edge, `proliferation_outcome` is committed to `sel` mid-module — `proliferation_alignment.activateWhen` sees `proliferation_outcome=leaks_public` and fires (or doesn't), exactly as if the user had answered. The module's completion logic (via `proliferation_set` marker) works orthogonally to this: the marker is set on whichever user-answered edge terminates the module, regardless of which other internal dims are written by upstream edges vs. asked vs. skipped. No special handling required.
 
 - **activateWhen = first-node's activateWhen verbatim.** Mirrors `proliferation_control`'s 3-clause activation exactly (gov_action didn't run, or ran with non-escape/non-fail outcome). Same "mirror the gate node" pattern escape widening introduced — module pending-ness tracks node askability 1:1.
 
-- **Two of three internal dims are flavor-moved on exit.** Only `proliferation_alignment` stays in `writes` (gate-read by 5 `ai_goals.*.disabledWhen` clauses on `holds`, used to rule out hostile goals on robust-aligned-survived-leak escape paths). `proliferation_control` and `proliferation_outcome` are mid-module-only gate readers (control → outcome's `activateWhen` / `requires`; outcome → alignment's `activateWhen`) and have no external sel-only readers post-exit; outcome flavor blocks (~7 in `outcomes.json`) and one `containment.contextWhen` entry read them via fused state. `nodeIds \ writes = { proliferation_control, proliferation_outcome }` — `attachModuleReducer` auto-moves both to flavor on every exit tuple. Two wrinkles worth noting: (1) the mid-module `secure_access` eviction on `proliferation_outcome.leaks_public` lives as a direct edge-level `collapseToFlavor` block (not in `buildProliferationExitPlan`) so it doesn't receive the auto-move list — it must fire on the alignment=robust path where the module hasn't exited yet and `proliferation_outcome` must remain in `sel` for `proliferation_alignment.activateWhen`. (2) `LEAKED_OPEN` explicitly writes `proliferation_outcome: 'leaks_public'` because on the `proliferation_control=none + alignment≠robust` exit, `proliferation_outcome` was only resolved via `deriveWhen` (never set in sel); without the explicit write, the auto-move would have nothing to shuttle into flavor and the post-exit narrative read would resolve to undefined.
+- **Two of three internal dims are flavor-moved on exit.** Only `proliferation_alignment` stays in `writes` (gate-read by 5 `ai_goals.*.disabledWhen` clauses on `holds`, used to rule out hostile goals on robust-aligned-survived-leak escape paths). `proliferation_control` and `proliferation_outcome` are mid-module-only gate readers (control → outcome's `activateWhen` / `requires`; outcome → alignment's `activateWhen`) and have no external sel-only readers post-exit; outcome flavor blocks (~7 in `outcomes.json`) and one `containment.contextWhen` entry read them via fused state. `nodeIds \ writes = { proliferation_control, proliferation_outcome }` — `attachModuleReducer` auto-moves both to flavor on every exit tuple. Two wrinkles worth noting: (1) the mid-module `secure_access` eviction on `proliferation_outcome.leaks_public` lives as a direct edge-level `effects` block (not in `buildProliferationExitPlan`) so it doesn't receive the auto-move list — it must fire on the alignment=robust path where the module hasn't exited yet and `proliferation_outcome` must remain in `sel` for `proliferation_alignment.activateWhen`. (2) `LEAKED_OPEN` explicitly writes `proliferation_outcome: 'leaks_public'` because on the `proliferation_control=none + alignment≠robust` exit, `proliferation_outcome` was only resolved via `deriveWhen` (never set in sel); without the explicit write, the auto-move would have nothing to shuttle into flavor and the post-exit narrative read would resolve to undefined.
 
 Metrics unchanged from post-escape-widening baseline: 0 static errors, 20 DFS violations, 0 reach mismatches, 18 premature-outcome warnings, 23 unreachable DEAD, all 7 modules pass audit, `module_primitive.js` PASS. Functional spot-checks confirmed the conditional exits fire correctly (none + brittle → exit; none + robust → stay active until proliferation_alignment; leaks_public + robust → stay active; leaks_public + brittle → exit).
 

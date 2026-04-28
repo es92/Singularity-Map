@@ -545,7 +545,7 @@
     ]);
 
     // Walk arbitrary nested object and collect keys that are dim IDs.
-    // Skips values inside `collapseToFlavor.move` (those are *writes*, not reads).
+    // Skips values inside `effects.move` (those are *writes*, not reads).
     function collectDimRefs(obj, dimSet, out) {
         if (!obj || typeof obj !== 'object') return;
         if (Array.isArray(obj)) { obj.forEach(x => collectDimRefs(x, dimSet, out)); return; }
@@ -587,20 +587,20 @@
         const NODES = window.Engine.NODES;
         const dimSet = new Set(NODES.map(n => n.id));
         // Outcome "dims" exist too — templates reference marker-like keys
-        // written only via collapseToFlavor.set (e.g. `rollout_set`,
+        // written only via effects.set (e.g. `rollout_set`,
         // `asi_happens`). Include those so references to them resolve, but
         // we'll treat them as synthetic dims without a host node.
         const syntheticDims = new Set();
 
-        // First pass: discover synthetic dims written by collapseToFlavor.set.
-        // collapseToFlavor may be a single block or an array of blocks (array
+        // First pass: discover synthetic dims written by effects.set.
+        // effects may be a single block or an array of blocks (array
         // form is used when the collapse values depend on sel at edge-pick time,
         // e.g. decel terminating edges).
         for (const n of NODES) {
             if (!n.edges) continue;
             for (const e of n.edges) {
-                if (!e.collapseToFlavor) continue;
-                const blocks = Array.isArray(e.collapseToFlavor) ? e.collapseToFlavor : [e.collapseToFlavor];
+                if (!e.effects) continue;
+                const blocks = Array.isArray(e.effects) ? e.effects : [e.effects];
                 for (const c of blocks) {
                     if (!c || !c.set) continue;
                     for (const k of Object.keys(c.set)) {
@@ -615,12 +615,12 @@
         // Shape:
         //   nodeReads      : nodeId → Set<dimId>            (dims whose values this node reads)
         //   nodeReadSites  : nodeId → [{ where, dims, raw }]
-        //   nodeWrites     : nodeId → Set<dimId>            (dims this node can set in sel via collapseToFlavor.set)
-        //   nodeMoves      : nodeId → Set<dimId>            (dims this node moves to flavor via collapseToFlavor.move)
+        //   nodeWrites     : nodeId → Set<dimId>            (dims this node can set in sel via effects.set)
+        //   nodeMoves      : nodeId → Set<dimId>            (dims this node moves to flavor via effects.move)
         //   outcomeReads   : outcomeId → Set<dimId>
         //   outcomeSites   : outcomeId → { reachable: Set, flavor: Set, primary: string }
         //   readBy         : dimId → [{ nodeId, where }]    (reverse of nodeReadSites)
-        //   writtenBy      : dimId → [{ nodeId, via }]      (reverse; 'pick' means user picks an edge, 'set' means collapseToFlavor.set)
+        //   writtenBy      : dimId → [{ nodeId, via }]      (reverse; 'pick' means user picks an edge, 'set' means effects.set)
         //   movedBy        : dimId → [{ nodeId }]
         //   outcomesUsing  : dimId → Set<outcomeId>
 
@@ -667,26 +667,26 @@
             (n.edges || []).forEach((e, ei) => {
                 asArray(e.disabledWhen).forEach((c, ci) => scanCond(n.id, `edges.${e.id}.disabledWhen[${ci}]`, c));
                 asArray(e.requires).forEach((c, ci) => scanCond(n.id, `edges.${e.id}.requires`, c));
-                if (!e.collapseToFlavor) return;
-                const blocks = Array.isArray(e.collapseToFlavor) ? e.collapseToFlavor : [e.collapseToFlavor];
+                if (!e.effects) return;
+                const blocks = Array.isArray(e.effects) ? e.effects : [e.effects];
                 blocks.forEach((c, bi) => {
                     if (!c) return;
                     const suffix = blocks.length > 1 ? `[${bi}]` : '';
                     if (c.when) {
-                        scanCond(n.id, `edges.${e.id}.collapseToFlavor${suffix}.when`, c.when);
+                        scanCond(n.id, `edges.${e.id}.effects${suffix}.when`, c.when);
                     }
                     if (c.set) {
                         for (const dim of Object.keys(c.set)) {
                             if (!nodeWrites.has(n.id)) nodeWrites.set(n.id, new Set());
                             nodeWrites.get(n.id).add(dim);
-                            pushMap(writtenBy, dim, { nodeId: n.id, via: `edges.${e.id}.collapseToFlavor${suffix}.set`, value: c.set[dim] });
+                            pushMap(writtenBy, dim, { nodeId: n.id, via: `edges.${e.id}.effects${suffix}.set`, value: c.set[dim] });
                         }
                     }
                     if (c.move) {
                         for (const dim of c.move) {
                             if (!nodeMoves.has(n.id)) nodeMoves.set(n.id, new Set());
                             nodeMoves.get(n.id).add(dim);
-                            pushMap(movedBy, dim, { nodeId: n.id, via: `edges.${e.id}.collapseToFlavor${suffix}.move` });
+                            pushMap(movedBy, dim, { nodeId: n.id, via: `edges.${e.id}.effects${suffix}.move` });
                         }
                     }
                 });
@@ -1048,7 +1048,7 @@
               earlyExits: ['the-ruin', 'the-escape', 'the-chaos', 'the-alien-ai'] },
             // Second-position escape slot for the inert_stays=no re-entry.
             // Same module spec as escape_late — backed by the SAME runtime
-            // experience (ESCAPE_MODULE re-pending after collapseToFlavor.move
+            // experience (ESCAPE_MODULE re-pending after effects.move
             // evicts ai_goals + escape_set). Split into its own FLOW_DAG slot
             // so the back-edge from inert_stays=no doesn't form a topology
             // cycle with escape_late's forward edge into inert_stays. At
@@ -1065,7 +1065,7 @@
             // avoid topology cycles and to make this distinct entry
             // point visible to validate.js / /explore. On this slot:
             //   * power_use=generous pre-sets ai_goals=benevolent (via
-            //     edge collapseToFlavor) and exits the escape pipeline
+            //     edge effects) and exits the escape pipeline
             //     immediately through the benevolent short-circuit —
             //     lands in the-escape (benevolent).
             //   * power_use=extractive/indifferent leaves ai_goals
@@ -1131,7 +1131,7 @@
             ['who_benefits',  'brittle'],
             ['who_benefits',  'rollout'],
 
-            // inert_stays=no clears ai_goals + escape_set (collapseToFlavor.move)
+            // inert_stays=no clears ai_goals + escape_set (effects.move)
             // and re-routes through ESCAPE so the user picks a hostile goal
             // and walks the escape pipeline a second time. The back-edge
             // points to escape_re_entry rather than escape_late so the FLOW_DAG
@@ -1475,7 +1475,7 @@
 
         // Derived tags — flat nodes that are never asked directly. Their
         // values are written into sel/flavor by upstream edges
-        // (collapseToFlavor.set / setFlavor); the node itself just
+        // (effects.set / setFlavor); the node itself just
         // declares the dim's allowed values. Module-internal derived
         // nodes stay in their module card (they're part of that module's
         // machinery).
@@ -1546,7 +1546,7 @@
                 <div class="nd-narr-hint">
                     <code>${esc(node.id)}</code> is never asked. Its value is
                     written into sel/flavor by upstream edges
-                    (<code>collapseToFlavor.set</code> /
+                    (<code>effects.set</code> /
                     <code>setFlavor</code>) and consumed by outcome
                     templates and edge gates.
                     ${edgeIds ? `Possible values: <code>${esc(edgeIds)}</code>.` : ''}
@@ -1643,7 +1643,7 @@
         const NODE_MAP = window.Engine.NODE_MAP;
         const node = NODE_MAP[nodeId];
         if (!node) {
-            // maybe a synthetic dim (marker set via collapseToFlavor)
+            // maybe a synthetic dim (marker set via effects)
             if (A.syntheticDims.has(nodeId)) return renderSyntheticDimDetail(nodeId);
             return `<div class="nodes-detail-empty">Unknown node: ${esc(nodeId)}</div>`;
         }
@@ -1674,16 +1674,16 @@
         `;
 
         // ─── Reads / writes summary (pulled from activateWhen, hideWhen,
-        //     edge requires / disabledWhen, collapseToFlavor.when /
+        //     edge requires / disabledWhen, effects.when /
         //     set / move).
         const reads = A.nodeReads.get(nodeId) || new Set();
         if (reads.size || writes.size || moves.size) {
             html += `<div class="nd-section"><h3>Reads / writes</h3>`;
             html += `<div class="nd-narr-hint" style="margin-bottom: 8px;">
                 <code>reads</code>: dims pulled from this node's activateWhen, hideWhen,
-                and per-edge requires / disabledWhen / collapseToFlavor.when.
-                <code>writes (sel)</code>: collapseToFlavor.set targets.
-                <code>moves to flavor</code>: collapseToFlavor.move targets.
+                and per-edge requires / disabledWhen / effects.when.
+                <code>writes (sel)</code>: effects.set targets.
+                <code>moves to flavor</code>: effects.move targets.
             </div>`;
             if (reads.size) {
                 html += `<div class="nd-row"><div class="nd-row-label">reads</div><div class="nd-row-body"><div class="nd-chip-row">`;
@@ -1754,13 +1754,13 @@
         // ─── Edges (per-edge gating)
         if (node.edges && node.edges.length) {
             html += `<div class="nd-section"><h3>Edges (per-option gating)</h3>`;
-            html += `<div class="nd-narr-hint" style="margin-bottom: 10px;"><code>requires</code>: edge is hidden unless the clause matches. <code>disabledWhen</code>: edge is shown but greyed out. <code>collapseToFlavor</code>: what happens to state when this edge is picked.</div>`;
+            html += `<div class="nd-narr-hint" style="margin-bottom: 10px;"><code>requires</code>: edge is hidden unless the clause matches. <code>disabledWhen</code>: edge is shown but greyed out. <code>effects</code>: what happens to state when this edge is picked.</div>`;
             for (const e of node.edges) {
                 html += `<div class="nd-site">`;
                 html += `<div class="nd-site-head">${esc(e.id)}${e.label ? ` — ${esc(e.label)}` : ''}</div>`;
                 const hasReq = e.requires && (Array.isArray(e.requires) ? e.requires.length : Object.keys(e.requires).length);
                 const hasDis = e.disabledWhen && e.disabledWhen.length;
-                const hasC2F = !!e.collapseToFlavor;
+                const hasC2F = !!e.effects;
                 if (!hasReq && !hasDis && !hasC2F) {
                     html += `<div class="nd-empty">Always shown. No collapse.</div>`;
                 } else {
@@ -1771,7 +1771,7 @@
                         html += `<div class="nd-row"><div class="nd-row-label">disabledWhen</div><div class="nd-row-body"><pre class="nd-json">${esc(prettyJson(e.disabledWhen))}</pre></div></div>`;
                     }
                     if (hasC2F) {
-                        html += `<div class="nd-row"><div class="nd-row-label">collapseToFlavor</div><div class="nd-row-body"><pre class="nd-json">${esc(prettyJson(e.collapseToFlavor))}</pre></div></div>`;
+                        html += `<div class="nd-row"><div class="nd-row-label">effects</div><div class="nd-row-body"><pre class="nd-json">${esc(prettyJson(e.effects))}</pre></div></div>`;
                     }
                 }
                 html += `</div>`;
@@ -1863,7 +1863,7 @@
 
         let html = `
             <h2 class="nd-title"><span class="nd-id">${esc(dim)}</span><span style="color: var(--text-muted); font-weight: 400;">(marker dim)</span></h2>
-            <div class="nd-subtitle">A synthetic dim used only as a flag — no graph node owns it. Written via <code>collapseToFlavor.set</code> on some edge, read by nodes/outcomes.</div>
+            <div class="nd-subtitle">A synthetic dim used only as a flag — no graph node owns it. Written via <code>effects.set</code> on some edge, read by nodes/outcomes.</div>
         `;
         html += `<div class="nd-section"><h3>Written by</h3>`;
         if (!writtenBy.length) html += `<div class="nd-empty">(none)</div>`;

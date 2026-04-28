@@ -1431,7 +1431,7 @@
 
             const vignettes = [];
             // Iterate the stack directly (raw user picks), not sel — because
-            // collapseToFlavor moves some dims out of sel (e.g., stall_recovery,
+            // effects moves some dims out of sel (e.g., stall_recovery,
             // stall_duration) and may rewrite others (e.g., capability='stalls'
             // → 'singularity'). We still want to render the vignette for the
             // user's ORIGINAL pick.
@@ -1951,7 +1951,7 @@
             function _lightPush(sel, flavor, nodeId, edgeId) {
                 // Mirrors Engine.push without committing to the stack: append
                 // the edge and run cleanSelection (now single-pass — applies
-                // each set node's collapseToFlavor blocks once, in NODES
+                // each set node's effects blocks once, in NODES
                 // order, with no invalidation sweep).
                 const next = Object.assign({}, sel);
                 next[nodeId] = edgeId;
@@ -2159,7 +2159,7 @@
 
                 // 1) Stack-order answered events. Prefer the user's raw pick
                 //    (stackEntry.edgeId) over sel — sel may have been rewritten
-                //    by collapseToFlavor (e.g., capability 'stalls' →
+                //    by effects (e.g., capability 'stalls' →
                 //    'singularity'). Timeline should show what the user
                 //    actually answered.
                 for (const entry of stack) {
@@ -2174,7 +2174,7 @@
                 }
 
                 // 2) Non-stack nodes whose value was set by an upstream
-                //    collapseToFlavor.set / exitPlan.set write — these are
+                //    effects.set / exitPlan.set write — these are
                 //    real "answered" events that just didn't come from a
                 //    direct user click. Iterated in NODES order for stable
                 //    visual placement.
@@ -2585,7 +2585,7 @@
                 // every node whose `deriveWhen` rules computed an
                 // effective value different from the raw `sel[id]`.
                 // Now that derivation is gone — every change to sel is
-                // committed by the edge that fires (collapseToFlavor.set
+                // committed by the edge that fires (effects.set
                 // / setFlavor + module exit plans) — there is no
                 // "hidden vs. raw" gap to surface, so the function
                 // returns nothing. Kept as a no-op so the debug-panel

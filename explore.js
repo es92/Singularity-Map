@@ -423,17 +423,17 @@
     // module-audit do. Three disjoint(ish) categories:
     //   * reads  — strict gate-read set (activateWhen, hideWhen,
     //              disabledWhen, edge.requires, and
-    //              collapseToFlavor.when conditions).
+    //              effects.when conditions).
     //   * writes — dims this slot leaves in sel post-edge: the node's
     //              own pick (unless that pick is also moved out), plus
-    //              every collapseToFlavor.set key that ISN'T also in a
+    //              every effects.set key that ISN'T also in a
     //              move list (set+move on the same dim = the value was
     //              committed to sel mid-tick then evicted to flavor on
     //              the same edge — engine ordering is set→setFlavor→
-    //              move per applyEdgeBlocks).
+    //              move per applyEdgeEffects).
     //   * moves to flavor — dims evicted from sel into flavor: every
-    //              collapseToFlavor.move entry plus every
-    //              collapseToFlavor.setFlavor key. These are the dims
+    //              effects.move entry plus every
+    //              effects.setFlavor key. These are the dims
     //              this slot stops carrying in sel.
     const STRUCT_KEYS = new Set([
         'reason', '_ck', '_ct', '_cv', '_direct', 'required', 'not',
@@ -477,8 +477,8 @@
             }
             const dw = e.disableWhen || e.disabledWhen;
             if (dw) refsFromConditionList(Array.isArray(dw) ? dw : [dw], refs);
-            if (e.collapseToFlavor) {
-                const blocks = Array.isArray(e.collapseToFlavor) ? e.collapseToFlavor : [e.collapseToFlavor];
+            if (e.effects) {
+                const blocks = Array.isArray(e.effects) ? e.effects : [e.effects];
                 for (const b of blocks) {
                     if (!b) continue;
                     if (b.when) refsFromCondition(b.when, refs);
@@ -494,8 +494,8 @@
     function collectNodeMoves(node) {
         const moves = new Set();
         if (node.edges) for (const e of node.edges) {
-            if (!e.collapseToFlavor) continue;
-            const blocks = Array.isArray(e.collapseToFlavor) ? e.collapseToFlavor : [e.collapseToFlavor];
+            if (!e.effects) continue;
+            const blocks = Array.isArray(e.effects) ? e.effects : [e.effects];
             for (const b of blocks) {
                 if (!b) continue;
                 if (Array.isArray(b.move)) for (const m of b.move) moves.add(m);
@@ -515,8 +515,8 @@
         // edge, so it shows under "moves to flavor" rather than writes).
         if (!moveSet.has(node.id)) refs.add(node.id);
         if (node.edges) for (const e of node.edges) {
-            if (!e.collapseToFlavor) continue;
-            const blocks = Array.isArray(e.collapseToFlavor) ? e.collapseToFlavor : [e.collapseToFlavor];
+            if (!e.effects) continue;
+            const blocks = Array.isArray(e.effects) ? e.effects : [e.effects];
             for (const b of blocks) {
                 if (!b || !b.set || typeof b.set !== 'object') continue;
                 for (const k of Object.keys(b.set)) {
@@ -561,7 +561,7 @@
     // (e.g. WHO_BENEFITS_EXIT_FLAVOR_MOVE on every who_benefits exit, or
     // LEAK_REENTRY_MOVE on proliferation leak tuples) get unioned in too
     // so explicit per-edge moves surface in the display. For nodes:
-    // every collapseToFlavor.move + setFlavor entry across the node's
+    // every effects.move + setFlavor entry across the node's
     // edges (collectNodeMoves).
     function movesForSlot(slot) {
         const NODE_MAP = window.Engine.NODE_MAP;

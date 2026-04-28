@@ -78,7 +78,7 @@ const NODES = [
       // After module exit runs, capability is rewritten to 'plateau' on
       // substantial/never edges (see EMERGENCE exit plan). The mild edge
       // stays inside the module and routes back into the singularity
-      // sub-path via collapseToFlavor below.
+      // sub-path via effects below.
       hideWhen: [{ capability: ['plateau'] }],
       edges: [
         // `mild` collapses back into the direct-singularity state.
@@ -88,7 +88,7 @@ const NODES = [
         // same downstream state as a direct singularity path, while the
         // flavor preserves the "brief stall, then breakthrough" story.
         { id: 'mild', label: 'Months/years',
-          collapseToFlavor: {
+          effects: {
             set: { capability: 'singularity' },
             move: ['stall_duration', 'stall_recovery']
           } },
@@ -99,9 +99,9 @@ const NODES = [
         // flavor for flavor-text / heading lookups (the-plateau.flavors.
         // stall_recovery, narrative.json stall_recovery.when: ['never']).
         { id: 'substantial', label: 'Years/decades',
-          collapseToFlavor: { move: ['stall_recovery'] } },
+          effects: { move: ['stall_recovery'] } },
         { id: 'never', label: 'Never',
-          collapseToFlavor: { move: ['stall_recovery'] } }
+          effects: { move: ['stall_recovery'] } }
       ] },
     { id: 'plateau_benefit_distribution', label: 'Who Benefits?', stage: 3, priority: 2,
       activateWhen: [{ capability: ['plateau'] }],
@@ -117,11 +117,11 @@ const NODES = [
       hideWhen: [{ who_benefits_set: ['yes'] }],
       edges: [
         { id: 'equal', label: 'Shared equally',
-          collapseToFlavor: { set: { who_benefits_set: 'yes' }, move: ['plateau_benefit_distribution'] } },
+          effects: { set: { who_benefits_set: 'yes' }, move: ['plateau_benefit_distribution'] } },
         { id: 'unequal', label: 'Wealth concentrates',
-          collapseToFlavor: { set: { who_benefits_set: 'yes' }, move: ['plateau_benefit_distribution'] } },
+          effects: { set: { who_benefits_set: 'yes' }, move: ['plateau_benefit_distribution'] } },
         { id: 'extreme', label: 'Power concentrates',
-          collapseToFlavor: { set: { who_benefits_set: 'yes' }, move: ['plateau_benefit_distribution'] } }
+          effects: { set: { who_benefits_set: 'yes' }, move: ['plateau_benefit_distribution'] } }
       ] },
     // The unified knowledge_rate and physical_rate nodes (defined near the
     // end of NODES, after who_benefits) serve plateau, auto-shallow, and
@@ -151,17 +151,17 @@ const NODES = [
       ],
       edges: [
         { id: 'twenty_four_hours', label: 'Day-long tasks — we\'re nearly there', shortLabel: 'Day-long tasks',
-          collapseToFlavor: { set: { agi_happens: 'yes' } } },
+          effects: { set: { agi_happens: 'yes' } } },
         { id: 'one_week', label: 'Week-long tasks — sustained competence', shortLabel: 'Week-long tasks',
-          collapseToFlavor: { set: { agi_happens: 'yes' } } },
+          effects: { set: { agi_happens: 'yes' } } },
         { id: 'few_months', label: 'Month-long projects — deep expertise', shortLabel: 'Month-long projects',
-          collapseToFlavor: { set: { agi_happens: 'yes' } } },
+          effects: { set: { agi_happens: 'yes' } } },
         { id: 'one_year', label: 'Year-long work — the bar is very high', shortLabel: 'Year-long work',
-          collapseToFlavor: { set: { agi_happens: 'yes' } } },
+          effects: { set: { agi_happens: 'yes' } } },
         { id: 'ten_plus_years', label: 'Decade-scale mastery', shortLabel: 'Decade-scale mastery',
-          collapseToFlavor: { set: { agi_happens: 'yes' } } },
+          effects: { set: { agi_happens: 'yes' } } },
         { id: 'never', label: 'Never',
-          collapseToFlavor: { set: { agi_happens: 'no' } } }
+          effects: { set: { agi_happens: 'no' } } }
       ] },
     { id: 'asi_threshold', label: 'Superhuman AI', stage: 1,
       // Activate once agi has been answered (agi_happens is set).
@@ -181,21 +181,21 @@ const NODES = [
       edges: [
         { id: 'twenty_four_hours', label: 'Day-long tasks — the jump is small', shortLabel: 'Day-long tasks',
           requires: { agi_threshold: ['twenty_four_hours'] },
-          collapseToFlavor: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold', 'agi_happens'] } },
+          effects: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold', 'agi_happens'] } },
         { id: 'one_week', label: 'Week-long tasks — outpaces quickly', shortLabel: 'Week-long tasks',
           requires: { agi_threshold: ['twenty_four_hours', 'one_week'] },
-          collapseToFlavor: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold', 'agi_happens'] } },
+          effects: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold', 'agi_happens'] } },
         { id: 'few_months', label: 'Month-long projects — strategic superiority', shortLabel: 'Month-long projects',
           requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months'] },
-          collapseToFlavor: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold', 'agi_happens'] } },
+          effects: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold', 'agi_happens'] } },
         { id: 'one_year', label: 'Year-long work — the bar is very high', shortLabel: 'Year-long work',
           requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year'] },
-          collapseToFlavor: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold', 'agi_happens'] } },
+          effects: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold', 'agi_happens'] } },
         { id: 'ten_plus_years', label: 'Decade-scale mastery — surpassing takes decades', shortLabel: 'Decade-scale mastery',
           requires: { agi_threshold: ['twenty_four_hours', 'one_week', 'few_months', 'one_year', 'ten_plus_years'] },
-          collapseToFlavor: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold', 'agi_happens'] } },
+          effects: { set: { asi_happens: 'yes' }, move: ['agi_threshold', 'asi_threshold', 'agi_happens'] } },
         { id: 'never', label: 'Never — matching is the ceiling', shortLabel: 'Never',
-          collapseToFlavor: { move: ['agi_threshold', 'agi_happens'] } }
+          effects: { move: ['agi_threshold', 'agi_happens'] } }
       ] },
     // `automation` node was removed in the capability-4-value refactor.
     // Its role (distinguishing deep/shallow paths on the singularity branch)
@@ -212,7 +212,7 @@ const NODES = [
       // After module exit runs, capability is rewritten to 'agi' on
       // substantial/never edges (see EMERGENCE exit plan). The mild edge
       // stays inside the module and routes back into the full
-      // singularity-with-ASI sub-path via collapseToFlavor below.
+      // singularity-with-ASI sub-path via effects below.
       hideWhen: [{ capability: ['agi'] }],
       edges: [
         // `mild` = "a later breakthrough cracks the barrier". Behaviorally
@@ -226,7 +226,7 @@ const NODES = [
           // asi_happens='yes' in sel (matches post-asi-specific state) and
           // promote agi_happens to 'yes' in flavor (the breakthrough means
           // AGI effectively happened, overriding any pre-mild 'no').
-          collapseToFlavor: {
+          effects: {
             set: { asi_happens: 'yes' },
             setFlavor: { agi_happens: 'yes' },
             move: ['automation_recovery', 'asi_threshold']
@@ -237,9 +237,9 @@ const NODES = [
         // both edges (the shared gate); the specific pick is moved to
         // flavor for narrativeState lookups.
         { id: 'substantial', label: 'Years/decades',
-          collapseToFlavor: { move: ['automation_recovery'] } },
+          effects: { move: ['automation_recovery'] } },
         { id: 'never', label: 'Never',
-          collapseToFlavor: { move: ['automation_recovery'] } }
+          effects: { move: ['automation_recovery'] } }
       ] },
     { id: 'auto_benefit_distribution', label: 'Who Benefits?', stage: 3, priority: 2,
       activateWhen: [{ capability: ['agi'] }],
@@ -255,11 +255,11 @@ const NODES = [
       hideWhen: [{ who_benefits_set: ['yes'] }],
       edges: [
         { id: 'equal', label: 'Shared equally',
-          collapseToFlavor: { set: { who_benefits_set: 'yes' }, move: ['auto_benefit_distribution'] } },
+          effects: { set: { who_benefits_set: 'yes' }, move: ['auto_benefit_distribution'] } },
         { id: 'unequal', label: 'Wealth concentrates',
-          collapseToFlavor: { set: { who_benefits_set: 'yes' }, move: ['auto_benefit_distribution'] } },
+          effects: { set: { who_benefits_set: 'yes' }, move: ['auto_benefit_distribution'] } },
         { id: 'extreme', label: 'Power concentrates',
-          collapseToFlavor: { set: { who_benefits_set: 'yes' }, move: ['auto_benefit_distribution'] } }
+          effects: { set: { who_benefits_set: 'yes' }, move: ['auto_benefit_distribution'] } }
       ] },
     // knowledge_rate / physical_rate (unified across plateau, auto-shallow,
     // and main paths) live near the end of NODES — see note near the old
@@ -290,15 +290,15 @@ const NODES = [
       ],
       edges: [
         { id: 'none', label: '0% — Baseline',
-          collapseToFlavor: { set: { takeoff_class: 'normal' }, move: ['takeoff'] } },
+          effects: { set: { takeoff_class: 'normal' }, move: ['takeoff'] } },
         { id: 'slow', label: '10% — Modest',
-          collapseToFlavor: { set: { takeoff_class: 'normal' }, move: ['takeoff'] } },
+          effects: { set: { takeoff_class: 'normal' }, move: ['takeoff'] } },
         { id: 'moderate', label: '20% — Meaningful',
-          collapseToFlavor: { set: { takeoff_class: 'normal' }, move: ['takeoff'] } },
+          effects: { set: { takeoff_class: 'normal' }, move: ['takeoff'] } },
         { id: 'fast', label: '35% — Dramatic',
-          collapseToFlavor: { set: { takeoff_class: 'fast' }, move: ['takeoff'] } },
+          effects: { set: { takeoff_class: 'fast' }, move: ['takeoff'] } },
         { id: 'explosive', label: '50% — Runaway',
-          collapseToFlavor: { set: { takeoff_class: 'explosive' }, move: ['takeoff'] } }
+          effects: { set: { takeoff_class: 'explosive' }, move: ['takeoff'] } }
       ] },
     { id: 'governance_window', label: 'Governance Window', stage: 1,
       // Inside emergence: capability is still 'singularity' here (module
@@ -316,11 +316,11 @@ const NODES = [
       hideWhen: [{ capability: ['asi'] }],
       edges: [
         { id: 'governed', label: 'Active preparation',
-          collapseToFlavor: { setFlavor: { governance: 'governed' }, move: ['governance_window'] } },
+          effects: { setFlavor: { governance: 'governed' }, move: ['governance_window'] } },
         { id: 'partial', label: 'Partial preparation',
-          collapseToFlavor: { setFlavor: { governance: 'partial' }, move: ['governance_window'] } },
+          effects: { setFlavor: { governance: 'partial' }, move: ['governance_window'] } },
         { id: 'race', label: 'Relative complacency',
-          collapseToFlavor: { setFlavor: { governance: 'race' }, move: ['governance_window'] } }
+          effects: { setFlavor: { governance: 'race' }, move: ['governance_window'] } }
       ] },
     { id: 'open_source', label: 'Open Source', stage: 2,
       activateWhen: [{ capability: ['asi'] }],
@@ -338,15 +338,15 @@ const NODES = [
       edges: [
         { id: 'near_parity', label: 'Near-parity',
           disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }],
-          collapseToFlavor: { set: { open_source_set: 'yes' } } },
+          effects: { set: { open_source_set: 'yes' } } },
         { id: 'six_months', label: '~6 months',
           disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }],
-          collapseToFlavor: { set: { open_source_set: 'yes' } } },
+          effects: { set: { open_source_set: 'yes' } } },
         { id: 'twelve_months', label: '~12 months',
           disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this pace, open-source can\'t keep up' }],
-          collapseToFlavor: { set: { open_source_set: 'yes' } } },
+          effects: { set: { open_source_set: 'yes' } } },
         { id: 'twenty_four_months', label: '~24 months',
-          collapseToFlavor: { set: { open_source_set: 'yes' } } }
+          effects: { set: { open_source_set: 'yes' } } }
       ] },
     { id: 'distribution', label: 'Frontier Labs', stage: 2,
       activateWhen: [{ capability: ['asi'] }],
@@ -386,7 +386,7 @@ const NODES = [
           ] },
         { id: 'lagging', label: 'Many compete',
           disabledWhen: [{ takeoff_class: ['explosive'], reason: 'At this speed, only whoever gets there first has it' }, { open_source: ['near_parity'], reason: 'With open-source at parity, no one is lagging behind' }],
-          collapseToFlavor: { set: { distribution: 'concentrated' }, setFlavor: { distribution_detail: 'lagging' } } },
+          effects: { set: { distribution: 'concentrated' }, setFlavor: { distribution_detail: 'lagging' } } },
         { id: 'concentrated', label: 'A few lead', disabledWhen: [{ open_source: ['near_parity'], reason: 'With open-source at parity, no one is lagging behind' }] },
         { id: 'monopoly', label: 'One dominates', disabledWhen: [{ open_source: ['near_parity'], reason: 'With open-source at parity, no one can monopolize it' }] }
       ] },
@@ -409,10 +409,10 @@ const NODES = [
         { id: 'one', label: 'One country' },
         { id: 'two', label: 'Two powers',
           disabledWhen: [{ takeoff_class: ['explosive'], reason: 'Only the first mover has it at this speed' }, { distribution: ['monopoly'], reason: 'One lab dominates — only one country is in the game' }],
-          collapseToFlavor: { set: { geo_spread: 'multiple' }, setFlavor: { geo_spread_detail: 'two' }, move: ['open_source'] } },
+          effects: { set: { geo_spread: 'multiple' }, setFlavor: { geo_spread_detail: 'two' }, move: ['open_source'] } },
         { id: 'several', label: 'Several',
           disabledWhen: [{ takeoff_class: ['explosive'], reason: 'Only the first mover has it at this speed' }, { distribution: ['monopoly'], reason: 'One lab dominates — only one country is in the game' }],
-          collapseToFlavor: { set: { geo_spread: 'multiple' }, setFlavor: { geo_spread_detail: 'several' }, move: ['open_source'] } }
+          effects: { set: { geo_spread: 'multiple' }, setFlavor: { geo_spread_detail: 'several' }, move: ['open_source'] } }
       ] },
     { id: 'sovereignty', label: 'Power Holder', stage: 2,
       activateWhen: [
@@ -430,13 +430,13 @@ const NODES = [
         // /explore convergence. Gated by `when` so the monopoly+lab subtree
         // (where gov_action DOES activate) keeps open_source in sel.
         { id: 'lab', label: 'The labs',
-          collapseToFlavor: { when: { distribution: ['concentrated'] }, move: ['open_source'] } },
+          effects: { when: { distribution: ['concentrated'] }, move: ['open_source'] } },
         { id: 'state', label: 'The state' }
       ] },
     { id: 'alignment', label: 'Alignment', stage: 2, forwardKey: true,
       activateWhen: [{ capability: ['asi'] }],
       // All writers of `alignment` are explicit, edge-local
-      // collapseToFlavor.set:
+      // effects.set:
       //   * decel reducer writes alignment directly (robust on solved /
       //     parity_solved, brittle on (rival, brittle), failed on
       //     (escapes, *)).
@@ -479,13 +479,13 @@ const NODES = [
         // bucket-key projection — making these states look stuck at
         // escape_early. Same observable behavior either way.
         { id: 'breaks', label: 'Breaks',
-          collapseToFlavor: { set: { alignment: 'failed', containment: 'escaped', gov_action: 'accelerate' } } }
+          effects: { set: { alignment: 'failed', containment: 'escaped', gov_action: 'accelerate' } } }
       ] },
     { id: 'containment', label: 'Containment', stage: 2, forwardKey: true,
       // hideWhen / activateWhen / disabledWhen trimmed: rules formerly keyed
       // on external writer dims (brittle_resolution, proliferation_alignment,
       // proliferation_outcome, post_catch) are gone. Those modules / nodes
-      // now pre-write containment directly via collapseToFlavor.set
+      // now pre-write containment directly via effects.set
       // (ESCAPE.post_catch=contained, PROLIFERATION.{leaked-exits},
       // brittle_resolution.escape), so containment is already set in sel on
       // those paths — the node's own activation and rendering auto-skip
@@ -585,7 +585,7 @@ const NODES = [
             // Disables marginal during the ESCAPE_MODULE re-entry triggered
             // by inert_stays=no. Mirrors the gating pattern above: the
             // `escape_set: false` clause ensures this rule only fires
-            // AFTER the inert_stays.no collapseToFlavor has evicted
+            // AFTER the inert_stays.no effects has evicted
             // `ai_goals` + `escape_set` to flavor.
             { inert_stays: ['no'], escape_set: false, reason: 'You already chose "eventually develops goals" — the AI can\'t stay inert' }
           ] }
@@ -620,12 +620,12 @@ const NODES = [
           // the initial transition — once the user re-picks a hostile
           // goal, this block's `when` no longer matches so subsequent
           // pushes' cleanSelection runs leave the new ai_goals alone.
-          collapseToFlavor: { when: { ai_goals: ['marginal'] }, move: ['ai_goals', 'escape_set'] }
+          effects: { when: { ai_goals: ['marginal'] }, move: ['ai_goals', 'escape_set'] }
         }
       ] },
     // Note: the former `inert_outcome` node is gone. The inert-wakes path
     // now re-asks `ai_goals` instead — see ESCAPE_MODULE and
-    // inert_stays.no.collapseToFlavor.
+    // inert_stays.no.effects.
     { id: 'gov_action', label: 'Deceleration', stage: 2,
       // Hide once the AI has escaped containment — the deceleration
       // decision is moot at that point, regardless of how the escape
@@ -654,7 +654,7 @@ const NODES = [
       edges: [
         { id: 'decelerate', label: 'Decelerate',
           disabledWhen: [{ alignment: ['robust'], reason: 'Alignment is solved — there is no case for slowing down' }, { takeoff_class: ['explosive'], reason: 'Moving too fast for any government to intervene' }],
-          collapseToFlavor: { move: ['takeoff_class'] } },
+          effects: { move: ['takeoff_class'] } },
         // Picking accelerate means the decel chain is never entered, so the
         // specific open_source timeline (6/12/24 months) no longer affects
         // any downstream gating. Move it to flavor for /explore convergence.
@@ -667,7 +667,7 @@ const NODES = [
         // narratives (data/outcomes.json governance.{race,…} blocks)
         // read this through resolvedStateWithFlavor.
         { id: 'accelerate', label: 'Accelerate',
-          collapseToFlavor: { setFlavor: { governance: 'race' }, move: ['open_source', 'takeoff_class'] } }
+          effects: { setFlavor: { governance: 'race' }, move: ['open_source', 'takeoff_class'] } }
       ] },
     { id: 'decel_2mo_progress', label: '2 Months', stage: 2,
       activateWhen: [{ gov_action: ['decelerate'] }],
@@ -852,7 +852,7 @@ const NODES = [
           // module continues to proliferation_alignment, whose
           // activateWhen requires proliferation_outcome=leaks_public —
           // this edge-write is what makes that gate fire.
-          collapseToFlavor: { set: { proliferation_outcome: 'leaks_public' } },
+          effects: { set: { proliferation_outcome: 'leaks_public' } },
           disabledWhen: [
             { alignment: ['failed'], distribution: { not: ['open'] }, reason: 'Releasing the weights of a misaligned AI when you still had controlled distribution is a different, more drastic scenario than this question models' }
           ] }
@@ -891,7 +891,7 @@ const NODES = [
           // _outcome) attaches only to exit-plan tuples; this block stays
           // out of that path. attachModuleReducer merges via existing.
           // concat(blocks), so this block runs first.
-          collapseToFlavor: [
+          effects: [
             { when: { proliferation_control: ['secure_access'] }, move: ['proliferation_control'] }
           ]
         }
@@ -1147,7 +1147,7 @@ const NODES = [
       // `ai_goals=benevolent → equal` deriveWhen rule is replaced by
       // the disabledWhen clauses on `unequal` / `extreme` below
       // (any-capability benevolent disable) plus the
-      // power_use.generous.collapseToFlavor override that handles the
+      // power_use.generous.effects override that handles the
       // soft-takeover path where benefit_distribution=extreme is already
       // in sel by the time ai_goals='benevolent' is written.
       activateWhen: [
@@ -1183,7 +1183,7 @@ const NODES = [
           // match intent?" question doesn't add narrative value on top of
           // the power-concentration framing (intent was to capture, and
           // capture happened). Mark ineligible so failure_mode skips.
-          collapseToFlavor: { when: { intent: ['self_interest'] }, set: { delivery_ask_eligible: 'no' } } },
+          effects: { when: { intent: ['self_interest'] }, set: { delivery_ask_eligible: 'no' } } },
         { id: 'extreme', label: 'Power concentrates',
           disabledWhen: [
             // See `unequal.disabledWhen` above for the benevolent
@@ -1198,7 +1198,7 @@ const NODES = [
           // Extreme concentration → the-capture territory. The outcome is
           // defined by power concentration; delivery drift isn't a useful
           // orthogonal axis here. Mark ineligible regardless of intent.
-          collapseToFlavor: { set: { delivery_ask_eligible: 'no' } } }
+          effects: { set: { delivery_ask_eligible: 'no' } } }
       ] },
     { id: 'concentration_type', label: 'The Circle', stage: 3, priority: 2,
       activateWhen: [{ benefit_distribution: ['extreme'] }],
@@ -1209,13 +1209,13 @@ const NODES = [
         // ai_itself = the user picks "humans handed the world to the AI".
         // Treated as a programmatic equivalent of inert_stays=no: a
         // dormant AI can't actually be running the world, so picking
-        // ai_itself implicitly wakes it. Two collapseToFlavor blocks,
+        // ai_itself implicitly wakes it. Two effects blocks,
         // applied in order:
         //   1. set inert_stays='no' — the awake-AI signal. Stays in sel
         //      (`.set` writes to sel; only `.move` evicts) so ESCAPE
         //      and ai_goals.marginal.disabledWhen can read it.
         //   2. when ai_goals=marginal, move ai_goals + escape_set —
-        //      mirrors the existing inert_stays.no.collapseToFlavor
+        //      mirrors the existing inert_stays.no.effects
         //      block exactly. If the user reached who_benefits via a
         //      prior marginal escape (ai_goals='marginal' in sel,
         //      escape_set='yes' from escape_early's exit plan), this
@@ -1234,7 +1234,7 @@ const NODES = [
         // / the-escape / the-chaos, all keyed on post_catch='loose') match
         // the now-released hostile AI.
         { id: 'ai_itself', label: 'The AI itself',
-          collapseToFlavor: [
+          effects: [
             { set: { inert_stays: 'no' } },
             { when: { ai_goals: ['marginal'] }, move: ['ai_goals', 'escape_set'] },
             // Humans put a previously caged AI back in charge — flip
@@ -1280,10 +1280,10 @@ const NODES = [
           //     outcome matching (the prior deriveWhen rule on
           //     benefit_distribution did this via resolvedVal). The
           //     overwrite happens after benefit_distribution.extreme's
-          //     own collapseToFlavor (delivery_ask_eligible='no') has
+          //     own effects (delivery_ask_eligible='no') has
           //     already fired in cleanSelection's NODES-order pass, so
           //     that side effect is preserved.
-          collapseToFlavor: { when: { concentration_type: ['ai_itself'] }, set: { ai_goals: 'benevolent', escape_set: 'yes', benefit_distribution: 'equal' } } },
+          effects: { when: { concentration_type: ['ai_itself'] }, set: { ai_goals: 'benevolent', escape_set: 'yes', benefit_distribution: 'equal' } } },
         // ai_itself + extractive/indifferent = AI took control AND wields
         // it badly. ai_goals.benevolent's disabledWhen
         // ({concentration_type:ai_itself, power_use:[extractive,indifferent]})
@@ -1296,9 +1296,9 @@ const NODES = [
         // value preserved in flavor for narrative continuity.
         // Symmetric to the generous block above.
         { id: 'extractive', label: 'A tightening grip',
-          collapseToFlavor: { when: { concentration_type: ['ai_itself'], ai_goals: ['benevolent'] }, move: ['ai_goals'] } },
+          effects: { when: { concentration_type: ['ai_itself'], ai_goals: ['benevolent'] }, move: ['ai_goals'] } },
         { id: 'indifferent', label: 'Their own project',
-          collapseToFlavor: { when: { concentration_type: ['ai_itself'], ai_goals: ['benevolent'] }, move: ['ai_goals'] } }
+          effects: { when: { concentration_type: ['ai_itself'], ai_goals: ['benevolent'] }, move: ['ai_goals'] } }
       ] },
     // knowledge_rate / physical_rate — unified across three contexts
     // keyed on the post-emergence `capability` value. In all three:
@@ -1316,7 +1316,7 @@ const NODES = [
     //   • capability='plateau' — rollout exits on early_physical_rate.*;
     //       knowledge_rate is in EARLY_ROLLOUT writes and persists.
     //       physical_rate is set into sel mid-module by the picked
-    //       early_physical_rate.* edge's collapseToFlavor.set, then
+    //       early_physical_rate.* edge's effects.set, then
     //       evicted to flavor on exit via EARLY_ROLLOUT internalMarkers
     //       (attachModuleReducer's exit block moves it).
     //   • capability='agi' (AGI-only / auto-shallow) — same as plateau.
@@ -1337,7 +1337,7 @@ const NODES = [
     // split. Plateau / agi paths now go through early_knowledge_rate /
     // early_physical_rate (separate nodes owned by EARLY_ROLLOUT_MODULE),
     // which write the same canonical knowledge_rate / physical_rate dims
-    // via edge-level collapseToFlavor.set so outcome flavor lookups
+    // via edge-level effects.set so outcome flavor lookups
     // (the-plateau.knowledge_rate.*, the-agi-economy.physical_rate.*)
     // continue to read the same dim names. The 'limited' edge dropped
     // here was always disabled on asi anyway; it lives only on the early
@@ -1370,7 +1370,7 @@ const NODES = [
       ] },
     // early_knowledge_rate / early_physical_rate: plateau / agi versions
     // of the rollout questions. Each edge writes the canonical
-    // knowledge_rate / physical_rate dim via collapseToFlavor.set so
+    // knowledge_rate / physical_rate dim via effects.set so
     // outcomes that key on those names work transparently. The early_*
     // dims themselves are pure question-host nodes that move to flavor
     // on EARLY_ROLLOUT_MODULE exit (nodeIds \ writes auto-eviction).
@@ -1382,15 +1382,15 @@ const NODES = [
       ],
       edges: [
         { id: 'rapid', label: 'Rapid',
-          collapseToFlavor: { set: { knowledge_rate: 'rapid' } },
+          effects: { set: { knowledge_rate: 'rapid' } },
           disabledWhen: [{ capability: ['plateau'], stall_duration: ['hours', 'days'], reason: 'At this stall duration, rapid adoption isn\'t possible' }] },
         { id: 'gradual', label: 'Gradual',
-          collapseToFlavor: { set: { knowledge_rate: 'gradual' } },
+          effects: { set: { knowledge_rate: 'gradual' } },
           disabledWhen: [{ capability: ['plateau'], stall_duration: ['hours'], reason: 'The stall is too short for gradual rollout' }] },
         { id: 'uneven', label: 'Uneven',
-          collapseToFlavor: { set: { knowledge_rate: 'uneven' } } },
+          effects: { set: { knowledge_rate: 'uneven' } } },
         { id: 'limited', label: 'Limited',
-          collapseToFlavor: { set: { knowledge_rate: 'limited' } },
+          effects: { set: { knowledge_rate: 'limited' } },
           disabledWhen: [
             { capability: ['plateau'], stall_duration: ['weeks', 'months'], reason: 'With a longer stall, AI has room to move beyond augmentation' }
           ] }
@@ -1403,15 +1403,15 @@ const NODES = [
       ],
       edges: [
         { id: 'rapid', label: 'Rapid',
-          collapseToFlavor: { set: { physical_rate: 'rapid' } },
+          effects: { set: { physical_rate: 'rapid' } },
           disabledWhen: [{ capability: ['plateau'], reason: 'Physical automation can\'t be rapid while AI itself is plateaued' }] },
         { id: 'gradual', label: 'Gradual',
-          collapseToFlavor: { set: { physical_rate: 'gradual' } },
+          effects: { set: { physical_rate: 'gradual' } },
           disabledWhen: [{ capability: ['plateau'], stall_duration: ['hours'], reason: 'The stall is too short for gradual rollout' }] },
         { id: 'uneven', label: 'Uneven',
-          collapseToFlavor: { set: { physical_rate: 'uneven' } } },
+          effects: { set: { physical_rate: 'uneven' } } },
         { id: 'limited', label: 'Limited',
-          collapseToFlavor: { set: { physical_rate: 'limited' } } }
+          effects: { set: { physical_rate: 'limited' } } }
       ] },
     { id: 'brittle_resolution', label: 'Long-Term Alignment Fate', stage: 3, priority: 1,
       // Only hidden once the AI has already escaped — on an escape path the
@@ -1447,7 +1447,7 @@ const NODES = [
       //
       // Every edge moves both `alignment` and `brittle_resolution` to
       // flavor. By engine block ordering (set → setFlavor → move per
-      // applyEdgeBlocks), `set: { alignment: X }` runs first, populating
+      // applyEdgeEffects), `set: { alignment: X }` runs first, populating
       // sel.alignment with the final value; then `move: ['alignment']`
       // evicts that just-set value to flavor. Net: post-edge state is
       // sel.alignment=undefined, flavor.alignment=X. Same pattern for
@@ -1462,12 +1462,12 @@ const NODES = [
       // escape_after_who / rollout) on brittle-asked paths.
       edges: [
         { id: 'solved', label: 'Alignment fully solved', shortLabel: 'Fully solved',
-          collapseToFlavor: {
+          effects: {
             set: { alignment: 'robust' },
             move: ['alignment', 'brittle_resolution']
           } },
         { id: 'sufficient', label: 'Brittle alignment holds', shortLabel: 'Brittle holds',
-          collapseToFlavor: {
+          effects: {
             set: { alignment: 'brittle' },
             move: ['alignment', 'brittle_resolution']
           } },
@@ -1492,7 +1492,7 @@ const NODES = [
           // pattern documented above) — same rationale as the other two
           // edges. containment STAYS in sel (it IS read post-brittle by
           // ESCAPE.reads / ROLLOUT.reads) — only alignment evicts.
-          collapseToFlavor: {
+          effects: {
             set: { alignment: 'failed', containment: 'escaped', post_catch: 'loose' },
             move: ['escape_set', 'ai_goals', 'alignment', 'brittle_resolution']
           } }
@@ -1680,7 +1680,7 @@ const NODES = [
     // Fires only on the civilizational-collateral branch of the catch path
     // (catch_outcome=holds_permanently + collateral_impact=civilizational)
     // and writes to the shared `war_survivors` sel dim via
-    // collapseToFlavor.set — so downstream consumers (outcome templates,
+    // effects.set — so downstream consumers (outcome templates,
     // ruin_type) read one canonical key regardless of which pipeline
     // produced the survivor count. Narrative is AI-catastrophe flavored,
     // distinct from the war_survivors node which stays war-flavored.
@@ -1709,11 +1709,11 @@ const NODES = [
     //
     // decel_align_progress is NOT declared as a node here: it's a pure
     // marker dim written only by the decel module reducer (via
-    // collapseToFlavor.set). Declaring it with edges would let the DFS
+    // effects.set). Declaring it with edges would let the DFS
     // validator enumerate it as a user-selectable dim, producing invalid
     // states like (alignment=robust, decel_align_progress=robust) without
     // gov_action=decelerate. Its values ({robust, brittle, unsolved}) are
-    // auto-registered by the engine's markerVals scan of collapseToFlavor
+    // auto-registered by the engine's markerVals scan of effects
     // blocks. Downstream consumers (alignment_durability,
     // proliferation_control) still read it via matchCondition → sel[k].
     { id: 'governance', label: 'Governance', derived: true, forwardKey: true,
@@ -1736,7 +1736,7 @@ const NODES = [
     // (templates at data/outcomes.json:1662,1740,2010,2130,2537,2616)
     // still see rival_emerges as a sel-dim and match it normally — the
     // engine registers 'rival_emerges' as a marker dim on first
-    // collapseToFlavor.set encounter.
+    // effects.set encounter.
     { id: 'ruin_type', label: 'Ruin Cause', derived: true,
       // Pure derived dim: never asked. Both values are written
       // edge-locally:
@@ -1758,11 +1758,11 @@ const NODES = [
 const NODE_MAP = {};
 for (const d of NODES) NODE_MAP[d.id] = d;
 
-// Phase 4a: decel collapseToFlavor attachment is now delegated to the
+// Phase 4a: decel effects attachment is now delegated to the
 // module runtime primitive (`attachModuleReducer(DECEL_MODULE)`), invoked
 // below after MODULES is declared. The primitive enumerates the reducer's
 // exit plan (cross product of DECEL_PAIRS × DECEL_REDUCER_TABLE) and
-// installs one collapseToFlavor block per (pKey, action, progress) cell
+// installs one effects block per (pKey, action, progress) cell
 // with the reducer's direct-write bundle and `move` set to all 14 internal
 // decel dims — identical structure to the old manual loop, but now data-
 // driven by the module declaration.
@@ -1779,7 +1779,7 @@ for (const [pKey, aKey] of DECEL_PAIRS) {
 // interface. The engine treats a module as one atomic transition in the
 // outer graph: enter when activateWhen fires, ask its internal questions
 // until terminal, then commit a write bundle to global `sel` via the
-// collapseToFlavor blocks attachModuleReducer installed on the module's
+// effects blocks attachModuleReducer installed on the module's
 // exit edges.
 //
 // Declaration shape:
@@ -1799,13 +1799,13 @@ for (const [pKey, aKey] of DECEL_PAIRS) {
 //     ],                                 // `set` is the write bundle, `when`
 //                                        // is the gate over local state.
 //                                        // attachModuleReducer installs each
-//                                        // tuple as a collapseToFlavor block
+//                                        // tuple as a effects block
 //                                        // on its edge at graph load.
 //   }
 //
 // The legacy `reduce(local)` function field was retired once every
 // module's exitPlan became the authoritative source — runtime writes
-// go through attached collapseToFlavor blocks, and audit tooling uses
+// go through attached effects blocks, and audit tooling uses
 // `engine.reduceFromExitPlan(mod, local)` to ask "what bundle would
 // this exitPlan produce for a given local state?".
 
@@ -1880,7 +1880,7 @@ const DECEL_MODULE_NODE_IDS = (function() {
 //     directly ('race' / 'slowdown') so the deriveWhen rule's fall-
 //     through to sel.governance returns the committed value.
 //   * open_source already moves on the gov_action.accelerate edge
-//     (collapseToFlavor.move: ['open_source', 'takeoff_class']) — this
+//     (effects.move: ['open_source', 'takeoff_class']) — this
 //     is the symmetric move for the decelerate path so cart-prod
 //     converges on every decel exit regardless of the chosen action.
 //   * Outcome `reachable` clauses: zero references to either dim.
@@ -2045,7 +2045,7 @@ const DECEL_MODULE = {
 //   the AI actually stays inert. Priority 1 (vs rollout's pri 2) ensures
 //   it fires AFTER who_benefits but BEFORE rollout begins. Two outcomes:
 //     * inert_stays=yes — nothing further; the marginal pick stands.
-//     * inert_stays=no — the edge's collapseToFlavor evicts both
+//     * inert_stays=no — the edge's effects evicts both
 //       `ai_goals` and `escape_set` (the completion marker) to flavor.
 //       With the marker cleared, _isModulePending flips back to true;
 //       module-first priority scheduling then re-walks ai_goals (with
@@ -2089,7 +2089,7 @@ const ESCAPE_NODE_IDS = [
     // as a flat node (priority: 1, gated on who_benefits_set) so the
     // user walks the full marginal-path flow (who_benefits, etc.) before
     // being asked whether the AI actually stays inert. On
-    // inert_stays=no, the edge's collapseToFlavor evicts both `ai_goals`
+    // inert_stays=no, the edge's effects evicts both `ai_goals`
     // and `escape_set` — which clears the module's completion marker
     // and lets it re-enter with a hostile ai_goals pick (marginal
     // disabled).
@@ -2153,7 +2153,7 @@ const ESCAPE_WRITES = [
 //     exits on the civilizational-collateral tail. Each writes the
 //     chosen value back to the shared `war_survivors` sel dim via the
 //     exit-tuple `set` block (attachModuleReducer installs it as a
-//     collapseToFlavor.set on the edge).
+//     effects.set on the edge).
 // All set `escape_set: 'yes'`.
 function buildEscapeExitPlan() {
     const plan = [];
@@ -2367,8 +2367,8 @@ function expandExitTable(rows) {
 }
 
 // Phase 3 runtime primitive — attach the module's reducer output to the
-// terminating-edge collapseToFlavor blocks. Given an exit plan (a list of
-// { nodeId, edgeId, when, set } tuples), install collapseToFlavor on the
+// terminating-edge effects blocks. Given an exit plan (a list of
+// { nodeId, edgeId, when, set } tuples), install effects on the
 // matching edges. The `move` list is the set of internal dims that are
 // NOT also writes — they get evicted from sel into flavor on module exit,
 // while writes stay in sel for downstream consumers. For decel, writes ∩
@@ -2390,7 +2390,7 @@ function attachModuleReducer(mod) {
     const moveDims = (mod.nodeIds || []).filter(d => !writes.has(d))
         .concat(mod.internalMarkers || []);
     // Group by (nodeId, edgeId) so multiple progress-when cells stack up
-    // on the same edge as a collapseToFlavor ARRAY.
+    // on the same edge as a effects ARRAY.
     const byEdge = new Map();
     for (const tuple of mod.exitPlan) {
         const key = tuple.nodeId + '|' + tuple.edgeId;
@@ -2412,13 +2412,13 @@ function attachModuleReducer(mod) {
         if (!node || !node.edges) continue;
         const edge = node.edges.find(e => e.id === edgeId);
         if (!edge) continue;
-        // If the edge already has a collapseToFlavor (legacy decel_outcome
+        // If the edge already has a effects (legacy decel_outcome
         // path), we merge — the legacy block stays for pre-migration, and
         // Phase 4a will remove the legacy loop.
-        const existing = edge.collapseToFlavor
-            ? (Array.isArray(edge.collapseToFlavor) ? edge.collapseToFlavor : [edge.collapseToFlavor])
+        const existing = edge.effects
+            ? (Array.isArray(edge.effects) ? edge.effects : [edge.effects])
             : [];
-        edge.collapseToFlavor = existing.concat(blocks);
+        edge.effects = existing.concat(blocks);
     }
 }
 
@@ -2492,7 +2492,7 @@ const WHO_BENEFITS_NODE_IDS = [
 // (via nodeIds \ writes auto-eviction in attachModuleReducer).
 //
 // `delivery_ask_eligible` is a synthetic marker (no host node) set by
-// benefit_distribution edges via `collapseToFlavor.set` to signal to
+// benefit_distribution edges via `effects.set` to signal to
 // failure_mode in ROLLOUT whether the delivery-drift question makes
 // sense on this path. Listed here to document the cross-module output;
 // the audit only cares about node-id writes, so this is informational.
@@ -2511,7 +2511,7 @@ const WHO_BENEFITS_WRITES = [
     // a singleton/inner_circle question with no external readers.)
     'power_use',
     // ai_goals is normally owned by ESCAPE_MODULE, but
-    // power_use.generous's collapseToFlavor (gated on
+    // power_use.generous's effects (gated on
     // concentration_type=ai_itself) writes ai_goals='benevolent' to
     // pre-resolve the AI's stance for the soft-takeover-generous
     // outcome. Without ai_goals in writes, cartesianWriteRows's
@@ -2524,7 +2524,7 @@ const WHO_BENEFITS_WRITES = [
     // (when present) on every other branch.
     'ai_goals',
     // inert_stays is normally owned by the standalone inert_stays
-    // node-slot, but concentration_type.ai_itself's collapseToFlavor
+    // node-slot, but concentration_type.ai_itself's effects
     // writes inert_stays='no' to treat the AI-soft-takeover path as
     // "AI is awake and running the world". Without it in writes,
     // cartesianWriteRows's output projection drops the derivation
@@ -2534,7 +2534,7 @@ const WHO_BENEFITS_WRITES = [
     // as ai_goals above.
     'inert_stays',
     // escape_set is normally owned by ESCAPE_MODULE (it's its
-    // completionMarker), but power_use.generous's collapseToFlavor
+    // completionMarker), but power_use.generous's effects
     // (gated on concentration_type=ai_itself) sets escape_set='yes'
     // to signal "ESCAPE module pre-resolved as a benevolent early-
     // exit". Without it in writes, cartesianWriteRows's projection
@@ -2542,7 +2542,7 @@ const WHO_BENEFITS_WRITES = [
     // Same cross-module-write pattern as ai_goals.
     'escape_set',
     // containment / post_catch are normally owned by ESCAPE_MODULE,
-    // but concentration_type.ai_itself's collapseToFlavor (gated on
+    // but concentration_type.ai_itself's effects (gated on
     // post_catch='contained' — the AI was caught earlier) flips
     // them back to ('escaped', 'loose') to model "humans accidentally
     // put the caged AI back in charge, opening the cage". Without
@@ -2577,7 +2577,7 @@ const WHO_BENEFITS_WRITES = [
 // be visible to power_promise.disabledWhen and disable behavior
 // would silently break.
 //
-// Markers aren't node ids (synthetic dims set via collapseToFlavor.
+// Markers aren't node ids (synthetic dims set via effects.
 // set in buildWarExitPlan), so they're outside WHO_BENEFITS_NODE_IDS
 // and attachModuleReducer's auto-move list (nodeIds \ writes) won't
 // pick them up — explicit per-tuple `move` is required. applyEdge
@@ -2611,7 +2611,7 @@ function buildWhoBenefitsExitPlan() {
         // on {elites} which doesn't activate power_use.
         // (ai_itself is the AI-soft-takeover path — power_use becomes
         // the moral test for what the AI does with the world it was
-        // handed; see power_use.generous.collapseToFlavor for how
+        // handed; see power_use.generous.effects for how
         // generous derives ai_goals=benevolent for that path.)
         const deferToPowerUse = new Set(['singleton', 'inner_circle', 'ai_itself']);
         for (const e of ct.edges) {
@@ -2695,7 +2695,7 @@ const WHO_BENEFITS_MODULE = {
 //   * early_physical_rate  — pace of AI impact on physical work
 //
 // Each early_* edge writes the canonical knowledge_rate / physical_rate
-// dim via collapseToFlavor.set so outcomes (the-plateau, the-agi-
+// dim via effects.set so outcomes (the-plateau, the-agi-
 // economy, etc.) read the same dim names regardless of which module
 // asked the question. The early_* dims themselves are pure question
 // hosts — they move to flavor on module exit (nodeIds \ writes auto-
@@ -2774,10 +2774,10 @@ const EARLY_ROLLOUT_MODULE = {
     writes: EARLY_ROLLOUT_WRITES,
     nodeIds: EARLY_ROLLOUT_NODE_IDS,
     // physical_rate is set into sel mid-module via early_physical_rate.*
-    // edges' collapseToFlavor.set, then evicted to flavor on exit.
+    // edges' effects.set, then evicted to flavor on exit.
     // Listed here (rather than in writes) because no outcome reachable
     // clause / graph gate reads it from sel; only outcome flavor blocks
-    // read it (via fused state). Engine applies edge collapseToFlavor
+    // read it (via fused state). Engine applies edge effects
     // blocks in order: the picked early_physical_rate.* edge's `set`
     // block fires first (sel.physical_rate='rapid'), then
     // attachModuleReducer's exit block fires with this dim in `move`,
@@ -2802,7 +2802,7 @@ const EARLY_ROLLOUT_MODULE = {
 //
 // Plateau / agi paths are handled by EARLY_ROLLOUT_MODULE (separate
 // early_knowledge_rate / early_physical_rate nodes that write the same
-// canonical knowledge_rate / physical_rate dims via collapseToFlavor.set).
+// canonical knowledge_rate / physical_rate dims via effects.set).
 //
 // Two ASI sub-contexts:
 //   * delivery_ask_eligible ≠ no — main ASI path: all three asked; exit
@@ -2952,10 +2952,10 @@ const ROLLOUT_MODULE = {
 //            exit plan, owned by the dim's rightful writer.
 //   writes = open_source (conditional — stays in sel on paths where
 //            downstream decel chain reads it, moved to flavor on others
-//            via existing per-edge collapseToFlavor rules), distribution,
+//            via existing per-edge effects rules), distribution,
 //            geo_spread, sovereignty, control_set.
 //   internalMarkers = open_source_set. Set into sel by every open_source
-//            edge's collapseToFlavor so the node's own hideWhen can fire
+//            edge's effects so the node's own hideWhen can fire
 //            after a downstream collapse moves `open_source` to flavor
 //            mid-walk. Auto-moved to flavor at module exit — not an
 //            external contract, so no reader outside the module.
@@ -2989,7 +2989,7 @@ const CONTROL_NODE_IDS = [
 //     outcome templates.
 //   * `sovereignty` — read by gov_action, power_structure outcomes.
 // The audit recognizes these as declared exports; per-edge node-level
-// collapseToFlavor rules still move them to flavor on the specific paths
+// effects rules still move them to flavor on the specific paths
 // where downstream consumers don't need them (e.g., geo_spread.two moves
 // open_source; sovereignty.lab on concentrated also moves open_source).
 const CONTROL_WRITES = [
@@ -3104,7 +3104,7 @@ const CONTROL_MODULE = {
 //     proliferation_outcome was only resolved via deriveWhen, never set
 //     in sel) still has a value to flavor-move at exit.
 //
-//     The proliferation_outcome.leaks_public.collapseToFlavor on the
+//     The proliferation_outcome.leaks_public.effects on the
 //     edge itself (the secure_access mid-module eviction) lives outside
 //     buildProliferationExitPlan precisely so it does NOT receive the
 //     auto-move list — it fires on the alignment=robust path where the
@@ -3199,7 +3199,7 @@ function buildProliferationExitPlan() {
     // (containment.contextWhen, outcomes.json flavor blocks) see a
     // consistent value once proliferation_outcome auto-moves to flavor.
     // On the proliferation_control=none branch the value is also written
-    // edge-locally on proliferation_control.none.collapseToFlavor.set, so
+    // edge-locally on proliferation_control.none.effects.set, so
     // both the alignment=robust path (which doesn't exit here — the
     // module continues to proliferation_alignment, whose activateWhen
     // requires proliferation_outcome=leaks_public) and the alignment
@@ -3291,7 +3291,7 @@ function buildProliferationExitPlan() {
                 });
                 // (secure_access mid-module eviction is on the edge
                 // itself — see proliferation_outcome.leaks_public.
-                // collapseToFlavor in the node definition. Lives there
+                // effects in the node definition. Lives there
                 // because that block must NOT receive the auto-move
                 // list — it fires on the alignment=robust path where
                 // the module hasn't exited yet and proliferation_outcome
@@ -3413,7 +3413,7 @@ const PROLIFERATION_MODULE = {
 // sel through to capability ∈ {plateau, agi, asi, stalls}.
 //
 // No reducerTable — exit space spans 4 different terminal nodes with
-// path-specific collapseToFlavor blocks. Walker falls through to normal
+// path-specific effects blocks. Walker falls through to normal
 // DFS, same as escape / who_benefits / rollout.
 
 const EMERGENCE_NODE_IDS = [
@@ -3430,7 +3430,7 @@ const EMERGENCE_NODE_IDS = [
 // Writes = dims that remain in sel (or are markers set in sel) post-exit
 // and are read by external consumers downstream. The pure-internal dims
 // (stall_recovery, agi_threshold, automation_recovery, takeoff,
-// governance_window) each have their own per-edge collapseToFlavor that
+// governance_window) each have their own per-edge effects that
 // moves them to flavor; we don't list them here.
 //
 // `capability` never moves to flavor — it's rewritten on module exit to
@@ -3445,7 +3445,7 @@ const EMERGENCE_NODE_IDS = [
 // below. `agi_happens` is also NOT in writes: every asi_threshold edge
 // moves it to flavor, so it's never durable in sel post-exit.
 // `asi_threshold` is also NOT in writes: it's mid-flow evicted to flavor
-// by per-edge collapseToFlavor (asi_threshold non-never edges + the
+// by per-edge effects (asi_threshold non-never edges + the
 // automation_recovery.mild edge). The one case where that eviction
 // doesn't fire (asi_threshold=never + automation_recovery in
 // {substantial, never}) is handled by attachModuleReducer's
@@ -3476,7 +3476,7 @@ const EMERGENCE_WRITES = [
 //     question resolves. No external reader.
 //   * `agi_happens` — set by agi_threshold edges (yes/no) and consumed
 //     by asi_threshold.activateWhen / agi_threshold.hideWhen. Always
-//     moved to flavor by asi_threshold's own per-edge collapseToFlavor
+//     moved to flavor by asi_threshold's own per-edge effects
 //     (or by automation_recovery.mild.setFlavor); never durable in sel
 //     post-exit and never read externally.
 const EMERGENCE_INTERNAL_MARKERS = ['asi_happens', 'agi_happens'];
@@ -4143,7 +4143,7 @@ const ALIGNMENT_MODULE = {
         'capability',
         'control_set',
         'geo_spread', 'sovereignty', 'distribution',
-        // gov_action edge collapseToFlavor moves (pre-existing)
+        // gov_action edge effects moves (pre-existing)
         'takeoff_class',
     ],
     writes: ALIGNMENT_WRITES,

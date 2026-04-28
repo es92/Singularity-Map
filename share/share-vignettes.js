@@ -265,7 +265,7 @@
             });
         };
         // Stack-order first (chronological), then NODES-order for any extras
-        // set via collapseToFlavor / exitPlan writes the user didn't directly
+        // set via effects / exitPlan writes the user didn't directly
         // pick.
         for (const entry of stack) {
             if (!entry.nodeId) continue;
@@ -348,7 +348,7 @@
             pushEvent(node, value);
         }
         // NODES-order for any non-stack nodes whose value was set by an
-        // upstream collapseToFlavor / exitPlan write. Skip locked auto-fills
+        // upstream effects / exitPlan write. Skip locked auto-fills
         // (matches the legacy displayOrder behavior — locked-not-in-stack
         // never rendered).
         for (const node of Engine.NODES) {

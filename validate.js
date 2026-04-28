@@ -70,7 +70,7 @@ GraphIO.registerOutcomes(TEMPLATES);
 // Verifies that every condition (activateWhen, hideWhen, requires,
 // disabledWhen, outcome.reachable) refers to dims/values that
 // actually exist in the graph. Synthetic dims/values produced by
-// collapseToFlavor.set are accepted.
+// effects.set are accepted.
 //
 // Also detects "dead edges" — edges whose `requires` is fully
 // implied by their `disabledWhen`, meaning the edge can never fire.
@@ -88,8 +88,8 @@ function runStaticAnalysis() {
     for (const node of NODES) {
         if (!node.edges) continue;
         for (const edge of node.edges) {
-            if (!edge.collapseToFlavor) continue;
-            const blocks = Array.isArray(edge.collapseToFlavor) ? edge.collapseToFlavor : [edge.collapseToFlavor];
+            if (!edge.effects) continue;
+            const blocks = Array.isArray(edge.effects) ? edge.effects : [edge.effects];
             for (const c of blocks) {
                 if (!c || !c.set) continue;
                 for (const [dim, val] of Object.entries(c.set)) {

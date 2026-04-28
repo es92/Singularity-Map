@@ -30,14 +30,14 @@
 //     input row through to terminal states and projects each terminal
 //     onto the slot's write-dim list, deduped:
 //       - module : DFS through `mod.nodeIds`, picking enabled edges,
-//                  applying every collapseToFlavor.set block (user-
+//                  applying every effects.set block (user-
 //                  defined intermediate writes + auto-installed exit-
 //                  tuple sets). A leaf is a state where no internal
 //                  node is askable; it counts as an output iff the
 //                  module's completionMarker is set.
 //       - node   : single-step "DFS" — for each enabled edge, the
 //                  output state is the input + edge.id written to
-//                  node.id + the edge's collapseToFlavor.set blocks.
+//                  node.id + the edge's effects.set blocks.
 //       - outcome: terminal slot, no walk; returns no rows.
 //     Distinct write-dim projections collapse identical paths, so a
 //     module exposing 63 exit tuples may surface far fewer unique
@@ -46,7 +46,7 @@
 //   dimDomain(dim)
 //     Returns the inferred value space for a dim — every literal value
 //     observed for it across the whole graph (NODE.edges, condition
-//     literals, collapseToFlavor.set, exitPlan.set). The UNSET
+//     literals, effects.set, exitPlan.set). The UNSET
 //     sentinel is NOT included; cartesianReadRows adds it when it
 //     enumerates rows.
 //
@@ -83,7 +83,7 @@
 //   + every NODE in mod.nodeIds; if any relevant graph data changes
 //   the fingerprint mismatches and we recompute. PERSIST_VERSION must
 //   be bumped whenever the DFS itself changes (e.g. new
-//   collapseToFlavor handling) so old payloads are discarded across
+//   effects handling) so old payloads are discarded across
 //   deploys. Storage is best-effort: quota errors and disabled
 //   localStorage just fall back to the in-memory path.
 
@@ -114,7 +114,7 @@
     // are persisted, so a format change makes every lookup miss → 0
     // outputs). Eligibility is gated by `slot.kind === 'module'` at
     // the call sites below; outcomes have no DFS to cache.
-    const PERSIST_VERSION = 15;
+    const PERSIST_VERSION = 16;
     const PERSIST_KEY_PREFIX = 'gio:writeRows:';
 
     let _domainsCache = null;
@@ -184,7 +184,7 @@
     //   * NODE.activateWhen          → values constraining each dim
     //   * NODE.hideWhen              → ditto
     //   * edge.requires / disabledWhen → ditto
-    //   * collapseToFlavor.set / setFlavor / .when → dim writes + gates
+    //   * effects.set / setFlavor / .when → dim writes + gates
     //   * MODULE.activateWhen / hideWhen → ditto
     //   * MODULE.exitPlan[].set / .when → marker dims like decel_set
     //
@@ -221,8 +221,8 @@
                 add(n.id, e.id);
                 scanCondList(e.requires);
                 scanCondList(e.disabledWhen);
-                if (e.collapseToFlavor) {
-                    const blocks = Array.isArray(e.collapseToFlavor) ? e.collapseToFlavor : [e.collapseToFlavor];
+                if (e.effects) {
+                    const blocks = Array.isArray(e.effects) ? e.effects : [e.effects];
                     for (const b of blocks) {
                         if (!b) continue;
                         if (b.set) for (const [k, v] of Object.entries(b.set)) add(k, v);
@@ -327,8 +327,8 @@
                     const node = NM[nid];
                     if (!node) continue;
                     for (const e of (node.edges || [])) {
-                        if (!e.collapseToFlavor) continue;
-                        const blocks = Array.isArray(e.collapseToFlavor) ? e.collapseToFlavor : [e.collapseToFlavor];
+                        if (!e.effects) continue;
+                        const blocks = Array.isArray(e.effects) ? e.effects : [e.effects];
                         for (const b of blocks) {
                             if (b && Array.isArray(b.move)) {
                                 for (const k of b.move) {
@@ -357,7 +357,7 @@
                 for (const e of (node.edges || [])) {
                     _collectCondDims(e.requires, dims);
                     _collectCondDims(e.disabledWhen, dims);
-                    // Also include collapseToFlavor effect dims (set /
+                    // Also include effects effect dims (set /
                     // setFlavor / move) in reads. This is what lets us
                     // distinguish, in the per-edge projection key,
                     // "edge X moved this dim" (UNSET) from "edge Y
@@ -373,8 +373,8 @@
                     // input bucket does the YES projection capture
                     // the upstream 'yes' as a real value rather than
                     // a spurious UNSET.
-                    if (!e.collapseToFlavor) continue;
-                    const blocks = Array.isArray(e.collapseToFlavor) ? e.collapseToFlavor : [e.collapseToFlavor];
+                    if (!e.effects) continue;
+                    const blocks = Array.isArray(e.effects) ? e.effects : [e.effects];
                     for (const b of blocks) {
                         if (!b) continue;
                         if (b.set) for (const k of Object.keys(b.set)) dims.add(k);
@@ -525,7 +525,7 @@
     //   * module : declared mod.writes (authoritative — modules pin the
     //              dims they commit to global sel on exit).
     //   * node   : {node.id} ∪ every dim mentioned in the node's edges'
-    //              collapseToFlavor.set / setFlavor blocks.
+    //              effects.set / setFlavor blocks.
     //   * outcome: none — outcome cards are terminal.
     function _writeDimsForSlot(slot) {
         const cached = _writeDimsCache.get(slot.key);
@@ -539,8 +539,8 @@
             if (node) {
                 dims.add(node.id);
                 for (const e of (node.edges || [])) {
-                    if (!e.collapseToFlavor) continue;
-                    const blocks = Array.isArray(e.collapseToFlavor) ? e.collapseToFlavor : [e.collapseToFlavor];
+                    if (!e.effects) continue;
+                    const blocks = Array.isArray(e.effects) ? e.effects : [e.effects];
                     for (const b of blocks) {
                         if (!b) continue;
                         if (b.set) for (const k of Object.keys(b.set)) dims.add(k);
@@ -575,7 +575,7 @@
     //   (priority + askability mirrors engine.findNextQ but scoped to
     //   `mod.nodeIds`). For each enabled edge, build the next sel by:
     //     1. setting sel[node.id] = edge.id
-    //     2. applying every collapseToFlavor.{set,setFlavor} block
+    //     2. applying every effects.{set,setFlavor} block
     //        whose `when` matches the new sel (this includes both the
     //        user-defined intermediate writes AND the auto-installed
     //        exit-tuple set blocks attachModuleReducer pushed in)
@@ -675,8 +675,8 @@
 
     function _applyEdgeWrites(sel, node, edge) {
         // Returns a fresh sel with node.id=edge.id and the edge's
-        // collapseToFlavor blocks applied. The block interpreter
-        // itself lives in engine.applyEdgeBlocks — calling it here
+        // effects blocks applied. The block interpreter
+        // itself lives in engine.applyEdgeEffects — calling it here
         // (with flavor=null so `move` just deletes from sel) keeps
         // static analysis byte-equivalent to the runtime per-edge
         // pass that cleanSelection runs. The two used to be parallel
@@ -685,7 +685,7 @@
         // to a shared helper keeps that class of bug closed by
         // construction.
         const next = { ...sel, [node.id]: edge.id };
-        window.Engine.applyEdgeBlocks(next, edge, null);
+        window.Engine.applyEdgeEffects(next, edge, null);
         return next;
     }
 
@@ -792,7 +792,7 @@
     // intentionally do NOT include outcome templates / dimDomains:
     // outputs of a single module's DFS only depend on that module's
     // structure (nodeIds, edges, completionMarker, exitPlan-installed
-    // collapseToFlavor blocks) plus the engine semantics, not on the
+    // effects blocks) plus the engine semantics, not on the
     // wider graph.
     function _persistFingerprint(slot) {
         if (slot.kind !== 'module') return null;

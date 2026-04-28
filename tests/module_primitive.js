@@ -3,7 +3,7 @@
 //
 // Exercises the toy 2-node module fixture end-to-end without any graph
 // migration. Verifies:
-//   1. `attachModuleReducer(mod)` installs collapseToFlavor blocks with
+//   1. `attachModuleReducer(mod)` installs effects blocks with
 //      the expected (when, set, move) shape.
 //   2. Engine push through the attached edge applies the reducer's writes
 //      to sel and evicts all internal dims to flavor.
@@ -89,20 +89,20 @@ attachModuleReducer(toyModule);
 // ────────────────────────────────────────────────────────────
 
 const commitEdge = toyActionNode.edges.find(e => e.id === 'commit');
-assert(commitEdge.collapseToFlavor, 'collapseToFlavor should be attached to commit edge');
-assert(Array.isArray(commitEdge.collapseToFlavor), 'should be an array');
-assert.strictEqual(commitEdge.collapseToFlavor.length, 2, 'two cells (low, high)');
+assert(commitEdge.effects, 'effects should be attached to commit edge');
+assert(Array.isArray(commitEdge.effects), 'should be an array');
+assert.strictEqual(commitEdge.effects.length, 2, 'two cells (low, high)');
 
-const lowBlock = commitEdge.collapseToFlavor.find(b => b.when.toy_progress[0] === 'low');
+const lowBlock = commitEdge.effects.find(b => b.when.toy_progress[0] === 'low');
 assert.deepStrictEqual(lowBlock.set, { alignment: 'failed' });
 assert.deepStrictEqual(lowBlock.move.sort(), ['toy_action', 'toy_progress']);
 
-const highBlock = commitEdge.collapseToFlavor.find(b => b.when.toy_progress[0] === 'high');
+const highBlock = commitEdge.effects.find(b => b.when.toy_progress[0] === 'high');
 assert.deepStrictEqual(highBlock.set, { alignment: 'robust' });
 
 // The non-terminating 'continue' edge must NOT have gotten anything attached.
 const continueEdge = toyActionNode.edges.find(e => e.id === 'continue');
-assert.strictEqual(continueEdge.collapseToFlavor, undefined,
+assert.strictEqual(continueEdge.effects, undefined,
     'non-terminating continue edge should have no reducer attachment');
 
 console.log('toy module attachment: PASS');
@@ -156,7 +156,7 @@ console.log(`decel exitPlan self-consistency via reduceFromExitPlan (${plan.leng
 //    Post-Phase-4a: the (accelerate, robust) cell writes
 //    { alignment: 'robust', governance: 'race', decel_align_progress:
 //    'robust' } directly to sel via the reducer-installed
-//    collapseToFlavor block.
+//    effects block.
 // ────────────────────────────────────────────────────────────
 
 const engine = require('../engine.js');
@@ -190,7 +190,7 @@ assert.strictEqual(selEnd.governance, undefined, 'governance no longer in sel');
 assert.strictEqual(flavorEnd.decel_align_progress, 'robust', 'reducer moves decel_align_progress=robust to flavor');
 assert.strictEqual(selEnd.decel_align_progress, undefined, 'decel_align_progress no longer in sel');
 // Internal decel dims should have been moved to flavor by the
-// module-reducer-installed collapseToFlavor.move.
+// module-reducer-installed effects.move.
 assert.strictEqual(selEnd.decel_2mo_progress, undefined, 'decel_2mo_progress moved to flavor');
 assert.strictEqual(flavorEnd.decel_2mo_progress, 'robust');
 // alignment now resolves directly from sel (not via deriveWhen).
@@ -287,7 +287,7 @@ for (const t of csSetTuples) {
 }
 
 // After attachModuleReducer ran at graph.js load, each exit edge should
-// carry a collapseToFlavor block with move list covering the 5 pure
+// carry a effects block with move list covering the 5 pure
 // pipeline flavor dims PLUS catch_outcome + collateral_impact (now
 // evicted to flavor since they're nodeIds outside of writes).
 const catchNode = graph.NODE_MAP.catch_outcome;
@@ -297,8 +297,8 @@ const expectedMove = [
     'response_method', 'response_success',
 ].sort();
 for (const e of catchNode.edges) {
-    assert(e.collapseToFlavor, `catch_outcome.${e.id} should have collapseToFlavor installed`);
-    const blocks = Array.isArray(e.collapseToFlavor) ? e.collapseToFlavor : [e.collapseToFlavor];
+    assert(e.effects, `catch_outcome.${e.id} should have effects installed`);
+    const blocks = Array.isArray(e.effects) ? e.effects : [e.effects];
     const ourBlock = blocks.find(b => b.set && b.set.escape_set === 'yes');
     assert(ourBlock, `catch_outcome.${e.id}: module block with escape_set=yes`);
     assert.deepStrictEqual(ourBlock.move.slice().sort(), expectedMove,
@@ -308,7 +308,7 @@ const aiGoalsNode = graph.NODE_MAP.ai_goals;
 for (const edgeId of ['benevolent', 'marginal']) {
     const e = aiGoalsNode.edges.find(x => x.id === edgeId);
     assert(e, `ai_goals.${edgeId} edge must exist`);
-    const blocks = Array.isArray(e.collapseToFlavor) ? e.collapseToFlavor : (e.collapseToFlavor ? [e.collapseToFlavor] : []);
+    const blocks = Array.isArray(e.effects) ? e.effects : (e.effects ? [e.effects] : []);
     const ourBlock = blocks.find(b => b.set && b.set.escape_set === 'yes');
     assert(ourBlock, `ai_goals.${edgeId}: module block with escape_set=yes should be installed`);
     assert.deepStrictEqual(ourBlock.move.slice().sort(), expectedMove,
@@ -318,7 +318,7 @@ for (const edgeId of ['benevolent', 'marginal']) {
 // Retired: the bespoke `escape.reduce()` pass-through test. Its job
 // was to verify that `escapeReduce(local)` projected local state down
 // to the declared writes. Post-migration, runtime writes go through
-// the collapseToFlavor blocks attached to each exit edge (validated
+// the effects blocks attached to each exit edge (validated
 // above), and the generic engine.reduceFromExitPlan no longer does a
 // writes-based pass-through — it just returns the matching exit
 // tuple's `set`. The equivalent runtime guarantee (escape commits

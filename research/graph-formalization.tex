@@ -409,10 +409,10 @@ These checks inspect the graph definition without traversal.
 \begin{definition}[Reference Integrity]\label{def:refint}
 For every condition $\varphi$ appearing in any \texttt{activateWhen},
 \texttt{hideWhen}, \texttt{disabledWhen}, \texttt{requires}, or
-\texttt{collapseToFlavor.when} rule: every dimension $d$ referenced
+\texttt{effects.when} rule: every dimension $d$ referenced
 by $\varphi$ must exist ($d \in \Dim$), and every value referenced
 must be a valid edge ($v \in \Edg{d}$). The same holds for
-\texttt{collapseToFlavor.set} / \texttt{setFlavor} write maps,
+\texttt{effects.set} / \texttt{setFlavor} write maps,
 module \texttt{exitPlan} \texttt{set} maps, and outcome template
 conditions.
 \end{definition}
@@ -1057,7 +1057,7 @@ class computation and fingerprint checks.
 
 The current model eliminates this entirely. Every change to $\sel$ /
 $\flav$ is committed by the edge that fires, either directly (via
-\texttt{collapseToFlavor.set} / \texttt{setFlavor}) or via a module's
+\texttt{effects.set} / \texttt{setFlavor}) or via a module's
 \texttt{exitPlan}. \texttt{resolvedVal} reduces to a direct
 $\sel[d]$ lookup, and \texttt{matchCondition} reads $\sel[k]$ without
 recursion. Dimensions that the user never picks (such as
@@ -1167,7 +1167,7 @@ The harness (\texttt{test/run.js}) works as follows:
 
 The \texttt{edge-write-crossover} graph is the minimal reproducer for
 the terminal memoization bug (Remark~\ref{rem:termmemo}): 5 dimensions,
-10 edges, with an upstream edge whose \texttt{collapseToFlavor.set}
+10 edges, with an upstream edge whose \texttt{effects.set}
 write changes a downstream dimension's effective value, creating a
 path crossover. Before the fix (moving the terminal check before
 memoization), it produced both false positives and false negatives.
@@ -1177,7 +1177,7 @@ The \texttt{production-subgraph} graph contains the first 16 dimensions
 of the production Singularity Map (up to and including
 \texttt{open\_source}), with all real \texttt{activateWhen},
 \texttt{disabledWhen}, \texttt{requires}, and
-\texttt{collapseToFlavor.when} conditions preserved. Its 1204 baseline states compress to 20 irrelevance
+\texttt{effects.when} conditions preserved. Its 1204 baseline states compress to 20 irrelevance
 keys, and the optimized--baseline comparison passes with zero
 discrepancies (no reachability false positives, false negatives, or
 missing entries; browser-sim FP/FN both zero).
