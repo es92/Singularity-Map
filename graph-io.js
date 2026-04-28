@@ -114,7 +114,7 @@
     // are persisted, so a format change makes every lookup miss → 0
     // outputs). Eligibility is gated by `slot.kind === 'module'` at
     // the call sites below; outcomes have no DFS to cache.
-    const PERSIST_VERSION = 18;
+    const PERSIST_VERSION = 19;
     const PERSIST_KEY_PREFIX = 'gio:writeRows:';
 
     let _domainsCache = null;

@@ -2345,6 +2345,21 @@ const ESCAPE_MODULE = {
         // Without power_use in reads, cartesianWriteRows would generate
         // contradictory output projections (e.g. generous + paperclip).
         'power_use',
+        // catch_outcome.hideWhen / collateral_impact.effects.when /
+        // collateral_survivors.activateWhen all branch on who_benefits_set.
+        // At early-escape slots (escape_early/_alt) it's unset and the
+        // DFS walks collateral_impact (which sets containment='contained'
+        // on catch tuples); at late-escape slots (escape_late, _re_entry,
+        // _after_who) it's 'yes' and the DFS walks catch_outcome instead
+        // (containment stays 'escaped' on the ruin paths). Without
+        // who_benefits_set in reads, cartesianReadRows synthesizes a
+        // single who_benefits_set=UNSET row per bucket and the static
+        // analysis silently produces early-branch outputs (containment=
+        // contained) for late-escape upstream sels — wrong on every
+        // outcome whose reachable clause gates on containment (the
+        // _not[*].containment=['escaped'] family on the-gilded-/
+        // new-hierarchy/flourishing/capture/standoff/mosaic/failure).
+        'who_benefits_set',
     ],
     writes: ESCAPE_WRITES,
     nodeIds: ESCAPE_NODE_IDS,
@@ -3044,8 +3059,15 @@ const CONTROL_MODULE = {
     ],
     reads: [
         // Post-emergence state that internal nodes read (disabledWhen,
-        // activateWhen, deriveWhen clauses). capability='asi' is the
-        // module's activation gate and also its completion marker check.
+        // activateWhen clauses). capability='asi' is the module's
+        // activation gate and also its completion marker check.
+        // Intentionally excludes proliferation_set (referenced by
+        // distribution.open.requires/disabledWhen as a post-leak gate):
+        // control runs strictly upstream of proliferation, so that
+        // value is always UNSET at control's DFS time. Including it
+        // would synthesize phantom proliferation_set=yes inputs that
+        // never occur in practice and would (incorrectly) add
+        // distribution=open to the output set.
         'capability',
         'takeoff_class',
     ],
