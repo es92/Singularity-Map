@@ -470,20 +470,14 @@ function _findNextInternal(mod, sel) {
 // UI's outer-vs-inner key choice.
 const _isModuleDone = (mod, sel) => Engine.isModuleDone(sel, mod.completionMarker);
 
-// applyEdgeWrites mirroring graph-io._applyEdgeWrites — single-edge
-// effects application identical to engine.push at runtime. Both call
-// the same block interpreter (engine.applyEdgeEffects under the hood),
-// so static and runtime cannot drift.
+// applyEdgeWrites — delegates to engine.applyEdgeEffects, the single
+// block interpreter shared by runtime push, graph-io._applyEdgeWrites,
+// and the UI dry-run. Static and runtime cannot drift because there is
+// only one implementation. flavor=null so `move` just drops the dim
+// from sel (precompute is a sel-only projection).
 function _applyEdgeWrites(sel, node, edge) {
     const next = { ...sel, [node.id]: edge.id };
-    if (!edge.effects) return next;
-    const blocks = Array.isArray(edge.effects) ? edge.effects : [edge.effects];
-    for (const b of blocks) {
-        if (!b) continue;
-        if (b.when && !Engine.matchCondition(next, b.when)) continue;
-        if (b.set) for (const [k, v] of Object.entries(b.set)) next[k] = v;
-        if (Array.isArray(b.move)) for (const k of b.move) delete next[k];
-    }
+    Engine.applyEdgeEffects(next, edge, null);
     return next;
 }
 
