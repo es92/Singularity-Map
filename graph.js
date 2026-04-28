@@ -1460,31 +1460,38 @@ const NODES = [
       // containment='escaped', and 'sufficient' keeps alignment='brittle'
       // (no-op, written explicitly for clarity).
       //
-      // Every edge moves both `alignment` and `brittle_resolution` to
-      // flavor. By engine block ordering (set → setFlavor → move per
-      // applyEdgeEffects), `set: { alignment: X }` runs first, populating
-      // sel.alignment with the final value; then `move: ['alignment']`
-      // evicts that just-set value to flavor. Net: post-edge state is
-      // sel.alignment=undefined, flavor.alignment=X. Same pattern for
-      // brittle_resolution itself (which has 0 sel readers and 0 outcome
-      // refs anywhere — purely narrative-only after the edge fires).
-      // alignment has 0 outcome `reachable` refs and is absent from
-      // ESCAPE_MODULE.reads / ROLLOUT_MODULE.reads, so no post-brittle
-      // sel gate consumes it. Narrative refs (4 templates' headings +
-      // 4 `_when` conditionals) resolve via fused state. Saves cart-prod
-      // (alignment×4 × brittle_resolution×4 ≈ 16×) on every push through
-      // the post-brittle slots (escape_late / escape_re_entry /
-      // escape_after_who / rollout) on brittle-asked paths.
+      // Each edge moves `brittle_resolution` (the answer dim) to flavor —
+      // it has 0 sel readers and 0 outcome refs anywhere, purely
+      // narrative-only after the edge fires. Saves cart-prod (×4) on
+      // every push through the post-brittle slots (escape_late /
+      // escape_re_entry / escape_after_who / rollout) on brittle-asked
+      // paths.
+      //
+      // `alignment` STAYS in sel (NOT moved). It's the primaryDimension
+      // for the-mosaic's variant key — the precompute uses sel-only
+      // variant determination (consistent with sel-only outcome
+      // matching), so moving alignment to flavor here would leave
+      // the-mosaic--{robust,brittle,failed} reach files empty for
+      // every brittle-asked path. The runtime UI would still render
+      // the right variant via narrEff (fused), but reach-file lookups
+      // (back-button trail, share assets, outcome stats) would miss.
+      // Keeping alignment in sel costs an additional ×3 (or ×4 with
+      // UNSET) cart-prod at the post-brittle slots; an earlier
+      // optimization moved it to flavor for ×16 savings, but that
+      // optimization broke variant determination for the-mosaic--brittle
+      // and was reverted. Other writers of `alignment`
+      // (decel_*_action, alignment_durability.breaks, proliferation_*)
+      // already keep it in sel for the same reason.
       edges: [
         { id: 'solved', label: 'Alignment fully solved', shortLabel: 'Fully solved',
           effects: {
             set: { alignment: 'robust' },
-            move: ['alignment', 'brittle_resolution']
+            move: ['brittle_resolution']
           } },
         { id: 'sufficient', label: 'Brittle alignment holds', shortLabel: 'Brittle holds',
           effects: {
             set: { alignment: 'brittle' },
-            move: ['alignment', 'brittle_resolution']
+            move: ['brittle_resolution']
           } },
         { id: 'escape', label: 'AI eventually escapes', shortLabel: 'Escapes',
           // Re-entry trigger for ESCAPE_MODULE at the escape_late slot.
@@ -1503,13 +1510,14 @@ const NODES = [
           // stuck pending — same eviction pattern as the proliferation
           // leak tuples (LEAK_REENTRY_MOVE).
           //
-          // alignment / brittle_resolution also move here (set+move
-          // pattern documented above) — same rationale as the other two
-          // edges. containment STAYS in sel (it IS read post-brittle by
-          // ESCAPE.reads / ROLLOUT.reads) — only alignment evicts.
+          // brittle_resolution moves here too — same rationale as the
+          // other two edges. alignment STAYS in sel (variant key for
+          // the-mosaic — see the-mosaic note on the solved/sufficient
+          // edges). containment STAYS in sel (read post-brittle by
+          // ESCAPE.reads / ROLLOUT.reads).
           effects: {
             set: { alignment: 'failed', containment: 'escaped', post_catch: 'loose' },
-            move: ['escape_set', 'ai_goals', 'alignment', 'brittle_resolution']
+            move: ['escape_set', 'ai_goals', 'brittle_resolution']
           } }
       ] },
     { id: 'failure_mode', label: 'Delivery', stage: 3, priority: 2, forwardKey: true,

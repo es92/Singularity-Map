@@ -300,21 +300,25 @@ for (let oi = 0; oi < order.length; oi++) {
             const ok = GraphIO.selKey(o);
             outsForInput.add(ok);
 
-            // Provenance for this output. Each `(slotKey, projKey)`
-            // is the canonical "post-edge state at slot S" the
-            // runtime gate will compute on click. The same selKey
-            // can be produced at multiple slots; we keep only the
-            // first observed provenance because the mask we'll
-            // attach is a function of the sel alone (routing is
-            // deterministic from sel), so two parents producing the
-            // same selKey contribute identical masks under their
-            // own `<slotKey>|out:<projKey>` keys.
             if (!outProv.has(ok)) {
                 const pk = GraphIO.compactProjectKey(o, writeDims);
                 outProv.set(ok, slotKey + '|o|' + pk);
             }
 
-            if (outSiphon.has(ok) || outRouted.has(ok)) continue;
+            // Dedup is keyed by ok across ALL slots, but routing is
+            // deterministic from (parentSlot, sel), not sel alone — each
+            // slot's children differ, so the best-priority child for the
+            // same sel can differ across producing parents. The common
+            // "pass-through" case is an edge whose writes are already in
+            // sel (e.g. brittle_resolution.sufficient sets
+            // alignment='brittle' on an input that already has it): the
+            // output sel equals the input sel, and the upstream parent
+            // already routed this ok HERE. We must NOT skip — we need to
+            // re-route from THIS slot's children. The check
+            // `outRouted.get(ok) !== slotKey` lets through exactly that
+            // case (and only that case).
+            if (outSiphon.has(ok)) continue;
+            if (outRouted.has(ok) && outRouted.get(ok) !== slotKey) continue;
 
             const ee = earlyExitsBySlot.get(slotKey);
             const { bits, terminal } = siphonBitsFor(o, ee, slotKey, unauthorizedSiphons);
