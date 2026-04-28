@@ -726,6 +726,15 @@
     }
 
     function _findNextInternalNode(mod, sel) {
+        // Canonical "what would the engine ask next inside this
+        // module?" picker. Used by:
+        //   * graph-io._dfsModuleOutputs — inner DFS that materializes
+        //     module outputs for cartesianWriteRows.
+        //   * precompute-reachability.js inner DFS.
+        //   * flow-propagation.flowNext — runtime navigator (both the
+        //     mid-module atomicity branch and the cross-slot module
+        //     branch).
+        //
         // Engine.isAskableInternal covers the gate side (unanswered +
         // activate/hide). For DFS we additionally need at-least-one
         // enabled edge — a node with all edges currently disabled has
@@ -733,15 +742,11 @@
         // runtime engine would still surface it as a question.
         //
         // Tiebreak: LOWEST priority wins, matching FlowPropagation's
-        // `_slotPickPriority` module branch and `flowNext`'s
-        // module-internal branch — the same signal the runtime
-        // navigator uses to decide which internal to surface next.
-        // Default priority for an unset value is 0. The choice only
-        // matters when ≥2 internal nodes of a module are
-        // simultaneously askable with different priorities; the
-        // current graph has activate clauses that prevent that
-        // co-firing, so this tiebreak is presently invariant — it's
-        // the future-proof shape.
+        // `_slotPickPriority` module branch — the same signal the
+        // runtime navigator uses to decide which internal to surface
+        // next. Default priority for an unset value is 0. Today this
+        // matters only inside `who_benefits` (the only multi-priority
+        // module).
         const NM = NODE_MAP();
         const Engine = window.Engine;
         const nodeIds = mod.nodeIds || [];

@@ -398,7 +398,8 @@
     function flowNext(sel) {
         const Engine = _Engine();
         const flowDag = _FlowDag();
-        if (!Engine || !flowDag) return { kind: 'open' };
+        const GraphIO = _GraphIO();
+        if (!Engine || !flowDag || !GraphIO) return { kind: 'open' };
 
         for (const slot of flowDag.nodes) {
             if (!slot || slot.kind !== 'module' || slot.key === 'emergence') continue;
@@ -410,7 +411,7 @@
                 if (sel[nid] !== undefined) { entered = true; break; }
             }
             if (!entered) continue;
-            const next = _pickModuleInternal(Engine, m, sel);
+            const next = GraphIO.findNextInternalNode(m, sel);
             if (next) return { kind: 'question', node: next, slotKey: slot.key };
             // No askable internal. With a completionMarker, this is a
             // stuck state (the marker should have been set by an exit
@@ -439,27 +440,11 @@
         if (bestSlot.kind === 'module') {
             const m = Engine.MODULE_MAP[bestSlot.id];
             if (!m) return { kind: 'stuck', slotKey: bestSlot.key };
-            const next = _pickModuleInternal(Engine, m, sel);
+            const next = GraphIO.findNextInternalNode(m, sel);
             if (next) return { kind: 'question', node: next, slotKey: bestSlot.key };
             return { kind: 'stuck', slotKey: bestSlot.key };
         }
         return { kind: 'open' };
-    }
-
-    // Lowest-priority TIGHT-askable internal of `mod` for this `sel`.
-    // Shared between the module-atomicity override above and the
-    // cross-slot fallback below it.
-    function _pickModuleInternal(Engine, mod, sel) {
-        let bestNode = null;
-        let bestNodeP = Infinity;
-        for (const nid of (mod.nodeIds || [])) {
-            const n = Engine.NODE_MAP[nid];
-            if (!Engine.isAskableInternal(sel, n)) continue;
-            if (!n.edges || !n.edges.some(e => !Engine.isEdgeDisabled(sel, n, e))) continue;
-            const p = n.priority == null ? 0 : n.priority;
-            if (p < bestNodeP) { bestNode = n; bestNodeP = p; }
-        }
-        return bestNode;
     }
 
     if (typeof window !== 'undefined') {
