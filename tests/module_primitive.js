@@ -221,8 +221,8 @@ console.log('engine decel module path integration: PASS');
 const escape = MODULE_MAP.escape;
 assert(escape, 'escape module must exist');
 assert.deepStrictEqual(escape.writes.slice().sort(), [
-    'ai_goals', 'containment', 'escape_set', 'post_catch', 'war_survivors',
-].sort(), 'escape.writes should be ai_goals + post_catch + war_survivors + containment + escape_set');
+    'ai_goals', 'containment', 'escape_set', 'post_catch', 'ruin_type', 'war_survivors',
+].sort(), 'escape.writes should be ai_goals + post_catch + war_survivors + containment + escape_set + ruin_type');
 
 const escPlan = escape.exitPlan;
 // Tuple breakdown (18 total):
@@ -393,11 +393,11 @@ assert.strictEqual(escFlavor.response_method, 'physical_strikes', 'response_meth
 assert.strictEqual(escSel.response_success, undefined, 'response_success moved out of sel');
 assert.strictEqual(escFlavor.response_success, 'yes', 'response_success in flavor');
 
-// Downstream: ruin_type.deriveWhen now reads the consolidated post_catch
-// marker ({ruined} → self_inflicted).
-const ruin = engine.resolvedVal(escSel, 'ruin_type');
-assert.strictEqual(ruin, 'self_inflicted',
-    `ruin_type should derive to 'self_inflicted' from post_catch=ruined; got ${ruin}`);
+// Downstream: ruin_type='self_inflicted' is now written explicitly by
+// the collateral_survivors exit-plan tuples (replaces the prior
+// ruin_type.deriveWhen rule keyed on post_catch='ruined').
+assert.strictEqual(escSel.ruin_type, 'self_inflicted',
+    `ruin_type='self_inflicted' must land in sel via collateral_survivors exit tuple; got ${escSel.ruin_type}`);
 
 console.log('engine escape module path integration: PASS');
 

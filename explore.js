@@ -422,7 +422,7 @@
     // we walk the same condition / edge structures the engine and
     // module-audit do. Three disjoint(ish) categories:
     //   * reads  — strict gate-read set (activateWhen, hideWhen,
-    //              disabledWhen, deriveWhen, edge.requires, and
+    //              disabledWhen, edge.requires, and
     //              collapseToFlavor.when conditions).
     //   * writes — dims this slot leaves in sel post-edge: the node's
     //              own pick (unless that pick is also moved out), plus
@@ -470,10 +470,6 @@
         const refs = new Set();
         refsFromConditionList(node.activateWhen, refs);
         refsFromConditionList(node.hideWhen, refs);
-        if (node.deriveWhen) for (const rule of node.deriveWhen) {
-            if (rule.match) refsFromCondition(rule.match, refs);
-            if (rule.fromState) refs.add(rule.fromState);
-        }
         if (node.edges) for (const e of node.edges) {
             if (e.requires) {
                 const cs = Array.isArray(e.requires) ? e.requires : [e.requires];
@@ -664,7 +660,7 @@
                 nodes: NODES.map(n => ({
                     id: n.id, edges: n.edges,
                     activateWhen: n.activateWhen, hideWhen: n.hideWhen,
-                    deriveWhen: n.deriveWhen, derived: n.derived, module: n.module,
+                    derived: n.derived, module: n.module,
                     // Priority drives the routing tiebreak below — any
                     // change must invalidate the cached reach map.
                     priority: n.priority,

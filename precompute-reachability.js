@@ -129,13 +129,11 @@ function siphonBitsFor(sel, earlyExitsSet, slotKey, unauthorizedAcc) {
         if (!es) continue;
         for (const e of es) {
             if (!e.primaryDim) { bits |= e.bit; continue; }
-            // primaryDim can be a derived dim (e.g. `ruin_type` is
-            // not a sel value but resolves from `post_catch` /
-            // `war_survivors` via deriveWhen). Match on
-            // `resolvedVal` so derived variants attribute to the
-            // right bit. Falls back to sel[…] when there's no
-            // derive table.
-            const v = Engine.resolvedVal(sel, e.primaryDim);
+            // primaryDim is now always a sel dim. `ruin_type` used
+            // to resolve via deriveWhen, but is now written
+            // edge-locally (war exit plan + collateral_survivors
+            // exit plan), so a direct sel lookup suffices.
+            const v = sel[e.primaryDim];
             if (v === e.variantKey) bits |= e.bit;
         }
     }

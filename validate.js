@@ -68,9 +68,9 @@ GraphIO.registerOutcomes(TEMPLATES);
 // ────────────────────────────────────────────────────────────────
 //
 // Verifies that every condition (activateWhen, hideWhen, requires,
-// disabledWhen, deriveWhen, outcome.reachable) refers to dims/values
-// that actually exist in the graph. Synthetic dims/values produced
-// by collapseToFlavor.set or deriveWhen.value(Map) are accepted.
+// disabledWhen, outcome.reachable) refers to dims/values that
+// actually exist in the graph. Synthetic dims/values produced by
+// collapseToFlavor.set are accepted.
 //
 // Also detects "dead edges" — edges whose `requires` is fully
 // implied by their `disabledWhen`, meaning the edge can never fire.
@@ -86,14 +86,6 @@ function runStaticAnalysis() {
         extraValuesByDim.get(dim).add(val);
     };
     for (const node of NODES) {
-        if (node.deriveWhen) {
-            for (const rule of node.deriveWhen) {
-                if (rule.value !== undefined) addExtra(node.id, rule.value);
-                if (rule.valueMap) {
-                    for (const out of Object.values(rule.valueMap)) addExtra(node.id, out);
-                }
-            }
-        }
         if (!node.edges) continue;
         for (const edge of node.edges) {
             if (!edge.collapseToFlavor) continue;
@@ -161,44 +153,6 @@ function runStaticAnalysis() {
                 for (const c of condSets) validateCondition(c, `${node.id}.${v.id}`, 'requires');
             }
             if (v.disabledWhen) for (const c of v.disabledWhen) validateCondition(c, `${node.id}.${v.id}`, 'disabledWhen');
-        }
-    }
-
-    for (const node of NODES) {
-        if (!node.deriveWhen) continue;
-        const ownValues = validValuesFor(node.id) || new Set();
-        for (const rule of node.deriveWhen) {
-            if (rule.match) {
-                for (const [k, val] of Object.entries(rule.match)) {
-                    if (k === 'reason') continue;
-                    if (!metaNodes.has(k)) { errors.push(`[derivations] "${node.id}" references unknown node "${k}" in match`); continue; }
-                    if (val === true || val === false) continue;
-                    const validIds = validValuesFor(k);
-                    if (!validIds) continue;
-                    if (val && typeof val === 'object' && !Array.isArray(val) && val.not) {
-                        for (const v of val.not) {
-                            if (!validIds.has(v)) errors.push(`[derivations] "${node.id}" unknown edge "${k}=${v}" in match.not`);
-                        }
-                        continue;
-                    }
-                    const vals = Array.isArray(val) ? val : [val];
-                    for (const v of vals) {
-                        if (!validIds.has(v)) errors.push(`[derivations] "${node.id}" unknown edge "${k}=${v}" in match`);
-                    }
-                }
-            }
-            if (rule.fromState && !metaNodes.has(rule.fromState)) {
-                errors.push(`[derivations] "${node.id}" unknown node "${rule.fromState}" in fromState`);
-            }
-            if (rule.value !== undefined && !ownValues.has(rule.value)) {
-                errors.push(`[derivations] "${node.id}" produces unknown edge "${rule.value}"`);
-            }
-            if (rule.valueMap) {
-                for (const [from, to] of Object.entries(rule.valueMap)) {
-                    if (!ownValues.has(from)) errors.push(`[derivations] "${node.id}" valueMap unknown input "${from}"`);
-                    if (!ownValues.has(to))   errors.push(`[derivations] "${node.id}" valueMap unknown output "${to}"`);
-                }
-            }
         }
     }
 

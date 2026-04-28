@@ -409,11 +409,12 @@ These checks inspect the graph definition without traversal.
 \begin{definition}[Reference Integrity]\label{def:refint}
 For every condition $\varphi$ appearing in any \texttt{activateWhen},
 \texttt{hideWhen}, \texttt{disabledWhen}, \texttt{requires}, or
-\texttt{deriveWhen} rule: every dimension $d$ referenced by $\varphi$
-must exist ($d \in \Dim$), and every value referenced must be a valid
-edge ($v \in \Edg{d}$). The same holds for derivation outputs
-(\texttt{value}, \texttt{valueMap}, \texttt{fromState}) and outcome
-template conditions.
+\texttt{collapseToFlavor.when} rule: every dimension $d$ referenced
+by $\varphi$ must exist ($d \in \Dim$), and every value referenced
+must be a valid edge ($v \in \Edg{d}$). The same holds for
+\texttt{collapseToFlavor.set} / \texttt{setFlavor} write maps,
+module \texttt{exitPlan} \texttt{set} maps, and outcome template
+conditions.
 \end{definition}
 
 \begin{definition}[Dead Edge Detection]\label{def:deaded}
@@ -1042,29 +1043,30 @@ used. Therefore, super key memoization at non-terminal states is sound
 for reachability recording, provided terminals are always computed fresh.
 \end{lemma}
 
-\begin{remark}[Derivation-Induced Path Crossovers]\label{rem:crossover}
-A \texttt{deriveWhen} rule on dimension $d_1$ that references dimension
-$d_2$ (where $d_2$ appears later in the ordering and is conditionally
-activated by $d_1$) can create \textbf{path crossovers}: a choice of
-$d_2$ changes the resolved value of $d_1$, which in turn changes the
-visibility of downstream dimensions, effectively routing the state from
-one ``branch'' of the graph into another.
+\begin{remark}[Edge-Local Writes Replace Lazy Derivation]\label{rem:crossover}
+Earlier revisions of the graph supported lazy
+\texttt{deriveWhen} rules: a node $d_1$ could declare a derivation rule
+that recomputed its effective value on demand from other dimensions
+(e.g.\ ``if $d_2 = \mathsf{stall\_recovery}$ is $\mathsf{mild}$, then
+$d_1$ resolves to $\mathsf{singularity}$''). Because the resolved value
+depended on later answers, picking $d_2$ could retroactively change the
+visibility of downstream dimensions, creating \textbf{path crossovers}
+that complicated both the static analysis (which had to materialize
+JIT Cartesian-product derivation tables) and the proof obligations on
+class computation and fingerprint checks.
 
-For example, if $d_1 = \mathsf{capability}$ has edge values
-$\{\mathsf{singularity}, \mathsf{stalls}\}$ and
-\texttt{deriveWhen} rule ``if $d_2 = \mathsf{stall\_recovery}$ is
-$\mathsf{mild}$, then $d_1$ resolves to $\mathsf{singularity}$'', then
-the user can select $d_1 = \mathsf{stalls}$ but later selecting
-$d_2 = \mathsf{mild}$ causes $d_1$ to resolve to $\mathsf{singularity}$,
-activating entirely different downstream dimensions.
-
-This crossover is correctly handled by the class computation (R1), which
-gives $d_2$ distinct classes for values that produce different derivation
-outcomes, and by the fingerprint check (R3), which prevents superposition
-when different class representatives produce different visible-node sets.
-The terminal memoization bug (Remark~\ref{rem:termmemo}) was the only
-mechanism by which crossover effects leaked incorrectly, and is resolved
-by the corrected algorithm ordering.
+The current model eliminates this entirely. Every change to $\sel$ /
+$\flav$ is committed by the edge that fires, either directly (via
+\texttt{collapseToFlavor.set} / \texttt{setFlavor}) or via a module's
+\texttt{exitPlan}. \texttt{resolvedVal} reduces to a direct
+$\sel[d]$ lookup, and \texttt{matchCondition} reads $\sel[k]$ without
+recursion. Dimensions that the user never picks (such as
+$\mathsf{ruin\_type}$ or $\mathsf{governance}$) are written into
+$\sel$ / $\flav$ by the upstream edges that own the triggering signal,
+so the same crossover behavior is preserved as a plain forward push
+rather than a lazy backward inference. This collapses the proof
+obligations on class computation and fingerprint checks to those of an
+ordinary monotone DAG.
 \end{remark}
 
 \begin{lemma}[Safe Push Optimization]\label{lem:safepush}
@@ -1147,8 +1149,8 @@ The harness (\texttt{test/run.js}) works as follows:
 \texttt{deep-superposition}  & 5  & 118  & 10 & R3: chained superposition \\
 \texttt{variants}            & 3  & 4    & 4  & R4: variant expansion \\
 \texttt{kitchen-sink}        & 7  & 23   & 13 & Combined features \\
-\texttt{derive-crossover}    & 5  & 9    & 7  & \texttt{deriveWhen} crossover \\
-\texttt{chained-derive}      & 5  & 7    & 6  & Transitive derivation \\
+\texttt{edge-write-crossover} & 5  & 9    & 7  & Edge-local write crossover \\
+\texttt{chained-edge-writes}  & 5  & 7    & 6  & Transitive edge writes \\
 \texttt{convergence-basic}   & 7  & 14   & 9  & Path convergence \\
 \texttt{diamond-convergence} & 4  & 8    & 7  & Diamond-shaped subgraph \\
 \texttt{disabled-by-derived} & 4  & 8    & 7  & Derived-value disabling \\
@@ -1163,18 +1165,19 @@ The harness (\texttt{test/run.js}) works as follows:
 \end{tabular}
 \end{center}
 
-The \texttt{derive-crossover} graph is the minimal reproducer for the
-terminal memoization bug (Remark~\ref{rem:termmemo}): 5 dimensions, 10
-edges, with a \texttt{deriveWhen} rule that creates a path crossover.
-Before the fix (moving the terminal check before memoization), it
-produced both false positives and false negatives. After the fix, all
-19 graphs pass.
+The \texttt{edge-write-crossover} graph is the minimal reproducer for
+the terminal memoization bug (Remark~\ref{rem:termmemo}): 5 dimensions,
+10 edges, with an upstream edge whose \texttt{collapseToFlavor.set}
+write changes a downstream dimension's effective value, creating a
+path crossover. Before the fix (moving the terminal check before
+memoization), it produced both false positives and false negatives.
+After the fix, all 19 graphs pass.
 
 The \texttt{production-subgraph} graph contains the first 16 dimensions
 of the production Singularity Map (up to and including
 \texttt{open\_source}), with all real \texttt{activateWhen},
-\texttt{disabledWhen}, \texttt{requires}, and \texttt{deriveWhen}
-conditions preserved. Its 1204 baseline states compress to 20 irrelevance
+\texttt{disabledWhen}, \texttt{requires}, and
+\texttt{collapseToFlavor.when} conditions preserved. Its 1204 baseline states compress to 20 irrelevance
 keys, and the optimized--baseline comparison passes with zero
 discrepancies (no reachability false positives, false negatives, or
 missing entries; browser-sim FP/FN both zero).

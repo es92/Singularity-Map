@@ -435,26 +435,18 @@ const NODES = [
       ] },
     { id: 'alignment', label: 'Alignment', stage: 2, forwardKey: true,
       activateWhen: [{ capability: ['asi'] }],
-      // Phase 4a: removed three decel_outcome-based rules — decel reducer
-      // now writes alignment directly (robust on solved/parity_solved,
-      // brittle on (rival, brittle), failed on (escapes, *)).
-      // deriveWhen trimmed: rules formerly keyed on external writer
-      // dimensions (proliferation_alignment, proliferation_outcome,
-      // brittle_resolution) moved to their rightful writer modules /
-      // nodes:
+      // All writers of `alignment` are explicit, edge-local
+      // collapseToFlavor.set:
+      //   * decel reducer writes alignment directly (robust on solved /
+      //     parity_solved, brittle on (rival, brittle), failed on
+      //     (escapes, *)).
       //   * PROLIFERATION exit plan (proliferation_alignment.breaks,
       //     proliferation_outcome.leaks_public + alignment≠robust,
-      //     proliferation_control.none + alignment≠robust) now sets
-      //     alignment='failed' directly via collapseToFlavor.set.
-      //   * brittle_resolution.{escape, solved, sufficient} edges now
-      //     set alignment={failed, robust, brittle} directly via
-      //     collapseToFlavor.set.
-      // Only alignment_durability.breaks remains as a derive (intra-module
-      // — alignment_durability is an ALIGNMENT_MODULE internal dim, so
-      // it can stay as a derive without creating a cross-module read).
-      deriveWhen: [
-        { match: { alignment_durability: ['breaks'] }, value: 'failed' },
-      ],
+      //     proliferation_control.none + alignment≠robust) sets
+      //     alignment='failed'.
+      //   * brittle_resolution.{escape, solved, sufficient} edges set
+      //     alignment={failed, robust, brittle}.
+      //   * alignment_durability.breaks edge sets alignment='failed'.
       edges: [
         { id: 'robust', label: 'Robust' },
         { id: 'brittle', label: 'Brittle / Partial' },
@@ -487,7 +479,7 @@ const NODES = [
         // bucket-key projection — making these states look stuck at
         // escape_early. Same observable behavior either way.
         { id: 'breaks', label: 'Breaks',
-          collapseToFlavor: { set: { containment: 'escaped', gov_action: 'accelerate' } } }
+          collapseToFlavor: { set: { alignment: 'failed', containment: 'escaped', gov_action: 'accelerate' } } }
       ] },
     { id: 'containment', label: 'Containment', stage: 2, forwardKey: true,
       // hideWhen / activateWhen / disabledWhen trimmed: rules formerly keyed
@@ -666,8 +658,16 @@ const NODES = [
         // Picking accelerate means the decel chain is never entered, so the
         // specific open_source timeline (6/12/24 months) no longer affects
         // any downstream gating. Move it to flavor for /explore convergence.
+        // Also write `governance: 'race'` to flavor — replaces the prior
+        // `governance.deriveWhen` rule keyed on gov_action='accelerate'.
+        // DECEL_EXIT_CELLS handles the gov_action.decelerate paths
+        // (writes governance directly into sel mid-DECEL, then evicts
+        // to flavor on module exit); this edge handles the direct
+        // accelerate path where DECEL is never entered. Outcome flavor
+        // narratives (data/outcomes.json governance.{race,…} blocks)
+        // read this through resolvedStateWithFlavor.
         { id: 'accelerate', label: 'Accelerate',
-          collapseToFlavor: { move: ['open_source', 'takeoff_class'] } }
+          collapseToFlavor: { setFlavor: { governance: 'race' }, move: ['open_source', 'takeoff_class'] } }
       ] },
     { id: 'decel_2mo_progress', label: '2 Months', stage: 2,
       activateWhen: [{ gov_action: ['decelerate'] }],
@@ -844,9 +844,18 @@ const NODES = [
       edges: [
         { id: 'deny_rivals', label: 'Deny rivals', disabledWhen: [{ distribution: ['open'], reason: 'The technology is already openly distributed' }] },
         { id: 'secure_access', label: 'Secure access', disabledWhen: [{ distribution: ['open'], reason: 'The technology is already openly distributed' }] },
-        { id: 'none', label: 'Open access', disabledWhen: [
-          { alignment: ['failed'], distribution: { not: ['open'] }, reason: 'Releasing the weights of a misaligned AI when you still had controlled distribution is a different, more drastic scenario than this question models' }
-        ] }
+        { id: 'none', label: 'Open access',
+          // Eagerly write proliferation_outcome='leaks_public' on every
+          // proliferation_control=none push. On alignment≠robust, the
+          // PROLIFERATION exit plan also writes this value via
+          // LEAKED_OPEN_UNROBUST — idempotent. On alignment=robust, the
+          // module continues to proliferation_alignment, whose
+          // activateWhen requires proliferation_outcome=leaks_public —
+          // this edge-write is what makes that gate fire.
+          collapseToFlavor: { set: { proliferation_outcome: 'leaks_public' } },
+          disabledWhen: [
+            { alignment: ['failed'], distribution: { not: ['open'] }, reason: 'Releasing the weights of a misaligned AI when you still had controlled distribution is a different, more drastic scenario than this question models' }
+          ] }
       ] },
     { id: 'proliferation_outcome', label: 'Control Outcome', stage: 2,
       activateWhen: [
@@ -854,9 +863,6 @@ const NODES = [
           capability: ['asi'],
           proliferation_control: ['deny_rivals', 'secure_access']
         }
-      ],
-      deriveWhen: [
-        { match: { proliferation_control: ['none'] }, value: 'leaks_public' }
       ],
       edges: [
         {
@@ -1134,13 +1140,21 @@ const NODES = [
       hideWhen: [{ ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } }],
       // Internal to who_benefits module: activated via the module's upstream
       // pipeline (power_promise → mobilization → ...), plus the benevolent
-      // derivation bypass and the post-catch characterisation path.
+      // short-circuit (ai_goals=benevolent — module activates with no
+      // upstream nodes set; benefit_distribution is the only askable
+      // internal, funneled to 'equal' via per-edge disabledWhen) and
+      // the post-catch characterisation path. The former
+      // `ai_goals=benevolent → equal` deriveWhen rule is replaced by
+      // the disabledWhen clauses on `unequal` / `extreme` below
+      // (any-capability benevolent disable) plus the
+      // power_use.generous.collapseToFlavor override that handles the
+      // soft-takeover path where benefit_distribution=extreme is already
+      // in sel by the time ai_goals='benevolent' is written.
       activateWhen: [
         ...WHO_BENEFITS_INTERNAL_ACTIVATE,
         { capability: ['asi'], ai_goals: ['benevolent'] },
         { capability: ['asi'], post_catch: ['contained'] }
       ],
-      deriveWhen: [{ match: { ai_goals: ['benevolent'] }, value: 'equal' }],
       edges: [
         { id: 'equal', label: 'Shared equally',
           disabledWhen: [
@@ -1152,7 +1166,15 @@ const NODES = [
           ] },
         { id: 'unequal', label: 'Wealth concentrates',
           disabledWhen: [
-            { ai_goals: ['benevolent'], capability: ['singularity'], reason: 'A genuinely benevolent superintelligence distributes its gifts directly — no human intermediary to capture the gains' },
+            // Benevolent ASI/singularity narrative axiom: a genuinely
+            // benevolent superintelligence distributes its gifts directly
+            // — no human intermediary to capture the gains. Funneling
+            // ai_goals=benevolent paths to benefit_distribution=equal
+            // replaces the prior deriveWhen rule (ai_goals=benevolent →
+            // equal). The capability constraint is dropped (was
+            // 'singularity' only) so capability=asi paths are funneled
+            // identically to the prior derived behavior.
+            { ai_goals: ['benevolent'], reason: 'A genuinely benevolent superintelligence distributes its gifts directly — no human intermediary to capture the gains' },
             { power_promise: ['for_everyone'], mobilization: ['strong'], reason: 'Promise and pressure aligned — broadly shared outcomes, not partial inequality' },
             { sincerity_test: ['sincere'], reason: 'Genuine cooperative intent produced broadly shared outcomes' },
             { pushback_outcome: ['succeeds'], reason: 'Successful pushback forced genuine redistribution' },
@@ -1164,7 +1186,10 @@ const NODES = [
           collapseToFlavor: { when: { intent: ['self_interest'] }, set: { delivery_ask_eligible: 'no' } } },
         { id: 'extreme', label: 'Power concentrates',
           disabledWhen: [
-            { ai_goals: ['benevolent'], capability: ['singularity'], reason: 'A genuinely benevolent superintelligence has no reason to concentrate power — it bypasses human structures entirely' },
+            // See `unequal.disabledWhen` above for the benevolent
+            // narrative-axiom rationale; capability constraint dropped
+            // for the same reason (replaces the prior deriveWhen rule).
+            { ai_goals: ['benevolent'], reason: 'A genuinely benevolent superintelligence has no reason to concentrate power — it bypasses human structures entirely' },
             { power_promise: ['for_everyone'], mobilization: ['strong'], reason: 'Promise and accountability together prevent extreme concentration' },
             { sincerity_test: ['sincere'], reason: 'The cooperative intent proved genuine — power didn\'t concentrate this far' },
             { pushback_outcome: ['succeeds'], reason: 'The pushback forced genuine redistribution' },
@@ -1248,7 +1273,17 @@ const NODES = [
           //     pending, but no internal is askable — ai_goals already
           //     set, catch pipeline gated on containment=escaped — and
           //     the path dead-ends).
-          collapseToFlavor: { when: { concentration_type: ['ai_itself'] }, set: { ai_goals: 'benevolent', escape_set: 'yes' } } },
+          //   * benefit_distribution='equal' — narrative-axiom override
+          //     mirroring ai_goals.benevolent's edge collapse. The user
+          //     picked benefit_distribution=extreme earlier in this
+          //     module; benevolent-AI semantics demand 'equal' for
+          //     outcome matching (the prior deriveWhen rule on
+          //     benefit_distribution did this via resolvedVal). The
+          //     overwrite happens after benefit_distribution.extreme's
+          //     own collapseToFlavor (delivery_ask_eligible='no') has
+          //     already fired in cleanSelection's NODES-order pass, so
+          //     that side effect is preserved.
+          collapseToFlavor: { when: { concentration_type: ['ai_itself'] }, set: { ai_goals: 'benevolent', escape_set: 'yes', benefit_distribution: 'equal' } } },
         // ai_itself + extractive/indifferent = AI took control AND wields
         // it badly. ai_goals.benevolent's disabledWhen
         // ({concentration_type:ai_itself, power_use:[extractive,indifferent]})
@@ -1682,24 +1717,19 @@ const NODES = [
     // blocks. Downstream consumers (alignment_durability,
     // proliferation_control) still read it via matchCondition → sel[k].
     { id: 'governance', label: 'Governance', derived: true, forwardKey: true,
-      // Phase 4a rewrite:
-      //   * `decel_outcome: ['abandon'] -> race` → subsumed by reducer
-      //     writing governance='race' on (accelerate, brittle|unsolved).
-      //   * `gov_action: ['decelerate'] -> slowdown` → subsumed by reducer
-      //     writing governance='slowdown' on every decel-exit cell that
-      //     isn't (accelerate, brittle|unsolved). Leaving this rule in
-      //     would shadow the reducer's 'race' write (resolvedVal consults
-      //     deriveWhen before sel for derived dims).
-      //   For non-decel paths, sel[governance] falls through when no rule
-      //   matches — the `gov_action: ['accelerate']` rule still covers the
-      //   direct-accelerate branch, and governance_window rules cover the
-      //   non-post-singularity settings.
-      deriveWhen: [
-        { match: { gov_action: ['accelerate'] }, value: 'race' },
-        { match: { governance_window: ['governed'] }, value: 'governed' },
-        { match: { governance_window: ['partial'] }, value: 'partial' },
-        { match: { governance_window: ['race'] }, value: 'race' },
-      ],
+      // Pure derived dim: never asked, never directly picked. Every value
+      // it can take is written explicitly into sel or flavor by an
+      // upstream edge:
+      //   * `gov_action.accelerate` and the DECEL_EXIT_CELLS reducer
+      //     write `governance: 'race'` (and 'slowdown' on the
+      //     non-accelerate cells) directly into sel.
+      //   * `governance_window.{governed, partial, race}` edges write
+      //     `governance` into flavor via setFlavor.
+      // Outcome templates consume `governance` through
+      // resolvedStateWithFlavor (sel ∪ flavor underlay), so the
+      // setFlavor writes are visible to template matching. No
+      // matchCondition in the graph reads `governance` directly, so no
+      // sel-only consumer needs a fallback.
       edges: [{ id: 'race' }, { id: 'slowdown' }, { id: 'governed' }, { id: 'partial' }] },
     // Phase 4a: rival_emerges derived node deleted. Decel module writes
     // rival_emerges='yes' directly on (rival, *) cells. Other consumers
@@ -1708,17 +1738,20 @@ const NODES = [
     // engine registers 'rival_emerges' as a marker dim on first
     // collapseToFlavor.set encounter.
     { id: 'ruin_type', label: 'Ruin Cause', derived: true,
-      // `war` derives on war_survivors ∈ {remnants, none} rather than
-      // conflict_result=destruction. The war pipeline now only emits
-      // those two edges (war_survivors's `most` was dropped — see node
-      // definition), so the two formulations are equivalent on the war
-      // pipeline. Reading war_survivors directly is more semantically
-      // accurate: ruin_type means "this is a ruin outcome", and
-      // remnants|none is precisely the "civilization-ending" subset.
-      deriveWhen: [
-        { match: { post_catch: ['ruined'] }, value: 'self_inflicted' },
-        { match: { war_survivors: ['remnants', 'none'] }, value: 'war' }
-      ],
+      // Pure derived dim: never asked. Both values are written
+      // edge-locally:
+      //   * 'self_inflicted' — buildEscapeExitPlan's collateral_survivors
+      //     exit tuples (the AI catastrophe → civilizational collapse
+      //     branch).
+      //   * 'war' — buildWarExitPlan's war_survivors.{remnants, none}
+      //     exit tuples (the rivalry-pipeline destruction tail).
+      // The two paths are mutually exclusive — collateral_survivors
+      // edges set war_survivors via the exit-tuple `set` block but are
+      // routed through ESCAPE, not WAR (war_survivors itself isn't
+      // traversed on those paths). So the ordering precedence the
+      // prior deriveWhen rules encoded ("self_inflicted wins when both
+      // post_catch=ruined and war_survivors∈{remnants,none}") falls
+      // out of the topology — there's no shared edge to disambiguate.
       edges: [{ id: 'war' }, { id: 'self_inflicted' }] }
 ];
 
@@ -2092,6 +2125,18 @@ const ESCAPE_WRITES = [
     // no longer needs to read post_catch.
     'containment',
     'escape_set',
+    // ruin_type='self_inflicted' is set by collateral_survivors exit-plan
+    // tuples (replaces the prior ruin_type.deriveWhen rule keyed on
+    // post_catch='ruined'). Listing it in writes keeps it in sel after
+    // module exit so outcome variant resolution
+    // (precompute-reachability.js's sel[primaryDim] lookup, the-ruin
+    // self_inflicted variant) sees it. Only the collateral_survivors
+    // exit-plan tuples set it; every other ESCAPE exit leaves it
+    // undefined, which is correct (ruin_type isn't a question dim, it's
+    // a derivation-replacement marker — its only sel readers are the
+    // primaryDim variant resolver and outcome flavor blocks via fused
+    // state).
+    'ruin_type',
 ];
 
 // Exit edges:
@@ -2227,12 +2272,12 @@ function buildEscapeExitPlan() {
             plan.push({
                 nodeId: 'collateral_survivors', edgeId: e.id,
                 when: { catch_outcome: ['holds_permanently'] },
-                set: { escape_set: 'yes', post_catch: 'ruined', war_survivors: e.id, war_set: 'yes' },
+                set: { escape_set: 'yes', post_catch: 'ruined', war_survivors: e.id, war_set: 'yes', ruin_type: 'self_inflicted' },
             });
             plan.push({
                 nodeId: 'collateral_survivors', edgeId: e.id,
                 when: { who_benefits_set: { not: ['yes'] } },
-                set: { escape_set: 'yes', post_catch: 'ruined', war_survivors: e.id, containment: 'contained', war_set: 'yes' },
+                set: { escape_set: 'yes', post_catch: 'ruined', war_survivors: e.id, containment: 'contained', war_set: 'yes', ruin_type: 'self_inflicted' },
             });
         }
         // Extinction (collateral_survivors='none') invalidates the
@@ -3149,19 +3194,18 @@ function buildProliferationExitPlan() {
     //   * LEAKED_OPEN_UNROBUST — open-weights leak with alignment broken.
     //     Adds the alignment/containment flip on top of LEAKED_OPEN.
     const LEAKED       = { proliferation_set: 'yes', geo_spread: 'multiple' };
-    // `proliferation_outcome: 'leaks_public'` is written explicitly here
-    // (not just left to deriveWhen) because proliferation_outcome and
-    // proliferation_control auto-move to flavor on every exit (per
-    // nodeIds \ writes). On the proliferation_control=none + alignment
-    // ≠robust exit, the user was never asked proliferation_outcome — its
-    // value was only resolved via deriveWhen (`proliferation_control:
-    // ['none']` → 'leaks_public'). Once auto-move evicts proliferation
-    // _control to flavor, that deriveWhen no longer fires (deriveWhen
-    // reads sel only). Writing 'leaks_public' here, then letting auto
-    // -move shuttle it sel→flavor, preserves the post-exit narrative
-    // read (containment.contextWhen, outcomes.json flavor blocks).
-    // Idempotent on every other LEAKED_OPEN/LEAKED_OPEN_UNROBUST exit
-    // (sel.proliferation_outcome='leaks_public' is already set there).
+    // `proliferation_outcome: 'leaks_public'` is written explicitly on
+    // every leaked-open exit so the post-exit narrative reads
+    // (containment.contextWhen, outcomes.json flavor blocks) see a
+    // consistent value once proliferation_outcome auto-moves to flavor.
+    // On the proliferation_control=none branch the value is also written
+    // edge-locally on proliferation_control.none.collapseToFlavor.set, so
+    // both the alignment=robust path (which doesn't exit here — the
+    // module continues to proliferation_alignment, whose activateWhen
+    // requires proliferation_outcome=leaks_public) and the alignment
+    // ≠robust path (which fires LEAKED_OPEN_UNROBUST below) end up with
+    // proliferation_outcome=leaks_public in sel. Idempotent across every
+    // re-entry.
     const LEAKED_OPEN  = { ...LEAKED, distribution: 'open', proliferation_outcome: 'leaks_public' };
     // LEAKED_OPEN_UNROBUST also flips containment back to escaped — and
     // since the loose copies of the AI inherit the same hostile goals,
@@ -3194,10 +3238,11 @@ function buildProliferationExitPlan() {
     const HOLDS = { proliferation_set: 'yes' };
 
     // proliferation_control.none: always a leaked-weights world with
-    // alignment≠robust (if alignment=robust, proliferation_outcome derives
-    // to leaks_public and proliferation_alignment activates — the module
-    // doesn't exit here). So always carries the full alignment override
-    // and the open-distribution override.
+    // alignment≠robust (if alignment=robust, the edge-write of
+    // proliferation_outcome=leaks_public on proliferation_control.none
+    // makes proliferation_alignment activate — the module doesn't exit
+    // here). So always carries the full alignment override and the
+    // open-distribution override.
     //
     // The `proliferation_set: false` gate makes this block fire EXACTLY
     // ONCE — on the push that first sets proliferation_control=none.
@@ -3810,6 +3855,16 @@ const WAR_WRITES = [
     // narrative.json `when` clauses still see post_war_aims via
     // fused state.
     'self_interest_aims_set',
+    // ruin_type='war' is set on war_survivors.{remnants,none} exit
+    // edges (see buildWarExitPlan's buildSet), replacing the prior
+    // ruin_type.deriveWhen rule keyed on war_survivors∈{remnants,none}.
+    // Listing it in writes keeps the dim in sel after WAR exit so
+    // outcome variant resolution (precompute-reachability.js's
+    // sel[primaryDim] lookup, the-ruin war variant) sees it. Only the
+    // war_survivors exit tuples set it; every other WAR exit leaves it
+    // undefined, which is correct (ruin_type is a derivation-replacement
+    // marker, not a question dim).
+    'ruin_type',
 ];
 
 // 6 exit edges:
@@ -3850,8 +3905,17 @@ function buildWarExitPlan() {
         // outcome, so asking about post-war economic distribution would
         // be narrative noise. inert_stays still fires off this marker
         // for the marginal-AI tail; the-ruin matches at inert_stays.
+        // ruin_type='war' replaces the prior `ruin_type` deriveWhen
+        // rule keyed on war_survivors∈{remnants,none}: writing it here
+        // makes the same dim available in sel for outcome matching
+        // without going through deriveWhen. The collateral_survivors
+        // exit-plan tuples write ruin_type='self_inflicted' on their
+        // own paths (which never fire war_survivors directly), so the
+        // prior rule-order precedence — "self_inflicted wins on
+        // collateral_survivors paths" — is preserved by construction.
         if (nodeId === 'war_survivors') {
             set.who_benefits_set = 'yes';
+            set.ruin_type = 'war';
         }
     // power_promise edge disable markers (see WAR_WRITES comment).
     // Encoded here rather than as power_promise.disabledWhen reads on

@@ -2580,20 +2580,19 @@
                 }
             }
 
-            function getHiddenState(s) {
-                const eff = Engine.resolvedState(s);
-                const hidden = {};
-                for (const node of NODES) {
-                    if (!node.deriveWhen) continue;
-                    const raw = s[node.id];
-                    const effVal = eff[node.id];
-                    if (effVal && raw !== effVal) {
-                        hidden[node.id] = hidden[node.id] || {};
-                        hidden[node.id].derived = effVal;
-                        if (raw) hidden[node.id].raw = raw;
-                    }
-                }
-                return hidden;
+            function getHiddenState(_s) {
+                // Historically returned { nodeId: { derived, raw } } for
+                // every node whose `deriveWhen` rules computed an
+                // effective value different from the raw `sel[id]`.
+                // Now that derivation is gone — every change to sel is
+                // committed by the edge that fires (collapseToFlavor.set
+                // / setFlavor + module exit plans) — there is no
+                // "hidden vs. raw" gap to surface, so the function
+                // returns nothing. Kept as a no-op so the debug-panel
+                // and answer-summary call sites keep working without a
+                // wider refactor; they render an empty hidden-state
+                // section, which is the truthful display.
+                return {};
             }
 
             function getVisibleNodes(s) {

@@ -620,7 +620,7 @@
         //   outcomeReads   : outcomeId → Set<dimId>
         //   outcomeSites   : outcomeId → { reachable: Set, flavor: Set, primary: string }
         //   readBy         : dimId → [{ nodeId, where }]    (reverse of nodeReadSites)
-        //   writtenBy      : dimId → [{ nodeId, via }]      (reverse; 'pick' means user picks an edge, 'set' means collapseToFlavor.set, 'derive' means deriveWhen sets this.id)
+        //   writtenBy      : dimId → [{ nodeId, via }]      (reverse; 'pick' means user picks an edge, 'set' means collapseToFlavor.set)
         //   movedBy        : dimId → [{ nodeId }]
         //   outcomesUsing  : dimId → Set<outcomeId>
 
@@ -660,10 +660,6 @@
             // Reads
             (n.activateWhen || []).forEach((c, i) => scanCond(n.id, `activateWhen[${i}]`, c));
             (n.hideWhen || []).forEach((c, i) => scanCond(n.id, `hideWhen[${i}]`, c));
-            (n.deriveWhen || []).forEach((d, i) => {
-                scanCond(n.id, `deriveWhen[${i}].match`, d.match || {});
-                // deriveWhen[].value/valueMap writes to this.id — track as "derive" below.
-            });
             // Edges
             // Normalize `requires` (which is a single condition object, not
             // an array like disabledWhen/activateWhen) into an array.
@@ -695,10 +691,6 @@
                     }
                 });
             });
-            // Self-writes via derivation
-            if (n.deriveWhen && n.deriveWhen.length) {
-                pushMap(writtenBy, n.id, { nodeId: n.id, via: 'deriveWhen', value: '(derived)' });
-            }
             // User-pick: each answer edge on a non-derived node writes this.id
             if (!n.derived && n.edges && n.edges.length) {
                 pushMap(writtenBy, n.id, { nodeId: n.id, via: 'user-pick', value: '(edge id)' });
@@ -1481,9 +1473,12 @@
             html += `</div>`;
         }
 
-        // Derived tags — flat nodes computed via deriveWhen, never asked
-        // directly. Module-internal derived nodes stay in their module
-        // card (they're part of that module's machinery).
+        // Derived tags — flat nodes that are never asked directly. Their
+        // values are written into sel/flavor by upstream edges
+        // (collapseToFlavor.set / setFlavor); the node itself just
+        // declares the dim's allowed values. Module-internal derived
+        // nodes stay in their module card (they're part of that module's
+        // machinery).
         const derivedFlat = NODES.filter(n => n.derived && isFlat(n));
         if (derivedFlat.length) {
             html += `<div class="ng-section">`;
@@ -1550,8 +1545,10 @@
                 <div class="nd-narr-head">Derived tag · no narrative</div>
                 <div class="nd-narr-hint">
                     <code>${esc(node.id)}</code> is never asked. Its value is
-                    computed from other dims via <code>deriveWhen</code> and
-                    consumed by outcome templates and edge gates.
+                    written into sel/flavor by upstream edges
+                    (<code>collapseToFlavor.set</code> /
+                    <code>setFlavor</code>) and consumed by outcome
+                    templates and edge gates.
                     ${edgeIds ? `Possible values: <code>${esc(edgeIds)}</code>.` : ''}
                 </div>
             </div>`;
@@ -1677,14 +1674,14 @@
         `;
 
         // ─── Reads / writes summary (pulled from activateWhen, hideWhen,
-        //     edge requires / disabledWhen, deriveWhen.match,
-        //     collapseToFlavor.when / set / move).
+        //     edge requires / disabledWhen, collapseToFlavor.when /
+        //     set / move).
         const reads = A.nodeReads.get(nodeId) || new Set();
         if (reads.size || writes.size || moves.size) {
             html += `<div class="nd-section"><h3>Reads / writes</h3>`;
             html += `<div class="nd-narr-hint" style="margin-bottom: 8px;">
                 <code>reads</code>: dims pulled from this node's activateWhen, hideWhen,
-                deriveWhen.match, and per-edge requires / disabledWhen / collapseToFlavor.when.
+                and per-edge requires / disabledWhen / collapseToFlavor.when.
                 <code>writes (sel)</code>: collapseToFlavor.set targets.
                 <code>moves to flavor</code>: collapseToFlavor.move targets.
             </div>`;
@@ -1720,7 +1717,6 @@
                 if (seen.has(key)) continue;
                 seen.add(key);
                 const label = w.via === 'user-pick' ? 'user picks edge'
-                            : w.via === 'deriveWhen' ? 'derived from this node’s own deriveWhen'
                             : w.via;
                 html += `<span class="nd-chip nd-chip-muted" style="cursor: default;">${esc(label)}${w.value ? ` = ${esc(String(w.value))}` : ''}</span>`;
             }
@@ -1728,14 +1724,13 @@
         }
         html += `</div>`;
 
-        // ─── When this question is active / hidden / auto-derived
+        // ─── When this question is active / hidden
         const activateWhen = node.activateWhen || [];
         const hideWhen = node.hideWhen || [];
-        const deriveWhen = node.deriveWhen || [];
-        const hasNodeGates = activateWhen.length || hideWhen.length || deriveWhen.length;
+        const hasNodeGates = activateWhen.length || hideWhen.length;
         html += `<div class="nd-section"><h3>Activation & visibility</h3>`;
         if (!hasNodeGates) {
-            html += `<div class="nd-empty">Always active once its stage is reached. Never hidden. User-answered (not derived).</div>`;
+            html += `<div class="nd-empty">Always active once its stage is reached. Never hidden.</div>`;
         } else {
             if (activateWhen.length) {
                 html += `<div class="nd-row"><div class="nd-row-label">activateWhen</div><div class="nd-row-body">`;
@@ -1750,14 +1745,6 @@
                 html += `<div class="nd-narr-hint" style="margin-bottom: 6px;">Node is suppressed from the queue when any clause matches.</div>`;
                 hideWhen.forEach((c, i) => {
                     html += `<pre class="nd-json">clause ${i}: ${esc(prettyJson(c))}</pre>`;
-                });
-                html += `</div></div>`;
-            }
-            if (deriveWhen.length) {
-                html += `<div class="nd-row"><div class="nd-row-label">deriveWhen</div><div class="nd-row-body">`;
-                html += `<div class="nd-narr-hint" style="margin-bottom: 6px;">Value is auto-computed instead of asked when a rule's <code>match</code> holds.</div>`;
-                deriveWhen.forEach((d, i) => {
-                    html += `<pre class="nd-json">rule ${i}: ${esc(prettyJson(d))}</pre>`;
                 });
                 html += `</div></div>`;
             }

@@ -8,113 +8,26 @@ const { SCENARIO, NODES, NODE_MAP, MODULES, MODULE_MAP } = (typeof module !== 'u
     ? require('./graph.js') : window.Graph;
 
 // ════════════════════════════════════════════════════════
-// Derivation engine (declarative)
+// Condition pre-compilation
 // ════════════════════════════════════════════════════════
+//
+// Conditions (activateWhen / hideWhen / disabledWhen / requires /
+// collapseToFlavor.when / template `reachable`) are pre-compiled to a
+// flat (keys, types, vals) triple so matchCondition's hot path is a
+// switched index lookup. With deriveWhen gone, every read is a direct
+// `sel[k]` so there's no indirect/derived branch — every matcher is
+// `_direct = true`.
 
-// Pre-compilation: type tags for match entries
-const _MT = 0, _MF = 1, _MN = 2, _MA = 3, _ME = 4;
 // Pre-compilation: type tags for condition entries
 const _CT = 0, _CF = 1, _CN = 2, _CR = 3, _CI = 4;
 
-const _valToIdx = Object.create(null);
-const _idxToVal = Object.create(null);
-const _derivTable = Object.create(null);
-
 function _precompile() {
-    // Value indexing: map each dim's values to numeric indices (0 = undefined)
-    for (const node of NODES) {
-        if (!node.edges) continue;
-        const v2i = Object.create(null);
-        const i2v = [undefined];
-        for (let j = 0; j < node.edges.length; j++) {
-            v2i[node.edges[j].id] = j + 1;
-            i2v.push(node.edges[j].id);
-        }
-        _valToIdx[node.id] = v2i;
-        _idxToVal[node.id] = i2v;
-    }
-
-    // Register "marker" dimensions that aren't declared nodes but are written
-    // into sel via `collapseToFlavor.set` (e.g. `agi_happens`, `asi_happens`,
-    // `takeoff_class`, `rollout_set`, ...). These
-    // need entries in _valToIdx/_idxToVal so derivation tables that reference
-    // them as inputs can be built and looked up at runtime.
-    //
-    // Also collect extra values for dims that ARE declared nodes when
-    // `collapseToFlavor.set` overrides the picked edge value with a collapsed
-    // value (e.g. `geo_spread` edges 'two'/'several' collapsing to 'multiple').
-    // Those collapsed values must be indexable too.
-    const markerVals = Object.create(null);
-    for (const node of NODES) {
-        if (!node.edges) continue;
-        for (const edge of node.edges) {
-            const raw = edge.collapseToFlavor;
-            if (!raw) continue;
-            const blocks = Array.isArray(raw) ? raw : [raw];
-            for (const c of blocks) {
-                if (!c || !c.set) continue;
-                for (const k of Object.keys(c.set)) {
-                    if (!markerVals[k]) markerVals[k] = new Set();
-                    markerVals[k].add(c.set[k]);
-                }
-            }
-        }
-    }
-    // Collapsed values from deriveWhen rules that produce values not present
-    // in a node's edges (e.g. `geo_spread` deriving 'multiple').
-    for (const node of NODES) {
-        if (!node.deriveWhen) continue;
-        for (const rule of node.deriveWhen) {
-            if (rule.value === undefined) continue;
-            if (!markerVals[node.id]) markerVals[node.id] = new Set();
-            markerVals[node.id].add(rule.value);
-        }
-    }
-    for (const k of Object.keys(markerVals)) {
-        let v2i = _valToIdx[k];
-        let i2v = _idxToVal[k];
-        if (!v2i) {
-            v2i = Object.create(null);
-            i2v = [undefined];
-            _valToIdx[k] = v2i;
-            _idxToVal[k] = i2v;
-        }
-        for (const val of markerVals[k]) {
-            if (v2i[val]) continue;
-            v2i[val] = i2v.length;
-            i2v.push(val);
-        }
-    }
-
-    const derivedDims = new Set();
-    for (const node of NODES) {
-        if (node.deriveWhen) derivedDims.add(node.id);
-    }
-    const compileRule = (rule) => {
-        if (!rule.match) { rule._mk = null; rule._direct = true; return; }
-        const keys = [], types = [], vals = [];
-        let allDirect = true;
-        for (const k of Object.keys(rule.match)) {
-            const v = rule.match[k];
-            keys.push(k);
-            if (derivedDims.has(k)) allDirect = false;
-            if (v === true) { types.push(_MT); vals.push(null); }
-            else if (v === false) { types.push(_MF); vals.push(null); }
-            else if (v && typeof v === 'object' && !Array.isArray(v) && v.not) { types.push(_MN); vals.push(v.not); }
-            else if (Array.isArray(v)) { types.push(_MA); vals.push(v); }
-            else { types.push(_ME); vals.push(v); }
-        }
-        rule._mk = keys; rule._mt = types; rule._mv = vals;
-        rule._direct = allDirect;
-    };
     const compileCond = (cond) => {
         const keys = [], types = [], vals = [];
-        let allDirect = true;
         for (const k of Object.keys(cond)) {
             if (k === 'reason' || k.startsWith('_')) continue;
             const v = cond[k];
             keys.push(k);
-            if (derivedDims.has(k)) allDirect = false;
             if (v === true) { types.push(_CT); vals.push(null); }
             else if (v === false) { types.push(_CF); vals.push(null); }
             else if (v && typeof v === 'object' && !Array.isArray(v) && v.not) {
@@ -124,14 +37,8 @@ function _precompile() {
             else { types.push(_CI); vals.push(Array.isArray(v) ? v : [v]); }
         }
         cond._ck = keys; cond._ct = types; cond._cv = vals;
-        cond._direct = allDirect;
     };
     for (const node of NODES) {
-        if (node.deriveWhen) {
-            const dw = node.deriveWhen;
-            node._dwLen = dw.length;
-            for (let i = 0; i < dw.length; i++) compileRule(dw[i]);
-        }
         if (node.activateWhen) for (const c of node.activateWhen) compileCond(c);
         if (node.hideWhen) for (const c of node.hideWhen) compileCond(c);
         if (node.edges) for (const e of node.edges) {
@@ -145,209 +52,13 @@ function _precompile() {
 }
 _precompile();
 
-function matchesDerivation(rule, sel) {
-    const keys = rule._mk;
-    if (!keys) return true;
-    const types = rule._mt, vals = rule._mv;
-    if (rule._direct) {
-        for (let i = 0; i < keys.length; i++) {
-            const eff = sel[keys[i]];
-            switch (types[i]) {
-                case _MT: if (!eff) return false; break;
-                case _MF: if (eff) return false; break;
-                case _MN: if (eff && vals[i].includes(eff)) return false; break;
-                case _MA: if (!vals[i].includes(eff)) return false; break;
-                case _ME: if (eff !== vals[i]) return false; break;
-            }
-        }
-        return true;
-    }
-    for (let i = 0; i < keys.length; i++) {
-        const eff = resolvedVal(sel, keys[i]);
-        switch (types[i]) {
-            case _MT: if (!eff) return false; break;
-            case _MF: if (eff) return false; break;
-            case _MN: if (eff && vals[i].includes(eff)) return false; break;
-            case _MA: if (!vals[i].includes(eff)) return false; break;
-            case _ME: if (eff !== vals[i]) return false; break;
-        }
-    }
-    return true;
-}
-
-function applyDerivations(derivations, sel, k) {
-    for (let r = 0; r < derivations.length; r++) {
-        const rule = derivations[r];
-        if (!matchesDerivation(rule, sel)) continue;
-        if (rule.fromState) return resolvedVal(sel, rule.fromState);
-        if (rule.valueMap) return rule.valueMap[sel[k]] ?? sel[k];
-        return rule.value;
-    }
-    return undefined;
-}
-
-const _computing = Object.create(null);
-let _rvCache = null;
-function setRvCache(cache) { _rvCache = cache; }
-
+// resolvedVal — kept as a one-line wrapper rather than inlined at every
+// call site so future "lazy view" semantics (e.g. flavor-underlay reads
+// in an alternate matchCondition mode) have a single hook to extend. As
+// of the deriveWhen drop, this is a direct sel lookup with no caching.
 function resolvedVal(sel, k) {
-    if (_computing[k]) return sel[k];
-    const tbl = _derivTable[k];
-    if (tbl) {
-        if (_rvCache) {
-            const c = _rvCache.get(k);
-            if (c !== undefined) return c;
-        }
-        const result = tbl(sel);
-        if (_rvCache && result !== undefined) _rvCache.set(k, result);
-        return result !== undefined ? result : sel[k];
-    }
-    const node = NODE_MAP[k];
-    if (node && node.deriveWhen) {
-        if (_rvCache) {
-            const c = _rvCache.get(k);
-            if (c !== undefined) return c;
-        }
-        _computing[k] = true;
-        const result = applyDerivations(node.deriveWhen, sel, k);
-        _computing[k] = false;
-        if (result !== undefined) {
-            if (_rvCache) _rvCache.set(k, result);
-            return result;
-        }
-    }
     return sel[k];
 }
-
-// ════════════════════════════════════════════════════════
-// Derivation lookup tables (pre-computed at init)
-// ════════════════════════════════════════════════════════
-
-function _buildDerivTables() {
-    const derivedNodes = NODES.filter(n => n.deriveWhen);
-    const derivedSet = new Set(derivedNodes.map(n => n.id));
-
-    function getInputDims(node) {
-        const inputs = [];
-        let hasValueMap = false;
-        for (const rule of node.deriveWhen) {
-            if (rule.valueMap) hasValueMap = true;
-            if (rule.match) for (const k of Object.keys(rule.match)) {
-                if (k !== 'reason' && k !== node.id && !inputs.includes(k)) inputs.push(k);
-            }
-            if (rule.fromState && rule.fromState !== node.id && !inputs.includes(rule.fromState)) {
-                inputs.push(rule.fromState);
-            }
-        }
-        // valueMap rules reference sel[k], so include the dim itself as a raw-value input
-        if (hasValueMap && !inputs.includes(node.id)) inputs.push(node.id);
-        return inputs;
-    }
-
-    // Topological sort so tables for dependencies are built first
-    const visited = new Set();
-    const topoOrder = [];
-    function topoVisit(id) {
-        if (visited.has(id)) return;
-        visited.add(id);
-        const node = NODE_MAP[id];
-        if (!node || !node.deriveWhen) return;
-        for (const dep of getInputDims(node)) {
-            if (derivedSet.has(dep)) topoVisit(dep);
-        }
-        topoOrder.push(id);
-    }
-    for (const n of derivedNodes) topoVisit(n.id);
-
-    // Phase 4a: decel_outcome is deleted; decel_align_progress is no
-    // longer derived (written directly by the decel module reducer).
-    // The JIT chain tables below are therefore obsolete — largeDims is
-    // empty (we keep the set as a hook for future large-fanout dims).
-    const largeDims = new Set();
-
-    for (const dimId of topoOrder) {
-        if (largeDims.has(dimId)) continue;
-        const node = NODE_MAP[dimId];
-        const inputDims = getInputDims(node);
-        const isDerived = inputDims.map(d => derivedSet.has(d) && d !== dimId);
-
-        const sizes = inputDims.map(d => (_idxToVal[d] || [undefined]).length);
-        const strides = new Array(inputDims.length);
-        let totalSize = 1;
-        for (let i = inputDims.length - 1; i >= 0; i--) {
-            strides[i] = totalSize;
-            totalSize *= sizes[i];
-        }
-
-        // Temporarily disable derivation on derived inputs so testSel values are used directly
-        const savedDw = {};
-        for (let i = 0; i < inputDims.length; i++) {
-            if (isDerived[i]) {
-                const inp = NODE_MAP[inputDims[i]];
-                savedDw[inputDims[i]] = inp.deriveWhen;
-                inp.deriveWhen = null;
-            }
-        }
-
-        _computing[dimId] = true;
-        const table = new Uint8Array(totalSize);
-        const testSel = {};
-        const v2i = _valToIdx[dimId];
-
-        function enumerate(idx, flatIdx) {
-            if (idx === inputDims.length) {
-                const result = applyDerivations(node.deriveWhen, testSel, dimId);
-                if (result !== undefined && v2i[result]) {
-                    table[flatIdx] = v2i[result];
-                }
-                return;
-            }
-            const dim = inputDims[idx];
-            const vals = _idxToVal[dim] || [undefined];
-            for (let v = 0; v < vals.length; v++) {
-                if (vals[v] === undefined) delete testSel[dim];
-                else testSel[dim] = vals[v];
-                enumerate(idx + 1, flatIdx + v * strides[idx]);
-            }
-            delete testSel[dim];
-        }
-        enumerate(0, 0);
-
-        _computing[dimId] = false;
-        for (const [d, dw] of Object.entries(savedDw)) {
-            NODE_MAP[d].deriveWhen = dw;
-        }
-
-        // Build resolve closure
-        const tInputDims = inputDims;
-        const tIsDerived = isDerived;
-        const tStrides = strides;
-        const tTable = table;
-        const tI2V = _idxToVal[dimId];
-        const tV2Is = inputDims.map(d => _valToIdx[d]);
-
-        _derivTable[dimId] = function(sel) {
-            let idx = 0;
-            for (let i = 0; i < tInputDims.length; i++) {
-                const v = tIsDerived[i] ? resolvedVal(sel, tInputDims[i]) : sel[tInputDims[i]];
-                idx += (v !== undefined ? (tV2Is[i][v] || 0) : 0) * tStrides[i];
-            }
-            const ri = tTable[idx];
-            return ri ? tI2V[ri] : undefined;
-        };
-    }
-
-    // Phase 4a: removed the JIT chain tables for decel_outcome and
-    // decel_align_progress. Both were built over the 14 decel_*mo_*
-    // dims to collapse the derived chain into a single O(steps) lookup.
-    // Post-migration:
-    //   * decel_outcome no longer exists — decel module writes alignment/
-    //     geo_spread/rival_emerges/governance/containment directly.
-    //   * decel_align_progress is written directly by the module reducer
-    //     (collapseToFlavor.set) and needs no derivation — resolvedVal
-    //     reads it from sel.
-}
-_buildDerivTables();
 
 // ════════════════════════════════════════════════════════
 // Activation engine (generic isNodeVisible)
@@ -355,10 +66,13 @@ _buildDerivTables();
 
 function matchCondition(sel, cond) {
     const keys = cond._ck;
+    // Slow path for un-precompiled conds (e.g. dynamically constructed
+    // by callers outside graph-init). Mirrors the precompiled fast path
+    // semantics exactly.
     if (!keys) {
         for (const [k, allowed] of Object.entries(cond)) {
             if (k === 'reason') continue;
-            const v = resolvedVal(sel, k);
+            const v = sel[k];
             if (allowed === true)  { if (v == null) return false; continue; }
             if (allowed === false) { if (v != null) return false; continue; }
             if (allowed && allowed.not) {
@@ -371,21 +85,8 @@ function matchCondition(sel, cond) {
         return true;
     }
     const types = cond._ct, vals = cond._cv;
-    if (cond._direct) {
-        for (let i = 0; i < keys.length; i++) {
-            const v = sel[keys[i]];
-            switch (types[i]) {
-                case _CT: if (v == null) return false; break;
-                case _CF: if (v != null) return false; break;
-                case _CN: if (v && vals[i].includes(v)) return false; break;
-                case _CR: if (v == null || vals[i].includes(v)) return false; break;
-                case _CI: if (!v || !vals[i].includes(v)) return false; break;
-            }
-        }
-        return true;
-    }
     for (let i = 0; i < keys.length; i++) {
-        const v = resolvedVal(sel, keys[i]);
+        const v = sel[keys[i]];
         switch (types[i]) {
             case _CT: if (v == null) return false; break;
             case _CF: if (v != null) return false; break;
@@ -661,14 +362,8 @@ function resolvedState(sel) {
         if (!NODE_MAP[k]) d[k] = sel[k];
     }
     for (const node of NODES) {
-        if (!isNodeVisible(sel, node)) {
-            if (node.deriveWhen) {
-                const derived = applyDerivations(node.deriveWhen, sel, node.id);
-                if (derived !== undefined) d[node.id] = derived;
-            }
-            continue;
-        }
-        const ev = resolvedVal(sel, node.id);
+        if (!isNodeVisible(sel, node)) continue;
+        const ev = sel[node.id];
         if (ev) { d[node.id] = ev; continue; }
         const locked = isNodeLocked(sel, node);
         if (locked !== null) d[node.id] = locked;
@@ -897,7 +592,7 @@ function matchContextWhen(state, cond) {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { NODES, NODE_MAP, MODULES, MODULE_MAP,
-        matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
+        matchCondition, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         isAskableInternal,
         applyEdgeBlocks, cleanSelection, resolvedState, resolvedStateWithFlavor,
         templateMatches, templatePartialMatch, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
@@ -906,7 +601,7 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 if (typeof window !== 'undefined') {
     window.Engine = { NODES, NODE_MAP, MODULES, MODULE_MAP,
-        matchCondition, resolvedVal, setRvCache, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
+        matchCondition, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         isAskableInternal,
         applyEdgeBlocks, cleanSelection, resolvedState, resolvedStateWithFlavor,
         templateMatches, templatePartialMatch, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
