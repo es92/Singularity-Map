@@ -486,15 +486,39 @@
     // Lazy caches built from FLOW_DAG on first flowNext call (FLOW_DAG
     // isn't loaded at this file's IIFE time).
     //
-    //   _childrenOf — parentKey → [childKey], in FLOW_DAG.edges
-    //                 declaration order. Excludes outcome / deadend /
-    //                 outcome-link edges (flowNext doesn't route to
-    //                 those, matching run()).
-    //   _slotByKey  — slotKey → slot object, for O(1) lookup.
+    //   _childrenOf   — parentKey → [childKey], in FLOW_DAG.edges
+    //                   declaration order. Excludes outcome / deadend /
+    //                   outcome-link edges (flowNext doesn't route to
+    //                   those, matching run()).
+    //   _parentsOf    — childKey → [parentKey]. Same edge-kind filter
+    //                   as _childrenOf. Used by parentSlotKeyFromStack
+    //                   for shared-id disambiguation.
+    //   _slotByKey    — slotKey → slot object, for O(1) lookup.
+    //   _ownerOfNode  — internal-nodeId → owning slotKey. For
+    //                   node-kind slots, slot.id is its own owner;
+    //                   for module-kind, every nodeId in the
+    //                   module's nodeIds list points at that slot.
+    //                   For shared-id modules (escape_*: 5 FLOW_DAG
+    //                   slots all backed by the same module spec, so
+    //                   every escape internal nodeId is claimed by
+    //                   all 5 slots simultaneously), we DON'T
+    //                   populate this — the lookup is ambiguous by
+    //                   construction. Disambiguation falls out
+    //                   through `_sameIdFamily` + the upstream
+    //                   non-shared answer instead.
+    //   _sameIdFamily — moduleId → [slotKey] when ≥2 FLOW_DAG slots
+    //                   back the same module (escape_* today, none
+    //                   else). Lookup populated only for ids where
+    //                   the family size is >1, so a `.has(id)` check
+    //                   doubles as "is this slot's id shared?".
     let _childrenOf = null;
+    let _parentsOf = null;
     let _slotByKey = null;
+    let _ownerOfNode = null;
+    let _sameIdFamily = null;
     function _buildTopoCaches(flowDag) {
         const ch = new Map();
+        const pa = new Map();
         for (const e of flowDag.edges) {
             const [p, c, kind] = e;
             if (kind === 'placement-outcome' || kind === 'placement-deadend') continue;
@@ -503,11 +527,50 @@
             let arr = ch.get(p);
             if (!arr) { arr = []; ch.set(p, arr); }
             arr.push(c);
+            let parr = pa.get(c);
+            if (!parr) { parr = []; pa.set(c, parr); }
+            parr.push(p);
         }
         const sm = new Map();
         for (const n of flowDag.nodes) if (n && n.key) sm.set(n.key, n);
+
+        // Group module-kind slots by id to detect shared-id families.
+        const fam = new Map();
+        for (const n of flowDag.nodes) {
+            if (!n || n.kind !== 'module' || n.key === 'emergence') continue;
+            let arr = fam.get(n.id);
+            if (!arr) { arr = []; fam.set(n.id, arr); }
+            arr.push(n.key);
+        }
+        // Drop singleton entries — only the truly shared families need
+        // the disambiguator, and a `.has` check below is "is shared".
+        for (const id of [...fam.keys()]) {
+            if (fam.get(id).length < 2) fam.delete(id);
+        }
+
+        const Engine = _Engine();
+        const own = new Map();
+        for (const n of flowDag.nodes) {
+            if (!n || n.key === 'emergence') continue;
+            if (n.kind === 'outcome' || n.kind === 'deadend') continue;
+            if (n.kind === 'node') {
+                own.set(n.id, n.key);
+            } else if (n.kind === 'module') {
+                if (fam.has(n.id)) continue; // shared-id — skip, ambiguous
+                const m = Engine && Engine.MODULE_MAP[n.id];
+                if (m && Array.isArray(m.nodeIds)) {
+                    for (const nid of m.nodeIds) {
+                        if (!own.has(nid)) own.set(nid, n.key);
+                    }
+                }
+            }
+        }
+
         _childrenOf = ch;
+        _parentsOf = pa;
         _slotByKey = sm;
+        _ownerOfNode = own;
+        _sameIdFamily = fam;
     }
 
     // ─── Sub-routines ──────────────────────────────────────────────
@@ -677,54 +740,203 @@
     // sel-only flowNext then re-asks brittle in a loop).
     //
     // A slot S counts as exited iff:
-    //   1. S's exit signature is set in the current sel (node-kind:
-    //      sel[S.id] !== undefined; module-kind: completion marker
-    //      set), AND
-    //   2. The user actually answered one of S's nodes in stack —
-    //      this distinguishes S "walked" (user pick) from S
-    //      "side-effect-set" (an upstream edge wrote S's marker
-    //      without S's nodes ever being asked, e.g.
-    //      concentration_type='ai_itself' writes inert_stays='no').
+    //   * node-kind:   the user answered S in stack — i.e.
+    //                  answered.has(S.id). For nodes, S.id IS the
+    //                  answered node id, so the answer-history
+    //                  membership IS the canonical exit signature.
+    //                  Sel may not still hold S.id: nodes whose
+    //                  edges all `move: [S.id]` (e.g. brittle.{solved,
+    //                  sufficient,escape}, takeoff, governance_window)
+    //                  evict their own answer dim to flavor on exit.
+    //                  A `sel[S.id] !== undefined` check would loop on
+    //                  brittle in exactly that case (parent
+    //                  misidentified as who_benefits → brittle is its
+    //                  child and is askable → ask brittle again).
+    //   * module-kind: completion marker is set in sel AND the user
+    //                  answered one of S's nodeIds. The marker check
+    //                  matches the exit signature run() uses; the
+    //                  answered check distinguishes S "walked" (user
+    //                  pick) from S "side-effect-set" (an upstream
+    //                  edge wrote S's marker without S's nodes ever
+    //                  being asked, e.g. concentration_type='ai_itself'
+    //                  writes inert_stays='no'). Module markers
+    //                  themselves don't get moved to flavor on exit
+    //                  (they're the completion signal downstream
+    //                  gates read), so the AND is safe here.
     //
-    // Returns the latest such S in FLOW_DAG.nodes order. Defaults to
-    // 'emergence' (game start, no slot has exited yet).
+    // Returns the slot the user most recently EXITED in walk order
+    // (not in FLOW_DAG topo order). Defaults to 'emergence' (game
+    // start, no slot has exited yet, or no exited slot is reachable
+    // from any answered frame).
     //
-    // For shared completionMarker modules (escape_*: all id='escape'
-    // sharing 'escape_set'), the LATEST in topo order wins —
-    // matches run()'s parent identification (escape_late ⊃
-    // escape_after_who in topo, etc.).
+    // ─── Why walk-order, not topo-order ────────────────────────────
+    //
+    // A reverse-topo "first exited slot wins" pass handles the
+    // common cases (alignment exits → next call returns alignment;
+    // who_benefits exits → next call returns who_benefits) but
+    // misroutes whenever a slot LATER in topo has a stale exit
+    // signature in sel from an earlier walk. Two failure modes:
+    //
+    //   1. Self-moving node (e.g. brittle.{solved,sufficient,
+    //      escape}): the node's exit signature IS its own answer
+    //      dim, which gets moved to flavor on every edge — no
+    //      sticky-staleness, but the original `sel[slot.id] !==
+    //      undefined` check failed for legitimately-walked nodes.
+    //      Fixed by reading the answered set from stack history,
+    //      which we still do here.
+    //
+    //   2. Stale shared completionMarker (escape_*): all 5 escape
+    //      FLOW_DAG slots share `completionMarker='escape_set'`, so
+    //      once any escape position has walked AND a later slot
+    //      (who_benefits, brittle, inert_stays) subsequently
+    //      EXITED, reverse-topo iteration still picks the latest
+    //      escape position in topo (always escape_after_who) over
+    //      the actually-most-recently-exited later slot. The
+    //      runtime then routes among escape_after_who's children
+    //      (which is empty — escape_after_who has no FLOW_DAG
+    //      outgoing edges, only outcome links), returns 'open',
+    //      and either matches an outcome (lucky) or strands the
+    //      user with no question (stuck).
+    //
+    // Walk-order resolves both by reading the stack as-is: the
+    // user's latest answered nodeId points at exactly one slot
+    // (modulo shared-id families, see below), and the answer to
+    // "what just exited" is "the most recent frame whose owning
+    // slot is currently exited". Frames whose owning slot is
+    // mid-walk (module entered, completionMarker not set) are
+    // skipped, because the user is INSIDE that slot — the slot
+    // they exited LAST is the one whose marker landed before the
+    // current mid-walk began. Examples:
+    //
+    //   * After benefit_distribution=equal in a brittle-holds run:
+    //     who_benefits.completionMarker just got set, return
+    //     who_benefits — even though escape_set is also set in
+    //     sel from the earlier benevolent short-circuit.
+    //
+    //   * Mid-who_benefits (only power_promise answered):
+    //     who_benefits is entered but not exited. Skip its frame.
+    //     The next frame back belongs to intent (or war), which
+    //     IS exited. Return that. flowNext then routes among that
+    //     parent's children, picks who_benefits via the entered-
+    //     but-not-exited atomicity rule, and asks the next
+    //     who_benefits internal.
+    //
+    // ─── Shared-id disambiguation ──────────────────────────────────
+    //
+    // Today only `escape_*` (escape_early, escape_early_alt,
+    // escape_late, escape_re_entry, escape_after_who) have multiple
+    // FLOW_DAG slots backing the same module — same
+    // completionMarker, same nodeIds. When we hit a frame whose
+    // nodeId is in the shared module's nodeIds, we don't know which
+    // family member owns it. Resolve by walking further back for
+    // the first non-shared answered nodeId; that nodeId's owning
+    // slot IS — by construction of the family's FLOW_DAG parent
+    // edges — the FLOW_DAG parent of the correct family member:
+    //
+    //     escape_early       ← parent = alignment
+    //     escape_early_alt   ← parent = proliferation
+    //     escape_late        ← parent = brittle
+    //     escape_re_entry    ← parent = inert_stays
+    //     escape_after_who   ← parent = who_benefits
+    //
+    // Disambiguation falls through to "topo-latest in family" if
+    // (a) the stack has no non-shared answer (impossible in normal
+    // play — every family member's FLOW_DAG parent is non-shared,
+    // so reaching any escape position requires walking a non-shared
+    // slot first), or (b) no family member's parent set contains
+    // the upstream slot (would indicate a graph-topology change;
+    // tests/flow_next_parity.js Phase 3 surfaces it).
+    function _isSlotExited(Engine, slot, sel, answered) {
+        if (!slot) return false;
+        if (slot.kind === 'node') return answered.has(slot.id);
+        if (slot.kind === 'module') {
+            const m = Engine.MODULE_MAP[slot.id];
+            if (!m || !m.completionMarker) return false;
+            if (!Engine.isModuleDone(sel, m.completionMarker)) return false;
+            for (const nid of (m.nodeIds || [])) {
+                if (answered.has(nid)) return true;
+            }
+        }
+        return false;
+    }
+
     function parentSlotKeyFromStack(stack) {
         const Engine = _Engine();
         const flowDag = _FlowDag();
         if (!Engine || !flowDag || !Array.isArray(stack) || stack.length === 0) {
             return 'emergence';
         }
+        if (!_childrenOf) _buildTopoCaches(flowDag);
+
         const sel = stack[stack.length - 1].state || {};
         const answered = new Set();
         for (const frame of stack) {
             if (frame && frame.nodeId) answered.add(frame.nodeId);
         }
 
-        let lastExited = 'emergence';
-        for (let i = flowDag.nodes.length - 1; i >= 0; i--) {
-            const slot = flowDag.nodes[i];
-            if (!slot || slot.key === 'emergence') continue;
-            if (slot.kind === 'outcome' || slot.kind === 'deadend') continue;
+        // Walk the stack backward in user-time order. The most
+        // recent frame whose owning slot is currently exited is
+        // the answer.
+        for (let i = stack.length - 1; i > 0; i--) {
+            const f = stack[i];
+            const nodeId = f && f.nodeId;
+            if (!nodeId) continue;
 
-            let exited = false;
-            if (slot.kind === 'node') {
-                if (sel[slot.id] !== undefined && answered.has(slot.id)) exited = true;
-            } else if (slot.kind === 'module') {
-                const m = Engine.MODULE_MAP[slot.id];
-                if (m && m.completionMarker && Engine.isModuleDone(sel, m.completionMarker)) {
-                    for (const nid of (m.nodeIds || [])) {
-                        if (answered.has(nid)) { exited = true; break; }
-                    }
+            // Owner lookup. _ownerOfNode is intentionally
+            // unpopulated for shared-id families (escape_*) — we
+            // need the disambiguator there.
+            const owner = _ownerOfNode.get(nodeId);
+            if (owner) {
+                const slot = _slotByKey.get(owner);
+                if (_isSlotExited(Engine, slot, sel, answered)) return owner;
+                continue;
+            }
+
+            // Shared-id case. Identify the family by which module's
+            // nodeIds list contains `nodeId`, then check if the
+            // shared completionMarker is set; if so, disambiguate.
+            let sharedFamily = null;
+            let sharedModuleId = null;
+            for (const [moduleId, family] of _sameIdFamily) {
+                const m = Engine.MODULE_MAP[moduleId];
+                if (m && (m.nodeIds || []).includes(nodeId)) {
+                    sharedFamily = family;
+                    sharedModuleId = moduleId;
+                    break;
                 }
             }
-            if (exited) { lastExited = slot.key; break; }
+            if (!sharedFamily) continue;
+
+            const m = Engine.MODULE_MAP[sharedModuleId];
+            // Any family member shares the same exit check (same
+            // completionMarker + same nodeIds list).
+            if (!m || !m.completionMarker) continue;
+            if (!Engine.isModuleDone(sel, m.completionMarker)) continue;
+            // (answered.has(nodeId) is implied — we got here
+            // because this frame's nodeId is in m.nodeIds and is
+            // therefore in the answered set.)
+
+            // Walk further back for the first non-shared answer.
+            const sharedNids = new Set(m.nodeIds || []);
+            let upstreamSlotKey = null;
+            for (let j = i - 1; j >= 0; j--) {
+                const nidJ = stack[j] && stack[j].nodeId;
+                if (!nidJ || sharedNids.has(nidJ)) continue;
+                upstreamSlotKey = _ownerOfNode.get(nidJ);
+                if (upstreamSlotKey) break;
+            }
+            if (upstreamSlotKey) {
+                for (const candKey of sharedFamily) {
+                    const ps = _parentsOf.get(candKey) || [];
+                    if (ps.includes(upstreamSlotKey)) return candKey;
+                }
+            }
+            // Fallback: topo-latest in family. Matches the prior
+            // behavior for cases the disambiguator can't resolve.
+            return sharedFamily[sharedFamily.length - 1];
         }
-        return lastExited;
+
+        return 'emergence';
     }
 
     if (typeof window !== 'undefined') {
