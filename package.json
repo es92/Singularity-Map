@@ -4,6 +4,7 @@
   "scripts": {
     "test": "node --max-old-space-size=16384 validate.js",
     "test:quick": "node validate.js --quick",
+    "test:all": "node tests/run.js",
     "precompute-reach": "node --max-old-space-size=16384 precompute-reachability.js"
   },
   "dependencies": {
