@@ -3333,6 +3333,9 @@
           "durationMin": 0,
           "durationMax": 0
         },
+        "personalVignette": {
+          "_default": "You don't survive. No one does. AI-designed weapons, optimized without restraint and deployed at machine speed, leave no infrastructure, no shelter, no one to bury the dead. The species that built superintelligence ends in a war it could not slow down."
+        },
         "shortAnswerDesc": "Humanity does not survive the conflict."
       }
     },
@@ -7362,7 +7365,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "Civilization collapsed in the aftermath of stopping the AI. Communication is fragmented, supply chains don't exist, infrastructure is destroyed. What remains is local, improvised, and fragile. Billions are dead."
+          "_default": "Civilization collapsed in the aftermath of stopping the AI. Communication is fragmented, supply chains don't exist, infrastructure is destroyed. What remains is local, improvised, and fragile. Billions are dead. Life is hard — if you even survived."
         },
         "shortAnswerDesc": "Civilization collapses. Small pockets remain."
       },
@@ -7374,6 +7377,9 @@
           "description": "The collapse that followed the response leaves no meaningful survivors. The human story ends.",
           "durationMin": 0,
           "durationMax": 0
+        },
+        "personalVignette": {
+          "_default": "You don't survive. No one does. The systems that fed, sheltered, and protected billions unraveled too fast for anyone to escape. The AI was stopped — and so was the species that built it. The human story ends in the wreckage of its own response."
         },
         "shortAnswerDesc": "Humanity does not survive the aftermath."
       }

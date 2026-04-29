@@ -1475,7 +1475,7 @@
             const benefitNodes = new Set([
                 'plateau_benefit_distribution', 'auto_benefit_distribution', 'benefit_distribution',
             ]);
-            const deathNodes = new Set(['war_survivors']);
+            const deathNodes = new Set(['war_survivors', 'collateral_survivors']);
             // response_success may live in flavor post-module-exit; narrSel
             // layers flavor under sel so this check survives the move.
             if (narrSel.response_success !== 'yes') deathNodes.add('escape_method');
