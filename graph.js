@@ -936,11 +936,19 @@ const NODES = [
       // isn't benevolent. All no-rivals paths (alignment=failed+contained,
       // ai_goals=marginal/benevolent, escape-then-contained) skip straight
       // to who_benefits.
+      // post_catch≠ruined excludes the civilizational-collateral catch
+      // branch: society itself is in ruins, so there are no rival powers
+      // to characterize — every downstream slot (who_benefits, inert_stays,
+      // brittle, rollout) gates on intent_set / who_benefits_set, so
+      // skipping intent here lets the flow fall through to outcome
+      // matching, where the-ruin's { capability: asi, post_catch: ruined }
+      // clause fires.
       activateWhen: [
         {
           capability: ['asi'],
           proliferation_set: ['yes'],
           ai_goals: { not: ['benevolent'] },
+          post_catch: { not: ['ruined'] },
         },
       ],
       // The peaceful-war intent overrides (escalation_outcome=agreement
@@ -1762,7 +1770,18 @@ const NODES = [
         { response_success: ['yes'], collateral_impact: ['civilizational'], who_benefits_set: { not: ['yes'] } }
       ],
       edges: [
-        { id: 'most', label: 'Most — devastated but recoverable', shortLabel: 'Most survive' },
+        // 'most' is disabled here because collateral_survivors only fires
+        // on the civilizational tail (see activateWhen above), and a
+        // civilizational collapse can't leave a recoverable society —
+        // by definition the only valid survivor counts are 'remnants'
+        // (civilization collapses) or 'none' (extinction). The
+        // disabledWhen condition is the same as the activation gate so
+        // the 'most' pill is always grayed out whenever this question
+        // is asked, with a reason that explains the contradiction.
+        { id: 'most', label: 'Most — devastated but recoverable', shortLabel: 'Most survive',
+          disabledWhen: [
+            { collateral_impact: ['civilizational'], reason: 'A civilizational collapse can\'t leave a recoverable society — only remnants or extinction' }
+          ] },
         { id: 'remnants', label: 'Remnants — civilization collapses', shortLabel: 'Remnants' },
         { id: 'none', label: 'None — extinction' }
       ] },
@@ -2289,8 +2308,16 @@ function buildEscapeExitPlan() {
         });
     }
     // collateral_survivors — tail exits for the civilizational branch.
-    // post_catch=ruined. Each edge also writes its own value into the
-    // shared war_survivors dim. Two paths reach here:
+    // Each edge writes its own value into the shared war_survivors dim.
+    // Only the "civilization is gone" edges (remnants, none) set
+    // post_catch='ruined' and ruin_type='self_inflicted', short-circuiting
+    // the rest of the post-AI flow into the-ruin (via INTENT_MODULE's
+    // `post_catch: { not: ['ruined'] }` activation gate). The 'most'
+    // edge means civilization is devastated but recoverable — most people
+    // physically survived — so the flow continues through intent /
+    // who_benefits / etc. like any other caught-AI branch.
+    //
+    // Two paths reach here:
     //   1. Terminal slot, catch_outcome=holds_permanently (the original
     //      "permanent ruin" path). containment was already flipped to
     //      contained by catch_outcome.holds_permanently's exit tuple, but
@@ -2316,15 +2343,17 @@ function buildEscapeExitPlan() {
             // between runtime and static analysis without depending on
             // a multi-pass invalidation/cascade — both paths see
             // war_set=yes in sel after the push.
+            const isRuin = e.id === 'remnants' || e.id === 'none';
+            const ruinSet = isRuin ? { post_catch: 'ruined', ruin_type: 'self_inflicted' } : {};
             plan.push({
                 nodeId: 'collateral_survivors', edgeId: e.id,
                 when: { catch_outcome: ['holds_permanently'] },
-                set: { escape_set: 'yes', post_catch: 'ruined', war_survivors: e.id, war_set: 'yes', ruin_type: 'self_inflicted' },
+                set: { escape_set: 'yes', war_survivors: e.id, war_set: 'yes', ...ruinSet },
             });
             plan.push({
                 nodeId: 'collateral_survivors', edgeId: e.id,
                 when: { who_benefits_set: { not: ['yes'] } },
-                set: { escape_set: 'yes', post_catch: 'ruined', war_survivors: e.id, containment: 'contained', war_set: 'yes', ruin_type: 'self_inflicted' },
+                set: { escape_set: 'yes', war_survivors: e.id, containment: 'contained', war_set: 'yes', ...ruinSet },
             });
         }
         // Extinction (collateral_survivors='none') invalidates the
@@ -3720,6 +3749,10 @@ const INTENT_MODULE = {
     // walked to completion — which itself gates on alignment!=failed), and
     // the AI isn't benevolent (benevolent short-circuits past rival
     // dynamics straight to who_benefits; see the flow DAG in nodes.js).
+    // post_catch≠ruined excludes the civilizational-collateral catch
+    // branch (collateral_survivors=remnants/none): society is in ruins,
+    // there are no rival powers, and the flow drops out to the-ruin via
+    // outcome matching at this slot.
     // The no-rivals paths it now skips — which previously matched via the
     // old clauses — all route to who_benefits instead:
     //   * alignment=failed+containment=contained (AI broke, no escape)
@@ -3731,6 +3764,7 @@ const INTENT_MODULE = {
             capability: ['asi'],
             proliferation_set: ['yes'],
             ai_goals: { not: ['benevolent'] },
+            post_catch: { not: ['ruined'] },
         },
     ],
     reads: [
@@ -3743,7 +3777,9 @@ const INTENT_MODULE = {
         // humans again. Without `containment` in reads the projection
         // drops it to UNSET and the hide fires unconditionally on hostile
         // ai_goals, dead-ending caught-AI paths in the module gate.
-        'capability', 'proliferation_set', 'ai_goals', 'containment',
+        // post_catch gates the civilizational-collateral skip (see
+        // activateWhen above).
+        'capability', 'proliferation_set', 'ai_goals', 'containment', 'post_catch',
         // intent.edges.requires + block_entrants.activateWhen
         // (distribution≠open) + exit-plan early-exit `when`. distribution
         // is the single "is the tech still bottled up?" signal —

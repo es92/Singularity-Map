@@ -260,10 +260,20 @@ assert.deepStrictEqual(catchTuples.holds_permanently.when,
     { collateral_impact: { not: ['civilizational'] } },
     'catch_outcome.holds_permanently exit gated on collateral_impact≠civilizational');
 // collateral_survivors exits: 3 edges (most/remnants/none) × 2 tuples
-// (terminal vs. early-slot) → each terminal+early tuple → post_catch=ruined,
-// writes war_survivors=edgeId, and sets war_set=yes (mirrors WAR_MODULE
-// completion). Plus a 7th tuple on cs.none that's purely a move:[ai_goals]
-// to mirror cleanSelection's invalidation of pro-humanity ai_goals on
+// (terminal vs. early-slot). All 6 set-tuples write war_survivors=edgeId
+// and war_set=yes (mirrors WAR_MODULE completion on this branch).
+//
+// Only the "civilization is gone" edges (remnants, none) additionally
+// write post_catch='ruined' + ruin_type='self_inflicted', short-
+// circuiting the rest of the post-AI flow into the-ruin (via
+// INTENT_MODULE's `post_catch: { not: ['ruined'] }` activation gate).
+// The 'most' edge means civilization is devastated but recoverable —
+// most people physically survived — so the flow continues through
+// intent / who_benefits / etc. like any other caught-AI branch and
+// matches a downstream outcome rather than the-ruin.
+//
+// Plus a 7th tuple on cs.none that's purely a move:[ai_goals] to
+// mirror cleanSelection's invalidation of pro-humanity ai_goals on
 // extinction.
 const csTuples = planByNode.collateral_survivors;
 assert.strictEqual(csTuples.length, 7, '7 collateral_survivors tuples (3 edges × 2 + 1 ai_goals move)');
@@ -276,12 +286,21 @@ assert.deepStrictEqual(csMoveTuples[0].move, ['ai_goals'],
 assert.strictEqual(csMoveTuples[0].edgeId, 'none',
     'move-only tuple is on cs.none');
 for (const t of csSetTuples) {
-    assert.strictEqual(t.set.post_catch, 'ruined',
-        `collateral_survivors.${t.edgeId} → post_catch=ruined`);
     assert.strictEqual(t.set.war_survivors, t.edgeId,
         `collateral_survivors.${t.edgeId} writes war_survivors=${t.edgeId}`);
     assert.strictEqual(t.set.war_set, 'yes',
         `collateral_survivors.${t.edgeId} writes war_set=yes (mirrors WAR_MODULE completion)`);
+    if (t.edgeId === 'remnants' || t.edgeId === 'none') {
+        assert.strictEqual(t.set.post_catch, 'ruined',
+            `collateral_survivors.${t.edgeId} → post_catch=ruined (civilization is gone)`);
+        assert.strictEqual(t.set.ruin_type, 'self_inflicted',
+            `collateral_survivors.${t.edgeId} → ruin_type=self_inflicted`);
+    } else {
+        assert.strictEqual(t.set.post_catch, undefined,
+            `collateral_survivors.${t.edgeId} does NOT set post_catch (civ is recoverable, normal flow continues)`);
+        assert.strictEqual(t.set.ruin_type, undefined,
+            `collateral_survivors.${t.edgeId} does NOT set ruin_type (not a ruin path)`);
+    }
 }
 
 // After attachModuleReducer ran at graph.js load, each exit edge should
@@ -355,9 +374,12 @@ const escapePath = [
     // catch_outcome=holds_permanently with collateral_impact=civilizational
     // does NOT exit the module (exit tuple when-clause excludes
     // civilizational); the civilizational tail defers to
-    // collateral_survivors. Picking a survivor value triggers the final
-    // exit with post_catch=ruined and war_survivors=<edgeId>.
-    ['collateral_survivors', 'most'],
+    // collateral_survivors. Picking a "civilization is gone" survivor
+    // value (remnants or none) triggers the final exit with
+    // post_catch=ruined and war_survivors=<edgeId>. ('most' would skip
+    // the ruin marker since civ is recoverable on that branch — see
+    // the contract test above.)
+    ['collateral_survivors', 'remnants'],
 ];
 for (const [nid, eid] of escapePath) escStk = engine.push(escStk, nid, eid);
 const escSel = engine.currentState(escStk);
@@ -366,8 +388,8 @@ const escFlavor = engine.currentFlavor(escStk);
 // Writes stay in sel (post-module-exit).
 assert.strictEqual(escSel.post_catch, 'ruined',
     'post_catch=ruined on civilizational tail');
-assert.strictEqual(escSel.war_survivors, 'most',
-    'war_survivors=most written by collateral_survivors exit tuple');
+assert.strictEqual(escSel.war_survivors, 'remnants',
+    'war_survivors=remnants written by collateral_survivors exit tuple');
 assert.strictEqual(escSel.ai_goals, 'paperclip', 'ai_goals stays in sel');
 assert.strictEqual(escSel.escape_set, 'yes', 'escape_set=yes on exit');
 // catch_outcome + collateral_impact move to flavor (no longer in writes).

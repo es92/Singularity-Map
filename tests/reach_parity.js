@@ -146,7 +146,12 @@ const RUIN_PATH = [
     // → escape mid-DFS → discovery / response / collateral), where
     // catch defaults to post_catch=contained via the collateral_impact
     // exit tuple, so we never ask catch_outcome.
-    ['collateral_survivors', 'most'],
+    //
+    // Pick a survivor value that routes to the-ruin: 'remnants' (or
+    // 'none') sets post_catch=ruined + ruin_type=self_inflicted.
+    // 'most' is a recoverable-civilization branch and continues
+    // through normal post-AI flow rather than landing at the-ruin.
+    ['collateral_survivors', 'remnants'],
 ];
 
 // post_catch=ruined → ruin_type derives 'self_inflicted', not 'war'.
