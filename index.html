@@ -1772,7 +1772,11 @@
                 if (flags.pp) {
                     savePersonalAnswers({ profession: flags.pp });
                 }
-                return { screen: 'map', started: true, pairs, lockedOutcomeId, flags };
+                // A /map URL with only flags (no answered pairs, no locked
+                // outcome) lands on the intro screen with those flags applied,
+                // mirroring share links produced from the start screen.
+                const isStarted = pairs.length > 0 || !!lockedOutcomeId;
+                return { screen: 'map', started: isStarted, pairs, lockedOutcomeId, flags };
             }
             if (hash.startsWith('/about')) {
                 const showOutcomes = hash.includes('outcomes=1');
@@ -2565,10 +2569,6 @@
             function syncHash() {
                 const shouldPush = _pushNextSync;
                 _pushNextSync = false;
-                if (!started) {
-                    history.replaceState({ screen: 'map' }, '', location.pathname);
-                    return;
-                }
                 let hash = '/map';
                 const entries = [];
                 for (const entry of stack) {
@@ -2592,10 +2592,13 @@
                 const stateFlags = { fullQuestions, shortQuestions, expandTimeline, customDurations, debugMode };
                 const pairs = stack.filter(e => e.nodeId).map(e => ({ nodeId: e.nodeId, edgeId: e.edgeId }));
                 const state = { screen: 'map', pairs, lockedOutcomeId: lockedId + (lockedVariantKey ? '--' + lockedVariantKey : ''), flags: stateFlags, started };
+                // On the intro screen with no flags toggled, keep the URL clean
+                // (just the pathname) rather than changing it to `#/map`.
+                const target = !started && entries.length === 0 ? location.pathname : '#' + hash;
                 if (shouldPush) {
-                    history.pushState(state, '', '#' + hash);
+                    history.pushState(state, '', target);
                 } else {
-                    history.replaceState(state, '', '#' + hash);
+                    history.replaceState(state, '', target);
                 }
             }
 
@@ -3171,12 +3174,15 @@
                 mutateStack(s => Engine.push(s, pick.nodeId, pick.value));
                 return nextQ.node.id + ' = ' + pick.value;
             };
-            // TEMP: Space key triggers DebugSelectRandom for quick clickthroughs.
+            // TEMP: Space key triggers DebugSelectRandom for quick clickthroughs,
+            // or clicks Start when the intro is still showing.
             window.addEventListener('keydown', e => {
                 if (e.code !== 'Space' && e.key !== ' ') return;
                 const t = e.target;
                 if (t && (t.matches?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]'))) return;
                 e.preventDefault();
+                const startBtn = document.querySelector('[data-action="begin"]');
+                if (startBtn) { startBtn.click(); return; }
                 window.DebugSelectRandom();
             });
             listen('[data-action="share"]', 'click', () => {
