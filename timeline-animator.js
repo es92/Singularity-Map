@@ -592,70 +592,27 @@ class TimelineAnimator extends TimelineRenderer {
         const eventDys = [];
         const stripSel = this._stripFromAnimation;
         newEvents.forEach(el => {
-            const elRect = el.getBoundingClientRect();
-            const H = elRect.height;
+            const fadeChildren = Array.from(el.querySelectorAll(
+                '.tl-pills, .tl-undo, .timeline-year, .timeline-headline, .timeline-desc, .timeline-slider'
+            )).filter(c => !stripSel || !c.matches(stripSel));
+            const dy = flip.slide(el, startCardRect.top, { fadeChildren });
+            eventDys.push(dy);
 
-            // Clip line: just below the label (in viewport coords), so sliding content
-            // never paints over the label area. Falls back to the event top if no label.
-            let clipLineViewport = elRect.top;
-            if (stripSel) {
+            if (startLabelInternalOffset != null && stripSel) {
                 const labelEl = el.querySelector(stripSel);
                 if (labelEl) {
-                    clipLineViewport = labelEl.getBoundingClientRect().bottom;
+                    const elRect = el.getBoundingClientRect();
+                    const labelRect = labelEl.getBoundingClientRect();
+                    const newOffset = labelRect.top - elRect.top;
+                    const compensation = startLabelInternalOffset - newOffset;
+                    if (Math.abs(compensation) >= 1) {
+                        flip._animations.push(labelEl.animate(
+                            [{ transform: `translateY(${compensation}px)` }, { transform: 'translateY(0)' }],
+                            { duration: DURATION, easing: EASING, fill: 'none' }
+                        ));
+                    }
                 }
             }
-
-            // Event element itself doesn't move — every "stationary" child (label, dot,
-            // hline, segment, year, undo) stays at its natural position by construction.
-            // No segment animation needed for this event.
-            eventDys.push(0);
-
-            // Children that slide in from above the clip line. Year + undo are kept
-            // stationary because they share the label's row; sliding them while the
-            // label stays put would look misaligned.
-            const slidingSelectors = '.tl-pills, .timeline-headline, .timeline-desc, .timeline-slider';
-            const slidingChildren = Array.from(el.querySelectorAll(slidingSelectors))
-                .filter(c => !stripSel || !c.matches(stripSel));
-
-            slidingChildren.forEach(c => {
-                const cTop = c.getBoundingClientRect().top;
-
-                // Slide from translateY(-H) to translateY(0) over the full duration.
-                flip._animations.push(c.animate(
-                    [{ transform: `translateY(${-H}px)` }, { transform: 'translateY(0)' }],
-                    { duration: DURATION, easing: EASING, fill: 'none' }
-                ));
-
-                // Soft-to-hard mask: a linear-gradient band whose slope sharpens over
-                // the animation. Early on it's a smooth FADE_HEIGHT_START-wide fade
-                // (transparent above the label-bottom line, opaque below); by the end
-                // the band has collapsed to width 0 — a hard edge — which means the
-                // mask isn't clipping any of the child at t=1 (clipLine is above the
-                // child's natural top), so removing the mask when fill:'none' resets
-                // doesn't produce a snap.
-                //
-                // The hardening uses a power curve so the band stays near full-width
-                // for most of the animation and tightens rapidly near the end.
-                //
-                // mask-image is discrete-animatable, so step across many keyframes —
-                // offsets land in eased-progress space, matching the transform timing.
-                const FADE_HEIGHT_START = 40;
-                const HARDNESS_POWER = 4;
-                const NUM_STEPS = 30;
-                const clipDelta = clipLineViewport - cTop;
-                const maskFrames = [];
-                for (let i = 0; i <= NUM_STEPS; i++) {
-                    const offset = i / NUM_STEPS;
-                    const clipLine = clipDelta + H * (1 - offset);
-                    const fadeHeight = FADE_HEIGHT_START * (1 - Math.pow(offset, HARDNESS_POWER));
-                    const grad = `linear-gradient(to bottom, transparent ${clipLine}px, black ${clipLine + fadeHeight}px)`;
-                    maskFrames.push({ offset, maskImage: grad, WebkitMaskImage: grad });
-                }
-                flip._animations.push(c.animate(
-                    maskFrames,
-                    { duration: DURATION, easing: EASING, fill: 'none' }
-                ));
-            });
         });
 
         newHeaders.forEach(el => {
