@@ -515,7 +515,6 @@ class TimelineAnimator extends TimelineRenderer {
     // ------------------------------------------------------------------
 
     _runAnimation({ startCardRect, startCardContent, startCardClassName, startTopRowHeight, startLabelInternalOffset, startOutcomeTop, startOutcomeVisible, applyEndState, onComplete, fadeFooterIn }) {
-        const DURATION = this.morphDuration;
         const EASING = 'ease-in-out';
 
         const timeline = this.timelineEl;
@@ -525,6 +524,22 @@ class TimelineAnimator extends TimelineRenderer {
 
         const footerEl = this.containerEl.querySelector('.map-actions');
         const footerOriginalTop = footerEl ? footerEl.getBoundingClientRect().top : null;
+
+        // Derive DURATION from H_old (the old card's height) using two formulas, taking
+        // the max so we cap the *speed* at TARGET_SPEED while still padding short cards:
+        //   - speed cap:  duration ≥ H_old / TARGET_SPEED  (so px/ms never exceeds it)
+        //   - short pad:  duration ≥ BASE_OFFSET + H_old   (slope 1 ms/px below cap)
+        // The two formulas cross at H_old = BASE_OFFSET / (1/TARGET_SPEED − 1), and
+        // with BASE_OFFSET=600, TARGET_SPEED=0.5 they cross at H_old=600 (→1200ms,
+        // exactly 0.5 px/ms). Above 600 the speed cap dominates; below 600, the pad
+        // gives shorter cards proportionally more time so secondary motions (children
+        // sliding ~H_event, scroll ~H_event, etc.) don't appear rushed.
+        const BASE_OFFSET = 600;
+        const TARGET_SPEED = 0.5;
+        const DURATION = Math.max(1, Math.round(Math.max(
+            startCardRect.height / TARGET_SPEED,
+            BASE_OFFSET + startCardRect.height
+        )));
 
         // --- 1. Apply end state (no inflation, natural layout) ---
         const savedScrollY = window.scrollY;
