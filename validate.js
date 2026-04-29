@@ -386,14 +386,27 @@ function checkEdgeCoverage(prop) {
 // ────────────────────────────────────────────────────────────────
 //
 // A stuck input is a sel that flow-prop pushed into a slot, the
-// slot's gate accepted, but the slot's own DFS / write table
-// produced zero output rows. At runtime this would mean: the engine
-// routes the user into the slot, renders its UI, and then has no
-// edge to take and no outcome to terminate at — a true stuck state
-// that's invisible to dead-end detection because the sel never
-// becomes a parent output (it dies inside the slot).
+// slot's gate accepted, but the runtime would have nothing to
+// advance into. Two flavors, both reported here:
 //
-// Common causes:
+// (a) BUCKET-LEVEL stuck — `reachableFullSelsFromInputs` produced
+//     zero output rows for the input's read-bucket. Surfaced via
+//     `prop.stuckBySlot` (graph-io tracks it as part of the
+//     bucket-grouped DFS).
+//
+// (b) PER-SEL stuck — bucketing in (a) groups inputs by
+//     `slot.reads` only, but `disabledWhen` can read dims OUTSIDE
+//     reads. Two inputs in the same bucket can therefore have
+//     different edge-enablement: the bucket as a whole produces
+//     output rows (from its non-stuck members) so (a) doesn't
+//     fire, but for the stuck input every askable internal has
+//     every edge disabled. The runtime caller (flowNext via
+//     GraphIO.findNextInternalNode, TIGHT askability) returns null
+//     for these and renders an empty card. We catch them here by
+//     replaying findNextInternalNode per accepted input on each
+//     module slot.
+//
+// Common causes (either flavor):
 //   * Module entered with all internal nodes hidden, derived, or
 //     answered, but the completion marker isn't set yet.
 //   * Module entered where every askable internal has all edges
@@ -406,13 +419,43 @@ function checkEdgeCoverage(prop) {
 
 function detectStuckInputs(prop) {
     const errors = [];
+
     for (const [slotKey, stuckSels] of prop.stuckBySlot) {
         if (!stuckSels.length) continue;
         const accepted = prop.acceptedBySlot.get(slotKey) || 0;
         const samples = stuckSels.slice(0, 3).map(_selUrl);
-        errors.push(`[stuck] Slot "${slotKey}": ${fmtCount(stuckSels.length)}/${fmtCount(accepted)} accepted inputs produced zero outputs (engine would render slot with nothing to advance into)`);
-        for (const u of samples) errors.push(`           sample: ${u}`);
+        errors.push(`[stuck-bucket] Slot "${slotKey}": ${fmtCount(stuckSels.length)}/${fmtCount(accepted)} accepted inputs produced zero outputs (engine would render slot with nothing to advance into)`);
+        for (const u of samples) errors.push(`              sample: ${u}`);
     }
+
+    // Per-sel tight check: for every sel routed into a module slot,
+    // confirm at least one internal is runtime-askable AND has at
+    // least one enabled edge. We only run this on module slots
+    // because node slots only have one internal — if it's askable
+    // with all edges disabled, the slot's gate let the sel through
+    // but the slot's writes produce no rows and bucket-level
+    // detection (a) catches it.
+    for (const [slotKey, sels] of prop.inputsBySlot) {
+        const slot = FLOW_DAG.nodes.find(n => n && n.key === slotKey);
+        if (!slot || slot.kind !== 'module') continue;
+        const m = Engine.MODULE_MAP[slot.id];
+        if (!m) continue;
+        let perSelStuck = 0;
+        const perSelSamples = [];
+        for (const sel of sels) {
+            if (GraphIO.findNextInternalNode(m, sel) !== null) continue;
+            // Skip if already counted at the bucket level.
+            const stuckBucket = prop.stuckBySlot.get(slotKey) || [];
+            if (stuckBucket.indexOf(sel) >= 0) continue;
+            perSelStuck++;
+            if (perSelSamples.length < 3) perSelSamples.push(_selUrl(sel));
+        }
+        if (perSelStuck > 0) {
+            errors.push(`[stuck-per-sel] Slot "${slotKey}": ${fmtCount(perSelStuck)}/${fmtCount(sels.length)} routed inputs have every askable internal's every edge disabled (engine would render slot's first askable internal with all options greyed out)`);
+            for (const u of perSelSamples) errors.push(`                sample: ${u}`);
+        }
+    }
+
     return errors;
 }
 

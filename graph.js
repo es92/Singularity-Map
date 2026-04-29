@@ -1307,10 +1307,33 @@ const NODES = [
         // user is re-asked and picks a hostile goal, with the prior
         // value preserved in flavor for narrative continuity.
         // Symmetric to the generous block above.
+        //
+        // disabledWhen on (concentration_type=ai_itself,
+        // proliferation_alignment=holds): mirrors the
+        // proliferation_alignment=holds disables on every hostile
+        // ai_goals edge (alien_*/paperclip/power_seeking,
+        // "Alignment is intrinsic — the AI's values held even under
+        // open weights"). Without this disable, picking
+        // extractive/indifferent here also disables benevolent (via
+        // ai_goals.benevolent's existing power_use rule), AND
+        // hostile goals are blocked by proliferation_alignment=holds,
+        // AND swarm/marginal are blocked by concentration_type=
+        // ai_itself — leaving zero askable ai_goals edges and a
+        // stuck ESCAPE_MODULE entry. validate.js Phase 6 (per-sel
+        // stuck) flags this; tightening the gate here fixes it at
+        // the source rather than papering over downstream.
         { id: 'extractive', label: 'A tightening grip',
-          effects: { when: { concentration_type: ['ai_itself'], ai_goals: ['benevolent'] }, move: ['ai_goals'] } },
+          effects: { when: { concentration_type: ['ai_itself'], ai_goals: ['benevolent'] }, move: ['ai_goals'] },
+          disabledWhen: [
+            { concentration_type: ['ai_itself'], proliferation_alignment: ['holds'],
+              reason: 'Alignment is intrinsic — a robustly-aligned AI wouldn\'t wield power exploitatively' }
+          ] },
         { id: 'indifferent', label: 'Their own project',
-          effects: { when: { concentration_type: ['ai_itself'], ai_goals: ['benevolent'] }, move: ['ai_goals'] } }
+          effects: { when: { concentration_type: ['ai_itself'], ai_goals: ['benevolent'] }, move: ['ai_goals'] },
+          disabledWhen: [
+            { concentration_type: ['ai_itself'], proliferation_alignment: ['holds'],
+              reason: 'Alignment is intrinsic — a robustly-aligned AI wouldn\'t treat humanity as incidental' }
+          ] }
       ] },
     // knowledge_rate / physical_rate — unified across three contexts
     // keyed on the post-emergence `capability` value. In all three:
@@ -2714,6 +2737,18 @@ const WHO_BENEFITS_MODULE = {
         // benefit_distribution activates via post_catch (the consolidated
         // escape-exit marker).
         'post_catch',
+        // power_use's extractive/indifferent disabledWhens read
+        // proliferation_alignment to block the (concentration_type=
+        // ai_itself + proliferation_alignment=holds) contradiction
+        // — a robustly-aligned AI shouldn't wield power exploitatively.
+        // Without this in reads, the bucket-grouped DFS in
+        // reachableFullSelsFromInputs doesn't have the dim available
+        // for disabledWhen evaluation, the disable doesn't fire in
+        // static analysis, and ESCAPE_MODULE inherits a stuck state
+        // (every ai_goals edge gated out by either alignment or
+        // power_use). validate.js Phase 6 (per-sel stuck) catches
+        // this.
+        'proliferation_alignment',
     ],
     writes: WHO_BENEFITS_WRITES,
     nodeIds: WHO_BENEFITS_NODE_IDS,
