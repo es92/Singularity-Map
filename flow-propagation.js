@@ -592,6 +592,27 @@
         if (!Engine || !flowDag || !GraphIO) return { kind: 'open' };
         if (!_childrenOf) _buildTopoCaches(flowDag);
 
+        // EMERGENCE is the entry module: no FLOW_DAG parent, never a
+        // child of any other slot. Until it completes, its internals
+        // own the pick — the runtime analogue of run()'s
+        // `cartesianWriteRows(emergence)` seed pass. Without this
+        // short-circuit, parentSlotKey='emergence' (the default both
+        // parentSlotKeyFromStack and the sel-only heuristic produce
+        // at game start) would skip past the module and try to route
+        // an empty sel to plateau_bd/auto_bd/control — none of which
+        // accept until `capability` is set.
+        const emergenceSlot = _slotByKey.get('emergence');
+        if (emergenceSlot && emergenceSlot.kind === 'module') {
+            const m = Engine.MODULE_MAP[emergenceSlot.id];
+            const done = m && m.completionMarker
+                && Engine.isModuleDone(sel, m.completionMarker);
+            if (m && !done) {
+                const next = GraphIO.findNextInternalNode(m, sel);
+                if (next) return { kind: 'question', node: next, slotKey: emergenceSlot.key };
+                if (m.completionMarker) return { kind: 'stuck', slotKey: emergenceSlot.key };
+            }
+        }
+
         if (parentSlotKey != null) {
             // Definitive parent context — restrict the pick to that
             // parent's children. No fallback: if the caller asserts a
