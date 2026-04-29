@@ -444,28 +444,19 @@ function templateMatches(t, state) {
     });
 }
 
-function templatePartialMatch(t, state) {
-    if (!t.reachable) return true;
-    return t.reachable.some(cond => {
-        for (const [k, allowed] of Object.entries(cond)) {
-            if (k === '_not') continue;
-            if (state[k] && !allowed.includes(state[k])) return false;
-        }
-        if (_notRejects(cond._not, state)) return false;
-        return true;
-    });
-}
-
 // ════════════════════════════════════════════════════════
 // Immutable answer stack
 // ════════════════════════════════════════════════════════
 
-// Each entry carries a `moduleStack` vector of active module frames. When
-// empty (the default), engine behavior is identical to the pre-module code:
-// every helper that consults frames short-circuits and just reads globals.
-// Frame shape (Phase 3 will instantiate these): { moduleId, local: {sel, flavor}, entryIndex }
+// Each entry is { nodeId, edgeId, state, flavor }. Module scoping is
+// not maintained on the stack — it's a property of FLOW_DAG slot
+// ownership, computed on demand by FlowPropagation.flowNext (which
+// keys off completion markers in `state` plus stack-derived parent
+// context via parentSlotKeyFromStack). The pre-FLOW_DAG design
+// included a `moduleStack` frame vector here; it was never populated
+// in the shipped runtime and was removed.
 function createStack() {
-    return [{ nodeId: null, edgeId: null, state: {}, flavor: {}, moduleStack: [] }];
+    return [{ nodeId: null, edgeId: null, state: {}, flavor: {} }];
 }
 
 // Edge-local push: stamps the picked edge id into sel, then applies
@@ -483,13 +474,12 @@ function push(stack, nodeId, edgeId) {
 
     const prev = base[base.length - 1].state;
     const prevFlavor = base[base.length - 1].flavor || {};
-    const prevModuleStack = base[base.length - 1].moduleStack || [];
     const next = { ...prev, [nodeId]: edgeId };
     const flavor = { ...prevFlavor };
     const node = NODE_MAP[nodeId];
     const edge = node && node.edges && node.edges.find(e => e.id === edgeId);
     if (edge) applyEdgeEffects(next, edge, flavor);
-    return [...base, { nodeId, edgeId, state: next, flavor, moduleStack: prevModuleStack }];
+    return [...base, { nodeId, edgeId, state: next, flavor }];
 }
 
 function pop(stack) {
@@ -509,15 +499,6 @@ function currentState(stack) {
 
 function currentFlavor(stack) {
     return stack[stack.length - 1].flavor || {};
-}
-
-function currentModuleStack(stack) {
-    return stack[stack.length - 1].moduleStack || [];
-}
-
-function currentModuleFrame(stack) {
-    const ms = currentModuleStack(stack);
-    return ms.length ? ms[ms.length - 1] : null;
 }
 
 // Merged view for narrative resolution: sel wins on conflict (engine state
@@ -610,18 +591,18 @@ if (typeof module !== 'undefined' && module.exports) {
         matchCondition, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         isAskableInternal,
         applyEdgeEffects, resolvedState, resolvedStateWithFlavor,
-        templateMatches, templatePartialMatch, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
+        templateMatches, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
         isModuleDone: _isModuleDone, isModulePending: _isModulePending,
-        createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas };
+        createStack, push, pop, popTo, currentState, currentFlavor, narrativeState, stackHas };
 }
 if (typeof window !== 'undefined') {
     window.Engine = { NODES, NODE_MAP, MODULES, MODULE_MAP,
         matchCondition, resolvedVal, isNodeVisible, isNodeActivated, isNodeLocked, isEdgeDisabled, getEdgeDisabledReason,
         isAskableInternal,
         applyEdgeEffects, resolvedState, resolvedStateWithFlavor,
-        templateMatches, templatePartialMatch, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
+        templateMatches, reduceFromExitPlan, resolveContextWhen, resolveQuestionText, resolveShortQuestionText, resolveShortQuestionContext,
         isModuleDone: _isModuleDone, isModulePending: _isModulePending,
-        createStack, push, pop, popTo, currentState, currentFlavor, currentModuleStack, currentModuleFrame, narrativeState, stackHas };
+        createStack, push, pop, popTo, currentState, currentFlavor, narrativeState, stackHas };
 }
 
 })();

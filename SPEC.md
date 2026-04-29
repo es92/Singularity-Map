@@ -235,24 +235,53 @@ A module declaration lives in `graph.js` alongside `NODES`:
   reads:  ['gov_action', 'alignment', 'open_source', 'capability', 'automation'],
   writes: ['alignment', 'geo_spread', 'rival_emerges', 'governance',
            'containment', 'decel_align_progress'],
+  internalMarkers: [...dims moved to flavor on exit...],
+  completionMarker: 'decel_outcome',
   nodeIds: [...14 internal dim ids...],
-  reduce(local) -> bundle,   // (local state) -> partial sel writes
-  reducerTable: {...}        // enumerable cells for audit + walker
+  exitPlan: { /* (terminating-edge selector) -> {set, move} bundle */ },
+  reducerTable: {...}        // enumerable cells for audit + walker (legacy)
 }
 ```
 
 - `reads` lists the global dims the module's internals consult.
-- `writes` lists the global dims the reducer commits to `sel` on module exit.
+- `writes` lists the global dims that may land in `sel` on module exit.
+- `internalMarkers` lists internal dims that get moved to `flavor` on exit.
+- `completionMarker` is the dim that signals the module has terminated; FLOW_DAG navigation keys off it to release the slot.
 - `nodeIds` lists internal dims; they still live in top-level `NODES` for now but are logically scoped to the module.
-- `reduce` is a pure function from frame-local state → write bundle.
+- `exitPlan` is the declarative bundle from terminating-edge keys → `{set, move}` writes that `attachModuleReducer` compiles into edge `effects`.
 
 Modules are registered in the `MODULES` array exported from `graph.js`.
 
 ### Runtime
 
-- **Entry.** When a module's `activateWhen` fires, the engine pushes a frame onto `stack.moduleStack` and scopes `findNextQ` to the module's internal dims.
-- **Exit.** On a terminating internal edge, the module's `reduce(local)` produces the write bundle, which is committed to global `sel` via `effects` installed by `attachModuleReducer(mod)`. Internal dims are moved to `flavor`.
-- **No `outcome` tag.** The decel module intentionally eliminates the intermediate `decel_outcome` dim that previously dispatched through a cascade of derivation rules. Writes land directly on consumer globals — simpler, faster, easier to audit.
+Module scoping is a property of FLOW_DAG slot ownership, not a runtime
+frame stack. The engine itself is stateless about modules — the navigator
+(`FlowPropagation.flowNext`) decides which slot owns the current `sel`.
+
+- **Entry.** A module's slot owns the `sel` whenever its `activateWhen` /
+  `hideWhen` permit, no `completionMarker` is set, and at least one
+  internal node is askable. `_slotPickPriority` ranks competing slots by
+  the lowest-priority askable internal; lowest wins. Inside the picked
+  slot, `GraphIO.findNextInternalNode` returns the next renderable
+  question. Once a module is picked, *module atomicity* (enforced by
+  `flowNext`'s parent-children pass plus `parentSlotKeyFromStack`)
+  prevents other slots from preempting it mid-flow.
+- **Exit.** Each terminating internal edge declares `effects.set` for the
+  dims the module commits back to `sel` (including the `completionMarker`)
+  and `effects.move` for the internal dims it evicts to `flavor`.
+  `attachModuleReducer(mod)` writes those `effects` blocks into the edges
+  declaratively from the module's `exitPlan`. There is no runtime
+  `reduce(local)` call — the engine just applies edge effects via
+  `applyEdgeEffects`.
+- **No `outcome` tag.** The decel module intentionally eliminates the
+  intermediate `decel_outcome` dim that previously dispatched through a
+  cascade of derivation rules. Writes land directly on consumer globals —
+  simpler, faster, easier to audit.
+
+The static-analysis path (`FlowPropagation.run` for `validate.js`,
+`/explore`, `precompute-reachability.js`) shares these exact predicates,
+so runtime navigation and static analysis route identically — verified
+by `tests/flow_next_parity.js`.
 
 ### Static analysis (Phase 5)
 

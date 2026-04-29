@@ -4262,10 +4262,10 @@ for (const m of MODULES) {
 for (const mod of MODULES) attachModuleReducer(mod);
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { SCENARIO, NODES, NODE_MAP, MODULES, MODULE_MAP, DECEL_PAIRS, attachModuleReducer };
+    module.exports = { SCENARIO, NODES, NODE_MAP, MODULES, MODULE_MAP, attachModuleReducer };
 }
 if (typeof window !== 'undefined') {
-    window.Graph = { SCENARIO, NODES, NODE_MAP, MODULES, MODULE_MAP, DECEL_PAIRS, attachModuleReducer };
+    window.Graph = { SCENARIO, NODES, NODE_MAP, MODULES, MODULE_MAP, attachModuleReducer };
 }
 
 })();
