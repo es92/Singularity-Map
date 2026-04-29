@@ -2186,23 +2186,19 @@
                     pushAnswered(node, value, false);
                 }
 
-                // 2) Non-stack nodes whose value was set by an upstream
-                //    effects.set / exitPlan.set write — these are
-                //    real "answered" events that just didn't come from a
-                //    direct user click. Iterated in NODES order for stable
-                //    visual placement.
-                for (const node of Engine.NODES) {
-                    if (node.derived) continue;
-                    if (renderedIds.has(node.id)) continue;
-                    if (sel[node.id] === undefined) continue;
-                    if (Engine.isNodeLocked(sel, node) !== null) continue;
-                    renderedIds.add(node.id);
-                    pushAnswered(node, sel[node.id], false);
-                }
-
-                // 3) Compact mode (!fullQuestions): render the frontier inline
+                // 2) Compact mode (!fullQuestions): render the frontier inline
                 //    as a final pill-row event. Full mode renders the frontier
                 //    separately via the question card.
+                //
+                // Note: dims set by upstream edge effects (e.g. containment=
+                // escaped from brittle_resolution.escape, geo_spread=multiple
+                // from the decel reducer, or intent=coexistence from
+                // WAR_MODULE's exit plan) are deliberately NOT rendered as
+                // timeline events. The timeline shows what the user actually
+                // answered — anything else is a downstream consequence of an
+                // already-rendered pick. Forced single-option nodes still
+                // appear because their auto-resolved answer flows through
+                // Engine.push and lands in the stack (rendered by step 1).
                 if (!fullQuestions && nextQ) {
                     const node = nextQ.node;
                     const siblings = nextQ.options.map(o => ({
