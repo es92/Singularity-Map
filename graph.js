@@ -538,6 +538,17 @@ const NODES = [
         { id: 'escaped', label: 'Escapes' }
       ] },
     { id: 'ai_goals', label: 'AI Converges On', stage: 2, forwardKey: true,
+      // priority -1 promotes ESCAPE_MODULE ahead of every default-priority
+      // (0) sibling at the slot-pick level. _slotPickPriority for a module
+      // returns the min priority among its askable internals; ai_goals is
+      // ESCAPE's first internal so this becomes the slot's priority. Once
+      // the user has committed to escape (containment='escaped' or
+      // concentration_type='ai_itself'), surfacing ai_goals before
+      // decel/intent/proliferation/who_benefits keeps the narrative
+      // ordering intuitive — the AI taking over is the salient event,
+      // ask its goals first. Beats everything except a node/module slot
+      // explicitly authored at <-1 (none today).
+      priority: -1,
       activateWhen: [
         { containment: ['escaped'] },
         { concentration_type: ['ai_itself'] }
