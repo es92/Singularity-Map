@@ -1650,18 +1650,42 @@ const NODES = [
       ] },
     { id: 'response_success', label: 'Success?', stage: 3,
       hideWhen: [{ war_survivors: ['none'] }],
+      // Asked on every reachable response_method, including the
+      // "no decisive action" pair (competitive_paralysis,
+      // institutional_indecisiveness) — there only `no` is enabled
+      // (the response can't succeed when there wasn't one), but the
+      // forced single-option fires as a Continue card so the
+      // short-term outcome is acknowledged before catch_outcome's
+      // long-term question. (collateral_impact is hidden on those
+      // two paths since no action means no action-borne collateral —
+      // see its hideWhen.)
       activateWhen: [
-        { response_method: ['digital_countermeasure', 'infrastructure_shutdown', 'physical_strikes', 'emp', 'negotiation'] }
+        { response_method: ['digital_countermeasure', 'infrastructure_shutdown', 'physical_strikes', 'emp', 'negotiation', 'competitive_paralysis', 'institutional_indecisiveness'] }
       ],
       edges: [
         { id: 'yes', label: 'Yes — AI actually neutralized', shortLabel: 'Yes — neutralized',
-          disabledWhen: [{ concentration_type: ['ai_itself'], reason: 'The AI controls the levers of any response — neutralization isn\'t possible' }] },
+          disabledWhen: [
+            { concentration_type: ['ai_itself'], reason: 'The AI controls the levers of any response — neutralization isn\'t possible' },
+            { response_method: ['competitive_paralysis', 'institutional_indecisiveness'], reason: 'No decisive response was taken — there\'s nothing that could have neutralized the AI' }
+          ] },
         { id: 'delayed', label: 'Delayed — AI disrupted but recovering', shortLabel: 'Delayed',
-          disabledWhen: [{ concentration_type: ['ai_itself'], reason: 'The AI controls the levers of any response — even temporary disruption isn\'t possible' }] },
+          disabledWhen: [
+            { concentration_type: ['ai_itself'], reason: 'The AI controls the levers of any response — even temporary disruption isn\'t possible' },
+            { response_method: ['competitive_paralysis', 'institutional_indecisiveness'], reason: 'No decisive response was taken — there\'s nothing that could have disrupted the AI' }
+          ] },
         { id: 'no', label: 'No — AI unaffected' }
       ] },
     { id: 'collateral_impact', label: 'Collateral', stage: 3,
-      hideWhen: [{ war_survivors: ['none'] }],
+      // Skipped on the "no decisive action" response_methods —
+      // collateral_impact measures damage *from the response*, and a
+      // non-response can't cause action-borne collateral. catch_outcome
+      // still fires on those paths via its own
+      // `response_method: [competitive_paralysis, institutional_indecisiveness]`
+      // activateWhen clause.
+      hideWhen: [
+        { war_survivors: ['none'] },
+        { response_method: ['competitive_paralysis', 'institutional_indecisiveness'] }
+      ],
       activateWhen: [
         { response_success: ['yes', 'delayed', 'no'] }
       ],
