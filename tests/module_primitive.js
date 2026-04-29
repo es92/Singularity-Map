@@ -1,19 +1,17 @@
 #!/usr/bin/env node
-// tests/module_primitive.js — Phase 3 runtime-primitive check.
+// tests/module_primitive.js — module runtime-primitive check.
 //
-// Exercises the toy 2-node module fixture end-to-end without any graph
-// migration. Verifies:
-//   1. `attachModuleReducer(mod)` installs effects blocks with
-//      the expected (when, set, move) shape.
-//   2. Engine push through the attached edge applies the reducer's writes
-//      to sel and evicts all internal dims to flavor.
-//   3. Matches the existing DECEL_OUTCOME_TABLE behavior for a sanity-
-//      checked path (this is the "non-regression" aspect — the primitive
-//      produces a sel shape consistent with today's decel collapse except
-//      for the direct-write dims which Phase 4a will switch on).
-//
-// No actual runtime changes yet: decel is still driven by
-// DECEL_OUTCOME_TABLE. Phase 4a flips the switch.
+// Exercises a toy 2-node module fixture end-to-end and then validates the
+// real decel and escape modules. Verifies:
+//   1. `attachModuleReducer(mod)` installs effects blocks with the
+//      expected (when, set, move) shape.
+//   2. Engine push through an attached terminating edge applies the
+//      reducer's writes to sel and evicts internal dims to flavor.
+//   3. The decel module exit plan is self-consistent under
+//      `Engine.reduceFromExitPlan`.
+//   4. Escape module's writes ⊂ nodeIds (so internal dims survive in
+//      flavor while the writes land in sel).
+//   5. completionMarker ⊆ writes for every module.
 
 const assert = require('assert');
 const { MODULES, MODULE_MAP, attachModuleReducer } = require('../graph.js');
@@ -179,11 +177,11 @@ for (const [nid, eid] of path) stk = engine.push(stk, nid, eid);
 const selEnd = engine.currentState(stk);
 const flavorEnd = engine.currentFlavor(stk);
 
-// Post-Phase-4a: decel_outcome no longer exists. The reducer writes the
-// (accelerate, robust) bundle directly to sel for external dims
-// (alignment, geo_spread, containment), and into flavor for internal
-// markers (governance, decel_align_progress, rival_emerges).
-assert.strictEqual(selEnd.decel_outcome, undefined, 'decel_outcome is removed in Phase 4a');
+// decel_outcome no longer exists. The reducer writes the (accelerate,
+// robust) bundle directly to sel for external dims (alignment,
+// geo_spread, containment), and into flavor for internal markers
+// (governance, decel_align_progress, rival_emerges).
+assert.strictEqual(selEnd.decel_outcome, undefined, 'decel_outcome dim is gone');
 assert.strictEqual(selEnd.alignment, 'robust', 'reducer writes alignment=robust on (accelerate, robust)');
 assert.strictEqual(flavorEnd.governance, 'race', 'reducer moves governance=race to flavor on (accelerate, robust)');
 assert.strictEqual(selEnd.governance, undefined, 'governance no longer in sel');
@@ -193,7 +191,7 @@ assert.strictEqual(selEnd.decel_align_progress, undefined, 'decel_align_progress
 // module-reducer-installed effects.move.
 assert.strictEqual(selEnd.decel_2mo_progress, undefined, 'decel_2mo_progress moved to flavor');
 assert.strictEqual(flavorEnd.decel_2mo_progress, 'robust');
-// alignment now resolves directly from sel (not via deriveWhen).
+// alignment resolves directly from sel.
 const resolvedAlign = engine.resolvedVal(selEnd, 'alignment');
 assert.strictEqual(resolvedAlign, 'robust', 'resolved alignment=robust after reducer write');
 console.log('engine decel module path integration: PASS');
@@ -394,8 +392,7 @@ assert.strictEqual(escSel.response_success, undefined, 'response_success moved o
 assert.strictEqual(escFlavor.response_success, 'yes', 'response_success in flavor');
 
 // Downstream: ruin_type='self_inflicted' is now written explicitly by
-// the collateral_survivors exit-plan tuples (replaces the prior
-// ruin_type.deriveWhen rule keyed on post_catch='ruined').
+// the collateral_survivors exit-plan tuples.
 assert.strictEqual(escSel.ruin_type, 'self_inflicted',
     `ruin_type='self_inflicted' must land in sel via collateral_survivors exit tuple; got ${escSel.ruin_type}`);
 
@@ -404,7 +401,7 @@ console.log('engine escape module path integration: PASS');
 // ────────────────────────────────────────────────────────────
 // 5. Invariant: every module's string completionMarker must be in
 //    its `writes` list. Otherwise captureExitResult puts it in
-//    setFlavor, and any sel-only outer DFS (validate.js Phase 2's
+//    setFlavor, and any sel-only outer DFS (validate.js's
 //    FlowPropagation pass, the precompute reach pipeline, etc.) will
 //    see the module as perpetually pending and re-fire it. Emergence
 //    uses a structured marker ({dim, values}) — skipped here.
@@ -419,4 +416,4 @@ for (const mod of MODULES) {
 }
 console.log('module completionMarker ⊆ writes invariant: PASS');
 
-console.log('\nAll Phase 3 runtime-primitive checks passed.');
+console.log('\nAll module runtime-primitive checks passed.');

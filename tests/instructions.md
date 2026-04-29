@@ -44,7 +44,7 @@ Read `tests/report.md`. Focus on:
 
 If the report identifies issues, propose specific edits to:
 - `data/outcomes.json` — template matching, flavor text, variant summaries
-- `graph.js` — node structure, edge conditions, derivation rules
+- `graph.js` — node structure, edge conditions, edge effects (`set` / `setFlavor` / `move`)
 - `data/narrative.json` — question text, answer labels, answer descriptions
 
 After making changes, re-run the evaluations to verify the fixes.

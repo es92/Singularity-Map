@@ -1,6 +1,7 @@
 // Singularity Map — Engine
-// Interprets the declarative graph rules defined in graph.js.
-// Handles derivations, activation, locking, state management, and template matching.
+// Interprets the declarative graph rules defined in graph.js: activation,
+// locking, edge-effect application, immutable answer-stack management, and
+// template matching against `sel`/`flavor`.
 
 (function() {
 
@@ -14,9 +15,8 @@ const { SCENARIO, NODES, NODE_MAP, MODULES, MODULE_MAP } = (typeof module !== 'u
 // Conditions (activateWhen / hideWhen / disabledWhen / requires /
 // effects.when / template `reachable`) are pre-compiled to a
 // flat (keys, types, vals) triple so matchCondition's hot path is a
-// switched index lookup. With deriveWhen gone, every read is a direct
-// `sel[k]` so there's no indirect/derived branch — every matcher is
-// `_direct = true`.
+// switched index lookup. Every read is a direct `sel[k]`, so every
+// matcher is `_direct = true`.
 
 // Pre-compilation: type tags for condition entries
 const _CT = 0, _CF = 1, _CN = 2, _CR = 3, _CI = 4;
@@ -54,8 +54,8 @@ _precompile();
 
 // resolvedVal — kept as a one-line wrapper rather than inlined at every
 // call site so future "lazy view" semantics (e.g. flavor-underlay reads
-// in an alternate matchCondition mode) have a single hook to extend. As
-// of the deriveWhen drop, this is a direct sel lookup with no caching.
+// in an alternate matchCondition mode) have a single hook to extend.
+// Today: a direct sel lookup with no caching.
 function resolvedVal(sel, k) {
     return sel[k];
 }
@@ -135,9 +135,7 @@ function _isModulePending(sel, mod) {
     return conds.some(c => matchCondition(sel, c));
 }
 
-// Generic module reducer derived from the module's exitPlan. Replaces
-// the ten hand-written `*Reduce` functions that used to live in
-// graph.js (decelReduce, escapeReduce, whoBenefitsReduce, …). For a
+// Generic module reducer derived from the module's exitPlan. For a
 // given module-local state `local` (a sel-shaped object containing
 // the internal node answers + any `when`-gate dims), walks the
 // module's exitPlan in declaration order and returns the `set` bundle
@@ -452,9 +450,7 @@ function templateMatches(t, state) {
 // not maintained on the stack — it's a property of FLOW_DAG slot
 // ownership, computed on demand by FlowPropagation.flowNext (which
 // keys off completion markers in `state` plus stack-derived parent
-// context via parentSlotKeyFromStack). The pre-FLOW_DAG design
-// included a `moduleStack` frame vector here; it was never populated
-// in the shipped runtime and was removed.
+// context via parentSlotKeyFromStack).
 function createStack() {
     return [{ nodeId: null, edgeId: null, state: {}, flavor: {} }];
 }

@@ -1,7 +1,7 @@
 'use strict';
 
 // ---------------------------------------------------------------------------
-// Phase 5: Rendering logic separated from animation
+// TimelineRenderer — DOM rendering (separated from animation)
 // ---------------------------------------------------------------------------
 
 class TimelineRenderer {
@@ -355,7 +355,7 @@ class TimelineRenderer {
 }
 
 // ---------------------------------------------------------------------------
-// Phase 3: FLIP animation helper — manages Web Animations API instances
+// FlipGroup — FLIP animation helper, manages Web Animations API instances
 // ---------------------------------------------------------------------------
 
 class FlipGroup {
@@ -413,8 +413,8 @@ class FlipGroup {
 }
 
 // ---------------------------------------------------------------------------
-// Phases 1, 2, 4: Animation core — no scroll room, direct scroll targets,
-// Web Animations API for elements, rAF only for scroll + old card
+// TimelineAnimator — animation core. No scroll room, direct scroll targets,
+// Web Animations API for elements, rAF only for scroll + old card.
 // ---------------------------------------------------------------------------
 
 class TimelineAnimator extends TimelineRenderer {

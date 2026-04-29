@@ -129,10 +129,9 @@ function siphonBitsFor(sel, earlyExitsSet, slotKey, unauthorizedAcc) {
         if (!es) continue;
         for (const e of es) {
             if (!e.primaryDim) { bits |= e.bit; continue; }
-            // primaryDim is now always a sel dim. `ruin_type` used
-            // to resolve via deriveWhen, but is now written
-            // edge-locally (war exit plan + collateral_survivors
-            // exit plan), so a direct sel lookup suffices.
+            // primaryDim is always a sel dim — written edge-locally
+            // (e.g. ruin_type by the war + collateral_survivors exit
+            // plans) so a direct sel lookup suffices.
             const v = sel[e.primaryDim];
             if (v === e.variantKey) bits |= e.bit;
         }

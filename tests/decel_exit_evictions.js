@@ -114,8 +114,7 @@ else { console.log(`  ${failCount} FAILED of ${okCount + failCount}`); process.e
 
 // ─── Test 3: gov_action.accelerate writes governance='race' to flavor.
 // Accelerate → DECEL skipped → gov_action stays in sel → the accelerate
-// edge's effects.setFlavor writes governance='race' (replaces
-// the prior governance.deriveWhen rule keyed on gov_action='accelerate').
+// edge's effects.setFlavor writes governance='race'.
 
 let stk2 = Engine.createStack();
 const accelPath = [

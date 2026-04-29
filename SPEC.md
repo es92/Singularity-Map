@@ -239,7 +239,7 @@ A module declaration lives in `graph.js` alongside `NODES`:
   completionMarker: 'decel_outcome',
   nodeIds: [...14 internal dim ids...],
   exitPlan: { /* (terminating-edge selector) -> {set, move} bundle */ },
-  reducerTable: {...}        // enumerable cells for audit + walker (legacy)
+  reducerTable: {...}        // enumerable cells for /explore + module-audit (decel only)
 }
 ```
 
@@ -283,7 +283,7 @@ The static-analysis path (`FlowPropagation.run` for `validate.js`,
 so runtime navigation and static analysis route identically — verified
 by `tests/flow_next_parity.js`.
 
-### Static analysis (Phase 5)
+### Static analysis
 
 `graph-io.js` enumerates each module's exit space declaratively: `cartesianWriteRows(slot)` returns a `(bucketKey → projKeySet)` table where the bucket is the projection onto `module.reads` and each `projKey` is a JSON-stringified projection onto `module.writes`. `flow-propagation.js` composes those per-slot tables across the FLOW_DAG via topological propagation; `validate.js`, `precompute-reachability.js`, and `/explore` all share the same primitives. The runtime gate (`wouldReachOutcome` in `index.html`) computes the same `<slotKey>|out:<projKey>` keys against the precompute output, so static analysis and the live UI agree by construction.
 
@@ -423,7 +423,7 @@ The widening introduced the first **early-exit module** pattern:
 - **nodeIds expanded to 8** (ai_goals prepended). On hostile paths (alien_coexistence / alien_extinction / paperclip / swarm / power_seeking) the original 7-node pipeline runs; on `benevolent` / `marginal` it short-circuits.
 - **4 exit tuples, 2 terminal nodes.** `ai_goals.{benevolent, marginal}` fire early-exit tuples (pipeline skipped entirely — user's 1 answer was all the module needed). `catch_outcome.{not_permanent, holds_permanently}` fire the original pipeline-complete exits. Every tuple sets the new `escape_set` completion marker. (`not_permanent` fuses the pre-merge `never_stopped` + `holds_temporarily` edges — the two were already mutually exclusive on `response_success`, so the sel-level split carried no information the engine actually branched on; narrative/flavor text now disambiguates the two sub-cases by reading `response_success` from flavor via `narrSel` / `resolvedStateWithFlavor`.)
 - **Explicit `completionMarker: 'escape_set'`.** The prior auto-detection ("last write") assumed a single terminal node; with two exit nodes we need an explicit marker so the walker knows the module is done regardless of which path was taken. Same pattern as who_benefits / rollout / emergence / control — escape_set becomes the 5th module to declare one.
-- **`ai_goals` added to writes.** It's externally consumed by dozens of nodes and outcome templates (intent.hideWhen, containment.hideWhen, ruin_type, failure_mode, who_benefits, etc.). The user's answer stays in sel on exit, same as on the pre-module graph.
+- **`ai_goals` added to writes.** It's externally consumed by dozens of nodes and outcome templates (intent.hideWhen, containment.hideWhen, ruin_type, failure_mode, who_benefits, etc.), so the user's answer stays in sel on exit.
 - **`inert_outcome` node removed.** The inert-wakes path now re-asks `ai_goals` inside the escape module (instead of asking a near-duplicate `inert_outcome` node). `inert_stays.no.effects.move` evicts the `marginal` pick; `ai_goals.marginal.disabledWhen` blocks re-choosing it; the escape pipeline runs as normal via `ai_goals ∈ hostile`. All external references that used to read `inert_outcome` (hideWhen `inert_outcome: false`, activateWhen `inert_outcome: true`, conditional matches) now read `inert_stays` directly.
 
 Audit / validation: all 6 modules pass cleanly. Metrics unchanged (0 static errors, 20 DFS violations, 0 reach mismatches, 18 premature-outcome warnings, 23 unreachable-clause DEAD entries). The `module_primitive.js` test was updated to reflect the new 5-tuple exit plan and 6-write contract.
