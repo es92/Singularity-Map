@@ -3165,6 +3165,14 @@
                 mutateStack(s => Engine.push(s, pick.nodeId, pick.value));
                 return nextQ.node.id + ' = ' + pick.value;
             };
+            // TEMP: Space key triggers DebugSelectRandom for quick clickthroughs.
+            window.addEventListener('keydown', e => {
+                if (e.code !== 'Space' && e.key !== ' ') return;
+                const t = e.target;
+                if (t && (t.matches?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]'))) return;
+                e.preventDefault();
+                window.DebugSelectRandom();
+            });
             listen('[data-action="share"]', 'click', () => {
                 const url = location.origin + location.pathname + location.hash;
                 if (navigator.clipboard) {
