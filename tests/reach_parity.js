@@ -95,7 +95,8 @@ function reachKey(childSel, nodeId) {
 }
 
 // Path adapted from tests/module_primitive.js's escape integration —
-// known to land on `the-ruin` (post_catch=ruined, war_survivors=most).
+// known to land on `the-ruin--self_inflicted` (post_catch=ruined,
+// war_survivors=remnants, ruin_type=self_inflicted).
 const RUIN_PATH = [
     ['capability', 'singularity'],
     ['agi_threshold', 'few_months'],
@@ -172,13 +173,14 @@ for (const [nid, eid] of RUIN_PATH) {
     const key = reachKey(childSel, nid);
     const hit = key && reachSet.has(key);
 
-    // Every internal step on a path that *does* land on the-ruin--war
-    // should be flagged "reachable" by the precompute. The terminal
-    // step is the exception: post-click sel matches the outcome
-    // template, so the runtime gate isn't asked again — but the
-    // reach-set still records the post-edge key (since the precompute
-    // emits provenance for outputs even when they immediately
-    // siphon, so long as the outcome's bit ends up in their mask).
+    // Every internal step on a path that *does* land on
+    // the-ruin--self_inflicted should be flagged "reachable" by the
+    // precompute. The terminal step is the exception: post-click sel
+    // matches the outcome template, so the runtime gate isn't asked
+    // again — but the reach-set still records the post-edge key
+    // (since the precompute emits provenance for outputs even when
+    // they immediately siphon, so long as the outcome's bit ends up
+    // in their mask).
     if (!hit) {
         misses++;
         if (sample.length < 5) sample.push({ nid, eid, key });
