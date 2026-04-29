@@ -819,6 +819,9 @@
             transform: translateY(-400px);
             transition: opacity 1500ms cubic-bezier(0.42, 0, 0.58, 1), transform 1500ms cubic-bezier(0.42, 0, 0.58, 1);
         }
+        body.intro-exiting.intro-exiting-fade .intro-bg {
+            transform: translateY(0);
+        }
         .intro-bg g { --drift-speed: 1; }
         .intro-bg g.depth-near { --drift-speed: 0.5; }
         .intro-bg g.depth-mid  { --drift-speed: 1; }
@@ -1091,13 +1094,16 @@
                 cl.remove('intro-active');
             }
         }
-        function triggerIntroBgExit() {
+        function triggerIntroBgExit(opts) {
             const cl = document.body.classList;
             if (!cl.contains('intro-active')) return;
             cl.add('intro-exiting');
+            // In compact mode there's no card sliding up to coordinate with, so
+            // fade only — without the translateY(-400px) — looks cleaner.
+            if (opts && opts.fadeOnly) cl.add('intro-exiting-fade');
             if (_introExitTimer) clearTimeout(_introExitTimer);
             _introExitTimer = setTimeout(() => {
-                cl.remove('intro-active', 'intro-exiting');
+                cl.remove('intro-active', 'intro-exiting', 'intro-exiting-fade');
                 _introExitTimer = null;
             }, 1550);
         }
@@ -3144,7 +3150,7 @@
                 if (e.target.closest('[data-action="home"]')) backToStart();
                 if (e.target.closest('[data-action="reset"]')) resetSelections();
                 if (e.target.closest('[data-action="begin"]')) {
-                    triggerIntroBgExit();
+                    triggerIntroBgExit({ fadeOnly: !fullQuestions });
                     logStart();
                     started = true;
                     mutateStack(s => s, { fadeFooterIn: true });

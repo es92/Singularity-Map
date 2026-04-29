@@ -338,17 +338,42 @@ class TimelineRenderer {
     _updateScrollPadding() {
         if (!this._headerEl || !this.questionZoneEl) return;
         const card = this._getCard();
-        if (!card) { this.questionZoneEl.style.paddingBottom = ''; return; }
+        const frontier = this.timelineEl && this.timelineEl.querySelector('.frontier-event');
+        const anchor = card || frontier;
+        if (!anchor) { this.questionZoneEl.style.paddingBottom = ''; return; }
+
+        // Force the questionZone back into layout before reading scrollHeight, since
+        // the host page sets `display: none` when it has no card to render and
+        // padding-bottom on a display:none element doesn't contribute to docHeight.
+        if (this.questionZoneEl.style.display === 'none') {
+            this.questionZoneEl.style.display = 'block';
+        }
 
         const currentPadding = parseFloat(this.questionZoneEl.style.paddingBottom) || 0;
         const headerHeight = this._headerEl.offsetHeight;
         const desiredOffset = 50;
-        const cardTop = card.getBoundingClientRect().top + window.scrollY;
+        const anchorTop = anchor.getBoundingClientRect().top + window.scrollY;
         const viewportHeight = window.innerHeight;
         const docHeight = document.documentElement.scrollHeight;
         const naturalHeight = docHeight - currentPadding;
 
-        const neededPadding = cardTop + viewportHeight - headerHeight - desiredOffset - naturalHeight;
+        let neededPadding;
+        if (card) {
+            // Full mode: pad so the card can scroll up to within desiredOffset of
+            // the header bottom. The card is part of the natural layout and itself
+            // takes substantial height, so this typically leaves modest padding.
+            neededPadding = anchorTop + viewportHeight - headerHeight - desiredOffset - naturalHeight;
+        } else {
+            // Compact mode: the frontier is in the timeline (well above the
+            // questionZone), so an "anchor scrolls to top" target would inflate the
+            // padding far beyond the natural content. Pad just enough to fill the
+            // viewport (footer lands at the bottom in steady state) — but never
+            // shrink docHeight below the current scrollY+viewport. If we did, the
+            // browser would clamp scrollY back, and a render() that happens mid
+            // click animation (in _runScrollOnly) would snap the page back to the
+            // top before the scroll animation kicked in.
+            neededPadding = window.scrollY + viewportHeight - naturalHeight;
+        }
         const appliedPadding = neededPadding > 0 ? neededPadding : 0;
         this.questionZoneEl.style.paddingBottom = appliedPadding + 'px';
     }
@@ -485,7 +510,14 @@ class TimelineAnimator extends TimelineRenderer {
     animateTransition({ applyChange, onComplete, fadeFooterIn }) {
         if (this.morphAnimating) return false;
         const card = this._getCard();
-        if (!card) { applyChange(); this.render(); return false; }
+        if (!card) {
+            // Compact ("question mode off") path: there's no question card, but the
+            // .frontier-event in the timeline is the inline next-question. Run a
+            // scroll-only animation anchored on that frontier so the new frontier
+            // ends up at the same viewport position as the old one. No FLIP slides
+            // on timeline elements — they appear in place at the new layout.
+            return this._runScrollOnly({ applyChange, onComplete });
+        }
         this.morphAnimating = true;
 
         const start = this._captureStartState(card);
@@ -500,6 +532,110 @@ class TimelineAnimator extends TimelineRenderer {
             fadeFooterIn,
         });
 
+        return true;
+    }
+
+    // Linear-with-offset-and-cap formula. See `_runAnimation` for the rationale.
+    _computeDuration(H) {
+        const BASE_OFFSET = 600;
+        const TARGET_SPEED = 0.5;
+        return Math.max(1, Math.round(Math.max(
+            H / TARGET_SPEED,
+            BASE_OFFSET + H
+        )));
+    }
+
+    _runScrollOnly({ applyChange, onComplete }) {
+        const oldFrontier = this.timelineEl.querySelector('.frontier-event');
+        if (!oldFrontier) {
+            applyChange();
+            this.render();
+            if (onComplete) onComplete();
+            return false;
+        }
+
+        const scrollStart = window.scrollY;
+        const oldRect = oldFrontier.getBoundingClientRect();
+
+        this.morphAnimating = true;
+        applyChange();
+        this.render();
+
+        // The host's `update()` briefly sets `display:none` on questionZone before
+        // we re-render, which removes its (huge) padding from layout. If docHeight
+        // dips below scrollStart+viewport during that window, the browser clamps
+        // scrollY to 0 — a flash the user sees as the page snapping back to top
+        // before our scroll animation kicks in. Force questionZone visible with
+        // enough padding to keep scrollStart feasible, then restore scrollY.
+        if (this.questionZoneEl) {
+            if (this.questionZoneEl.style.display === 'none') {
+                this.questionZoneEl.style.display = 'block';
+            }
+            const required = scrollStart + window.innerHeight;
+            const docH = document.documentElement.scrollHeight;
+            if (docH < required) {
+                const currentPadding = parseFloat(this.questionZoneEl.style.paddingBottom) || 0;
+                this.questionZoneEl.style.paddingBottom = (currentPadding + (required - docH)) + 'px';
+            }
+        }
+        if (window.scrollY !== scrollStart) {
+            window.scrollTo({ top: scrollStart, behavior: 'instant' });
+        }
+
+        const newFrontier = this.timelineEl.querySelector('.frontier-event');
+        if (!newFrontier) {
+            this.morphAnimating = false;
+            if (onComplete) onComplete();
+            return true;
+        }
+        const newRect = newFrontier.getBoundingClientRect();
+        const newDocTop = newRect.top + window.scrollY;
+
+        // Compute scroll delta in document coordinates (robust to any mid-render
+        // scroll clamps): we want the new frontier to land at oldRect.top in the
+        // viewport, i.e. final scrollY = newDocTop - oldRect.top.
+        let scrollDelta = (newDocTop - oldRect.top) - scrollStart;
+
+        // Extend questionZone padding just-in-time if the page isn't tall enough
+        // for the final scroll target. _updateScrollPadding only pads to fill the
+        // viewport in compact mode; the click animation typically needs more.
+        if (this.questionZoneEl && scrollDelta > 0) {
+            const targetScroll = scrollStart + scrollDelta;
+            const requiredDoc = targetScroll + window.innerHeight;
+            const docHeight = document.documentElement.scrollHeight;
+            if (requiredDoc > docHeight) {
+                const currentPadding = parseFloat(this.questionZoneEl.style.paddingBottom) || 0;
+                this.questionZoneEl.style.paddingBottom = (currentPadding + (requiredDoc - docHeight)) + 'px';
+            }
+        }
+
+        const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+        if (scrollStart + scrollDelta > maxScroll) scrollDelta = Math.max(0, maxScroll - scrollStart);
+        if (scrollStart + scrollDelta < 0) scrollDelta = -scrollStart;
+
+        if (Math.abs(scrollDelta) < 1) {
+            this.morphAnimating = false;
+            if (onComplete) onComplete();
+            return true;
+        }
+
+        const DURATION = this._computeDuration(oldRect.height);
+
+        let startTime = 0;
+        const tick = (now) => {
+            if (!startTime) startTime = now;
+            const t = Math.min((now - startTime) / DURATION, 1);
+            const e = this._ease(t);
+            window.scrollTo({ top: scrollStart + scrollDelta * e, behavior: 'instant' });
+            if (t < 1) {
+                this._scrollRafId = requestAnimationFrame(tick);
+            } else {
+                this._scrollRafId = null;
+                this.morphAnimating = false;
+                if (onComplete) onComplete();
+            }
+        };
+        this._scrollRafId = requestAnimationFrame(tick);
         return true;
     }
 
@@ -525,21 +661,12 @@ class TimelineAnimator extends TimelineRenderer {
         const footerEl = this.containerEl.querySelector('.map-actions');
         const footerOriginalTop = footerEl ? footerEl.getBoundingClientRect().top : null;
 
-        // Derive DURATION from H_old (the old card's height) using two formulas, taking
-        // the max so we cap the *speed* at TARGET_SPEED while still padding short cards:
-        //   - speed cap:  duration ≥ H_old / TARGET_SPEED  (so px/ms never exceeds it)
-        //   - short pad:  duration ≥ BASE_OFFSET + H_old   (slope 1 ms/px below cap)
-        // The two formulas cross at H_old = BASE_OFFSET / (1/TARGET_SPEED − 1), and
-        // with BASE_OFFSET=600, TARGET_SPEED=0.5 they cross at H_old=600 (→1200ms,
-        // exactly 0.5 px/ms). Above 600 the speed cap dominates; below 600, the pad
-        // gives shorter cards proportionally more time so secondary motions (children
-        // sliding ~H_event, scroll ~H_event, etc.) don't appear rushed.
-        const BASE_OFFSET = 600;
-        const TARGET_SPEED = 0.5;
-        const DURATION = Math.max(1, Math.round(Math.max(
-            startCardRect.height / TARGET_SPEED,
-            BASE_OFFSET + startCardRect.height
-        )));
+        // Derive DURATION from H_old (the old card's height) via _computeDuration:
+        // it takes the max of (H_old / TARGET_SPEED) and (BASE_OFFSET + H_old), so the
+        // dominant viewport motion is capped at TARGET_SPEED px/ms but short cards
+        // get an additive pad to keep secondary motions (children sliding ~H_event,
+        // scroll ~H_event, etc.) from appearing rushed.
+        const DURATION = this._computeDuration(startCardRect.height);
 
         // --- 1. Apply end state (no inflation, natural layout) ---
         const savedScrollY = window.scrollY;
@@ -728,6 +855,19 @@ class TimelineAnimator extends TimelineRenderer {
         const refDy = newCardDy !== null ? newCardDy : outcomeDy;
         const refTop = newCardDy !== null ? newCardRect.top
                      : (outcomeDy !== null ? endOutcomeRect.top : null);
+
+        // When there's no new card or outcome to anchor against (e.g. clicking
+        // Start in compact mode — intro card disappears, only inline timeline
+        // events remain), the rAF tick has nothing to drive the old card's
+        // slide-up + soft mask. Fade it out instead so it doesn't sit static
+        // under the incoming timeline event.
+        const oldCardFadeOnly = oldCardEl && refDy === null && refTop === null;
+        if (oldCardFadeOnly) {
+            flip._animations.push(oldCardEl.animate(
+                [{ opacity: '1' }, { opacity: '0' }],
+                { duration: DURATION, easing: EASING, fill: 'forwards' }
+            ));
+        }
 
         if (oldCardEl) oldCardEl.style.willChange = 'transform';
 
