@@ -22,6 +22,23 @@
 //
 //   FlowPropagation.run(opts) → {
 //     inputsBySlot   Map<slotKey, sel[]>      sels routed INTO each slot
+//     routedFromBySlot
+//                    Map<slotKey, slotKey[]>  index-aligned with inputsBySlot:
+//                                              for each sel that arrived at K,
+//                                              records the parent slotKey that
+//                                              produced it. Lets flowNext (and
+//                                              the parity test) recover the
+//                                              walk's parent context — the
+//                                              same sel value can arrive from
+//                                              multiple parents (e.g.
+//                                              brittle.sufficient leaves the
+//                                              sel value identical to its
+//                                              input, so the same sel ends up
+//                                              in inputsBySlot[brittle] from
+//                                              who_benefits AND in
+//                                              inputsBySlot[rollout] from
+//                                              brittle, with different
+//                                              routedFrom entries).
 //     routedBySlot   Map<slotKey, sel[]>      parent outputs that found a child
 //     deadBySlot     Map<slotKey, sel[]>      parent outputs no child accepts
 //     stuckBySlot    Map<slotKey, sel[]>      inputs the slot accepted but whose
@@ -223,6 +240,11 @@
         const emergenceOutputs = eW.rows.map(rowToSel);
 
         const inputsBySlot       = new Map();
+        // Index-aligned with inputsBySlot: for each sel routed into a
+        // child K, record the parent slotKey that produced it. Same
+        // shape (Map<slotKey, slotKey[]>); the i-th entry of
+        // routedFromBySlot.get(K) is the parent of inputsBySlot.get(K)[i].
+        const routedFromBySlot   = new Map();
         const routedBySlot       = new Map();
         const deadBySlot         = new Map();
         const stuckBySlot        = new Map();
@@ -301,6 +323,9 @@
                     let arr = inputsBySlot.get(bestChild.key);
                     if (!arr) { arr = []; inputsBySlot.set(bestChild.key, arr); }
                     arr.push(sel);
+                    let parents = routedFromBySlot.get(bestChild.key);
+                    if (!parents) { parents = []; routedFromBySlot.set(bestChild.key, parents); }
+                    parents.push(slotKey);
                     routedHere.push(sel);
                     perChildCnt.set(bestChild.key, (perChildCnt.get(bestChild.key) || 0) + 1);
                 } else {
@@ -314,7 +339,8 @@
         }
 
         return {
-            inputsBySlot, routedBySlot, deadBySlot, stuckBySlot, routedToChild,
+            inputsBySlot, routedFromBySlot,
+            routedBySlot, deadBySlot, stuckBySlot, routedToChild,
             acceptedBySlot, matchedBySlot, outcomeAgg, unauthorizedBySlot,
             parentsOf, childrenOf, order,
         };
@@ -369,43 +395,133 @@
     // enabled edge) and lowest-priority-wins (matching what the
     // user-facing engine surfaces).
     //
+    // ─── Topology-aware pick (matches run()) ───────────────────────
+    // run() routes each parent's outputs to ONE of that parent's
+    // children — the child whose _slotPickPriority is lowest. flowNext
+    // mirrors this in two passes:
+    //
+    //   1. TOPOLOGY pass — identify the "current parent" (the latest
+    //      FLOW_DAG slot whose exit signature is in sel) and restrict
+    //      the pick to that parent's children. This matches run()
+    //      exactly when the parent can be uniquely identified from
+    //      sel.
+    //
+    //   2. GLOBAL fallback — if no child of the topology-identified
+    //      parent accepts the sel, fall through to a global lowest-
+    //      priority scan. This handles two distinct shadowing cases:
+    //
+    //      • Pre-set markers — plateau_bd / auto_bd write
+    //        `who_benefits_set='yes'` to skip who_benefits on
+    //        capability=plateau / agi paths (`effects.set:
+    //        { who_benefits_set: 'yes' }`). After plateau_bd's own
+    //        dim is moved to flavor (effects.move), the post-walk
+    //        sel has `who_benefits_set='yes'` and NO
+    //        plateau_benefit_distribution — the topology pass
+    //        misidentifies who_benefits as the parent. who_benefits's
+    //        children (inert_stays / brittle / rollout /
+    //        escape_after_who) all gate on capability=asi, so none
+    //        accept; the fallback then finds rollout_early
+    //        (plateau_bd's actual child) globally.
+    //
+    //      • Side-effect markers — concentration_type='ai_itself'
+    //        writes `inert_stays='no'` as an edge effect even when
+    //        inert_stays slot itself never walked. The topology
+    //        pass picks inert_stays as the parent (newest exit
+    //        signature) but inert_stays' children (escape_re_entry,
+    //        rollout) and escape_after_who (the actual run() target)
+    //        all share the ESCAPE_MODULE — so they surface the SAME
+    //        question (ai_goals). The slotKey reported differs from
+    //        run() but the user-facing question is identical. The
+    //        flow_next_parity test checks question-equivalence
+    //        (rather than slotKey-equivalence) for exactly this
+    //        reason — see tests/flow_next_parity.js.
+    //
+    // Without the topology restriction, flowNext would always do a
+    // global scan and could shortcut past topology — e.g. a sel
+    // produced by `decel` (whose only child is `proliferation`)
+    // could shortcut to `escape_early` (a sibling of decel via
+    // alignment), because both accept the sel and escape_early
+    // appears first in FLOW_DAG. Restricting to decel's children
+    // blocks that.
+    //
+    // "Exit signature" is the slot's terminal write into sel:
+    //   * node-kind:   sel[slot.id] !== undefined
+    //   * module-kind: Engine.isModuleDone(sel, m.completionMarker)
+    //
+    // For modules that share a completionMarker (escape_early /
+    // escape_early_alt / escape_late / escape_re_entry /
+    // escape_after_who all have id='escape', so `escape_set` trips
+    // isModuleDone for all of them simultaneously), reverse-topo
+    // picks the LATEST in FLOW_DAG.nodes order. This is correct: by
+    // construction, only the latest-positioned escape slot can be
+    // the one a sel just exited (earlier escape slots are reachable
+    // only via paths that subsequently traverse later structures
+    // first), and the parent-children edge restriction filters out
+    // any spurious sibling matches downstream.
+    //
     // ─── Module atomicity ──────────────────────────────────────────
-    // If any module has been ENTERED (≥1 internal answered) and not
-    // yet EXITED (completion marker unset), it owns the next pick
-    // exclusively — no other slot can preempt. This prevents
-    // mid-module interruption when a downstream module's gate happens
-    // to activate on a value just written by the current module. (E.g.
-    // who_benefits writes `concentration_type=ai_itself`, which also
-    // satisfies escape's gate; without this rule, escape would steal
-    // the next question before who_benefits asks `power_use`.) Mirrors
-    // FlowPropagation.run, which is inherently atomic per-slot via
-    // the inner-DFS in `reachableFullSelsFromInputs`.
+    // If a child of the current parent is a module that's been
+    // ENTERED (≥1 internal answered) but not yet EXITED (completion
+    // marker unset), it owns the next pick exclusively — no other
+    // child can preempt. This prevents mid-module interruption when
+    // a sibling's gate happens to activate on a value the current
+    // module just wrote. (E.g. who_benefits writes `concentration_
+    // type=ai_itself`, which also satisfies escape's gate; without
+    // this rule, escape_after_who would steal the next question
+    // before who_benefits asks `power_use`.) Mirrors run(), which
+    // is inherently atomic per-slot via the inner DFS in
+    // reachableFullSelsFromInputs.
     //
-    // If two modules are simultaneously mid-flow (rare; can only
-    // happen via legacy state captured before this rule existed), the
-    // FIRST in FLOW_DAG order wins.
+    // The atomicity check runs in BOTH passes (topology first, then
+    // global) because the global fallback is only entered when no
+    // topology-pass child accepts; if a mid-flow module exists at
+    // all, it's accepting.
     //
-    // ─── Cross-slot pick (no module mid-flow) ──────────────────────
-    // The owning slot is the one whose _slotPickPriority is lowest —
-    // the same signal FlowPropagation.run uses to route a parent's
-    // outputs to one of its children. This makes runtime (flowNext)
-    // and static analysis (run) agree on a single criterion. When two
-    // slots tie on priority, FLOW_DAG.nodes order is the tie-breaker
-    // (first wins). Because FLOW_DAG.nodes is hand-authored in
-    // topological order, this matches the parent-edge-decl tie-break
-    // in run() in every case where one parent has multiple
-    // equally-prioritized accepting children.
-    function flowNext(sel) {
-        const Engine = _Engine();
-        const flowDag = _FlowDag();
-        const GraphIO = _GraphIO();
-        if (!Engine || !flowDag || !GraphIO) return { kind: 'open' };
+    // ─── Tie-break ─────────────────────────────────────────────────
+    // When two children tie on priority, FLOW_DAG.edges declaration
+    // order is the tie-breaker (first declared wins). This matches
+    // run()'s `for (const child of childSlots)` iteration order,
+    // which is built from the edge list.
 
-        for (const slot of flowDag.nodes) {
-            if (!slot || slot.kind !== 'module' || slot.key === 'emergence') continue;
+    // Lazy caches built from FLOW_DAG on first flowNext call (FLOW_DAG
+    // isn't loaded at this file's IIFE time).
+    //
+    //   _childrenOf — parentKey → [childKey], in FLOW_DAG.edges
+    //                 declaration order. Excludes outcome / deadend /
+    //                 outcome-link edges (flowNext doesn't route to
+    //                 those, matching run()).
+    //   _slotByKey  — slotKey → slot object, for O(1) lookup.
+    let _childrenOf = null;
+    let _slotByKey = null;
+    function _buildTopoCaches(flowDag) {
+        const ch = new Map();
+        for (const e of flowDag.edges) {
+            const [p, c, kind] = e;
+            if (kind === 'placement-outcome' || kind === 'placement-deadend') continue;
+            if (kind === 'outcome-link') continue;
+            if (String(c).startsWith('outcome:') || c === 'deadend') continue;
+            let arr = ch.get(p);
+            if (!arr) { arr = []; ch.set(p, arr); }
+            arr.push(c);
+        }
+        const sm = new Map();
+        for (const n of flowDag.nodes) if (n && n.key) sm.set(n.key, n);
+        _childrenOf = ch;
+        _slotByKey = sm;
+    }
+
+    // ─── Sub-routines ──────────────────────────────────────────────
+    // Pick the next render-target across a candidate set of slots.
+    // Used by both the topology pass and the global fallback. Returns
+    // a flowNext-shaped result (question / stuck / null). Atomicity
+    // is checked first: any mid-flow module in the candidate set
+    // owns the pick exclusively.
+    function _pickFromCandidates(Engine, GraphIO, candidateSlots, sel) {
+        for (const slot of candidateSlots) {
+            if (!slot || slot.kind !== 'module') continue;
             const m = Engine.MODULE_MAP[slot.id];
             if (!m) continue;
-            if (m.completionMarker && sel[m.completionMarker] !== undefined) continue;
+            if (m.completionMarker && Engine.isModuleDone(sel, m.completionMarker)) continue;
             let entered = false;
             for (const nid of (m.nodeIds || [])) {
                 if (sel[nid] !== undefined) { entered = true; break; }
@@ -413,25 +529,19 @@
             if (!entered) continue;
             const next = GraphIO.findNextInternalNode(m, sel);
             if (next) return { kind: 'question', node: next, slotKey: slot.key };
-            // No askable internal. With a completionMarker, this is a
-            // stuck state (the marker should have been set by an exit
-            // edge but wasn't — graph bug; validate.js's stuck-inputs
-            // phase surfaces it). Without a marker, the module simply
-            // ran out of questions — that IS its terminal state, so
-            // fall through to the global pick.
             if (m.completionMarker) return { kind: 'stuck', slotKey: slot.key };
         }
 
         let bestSlot = null;
         let bestP = Infinity;
-        for (const slot of flowDag.nodes) {
-            if (!slot || slot.key === 'emergence') continue;
+        for (const slot of candidateSlots) {
+            if (!slot) continue;
             if (slot.kind === 'outcome' || slot.kind === 'deadend') continue;
             const p = _slotPickPriority(Engine, slot, sel);
             if (p === Infinity) continue;
             if (p < bestP) { bestSlot = slot; bestP = p; }
         }
-        if (!bestSlot) return { kind: 'open' };
+        if (!bestSlot) return null;
 
         if (bestSlot.kind === 'node') {
             const n = Engine.NODE_MAP[bestSlot.id];
@@ -444,10 +554,159 @@
             if (next) return { kind: 'question', node: next, slotKey: bestSlot.key };
             return { kind: 'stuck', slotKey: bestSlot.key };
         }
-        return { kind: 'open' };
+        return null;
+    }
+
+    // ─── flowNext(sel, parentSlotKey?) ──────────────────────────────
+    //
+    // Single-step navigator. With an explicit `parentSlotKey`, this is
+    // a strict mirror of run()'s per-parent routing — the SAME pick
+    // run() makes when it routes from `parentSlotKey` to one of its
+    // children for `sel`. With no parent argument, it falls back to a
+    // sel-only heuristic (reverse-topo for latest exit signature, plus
+    // global fallback) for callers that don't track walk context.
+    //
+    // ─── Why parentSlotKey is the canonical disambiguator ───────────
+    //
+    // run() routes by parent in topological order. The same sel value
+    // can legitimately arrive at multiple slots from different parents
+    // (e.g. brittle.sufficient leaves the sel value identical to its
+    // input, so the same sel ends up routed who_benefits→brittle AND
+    // brittle→rollout). Sel-only flowNext can't tell these apart —
+    // which routing is "right" depends on which parent is currently
+    // dispatching. parentSlotKey collapses that ambiguity.
+    //
+    // It also sidesteps the side-effect-marker problem: dims like
+    // `inert_stays='no'` can be written either by walking the
+    // inert_stays slot (user-pick) or by a concentration_type=
+    // 'ai_itself' edge effect (no walk). Parent context tells us
+    // unambiguously which case it is, where sel does not.
+    //
+    // The parity test (tests/flow_next_parity.js) feeds the parent
+    // recorded in run()'s `routedFromBySlot` so it can assert exact
+    // slotKey equality against `inputsBySlot`.
+    function flowNext(sel, parentSlotKey) {
+        const Engine = _Engine();
+        const flowDag = _FlowDag();
+        const GraphIO = _GraphIO();
+        if (!Engine || !flowDag || !GraphIO) return { kind: 'open' };
+        if (!_childrenOf) _buildTopoCaches(flowDag);
+
+        if (parentSlotKey != null) {
+            // Definitive parent context — restrict the pick to that
+            // parent's children. No fallback: if the caller asserts a
+            // parent and none of its children accept, the answer is
+            // genuinely 'open' (sel has cleared FLOW_DAG).
+            const childKeys = _childrenOf.get(parentSlotKey) || [];
+            const childSlots = childKeys.map(k => _slotByKey.get(k)).filter(Boolean);
+            const result = _pickFromCandidates(Engine, GraphIO, childSlots, sel);
+            return result || { kind: 'open' };
+        }
+
+        // ─── Sel-only heuristic (no parent context) ────────────────
+        // Pass 1: TOPOLOGY pick — find the latest-exited slot in
+        // FLOW_DAG topological order. Default 'emergence' covers the
+        // empty-sel case (game start).
+        let parentKey = 'emergence';
+        for (let i = flowDag.nodes.length - 1; i >= 0; i--) {
+            const slot = flowDag.nodes[i];
+            if (!slot || slot.key === 'emergence') continue;
+            if (slot.kind === 'outcome' || slot.kind === 'deadend') continue;
+            let exited = false;
+            if (slot.kind === 'node') {
+                exited = sel[slot.id] !== undefined;
+            } else if (slot.kind === 'module') {
+                const m = Engine.MODULE_MAP[slot.id];
+                if (m && m.completionMarker && Engine.isModuleDone(sel, m.completionMarker)) {
+                    exited = true;
+                }
+            }
+            if (exited) { parentKey = slot.key; break; }
+        }
+
+        const childKeys = _childrenOf.get(parentKey) || [];
+        const childSlots = childKeys.map(k => _slotByKey.get(k)).filter(Boolean);
+        const topoResult = _pickFromCandidates(Engine, GraphIO, childSlots, sel);
+        if (topoResult) return topoResult;
+
+        // Pass 2: GLOBAL fallback — no child of the topology-
+        // identified parent accepts the sel. Identification was
+        // likely shadowed by an upstream pre-set (effects.set sharing
+        // a marker with the pre-set slot's completion). Fall through
+        // to a global lowest-priority scan over every non-emergence
+        // slot.
+        const globalSlots = [];
+        for (const slot of flowDag.nodes) {
+            if (!slot || slot.key === 'emergence') continue;
+            if (slot.kind === 'outcome' || slot.kind === 'deadend') continue;
+            globalSlots.push(slot);
+        }
+        const globalResult = _pickFromCandidates(Engine, GraphIO, globalSlots, sel);
+        return globalResult || { kind: 'open' };
+    }
+
+    // ─── parentSlotKeyFromStack(stack) ──────────────────────────────
+    //
+    // Derive the latest fully-exited FLOW_DAG slot from the runtime's
+    // answer history. Used by index.html findNextQuestion to feed
+    // flowNext's parent argument so runtime navigation matches run()
+    // exactly (otherwise sel-only heuristics misroute when a slot
+    // moves its own gate dim — the canonical case is brittle.sufficient,
+    // which leaves sel unchanged but moves brittle_resolution to flavor;
+    // sel-only flowNext then re-asks brittle in a loop).
+    //
+    // A slot S counts as exited iff:
+    //   1. S's exit signature is set in the current sel (node-kind:
+    //      sel[S.id] !== undefined; module-kind: completion marker
+    //      set), AND
+    //   2. The user actually answered one of S's nodes in stack —
+    //      this distinguishes S "walked" (user pick) from S
+    //      "side-effect-set" (an upstream edge wrote S's marker
+    //      without S's nodes ever being asked, e.g.
+    //      concentration_type='ai_itself' writes inert_stays='no').
+    //
+    // Returns the latest such S in FLOW_DAG.nodes order. Defaults to
+    // 'emergence' (game start, no slot has exited yet).
+    //
+    // For shared completionMarker modules (escape_*: all id='escape'
+    // sharing 'escape_set'), the LATEST in topo order wins —
+    // matches run()'s parent identification (escape_late ⊃
+    // escape_after_who in topo, etc.).
+    function parentSlotKeyFromStack(stack) {
+        const Engine = _Engine();
+        const flowDag = _FlowDag();
+        if (!Engine || !flowDag || !Array.isArray(stack) || stack.length === 0) {
+            return 'emergence';
+        }
+        const sel = stack[stack.length - 1].state || {};
+        const answered = new Set();
+        for (const frame of stack) {
+            if (frame && frame.nodeId) answered.add(frame.nodeId);
+        }
+
+        let lastExited = 'emergence';
+        for (let i = flowDag.nodes.length - 1; i >= 0; i--) {
+            const slot = flowDag.nodes[i];
+            if (!slot || slot.key === 'emergence') continue;
+            if (slot.kind === 'outcome' || slot.kind === 'deadend') continue;
+
+            let exited = false;
+            if (slot.kind === 'node') {
+                if (sel[slot.id] !== undefined && answered.has(slot.id)) exited = true;
+            } else if (slot.kind === 'module') {
+                const m = Engine.MODULE_MAP[slot.id];
+                if (m && m.completionMarker && Engine.isModuleDone(sel, m.completionMarker)) {
+                    for (const nid of (m.nodeIds || [])) {
+                        if (answered.has(nid)) { exited = true; break; }
+                    }
+                }
+            }
+            if (exited) { lastExited = slot.key; break; }
+        }
+        return lastExited;
     }
 
     if (typeof window !== 'undefined') {
-        window.FlowPropagation = { run, slotPickPriority, flowNext };
+        window.FlowPropagation = { run, slotPickPriority, flowNext, parentSlotKeyFromStack };
     }
 })();

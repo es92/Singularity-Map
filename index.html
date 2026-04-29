@@ -2073,7 +2073,16 @@
                 //                  outcome zone stay empty).
                 //   * 'open'     — no slot owns the sel; outcome matching
                 //                  is allowed.
-                const flow = window.FlowPropagation.flowNext(sel);
+                //
+                // Derive the parent slot from stack-history so flowNext
+                // routes the same way run() does even when a slot moves
+                // its own gate dim on exit (e.g. brittle.sufficient
+                // leaves sel unchanged but flavor-moves brittle_resolution
+                // — sel-only routing would loop on brittle, but stack
+                // history shows brittle was answered so its child
+                // routing wins).
+                const parentSlotKey = window.FlowPropagation.parentSlotKeyFromStack(stack);
+                const flow = window.FlowPropagation.flowNext(sel, parentSlotKey);
                 if (flow.kind === 'open') {
                     // Outcome matching reads only sel — flavor is for
                     // narrative rendering, not template gating. Any dim
