@@ -737,6 +737,19 @@ class TimelineAnimator extends TimelineRenderer {
             }
             this.containerEl.appendChild(oldCardEl);
             this._oldCardEl = oldCardEl;
+
+            // Forced-continue button (only present on forced questions): fade it out
+            // explicitly so it visibly disappears during the animation. Independent of
+            // any global opacity on the card itself. fill:'forwards' keeps it at opacity
+            // 0 until the clone is removed, avoiding a 1-frame flash if WAAPI ends
+            // before the rAF cleanup tick.
+            const continueEl = oldCardEl.querySelector('.forced-continue');
+            if (continueEl) {
+                flip._animations.push(continueEl.animate(
+                    [{ opacity: '1' }, { opacity: '0' }],
+                    { duration: DURATION, easing: EASING, fill: 'forwards' }
+                ));
+            }
         }
 
         // --- 5. rAF loop: scroll + old card only ---
