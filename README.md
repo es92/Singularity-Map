@@ -41,6 +41,8 @@ timeline-animator.js          Timeline rendering and animation
 timeline.css                  All styles
 milestone-utils.js            Timeline event grouping helpers
 generate-share-assets.js      OG image + share page generator
+serve.js                      Local dev server (PORT=3000 default)
+validate.js                   Graph integrity checker (run via `npm test`)
 
 data/
   narrative.json        Question text, answer descriptions, timeline events, personal vignettes
@@ -49,15 +51,22 @@ data/
   reach/                Per-outcome reachability sets (JSON + gzipped)
 
 tests/
-  module_primitive.js   Module reducer / exit-plan parity check
-  evaluate.js           LLM-based evaluation — persona simulation, audits, reports
-  personas.json         Test personas for evaluation
+  module_primitive.js          Module reducer / exit-plan integration
+  module_reads_complete.js     Module reads completeness audit
+  post_write_dim_usage.js      Dim writers/readers boundary audit
+  premature_outcomes.js        Outcome reachability at every slot
+  unreachable_clauses.js       Outcome reachable-clause coverage
+  decel_exit_evictions.js      Decel exit-tuple eviction shape
+  flow_next_parity.js          FlowPropagation.run vs. flowNext routing parity
+  all_variants_reachable.js    Every declared outcome variant is reached
+  reach_parity.js              Runtime walk vs. precomputed reach parity
+  evaluate.js                  LLM-based evaluation — persona simulation
+  personas.json                Test personas for evaluation
 
 research/
   graph-formalization.tex   Formal writeup of the graph, algorithms, reductions
   graph-formalization.pdf
 
-validate.js             Graph integrity checker
 share/                  OG share pages and images for each outcome variant
 ```
 

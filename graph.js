@@ -1862,8 +1862,7 @@ const DECEL_MODULE_NODE_IDS = (function() {
 // pairs) into 63 exitPlan tuples — one per (action-node, action-edge)
 // carrying a `when:{progress-key:[progress]}` gate.
 // `buildDecelReducerTable()` pivots the same cells into the 2D
-// `{action:{progress:set}}` audit view that explore.js / module-audit.js
-// still consume.
+// `{action:{progress:set}}` audit view that explore.js consumes.
 //
 // The flat cell list is the authored source; both the exitPlan and the
 // 2D reducerTable are derived from it.
@@ -1948,9 +1947,8 @@ const DECEL_EXIT_CELLS = [
 
 // Derived 2D `{action:{progress:set}}` view of the cell list. Kept
 // exposed on DECEL_MODULE.reducerTable so explore.js's
-// `_buildModuleSyntheticNode` and module-audit.js's reducer-cell audit
-// can consume it. Consumers that want the exit plan instead can use
-// mod.exitPlan directly.
+// `_buildModuleSyntheticNode` can consume it. Consumers that want the
+// exit plan instead can use mod.exitPlan directly.
 function buildDecelReducerTable() {
     const table = {};
     for (const { action, progress, set } of DECEL_EXIT_CELLS) {
@@ -2043,11 +2041,10 @@ const DECEL_MODULE = {
     // (FlowPropagation.flowNext): once a module owns the sel, only its
     // own internals are surfaced until completionMarker fires.
     // Derived 2D (action × progress) view of DECEL_EXIT_CELLS. Exposed
-    // for explore.js / module-audit.js, which drive their "atomic
-    // outcome" synthetic nodes off the reducerTable shape. NOT an
-    // authored primitive: changes to decel outcomes go in
-    // DECEL_EXIT_CELLS, which both this table and the exitPlan below
-    // derive from.
+    // for explore.js, which drives its "atomic outcome" synthetic nodes
+    // off the reducerTable shape. NOT an authored primitive: changes
+    // to decel outcomes go in DECEL_EXIT_CELLS, which both this table
+    // and the exitPlan below derive from.
     reducerTable: DECEL_REDUCER_TABLE,
     get exitPlan() { return buildDecelExitPlan(); },
 };

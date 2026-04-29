@@ -190,14 +190,18 @@ Singularity Map/
 │   ├── narrative.json             ← question text, answer descriptions, timeline events, vignettes
 │   ├── personal.json              ← profession list, country buckets
 │   └── reach/                     ← per-outcome reachability sets (JSON + gzipped)
-├── test/                          ← reduction-correctness harness
-│   ├── run.js                     ← baseline-vs-optimized DFS comparison
-│   ├── graphs/                    ← minimal graphs exercising each reduction
-│   ├── reach-browser-sim.js       ← simulates the browser's wouldReachOutcome path
-│   └── reach-table.js             ← reach-map inspection CLI
-├── tests/                         ← narrative/evaluation
-│   ├── evaluate.js                ← LLM-based evaluation — persona simulation, audits
-│   └── personas.json              ← test personas for evaluation
+├── tests/                         ← contract + narrative tests
+│   ├── module_primitive.js          ← module attachReducer + exit-plan integration
+│   ├── module_reads_complete.js     ← module reads completeness audit
+│   ├── post_write_dim_usage.js      ← dim writers/readers boundary audit
+│   ├── premature_outcomes.js        ← outcome reachability at every slot
+│   ├── unreachable_clauses.js       ← outcome reachable-clause coverage
+│   ├── decel_exit_evictions.js      ← decel exit-tuple eviction shape
+│   ├── flow_next_parity.js          ← FlowPropagation.run vs. flowNext routing parity
+│   ├── all_variants_reachable.js    ← every declared outcome variant is reached
+│   ├── reach_parity.js              ← runtime walk vs. precomputed reach parity
+│   ├── evaluate.js                  ← LLM-based evaluation — persona simulation
+│   └── personas.json                ← test personas for evaluation
 ├── research/
 │   ├── graph-formalization.tex    ← formal writeup (see \ref{sec:reductions})
 │   └── graph-formalization.pdf
@@ -239,7 +243,7 @@ A module declaration lives in `graph.js` alongside `NODES`:
   completionMarker: 'decel_outcome',
   nodeIds: [...14 internal dim ids...],
   exitPlan: { /* (terminating-edge selector) -> {set, move} bundle */ },
-  reducerTable: {...}        // enumerable cells for /explore + module-audit (decel only)
+  reducerTable: {...}        // enumerable cells for /explore (decel only)
 }
 ```
 
@@ -291,14 +295,15 @@ Modules without an explicit reducer table fall through the same DFS — the tabl
 
 ### Auditing
 
-`module-audit.js` validates each module's contract:
-- Internal dims not read from outside the module.
-- Template flavors/headings don't reference internal dims.
-- Every cross-module `reads` cell is declared in `module.reads`.
-- Every reducer cell's writes are declared in `module.writes`.
-- External consumers of `module.writes` are enumerated.
+Module-contract auditing is split across the test suite:
 
-Run: `node module-audit.js`.
+- `tests/module_reads_complete.js` — every cross-module read inside a module's internals is declared in `module.reads`.
+- `tests/post_write_dim_usage.js` — for each dim, identify the last writer and report any outside-module sel readers (catches dims that should have moved to flavor on exit but didn't).
+- `tests/premature_outcomes.js` — outcome `reachable` clauses don't match at slots earlier than the slot that owns the dispatch.
+- `tests/unreachable_clauses.js` — every authored `reachable` clause is reached by at least one sel.
+- `validate.js` — full static + live-propagation invariants (8 phases).
+
+Run individually with `node tests/<file>.js`, or run the canonical pass with `npm test` (which executes `validate.js`).
 
 ### Decel retrospective
 
@@ -312,10 +317,10 @@ Decel was a well-contained sub-loop — 14 internal dims, a linear time-step str
 
 Escape (7 internal dims, 4 writes) was the second module. It deliberately broke two assumptions decel had baked in, and the infrastructure adapted without regressions.
 
-- **Not every module wants an explicit reducer table.** Decel's (action × progress) lattice had 9 cells, fully written out; escape's exit space (`response_success × collateral_impact × discovery_timing × catch_outcome`) has long-tail conditional structure. The escape module relies on `attachModuleReducer` to derive its exit-tuple set from `exitPlan`, so the per-cell table is built lazily by `cartesianWriteRows` rather than authored by hand. `MODULES`-iterating code (`module-audit.js`, `/explore` cluster rendering, `/nodes` sidebar grouping) works the same regardless.
+- **Not every module wants an explicit reducer table.** Decel's (action × progress) lattice had 9 cells, fully written out; escape's exit space (`response_success × collateral_impact × discovery_timing × catch_outcome`) has long-tail conditional structure. The escape module relies on `attachModuleReducer` to derive its exit-tuple set from `exitPlan`, so the per-cell table is built lazily by `cartesianWriteRows` rather than authored by hand. `MODULES`-iterating code (the contract tests, `/explore` cluster rendering, `/nodes` sidebar grouping) works the same regardless.
 - **`writes ⊂ nodeIds` is legal.** Decel wrote to globals it didn't own (`alignment`, `governance`, `containment`). Escape writes to two of its own internal nodes (`catch_outcome`, `collateral_impact`) because external consumers (downstream nodes that read these dims via `activateWhen` / `hideWhen` / `disabledWhen`, template `reachable` clauses, and the vignette builder) need them in `sel`. `attachModuleReducer` was generalized to compute `move = nodeIds \ writes`, so the remaining pure-internal dims (`escape_method`, `escape_timeline`, `discovery_timing`, `response_method`, `response_success`) collapse to `flavor` on exit. Decel's behaviour is unchanged (writes disjoint from nodeIds → all nodeIds move).
 - **Template matching is sel-only; flavor is for narrative.** `templateMatches` reads from `sel` only — never the fused `sel ∪ flavor` view. This keeps the runtime UI, the precompute (`precompute-reachability.js`), `validate.js`, and FlowPropagation all observing outcomes at exactly the same states, so locked-mode reach-set lookups can never lie. The contract for graph authors: any dim referenced by an outcome `reachable` clause must be present in `sel` at outcome-match time. If the producing module would otherwise move the dim to flavor on exit, add it to that module's `writes` list (e.g. `WHO_BENEFITS_WRITES` carries `benefit_distribution` forward; `ESCAPE_WRITES` carries `ruin_type` forward). `resolvedStateWithFlavor` still exists, but only for narrative resolution (flavor blocks, narrative variants, conditional text, timeline events).
-- **`module-audit.js` classifies template/narrative references to internal dims.** Refs split into two categories: (a) `template.reachable` blocks — these are sel-only by contract, so any internal dim they reference must be in the module's `writes`; and (b) `template.flavor` / `narrative.json` entries — these render via the merged `narrEff = sel ∪ flavor`, so flavor-moved dims work without needing to be in `writes`. Category (a) is a hard contract; category (b) is informational.
+- **Template/narrative references to internal dims split into two categories.** (a) `template.reachable` blocks — these are sel-only by contract, so any internal dim they reference must be in the module's `writes`; and (b) `template.flavor` / `narrative.json` entries — these render via the merged `narrEff = sel ∪ flavor`, so flavor-moved dims work without needing to be in `writes`. Category (a) is a hard contract enforced by `tests/post_write_dim_usage.js`; category (b) is informational.
 - **Hidden narrEff consumer in share-vignettes.** `share/share-vignettes.js::renderPersonalizedTimeline` was passing `resolvedState(sel)` (not `narrEff`) into `resolveTemplate`, which would have broken the escape timeline once `escape_method`/`escape_timeline` moved to flavor. Caught during the external-consumer audit and fixed in this migration. The general rule: any narrative/flavor consumer needs `Object.assign({}, currentFlavor(stack), eff)` as its state arg.
 - **Metrics.** DFS violations dropped from 7144 → 6146 (−998) — the gain comes from escape's internal dims no longer polluting URL keys on exit, which collapses many previously-distinct "stuck node" terminals. Reach mismatches held at 575 (pre-existing, unrelated to modularization). Decel path-equivalence still PASS.
 
@@ -376,12 +381,12 @@ Firsts this module introduces:
   - `governance_window.{governed, partial, race}` → main path, post-governance exit.
 
   Each edge unconditionally sets `emergence_set: 'yes'`; no `when` gates needed because the edge id uniquely identifies the path.
-- **Derived-dim-as-write.** `automation` (a derived `forwardKey` node) is listed in `writes` even though it's not in `nodeIds`. Its value is committed by emergence-internal edges (`automation_recovery.*`, `asi_threshold.*`) via `effects.set`, so it's effectively a module output written from inside the DFS. Declaring it as a write signals to `module-audit` that external consumers legitimately read it. `governance` has similar shape but a dual source (decel's `gov_action` also writes it on the accelerate path, plus the `gov_action.accelerate` edge writes `governance='race'` to flavor), so it's left outside the contract and shows as a LEAK informational only.
+- **Derived-dim-as-write.** `automation` (a derived `forwardKey` node) is listed in `writes` even though it's not in `nodeIds`. Its value is committed by emergence-internal edges (`automation_recovery.*`, `asi_threshold.*`) via `effects.set`, so it's effectively a module output written from inside the DFS. Declaring it as a write signals to the module contract tests that external consumers legitimately read it. `governance` has similar shape but a dual source (decel's `gov_action` also writes it on the accelerate path, plus the `gov_action.accelerate` edge writes `governance='race'` to flavor), so it's left outside the contract and shows as a LEAK informational only.
 - **Writes include conditional-sel dims.** `asi_threshold` is in writes because on the `asi_threshold: 'never'` edge it stays in sel (downstream rules read it); on other edges it moves to flavor via the node's own `effects`. `attachModuleReducer` doesn't force a move because the dim is in writes, so the per-edge rules own the placement decision. This generalizes the rollout pattern ("writes dims the edges themselves manage") one level further: writes can include dims that are sometimes moved and sometimes kept, and the module contract is still coherent.
 
 Audit refinement:
 
-- **Module's own writes are part of internal state.** `module-audit.js` previously flagged any dim read by an internal node but absent from `mod.reads` as an undeclared external read. That's wrong for markers the module itself sets (e.g., `stall_later`, `agi_happens`, `automation_later`, `takeoff_class`): those are module-internal state threaded between nodes, not external dependencies. The audit now excludes declared writes from the undeclared-read check, which removed 8 false positives for emergence without loosening the boundary for genuine external dims (those are in `reads`, not `writes`).
+- **Module's own writes are part of internal state.** The reads-completeness audit (`tests/module_reads_complete.js`) excludes declared writes from the undeclared-read check — markers the module itself sets (e.g., `stall_later`, `agi_happens`, `automation_later`, `takeoff_class`) are module-internal state threaded between nodes, not external dependencies. Treating them as external would produce false positives.
 
 Metrics (unchanged from post-rollout baseline):
 

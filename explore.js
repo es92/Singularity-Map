@@ -419,8 +419,9 @@
 
     // ─── Reads / writes / moves-to-flavor derivation for non-module nodes
     // Modules expose `reads` / `writes` directly. Flat nodes don't, so
-    // we walk the same condition / edge structures the engine and
-    // module-audit do. Three disjoint(ish) categories:
+    // we walk the same condition / edge structures the engine and the
+    // contract tests (tests/module_reads_complete.js,
+    // tests/post_write_dim_usage.js) do. Three disjoint(ish) categories:
     //   * reads  — strict gate-read set (activateWhen, hideWhen,
     //              disabledWhen, edge.requires, and
     //              effects.when conditions).

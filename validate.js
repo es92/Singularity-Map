@@ -511,12 +511,14 @@ function checkUnauthorizedSiphons(prop) {
 // Helpers
 // ────────────────────────────────────────────────────────────────
 
+// Honors $PORT for parity with serve.js (which defaults to 3000).
+const _DEBUG_PORT = process.env.PORT || 3000;
 function _selUrl(sel) {
     const params = Object.entries(sel)
         .filter(([, v]) => v != null)
         .map(([k, v]) => `${k}=${v}`)
         .join('&');
-    return `http://localhost:2500/#/explore${params ? '?' + params : ''}`;
+    return `http://localhost:${_DEBUG_PORT}/#/explore${params ? '?' + params : ''}`;
 }
 
 function fmtCount(n) { return Number(n).toLocaleString(); }
