@@ -201,7 +201,8 @@ Singularity Map/
 │   ├── all_variants_reachable.js    ← every declared outcome variant is reached
 │   ├── reach_parity.js              ← runtime walk vs. precomputed reach parity
 │   ├── evaluate.js                  ← LLM-based evaluation — persona simulation
-│   └── personas.json                ← test personas for evaluation
+│   ├── personas.json                ← test personas for evaluation
+│   └── timeline-animation-test.html ← standalone timeline-animation playground
 ├── research/
 │   ├── graph-formalization.tex    ← formal writeup (see \ref{sec:reductions})
 │   └── graph-formalization.pdf

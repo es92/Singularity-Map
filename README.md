@@ -62,6 +62,7 @@ tests/
   reach_parity.js              Runtime walk vs. precomputed reach parity
   evaluate.js                  LLM-based evaluation — persona simulation
   personas.json                Test personas for evaluation
+  timeline-animation-test.html Standalone timeline-animation playground
 
 research/
   graph-formalization.tex   Formal writeup of the graph, algorithms, reductions
