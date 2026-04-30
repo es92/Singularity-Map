@@ -7332,6 +7332,18 @@
           "durationMax": 0
         },
         "personalVignette": {
+          "_when": [
+            {
+              "if": {
+                "collateral_survivors": [
+                  "most",
+                  "remnants",
+                  "none"
+                ]
+              },
+              "text": ""
+            }
+          ],
           "_default": "The response to the AI threat crippled civilization. Power, internet, transportation — damaged or gone. The cure was nearly as devastating as the disease. Recovery will take decades, if it comes at all."
         },
         "shortAnswerLabel": "Civilizational — crippling harm",
