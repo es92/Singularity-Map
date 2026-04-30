@@ -1,0 +1,21 @@
+# Bump the patch version on every real commit so each commit gets a unique
+# `engine_version` string (used by the analytics logger to anchor journeys
+# to the engine they ran against — see logJourney in index.html and the
+# engine_version column on the worker's journeys table). Skipped on merge
+# commits to avoid pointless bumps when reconciling branches.
+if [ -f .git/MERGE_HEAD ]; then
+    exit 0
+fi
+
+node -e "
+const fs = require('fs');
+const pkg = JSON.parse(fs.readFileSync('package.json'));
+const cur = pkg.version || '0.1.0';
+const parts = cur.split('.').map(n => parseInt(n, 10) || 0);
+while (parts.length < 3) parts.push(0);
+parts[2] += 1;
+pkg.version = parts.join('.');
+fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+console.log('Bumped version to ' + pkg.version);
+"
+git add package.json

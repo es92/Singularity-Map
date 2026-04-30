@@ -1650,6 +1650,20 @@
         }
         let journeyId = null;
         let journeyStartTime = null;
+        // Fetched once at startup so analytics rows can be replayed against
+        // the exact engine version that produced them. The pre-commit hook
+        // (.husky/pre-commit) bumps package.json's `version` on every real
+        // commit; replay tooling can `git checkout v<version>` (or grep
+        // git log for the version string) to restore the engine state at
+        // the time a journey was logged. Stays null on first paint until
+        // package.json resolves — sent as null on /start in that case;
+        // /complete almost always has it since users spend seconds-to-
+        // minutes answering questions before completing.
+        let engineVersion = null;
+        fetch('package.json', { cache: 'no-cache' })
+            .then(r => r.ok ? r.json() : null)
+            .then(pkg => { if (pkg && pkg.version) engineVersion = String(pkg.version); })
+            .catch(() => {});
         function getSessionId() {
             let sid = localStorage.getItem('sm_sid');
             if (!sid) { sid = uuid(); localStorage.setItem('sm_sid', sid); }
@@ -1661,15 +1675,28 @@
             fetch(LOGGER_URL + '/start', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ journey_id: journeyId, session_id: getSessionId() }),
+                body: JSON.stringify({
+                    journey_id: journeyId,
+                    session_id: getSessionId(),
+                    engine_version: engineVersion,
+                }),
             }).catch(() => {});
         }
         function logJourney(outcomeId, variantId, stack) {
-            const sel = Engine.currentState(stack);
+            // Raw user picks (last-write-wins per dim) — not Engine.currentState,
+            // which post-module-migration only contains "writes" dims and rewrites
+            // values via effects (e.g. capability=singularity → asi, alignment
+            // =robust → failed when proliferation breaks alignment). Synthetic
+            // markers (post_catch, war_set, etc.) and the post-effects state
+            // are derivable from these picks by replaying against the engine
+            // pinned by `engine_version`. Outcome+variant land directly in
+            // the journeys row, so outcome-keyed analytics don't depend on
+            // the path shape.
             const path = {};
-            for (const [k, v] of Object.entries(sel)) {
-                if (k.startsWith('_')) continue;
-                path[k] = v;
+            for (const entry of stack) {
+                if (!entry || !entry.nodeId || !entry.edgeId) continue;
+                if (String(entry.nodeId).startsWith('_')) continue;
+                path[entry.nodeId] = entry.edgeId;
             }
             const elapsedMs = journeyStartTime ? Date.now() - journeyStartTime : null;
             fetch(LOGGER_URL + '/complete', {
@@ -1682,6 +1709,7 @@
                     variant_id: variantId || null,
                     path,
                     elapsed_ms: elapsedMs,
+                    engine_version: engineVersion,
                 }),
             }).catch(() => {});
         }

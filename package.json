@@ -1,15 +1,20 @@
 {
   "name": "singularity-map",
   "private": true,
+  "version": "0.1.1",
   "scripts": {
     "test": "node --max-old-space-size=16384 validate.js",
     "test:quick": "node validate.js --quick",
     "test:all": "node tests/run.js",
-    "precompute-reach": "node --max-old-space-size=16384 precompute-reachability.js"
+    "precompute-reach": "node --max-old-space-size=16384 precompute-reachability.js",
+    "prepare": "husky"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "dotenv": "^16.4.7",
     "puppeteer": "^24.40.0"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }

@@ -1,0 +1,18 @@
+# Tag the just-created commit with its package.json version. Skipped on
+# merge commits (no version bump fired in pre-commit, so there's nothing
+# to tag). The tag is annotated so `git push` with `push.followTags=true`
+# will auto-push it; otherwise push tags manually with `git push --tags`.
+if [ -f .git/MERGE_HEAD ]; then
+    exit 0
+fi
+
+VERSION=$(node -p "require('./package.json').version")
+TAG="v${VERSION}"
+
+if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+    echo "Tag ${TAG} already exists, skipping"
+    exit 0
+fi
+
+git tag -a "${TAG}" -m "Version ${VERSION}"
+echo "Tagged commit as ${TAG}"
