@@ -1,13 +1,7 @@
 // Shared personal vignette resolution utilities
-// Used by tests/evaluate.js and tests/validate.js
+// Used by tests/evaluate.js
 
 (function () {
-
-function getCountryBucket(countryName, personalData) {
-    if (!personalData) return 'rest';
-    const entry = personalData.countries.find(c => c.name === countryName);
-    return entry ? entry.bucket : 'rest';
-}
 
 function matchWhen(when, sel) {
     for (const [k, vals] of Object.entries(when)) {
@@ -55,20 +49,15 @@ function resolvePersonalVignetteText(spec, ctx) {
 }
 
 function resolvePersonalVignettes(sel, persona, personalData, narrative, nodes) {
-    if (!persona || !persona.country || !persona.profession) return [];
-    const bucket = getCountryBucket(persona.country, personalData);
+    if (!persona || !persona.profession) return [];
     const ctx = Object.assign({}, sel, {
         profession: persona.profession,
-        country_bucket: bucket,
-        is_ai_geo: persona.is_ai_geo || 'no',
     });
 
     const profEntry = personalData && personalData.professions.find(p => p.id === persona.profession);
     const tokenReplace = (str) => {
         if (!str) return str;
-        return str
-            .replace(/\{country\}/g, persona.country || '')
-            .replace(/\{profession\}/g, profEntry ? profEntry.label : (persona.profession || ''));
+        return str.replace(/\{profession\}/g, profEntry ? profEntry.label : (persona.profession || ''));
     };
 
     const vignettes = [];
@@ -108,7 +97,6 @@ function resolvePersonalVignettes(sel, persona, personalData, narrative, nodes) 
 }
 
 const exported = {
-    getCountryBucket,
     resolvePersonalVignetteText,
     resolvePersonalVignettes,
     resolveNarrativeVariant,

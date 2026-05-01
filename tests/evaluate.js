@@ -32,7 +32,7 @@ const outcomes = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', '
 const narrative = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'narrative.json'), 'utf8'));
 const personalData = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'personal.json'), 'utf8'));
 const personas = JSON.parse(fs.readFileSync(path.join(__dirname, 'personas.json'), 'utf8'));
-const { getCountryBucket, resolvePersonalVignettes } = require('../milestone-utils.js');
+const { resolvePersonalVignettes } = require('../milestone-utils.js');
 
 const templatesList = outcomes.templates;
 
@@ -517,20 +517,9 @@ ${optionsText}${disabledText}`;
     const template = matched.length > 0 ? matched[0] : null;
     const resolved = template ? resolveTemplate(template.id, eff) : null;
 
-    const bucket = getCountryBucket(persona.country, personalData);
-    const bucketInfo = personalData.countryBuckets[bucket];
-    const geo = eff.geo_spread || sel.geo_spread;
-    let isAiGeo = 'no';
-    if (geo === 'one' && bucketInfo && bucketInfo.plausibleLeader) isAiGeo = 'yes';
-    else if (geo === 'two' && bucketInfo && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) isAiGeo = 'yes';
-    else if (geo === 'several' && bucketInfo && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) isAiGeo = 'yes';
-    else if (!geo && bucketInfo && bucketInfo.plausibleLeader) isAiGeo = 'yes';
-
-    const personalVignettes = (persona.country && persona.profession)
+    const personalVignettes = persona.profession
         ? resolvePersonalVignettes(sel, {
             profession: persona.profession,
-            country: persona.country,
-            is_ai_geo: isAiGeo,
           }, personalData, narrative, NODES)
         : [];
 
@@ -568,7 +557,7 @@ async function getPersonaReview(persona, mode, log, resolved, personalVignettes)
     const profLabel = personalData.professions.find(p => p.id === persona.profession)?.label || persona.profession;
     let vignetteText = '';
     if (personalVignettes && personalVignettes.length > 0) {
-        vignetteText = `\n\n**How It Reaches You** (as a ${profLabel} professional in ${persona.country}):\n`;
+        vignetteText = `\n\n**How It Reaches You** (as a ${profLabel} professional):\n`;
         for (const v of personalVignettes) {
             vignetteText += `\n- [${v.heading} · ${v.answerLabel}]: ${v.text}`;
         }
@@ -578,7 +567,7 @@ async function getPersonaReview(persona, mode, log, resolved, personalVignettes)
 
     const system = `You are ${persona.name}. ${persona.bio}
 
-You just completed an interactive scenario about the future of AI. You will be shown the questions you were asked, the choices that were made, the outcome you reached, and personal vignettes describing how each world event reaches YOU based on your profession and country. Stay in character and respond with honest reactions as this persona.
+You just completed an interactive scenario about the future of AI. You will be shown the questions you were asked, the choices that were made, the outcome you reached, and personal vignettes describing how each world event reaches YOU based on your profession. Stay in character and respond with honest reactions as this persona.
 
 IMPORTANT CONTEXT about how choices were made:
 - For each question, you assigned probability ratings. ONE option was then sampled from your distribution.
@@ -604,7 +593,7 @@ Respond in JSON with these fields:
 - forced_choices: Any questions where none of the available options felt right. (array of objects with "question" and "complaint" fields, can be empty)
 - outcome_reaction: 2-3 sentences reacting to the outcome — does it feel like a fair conclusion from the choices made?
 - narrative_contradictions: List any vignettes where the text contradicts or doesn't match the choices you made. For each, cite the vignette heading and explain the mismatch. (array of objects with "heading" and "issue" fields, can be empty)
-- vignette_reaction: 1-2 sentences reacting to the personal vignettes — do they feel real and specific for someone with your profession in your country? Do they reflect the drama of the world events? (string, or empty string if no personal vignettes were shown)
+- vignette_reaction: 1-2 sentences reacting to the personal vignettes — do they feel real and specific for someone with your profession? Do they reflect the drama of the world events? (string, or empty string if no personal vignettes were shown)
 - vignette_issues: List any personal vignettes that feel wrong, disconnected from the world events, or missing key events you'd expect. (array of objects with "heading" and "issue" fields, can be empty)
 
 CRITICAL: You MUST return ONLY a single valid JSON object. No markdown, no explanation, no text before or after the JSON. The response must start with { and end with }. All string values must use double quotes. Do not include trailing commas. Example structure:
@@ -729,7 +718,7 @@ function buildEvaluationMd(persona, mode, runNum, result, review) {
     const vignettes = result.personalVignettes || [];
     if (vignettes.length > 0) {
         const profLabel = personalData.professions.find(p => p.id === persona.profession)?.label || persona.profession;
-        md += `## How It Reaches You (${persona.country} · ${profLabel})\n\n`;
+        md += `## How It Reaches You (${profLabel})\n\n`;
         for (const v of vignettes) {
             md += `- **[${v.heading} · ${v.answerLabel}]** — ${v.text}\n`;
         }
@@ -774,7 +763,7 @@ async function generateReport(allResults) {
         if (r.missingQuestions.length > 0) reviewsText += `Missing: ${r.missingQuestions.join('; ')}\n`;
         if (r.forcedChoices.length > 0) reviewsText += `Forced: ${r.forcedChoices.map(f => f.question + ': ' + f.complaint).join('; ')}\n`;
         if (r.narrativeContradictions && r.narrativeContradictions.length > 0) reviewsText += `Contradictions: ${r.narrativeContradictions.map(c => c.heading + ': ' + c.issue).join('; ')}\n`;
-        if (r.vignetteReaction) reviewsText += `Vignette reaction (${r.personaProfession} in ${r.personaCountry}): ${r.vignetteReaction}\n`;
+        if (r.vignetteReaction) reviewsText += `Vignette reaction (${r.personaProfession}): ${r.vignetteReaction}\n`;
         if (r.vignetteIssues && r.vignetteIssues.length > 0) reviewsText += `Vignette issues: ${r.vignetteIssues.map(v => v.heading + ': ' + v.issue).join('; ')}\n`;
         reviewsText += '\n';
     }
@@ -800,7 +789,7 @@ Write a report in markdown. Keep it under 2500 words. Sections:
 3. **Low Scores** — list any runs with satisfaction or accuracy below 3. One line each with persona, mode, score, and their complaint.
 4. **Recurring Feedback** — aggregate missing_questions and forced_choices. Only list items mentioned by 2+ personas.
 5. **Narrative Contradictions** — list every narrative_contradiction reported. Group by vignette heading. These are cases where the outcome text contradicts the choices made.
-6. **Vignette Feedback** — aggregate vignette_reaction and vignette_issues across all personas. Group by vignette heading. Flag issues mentioned by 2+ personas. Note patterns by profession or country.
+6. **Vignette Feedback** — aggregate vignette_reaction and vignette_issues across all personas. Group by vignette heading. Flag issues mentioned by 2+ personas. Note patterns by profession.
 7. **Issues** — up to 8 concrete problems. Each: one-line description, severity (critical/moderate/minor), affected file, proposed fix.
 8. **Top 3 Priorities** — the most impactful changes to make next.
 
@@ -1013,9 +1002,9 @@ Return ONLY the JSON array.`;
 }
 
 const VIGNETTE_PERSONAS = [
-    { profession: 'software', country: 'United States', is_ai_geo: 'yes' },
-    { profession: 'healthcare', country: 'Germany', is_ai_geo: 'no' },
-    { profession: 'trade', country: 'Nigeria', is_ai_geo: 'no' },
+    { profession: 'software' },
+    { profession: 'healthcare' },
+    { profession: 'trade' },
 ];
 
 function resolveVignettesForState(state, persona) {
@@ -1026,7 +1015,7 @@ async function auditVignetteBatch(model, templateId, testCases) {
     let casesText = '';
     for (let i = 0; i < testCases.length; i++) {
         const tc = testCases[i];
-        casesText += `\n--- Test Case ${i + 1} ---\nWorld state: ${describeState(tc.state)}\nPersona: ${tc.persona.profession} in ${tc.persona.country}\n\nWorld timeline vignettes:\n`;
+        casesText += `\n--- Test Case ${i + 1} ---\nWorld state: ${describeState(tc.state)}\nPersona: ${tc.persona.profession}\n\nWorld timeline vignettes:\n`;
         for (const v of tc.worldVignettes) {
             casesText += `- [${v.heading}]: ${v.text}\n`;
         }
@@ -1038,7 +1027,7 @@ async function auditVignetteBatch(model, templateId, testCases) {
 
     const system = `You are a QA reviewer for a narrative scenario app about AI futures. Users make choices about AI development and receive:
 1. World timeline vignettes (what happens in the world)
-2. Personal vignettes (how each world event reaches YOU — based on profession, country, and the world events)
+2. Personal vignettes (how each world event reaches YOU — based on profession and the world events)
 
 Your job: flag personal vignettes that are disconnected from or inconsistent with the world timeline. Specifically check:
 
@@ -1078,7 +1067,7 @@ Return ONLY the JSON array.`;
 async function auditToneForVignettes(model, templateId, persona, personalVignettes, worldVignettes, outcome) {
     const profLabel = personalData.professions.find(p => p.id === persona.profession)?.label || persona.profession;
 
-    let contextText = `Outcome: ${outcome}\nPersona: ${profLabel} in ${persona.country} (is_ai_geo: ${persona.is_ai_geo || 'no'})\n`;
+    let contextText = `Outcome: ${outcome}\nPersona: ${profLabel}\n`;
 
     if (worldVignettes && worldVignettes.length > 0) {
         contextText += `\nWorld timeline (what happened in the world):\n`;
@@ -1092,27 +1081,26 @@ async function auditToneForVignettes(model, templateId, persona, personalVignett
         contextText += `\n${v.heading} · ${v.answerLabel}:\n${v.text}\n`;
     }
 
-    const system = `You are a narrative editor reviewing personal vignettes for an interactive AI futures scenario. The user made choices about the future of AI, received world timeline vignettes (what happened), and personal vignettes (how each event reaches them based on profession and country).
+    const system = `You are a narrative editor reviewing personal vignettes for an interactive AI futures scenario. The user made choices about the future of AI, received world timeline vignettes (what happened), and personal vignettes (how each event reaches them based on profession).
 
 IMPORTANT CONTEXT about how this system works:
 - Each personal vignette corresponds to ONE question/answer in the scenario. Consider each vignette in the context of the world events that precede and surround it.
 - Some vignettes are intentionally general — events like "alignment is solved" or "AI escapes control" are news that everyone hears about the same way regardless of profession. These should NOT be flagged as generic.
-- Only flag GENERIC when a vignette describes an event that WOULD land differently by profession or country, but the text doesn't reflect that difference.
+- Only flag GENERIC when a vignette describes an event that WOULD land differently by profession, but the text doesn't reflect that difference.
 - Register variation across vignettes is intentional — a flat statement, a question, a fragment. Do NOT flag register shifts as tonal inconsistency.
 
 STYLE PRINCIPLES (flag violations of these):
-1. Don't invent what the story doesn't establish. Every detail must be traceable to the world narrative or the user's inputs (profession, country, is_ai_geo).
+1. Don't invent what the story doesn't establish. Every detail must be traceable to the world narrative or the user's inputs (profession).
 2. Personal over macro. Translate the world event into what the reader would notice — don't just restate the macro framing with "you" in front.
 3. Active over passive. The reader is a protagonist, not a spectator.
 4. Earn the emotion. No "after everything" or "against the odds." Let events create the feeling.
-5. Country as context, not decoration. Don't invent local color the narrative doesn't establish.
 
 Flag these specific issue types:
 
 1. FABRICATED: Details not established in the world narrative — invented names, numbers, times, scenes, institutions. This is the most important category.
 2. OVERWROUGHT: Portentous or emotionally manipulative language that isn't earned by the events.
 3. REPETITIVE: The same phrase, idea, or reassurance appearing in multiple vignettes on this path.
-4. COULD_CUSTOMIZE: A vignette where the world event WOULD land differently by profession or country, but the text is generic. Only flag this when customization would be meaningful — not for universal news events.
+4. COULD_CUSTOMIZE: A vignette where the world event WOULD land differently by profession, but the text is generic. Only flag this when customization would be meaningful — not for universal news events.
 
 Be specific and quote the text. Only flag things that would bother a thoughtful reader.`;
 
@@ -1138,11 +1126,11 @@ async function runVignetteAudit() {
     console.log(`Model: ${AUDIT_MODEL}\n`);
 
     const tonePersonas = [
-        { profession: 'software', country: 'United States', is_ai_geo: 'yes' },
-        { profession: 'education', country: 'United States', is_ai_geo: 'yes' },
-        { profession: 'healthcare', country: 'India', is_ai_geo: 'no' },
-        { profession: 'trade', country: 'Nigeria', is_ai_geo: 'no' },
-        { profession: 'student_retired', country: 'Germany', is_ai_geo: 'no' },
+        { profession: 'software' },
+        { profession: 'education' },
+        { profession: 'healthcare' },
+        { profession: 'trade' },
+        { profession: 'student_retired' },
     ];
 
     const allIssues = [];
@@ -1168,7 +1156,7 @@ async function runVignetteAudit() {
                 const issues = await auditToneForVignettes(AUDIT_MODEL, template.id, persona, vignettes, worldVignettes, outcomeName);
                 return issues.map(issue => ({
                     template: template.id,
-                    persona: `${persona.profession} in ${persona.country}`,
+                    persona: persona.profession,
                     type: issue.type,
                     heading: issue.heading,
                     quote: issue.quote,
@@ -1334,8 +1322,9 @@ async function runAudit() {
                 const stateStr = describeState(issue.state);
                 if (issue.type === 'personal_vignette') {
                     const persona = issue.persona;
+                    const profStr = (persona && persona.profession) || persona || '';
                     console.log(`    - [personal: ${issue.heading}] ${issue.issue}`);
-                    console.log(`      Persona: ${persona.profession} in ${persona.country} | State: ${stateStr}`);
+                    console.log(`      Persona: ${profStr} | State: ${stateStr}`);
                 } else {
                     console.log(`    - [${issue.heading}] ${issue.issue}`);
                     console.log(`      State: ${stateStr}`);
@@ -1419,7 +1408,6 @@ async function main() {
             narrativeContradictions: review.narrative_contradictions || [],
             vignetteReaction: review.vignette_reaction || '',
             vignetteIssues: review.vignette_issues || [],
-            personaCountry: persona.country,
             personaProfession: persona.profession,
             reviewError: review._error || false,
         };
