@@ -508,6 +508,208 @@ function checkUnauthorizedSiphons(prop) {
 }
 
 // ────────────────────────────────────────────────────────────────
+// Phase 9 — Module exit-plan completeness
+// ────────────────────────────────────────────────────────────────
+//
+// Walks each module-kind slot's reachable input sels through the
+// engine's actual decision logic — pick the next askable internal
+// (graph-io.findNextInternalNode), fork on each enabled edge, apply
+// edge effects via Engine.applyEdgeEffects, recurse — and verifies
+// every reachable terminal is either:
+//   (a) cleanly exited (module's completionMarker set), OR
+//   (b) accepted by a child slot's gate (legitimate module-bypass).
+//
+// A "stuck terminal" is a sel where:
+//   * Engine.isModuleDone(sel, completionMarker) is false, AND
+//   * GraphIO.findNextInternalNode returns null (nothing askable), AND
+//   * No downstream slot's activateWhen/hideWhen accepts the sel.
+//
+// At runtime this manifests as flowNext returning { kind: 'stuck' }
+// (or the fall-through { kind: 'open' } with no template match). The
+// UI silently swallows both — the user freezes on the last rendered
+// question with no path forward. (Confirmed in index.html's mainLoop:
+// `if (flow.kind === 'stuck') return null;`.)
+//
+// Why graph-io's set-wise propagation (Phases 3, 6) misses this:
+// `cartesianWriteRows` enumerates module outputs by iterating the
+// *declared* exit plan. A *missing* exit-plan tuple produces no
+// output sel for that input combination, so the propagation has
+// nothing to flag. This phase is the engine-faithful complement —
+// it walks the same DFS the runtime would and verifies the exit
+// plan is complete relative to the inputs each slot actually sees.
+//
+// Cost: per-input-sel walk, memoized on the post-edge sel content.
+// Module internals are bounded (≤10 nodes × ≤6 edges), so per-walk
+// fan-out is small. Empirically ≪1s on the current graph.
+
+function detectExitPlanGaps(prop) {
+    const errors = [];
+    const gapsByKey = new Map();
+
+    // Memo is scoped per slot, NOT per module — whether a stuck
+    // terminal counts as a gap depends on the slot's child set
+    // (a downstream gate can "save" the sel). Shared-across-slots
+    // memo would let slot A's "saved by child" early-return mask a
+    // real gap at slot B (different children). Per-slot scope keeps
+    // each slot's gap calculus independent while still collapsing
+    // intra-slot convergence (the dominant work).
+    for (const slot of FLOW_DAG.nodes) {
+        if (!slot || slot.kind !== 'module') continue;
+        const m = Engine.MODULE_MAP[slot.id];
+        if (!m || !m.completionMarker) continue;
+
+        // Walk the *real* propagation inputs for this slot — the
+        // sels that actually arrive at runtime, including upstream
+        // history. Canonical (cartesianReadRows) inputs project away
+        // dims the module doesn't declare as reads, but the engine's
+        // DFS is sensitive to ANY dim referenced by a node/edge
+        // predicate (available_when, disabled_when, hide_when,
+        // requires, effects.when), and those can — and do — overlap
+        // with upstream-only dims. Walking the real inputs guarantees
+        // we exercise the same routing the runtime sees.
+        const realInputs = prop.inputsBySlot.get(slot.key) || [];
+        if (!realInputs.length) continue;
+
+        const childSlotKeys = prop.childrenOf.get(slot.key) || [];
+        const childSlots = childSlotKeys
+            .map(k => FLOW_DAG.nodes.find(n => n && n.key === k))
+            .filter(Boolean);
+
+        // Project the memo key onto the dims the module's DFS could
+        // possibly read — module reads/writes/nodeIds/completion +
+        // every dim mentioned in any internal node's predicates and
+        // every internal edge's predicates/effects. Sels that agree
+        // on this projection produce identical DFS behavior. Two
+        // upstream histories that differ only in dims the module
+        // doesn't observe collapse to one walk.
+        const memoDims = _moduleMemoDims(m);
+        const visited = new Set();
+
+        for (const input of realInputs) {
+            _walkModuleForGaps(m, input, slot.key, childSlots, gapsByKey, visited, memoDims);
+        }
+    }
+
+    const sortedKeys = [...gapsByKey.keys()].sort();
+    for (const key of sortedKeys) {
+        const info = gapsByKey.get(key);
+        errors.push(
+            `[exit-plan-gap] Slot "${info.slotKey}" (module "${info.moduleId}"): `
+            + `terminal ${info.terminalNodeId}.${info.terminalEdgeId} is reachable `
+            + `via ${fmtCount(info.count)} engine state(s) with no exit-plan tuple `
+            + `firing AND no downstream slot accepting the result`
+        );
+        for (const u of info.samples) errors.push(`                sample: ${u}`);
+    }
+    return errors;
+}
+
+// Dims the module's DFS may observe. Must be a SUPERSET of every
+// dim that affects findNextInternalNode / isEdgeDisabled /
+// applyEdgeEffects for this module — otherwise two sels with the
+// same projection can produce different walks and we'd miss gaps.
+//
+// Includes module-declared reads/writes/nodeIds/completion plus
+// every dim mentioned in any internal node's available_when /
+// hide_when / requires and any internal edge's disabled_when /
+// effects[].when. We do NOT include dims set BY effects on those
+// nodes — those are already captured via writes ∪ nodeIds.
+function _moduleMemoDims(m) {
+    const dims = new Set();
+    for (const d of m.reads || []) dims.add(d);
+    for (const d of m.writes || []) dims.add(d);
+    for (const d of m.nodeIds || []) dims.add(d);
+    if (typeof m.completionMarker === 'string') dims.add(m.completionMarker);
+    else if (m.completionMarker && m.completionMarker.dim) dims.add(m.completionMarker.dim);
+    for (const nodeId of (m.nodeIds || [])) {
+        const node = NODE_MAP[nodeId];
+        if (!node) continue;
+        _collectCondDims(node.activate_when, dims);
+        _collectCondDims(node.hide_when, dims);
+        _collectCondDims(node.requires, dims);
+        for (const e of (node.edges || [])) {
+            _collectCondDims(e.disabled_when, dims);
+            const effects = Array.isArray(e.effects) ? e.effects : (e.effects ? [e.effects] : []);
+            for (const eff of effects) if (eff) _collectCondDims(eff.when, dims);
+        }
+    }
+    return [...dims].sort();
+}
+
+function _collectCondDims(cond, out) {
+    if (!cond || typeof cond !== 'object') return;
+    if (Array.isArray(cond)) { for (const c of cond) _collectCondDims(c, out); return; }
+    for (const k of Object.keys(cond)) {
+        if (k === 'reason') continue;
+        if (k === 'and' || k === 'or' || k === 'not_all' || k === 'any' || k === 'all') {
+            _collectCondDims(cond[k], out);
+            continue;
+        }
+        out.add(k);
+    }
+}
+
+function _walkModuleForGaps(module, entrySel, slotKey, childSlots, gapsByKey, visited, memoDims) {
+    const completionMarker = module.completionMarker;
+
+    function visit(sel, lastEdge) {
+        if (Engine.isModuleDone(sel, completionMarker)) return;
+
+        // Project sel onto memoDims for the memo key. Two sels that
+        // agree on (reads ∪ writes ∪ nodeIds ∪ completionMarker)
+        // produce identical module DFS results — we explore once.
+        let memoKey = '';
+        for (const d of memoDims) {
+            const v = sel[d];
+            if (v !== undefined) memoKey += d + '=' + v + '|';
+        }
+        if (visited.has(memoKey)) return;
+        visited.add(memoKey);
+
+        const next = GraphIO.findNextInternalNode(module, sel);
+        if (next) {
+            for (const edge of next.edges) {
+                if (Engine.isEdgeDisabled(sel, next, edge)) continue;
+                // Engine.push semantics: stamp edge.id, then apply
+                // edge effects (may set completionMarker, move dims,
+                // etc.). flavor=null mirrors the static-analysis
+                // posture in graph-io — `move` just deletes the dim.
+                const newSel = { ...sel, [next.id]: edge.id };
+                Engine.applyEdgeEffects(newSel, edge, null);
+                visit(newSel, { nodeId: next.id, edgeId: edge.id });
+            }
+            return;
+        }
+
+        // No askable internal AND module not done. Last chance: a
+        // child slot's gate may accept this sel — a legitimate
+        // module-bypass exit (rare but allowed by FLOW_DAG).
+        for (const child of childSlots) {
+            if (_slotAccepts(child, sel)) return;
+        }
+
+        // Stuck. Skip entry-time stalls (Phase 4 / Phase 6 territory).
+        if (!lastEdge) return;
+
+        const gapKey = `${module.id}|${lastEdge.nodeId}|${lastEdge.edgeId}`;
+        let info = gapsByKey.get(gapKey);
+        if (!info) {
+            info = {
+                slotKey, moduleId: module.id,
+                terminalNodeId: lastEdge.nodeId,
+                terminalEdgeId: lastEdge.edgeId,
+                count: 0, samples: [],
+            };
+            gapsByKey.set(gapKey, info);
+        }
+        info.count++;
+        if (info.samples.length < 3) info.samples.push(_selUrl(sel));
+    }
+
+    visit(entrySel, null);
+}
+
+// ────────────────────────────────────────────────────────────────
 // Helpers
 // ────────────────────────────────────────────────────────────────
 
@@ -583,6 +785,12 @@ if (!QUICK) {
     const unauthErrors = checkUnauthorizedSiphons(prop);
     console.log(`  ${unauthErrors.length === 0 ? 'OK' : `FAIL (${unauthErrors.length})`}  ${Date.now() - t8}ms`);
     sections.push({ name: 'unauthorized siphons', errors: unauthErrors });
+
+    console.log('\nPhase 9: module exit-plan completeness');
+    const t9 = Date.now();
+    const exitPlanErrors = detectExitPlanGaps(prop);
+    console.log(`  ${exitPlanErrors.length === 0 ? 'OK' : `FAIL (${exitPlanErrors.length})`}  ${Date.now() - t9}ms`);
+    sections.push({ name: 'exit-plan completeness', errors: exitPlanErrors });
 }
 
 console.log('\n' + '═'.repeat(60));
