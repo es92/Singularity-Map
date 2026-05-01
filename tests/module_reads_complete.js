@@ -148,6 +148,19 @@ for (const mod of Engine.MODULES) {
     const declaredReads = new Set(mod.reads || []);
     const ownNodeIds = new Set(mod.nodeIds || []);
     const internalMarkers = new Set(mod.internalMarkers || []);
+    // The module's own completionMarker. Exit-plan `when` clauses
+    // legitimately gate on it as an idempotency guard
+    // ("only fire this tuple if proliferation_set isn't yet 'yes'").
+    // Pre-entry it's UNSET (the module's gate enforces that), and
+    // once any exit tuple's `set` writes it to 'yes' the runtime
+    // engine treats the module as done — no further exit tuples
+    // fire on the same pass. So the dim is module-internal even
+    // though it's also published as a write.
+    if (typeof mod.completionMarker === 'string') {
+        internalMarkers.add(mod.completionMarker);
+    } else if (mod.completionMarker && mod.completionMarker.dim) {
+        internalMarkers.add(mod.completionMarker.dim);
+    }
 
     // Dims set by internal-node edges' effects.set / setFlavor —
     // these are local writes that downstream-priority internal nodes
@@ -198,6 +211,27 @@ for (const mod of Engine.MODULES) {
         }
     }
 
+    // Exit-plan `when` clauses are evaluated against sel BEFORE the
+    // tuple's own effects fire (attachModuleReducer installs each
+    // tuple as an effects block on its triggering edge; the block's
+    // `when` gates the block, but `set`/`setFlavor` haven't run yet).
+    //
+    // The `internallyWritten` exemption (used for node-level
+    // conditions, where it's plausible that an upstream-priority
+    // node already set the dim) is UNSAFE here: a dim that's written
+    // ONLY by some unrelated escape edge (e.g. collateral_survivors
+    // setting war_survivors) is NOT set yet at the time an
+    // ai_goals exit tuple's `when: war_survivors=none` is checked.
+    // Without this tightening the test rubber-stamps reads that the
+    // static analyzer can't fulfill from canonical inputs.
+    //
+    // ownNodeIds and internalMarkers stay exempt: nodeIds are
+    // edge-stamped at the moment the user picks the edge (so any
+    // already-picked node's dim is in sel), and internalMarkers
+    // by convention are set early by some edge to drive downstream
+    // askability — they're set before exit. If those exemptions
+    // ever produce false negatives, tighten them per-case via the
+    // KNOWN_FALSE_POSITIVES whitelist.
     if (Array.isArray(mod.exitPlan)) {
         for (const t of mod.exitPlan) {
             if (!t.when) continue;
@@ -206,7 +240,6 @@ for (const mod of Engine.MODULES) {
             for (const d of dims) {
                 if (ownNodeIds.has(d)) continue;
                 if (internalMarkers.has(d)) continue;
-                if (internallyWritten.has(d)) continue;
                 addRef(d, 'exitPlan.when');
             }
         }

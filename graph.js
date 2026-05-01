@@ -2452,6 +2452,19 @@ const ESCAPE_MODULE = {
         // _not[*].containment=['escaped'] family on the-gilded-/
         // new-hierarchy/flourishing/capture/standoff/mosaic/failure).
         'who_benefits_set',
+        // ai_goals.<hostile-goal> exit tuples carry a
+        // `when: { war_survivors: ['none'] }` clause that re-routes
+        // to the-ruin when civilization is already destroyed by war
+        // — see buildEscapeExitPlan's "war_survivors=none re-entry"
+        // block. The dim is set upstream by WAR_MODULE
+        // (war_outcome.* exit tuples) and read here at exit-tuple
+        // selection time on re-entry slots. Without it in reads,
+        // cartesianReadRows synthesizes war_survivors=UNSET per
+        // bucket, the new tuple's `when` never matches in static
+        // analysis, and the static reach map under-attributes
+        // the-ruin reach for the ai_goals=hostile + war_survivors=
+        // none subspace.
+        'war_survivors',
     ],
     writes: ESCAPE_WRITES,
     nodeIds: ESCAPE_NODE_IDS,
