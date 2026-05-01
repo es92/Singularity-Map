@@ -223,19 +223,28 @@ assert.deepStrictEqual(escape.writes.slice().sort(), [
 ].sort(), 'escape.writes should be ai_goals + post_catch + war_survivors + containment + escape_set + ruin_type');
 
 const escPlan = escape.exitPlan;
-// Tuple breakdown (18 total):
+// Tuple breakdown (22 total):
 //   2  ai_goals early-exit (benevolent, marginal)
+//   4  ai_goals war_survivors=none re-entry exits (alien_extinction,
+//      paperclip, power_seeking, swarm) — re-pick into a dead world
+//      after war already ruined civilization. Each gated
+//      `when: { war_survivors: ['none'] }` and sets escape_set=yes +
+//      post_catch='ruined' to route directly to the-ruin (since the
+//      escape pipeline is hidden by hideWhen war_survivors=['none']).
 //   2  catch_outcome (not_permanent, holds_permanently)
 //   1  response_success.no  gated on concentration_type=ai_itself
-//   1  discovery_timing.never gated on concentration_type=ai_itself
+//   1  discovery_timing.never (universal — was previously gated on
+//      concentration_type=ai_itself, but the gate left non-ai_itself
+//      paths with no exit-plan match; validate.js Phase 9 caught the
+//      gap and we dropped the gate)
 //   5  collateral_impact early-slot exits (2 minimal/severe on
 //      response_success=yes; 3 minimal/severe/civilizational on
 //      response_success=delayed,no)
 //   7  collateral_survivors (3 edges × 2 tuples — terminal and early-slot,
 //      both setting war_set + war_survivors — plus 1 ai_goals-eviction
 //      tuple on collateral_survivors=none)
-assert(Array.isArray(escPlan) && escPlan.length === 18,
-    `escape exitPlan should have 18 tuples; got ${escPlan.length}`);
+assert(Array.isArray(escPlan) && escPlan.length === 22,
+    `escape exitPlan should have 22 tuples; got ${escPlan.length}`);
 const planByNode = {};
 for (const t of escPlan) {
     // Most tuples set escape_set=yes; the collateral_survivors=none
@@ -246,8 +255,24 @@ for (const t of escPlan) {
     }
     (planByNode[t.nodeId] = planByNode[t.nodeId] || []).push({ edgeId: t.edgeId, set: t.set, when: t.when, move: t.move });
 }
+// ai_goals exit edges: 2 unconditional early-exit (benevolent, marginal)
+// plus 4 war_survivors=none re-entry tuples (alien_extinction, paperclip,
+// power_seeking, swarm) — see breakdown above.
 assert.deepStrictEqual(planByNode.ai_goals.map(x => x.edgeId).sort(),
-    ['benevolent', 'marginal'], 'ai_goals early-exit edges');
+    ['alien_extinction', 'benevolent', 'marginal', 'paperclip', 'power_seeking', 'swarm'],
+    'ai_goals exit edges (early-exit + war_survivors=none re-entry)');
+// The 4 war_survivors=none re-entry tuples must all carry the gating
+// when-clause and route to the-ruin via post_catch='ruined'.
+const aiGoalsHostile = planByNode.ai_goals.filter(t => t.edgeId !== 'benevolent' && t.edgeId !== 'marginal');
+assert.strictEqual(aiGoalsHostile.length, 4, '4 hostile ai_goals re-entry tuples');
+for (const t of aiGoalsHostile) {
+    assert.deepStrictEqual(t.when, { war_survivors: ['none'] },
+        `ai_goals.${t.edgeId} re-entry tuple gated on war_survivors=none`);
+    assert.strictEqual(t.set.post_catch, 'ruined',
+        `ai_goals.${t.edgeId} re-entry tuple → post_catch=ruined (routes to the-ruin)`);
+    assert.strictEqual(t.set.escape_set, 'yes',
+        `ai_goals.${t.edgeId} re-entry tuple sets escape_set=yes`);
+}
 // catch_outcome exits: not_permanent → loose; holds_permanently → contained.
 const catchTuples = Object.fromEntries(planByNode.catch_outcome.map(x => [x.edgeId, x]));
 assert.strictEqual(catchTuples.not_permanent.set.post_catch, 'loose',

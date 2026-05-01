@@ -1,7 +1,7 @@
 {
   "name": "singularity-map",
   "private": true,
-  "version": "0.1.14",
+  "version": "0.1.15",
   "scripts": {
     "test": "node --max-old-space-size=16384 validate.js",
     "test:quick": "node validate.js --quick",
