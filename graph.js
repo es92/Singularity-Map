@@ -2259,11 +2259,41 @@ function buildEscapeExitPlan() {
         when: { concentration_type: ['ai_itself'] },
         set: { escape_set: 'yes', post_catch: 'loose' },
     });
+    // discovery_timing.never — universal exit. The narrative ("the AI's
+    // plan succeeded undetected — humans never even tried to respond")
+    // applies regardless of concentration_type. On non-ai_itself paths
+    // the user has already answered escape_method + escape_timeline
+    // (real, non-forced choices); the rest of the pipeline
+    // (response_method → response_success → collateral_impact →
+    // catch_outcome) is naturally unaskable on `never`
+    // (response_method.activateWhen excludes it), so there's no missing
+    // data to collect — exit cleanly at post_catch=loose.
     plan.push({
         nodeId: 'discovery_timing', edgeId: 'never',
-        when: { concentration_type: ['ai_itself'] },
+        when: {},
         set: { escape_set: 'yes', post_catch: 'loose' },
     });
+    // war_survivors=none re-entry exits. After a prior war pipeline
+    // killed everyone (war_survivors=none + ruin_type=war), an
+    // inert_stays=no answer evicts ai_goals + escape_set and re-routes
+    // through ESCAPE for a hostile ai_goals re-pick. The entire escape
+    // pipeline (escape_method, escape_timeline, etc.) is hidden by
+    // hideWhen war_survivors=['none'] — there's no civilization left to
+    // escape into. Exit immediately on the ai_goals pick with
+    // post_catch='ruined' so the-ruin (war variant) catches the state
+    // (capability=asi + post_catch=ruined matches the-ruin's first
+    // reachable clause unconditionally, beating the-escape /
+    // the-alien-ai / the-chaos which all require post_catch=loose).
+    // Narratively: war already ended civilization before this re-pick;
+    // the AI re-emerging into a dead world is a footnote in an
+    // already-resolved ruin, not a new escape outcome.
+    for (const hostileGoal of ['alien_extinction', 'paperclip', 'power_seeking', 'swarm']) {
+        plan.push({
+            nodeId: 'ai_goals', edgeId: hostileGoal,
+            when: { war_survivors: ['none'] },
+            set: { escape_set: 'yes', post_catch: 'ruined' },
+        });
+    }
     // catch_outcome.holds_permanently — exits directly when
     // collateral_impact is NOT civilizational. post_catch=contained.
     // In the civilizational case, the module defers to
