@@ -1001,67 +1001,8 @@ Return ONLY the JSON array.`;
     }
 }
 
-const VIGNETTE_PERSONAS = [
-    { profession: 'software' },
-    { profession: 'healthcare' },
-    { profession: 'trade' },
-];
-
 function resolveVignettesForState(state, persona) {
     return resolvePersonalVignettes(state, persona, personalData, narrative, NODES);
-}
-
-async function auditVignetteBatch(model, templateId, testCases) {
-    let casesText = '';
-    for (let i = 0; i < testCases.length; i++) {
-        const tc = testCases[i];
-        casesText += `\n--- Test Case ${i + 1} ---\nWorld state: ${describeState(tc.state)}\nPersona: ${tc.persona.profession}\n\nWorld timeline vignettes:\n`;
-        for (const v of tc.worldVignettes) {
-            casesText += `- [${v.heading}]: ${v.text}\n`;
-        }
-        casesText += `\nPersonal vignettes ("How It Reaches You"):\n`;
-        for (const v of tc.personalVignettes) {
-            casesText += `- [${v.heading} · ${v.answerLabel}]: ${v.text}\n`;
-        }
-    }
-
-    const system = `You are a QA reviewer for a narrative scenario app about AI futures. Users make choices about AI development and receive:
-1. World timeline vignettes (what happens in the world)
-2. Personal vignettes (how each world event reaches YOU — based on profession and the world events)
-
-Your job: flag personal vignettes that are disconnected from or inconsistent with the world timeline. Specifically check:
-
-- Key world events that have NO reflection in the personal vignettes
-- Personal vignettes that describe events contradicting the world state
-- Tone mismatches: dramatic world events paired with bland personal descriptions, or vice versa
-- Fabricated details: specific names, times, numbers, or scenes not established in the world narrative
-
-Only flag genuine issues — not minor style differences. Be specific.`;
-
-    const user = `Template: ${templateId}
-
-${casesText}
-
----
-
-For each issue found, return a JSON array. Each entry: { "case": <number>, "heading": "<vignette heading>", "issue": "<what's wrong and why>" }
-
-If no issues, return an empty array: []
-
-Return ONLY the JSON array.`;
-
-    const schema = {
-        type: 'array',
-        items: { type: 'object', properties: { case: { type: 'integer' }, heading: { type: 'string' }, issue: { type: 'string' } }, required: ['case', 'heading', 'issue'], additionalProperties: false }
-    };
-    try {
-        const raw = await callClaude(model, system, user, 4096, { jsonSchema: schema });
-        const parsed = parseJsonResponse(raw);
-        return Array.isArray(parsed) ? parsed : [];
-    } catch (err) {
-        console.error(`  Vignette audit API error for ${templateId}: ${err.message}`);
-        return [];
-    }
 }
 
 async function auditToneForVignettes(model, templateId, persona, personalVignettes, worldVignettes, outcome) {
@@ -1242,72 +1183,15 @@ async function runAudit() {
         }
     }
 
-    // Build all personal vignette audit jobs
-    const personalJobs = [];
-    for (const template of templatesList) {
-        if (!template.reachable) continue;
+    console.log(`  ${worldJobs.length} world vignette audit jobs, concurrency ${CONCURRENCY}...`);
 
-        const testStates = generateTestStates(template);
-        const vignetteCases = [];
-        const seenKeys = new Set();
-
-        for (const state of testStates) {
-            const resolved = resolveTemplate(template.id, state);
-            if (!resolved) continue;
-
-            for (const persona of VIGNETTE_PERSONAS) {
-                const pv = resolveVignettesForState(state, persona);
-                if (pv.length === 0) continue;
-
-                const key = pv.map(v => v.heading + ':' + v.text.slice(0, 50)).join('|')
-                    + '||' + persona.profession;
-                if (seenKeys.has(key)) continue;
-                seenKeys.add(key);
-
-                vignetteCases.push({
-                    state,
-                    persona,
-                    worldVignettes: resolved.vignettes,
-                    personalVignettes: pv,
-                });
-            }
-        }
-
-        if (vignetteCases.length === 0) continue;
-
-        const MAX_CASES = 10;
-        const batch = vignetteCases.slice(0, MAX_CASES);
-        personalJobs.push(async () => {
-            const issues = await auditVignetteBatch(AUDIT_MODEL, template.id, batch);
-            return issues.map(issue => ({
-                template: template.id,
-                case: issue.case,
-                state: batch[issue.case - 1]?.state || {},
-                persona: batch[issue.case - 1]?.persona || {},
-                heading: issue.heading,
-                issue: issue.issue,
-                type: 'personal_vignette',
-            }));
-        });
-    }
-
-    const totalJobs = worldJobs.length + personalJobs.length;
-    console.log(`  ${worldJobs.length} world + ${personalJobs.length} personal = ${totalJobs} audit jobs, concurrency ${CONCURRENCY}...`);
-
-    const allJobs = [...worldJobs, ...personalJobs];
-    const results = await runPool(allJobs, CONCURRENCY, () => {});
+    const results = await runPool(worldJobs, CONCURRENCY, () => {});
     for (const issues of results) {
         if (issues && issues.length > 0) allIssues.push(...issues);
     }
 
-    const personalVignetteIssues = allIssues.filter(i => i.type === 'personal_vignette');
-
     console.log(`\n--- Audit Summary ---`);
-    const worldVignetteCount = allIssues.filter(i => !i.type).length;
-    const pvCount = allIssues.filter(i => i.type === 'personal_vignette').length;
-    console.log(`World vignette issues: ${worldVignetteCount}`);
-    console.log(`Personal vignette issues: ${pvCount}`);
-    console.log(`Total issues: ${allIssues.length}`);
+    console.log(`World vignette issues: ${allIssues.length}`);
 
     if (allIssues.length > 0) {
         console.log(`\nIssues by template:`);
@@ -1320,15 +1204,8 @@ async function runAudit() {
             console.log(`\n  ${tid} (${issues.length}):`);
             for (const issue of issues) {
                 const stateStr = describeState(issue.state);
-                if (issue.type === 'personal_vignette') {
-                    const persona = issue.persona;
-                    const profStr = (persona && persona.profession) || persona || '';
-                    console.log(`    - [personal: ${issue.heading}] ${issue.issue}`);
-                    console.log(`      Persona: ${profStr} | State: ${stateStr}`);
-                } else {
-                    console.log(`    - [${issue.heading}] ${issue.issue}`);
-                    console.log(`      State: ${stateStr}`);
-                }
+                console.log(`    - [${issue.heading}] ${issue.issue}`);
+                console.log(`      State: ${stateStr}`);
             }
         }
     }
