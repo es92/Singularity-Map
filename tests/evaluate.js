@@ -318,8 +318,10 @@ function resolveTemplate(templateId, state) {
 
 function getNextNode(sel, stack) {
     // FLOW_DAG-driven: same primitive the runtime UI uses
-    // (index.html/findNextQuestion). Skip locked auto-fills since the
-    // persona-eval loop only asks the LLM about real branching choices.
+    // (index.html/findNextQuestion). Returns the node flowNext picks
+    // along with its lock state so the caller can either ask the LLM
+    // (unlocked) or auto-push the locked answer (mirrors the runtime's
+    // one-option "Continue" button).
     //
     // Pass parentSlotKey derived from the stack so flowNext mirrors the
     // runtime's per-parent routing exactly. Without this, the sel-only
@@ -334,8 +336,8 @@ function getNextNode(sel, stack) {
     const flow = FlowPropagation.flowNext(sel, parentSlotKey);
     if (flow.kind !== 'question') return null;
     const node = flow.node;
-    if (Engine.isNodeLocked(sel, node) !== null) return null;
-    return node;
+    const lockedEdgeId = Engine.isNodeLocked(sel, node);
+    return { node, lockedEdgeId };
 }
 
 async function simulatePath(persona, mode, { deterministic = false } = {}) {
@@ -377,9 +379,43 @@ async function simulatePath(persona, mode, { deterministic = false } = {}) {
             acted = true;
         }
 
-        const next = getNextNode(sel, stack);
-        if (!next) {
+        const picked = getNextNode(sel, stack);
+        if (!picked) {
             if (!acted) break;
+            continue;
+        }
+        const next = picked.node;
+
+        // Auto-locked node: the runtime UI surfaces these as one-option
+        // "Continue" questions and commits the locked answer when the
+        // user clicks. Mirror that here — push the locked value silently
+        // so the walk doesn't stall on forced single-edge transitions
+        // (e.g. distribution=open after open_source=near_parity disables
+        // the other edges).
+        if (picked.lockedEdgeId != null) {
+            const disabledReasons = [];
+            for (const edge of next.edges) {
+                if (edge.id === picked.lockedEdgeId) continue;
+                const reason = Engine.getEdgeDisabledReason(sel, next, edge);
+                if (reason) disabledReasons.push({ id: edge.id, label: getAnswerLabel(next.id, edge.id, sel), reason });
+            }
+            stack = Engine.push(stack, next.id, picked.lockedEdgeId);
+            const newSel = Engine.currentState(stack);
+            loggedNodes.add(next.id);
+            log.push({
+                id: next.id, label: next.label, val: picked.lockedEdgeId,
+                prob: 1.0, source: 'auto', disabledReasons
+            });
+            if (disabledReasons.length > 0) {
+                let ctx = `- ${getQuestionText(next.id)}: ${getAnswerLabel(next.id, picked.lockedEdgeId, newSel)} [only option — previous choices ruled out the rest]`;
+                for (const d of disabledReasons) {
+                    ctx += `\n    ✗ "${d.label}" unavailable: ${d.reason}`;
+                }
+                pathContext.push(ctx);
+            } else {
+                pathContext.push(`- ${getQuestionText(next.id)}: ${getAnswerLabel(next.id, picked.lockedEdgeId, newSel)} [auto-locked]`);
+            }
+            acted = true;
             continue;
         }
 
