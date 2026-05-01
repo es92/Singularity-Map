@@ -35,6 +35,7 @@ const SUITE = [
     { label: 'validate.js',                    file: 'validate.js' },
     { label: 'tests/flow_next_parity',         file: 'tests/flow_next_parity.js' },
     { label: 'tests/all_variants_reachable',   file: 'tests/all_variants_reachable.js' },
+    { label: 'tests/narrative_coverage',       file: 'tests/narrative_coverage.js' },
 ];
 
 function pad(s, n) { return s + ' '.repeat(Math.max(0, n - s.length)); }
