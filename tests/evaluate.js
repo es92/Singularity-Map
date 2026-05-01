@@ -36,9 +36,9 @@ const { getCountryBucket, resolvePersonalVignettes } = require('../milestone-uti
 
 const templatesList = outcomes.templates;
 
-const EVAL_MODEL = process.env.EVAL_MODEL || 'claude-haiku-4-5-20250315';
-const REVIEW_MODEL = process.env.REVIEW_MODEL || 'claude-sonnet-4-6-20250627';
-const REPORT_MODEL = process.env.REPORT_MODEL || 'claude-sonnet-4-6-20250627';
+const EVAL_MODEL = process.env.EVAL_MODEL || 'claude-haiku-4-5-20251001';
+const REVIEW_MODEL = process.env.REVIEW_MODEL || 'claude-sonnet-4-6';
+const REPORT_MODEL = process.env.REPORT_MODEL || 'claude-sonnet-4-6';
 
 // ── Conditional flavor resolution (mirrors index.html) ──
 
@@ -316,11 +316,22 @@ function resolveTemplate(templateId, state) {
 
 // ── DAG walking ──
 
-function getNextNode(sel) {
+function getNextNode(sel, stack) {
     // FLOW_DAG-driven: same primitive the runtime UI uses
     // (index.html/findNextQuestion). Skip locked auto-fills since the
     // persona-eval loop only asks the LLM about real branching choices.
-    const flow = FlowPropagation.flowNext(sel);
+    //
+    // Pass parentSlotKey derived from the stack so flowNext mirrors the
+    // runtime's per-parent routing exactly. Without this, the sel-only
+    // heuristic misroutes when an upstream edge pre-sets a downstream
+    // module's completion marker — e.g. plateau_benefit_distribution's
+    // effect writes who_benefits_set='yes', which the sel-only heuristic
+    // misreads as "who_benefits exited" and skips past rollout_early into
+    // the terminal rollout slot, dead-ending the plateau path.
+    const parentSlotKey = stack
+        ? FlowPropagation.parentSlotKeyFromStack(stack)
+        : undefined;
+    const flow = FlowPropagation.flowNext(sel, parentSlotKey);
     if (flow.kind !== 'question') return null;
     const node = flow.node;
     if (Engine.isNodeLocked(sel, node) !== null) return null;
@@ -366,7 +377,7 @@ async function simulatePath(persona, mode, { deterministic = false } = {}) {
             acted = true;
         }
 
-        const next = getNextNode(sel);
+        const next = getNextNode(sel, stack);
         if (!next) {
             if (!acted) break;
             continue;
