@@ -627,16 +627,21 @@
     //   inputRow values that are UNSET are dropped from sel; the DFS
     //   then re-introduces them as needed via edge writes.
     //
-    // STEP_CAP is the per-slot upper bound on `walk()` invocations. The
-    // walk is a full cart-prod DFS over a slot's internal-node edge
-    // choices, so the cost grows multiplicatively in the per-node edge
-    // count. Most modules are tiny (decel/proliferation/etc. each well
-    // under 1k steps), but ESCAPE has 9 internal nodes with edge counts
-    // 7×4×4×4×7×3×3×2×3 ≈ 56k paths per input × ~315 read-cart-prod
-    // input rows. At 10M the escape walk completes (~1.6s) and lands
-    // on its real 61-projection answer; the result is cached in
-    // `_writeRowsCache` for the rest of the page. Set high enough that
-    // we never display a "+" suffix in practice on the current graph.
+    // STEP_CAP is a SOFT cap, only consulted in non-strict mode (the
+    // browser's `/explore` debug overlay). Walks that exceed it set
+    // ctx.truncated, the result picks up a "+" badge, and the page
+    // stays responsive. The cap is sized so legitimate enumerations
+    // on the current graph never trip it — escape, the only outlier,
+    // settles around ~3-4M steps; everything else is well under 1k.
+    //
+    // Strict-mode callers (validate.js, precompute-reachability.js,
+    // analysis tests) skip the cap entirely. There is no legitimate
+    // case where a strict caller should hit a step limit: the
+    // module DFSes are bounded by the graph, so they always
+    // terminate. Tuning the cap upward whenever a `reads` declaration
+    // widens is a band-aid; better to let the walk complete and let
+    // OOM / hang surface a genuine non-termination bug rather than
+    // mask it as an arbitrary numeric ceiling.
     const STEP_CAP = 10000000;
 
     function _rowToSel(row) {
@@ -782,9 +787,12 @@
         const Engine = window.Engine;
 
         function walk(sel) {
-            if (ctx.steps++ > STEP_CAP) {
+            // Step counting is browser-only — strict callers run the
+            // walk to completion (modules are graph-bounded; if a walk
+            // didn't terminate, that's a real bug, surface it as OOM/
+            // hang rather than a fixed numeric ceiling).
+            if (!STRICT_TRUNCATION && ctx.steps++ > STEP_CAP) {
                 ctx.truncated = true;
-                if (STRICT_TRUNCATION) _truncationError('_dfsModuleOutputs (STEP_CAP)', { module: mod.id, steps: ctx.steps, stepCap: STEP_CAP });
                 return;
             }
             if (outputs.size > MAX_ROWS) {
@@ -822,9 +830,8 @@
 
     function _dfsNodeOutputs(node, startSel, dims, outputs, ctx) {
         for (const edge of (node.edges || [])) {
-            if (ctx.steps++ > STEP_CAP) {
+            if (!STRICT_TRUNCATION && ctx.steps++ > STEP_CAP) {
                 ctx.truncated = true;
-                if (STRICT_TRUNCATION) _truncationError('_dfsNodeOutputs (STEP_CAP)', { node: node.id, steps: ctx.steps, stepCap: STEP_CAP });
                 return;
             }
             if (window.Engine.isEdgeDisabled(startSel, node, edge)) continue;
