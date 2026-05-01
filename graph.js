@@ -2259,6 +2259,52 @@ function buildEscapeExitPlan() {
         when: { concentration_type: ['ai_itself'] },
         set: { escape_set: 'yes', post_catch: 'loose' },
     });
+    // response_success.no — no-decisive-action exit (covers the
+    // competitive_paralysis / institutional_indecisiveness branch on
+    // ALL concentration types, not just ai_itself).
+    //
+    // Both response_methods write a forced response_success=no (their
+    // only enabled edge — see Continue-card behavior). Downstream:
+    //   * collateral_impact is HIDDEN by its hideWhen
+    //     (response_method: [competitive_paralysis,
+    //     institutional_indecisiveness]) — no action means no
+    //     action-borne collateral.
+    //   * catch_outcome activates via its own
+    //     `response_method: [competitive_paralysis,
+    //     institutional_indecisiveness]` activateWhen, but it lives in
+    //     the LATE escape FLOW_DAG slot (escape_late / escape_after_who),
+    //     which gates on who_benefits_set=yes. On the loose-AI tail
+    //     (containment=escaped, post_catch will be loose), who_benefits
+    //     never activates — so the late escape slot is unreachable from
+    //     here.
+    //
+    // Without this tuple, response_success=no on a non-ai_itself path
+    // with a no-decisive-action response_method has no internal next
+    // (collateral_impact hidden, catch_outcome out-of-slot, no exit
+    // tuple) and the runtime gets stuck inside escape with no askable
+    // node and no matching outcome. validate.js Phase 9's child-slot
+    // "save" check optimistically thinks intent_loop's activateWhen
+    // accepts the stuck sel and skips flagging this — but that's only
+    // true at the escape_early_alt slot key, not at escape_early
+    // (which is what parentSlotKeyFromStack returns for some stack
+    // shapes, e.g. when proliferation_control was answered as a
+    // module-internal pick before ai_goals). The runtime symptom is a
+    // NO MATCH terminal at escape_early; the eval surfaces it as a
+    // dead-end persona walk.
+    //
+    // Effect mirrors the existing ai_itself tuple (escape_set=yes,
+    // post_catch=loose) — semantically: the AI succeeds because no one
+    // fought back. ai_goals routes the outcome:
+    //   * benevolent / marginal — already handled by their own early-
+    //     exit tuples upstream of this slot, so they never reach here.
+    //   * alien_coexistence / alien_extinction → the-alien-ai
+    //   * paperclip / power_seeking → the-escape
+    //   * swarm → the-chaos
+    plan.push({
+        nodeId: 'response_success', edgeId: 'no',
+        when: { response_method: ['competitive_paralysis', 'institutional_indecisiveness'] },
+        set: { escape_set: 'yes', post_catch: 'loose' },
+    });
     // discovery_timing.never — universal exit. The narrative ("the AI's
     // plan succeeded undetected — humans never even tried to respond")
     // applies regardless of concentration_type. On non-ai_itself paths

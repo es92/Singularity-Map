@@ -223,7 +223,7 @@ assert.deepStrictEqual(escape.writes.slice().sort(), [
 ].sort(), 'escape.writes should be ai_goals + post_catch + war_survivors + containment + escape_set + ruin_type');
 
 const escPlan = escape.exitPlan;
-// Tuple breakdown (22 total):
+// Tuple breakdown (23 total):
 //   2  ai_goals early-exit (benevolent, marginal)
 //   4  ai_goals war_survivors=none re-entry exits (alien_extinction,
 //      paperclip, power_seeking, swarm) — re-pick into a dead world
@@ -232,7 +232,15 @@ const escPlan = escape.exitPlan;
 //      post_catch='ruined' to route directly to the-ruin (since the
 //      escape pipeline is hidden by hideWhen war_survivors=['none']).
 //   2  catch_outcome (not_permanent, holds_permanently)
-//   1  response_success.no  gated on concentration_type=ai_itself
+//   2  response_success.no exits — variant 1 gated on
+//      concentration_type=ai_itself; variant 2 gated on
+//      response_method ∈ {competitive_paralysis,
+//      institutional_indecisiveness} to cover the no-decisive-action
+//      branch on non-ai_itself paths (collateral_impact is hidden via
+//      response_method.hideWhen, catch_outcome is in escape_late which
+//      requires who_benefits_set=yes — never reached on this loose-AI
+//      tail; without this exit the runtime gets stuck inside escape
+//      with no askable internal node and no matching outcome).
 //   1  discovery_timing.never (universal — was previously gated on
 //      concentration_type=ai_itself, but the gate left non-ai_itself
 //      paths with no exit-plan match; validate.js Phase 9 caught the
@@ -243,8 +251,8 @@ const escPlan = escape.exitPlan;
 //   7  collateral_survivors (3 edges × 2 tuples — terminal and early-slot,
 //      both setting war_set + war_survivors — plus 1 ai_goals-eviction
 //      tuple on collateral_survivors=none)
-assert(Array.isArray(escPlan) && escPlan.length === 22,
-    `escape exitPlan should have 22 tuples; got ${escPlan.length}`);
+assert(Array.isArray(escPlan) && escPlan.length === 23,
+    `escape exitPlan should have 23 tuples; got ${escPlan.length}`);
 const planByNode = {};
 for (const t of escPlan) {
     // Most tuples set escape_set=yes; the collateral_survivors=none
