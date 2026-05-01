@@ -188,7 +188,7 @@ Singularity Map/
 ├── data/
 │   ├── outcomes.json              ← outcome templates (with variants, flavors, reachable conditions)
 │   ├── narrative.json             ← question text, answer descriptions, timeline events, vignettes
-│   ├── personal.json              ← profession list, country buckets
+│   ├── personal.json              ← profession list
 │   └── reach/                     ← per-outcome reachability sets (JSON + gzipped)
 ├── tests/                         ← contract + narrative tests
 │   ├── module_primitive.js          ← module attachReducer + exit-plan integration

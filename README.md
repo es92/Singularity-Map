@@ -12,7 +12,7 @@ An interactive choose-your-own-adventure through the future of AI. You answer qu
 
 Outcomes range from The Flourishing (genuine shared abundance) to The Ruin (civilizational catastrophe), with everything in between: plateaus, captures, standoffs, escapes, and chaos. 13 outcome families branch into 28 distinct variants.
 
-The app also generates personalized vignettes based on your profession and country — how each world event reaches you specifically.
+The app also generates personalized vignettes based on your profession — how each world event reaches you specifically.
 
 Think of this as a tool for exploring possibilities about AI, not as a source of truth about what will happen. The real world will likely be messier, more surprising, and shaped by factors simple branching can't capture. But we do expect many of these components to appear as AI develops, and mapping how they connect may help you reason about them before they do.
 
@@ -47,7 +47,7 @@ validate.js                   Graph integrity checker (run via `npm test`)
 data/
   narrative.json        Question text, answer descriptions, timeline events, personal vignettes
   outcomes.json         Outcome templates — titles, flavors, mood, variants
-  personal.json         Profession list, country buckets
+  personal.json         Profession list
   reach/                Per-outcome reachability sets (JSON + gzipped)
 
 tests/

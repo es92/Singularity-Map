@@ -1372,36 +1372,6 @@
             try { localStorage.setItem(PERSONAL_STORAGE_KEY, JSON.stringify(answers)); } catch {}
         }
 
-        function getCountryBucket(countryName) {
-            if (!personalData) return 'rest';
-            const entry = personalData.countries.find(c => c.name === countryName);
-            return entry ? entry.bucket : 'rest';
-        }
-
-        function shouldShowAiGeoQuestion(worldState, bucket) {
-            if (!personalData) return false;
-            const bucketInfo = personalData.countryBuckets[bucket];
-            if (!bucketInfo) return false;
-            const geo = worldState.geo_spread;
-            if (geo === 'one' && bucketInfo.plausibleLeader) return true;
-            if (geo === 'multiple' && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) return true;
-            if (!geo && bucketInfo.plausibleLeader) {
-                const dist = worldState.distribution;
-                if (dist === 'monopoly' || dist === 'concentrated') return true;
-            }
-            return false;
-        }
-
-        function autoComputeAiGeo(worldState, bucket) {
-            if (!personalData) return 'no';
-            const bucketInfo = personalData.countryBuckets[bucket];
-            if (!bucketInfo) return 'no';
-            const geo = worldState.geo_spread;
-            if (geo === 'multiple' && (bucketInfo.plausibleLeader || bucketInfo.plausibleRival)) return 'yes';
-            if (!geo && bucketInfo.plausibleLeader) return 'yes';
-            return 'no';
-        }
-
         function resolvePersonalVignetteText(spec, ctx) {
             if (!spec) return null;
             if (typeof spec === 'string') return spec;
