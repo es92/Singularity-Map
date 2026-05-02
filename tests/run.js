@@ -27,6 +27,7 @@ const SUITE = [
     { label: 'tests/decel_exit_evictions',     file: 'tests/decel_exit_evictions.js' },
     { label: 'tests/module_reads_complete',    file: 'tests/module_reads_complete.js' },
     { label: 'tests/post_write_dim_usage',     file: 'tests/post_write_dim_usage.js' },
+    { label: 'tests/random_walks',             file: 'tests/random_walks.js' },
     { label: 'tests/premature_outcomes',       file: 'tests/premature_outcomes.js' },
     { label: 'tests/unreachable_clauses',      file: 'tests/unreachable_clauses.js' },
     { label: 'tests/reach_parity',             file: 'tests/reach_parity.js' },
