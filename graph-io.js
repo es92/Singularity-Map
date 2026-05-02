@@ -95,16 +95,18 @@
 
     // Strict-truncation mode: when on, hitting MAX_ROWS in any cart-prod
     // or DFS throws a diagnostic error rather than silently capping the
-    // result. validate.js / precompute-reachability.js enable this so
-    // explosions in read-projection size or DFS state-space surface
-    // immediately (silent truncation produces wrong propagation
-    // results). The browser leaves it off — MAX_ROWS is a safety net
-    // there to keep the page responsive.
-    let STRICT_TRUNCATION = false;
+    // result. ON by default — silent truncation produces wrong
+    // propagation results, and current measurements (escape DFS uses
+    // ~27.5M steps, the largest non-escape slot uses 782k; biggest
+    // pre-filter cart-prod is who_benefits at 138k) leave clear
+    // headroom under MAX_ROWS=200k and STEP_CAP=100M. If the graph
+    // grows past those caps the precompute/validate/explore stops
+    // dead at the offending slot rather than producing wrong reach.
+    let STRICT_TRUNCATION = true;
     function setStrictTruncation(on) { STRICT_TRUNCATION = !!on; }
     function _truncationError(where, info) {
         const detail = info ? ' ' + JSON.stringify(info) : '';
-        throw new Error(`[graph-io] truncation hit MAX_ROWS=${MAX_ROWS} in ${where}${detail}. Read/write set is too wide — narrow it (drop a dim from reads, or split the slot).`);
+        throw new Error(`[graph-io] truncation in ${where}${detail}. MAX_ROWS=${MAX_ROWS}, STEP_CAP=${STEP_CAP}. Read/write set is too wide or DFS state space too large — narrow reads, split the slot, or bump the cap in graph-io.js with measured headroom.`);
     }
 
     // Every module's write-row DFS persists across refreshes. Bump
@@ -627,22 +629,17 @@
     //   inputRow values that are UNSET are dropped from sel; the DFS
     //   then re-introduces them as needed via edge writes.
     //
-    // STEP_CAP is a SOFT cap, only consulted in non-strict mode (the
-    // browser's `/explore` debug overlay). Walks that exceed it set
-    // ctx.truncated, the result picks up a "+" badge, and the page
-    // stays responsive. The cap is sized so legitimate enumerations
-    // on the current graph never trip it — escape, the only outlier,
-    // settles around ~3-4M steps; everything else is well under 1k.
-    //
-    // Strict-mode callers (validate.js, precompute-reachability.js,
-    // analysis tests) skip the cap entirely. There is no legitimate
-    // case where a strict caller should hit a step limit: the
-    // module DFSes are bounded by the graph, so they always
-    // terminate. Tuning the cap upward whenever a `reads` declaration
-    // widens is a band-aid; better to let the walk complete and let
-    // OOM / hang surface a genuine non-termination bug rather than
-    // mask it as an arbitrary numeric ceiling.
-    const STEP_CAP = 10000000;
+    // STEP_CAP gates the per-result DFS step counter. Walks that
+    // exceed it either throw (STRICT_TRUNCATION=true, the default) or
+    // silently set ctx.truncated and the badge picks up a "+" suffix.
+    // 100M leaves ~3.6× headroom over escape's measured 27.5M steps
+    // (5 escape slots, 97 outputs each); next-largest non-escape slot
+    // is who_benefits at 782k. With strict on, hitting the cap stops
+    // the run dead at the offending slot rather than producing wrong
+    // reach (or letting an actually-non-terminating DFS hang until
+    // OOM). Tune upward here, not at the call site, when a graph
+    // change pushes a slot past the cap.
+    const STEP_CAP = 100000000;
 
     function _rowToSel(row) {
         const sel = {};
@@ -787,12 +784,9 @@
         const Engine = window.Engine;
 
         function walk(sel) {
-            // Step counting is browser-only — strict callers run the
-            // walk to completion (modules are graph-bounded; if a walk
-            // didn't terminate, that's a real bug, surface it as OOM/
-            // hang rather than a fixed numeric ceiling).
-            if (!STRICT_TRUNCATION && ctx.steps++ > STEP_CAP) {
+            if (ctx.steps++ > STEP_CAP) {
                 ctx.truncated = true;
+                if (STRICT_TRUNCATION) _truncationError('_dfsModuleOutputs (step cap)', { module: mod.id, steps: ctx.steps, cap: STEP_CAP });
                 return;
             }
             if (outputs.size > MAX_ROWS) {
@@ -830,8 +824,9 @@
 
     function _dfsNodeOutputs(node, startSel, dims, outputs, ctx) {
         for (const edge of (node.edges || [])) {
-            if (!STRICT_TRUNCATION && ctx.steps++ > STEP_CAP) {
+            if (ctx.steps++ > STEP_CAP) {
                 ctx.truncated = true;
+                if (STRICT_TRUNCATION) _truncationError('_dfsNodeOutputs (step cap)', { node: node.id, steps: ctx.steps, cap: STEP_CAP });
                 return;
             }
             if (window.Engine.isEdgeDisabled(startSel, node, edge)) continue;
