@@ -98,7 +98,7 @@
       "id": "the-automation",
       "title": "The Automation",
       "mood": "mixed",
-      "summary": "AI capability keeps growing — it handles longer and more complex tasks every year. Routine knowledge work is systematically delegated: legal research, code maintenance, data analysis, writing, translation. Millions of jobs transform or disappear, and with each handoff, the human capacity to do that work quietly erodes. But genuinely novel work — original research, creative breakthroughs, the kind of thinking that would let AI improve itself — remains stubbornly human. No intelligence explosion. Instead, an extraordinarily capable technology, deployed across every industry. Transformative, disruptive, but manageable.",
+      "summary": "AI got powerful enough to handle most routine knowledge work — legal research, code maintenance, data analysis, writing, translation. But genuinely novel work — original research, creative breakthroughs, the kind of thinking that would let AI improve itself — remained stubbornly human. No intelligence explosion. Instead, an extraordinarily capable technology, deployed across every industry, bounded by the gap to actually-creative work.",
       "flavorHeadings": {
         "stall_recovery": "The Recovery",
         "automation_recovery": {
@@ -126,7 +126,8 @@
         "knowledge_rate": {
           "rapid": "Routine knowledge work was displaced within a few years — fast enough to be felt as a shock. The cost advantage of AI was simply too large for organizations to ignore.",
           "gradual": "Displacement unfolded over a decade, sector by sector. Fast by historical standards, but slow enough that workers and institutions partially adapted.",
-          "uneven": "Some industries automated overnight; others held out for years. A patchwork economy emerged — some workers displaced immediately, others untouched for a generation."
+          "uneven": "Some industries automated overnight; others held out for years. A patchwork economy emerged — some workers displaced immediately, others untouched for a generation.",
+          "limited": "AI augmented knowledge workers but rarely replaced them outright. The capability ceiling was binding — AI handled pieces of roles, not whole roles. The most powerful tool ever built, used mostly as an assistant."
         },
         "physical_rate": {
           "rapid": "Physical automation followed closely behind knowledge work. AI-designed robots and autonomous systems transformed manufacturing, logistics, and agriculture within years.",
