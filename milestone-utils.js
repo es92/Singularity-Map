@@ -64,15 +64,19 @@ function resolvePersonalVignettes(sel, persona, personalData, narrative, nodes) 
     for (const node of nodes) {
         const value = sel[node.id];
         if (!value) continue;
+        // Don't require value to match a node.edges entry: an edge upstream
+        // (e.g. early_knowledge_rate.limited) can write a canonical dim
+        // value via effects.set that the canonical node itself doesn't
+        // expose as an edge. The narrative.values lookup below is the
+        // authoritative source for whether a vignette exists.
         const edge = node.edges && node.edges.find(e => e.id === value);
-        if (!edge) continue;
 
         const narr = narrative[node.id];
         const narrEdge = narr && narr.values && narr.values[value];
         if (!narrEdge) continue;
 
         let pv = null;
-        let answerLabel = (narrEdge.answerLabel || edge.label);
+        let answerLabel = narrEdge.answerLabel || (edge && edge.label) || value;
         if (narrEdge.narrativeVariants && sel) {
             const variant = resolveNarrativeVariant(narrEdge.narrativeVariants, sel);
             if (variant) {
