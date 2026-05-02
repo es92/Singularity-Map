@@ -248,19 +248,6 @@ function runStaticAnalysis() {
 // the priority pick) vs. dead (no child accepts at all). We just
 // surface the dead bucket here.
 
-function _slotAccepts(slot, sel) {
-    if (!slot) return false;
-    if (slot.kind === 'outcome') return false;
-    const target = slot.kind === 'module'
-        ? Engine.MODULE_MAP && Engine.MODULE_MAP[slot.id]
-        : (slot.kind === 'node' ? Engine.NODE_MAP && Engine.NODE_MAP[slot.id] : null);
-    if (!target) return false;
-    const aw = target.activateWhen, hw = target.hideWhen;
-    if (aw && aw.length && !aw.some(c => Engine.matchCondition(sel, c))) return false;
-    if (hw && hw.length && hw.some(c => Engine.matchCondition(sel, c))) return false;
-    return true;
-}
-
 function detectDeadEnds(prop) {
     const errors = [];
     for (const [slotKey, deadSels] of prop.deadBySlot) {
@@ -570,11 +557,6 @@ function detectExitPlanGaps(prop) {
         const realInputs = prop.inputsBySlot.get(slot.key) || [];
         if (!realInputs.length) continue;
 
-        const childSlotKeys = prop.childrenOf.get(slot.key) || [];
-        const childSlots = childSlotKeys
-            .map(k => FLOW_DAG.nodes.find(n => n && n.key === k))
-            .filter(Boolean);
-
         // Project the memo key onto the dims the module's DFS could
         // possibly read — module reads/writes/nodeIds/completion +
         // every dim mentioned in any internal node's predicates and
@@ -586,18 +568,33 @@ function detectExitPlanGaps(prop) {
         const visited = new Set();
 
         for (const input of realInputs) {
-            _walkModuleForGaps(m, input, slot.key, childSlots, gapsByKey, visited, memoDims);
+            _walkModuleForGaps(m, input, slot.key, gapsByKey, visited, memoDims);
         }
     }
 
     const sortedKeys = [...gapsByKey.keys()].sort();
     for (const key of sortedKeys) {
         const info = gapsByKey.get(key);
+        // Two distinct failure modes share Phase 9's reporting:
+        //   * stuck       — flowNext returns kind=stuck. The engine is
+        //                   wedged inside the module — no askable
+        //                   internal, no exit tuple, no downstream slot
+        //                   accepts. Fix: add an exit-plan tuple OR
+        //                   make a child slot's gate accept the sel.
+        //   * no-outcome  — flowNext returns kind=open (path completes
+        //                   per FLOW_DAG) but no outcome template
+        //                   matches the resolved state. Symptom is the
+        //                   eval's "NO MATCH" terminal. Fix: extend an
+        //                   outcome template's `reachable` clauses,
+        //                   OR add an exit tuple that sets the missing
+        //                   dim a template requires.
+        const detail = info.symptom === 'no-outcome'
+            ? 'with no matching outcome template (path completes via flowNext but resolves to NO MATCH)'
+            : 'with no exit-plan tuple firing AND no downstream slot accepting the result';
         errors.push(
-            `[exit-plan-gap] Slot "${info.slotKey}" (module "${info.moduleId}"): `
+            `[exit-plan-gap:${info.symptom}] Slot "${info.slotKey}" (module "${info.moduleId}"): `
             + `terminal ${info.terminalNodeId}.${info.terminalEdgeId} is reachable `
-            + `via ${fmtCount(info.count)} engine state(s) with no exit-plan tuple `
-            + `firing AND no downstream slot accepting the result`
+            + `via ${fmtCount(info.count)} engine state(s) ${detail}`
         );
         for (const u of info.samples) errors.push(`                sample: ${u}`);
     }
@@ -649,7 +646,7 @@ function _collectCondDims(cond, out) {
     }
 }
 
-function _walkModuleForGaps(module, entrySel, slotKey, childSlots, gapsByKey, visited, memoDims) {
+function _walkModuleForGaps(module, entrySel, slotKey, gapsByKey, visited, memoDims) {
     const completionMarker = module.completionMarker;
 
     function visit(sel, lastEdge) {
@@ -681,23 +678,69 @@ function _walkModuleForGaps(module, entrySel, slotKey, childSlots, gapsByKey, vi
             return;
         }
 
-        // No askable internal AND module not done. Last chance: a
-        // child slot's gate may accept this sel — a legitimate
-        // module-bypass exit (rare but allowed by FLOW_DAG).
-        for (const child of childSlots) {
-            if (_slotAccepts(child, sel)) return;
+        // No askable internal AND module not done. Defer to the runtime
+        // navigator (FlowPropagation.flowNext) — same primitive index.html
+        // and tests/evaluate.js use — to decide whether the engine can
+        // advance from this sel.
+        //
+        // Replaces an earlier optimistic child-slot heuristic that
+        // asked "does any child of THIS slot's gate match?". That
+        // check was unsound: a static "child accepts" doesn't
+        // guarantee the runtime would actually route there, because
+        // the runtime current slot is determined by
+        // `parentSlotKeyFromStack(stack)` — which can disagree with
+        // the slot Phase 9 happens to be walking. Concretely, Lena's
+        // path (committed bugfix 2d1d08b) exposed this: Phase 9 walked
+        // escape_early_alt where intent_loop's activateWhen matches
+        // the stuck sel ("saved by child"), but the runtime resolved
+        // her stack's parent to a slot routing through escape_early
+        // (children: proliferation, who_benefits — neither saves) and
+        // dead-ended at NO MATCH.
+        //
+        // flowNext is the canonical routing primitive, so deferring to
+        // it gives a runtime-faithful answer for the slot Phase 9 is
+        // walking. Three outcomes:
+        //   * kind=question   — runtime would ask the next node. Safe.
+        //   * kind=open       — module/path exited cleanly per FLOW_DAG.
+        //                       Need to additionally verify an outcome
+        //                       template matches; otherwise this is a
+        //                       NO MATCH terminal (= what eval surfaces).
+        //   * kind=stuck      — runtime is wedged. Flag.
+        //
+        // CAVEAT: this still inherits propagation's slot assignment for
+        // the input sel. If propagation thinks the sel reaches slot X
+        // but runtime's parentSlotKeyFromStack would put the engine
+        // at a different slot Y for the same sel + some stack history,
+        // and flowNext(sel, X) is happy while flowNext(sel, Y) is
+        // stuck, this check misses it. The strictly-correct fix would
+        // enumerate every FLOW_DAG slot whose gate matches this sel
+        // and check flowNext from each — sound but expensive and
+        // likely surfaces false positives. Land the cheap fix first,
+        // see what surfaces, then escalate if needed.
+        const flow = FlowPropagation.flowNext(sel, slotKey);
+        if (flow.kind === 'question') return;
+        if (flow.kind === 'open') {
+            // Path complete — verify an outcome template matches.
+            const eff = Engine.resolvedState(sel);
+            for (const t of TEMPLATES) {
+                if (Engine.templateMatches(t, eff)) return;
+            }
+            // Falls through to gap flagging — open with no outcome.
         }
 
-        // Stuck. Skip entry-time stalls (Phase 4 / Phase 6 territory).
+        // Stuck or open-no-outcome. Skip entry-time stalls (Phase 4 /
+        // Phase 6 territory).
         if (!lastEdge) return;
 
-        const gapKey = `${module.id}|${lastEdge.nodeId}|${lastEdge.edgeId}`;
+        const symptom = flow.kind === 'open' ? 'no-outcome' : 'stuck';
+        const gapKey = `${module.id}|${lastEdge.nodeId}|${lastEdge.edgeId}|${symptom}`;
         let info = gapsByKey.get(gapKey);
         if (!info) {
             info = {
                 slotKey, moduleId: module.id,
                 terminalNodeId: lastEdge.nodeId,
                 terminalEdgeId: lastEdge.edgeId,
+                symptom,
                 count: 0, samples: [],
             };
             gapsByKey.set(gapKey, info);
