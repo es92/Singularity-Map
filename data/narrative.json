@@ -2627,18 +2627,18 @@
   },
   "proliferation_outcome": {
     "questionText": "What happens to advanced AI systems?",
-    "questionContext": "**Proliferation control is attempted — but the pressure is relentless.** Espionage, insider leaks, independent rival development, and strategic defection can all collapse the regime. The question is whether the systems stay contained, leak to specific rivals, or spread publicly.",
+    "questionContext": "**Proliferation control is attempted — but the pressure is relentless.** Espionage, insider leaks, independent rival development, and strategic defection can all collapse the regime. The question is whether access stays restricted, leaks to specific rivals, or spreads publicly.",
     "values": {
       "holds": {
-        "answerLabel": "Stay contained — control holds",
+        "answerLabel": "Restriction holds — no leaks",
         "answerDesc": "The control regime endures. Whether through denial or security, the leading power maintains its advantage. Frontier (most advanced) capability remains concentrated.",
         "timelineEvent": {
-          "headline": "Containment holds — capability stays restricted",
+          "headline": "Restriction holds — capability stays concentrated",
           "description": "Security measures succeed. Advanced AI capability remains restricted to authorized actors.",
           "durationMin": 0,
           "durationMax": 0
         },
-        "shortAnswerLabel": "Stay contained",
+        "shortAnswerLabel": "No leaks",
         "shortAnswerDesc": "The control regime endures. Frontier capability remains concentrated."
       },
       "leaks_rivals": {
