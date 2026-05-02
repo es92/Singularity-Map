@@ -48,11 +48,15 @@ function resolvePersonalVignetteText(spec, ctx) {
     return spec._default || null;
 }
 
-// `state` should be `Engine.narrativeState(stack)` (sel layered with flavor).
-// We need flavor-layered state because effects.move can evict dims from
-// sel into flavor at module exit (e.g., plateau_benefit_distribution lives
-// in flavor post-exit, not sel) — but the user still picked the value and
-// the personal vignette should fire.
+// State-iteration variant. Walks every node and checks `state[node.id]`.
+// `state` is typically `Engine.narrativeState(stack)` (sel layered with
+// flavor) so dims that effects.move evicted from sel still resolve. Used
+// by the audit path which passes synthetic states (no stack available).
+//
+// CAUTION: this can double-count when a stack pick is `early_X=v` and
+// effects writes the canonical `X=v` — both nodes will have state[id]=v
+// and emit vignettes. For walks where you have a stack, prefer
+// `resolvePersonalVignettesFromStack` (eval path).
 function resolvePersonalVignettes(state, persona, personalData, narrative, nodes) {
     if (!persona || !persona.profession) return [];
     const ctx = Object.assign({}, state, {
@@ -105,9 +109,68 @@ function resolvePersonalVignettes(state, persona, personalData, narrative, nodes
     return vignettes;
 }
 
+// Stack-iteration variant. Walks user picks (stack entries) and looks up
+// narrative content directly by node.id + edge.id. This mirrors the UI's
+// behavior in index.html: only show vignettes for the user's actual
+// choices, not for canonical dims that effects rewrote (e.g., walking
+// stack avoids the early_knowledge_rate / knowledge_rate duplicate).
+//
+// `state` should be `Engine.narrativeState(stack)` so narrativeVariants
+// matching can observe both sel and flavor dims.
+function resolvePersonalVignettesFromStack(stack, state, persona, personalData, narrative, nodeMap) {
+    if (!persona || !persona.profession) return [];
+    const ctx = Object.assign({}, state, {
+        profession: persona.profession,
+    });
+
+    const profEntry = personalData && personalData.professions.find(p => p.id === persona.profession);
+    const tokenReplace = (str) => {
+        if (!str) return str;
+        return str.replace(/\{profession\}/g, profEntry ? profEntry.label : (persona.profession || ''));
+    };
+
+    const vignettes = [];
+    for (const entry of stack) {
+        if (!entry || !entry.nodeId) continue;
+        const node = nodeMap[entry.nodeId];
+        if (!node || node.derived) continue;
+        const value = entry.edgeId;
+        if (!value) continue;
+
+        const narr = narrative[node.id];
+        const narrEdge = narr && narr.values && narr.values[value];
+        if (!narrEdge) continue;
+
+        const edge = node.edges && node.edges.find(e => e.id === value);
+        let pv = null;
+        let answerLabel = narrEdge.answerLabel || (edge && edge.label) || value;
+        if (narrEdge.narrativeVariants && state) {
+            const variant = resolveNarrativeVariant(narrEdge.narrativeVariants, state);
+            if (variant) {
+                if (variant.personalVignette) pv = variant.personalVignette;
+                if (variant.answerLabel) answerLabel = variant.answerLabel;
+            }
+        }
+        if (!pv && narrEdge.personalVignette) pv = narrEdge.personalVignette;
+        if (!pv) continue;
+
+        const text = resolvePersonalVignetteText(pv, ctx);
+        if (!text) continue;
+
+        vignettes.push({
+            nodeId: node.id,
+            heading: node.label || node.id,
+            answerLabel,
+            text: tokenReplace(text),
+        });
+    }
+    return vignettes;
+}
+
 const exported = {
     resolvePersonalVignetteText,
     resolvePersonalVignettes,
+    resolvePersonalVignettesFromStack,
     resolveNarrativeVariant,
 };
 

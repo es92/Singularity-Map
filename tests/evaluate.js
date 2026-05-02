@@ -32,7 +32,7 @@ const outcomes = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', '
 const narrative = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'narrative.json'), 'utf8'));
 const personalData = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'personal.json'), 'utf8'));
 const personas = JSON.parse(fs.readFileSync(path.join(__dirname, 'personas.json'), 'utf8'));
-const { resolvePersonalVignettes } = require('../milestone-utils.js');
+const { resolvePersonalVignettes, resolvePersonalVignettesFromStack } = require('../milestone-utils.js');
 
 const templatesList = outcomes.templates;
 
@@ -517,14 +517,16 @@ ${optionsText}${disabledText}`;
     const template = matched.length > 0 ? matched[0] : null;
     const resolved = template ? resolveTemplate(template.id, eff) : null;
 
-    // narrSel layers flavor under sel so vignettes resolve for dims that
-    // effects.move evicts from sel at module exit (e.g.,
-    // plateau_benefit_distribution).
+    // Walk the stack (user picks) and use narrSel for narrativeVariants
+    // matching — same approach as the runtime UI in index.html. Avoids
+    // the duplicate vignette that would fire when effects writes a
+    // canonical dim (e.g., early_knowledge_rate=gradual writes
+    // knowledge_rate=gradual; only the early_* pick should render).
     const narrSel = Engine.narrativeState(stack);
     const personalVignettes = persona.profession
-        ? resolvePersonalVignettes(narrSel, {
+        ? resolvePersonalVignettesFromStack(stack, narrSel, {
             profession: persona.profession,
-          }, personalData, narrative, NODES)
+          }, personalData, narrative, NODE_MAP)
         : [];
 
     return { log, sel, eff, template, resolved, apiCalls, personalVignettes };
