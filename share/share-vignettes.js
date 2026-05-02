@@ -264,21 +264,16 @@
                 text: tokenReplace(text),
             });
         };
-        // Stack-order first (chronological), then NODES-order for any extras
-        // set via effects / exitPlan writes the user didn't directly
-        // pick.
+        // Stack-order only (chronological) — matches index.html. Iterating
+        // NODES on top would double-render canonical dims that effects
+        // wrote (e.g., early_knowledge_rate=gradual writes
+        // knowledge_rate=gradual, and both nodes have personalVignettes
+        // in narrative.json). Stack-only renders the user's actual pick.
         for (const entry of stack) {
             if (!entry.nodeId) continue;
             const node = Engine.NODE_MAP[entry.nodeId];
             if (!node || node.derived) continue;
             if (seen.has(node.id)) continue;
-            seen.add(node.id);
-            collectVignette(node);
-        }
-        for (const node of Engine.NODES) {
-            if (node.derived) continue;
-            if (seen.has(node.id)) continue;
-            if (sel[node.id] === undefined) continue;
             seen.add(node.id);
             collectVignette(node);
         }
@@ -336,7 +331,10 @@
                 stage: narr.stage || node.stage,
             });
         };
-        // Stack-order first (chronological).
+        // Stack-order only (chronological) — matches index.html
+        // buildTimelineEvents. Dims set by upstream edge effects (e.g.,
+        // canonical knowledge_rate written by early_knowledge_rate) are
+        // deliberately NOT rendered as separate events.
         for (const entry of stack) {
             if (!entry.nodeId) continue;
             const node = Engine.NODE_MAP[entry.nodeId];
@@ -346,18 +344,6 @@
             if (!value) continue;
             seen.add(node.id);
             pushEvent(node, value);
-        }
-        // NODES-order for any non-stack nodes whose value was set by an
-        // upstream effects / exitPlan write. Skip locked auto-fills
-        // (matches the legacy displayOrder behavior — locked-not-in-stack
-        // never rendered).
-        for (const node of Engine.NODES) {
-            if (node.derived) continue;
-            if (seen.has(node.id)) continue;
-            if (sel[node.id] === undefined) continue;
-            if (Engine.isNodeLocked(sel, node) !== null) continue;
-            seen.add(node.id);
-            pushEvent(node, sel[node.id]);
         }
         return events;
     }
