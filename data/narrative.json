@@ -156,7 +156,7 @@
         },
         "shortAnswerLabel": "Broadly shared",
         "shortAnswerDesc": "Gains flow as lower costs, better services, and broad-based improvement.",
-        "personalVignette": "The gains reached everyone. Knowledge-intensive services — medical advice, education, legal help, financial planning — got dramatically cheaper. Physical goods and housing improved too, but more slowly, since automation hadn't fully transformed the physical economy. Your material quality of life is meaningfully better. The plateau didn't end scarcity — but the gains it produced were broadly shared. Where automation displaced workers, the cushion held: cheaper services, retraining where it worked, and a basic floor that meant losing a job wasn't losing your footing."
+        "personalVignette": "The gains reached everyone. Knowledge-intensive services — medical advice, education, legal help, financial planning — got dramatically cheaper. Physical goods and housing improved too, but more slowly, since automation hadn't fully transformed the physical economy. Your material quality of life is meaningfully better. The plateau didn't end scarcity — but the gains it produced were broadly shared. Because of how the gains were distributed, the displaced didn't fall through."
       },
       "unequal": {
         "answerLabel": "Unequally — existing wealth holders benefit most",
@@ -816,7 +816,7 @@
         },
         "shortAnswerLabel": "Broadly shared",
         "shortAnswerDesc": "Lower costs, better services, rising living standards for most.",
-        "personalVignette": "The economic gains reached everyone. Healthcare, education, housing — all dramatically cheaper or free. Your material quality of life is unrecognizable compared to a decade ago. Scarcity, as a defining feature of daily life, is over. Where automation displaced workers, the cushion held: cheaper services, retraining where it worked, and a basic floor that meant losing a job wasn't losing your footing."
+        "personalVignette": "The economic gains reached everyone. Healthcare, education, housing — all dramatically cheaper or free. Your material quality of life is unrecognizable compared to a decade ago. Scarcity, as a defining feature of daily life, is over. Because of how the gains were distributed, the displaced didn't fall through."
       },
       "unequal": {
         "answerLabel": "Unequally — existing wealth holders benefit most",
@@ -4287,10 +4287,10 @@
                   "drift"
                 ]
               },
-              "text": "The economic gains reached everyone. Healthcare, education, housing — all dramatically cheaper or free. By every material measure, life is better than you could have imagined. Where automation displaced workers, the cushion held: cheaper services, retraining where it worked, and a basic floor under everyone. But something is missing. The abundance is real; the sense of purpose isn't."
+              "text": "The economic gains reached everyone. Healthcare, education, housing — all dramatically cheaper or free. By every material measure, life is better than you could have imagined. Because of how the gains were distributed, the displaced didn't fall through. But something is missing. The abundance is real; the sense of purpose isn't."
             }
           ],
-          "_default": "The economic gains reached everyone. Healthcare, education, housing — all dramatically cheaper or free. Your material quality of life is unrecognizable compared to a decade ago. Scarcity, as a defining feature of daily life, is over. Where automation displaced workers, the cushion held: cheaper services, retraining where it worked, and a basic floor that meant losing a job wasn't losing your footing."
+          "_default": "The economic gains reached everyone. Healthcare, education, housing — all dramatically cheaper or free. Your material quality of life is unrecognizable compared to a decade ago. Scarcity, as a defining feature of daily life, is over. Because of how the gains were distributed, the displaced didn't fall through."
         }
       },
       "unequal": {
