@@ -816,19 +816,7 @@
         },
         "shortAnswerLabel": "Broadly shared",
         "shortAnswerDesc": "Lower costs, better services, rising living standards for most.",
-        "personalVignette": {
-          "_when": [
-            {
-              "if": {
-                "failure_mode": [
-                  "drift"
-                ]
-              },
-              "text": "The economic gains reached everyone. Healthcare, education, housing — all dramatically cheaper or free. By every material measure, life is better than you could have imagined. But something is missing. The abundance is real; the sense of purpose isn't."
-            }
-          ],
-          "_default": "The economic gains reached everyone. Healthcare, education, housing — all dramatically cheaper or free. Your material quality of life is unrecognizable compared to a decade ago. Scarcity, as a defining feature of daily life, is over."
-        }
+        "personalVignette": "The economic gains reached everyone. Healthcare, education, housing — all dramatically cheaper or free. Your material quality of life is unrecognizable compared to a decade ago. Scarcity, as a defining feature of daily life, is over."
       },
       "unequal": {
         "answerLabel": "Unequally — existing wealth holders benefit most",
@@ -841,19 +829,7 @@
         },
         "shortAnswerLabel": "Wealth holders benefit most",
         "shortAnswerDesc": "Those who own AI systems capture the productivity gains.",
-        "personalVignette": {
-          "_when": [
-            {
-              "if": {
-                "failure_mode": [
-                  "drift"
-                ]
-              },
-              "text": "Your material life is dramatically better — by any historical standard, you're wealthy. But those who held resources during the transformation captured gains that dwarf yours. And even what you have feels hollow. The material improvement is real; something else isn't."
-            }
-          ],
-          "_default": "Your material life is dramatically better — by any historical standard, you're wealthy. But those who held resources during the transformation captured gains that dwarf yours. You're better off than your parents could have imagined. You're nowhere near the top."
-        }
+        "personalVignette": "Your material life is dramatically better — by any historical standard, you're wealthy. But those who held resources during the transformation captured gains that dwarf yours. You're better off than your parents could have imagined. You're nowhere near the top."
       },
       "extreme": {
         "answerLabel": "Extremely unequally — those holding power capture nearly everything",
@@ -866,19 +842,7 @@
         },
         "shortAnswerLabel": "Power holders capture nearly everything",
         "shortAnswerDesc": "AI becomes a tool of entrenchment for those already in power.",
-        "personalVignette": {
-          "_when": [
-            {
-              "if": {
-                "failure_mode": [
-                  "drift"
-                ]
-              },
-              "text": "Your life is somewhat better — cheaper goods, better basic services. But the transformation's real gains went to those who held power. And even your modest improvement feels empty. The gap isn't just wealth — it's meaning."
-            }
-          ],
-          "_default": "Your life is somewhat better — cheaper goods, better basic services. But the transformation's real gains went to those who held power when it happened. Your improvement is modest; theirs is civilizational. The gap isn't just wealth — it's access, influence, and the ability to shape what comes next."
-        }
+        "personalVignette": "Your life is somewhat better — cheaper goods, better basic services. But the transformation's real gains went to those who held power when it happened. Your improvement is modest; theirs is civilizational. The gap isn't just wealth — it's access, influence, and the ability to shape what comes next."
       }
     },
     "shortQuestionContext": "Productivity soars from AI automation. But who captures the gains — broadly, or concentrated?"
