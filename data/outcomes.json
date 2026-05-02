@@ -1192,7 +1192,15 @@
         },
         "concentration_type": {
           "elites": "The concentration followed familiar grooves — shareholders, executives, political allies. Thousands of people hold real power. Enough to be stable, few enough to be oppressive. A ruling class, legible to history.",
-          "inner_circle": "The formal power structure is a facade. A handful of people — the ones who built the system, who shaped the AI's priorities — hold the real authority. Everyone else, from shareholders to cabinet ministers, follows.",
+          "inner_circle": {
+            "_default": "The formal power structure is a facade. A handful of people — the ones who built the system, who shaped the AI's priorities — hold the real authority. Everyone else, from shareholders to cabinet ministers, follows.",
+            "_when": [
+              {
+                "if": { "sovereignty": ["state"] },
+                "text": "The formal power structure is a facade. A handful of leaders in the government hold the real authority. Ministries are briefed; legislatures vote on policies already decided. The state's institutions move through their rituals, but the substantive choices happen in a much smaller room."
+              }
+            ]
+          },
           "singleton": "One person. The entire apparatus of captured AI answers to a single individual. Not through conspiracy — through the architecture of a system that was always designed around one center of gravity. The entire lightcone, tiled in their image."
         },
         "power_use": {
