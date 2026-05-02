@@ -517,8 +517,12 @@ ${optionsText}${disabledText}`;
     const template = matched.length > 0 ? matched[0] : null;
     const resolved = template ? resolveTemplate(template.id, eff) : null;
 
+    // narrSel layers flavor under sel so vignettes resolve for dims that
+    // effects.move evicts from sel at module exit (e.g.,
+    // plateau_benefit_distribution).
+    const narrSel = Engine.narrativeState(stack);
     const personalVignettes = persona.profession
-        ? resolvePersonalVignettes(sel, {
+        ? resolvePersonalVignettes(narrSel, {
             profession: persona.profession,
           }, personalData, narrative, NODES)
         : [];

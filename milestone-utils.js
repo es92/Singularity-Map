@@ -48,9 +48,14 @@ function resolvePersonalVignetteText(spec, ctx) {
     return spec._default || null;
 }
 
-function resolvePersonalVignettes(sel, persona, personalData, narrative, nodes) {
+// `state` should be `Engine.narrativeState(stack)` (sel layered with flavor).
+// We need flavor-layered state because effects.move can evict dims from
+// sel into flavor at module exit (e.g., plateau_benefit_distribution lives
+// in flavor post-exit, not sel) — but the user still picked the value and
+// the personal vignette should fire.
+function resolvePersonalVignettes(state, persona, personalData, narrative, nodes) {
     if (!persona || !persona.profession) return [];
-    const ctx = Object.assign({}, sel, {
+    const ctx = Object.assign({}, state, {
         profession: persona.profession,
     });
 
@@ -62,7 +67,7 @@ function resolvePersonalVignettes(sel, persona, personalData, narrative, nodes) 
 
     const vignettes = [];
     for (const node of nodes) {
-        const value = sel[node.id];
+        const value = state[node.id];
         if (!value) continue;
         // Don't require value to match a node.edges entry: an edge upstream
         // (e.g. early_knowledge_rate.limited) can write a canonical dim
@@ -77,8 +82,8 @@ function resolvePersonalVignettes(sel, persona, personalData, narrative, nodes) 
 
         let pv = null;
         let answerLabel = narrEdge.answerLabel || (edge && edge.label) || value;
-        if (narrEdge.narrativeVariants && sel) {
-            const variant = resolveNarrativeVariant(narrEdge.narrativeVariants, sel);
+        if (narrEdge.narrativeVariants && state) {
+            const variant = resolveNarrativeVariant(narrEdge.narrativeVariants, state);
             if (variant) {
                 if (variant.personalVignette) pv = variant.personalVignette;
                 if (variant.answerLabel) answerLabel = variant.answerLabel;
@@ -93,7 +98,7 @@ function resolvePersonalVignettes(sel, persona, personalData, narrative, nodes) 
         vignettes.push({
             nodeId: node.id,
             heading: node.label || node.id,
-            answerLabel: answerLabel || edge.label || value,
+            answerLabel: answerLabel || (edge && edge.label) || value,
             text: tokenReplace(text),
         });
     }
