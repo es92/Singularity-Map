@@ -2028,16 +2028,22 @@
                 return next;
             }
 
-            function wouldReachOutcome(slotKey, nodeId, edgeId, dfsMemo) {
+            function wouldReachOutcome(slotKey, nodeId, edgeId, dfsMemo, fromSel) {
                 // Returns true when the post-click sel can still reach
                 // the locked outcome at this slot's exit boundary.
                 // `slotKey` MUST be the active flowNext().slotKey — the
                 // checker indexes per-slot and the same selKey can hold
                 // different forward reach at different slots (escape × 5,
                 // brittle/sufficient pass-through, etc.).
+                //
+                // `fromSel` is the sel-at-question-time. Defaults to the
+                // current runtime sel (frontier question case). Past
+                // questions (timeline siblings) pass the partial-stack
+                // sel so the reach check reflects what was true at the
+                // moment of the pick, not the final sel.
                 if (!lockedId) return true;
                 if (!_reachActiveChecker) return true;  // still loading
-                const sel = Engine.currentState(stack);
+                const sel = fromSel || Engine.currentState(stack);
                 const childSel = _lightPushSel(sel, nodeId, edgeId);
                 return _reachActiveChecker.couldReach(slotKey, childSel, { dfsMemo });
             }
@@ -2158,14 +2164,40 @@
 
                 const renderedIds = new Set();
 
-                const pushAnswered = (node, value, isLockedNode) => {
+                const pushAnswered = (node, value, isLockedNode, selAtQ, slotKeyAtQ) => {
+                    // selAtQ / slotKeyAtQ are the (sel, slotKey) at the
+                    // moment this question was asked — reconstructed by
+                    // replaying the stack up to (but not including) the
+                    // entry. Used so sibling pills reflect both static
+                    // disable (Engine.isEdgeDisabled) AND the reach gate
+                    // (would-this-pick still reach the locked outcome?)
+                    // as they were at decision time, not against the
+                    // possibly-mutated final sel.
+                    const selForQ = selAtQ || sel;
+                    const dfsMemo = new Map();
                     const narr = nodeNarrativeFor(node.id, value, narrSel);
                     const nodeEdge = node.edges.find(v => v.id === value);
                     const paramLabel = nodeEdge ? nodeEdge.label : value;
                     const siblings = node.edges
                         .map(v => {
-                            const edgeDisabled = Engine.isEdgeDisabled(sel, node, v) && v.id !== value;
-                            return { value: v.id, label: v.label, shortLabel: v.shortLabel, nodeId: node.id, reachable: edgeDisabled ? false : true, disabled: edgeDisabled };
+                            // Picked edge is always rendered enabled — the
+                            // user took it; whatever it routed through is
+                            // by definition reachable.
+                            if (v.id === value) {
+                                return { value: v.id, label: v.label, shortLabel: v.shortLabel, nodeId: node.id, reachable: true, disabled: false };
+                            }
+                            // Static disable (graph-level disabledWhen)
+                            // checked first; if statically OK, reach-gate
+                            // against the locked outcome. wouldReachOutcome
+                            // is a no-op when not locked. slotKeyAtQ may be
+                            // null on edge cases where flowNext can't
+                            // recover the slot; skip the gate then.
+                            let disabled = Engine.isEdgeDisabled(selForQ, node, v);
+                            if (!disabled && slotKeyAtQ &&
+                                !wouldReachOutcome(slotKeyAtQ, node.id, v.id, dfsMemo, selForQ)) {
+                                disabled = true;
+                            }
+                            return { value: v.id, label: v.label, shortLabel: v.shortLabel, nodeId: node.id, reachable: !disabled, disabled };
                         });
                     events.push({
                         headline: narr.headline || '', description: narr.description || '',
@@ -2182,7 +2214,15 @@
                 //    by effects (e.g., capability 'stalls' →
                 //    'singularity'). Timeline should show what the user
                 //    actually answered.
-                for (const entry of stack) {
+                //
+                //    For each answered entry we replay the partial stack
+                //    [0..i) to recover (selAtQ, slotKeyAtQ) — the state
+                //    as it was at the moment of the pick. pushAnswered
+                //    uses these for sibling-pill disable/reach-gate
+                //    decisions. flowNext is FLOW_DAG-local and cheap;
+                //    ~10 calls per timeline render is negligible.
+                for (let i = 0; i < stack.length; i++) {
+                    const entry = stack[i];
                     if (!entry.nodeId) continue;
                     const node = Engine.NODE_MAP[entry.nodeId];
                     if (!node || node.derived) continue;
@@ -2190,7 +2230,19 @@
                     const value = entry.edgeId || sel[node.id];
                     if (!value) continue;
                     renderedIds.add(node.id);
-                    pushAnswered(node, value, false);
+                    const partialStack = stack.slice(0, i);
+                    const selAtQ = Engine.currentState(partialStack);
+                    const parentSlotKeyAtQ = window.FlowPropagation.parentSlotKeyFromStack(partialStack);
+                    const flowAtQ = window.FlowPropagation.flowNext(selAtQ, parentSlotKeyAtQ);
+                    // Conservative: only trust flowAtQ.slotKey if it
+                    // landed on the same node we're rendering. Mismatches
+                    // (e.g., engine forced a redirect, or the entry isn't
+                    // mid-flow) skip the reach gate rather than mark
+                    // siblings against the wrong slot's index.
+                    const slotKeyAtQ = (flowAtQ && flowAtQ.kind === 'question'
+                        && flowAtQ.node && flowAtQ.node.id === node.id)
+                        ? flowAtQ.slotKey : null;
+                    pushAnswered(node, value, false, selAtQ, slotKeyAtQ);
                 }
 
                 // 2) Compact mode (!fullQuestions): render the frontier inline
