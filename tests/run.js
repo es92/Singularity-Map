@@ -15,10 +15,32 @@
 //   npm run test:all               # same, via package.json
 
 const { spawnSync } = require('child_process');
+const fs = require('fs');
 const path = require('path');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const NODE_FLAGS = ['--max-old-space-size=16384'];
+
+// ─── Prereq: explore-cache must exist ─────────────────────────────
+// Several tests below (reach_parity, derive_reach_parity,
+// runtime_cache_parity, outcome_parity, random_walks_locked) read
+// data/explore-cache/*.full.bin produced by the reach precompute
+// pipeline. The cache is gitignored (regenerating churns ~50 MB on
+// every graph change), so first-time clones won't have it. Detect
+// and run the pipeline once before the suite — adds ~4 min on cold
+// start, no-op on warm.
+const META_PATH = path.join(REPO_ROOT, 'data', 'explore-cache', '_meta.json');
+if (!fs.existsSync(META_PATH)) {
+    console.log('data/explore-cache missing — running precompute pipeline (~4 min, one-time)...\n');
+    const pre = spawnSync('npm', ['run', 'precompute'], {
+        stdio: 'inherit', cwd: REPO_ROOT,
+    });
+    if (pre.status !== 0) {
+        console.error('\nprecompute failed; aborting test suite.');
+        process.exit(pre.status || 1);
+    }
+    console.log('\nprecompute complete.\n');
+}
 
 // Ordered cheapest → most expensive so failures surface fast.
 const SUITE = [
@@ -31,6 +53,10 @@ const SUITE = [
     { label: 'tests/premature_outcomes',       file: 'tests/premature_outcomes.js' },
     { label: 'tests/unreachable_clauses',      file: 'tests/unreachable_clauses.js' },
     { label: 'tests/reach_parity',             file: 'tests/reach_parity.js' },
+    { label: 'tests/derive_reach_parity',      file: 'tests/derive_reach_parity.js' },
+    { label: 'tests/runtime_cache_parity',     file: 'tests/runtime_cache_parity.js' },
+    { label: 'tests/outcome_parity',           file: 'tests/outcome_parity.js' },
+    { label: 'tests/random_walks_locked',      file: 'tests/random_walks_locked.js' },
 
     // ── Heavier static-analysis tests (~minute each) ────────────
     { label: 'validate.js',                    file: 'validate.js' },

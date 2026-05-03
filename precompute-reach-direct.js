@@ -54,10 +54,9 @@ if (!meta || !Array.isArray(meta.outcomeEntries)) {
     throw new Error('precompute-reach-direct: data/explore-cache/_meta.json missing — run precompute-explore.js first.');
 }
 
-// Group entries by templateId for the variant lookup. Same shape
-// `precompute-reachability.js`'s siphonBitsFor uses, just rebuilt from
-// the persisted meta so this script doesn't have to re-enumerate
-// templates itself.
+// Group entries by templateId for the variant lookup. Reads the
+// persisted meta so this script (and downstream consumers) doesn't
+// re-enumerate templates itself.
 const entryByTemplate = new Map();
 for (const e of meta.outcomeEntries) {
     if (!entryByTemplate.has(e.templateId)) entryByTemplate.set(e.templateId, []);

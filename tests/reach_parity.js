@@ -3,7 +3,7 @@
 
 // reach_parity.js — Verifies that the runtime key construction in
 // `wouldReachOutcome` (index.html) lands on the same Set entries the
-// precompute (`precompute-reachability.js`) emitted into
+// precompute (`derive-reach-per-outcome.js`) emitted into
 // `data/reach/<outcome>.json.gz`. The browser is unreachable from
 // this harness, so we re-implement the key derivation node-side and
 // walk a known-reachable outcome path, asserting the post-edge key

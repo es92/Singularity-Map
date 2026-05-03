@@ -411,9 +411,10 @@ function _notRejects(notSpec, state) {
 }
 
 // Template `reachable` clauses match against `sel` only — never the fused
-// `sel ∪ flavor` view. This keeps the runtime UI, the precompute
-// (precompute-reachability.js), validate.js, and FlowPropagation all
-// observing outcomes at the same states, and gives a single clean
+// `sel ∪ flavor` view. This keeps the runtime UI, the reach precompute
+// (precompute-explore.js + reach-direct/backprop + derive-reach-per-outcome.js),
+// validate.js, and FlowPropagation all observing outcomes at the same
+// states, and gives a single clean
 // contract for graph authors:
 //
 //   "Any dim referenced by an outcome `reachable` clause must be

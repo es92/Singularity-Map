@@ -36,7 +36,11 @@ graph-io.js                   Cartesian read/write enumeration + outcome matchin
 flow-propagation.js           Topological FLOW_DAG driver shared by validate / explore / precompute
 nodes.js                      /nodes view — graph debugger / inspector
 explore.js                    /explore view — module/card combinatorics surface
-precompute-reachability.js    Builds per-outcome reach sets into data/reach/
+precompute-explore.js         Builds the per-slot full-sel + reach binary cache (data/explore-cache/)
+precompute-reach-direct.js    Pass A of reach: per-(slot,sel) direct outcome match bits
+precompute-reach-backprop.js  Pass B of reach: back-propagate masks across slot DAG
+derive-reach-per-outcome.js   Bit-slices the cache into per-outcome reach files (data/reach/)
+reach-checker.js              Runtime composite reach lookup (cache + live in-module DFS)
 timeline-animator.js          Timeline rendering and animation
 timeline.css                  All styles
 milestone-utils.js            Timeline event grouping helpers

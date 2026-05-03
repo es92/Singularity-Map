@@ -2213,8 +2213,8 @@ const ESCAPE_WRITES = [
     'escape_set',
     // ruin_type='self_inflicted' is set by collateral_survivors exit-plan
     // tuples. Listing it in writes keeps it in sel after module exit so
-    // outcome variant resolution (precompute-reachability.js's
-    // sel[primaryDim] lookup, the-ruin self_inflicted variant) sees it.
+    // outcome variant resolution (the reach precompute's sel[primaryDim]
+    // lookup, the-ruin self_inflicted variant) sees it.
     // Only the collateral_survivors exit-plan tuples set it; every
     // other ESCAPE exit leaves it undefined. ruin_type isn't a question
     // dim — it's a write-only marker whose sel readers are just the
@@ -2933,7 +2933,7 @@ const EARLY_ROLLOUT_NODE_IDS = [
 // knowledge_rate is durable: it's the primaryDimension for several
 // outcome variants (the-gilded-singularity / the-new-hierarchy /
 // the-flourishing on the asi path; the-plateau / the-automation on
-// plateau/agi). Variant resolution in precompute-reachability.js uses
+// plateau/agi). Variant resolution in the reach precompute uses
 // Engine.resolvedVal(sel, primaryDim), which is sel-only — so
 // knowledge_rate must stay in sel for those variants to resolve.
 // physical_rate has no such reader (no outcome reachable / graph gate
@@ -3031,7 +3031,7 @@ const EARLY_ROLLOUT_MODULE = {
 // them — failure_mode for outcome reachable clauses (the-failure /
 // the-capture / the-new-hierarchy gates), knowledge_rate as the
 // primaryDimension for the-gilded-singularity / the-new-hierarchy /
-// the-flourishing variants (precompute-reachability.js variant resolution
+// the-flourishing variants (variant resolution in the reach precompute
 // uses Engine.resolvedVal(sel, primaryDim), which is sel-only).
 // physical_rate is in nodeIds but NOT writes → auto-moves to flavor on
 // every ROLLOUT exit via attachModuleReducer's `nodeIds \ writes` rule.
@@ -4060,8 +4060,8 @@ const WAR_WRITES = [
     // ruin_type='war' is set on war_survivors.{remnants,none} exit
     // edges (see buildWarExitPlan's buildSet). Listing it in writes
     // keeps the dim in sel after WAR exit so outcome variant resolution
-    // (precompute-reachability.js's sel[primaryDim] lookup, the-ruin
-    // war variant) sees it. Only the war_survivors exit tuples set it;
+    // (the reach precompute's sel[primaryDim] lookup, the-ruin war
+    // variant) sees it. Only the war_survivors exit tuples set it;
     // every other WAR exit leaves it undefined. ruin_type isn't a
     // question dim — it's a write-only variant marker.
     'ruin_type',

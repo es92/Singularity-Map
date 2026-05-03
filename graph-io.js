@@ -569,7 +569,7 @@
 
     // ─── Inner-DFS projection dims (module slots only) ──────────────
     // Single source of truth for the per-module "inner key" projection
-    // used by precompute-reachability.js (writing) and the runtime
+    // used by derive-reach-per-outcome.js (writing) and the runtime
     // wouldReachOutcome gate / reach_parity test (reading). The three
     // call-sites used to mirror this recipe locally; centralizing it
     // here makes drift impossible.
@@ -746,8 +746,7 @@
         // unset dims (UNSET sentinel collapses to ''). Decoder must
         // know the dim list, which precompute and runtime both
         // derive from FLOW_DAG / MODULE_MAP — they never share a
-        // dim list with literal '|' values (verified at startup;
-        // see the slot-key audit in precompute-reachability.js).
+        // dim list with literal '|' values.
         //
         // Used for emitting reach-set keys, where the JSON-array
         // shape `_projectKey` produces is too verbose: each escape
@@ -924,7 +923,8 @@
         // module?" picker. Used by:
         //   * graph-io._dfsModuleOutputs — inner DFS that materializes
         //     module outputs for cartesianWriteRows.
-        //   * precompute-reachability.js inner DFS.
+        //   * derive-reach-per-outcome.js inner DFS.
+        //   * reach-checker.js _dfsInModule.
         //   * flow-propagation.flowNext — runtime navigator (both the
         //     mid-module atomicity branch and the cross-slot module
         //     branch).
@@ -1674,7 +1674,7 @@
         // Toggle strict truncation: when true, any cart-prod / DFS that
         // would exceed MAX_ROWS throws with diagnostic context (slot id,
         // dims, sizes) instead of silently capping. Used by validate.js
-        // and precompute-reachability.js so design changes that explode
+        // and the reach precompute pipeline so design changes that explode
         // the read/write closure surface immediately as a failure rather
         // than as silently-wrong propagation results.
         setStrictTruncation,
@@ -1696,13 +1696,13 @@
         writeDimsForSlot: _writeDimsForSlot,
         // Single source of truth for the per-module inner-key projection
         // dim list — see comments at _innerDimsForSlot. Call sites:
-        // precompute-reachability.js (write side), index.html
+        // derive-reach-per-outcome.js (write side), index.html
         // wouldReachOutcome (read side), tests/reach_parity.js mirror.
         innerDimsForSlot: _innerDimsForSlot,
         // Inner-DFS pick: picks the (priority-highest) askable internal
         // node of `mod` that has at least one enabled edge under `sel`,
         // or null if none. Used by graph-io's own _dfsModuleOutputs and
-        // by precompute-reachability.js's per-module DFS so the two
+        // by derive-reach-per-outcome.js + reach-checker.js so they all
         // share one definition of "what would the engine ask next
         // inside this module?". Askability gate is delegated to
         // Engine.isAskableInternal for parity with the runtime

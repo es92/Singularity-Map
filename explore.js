@@ -1220,7 +1220,7 @@
     //
     // Propagation itself (topo walk + slot-priority routing + outcome
     // siphoning) is delegated to `FlowPropagation.run` — the same
-    // primitive validate.js and precompute-reachability.js use, so
+    // primitive validate.js and the reach precompute use, so
     // explore's badges and the engine's static analysis can never
     // disagree on what's reachable. The hook `onOutcomeMatch` lets us
     // tally per-(slot, outcome) reach without re-walking; everything

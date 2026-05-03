@@ -1969,12 +1969,12 @@
                 return { sel: next, flavor: nextFlavor };
             }
 
-            // ─── Reach-key helpers (mirror precompute-reachability.js) ──
-            // The reach files are keyed by `<slotKey>|out:<projKey>` for
+            // ─── Reach-key helpers (mirror derive-reach-per-outcome.js) ──
+            // The reach files are keyed by `<slotKey>|o|<projKey>` for
             // post-edge sels at non-module nodes / freshly-exited modules,
-            // and `<slotKey>|in:<projKey>` for partial states inside an
-            // active module. We compute the same key the precompute
-            // emitted so a Set.has() lands on the right entry.
+            // and `<moduleId>|i|<projKey>` for partial states inside an
+            // active module. We compute the same key derive emits so
+            // a Set.has() lands on the right entry.
             const _reachIndex = {
                 _built: false,
                 moduleOfNode: new Map(),
@@ -2072,7 +2072,7 @@
                 const narrSel = Engine.narrativeState(stack);
 
                 // FLOW_DAG-driven navigation (single source of truth, shared
-                // with validate.js / explore / precompute-reachability):
+                // with validate.js / explore / reach precompute):
                 //
                 //   * 'question' — render that node; outcomes deferred.
                 //   * 'stuck'    — FLOW_DAG slot owns the sel but nothing's

@@ -6,8 +6,11 @@
 //   * validate.js Phase 2+    — invariant checks (dead ends, gate vs.
 //                                internals, edge coverage, outcome
 //                                reachability).
-//   * precompute-reachability — per-outcome reach tables shipped to
-//                                the browser.
+//   * precompute-explore.js   — per-slot full-sel + reach binary
+//                                cache, the source of truth from
+//                                which derive-reach-per-outcome.js
+//                                bit-slices the per-outcome tables
+//                                shipped to the browser.
 //
 // Both callers want the same pass; they differ only in what they
 // observe as it runs. Callers register optional hooks (onSlotOutput,
@@ -416,7 +419,7 @@
     //   * validate.js (indirectly via FlowPropagation.run) — same
     //     slot-pick semantics drive the propagation pass.
     //   * /explore — same slot-pick semantics drive the visual graph.
-    //   * precompute-reachability.js — same.
+    //   * reach precompute (precompute-explore.js + derive-reach-per-outcome.js) — same.
     //
     // Slot ownership uses LOOSE askability (Engine.isAskableInternal,
     // 4-check) — mirroring how FLOW_DAG was designed (modules are

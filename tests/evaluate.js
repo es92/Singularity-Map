@@ -10,7 +10,7 @@ const Engine = require('../engine.js');
 
 // Shim window so the IIFE-style modules (graph-io.js, nodes.js,
 // flow-propagation.js) can attach to it. Mirrors validate.js /
-// precompute-reachability.js so flowNext() is the same primitive used by
+// the reach precompute so flowNext() is the same primitive used by
 // the runtime UI and the static-analysis pipeline.
 const ROOT = path.join(__dirname, '..');
 global.window = {
