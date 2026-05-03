@@ -57,6 +57,7 @@ const SUITE = [
     { label: 'tests/runtime_cache_parity',     file: 'tests/runtime_cache_parity.js' },
     { label: 'tests/outcome_parity',           file: 'tests/outcome_parity.js' },
     { label: 'tests/random_walks_locked',      file: 'tests/random_walks_locked.js' },
+    { label: 'tests/module_no_repeat_questions', file: 'tests/module_no_repeat_questions.js' },
 
     // ── Heavier static-analysis tests (~minute each) ────────────
     { label: 'validate.js',                    file: 'validate.js' },

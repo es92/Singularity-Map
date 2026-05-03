@@ -885,28 +885,23 @@ const NODES = [
         },
         { id: 'leaks_rivals', label: 'Leaks to rivals', disabledWhen: [{ proliferation_control: ['none'], reason: 'The technology is already openly available — there are no restrictions to leak past' }] },
         { id: 'leaks_public', label: 'Leaks publicly',
-          // Mid-module bookkeeping: secure_access becomes invalid the
-          // moment distribution flips to open (per its own disabledWhen).
-          // All leaks_public paths flip distribution to open eventually
-          // — at module exit on alignment≠robust (LEAKED_OPEN_UNROBUST),
-          // or one slot later via proliferation_alignment on alignment
-          // =robust (LEAKED_OPEN). Evict proliferation_control=secure_access
-          // here so the post-push sel doesn't carry a stale {distribution
-          // =open, proliferation_control=secure_access} pair on the
-          // alignment=robust path (where the module hasn't exited yet
-          // and proliferation_control remains in sel until the exit
-          // tuple's auto-move fires on the proliferation_alignment edge).
+          // No edge-level effects: proliferation_control stays in sel
+          // until the module exits, at which point attachModuleReducer's
+          // auto-move (`nodeIds \ writes`) clears it via the exit-plan
+          // tuple. That's the correct cleanup point — distribution
+          // hasn't flipped to 'open' yet at the moment of this push
+          // (the flip happens at module exit via LEAKED_OPEN_UNROBUST
+          // on alignment≠robust, or one slot later via LEAKED_OPEN on
+          // alignment=robust), so the {distribution=open,
+          // proliferation_control=secure_access} pair this used to
+          // pre-empt with a `move` never actually exists mid-walk.
           //
-          // Lives as a direct edge-level block (not in buildProliferation
-          // ExitPlan) because the module DOESN'T exit on alignment=robust
-          // here — it continues to proliferation_alignment. attachModule
-          // Reducer's auto-move list (proliferation_control, proliferation
-          // _outcome) attaches only to exit-plan tuples; this block stays
-          // out of that path. attachModuleReducer merges via existing.
-          // concat(blocks), so this block runs first.
-          effects: [
-            { when: { proliferation_control: ['secure_access'] }, move: ['proliferation_control'] }
-          ]
+          // The earlier mid-walk `move: ['proliferation_control']`
+          // here caused a UX bug: clearing the dim made
+          // findNextInternalNode re-offer proliferation_control on
+          // the alignment=robust path (where the module continues to
+          // proliferation_alignment instead of exiting). Surfaced by
+          // tests/module_no_repeat_questions.js.
         }
       ] },
     { id: 'proliferation_alignment', label: 'Alignment Under Open Weights', stage: 2,
