@@ -39,8 +39,9 @@ explore.js                    /explore view — module/card combinatorics surfac
 precompute-explore.js         Builds the per-slot full-sel + reach binary cache (data/explore-cache/)
 precompute-reach-direct.js    Pass A of reach: per-(slot,sel) direct outcome match bits
 precompute-reach-backprop.js  Pass B of reach: back-propagate masks across slot DAG
-derive-reach-per-outcome.js   Bit-slices the cache into per-outcome reach files (data/reach/)
-reach-checker.js              Runtime composite reach lookup (cache + live in-module DFS)
+bundle-reach-binaries.js      Gzip per-slot .full.bin files for browser fetch (data/reach/)
+reach-checker.js              Composite reach lookup; shared by browser and Node tests
+explore-cache.js              Cross-platform loader for per-slot reach binaries
 timeline-animator.js          Timeline rendering and animation
 timeline.css                  All styles
 milestone-utils.js            Timeline event grouping helpers
@@ -63,7 +64,7 @@ tests/
   decel_exit_evictions.js      Decel exit-tuple eviction shape
   flow_next_parity.js          FlowPropagation.run vs. flowNext routing parity
   all_variants_reachable.js    Every declared outcome variant is reached
-  reach_parity.js              Runtime walk vs. precomputed reach parity
+  random_walks_locked.js       Reach-checker walks for every locked outcome
   evaluate.js                  LLM-based evaluation — persona simulation
   personas.json                Test personas for evaluation
   timeline-animation-test.html Standalone timeline-animation playground

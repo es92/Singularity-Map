@@ -1,0 +1,201 @@
+{
+  "v": 2,
+  "outcomeEntries": [
+    {
+      "id": "the-plateau--hours",
+      "templateId": "the-plateau",
+      "primaryDim": "stall_duration",
+      "variantKey": "hours",
+      "bit": 1
+    },
+    {
+      "id": "the-plateau--days",
+      "templateId": "the-plateau",
+      "primaryDim": "stall_duration",
+      "variantKey": "days",
+      "bit": 2
+    },
+    {
+      "id": "the-plateau--weeks",
+      "templateId": "the-plateau",
+      "primaryDim": "stall_duration",
+      "variantKey": "weeks",
+      "bit": 4
+    },
+    {
+      "id": "the-plateau--months",
+      "templateId": "the-plateau",
+      "primaryDim": "stall_duration",
+      "variantKey": "months",
+      "bit": 8
+    },
+    {
+      "id": "the-automation",
+      "templateId": "the-automation",
+      "primaryDim": null,
+      "variantKey": null,
+      "bit": 16
+    },
+    {
+      "id": "the-gilded-singularity--rapid",
+      "templateId": "the-gilded-singularity",
+      "primaryDim": "knowledge_rate",
+      "variantKey": "rapid",
+      "bit": 32
+    },
+    {
+      "id": "the-gilded-singularity--gradual",
+      "templateId": "the-gilded-singularity",
+      "primaryDim": "knowledge_rate",
+      "variantKey": "gradual",
+      "bit": 64
+    },
+    {
+      "id": "the-gilded-singularity--uneven",
+      "templateId": "the-gilded-singularity",
+      "primaryDim": "knowledge_rate",
+      "variantKey": "uneven",
+      "bit": 128
+    },
+    {
+      "id": "the-new-hierarchy--rapid",
+      "templateId": "the-new-hierarchy",
+      "primaryDim": "knowledge_rate",
+      "variantKey": "rapid",
+      "bit": 256
+    },
+    {
+      "id": "the-new-hierarchy--gradual",
+      "templateId": "the-new-hierarchy",
+      "primaryDim": "knowledge_rate",
+      "variantKey": "gradual",
+      "bit": 512
+    },
+    {
+      "id": "the-new-hierarchy--uneven",
+      "templateId": "the-new-hierarchy",
+      "primaryDim": "knowledge_rate",
+      "variantKey": "uneven",
+      "bit": 1024
+    },
+    {
+      "id": "the-flourishing--rapid",
+      "templateId": "the-flourishing",
+      "primaryDim": "knowledge_rate",
+      "variantKey": "rapid",
+      "bit": 2048
+    },
+    {
+      "id": "the-flourishing--gradual",
+      "templateId": "the-flourishing",
+      "primaryDim": "knowledge_rate",
+      "variantKey": "gradual",
+      "bit": 4096
+    },
+    {
+      "id": "the-flourishing--uneven",
+      "templateId": "the-flourishing",
+      "primaryDim": "knowledge_rate",
+      "variantKey": "uneven",
+      "bit": 8192
+    },
+    {
+      "id": "the-capture",
+      "templateId": "the-capture",
+      "primaryDim": null,
+      "variantKey": null,
+      "bit": 16384
+    },
+    {
+      "id": "the-standoff",
+      "templateId": "the-standoff",
+      "primaryDim": null,
+      "variantKey": null,
+      "bit": 32768
+    },
+    {
+      "id": "the-ruin--war",
+      "templateId": "the-ruin",
+      "primaryDim": "ruin_type",
+      "variantKey": "war",
+      "bit": 65536
+    },
+    {
+      "id": "the-ruin--self_inflicted",
+      "templateId": "the-ruin",
+      "primaryDim": "ruin_type",
+      "variantKey": "self_inflicted",
+      "bit": 131072
+    },
+    {
+      "id": "the-mosaic--robust",
+      "templateId": "the-mosaic",
+      "primaryDim": "alignment",
+      "variantKey": "robust",
+      "bit": 262144
+    },
+    {
+      "id": "the-mosaic--brittle",
+      "templateId": "the-mosaic",
+      "primaryDim": "alignment",
+      "variantKey": "brittle",
+      "bit": 524288
+    },
+    {
+      "id": "the-mosaic--failed",
+      "templateId": "the-mosaic",
+      "primaryDim": "alignment",
+      "variantKey": "failed",
+      "bit": 1048576
+    },
+    {
+      "id": "the-failure--drift",
+      "templateId": "the-failure",
+      "primaryDim": "failure_mode",
+      "variantKey": "drift",
+      "bit": 2097152
+    },
+    {
+      "id": "the-escape--benevolent",
+      "templateId": "the-escape",
+      "primaryDim": "ai_goals",
+      "variantKey": "benevolent",
+      "bit": 4194304
+    },
+    {
+      "id": "the-escape--paperclip",
+      "templateId": "the-escape",
+      "primaryDim": "ai_goals",
+      "variantKey": "paperclip",
+      "bit": 8388608
+    },
+    {
+      "id": "the-escape--power_seeking",
+      "templateId": "the-escape",
+      "primaryDim": "ai_goals",
+      "variantKey": "power_seeking",
+      "bit": 16777216
+    },
+    {
+      "id": "the-alien-ai--alien_coexistence",
+      "templateId": "the-alien-ai",
+      "primaryDim": "ai_goals",
+      "variantKey": "alien_coexistence",
+      "bit": 33554432
+    },
+    {
+      "id": "the-alien-ai--alien_extinction",
+      "templateId": "the-alien-ai",
+      "primaryDim": "ai_goals",
+      "variantKey": "alien_extinction",
+      "bit": 67108864
+    },
+    {
+      "id": "the-chaos",
+      "templateId": "the-chaos",
+      "primaryDim": null,
+      "variantKey": null,
+      "bit": 134217728
+    }
+  ]
+}

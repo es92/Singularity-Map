@@ -3,7 +3,7 @@
 // explore-cache.js — Loader for the per-slot tables persisted by
 // precompute-explore.js.
 //
-// Two pairs of APIs are exposed, one per pass of the precompute:
+// Two shapes coexist:
 //
 //   PASS 1 — projection cache (`<slotKey>.bin`):
 //     loadSlot(slotKey)    — rehydrate to legacy
@@ -12,48 +12,105 @@
 //                            getInputOutputs without string allocation.
 //
 //   PASS 2 — full-sel + reach + predecessors cache (`<slotKey>.full.bin`):
-//     openFullSels(slotKey) — binary view; getSel(i) / getReach(i) /
-//                             setReach(i, mask) / getPredCount(i) /
-//                             getPred(i, k) / iteratePreds(i, fn).
-//                             writeReach flushes only the reach slab;
-//                             selsBuf, predOffsets, predSelsBuf
-//                             are constant after pass 2.
-//     loadFullSels(slotKey) — convenient JS-object form: returns
-//                             { dims, sels, reach, predOffsets,
-//                               predSels (flat sel[]) }.
+//     openFullSels(slotKey)        — Node-side disk loader. Returns a
+//                                    binary view: getSel / getReach /
+//                                    setReach / getPredCount / getPred /
+//                                    iteratePreds. writeReach flushes
+//                                    only the reach slab.
+//     openFullSelsFromBuffer(buf,
+//                            slotKey)
+//                                  — Cross-platform. Same view but
+//                                    parses from an already-fetched
+//                                    Uint8Array (browser uses this
+//                                    after fetch + DecompressionStream).
+//                                    No mutation / writeReach.
+//     loadFullSels(slotKey)        — JS-object form; Node only.
+//
+// The Node functions (`require('fs')`-backed) are no-ops in browsers.
+// `openFullSelsFromBuffer` and the lower-level parser are the
+// cross-platform path; every Node disk loader funnels through it.
 //
 // File format is documented in precompute-explore.js.
 
-const fs = require('fs');
-const path = require('path');
+(function (root) {
 
-const ROOT = __dirname;
-const CACHE_DIR = path.join(ROOT, 'data', 'explore-cache');
+const _isNode = typeof process !== 'undefined'
+    && process.versions
+    && process.versions.node
+    && typeof require === 'function';
+
+const fs = _isNode ? require('fs') : null;
+const path = _isNode ? require('path') : null;
+
+const ROOT = _isNode ? __dirname : null;
+const CACHE_DIR = _isNode ? path.join(ROOT, 'data', 'explore-cache') : null;
 
 const UNSET = '__GIO_UNSET__';
 
+// ─── Cross-platform binary readers ───────────────────────────────
+// Node Buffer is a Uint8Array subclass, so index access and the
+// helpers below are identical across environments — no Buffer
+// .readUInt32LE / .toString calls anywhere in the parser.
+
+function _u8(buf, off)  { return buf[off]; }
+function _u16(buf, off) { return buf[off] | (buf[off + 1] << 8); }
+function _u32(buf, off) {
+    // Avoid sign extension on the high byte.
+    return ((buf[off]) | (buf[off + 1] << 8) | (buf[off + 2] << 16))
+        + (buf[off + 3] * 0x1000000);
+}
+function _i32(buf, off) {
+    return (buf[off]) | (buf[off + 1] << 8) | (buf[off + 2] << 16) | (buf[off + 3] << 24);
+}
+function _w_i32(buf, off, v) {
+    buf[off]     = v & 0xff;
+    buf[off + 1] = (v >>> 8)  & 0xff;
+    buf[off + 2] = (v >>> 16) & 0xff;
+    buf[off + 3] = (v >>> 24) & 0xff;
+}
+
+const _td = (typeof TextDecoder !== 'undefined')
+    ? new TextDecoder('utf-8')
+    : null;
+function _decodeUtf8(buf, off, len) {
+    if (_td) return _td.decode(buf.subarray(off, off + len));
+    // Fallback (older Node without global TextDecoder):
+    return Buffer.from(buf.buffer, buf.byteOffset + off, len).toString('utf8');
+}
+
+function _asUint8Array(buf) {
+    // Accept Buffer, Uint8Array, or ArrayBuffer. Normalize to
+    // Uint8Array for index access. Buffer is already a Uint8Array
+    // so a no-op pass-through; ArrayBuffer needs wrapping.
+    if (buf instanceof Uint8Array) return buf;
+    if (typeof ArrayBuffer !== 'undefined' && buf instanceof ArrayBuffer) {
+        return new Uint8Array(buf);
+    }
+    throw new Error('explore-cache: expected Uint8Array, Buffer, or ArrayBuffer');
+}
+
+// ─── Pass 1 view (projection cache) ──────────────────────────────
+
 function _readFileBuf(slotKey) {
+    if (!_isNode) return null;
     const p = path.join(CACHE_DIR, slotKey + '.bin');
     if (!fs.existsSync(p)) return null;
     return fs.readFileSync(p);
 }
 
 function _parseHeader(fileBuf) {
-    const headerLen = fileBuf.readUInt32LE(0);
-    const headerJson = fileBuf.slice(4, 4 + headerLen).toString('utf8');
+    const headerLen = _u32(fileBuf, 0);
+    const headerJson = _decodeUtf8(fileBuf, 4, headerLen);
     const header = JSON.parse(headerJson);
     if (header.v !== 1) {
-        throw new Error(`explore-cache: unsupported format version ${header.v}`);
+        throw new Error('explore-cache: unsupported format version ' + header.v);
     }
     const bodyOff = 4 + headerLen;
     return { header, bodyOff };
 }
 
-// ─── Binary view (memory-efficient) ───────────────────────────────
-
-function openSlot(slotKey) {
-    const fileBuf = _readFileBuf(slotKey);
-    if (!fileBuf) return null;
+function _openSlotFromBuffer(buf) {
+    const fileBuf = _asUint8Array(buf);
     const { header, bodyOff } = _parseHeader(fileBuf);
 
     const dimsLen = header.dims.length;
@@ -61,30 +118,26 @@ function openSlot(slotKey) {
     const rowsBytes = header.rowCount * dimsLen;
     const byInputOff = rowsOff + rowsBytes;
 
-    // Pre-scan byInput to record (offset, pairCount, outputSize) per
-    // entry. O(byInputCount) once, then O(1) per random access. The
-    // offsets array is the only auxiliary memory we keep; everything
-    // else is read directly from `fileBuf`.
     const inputOffsets = new Uint32Array(header.byInputCount + 1);
     let off = byInputOff;
     for (let n = 0; n < header.byInputCount; n++) {
         inputOffsets[n] = off;
-        const pairCount = fileBuf.readUInt8(off);
+        const pairCount = _u8(fileBuf, off);
         const setOff = off + 1 + pairCount * 2;
-        const setSize = fileBuf.readUInt16LE(setOff);
+        const setSize = _u16(fileBuf, setOff);
         off = setOff + 2 + setSize * 2;
     }
     inputOffsets[header.byInputCount] = off;
 
     function getRowValueIdx(rowIdx, dimPos) {
-        return fileBuf.readUInt8(rowsOff + rowIdx * dimsLen + dimPos);
+        return _u8(fileBuf, rowsOff + rowIdx * dimsLen + dimPos);
     }
 
     function getRowSel(rowIdx) {
         const sel = {};
         const base = rowsOff + rowIdx * dimsLen;
         for (let j = 0; j < dimsLen; j++) {
-            const vi = fileBuf.readUInt8(base + j);
+            const vi = _u8(fileBuf, base + j);
             if (vi !== 0) sel[header.dims[j]] = header.values[vi];
         }
         return sel;
@@ -92,11 +145,11 @@ function openSlot(slotKey) {
 
     function getInputSel(n) {
         const o = inputOffsets[n];
-        const pairCount = fileBuf.readUInt8(o);
+        const pairCount = _u8(fileBuf, o);
         const sel = {};
         for (let i = 0; i < pairCount; i++) {
-            const di = fileBuf.readUInt8(o + 1 + i * 2);
-            const vi = fileBuf.readUInt8(o + 1 + i * 2 + 1);
+            const di = _u8(fileBuf, o + 1 + i * 2);
+            const vi = _u8(fileBuf, o + 1 + i * 2 + 1);
             sel[header.inputDims[di]] = header.values[vi];
         }
         return sel;
@@ -104,12 +157,12 @@ function openSlot(slotKey) {
 
     function getInputOutputs(n) {
         const o = inputOffsets[n];
-        const pairCount = fileBuf.readUInt8(o);
+        const pairCount = _u8(fileBuf, o);
         const setOff = o + 1 + pairCount * 2;
-        const setSize = fileBuf.readUInt16LE(setOff);
+        const setSize = _u16(fileBuf, setOff);
         const arr = new Uint16Array(setSize);
         for (let i = 0; i < setSize; i++) {
-            arr[i] = fileBuf.readUInt16LE(setOff + 2 + i * 2);
+            arr[i] = _u16(fileBuf, setOff + 2 + i * 2);
         }
         return arr;
     }
@@ -132,7 +185,13 @@ function openSlot(slotKey) {
     };
 }
 
-// ─── Legacy-shape rehydration ─────────────────────────────────────
+function openSlot(slotKey) {
+    const buf = _readFileBuf(slotKey);
+    if (!buf) return null;
+    return _openSlotFromBuffer(buf);
+}
+
+// ─── Legacy-shape rehydration (Node-only) ────────────────────────
 
 function _rebuildSelKey(sel) {
     const keys = Object.keys(sel).sort();
@@ -161,8 +220,6 @@ function loadSlot(slotKey) {
     const projKeys = new Array(view.rowCount);
     for (let i = 0; i < view.rowCount; i++) {
         const sel = view.getRowSel(i);
-        // Legacy `rows` carry UNSET as an explicit value on each dim,
-        // matching `_keyToRow(_projectKey(sel, writes))` in graph-io.
         const denseRow = {};
         for (const d of view.dims) denseRow[d] = (sel[d] === undefined) ? UNSET : sel[d];
         rows[i] = denseRow;
@@ -192,6 +249,7 @@ function loadSlot(slotKey) {
 }
 
 function loadAll() {
+    if (!_isNode) return new Map();
     if (!fs.existsSync(CACHE_DIR)) return new Map();
     const files = fs.readdirSync(CACHE_DIR).filter(f => f.endsWith('.bin'));
     const out = new Map();
@@ -202,22 +260,19 @@ function loadAll() {
     return out;
 }
 
-// ─── PASS 2 — full-sel + reach cache ─────────────────────────────
+// ─── Pass 2 view (full-sel + reach + predecessors) ──────────────
+//
+// The cross-platform parser sits below; both the Node disk loader
+// (openFullSels — supports writeReach) and the browser path
+// (openFullSelsFromBuffer — read-only, no mutation) wrap it.
 
-function _readFullSelFile(slotKey) {
-    const p = path.join(CACHE_DIR, slotKey + '.full.bin');
-    if (!fs.existsSync(p)) return null;
-    return { path: p, buf: fs.readFileSync(p) };
-}
-
-function openFullSels(slotKey) {
-    const f = _readFullSelFile(slotKey);
-    if (!f) return null;
-    const fileBuf = f.buf;
-    const headerLen = fileBuf.readUInt32LE(0);
-    const header = JSON.parse(fileBuf.slice(4, 4 + headerLen).toString('utf8'));
+function _parseFullSelsBuffer(buf, opts) {
+    const fileBuf = _asUint8Array(buf);
+    const headerLen = _u32(fileBuf, 0);
+    const header = JSON.parse(_decodeUtf8(fileBuf, 4, headerLen));
     if (header.v !== 3) {
-        throw new Error(`explore-cache: unsupported full-sel format version ${header.v} (expected 3)`);
+        throw new Error('explore-cache: unsupported full-sel format version '
+            + header.v + ' (expected 3)');
     }
 
     const dimsLen = header.dims.length;
@@ -229,25 +284,24 @@ function openFullSels(slotKey) {
     const predOffsetsBytes = (header.selCount + 1) * 4;
     const predSelsOff = predOffsetsOff + predOffsetsBytes;
 
-    // Reach is always small (selCount × 4 bytes); copy out into a
-    // typed array so callers can mutate it in place without
-    // mucking with the file Buffer's underlying slab.
+    // Reach is small (selCount × 4 bytes); copy into a typed array
+    // so callers can mutate without touching the file slab.
     const reach = new Int32Array(header.selCount);
     for (let i = 0; i < header.selCount; i++) {
-        reach[i] = fileBuf.readInt32LE(reachOff + i * 4);
+        reach[i] = _i32(fileBuf, reachOff + i * 4);
     }
 
     function _decodeSelAt(byteOff) {
         const sel = {};
         for (let j = 0; j < dimsLen; j++) {
-            const vi = fileBuf.readUInt8(byteOff + j);
+            const vi = _u8(fileBuf, byteOff + j);
             if (vi !== 0) sel[header.dims[j]] = header.values[vi];
         }
         return sel;
     }
 
     function getSelValueIdx(selIdx, dimPos) {
-        return fileBuf.readUInt8(selsOff + selIdx * dimsLen + dimPos);
+        return _u8(fileBuf, selsOff + selIdx * dimsLen + dimPos);
     }
 
     function getSel(selIdx) {
@@ -258,14 +312,14 @@ function openFullSels(slotKey) {
     function setReach(selIdx, mask) { reach[selIdx] = mask | 0; }
 
     function _predRange(selIdx) {
-        const lo = fileBuf.readUInt32LE(predOffsetsOff + selIdx * 4);
-        const hi = fileBuf.readUInt32LE(predOffsetsOff + (selIdx + 1) * 4);
+        const lo = _u32(fileBuf, predOffsetsOff + selIdx * 4);
+        const hi = _u32(fileBuf, predOffsetsOff + (selIdx + 1) * 4);
         return [lo, hi];
     }
 
     function getPredCount(selIdx) {
-        const [lo, hi] = _predRange(selIdx);
-        return hi - lo;
+        const r = _predRange(selIdx);
+        return r[1] - r[0];
     }
 
     function getPred(selIdx, k) {
@@ -274,8 +328,6 @@ function openFullSels(slotKey) {
         return _decodeSelAt(predSelsOff + (lo + k) * dimsLen);
     }
 
-    // Iterate each predecessor sel of `selIdx`. Decodes lazily; cb
-    // receives the sel object. Returning false short-circuits.
     function iteratePreds(selIdx, cb) {
         const [lo, hi] = _predRange(selIdx);
         for (let k = lo; k < hi; k++) {
@@ -283,24 +335,7 @@ function openFullSels(slotKey) {
         }
     }
 
-    function writeReach() {
-        // Re-serialize only the reach slab. selsBuf, predOffsets, and
-        // predSelsBuf are precompute-only and never mutated after
-        // pass 2 — splice them around a fresh reachBuf and atomic-
-        // rename.
-        const newReachBuf = Buffer.alloc(reachBytes);
-        for (let i = 0; i < header.selCount; i++) {
-            newReachBuf.writeInt32LE(reach[i] | 0, i * 4);
-        }
-        const head = fileBuf.slice(0, reachOff);
-        const tail = fileBuf.slice(predOffsetsOff);
-        const merged = Buffer.concat([head, newReachBuf, tail]);
-        const tmp = f.path + '.tmp';
-        fs.writeFileSync(tmp, merged);
-        fs.renameSync(tmp, f.path);
-    }
-
-    return {
+    const view = {
         slotKey: header.slotKey,
         slotKind: header.slotKind,
         slotId: header.slotId,
@@ -316,8 +351,46 @@ function openFullSels(slotKey) {
         getPredCount,
         getPred,
         iteratePreds,
-        writeReach,
     };
+
+    if (opts && opts.writeReachTo) {
+        // Node-only path: writeReach re-serializes just the reach
+        // slab and atomic-renames over the source file. selsBuf,
+        // predOffsets, predSelsBuf are pass-2-immutable so we splice
+        // a fresh reach buffer between them.
+        view.writeReach = function () {
+            const newReach = Buffer.alloc(reachBytes);
+            for (let i = 0; i < header.selCount; i++) {
+                _w_i32(newReach, i * 4, reach[i] | 0);
+            }
+            const head = fileBuf.subarray(0, reachOff);
+            const tail = fileBuf.subarray(predOffsetsOff);
+            const merged = Buffer.concat([head, newReach, tail]);
+            const tmp = opts.writeReachTo + '.tmp';
+            fs.writeFileSync(tmp, merged);
+            fs.renameSync(tmp, opts.writeReachTo);
+        };
+    }
+
+    return view;
+}
+
+function openFullSelsFromBuffer(buf, slotKey) {
+    // Browser entrypoint: caller owns the buffer (typically the result
+    // of fetch + DecompressionStream → ArrayBuffer). Read-only.
+    const view = _parseFullSelsBuffer(buf);
+    if (slotKey && !view.slotKey) view.slotKey = slotKey;
+    return view;
+}
+
+function openFullSels(slotKey) {
+    if (!_isNode) {
+        throw new Error('explore-cache.openFullSels is Node-only — '
+            + 'browsers should use openFullSelsFromBuffer(fetchedBuffer, slotKey)');
+    }
+    const p = path.join(CACHE_DIR, slotKey + '.full.bin');
+    if (!fs.existsSync(p)) return null;
+    return _parseFullSelsBuffer(fs.readFileSync(p), { writeReachTo: p });
 }
 
 function loadFullSels(slotKey) {
@@ -327,9 +400,6 @@ function loadFullSels(slotKey) {
     for (let i = 0; i < v.selCount; i++) sels[i] = v.getSel(i);
     const reach = new Int32Array(v.selCount);
     for (let i = 0; i < v.selCount; i++) reach[i] = v.getReach(i);
-    // Flatten preds into a parallel { offsets, sels } pair. Offsets
-    // are JS numbers (small enough; back-prop callers don't need a
-    // typed array here).
     const predOffsets = new Array(v.selCount + 1);
     const predSels = [];
     let n = 0;
@@ -346,6 +416,7 @@ function loadFullSels(slotKey) {
 }
 
 function loadMeta() {
+    if (!_isNode) return null;
     const p = path.join(CACHE_DIR, '_meta.json');
     if (!fs.existsSync(p)) return null;
     return JSON.parse(fs.readFileSync(p, 'utf8'));
@@ -353,9 +424,17 @@ function loadMeta() {
 
 function cacheDir() { return CACHE_DIR; }
 
-module.exports = {
+const api = {
     loadSlot, openSlot, loadAll,
-    openFullSels, loadFullSels,
+    openFullSels, openFullSelsFromBuffer, loadFullSels,
     loadMeta,
     cacheDir,
 };
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = api;
+} else {
+    root.ExploreCache = api;
+}
+
+})(typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : this));

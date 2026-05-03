@@ -1,13 +1,13 @@
 {
   "name": "singularity-map",
   "private": true,
-  "version": "0.1.37",
+  "version": "0.1.38",
   "scripts": {
     "test": "node --max-old-space-size=16384 validate.js",
     "test:quick": "node validate.js --quick",
     "test:all": "node tests/run.js",
-    "precompute": "node --max-old-space-size=16384 precompute-explore.js && node precompute-reach-direct.js && node precompute-reach-backprop.js && node derive-reach-per-outcome.js",
-    "precompute-reach": "node derive-reach-per-outcome.js",
+    "precompute": "node --max-old-space-size=16384 precompute-explore.js && node precompute-reach-direct.js && node precompute-reach-backprop.js && node bundle-reach-binaries.js",
+    "precompute-reach": "node bundle-reach-binaries.js",
     "prepare": "husky"
   },
   "dependencies": {

@@ -7,5 +7,4 @@ tests/audit-report.json
 .claude
 .DS_Store
 .cursor
-data/reach/*.json
 data/explore-cache/

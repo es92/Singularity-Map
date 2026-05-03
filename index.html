@@ -916,6 +916,8 @@
     <script src="nodes.js"></script>
     <script src="flow-propagation.js"></script>
     <script src="explore.js"></script>
+    <script src="explore-cache.js"></script>
+    <script src="reach-checker.js"></script>
     <script>
     (function () {
         'use strict';
@@ -1916,137 +1918,106 @@
             }
 
             // ─── Precomputed reachability lookup ────────────
-            let _reachSet = null;
-            let _reachSetId = '';
+            //
+            // The browser fetches the per-slot reach binaries
+            // (data/reach/<slotKey>.full.bin.gz, produced by
+            // bundle-reach-binaries.js) on entering locked mode and
+            // hands them to the same composite checker the Node tests
+            // use (reach-checker.js + tests/random_walks_locked.js).
+            // No projection-key derive step → no soundness gap from
+            // bucket aggregation.
+            //
+            // Lifecycle: the reach index is shared across every
+            // locked outcome (each outcome is just a bit in the same
+            // mask), so once loaded we never tear it down — relocking
+            // to a different outcome just changes which bit we mask
+            // against.
+            let _reachChecker = null;
             let _reachLoading = false;
 
-            function _loadReachMap(templateId) {
-                if (_reachSetId === templateId && (_reachSet || _reachLoading)) return;
-                _reachSetId = templateId;
-                _reachSet = null;
-                if (!templateId) return;
+            function _ensureReachChecker() {
+                if (_reachChecker || _reachLoading) return;
+                if (!window.ExploreCache || !window.ReachChecker) return;
+                if (typeof DecompressionStream === 'undefined') {
+                    // Older browsers degrade to "no greying"
+                    // (wouldReachOutcome returns true when checker
+                    // is null), which is conservative. The full.bin
+                    // files raw are ~50 MB; we don't ship those.
+                    return;
+                }
                 _reachLoading = true;
-                // Reach files ship gzipped only — the raw form was
-                // ~100× larger and never used at runtime. Modern
-                // browsers (Chrome 80+ / Firefox 113+ / Safari 16.4+)
-                // support DecompressionStream; older browsers degrade
-                // to "no greying" (wouldReachOutcome returns true
-                // when _reachSet is null), which is conservative.
-                fetch('data/reach/' + encodeURIComponent(templateId) + '.json.gz')
-                    .then(r => {
-                        if (!r.ok) throw new Error('reach fetch ' + r.status);
-                        if (typeof DecompressionStream === 'undefined' || !r.body) {
-                            throw new Error('DecompressionStream unavailable');
-                        }
-                        return new Response(
-                            r.body.pipeThrough(new DecompressionStream('gzip'))
-                        ).text();
-                    })
-                    .then(text => JSON.parse(text))
-                    .then(arr => {
-                        if (_reachSetId === templateId) {
-                            _reachSet = new Set(arr);
-                            _reachLoading = false;
-                            update();
-                        }
+
+                Promise.all([
+                    fetch('data/reach/_meta.json').then(r => r.json()),
+                    fetch('data/reach/_manifest.json').then(r => r.json()),
+                ]).then(([meta, manifest]) => Promise.all(
+                    manifest.slots.map(s =>
+                        fetch('data/reach/' + encodeURIComponent(s.slotKey) + '.full.bin.gz')
+                            .then(r => {
+                                if (!r.ok) throw new Error('reach binary fetch ' + r.status);
+                                return new Response(
+                                    r.body.pipeThrough(new DecompressionStream('gzip'))
+                                ).arrayBuffer();
+                            })
+                            .then(buf => [
+                                s.slotKey,
+                                window.ExploreCache.openFullSelsFromBuffer(buf, s.slotKey),
+                            ])
+                    )
+                ).then(pairs => ({ meta, views: new Map(pairs) })))
+                    .then(({ meta, views }) => {
+                        const FLOW_DAG = window.Nodes && window.Nodes.FLOW_DAG;
+                        const index = window.ReachChecker.buildIndexFromViews({
+                            views,
+                            outcomeEntries: meta.outcomeEntries,
+                            MODULES: Engine.MODULES,
+                            FLOW_DAG,
+                        });
+                        _reachChecker = window.ReachChecker.createChecker(index, {
+                            GraphIO: window.GraphIO,
+                            Engine,
+                        });
+                        _reachLoading = false;
+                        update();
                     })
                     .catch(e => {
-                        console.warn('Failed to load reachability map for', templateId, e);
+                        console.warn('Failed to load reach data:', e);
                         _reachLoading = false;
                     });
             }
 
-            function _lightPush(sel, flavor, nodeId, edgeId) {
-                // Mirrors Engine.push without committing to the stack: stamp
-                // the edge id into sel and apply only that edge's effects
-                // blocks via applyEdgeEffects. Edge-local model — no
-                // multi-edge re-walk over already-set nodes.
+            function _lightPushSel(sel, nodeId, edgeId) {
+                // Mirrors random_walks_locked.lightPushSel: stamp
+                // node.id=edge.id then run applyEdgeEffects on a
+                // fresh copy. Sel-only — flavor isn't observed by
+                // templateMatches and so doesn't affect reach.
                 const next = Object.assign({}, sel, { [nodeId]: edgeId });
-                const nextFlavor = flavor ? Object.assign({}, flavor) : {};
                 const node = Engine.NODE_MAP[nodeId];
                 const edge = node && node.edges && node.edges.find(e => e.id === edgeId);
-                if (edge) Engine.applyEdgeEffects(next, edge, nextFlavor);
-                return { sel: next, flavor: nextFlavor };
+                if (edge) Engine.applyEdgeEffects(next, edge, null);
+                return next;
             }
 
-            // ─── Reach-key helpers (mirror derive-reach-per-outcome.js) ──
-            // The reach files are keyed by `<slotKey>|o|<projKey>` for
-            // post-edge sels at non-module nodes / freshly-exited modules,
-            // and `<moduleId>|i|<projKey>` for partial states inside an
-            // active module. We compute the same key derive emits so
-            // a Set.has() lands on the right entry.
-            const _reachIndex = {
-                _built: false,
-                moduleOfNode: new Map(),
-                slotByKey:    new Map(),
-                innerDims:    new Map(),
-                build() {
-                    if (this._built) return;
-                    const FLOW_DAG = window.Nodes && window.Nodes.FLOW_DAG;
-                    if (!FLOW_DAG || !window.GraphIO) return;
-                    for (const m of (Engine.MODULES || [])) {
-                        for (const nid of (m.nodeIds || [])) this.moduleOfNode.set(nid, m);
-                    }
-                    for (const s of FLOW_DAG.nodes) this.slotByKey.set(s.key, s);
-                    // Modules can appear under a slot whose .key
-                    // differs from mod.id (alignment_loop →
-                    // 'alignment') or under multiple slots (escape
-                    // → 5 slots). Pick any matching slot — they
-                    // share the same mod object so reads/writes
-                    // are identical across them. innerDims recipe
-                    // (readDims ∪ nodeIds ∪ writeDims minus the
-                    // completionMarker) lives in GraphIO so this site,
-                    // the precompute writer, and the reach_parity test
-                    // cannot drift.
-                    for (const m of (Engine.MODULES || [])) {
-                        const slot = FLOW_DAG.nodes.find(n =>
-                            n && n.kind === 'module' && n.id === m.id);
-                        if (!slot) continue;
-                        this.innerDims.set(m.id, window.GraphIO.innerDimsForSlot(slot));
-                    }
-                    this._built = true;
-                },
-            };
+            function _lockedEntryId() {
+                if (!lockedId) return '';
+                return lockedVariantKey ? lockedId + '--' + lockedVariantKey : lockedId;
+            }
 
-            function wouldReachOutcome(nodeId, edgeId) {
-                if (!_reachSet) return true;
+            function wouldReachOutcome(slotKey, nodeId, edgeId, dfsMemo) {
+                // Returns true when the post-click sel can still reach
+                // the locked outcome at this slot's exit boundary.
+                // `slotKey` MUST be the active flowNext().slotKey — the
+                // checker indexes per-slot and the same selKey can hold
+                // different forward masks at different slots (escape × 5,
+                // brittle/sufficient pass-through, etc.).
+                if (!_reachChecker) return true;
                 if (!lockedId) return true;
-                // Under "outcomes are terminal" (SPEC.md), findNextQuestion
-                // never offers an edge from a state where any template
-                // already matches, so the reach-set lookup on the post-click
-                // state is sufficient — no template-match short-circuit
-                // needed.
-                _reachIndex.build();
-                if (!window.GraphIO) return true;
+                const targetMask = _reachChecker.bitFor(_lockedEntryId()) | 0;
+                if (!targetMask) return true;
                 const sel = Engine.currentState(stack);
-                const flavor = Engine.currentFlavor(stack);
-                const { sel: childSel } = _lightPush(sel, flavor, nodeId, edgeId);
-
-                const owningModule = _reachIndex.moduleOfNode.get(nodeId);
-                let key;
-                if (owningModule) {
-                    // Module-internal click — including the
-                    // exit-triggering click. The precompute's inner
-                    // pass folds OR-of-outer-reach into the inner
-                    // mask at exit states, so a single inner-key
-                    // lookup covers both "still inside" and "just
-                    // exited" cases. (We can't always identify the
-                    // FLOW_DAG slot anyway: `escape` appears as 5
-                    // slots and the engine doesn't track which one
-                    // is active.) compactProjectKey on innerDims =
-                    // (mod.reads ∪ mod.nodeIds) captures both the
-                    // entry bucket and the answered internals.
-                    const innerDims = _reachIndex.innerDims.get(owningModule.id) || [];
-                    key = owningModule.id + '|i|' +
-                        window.GraphIO.compactProjectKey(childSel, innerDims);
-                } else {
-                    const slot = _reachIndex.slotByKey.get(nodeId);
-                    if (!slot) return true;
-                    const writeDims = window.GraphIO.writeDimsForSlot(slot);
-                    key = nodeId + '|o|' +
-                        window.GraphIO.compactProjectKey(childSel, writeDims);
-                }
-                return _reachSet.has(key);
+                const childSel = _lightPushSel(sel, nodeId, edgeId);
+                const mask = _reachChecker.getReach(slotKey, childSel, { dfsMemo }) | 0;
+                return (mask & targetMask) !== 0;
             }
 
             function mutateStack(action, opts) {
@@ -2065,7 +2036,7 @@
             }
 
             function findNextQuestion() {
-                if (lockedId) _loadReachMap(lockedVariantKey ? lockedId + '--' + lockedVariantKey : lockedId);
+                if (lockedId) _ensureReachChecker();
                 const sel = Engine.currentState(stack);
                 // Narrative-match view: sel + flavor so edge narrativeVariants
                 // can observe flavor-moved dims (e.g., stall_recovery='mild').
@@ -2131,6 +2102,12 @@
                     return { node, options, isForced: true, forcedValue: locked };
                 }
 
+                // DFS memo is shared across this node's edge probes so
+                // mid-module sels visited during the gate's live walk
+                // are computed once per click. The memo is per-slot
+                // (mirrors random_walks_locked.js) — we're inside one
+                // slot's findNextQuestion call here.
+                const dfsMemo = new Map();
                 const options = node.edges.map(v => {
                     const disabled = Engine.isEdgeDisabled(sel, node, v);
                     const reason = Engine.getEdgeDisabledReason(sel, node, v);
@@ -2144,7 +2121,7 @@
                         shortAnswerLabel: (variant && variant.shortAnswerLabel) || v.shortAnswerLabel || null,
                         shortAnswerDesc: (variant && variant.shortAnswerDesc) || v.shortAnswerDesc || null,
                         nodeId: node.id,
-                        reachable: disabled ? false : wouldReachOutcome(node.id, v.id),
+                        reachable: disabled ? false : wouldReachOutcome(flow.slotKey, node.id, v.id, dfsMemo),
                         disabled,
                         disabledReason: reason,
                     };
@@ -3117,8 +3094,10 @@
                 unlockBtn.addEventListener('click', () => {
                     lockedId = '';
                     lockedVariantKey = '';
-                    _reachSet = null;
-                    _reachSetId = '';
+                    // Don't tear down _reachChecker — the same index
+                    // serves every outcome (each outcome is one bit
+                    // of the same mask), so a future relock just
+                    // reuses what's already loaded.
                     const pill = app.querySelector('.locked-outcome-pill');
                     if (pill) pill.remove();
                     update();

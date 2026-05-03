@@ -14,6 +14,12 @@ const MIME = {
   '.jpg':  'image/jpeg',
   '.svg':  'image/svg+xml',
   '.ico':  'image/x-icon',
+  '.bin':  'application/octet-stream',
+  // .gz files are pre-compressed payloads the browser MUST hand to
+  // DecompressionStream itself — we deliberately don't set
+  // `Content-Encoding: gzip`, which would make the browser
+  // auto-decompress before our reach loader ever sees the bytes.
+  '.gz':   'application/octet-stream',
 };
 
 http.createServer((req, res) => {

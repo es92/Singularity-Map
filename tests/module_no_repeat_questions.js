@@ -113,10 +113,9 @@ for (const mod of MODULES) {
     if (!slots.length) continue;
 
     // Seed sels: every predecessor full sel of every wrapping slot,
-    // deduped by readDims projection (same as derive-reach-per-outcome's
-    // seeding; states agreeing on read dims branch identically through
-    // the module). emergence is the root slot — no upstream — seeded
-    // with the empty sel.
+    // deduped by readDims projection (states agreeing on read dims
+    // branch identically through the module). emergence is the root
+    // slot — no upstream — seeded with the empty sel.
     const slot = slots[0];
     const readDims = GraphIO.readDimsForSlot(slot);
     const seedByReadKey = new Map();

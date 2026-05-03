@@ -127,7 +127,7 @@ const entries = reachIndex.outcomeEntries.map(e => ({
     bit: e.bit | 0,
 }));
 
-// ── Light-push helper (mirrors index.html `_lightPush`) ──
+// ── Light-push helper (mirrors index.html `_lightPushSel`) ──
 
 function lightPushSel(sel, nodeId, edgeId) {
     const next = Object.assign({}, sel, { [nodeId]: edgeId });

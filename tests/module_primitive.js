@@ -219,8 +219,10 @@ console.log('engine decel module path integration: PASS');
 const escape = MODULE_MAP.escape;
 assert(escape, 'escape module must exist');
 assert.deepStrictEqual(escape.writes.slice().sort(), [
-    'ai_goals', 'containment', 'escape_set', 'post_catch', 'ruin_type', 'war_survivors',
-].sort(), 'escape.writes should be ai_goals + post_catch + war_survivors + containment + escape_set + ruin_type');
+    'ai_goals', 'containment', 'escape_set', 'post_catch', 'ruin_type', 'war_set', 'war_survivors',
+].sort(), 'escape.writes should be ai_goals + post_catch + war_survivors + war_set + containment + escape_set + ruin_type'
+    + ' (war_set is set by collateral_survivors exit-plan tuples to mirror WAR_MODULE on shared war_survivors paths;'
+    + ' see ESCAPE_WRITES comment in graph.js)');
 
 const escPlan = escape.exitPlan;
 // Tuple breakdown (23 total):

@@ -52,10 +52,12 @@
 //   }
 //
 // Browser bundling: this file declares `ReachChecker` on `window`
-// when loaded, and on `module.exports` in Node. The Node-only
-// `buildIndexFromCache(...)` helper walks the disk cache; browsers
-// should build the index from fetched .full.bin files (loader to
-// be added when index.html migrates to v3).
+// when loaded, and on `module.exports` in Node. The cross-platform
+// `buildIndexFromViews(...)` helper takes per-slot views (produced
+// by `ExploreCache.openFullSels` on disk in Node, or
+// `openFullSelsFromBuffer` after fetch+decompress in the browser).
+// `buildIndexFromCache(...)` is a Node-only convenience that wraps
+// disk reads then forwards to buildIndexFromViews.
 
 (function (root) {
 
@@ -120,7 +122,7 @@
         }
 
         function _lightPushSel(sel, node, edge) {
-            // Mirrors index.html `_lightPush` and graph-io's
+            // Mirrors index.html `_lightPushSel` and graph-io's
             // `_applyEdgeWrites`. Stamps node.id=edge.id then runs
             // applyEdgeEffects (sel-only — flavor isn't observed
             // by templateMatches and so doesn't affect reach).
@@ -255,52 +257,43 @@
         };
     }
 
-    // ─── Node-only: build index from data/explore-cache ───────────
+    // ─── Cross-platform: build index from per-slot views ──────────
     //
-    // Browsers will build the index from fetched binaries; Node
-    // uses the explore-cache loader. Result shape feeds straight
-    // into createChecker(index, deps).
+    // Both Node tests and the browser runtime funnel through this.
+    // Caller provides:
+    //   * outcomeEntries — the bit assignment from
+    //                      data/explore-cache/_meta.json (or the
+    //                      bundled `_meta.json` shipped with the
+    //                      browser binary).
+    //   * views          — Map<slotKey, view>, where each view has
+    //                      `selCount`, `getSel(i)`, `getReach(i)`
+    //                      (the shape `ExploreCache.openFullSels`
+    //                      and `openFullSelsFromBuffer` return).
+    //   * MODULES, FLOW_DAG — runtime graph metadata.
+    //
+    // Result feeds straight into createChecker(index, deps).
 
-    function _isNode() {
-        return typeof process !== 'undefined'
-            && process.versions && process.versions.node
-            && typeof require === 'function';
-    }
-
-    function buildIndexFromCache(deps) {
-        if (!_isNode()) {
-            throw new Error('reach-checker.buildIndexFromCache is Node-only');
+    function buildIndexFromViews(deps) {
+        if (!deps || !deps.views || !deps.outcomeEntries
+                || !deps.MODULES || !deps.FLOW_DAG) {
+            throw new Error('buildIndexFromViews requires '
+                + '{ views, outcomeEntries, MODULES, FLOW_DAG }');
         }
-        if (!deps || !deps.Cache || !deps.MODULES || !deps.FLOW_DAG) {
-            throw new Error('buildIndexFromCache requires { Cache, MODULES, FLOW_DAG }');
-        }
-        const { Cache, MODULES, FLOW_DAG } = deps;
-        const fs = require('fs');
-
-        const meta = Cache.loadMeta();
-        if (!meta || !Array.isArray(meta.outcomeEntries)) {
-            throw new Error('reach-checker: data/explore-cache/_meta.json missing — run precompute-explore.js first');
-        }
-
-        const cacheDir = Cache.cacheDir();
-        const slotKeys = fs.readdirSync(cacheDir)
-            .filter(f => f.endsWith('.full.bin'))
-            .map(f => f.slice(0, -'.full.bin'.length))
-            .sort();
+        const { views, outcomeEntries, MODULES, FLOW_DAG } = deps;
 
         // Per-slot index: each slot owns its own selKey → mask map.
         // Memory cost is one selKey string per (slot, sel) entry —
         // ~60 MB total at 1.88M entries × 30B avg key. Acceptable
-        // for both Node tests and the eventual browser runtime.
+        // for both Node tests and the browser runtime (a one-time
+        // build cost on enter-locked-mode).
         const reachBySlot = new Map();
-        for (const k of slotKeys) {
-            const v = Cache.openFullSels(k);
+        for (const [slotKey, v] of views) {
             if (!v) continue;
             const m = new Map();
             for (let i = 0; i < v.selCount; i++) {
                 m.set(_selKey(v.getSel(i)), v.getReach(i) | 0);
             }
-            reachBySlot.set(k, m);
+            reachBySlot.set(slotKey, m);
         }
 
         const moduleOfNode = new Map();
@@ -333,9 +326,9 @@
             reachBySlot,
             moduleOfNode,
             slotsOfModule: { byKey, byModule },
-            outcomeEntries: meta.outcomeEntries,
+            outcomeEntries,
             bitFor: (entryId) => {
-                for (const e of meta.outcomeEntries) {
+                for (const e of outcomeEntries) {
                     if (e.id === entryId) return e.bit | 0;
                 }
                 return 0;
@@ -343,8 +336,55 @@
         };
     }
 
+    // ─── Node-only: build index from data/explore-cache ───────────
+    //
+    // Reads the disk cache produced by the precompute pipeline and
+    // forwards to buildIndexFromViews. Browsers fetch binaries +
+    // call buildIndexFromViews directly.
+
+    function _isNode() {
+        return typeof process !== 'undefined'
+            && process.versions && process.versions.node
+            && typeof require === 'function';
+    }
+
+    function buildIndexFromCache(deps) {
+        if (!_isNode()) {
+            throw new Error('reach-checker.buildIndexFromCache is Node-only');
+        }
+        if (!deps || !deps.Cache || !deps.MODULES || !deps.FLOW_DAG) {
+            throw new Error('buildIndexFromCache requires { Cache, MODULES, FLOW_DAG }');
+        }
+        const { Cache, MODULES, FLOW_DAG } = deps;
+        const fs = require('fs');
+
+        const meta = Cache.loadMeta();
+        if (!meta || !Array.isArray(meta.outcomeEntries)) {
+            throw new Error('reach-checker: data/explore-cache/_meta.json missing — run precompute-explore.js first');
+        }
+
+        const cacheDir = Cache.cacheDir();
+        const slotKeys = fs.readdirSync(cacheDir)
+            .filter(f => f.endsWith('.full.bin'))
+            .map(f => f.slice(0, -'.full.bin'.length))
+            .sort();
+
+        const views = new Map();
+        for (const k of slotKeys) {
+            const v = Cache.openFullSels(k);
+            if (v) views.set(k, v);
+        }
+
+        return buildIndexFromViews({
+            views,
+            outcomeEntries: meta.outcomeEntries,
+            MODULES,
+            FLOW_DAG,
+        });
+    }
+
     // ─── Export surface ───────────────────────────────────────────
-    const api = { createChecker, buildIndexFromCache, _selKey };
+    const api = { createChecker, buildIndexFromCache, buildIndexFromViews, _selKey };
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
     } else {

@@ -1,0 +1,99 @@
+{
+  "slots": [
+    {
+      "slotKey": "alignment",
+      "raw": 4705,
+      "gz": 1223
+    },
+    {
+      "slotKey": "auto_bd",
+      "raw": 274,
+      "gz": 203
+    },
+    {
+      "slotKey": "brittle",
+      "raw": 235361,
+      "gz": 27962
+    },
+    {
+      "slotKey": "control",
+      "raw": 1090,
+      "gz": 498
+    },
+    {
+      "slotKey": "decel",
+      "raw": 1911,
+      "gz": 591
+    },
+    {
+      "slotKey": "emergence",
+      "raw": 423,
+      "gz": 289
+    },
+    {
+      "slotKey": "escape_after_who",
+      "raw": 894166,
+      "gz": 80318
+    },
+    {
+      "slotKey": "escape_early",
+      "raw": 33752,
+      "gz": 5115
+    },
+    {
+      "slotKey": "escape_early_alt",
+      "raw": 84514,
+      "gz": 10616
+    },
+    {
+      "slotKey": "escape_late",
+      "raw": 1522835,
+      "gz": 125167
+    },
+    {
+      "slotKey": "escape_re_entry",
+      "raw": 11697933,
+      "gz": 871383
+    },
+    {
+      "slotKey": "inert_stays",
+      "raw": 1256102,
+      "gz": 128540
+    },
+    {
+      "slotKey": "intent",
+      "raw": 146354,
+      "gz": 21575
+    },
+    {
+      "slotKey": "plateau_bd",
+      "raw": 377,
+      "gz": 261
+    },
+    {
+      "slotKey": "proliferation",
+      "raw": 29396,
+      "gz": 5315
+    },
+    {
+      "slotKey": "rollout",
+      "raw": 29467380,
+      "gz": 2508980
+    },
+    {
+      "slotKey": "rollout_early",
+      "raw": 666,
+      "gz": 374
+    },
+    {
+      "slotKey": "war",
+      "raw": 360873,
+      "gz": 37054
+    },
+    {
+      "slotKey": "who_benefits",
+      "raw": 4456365,
+      "gz": 357138
+    }
+  ]
+}

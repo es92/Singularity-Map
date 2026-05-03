@@ -136,7 +136,7 @@ A state where any outcome template matches is **terminal**: the UI presents that
 
 Two consequences follow:
 
-1. **Reach-map shape.** The reach precompute (`precompute-explore.js` + `precompute-reach-direct.js` + `precompute-reach-backprop.js` + `derive-reach-per-outcome.js`) stops at the first siphon (template match) when walking the FLOW_DAG, so `reach/<outcome>.json.gz` contains projection-keyed entries only for states that are *not yet* terminal. The UI predicate `reachSet.has(<slotKey>|o|<projKey>)` (or `<moduleId>|i|<projKey>` for in-module clicks) is correct because the browser never asks a question from a terminal state.
+1. **Reach-map shape.** The reach precompute (`precompute-explore.js` + `precompute-reach-direct.js` + `precompute-reach-backprop.js` + `bundle-reach-binaries.js`) stops at the first siphon (template match) when walking the FLOW_DAG, so the per-slot `data/reach/<slotKey>.full.bin.gz` files contain forward reach masks only for states that are *not yet* terminal. The UI predicate `checker.getReach(slotKey, sel) & lockedBit` is correct because the browser never asks a question from a terminal state.
 2. **Authoring invariant.** If every path to outcome `B` transits a state where some other outcome `A` also matches, the user can never reach `B` — `A` terminates the path first. The existing `violations.ambiguous` check (no two templates match the same state) is strictly required for this invariant to hold; authors should treat it as a hard rule.
 
 ---
@@ -181,8 +181,9 @@ Singularity Map/
 ├── precompute-explore.js          ← per-slot full-sel + reach binary cache (data/explore-cache/, ~50MB raw)
 ├── precompute-reach-direct.js     ← pass A of reach: per-(slot,sel) direct outcome match bits
 ├── precompute-reach-backprop.js   ← pass B of reach: back-propagate masks across slot DAG
-├── derive-reach-per-outcome.js    ← bit-slice the cache into per-outcome reach files (data/reach/, ~13MB gz)
-├── reach-checker.js               ← runtime composite reach lookup (cache + live in-module DFS)
+├── bundle-reach-binaries.js       ← gzip per-slot .full.bin files for browser fetch (data/reach/, ~4MB gz)
+├── reach-checker.js               ← runtime composite reach lookup (cache + live in-module DFS); shared by browser and Node tests
+├── explore-cache.js               ← cross-platform binary loader for the per-slot reach files (Node disk + browser fetch)
 ├── timeline-animator.js           ← timeline rendering and animation
 ├── timeline.css                   ← all styles
 ├── milestone-utils.js             ← timeline event grouping helpers
@@ -193,7 +194,7 @@ Singularity Map/
 │   ├── outcomes.json              ← outcome templates (with variants, flavors, reachable conditions)
 │   ├── narrative.json             ← question text, answer descriptions, timeline events, vignettes
 │   ├── personal.json              ← profession list
-│   └── reach/                     ← per-outcome reachability sets (JSON + gzipped)
+│   └── reach/                     ← per-slot reachability binaries (gzipped .full.bin + manifest)
 ├── tests/                         ← contract + narrative tests
 │   ├── module_primitive.js          ← module attachReducer + exit-plan integration
 │   ├── module_reads_complete.js     ← module reads completeness audit
@@ -203,7 +204,7 @@ Singularity Map/
 │   ├── decel_exit_evictions.js      ← decel exit-tuple eviction shape
 │   ├── flow_next_parity.js          ← FlowPropagation.run vs. flowNext routing parity
 │   ├── all_variants_reachable.js    ← every declared outcome variant is reached
-│   ├── reach_parity.js              ← runtime walk vs. precomputed reach parity
+│   ├── random_walks_locked.js       ← reach-checker walks for every locked outcome
 │   ├── evaluate.js                  ← LLM-based evaluation — persona simulation
 │   ├── personas.json                ← test personas for evaluation
 │   └── timeline-animation-test.html ← standalone timeline-animation playground
@@ -294,7 +295,7 @@ by `tests/flow_next_parity.js`.
 
 ### Static analysis
 
-`graph-io.js` enumerates each module's exit space declaratively: `cartesianWriteRows(slot)` returns a `(bucketKey → projKeySet)` table where the bucket is the projection onto `module.reads` and each `projKey` is a JSON-stringified projection onto `module.writes`. `flow-propagation.js` composes those per-slot tables across the FLOW_DAG via topological propagation; `validate.js`, the reach precompute (`precompute-explore.js` + `derive-reach-per-outcome.js`), and `/explore` all share the same primitives. The runtime gate (`wouldReachOutcome` in `index.html`) computes the same `<slotKey>|o|<projKey>` keys against the precompute output, so static analysis and the live UI agree by construction.
+`graph-io.js` enumerates each module's exit space declaratively: `cartesianWriteRows(slot)` returns a `(bucketKey → projKeySet)` table where the bucket is the projection onto `module.reads` and each `projKey` is a JSON-stringified projection onto `module.writes`. `flow-propagation.js` composes those per-slot tables across the FLOW_DAG via topological propagation; `validate.js`, the reach precompute (`precompute-explore.js` + `precompute-reach-{direct,backprop}.js`), and `/explore` all share the same primitives. The runtime gate (`wouldReachOutcome` in `index.html`) feeds full sels through the same `reach-checker.js` composite the Node `random_walks_locked` test uses, so static analysis, the precompute, and the live UI all agree by construction.
 
 Modules without an explicit reducer table fall through the same DFS — the table is now derived from `attachModuleReducer`'s exit-tuple installation rather than authored separately, so the question of whether to keep one is moot.
 

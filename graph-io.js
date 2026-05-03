@@ -569,10 +569,9 @@
 
     // ─── Inner-DFS projection dims (module slots only) ──────────────
     // Single source of truth for the per-module "inner key" projection
-    // used by derive-reach-per-outcome.js (writing) and the runtime
-    // wouldReachOutcome gate / reach_parity test (reading). The three
-    // call-sites used to mirror this recipe locally; centralizing it
-    // here makes drift impossible.
+    // used by reach-checker.js _dfsInModule (running in both Node and
+    // the browser). Centralized here so the recipe (readDims ∪
+    // nodeIds ∪ writeDims, minus the completionMarker) can't drift.
     //
     // Recipe: readDims ∪ nodeIds ∪ writeDims, minus the module's
     // completionMarker dim.
@@ -923,7 +922,6 @@
         // module?" picker. Used by:
         //   * graph-io._dfsModuleOutputs — inner DFS that materializes
         //     module outputs for cartesianWriteRows.
-        //   * derive-reach-per-outcome.js inner DFS.
         //   * reach-checker.js _dfsInModule.
         //   * flow-propagation.flowNext — runtime navigator (both the
         //     mid-module atomicity branch and the cross-slot module
@@ -1695,18 +1693,17 @@
         readDimsForSlot:  _readDimsForSlot,
         writeDimsForSlot: _writeDimsForSlot,
         // Single source of truth for the per-module inner-key projection
-        // dim list — see comments at _innerDimsForSlot. Call sites:
-        // derive-reach-per-outcome.js (write side), index.html
-        // wouldReachOutcome (read side), tests/reach_parity.js mirror.
+        // dim list — see comments at _innerDimsForSlot. Used by
+        // reach-checker._dfsInModule (running in both Node tests and
+        // the browser runtime gate).
         innerDimsForSlot: _innerDimsForSlot,
         // Inner-DFS pick: picks the (priority-highest) askable internal
         // node of `mod` that has at least one enabled edge under `sel`,
         // or null if none. Used by graph-io's own _dfsModuleOutputs and
-        // by derive-reach-per-outcome.js + reach-checker.js so they all
-        // share one definition of "what would the engine ask next
-        // inside this module?". Askability gate is delegated to
-        // Engine.isAskableInternal for parity with the runtime
-        // navigator and FlowPropagation.
+        // by reach-checker._dfsInModule so they share one definition
+        // of "what would the engine ask next inside this module?".
+        // Askability gate is delegated to Engine.isAskableInternal for
+        // parity with the runtime navigator and FlowPropagation.
         findNextInternalNode: _findNextInternalNode,
         // JSON-stringified [[dim, value-or-UNSET], …] projection used
         // for reach keys. Same shape as `cartesianWriteRows.byInput`'s

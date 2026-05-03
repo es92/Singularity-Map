@@ -107,9 +107,9 @@ const TEMPLATES = outcomesData.templates;
 GraphIO.registerOutcomes(TEMPLATES);
 
 // ─── Outcome entries (variant-aware, 32-bit indexable) ────────────
-// Persisted to `_meta.json` so derive-reach-per-outcome.js,
-// reach-checker.js, and the runtime gate all read the same bit
-// assignment from one place. Templates with a
+// Persisted to `_meta.json` so reach-checker.js (used by both the
+// Node tests and the browser runtime gate) reads the bit assignment
+// from one place. Templates with a
 // `primaryDimension` get one entry per variant key; everything else
 // gets a single entry. The bit index is the entry's position in the
 // flat list. Limit is 31 bits (signed-int safe; lets us use -1 as a
