@@ -2203,6 +2203,14 @@ const ESCAPE_WRITES = [
     // primaryDim variant resolver and outcome flavor blocks via fused
     // state.
     'ruin_type',
+    // war_set='yes' is set by collateral_survivors exit-plan tuples
+    // (see buildEscapeExitPlan above) to mirror WAR_MODULE's exit on
+    // shared war_survivors paths. Listing it here keeps the precompute
+    // projection in sync with the runtime sel — without it, the static
+    // analysis would project an exit row missing war_set while the
+    // runtime carries war_set='yes' downstream, breaking selKey parity
+    // at downstream slot boundaries.
+    'war_set',
 ];
 
 // Exit edges:

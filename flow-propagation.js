@@ -316,12 +316,18 @@
             for (const sel of outputs) {
                 if (onSlotOutput) onSlotOutput(slotKey, sel);
 
-                // Siphon every matchOutcomes hit (routing semantics
-                // unchanged). For each hit additionally check whether
-                // the slot's `earlyExits` lists the outcome; if not,
-                // bookkeep + fire onUnauthorizedSiphon so callers
-                // (precompute, validate, this-test) can surface the
-                // annotation gap / clause leak.
+                // Siphon every matchOutcomes hit. The runtime's
+                // flowNext mirrors this rule: once a sel matches an
+                // outcome AND we're at a slot boundary (no module mid-
+                // walk), the runtime returns 'open' and renders the
+                // outcome rather than continuing into the next child
+                // slot. So the precompute's "match → stop routing"
+                // here matches runtime behavior exactly.
+                //
+                // Per-slot earlyExits annotates which outcomes are
+                // legitimately reachable here; misses are bookkept +
+                // surfaced via onUnauthorizedSiphon for validate.js
+                // and explore.
                 const hits = GraphIO.matchOutcomes(sel);
                 if (hits.length > 0) {
                     matched++;
@@ -673,6 +679,28 @@
     // The parity test (tests/flow_next_parity.js) feeds the parent
     // recorded in run()'s `routedFromBySlot` so it can assert exact
     // slotKey equality against `inputsBySlot`.
+    // True if any FLOW_DAG module is currently mid-walk: its
+    // completionMarker has not fired AND at least one of its internal
+    // nodes has been answered (so the user is actively answering the
+    // module's questions, not at a slot boundary). Used by the
+    // outcome-match short-circuit below to distinguish "between
+    // slots, sel matches an outcome — terminate" from "inside a
+    // module mid-walk, an outcome would match but the module's
+    // remaining internals can still flip the sel — keep going".
+    function _isInsidePendingModule(Engine, flowDag, sel) {
+        for (const slot of flowDag.nodes) {
+            if (!slot || slot.kind !== 'module') continue;
+            const m = Engine.MODULE_MAP[slot.id];
+            if (!m || !m.completionMarker) continue;
+            if (Engine.isModuleDone(sel, m.completionMarker)) continue;
+            const nodeIds = m.nodeIds || [];
+            for (const nid of nodeIds) {
+                if (sel[nid] !== undefined) return true;
+            }
+        }
+        return false;
+    }
+
     function flowNext(sel, parentSlotKey) {
         const Engine = _Engine();
         const flowDag = _FlowDag();
@@ -699,6 +727,21 @@
                 if (next) return { kind: 'question', node: next, slotKey: emergenceSlot.key };
                 if (m.completionMarker) return { kind: 'stuck', slotKey: emergenceSlot.key };
             }
+        }
+
+        // Outcome short-circuit: once the sel matches a template AND
+        // no module is mid-walk, the path is done. Mirrors the
+        // siphon in run() so static + runtime agree on terminal
+        // boundaries (and so the precompute cache for downstream
+        // slots doesn't need to enumerate already-resolved sels).
+        // The mid-walk gate matters because module internals can
+        // still rewrite outcome-relevant dims (e.g. proliferation's
+        // LEAKED_OPEN_UNROBUST flips containment/post_catch on exit)
+        // — terminating mid-walk would short-circuit a flip the
+        // narrative depends on.
+        if (!_isInsidePendingModule(Engine, flowDag, sel)) {
+            const hits = GraphIO.matchOutcomes(sel);
+            if (hits && hits.length > 0) return { kind: 'open' };
         }
 
         if (parentSlotKey != null) {

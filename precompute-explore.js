@@ -191,9 +191,14 @@ function buildProjectionBinary(slot, r) {
         return idx;
     }
 
+    // `r.rows` is deduped by writes-only — each unique writes-projection
+    // gets exactly one row, regardless of how many distinct moved-dim
+    // sets DFS paths produced for it. The on-disk format mirrors that:
+    // rowsBuf stores writes only, so byInput's [writes,moved] projKeys
+    // collapse onto the same row index and we dedupe before encoding.
     const rowCount = r.rows.length;
     const rowsBuf = Buffer.alloc(rowCount * dimsLen);
-    const projKeyToRowIdx = new Map();
+    const writesKeyToRowIdx = new Map();
     for (let i = 0; i < rowCount; i++) {
         const row = r.rows[i];
         const parts = new Array(dimsLen);
@@ -203,7 +208,11 @@ function buildProjectionBinary(slot, r) {
             rowsBuf[i * dimsLen + j] = intern(v);
             parts[j] = [d, v === undefined ? UNSET : v];
         }
-        projKeyToRowIdx.set(JSON.stringify(parts), i);
+        // _keyToRow strips moved when emitting r.rows, so a row's
+        // canonical key here is just the writes pairs (no moved
+        // wrapping). Match the same shape when extracting from a
+        // [writes, moved] projKey below.
+        writesKeyToRowIdx.set(JSON.stringify(parts), i);
     }
 
     const inputDimSet = new Set();
@@ -232,16 +241,17 @@ function buildProjectionBinary(slot, r) {
         }
         pairs.sort((a, b) => a[0] - b[0]);
 
-        const rowIdxs = new Array(outSet.size);
-        let n = 0;
+        const rowIdxSet = new Set();
         for (const projK of outSet) {
-            const ri = projKeyToRowIdx.get(projK);
+            const parsed = JSON.parse(projK);
+            const writesKey = JSON.stringify(parsed[0]);
+            const ri = writesKeyToRowIdx.get(writesKey);
             if (ri === undefined) {
-                throw new Error(`Slot ${slot.key}: byInput projKey not found in rows: ${projK.slice(0, 80)}…`);
+                throw new Error(`Slot ${slot.key}: byInput projKey writes-portion not found in rows: ${projK.slice(0, 80)}…`);
             }
-            rowIdxs[n++] = ri;
+            rowIdxSet.add(ri);
         }
-        rowIdxs.sort((a, b) => a - b);
+        const rowIdxs = [...rowIdxSet].sort((a, b) => a - b);
 
         const len = 1 + pairCount * 2 + 2 + rowIdxs.length * 2;
         byInputByteLen += len;

@@ -116,7 +116,7 @@
     // are persisted, so a format change makes every lookup miss → 0
     // outputs). Eligibility is gated by `slot.kind === 'module'` at
     // the call sites below; outcomes have no DFS to cache.
-    const PERSIST_VERSION = 21;
+    const PERSIST_VERSION = 26;
     const PERSIST_KEY_PREFIX = 'gio:writeRows:';
 
     let _domainsCache = null;
@@ -669,18 +669,76 @@
         return parts.join('\x00');
     }
 
-    function _projectKey(sel, dims) {
-        // Stable JSON-array of [dim, value-or-UNSET] pairs. Sorted by
-        // construction (dims is sorted) so identical projections compare
-        // equal. We keep UNSET as a literal sentinel string so "dim
-        // missing" rows are distinct from "dim is the literal string
-        // '__GIO_UNSET__'" (impossible in practice, but explicit).
-        const parts = [];
-        for (const d of dims) {
+    function _projectKey(sel, dims, moveBlocks) {
+        // Stable JSON-array `[writes_pairs, move_blocks]` where
+        // writes_pairs is a sorted list of [dim, value-or-UNSET]
+        // pairs (dims is already sorted by construction) and
+        // move_blocks is a list of {when?, dims} the DFS path
+        // accumulated — one entry per `effects.move` block on the
+        // path, preserving its `when` predicate (or null if
+        // unconditional). reachableFullSelsFromInputs evaluates each
+        // block's `when` per-bucket against (bucketSel + writes) to
+        // decide whether the move actually fires for that bucket;
+        // mirroring engine.applyEdgeEffects exactly.
+        //
+        // Without per-bucket evaluation, a `when`-gated move (e.g.
+        // power_use.extractive's `move:['ai_goals']` gated on
+        // concentration_type=ai_itself + ai_goals=benevolent) would
+        // be recorded as unconditional, dropping ai_goals on every
+        // path through the edge. Buckets where the `when` predicate
+        // doesn't match would have their upstream ai_goals deleted
+        // in the cache but preserved at runtime — silent parity
+        // break against tests/runtime_cache_parity.js.
+        //
+        // UNSET is kept as a literal sentinel string so "dim missing
+        // because DFS deleted it" rows are distinct from "dim is the
+        // literal string '__GIO_UNSET__'" (impossible in practice,
+        // but explicit).
+        const parts = new Array(dims.length);
+        for (let i = 0; i < dims.length; i++) {
+            const d = dims[i];
             const v = sel[d];
-            parts.push([d, v === undefined ? UNSET : v]);
+            parts[i] = [d, v === undefined ? UNSET : v];
         }
-        return JSON.stringify(parts);
+        // Move-block signatures (Set<string> from DFS path, each is
+        // a pre-canonicalized JSON of `[whenObj, dimsArr]`). Sort and
+        // join into the projKey. Paths only diverge here when their
+        // move-block sets actually differ; sibling paths with no
+        // moves at all collapse to the same projKey.
+        let moveSer = '[]';
+        if (moveBlocks && moveBlocks.size) {
+            const sigs = [...moveBlocks];
+            sigs.sort();
+            moveSer = '[' + sigs.join(',') + ']';
+        }
+        return '[' + JSON.stringify(parts) + ',' + moveSer + ']';
+    }
+
+    // Canonical when-predicate stringifier: stable sort of keys + each
+    // value canonicalized. Supports the shapes matchCondition handles:
+    // arrays, scalars, { not: [...] }, { required: true }, true, etc.
+    function _canonWhen(when) {
+        if (when == null) return null;
+        if (typeof when !== 'object') return when;
+        if (Array.isArray(when)) return when.slice().sort();
+        const keys = Object.keys(when).sort();
+        const out = {};
+        for (const k of keys) {
+            const v = when[k];
+            if (Array.isArray(v)) {
+                out[k] = v.slice().sort();
+            } else if (v && typeof v === 'object') {
+                const sub = {};
+                const sk = Object.keys(v).sort();
+                for (const s of sk) {
+                    sub[s] = Array.isArray(v[s]) ? v[s].slice().sort() : v[s];
+                }
+                out[k] = sub;
+            } else {
+                out[k] = v;
+            }
+        }
+        return out;
     }
 
     function _compactProjectKey(sel, dims) {
@@ -707,9 +765,12 @@
     }
 
     function _keyToRow(key) {
-        const parts = JSON.parse(key);
+        // projKey is [writes_pairs, move_blocks] (see _projectKey);
+        // legacy reads ignore the move-blocks component and
+        // reconstruct the same dim/value row they always have.
+        const [writes] = JSON.parse(key);
         const row = {};
-        for (const [d, v] of parts) row[d] = v;
+        for (const [d, v] of writes) row[d] = v;
         return row;
     }
 
@@ -725,6 +786,137 @@
         const next = { ...sel, [node.id]: edge.id };
         window.Engine.applyEdgeEffects(next, edge, null);
         return next;
+    }
+
+    // Returns the move blocks this edge contributes, with each block's
+    // `when` partitioned into "fixed" (dims resolvable at DFS time
+    // from this edge's own pre-block sel) and "deferred" (dims that
+    // depend on bucket / pt context, evaluated per-bucket at merge
+    // time).
+    //
+    // Each entry is { fixed: condObj | null, deferred: condObj | null,
+    // dims: dimsSorted }. The fixed part is what a DFS path uses to
+    // either accept the block (and emit it) or drop it (when fails on
+    // this DFS path). The deferred part is what the merge layer
+    // evaluates against bucketSel.
+    //
+    // Caching the partitioned blocks per edge keeps the DFS hot path
+    // allocation-free in the no-moves case (escape_late / escape_re_
+    // entry inner DFS).
+    const _edgeMoveCache = new WeakMap();
+    function _edgeMoveBlocks(edge) {
+        if (!edge || !edge.effects) return null;
+        const cached = _edgeMoveCache.get(edge);
+        if (cached !== undefined) return cached;
+        const blocks = Array.isArray(edge.effects) ? edge.effects : [edge.effects];
+        let out = null;
+        for (const b of blocks) {
+            if (b && Array.isArray(b.move) && b.move.length > 0) {
+                if (!out) out = [];
+                const dimsArr = b.move.slice().sort();
+                out.push({ rawWhen: b.when || null, dims: dimsArr });
+            }
+        }
+        _edgeMoveCache.set(edge, out);
+        return out;
+    }
+
+    // Resolve a move block's `when` against the DFS pre-edge sel.
+    // Returns {drop: true} if a fixed predicate fails, otherwise the
+    // deferred when (clauses on dims NOT in the pre-edge sel) which
+    // gets evaluated per-bucket at merge time.
+    //
+    // engine.applyEdgeEffects evaluates each block's `when` against
+    // the sel state JUST BEFORE that block fires — including prior
+    // edges' writes plus prior blocks of the same edge but NOT this
+    // block's own set. We approximate that with the pre-edge sel
+    // here: completion-marker dims (e.g. proliferation_set) and
+    // intra-edge `set`-only dims aren't in pre-edge sel and so are
+    // treated as undefined — exactly matching runtime semantics for
+    // exit-tuple blocks like proliferation_control.none's
+    // LEAK_REENTRY_MOVE (when={alignment:not-robust,
+    // proliferation_set:false}, where proliferation_set IS the same
+    // block's set — at runtime it's still undefined when the when
+    // fires).
+    function _resolveMoveWhen(rawWhen, preSel) {
+        if (!rawWhen) return { drop: false, deferred: null };
+        let deferred = null;
+        for (const [k, allowed] of Object.entries(rawWhen)) {
+            if (k === 'reason') continue;
+            const v = preSel[k];
+            const dimKnown = v !== undefined;
+            if (!dimKnown) {
+                // Defer: bucket / pt context decides at merge time.
+                // Special-case `false` (sel[k] must be undefined): if
+                // pre-edge sel doesn't have it, the runtime evaluator
+                // would treat it as matching only if BUCKET also
+                // doesn't have it. The merge layer re-checks against
+                // bucketSel.
+                if (!deferred) deferred = {};
+                deferred[k] = allowed;
+                continue;
+            }
+            // Fixed: evaluate against DFS pre-edge sel; mirror match
+            // Condition's per-key semantics.
+            if (allowed === true) continue; // present + non-null → ok
+            if (allowed === false) return { drop: true, deferred: null };
+            if (allowed && allowed.not) {
+                if (allowed.not.includes(v)) return { drop: true, deferred: null };
+                continue;
+            }
+            if (Array.isArray(allowed)) {
+                if (!allowed.includes(v)) return { drop: true, deferred: null };
+                continue;
+            }
+        }
+        return { drop: false, deferred };
+    }
+
+    // For a given edge + pre-edge sel, return the resolved move
+    // blocks ({ deferred, dims }) the DFS should accumulate.
+    // Returns null when the edge has no surviving moves.
+    function _edgeResolvedMoveBlocks(edge, preSel) {
+        const raw = _edgeMoveBlocks(edge);
+        if (!raw) return null;
+        let out = null;
+        for (const b of raw) {
+            const r = _resolveMoveWhen(b.rawWhen, preSel);
+            if (r.drop) continue;
+            if (!out) out = [];
+            out.push({ deferred: r.deferred, dims: b.dims });
+        }
+        return out;
+    }
+
+    // Convert accumulated move blocks (list of { deferred, dims }) into
+    // the projKey's move-sig array, filtering each block's dims against
+    // the final DFS sel at emit time.
+    //
+    // A dim listed in a move block but PRESENT in final sel was rewritten
+    // by a later edge on the same DFS path — engine.applyEdgeEffects's
+    // sequential evaluation means the move's `delete` was undone before
+    // the path exited. Counting that dim as "moved" in the cache produces
+    // an output that mismatches runtime. The classic case:
+    // concentration_type=ai_itself's block 2 moves [ai_goals, escape_set]
+    // (when ai_goals=marginal upstream), then power_use=generous's set
+    // re-writes escape_set=yes + ai_goals=benevolent. Without this filter,
+    // the cache deletes both even though runtime preserves them.
+    //
+    // Identical (deferred, filtered-dims) pairs dedup via Set so paths
+    // that hit the same effective moves collapse to one sig.
+    function _movesToSigs(moveList, finalSel) {
+        if (!moveList || moveList.length === 0) return null;
+        const out = new Set();
+        for (const m of moveList) {
+            const surviving = [];
+            for (const d of m.dims) {
+                if (finalSel[d] === undefined) surviving.push(d);
+            }
+            if (surviving.length === 0) continue;
+            const whenSer = m.deferred ? _canonWhen(m.deferred) : null;
+            out.add(JSON.stringify([whenSer, surviving]));
+        }
+        return out.size > 0 ? out : null;
     }
 
     function _findNextInternalNode(mod, sel) {
@@ -783,7 +975,7 @@
         const marker = mod.completionMarker || null;
         const Engine = window.Engine;
 
-        function walk(sel) {
+        function walk(sel, movesSoFar) {
             if (ctx.steps++ > STEP_CAP) {
                 ctx.truncated = true;
                 if (STRICT_TRUNCATION) _truncationError('_dfsModuleOutputs (step cap)', { module: mod.id, steps: ctx.steps, cap: STEP_CAP });
@@ -804,7 +996,10 @@
             // any module whose action node is in the move list (decel,
             // who_benefits, etc.).
             if (marker && Engine.isModuleDone(sel, marker)) {
-                outputs.add(_projectKey(sel, writes));
+                // Filter accumulated move blocks against the final
+                // DFS sel — dims that got rewritten by a later edge
+                // are NOT actually moved in the runtime path.
+                outputs.add(_projectKey(sel, writes, _movesToSigs(movesSoFar, sel)));
                 return;
             }
             const node = _findNextInternalNode(mod, sel);
@@ -814,12 +1009,22 @@
             if (!node) return;
             for (const edge of node.edges) {
                 if (window.Engine.isEdgeDisabled(sel, node, edge)) continue;
-                walk(_applyEdgeWrites(sel, node, edge));
+                // Resolve this edge's move-block whens against
+                // pre-edge sel. Drop blocks whose fixed predicate
+                // fails (move never fires on this DFS path); keep
+                // the rest as { deferred, dims } objects that the
+                // caller appends to movesSoFar via copy-on-write.
+                const edgeBlocks = _edgeResolvedMoveBlocks(edge, sel);
+                let nextMoves = movesSoFar;
+                if (edgeBlocks) {
+                    nextMoves = movesSoFar ? movesSoFar.concat(edgeBlocks) : edgeBlocks.slice();
+                }
+                walk(_applyEdgeWrites(sel, node, edge), nextMoves);
                 if (ctx.truncated) return;
             }
         }
 
-        walk(startSel);
+        walk(startSel, null);
     }
 
     function _dfsNodeOutputs(node, startSel, dims, outputs, ctx) {
@@ -831,7 +1036,10 @@
             }
             if (window.Engine.isEdgeDisabled(startSel, node, edge)) continue;
             const next = _applyEdgeWrites(startSel, node, edge);
-            outputs.add(_projectKey(next, dims));
+            const blocks = _edgeResolvedMoveBlocks(edge, startSel);
+            // Single-edge DFS — `next` IS the final sel, so filter
+            // dims against it directly.
+            outputs.add(_projectKey(next, dims, _movesToSigs(blocks, next)));
             if (outputs.size > MAX_ROWS) {
                 ctx.truncated = true;
                 if (STRICT_TRUNCATION) _truncationError('_dfsNodeOutputs (output rows)', { node: node.id, outputs: outputs.size });
@@ -993,8 +1201,19 @@
             walkInput('node', (sel, set) => _dfsNodeOutputs(node, sel, dims, set, ctx));
         }
 
+        // outputs is keyed by full projKey [writes, moved]. r.rows
+        // is the public "unique writes-projections" list — dedup by
+        // writes only so badges / validate / display see one row
+        // per distinct write-tuple. byInput keeps full projKeys
+        // intact for the merge layer.
         const rows = [];
-        for (const k of outputs) rows.push(_keyToRow(k));
+        const rowsSeen = new Set();
+        for (const k of outputs) {
+            const writesKey = JSON.stringify(JSON.parse(k)[0]);
+            if (rowsSeen.has(writesKey)) continue;
+            rowsSeen.add(writesKey);
+            rows.push(_keyToRow(k));
+        }
         const result = { dims, rows, truncated: ctx.truncated, byInput };
         _writeRowsCache.set(slot.key, result);
         _persistedWrite(slot, result);
@@ -1271,17 +1490,45 @@
                 for (const ok of projSet) {
                     const fixedSel = {};
                     for (const d of Object.keys(bucketSel)) fixedSel[d] = bucketSel[d];
-                    const writes = JSON.parse(ok);
+                    // projKey shape: [writes_pairs, move_blocks]
+                    // (see _projectKey). Each block is [deferredWhen,
+                    // dims] — the DFS already pre-filtered fixed
+                    // (intra-edge) parts; deferredWhen has only the
+                    // dims that need bucket / pt context. We evaluate
+                    // it against bucketSel (NOT fixedSel) because
+                    // engine.applyEdgeEffects matches the block's
+                    // `when` BEFORE applying its own set — fixedSel
+                    // already has post-write values that would
+                    // shadow the runtime's pre-block view.
+                    const [writes, moveBlocks] = JSON.parse(ok);
+                    // UNSET semantics: writeDim is declared by the
+                    // module but not written on this particular DFS
+                    // path. UNSET means "preserve upstream value" —
+                    // exactly what bucketSel already supplies for
+                    // read-dims and what pt-merge will supply for
+                    // non-read-dims. The ONLY reason to delete a dim
+                    // is if a move block fires (evaluated below).
                     for (const [d, v] of writes) {
-                        if (v === UNSET) {
-                            // Delete only if d is in reads — i.e. the
-                            // bucket actually carried d. For dims not
-                            // in reads, UNSET means "DFS didn't touch
-                            // it" and the pass-through path should
-                            // carry the upstream value.
-                            if (readSet.has(d)) delete fixedSel[d];
-                        } else {
-                            fixedSel[d] = v;
+                        if (v === UNSET) continue;
+                        fixedSel[d] = v;
+                    }
+                    // Per-bucket move evaluation. The deferred when
+                    // (whatever wasn't pinned at DFS time) gets
+                    // matched against bucketSel — for our cases that
+                    // means dims in mod.reads (the only dims a
+                    // bucket carries). PT dims aren't checked here;
+                    // none of the move blocks in the graph reference
+                    // pt dims, but if one ever did, this is the spot
+                    // to extend.
+                    let movedSet = null;
+                    if (moveBlocks && moveBlocks.length) {
+                        for (const [whenObj, dimsArr] of moveBlocks) {
+                            if (whenObj && !window.Engine.matchCondition(bucketSel, whenObj)) continue;
+                            for (const md of dimsArr) {
+                                if (!movedSet) movedSet = new Set();
+                                movedSet.add(md);
+                                if (readSet.has(md)) delete fixedSel[md];
+                            }
                         }
                     }
                     const dims = Object.keys(fixedSel).sort();
@@ -1291,7 +1538,7 @@
                         fixedParts[i * 2] = d;
                         fixedParts[i * 2 + 1] = fixedSel[d];
                     }
-                    inner.set(ok, { fixedSel, fixedParts });
+                    inner.set(ok, { fixedSel, fixedParts, movedSet });
                 }
             }
 
@@ -1335,6 +1582,13 @@
             // dim — happens when a projKey writes a dim that's also
             // in the input sel and not in reads) resolve in favour
             // of fixed: explicit writes override pass-through.
+            //
+            // movedSet (per-fp) tells us which pt dims the DFS
+            // explicitly deleted via an effects.move block. Those
+            // must be skipped during pt-merge — not preserved from
+            // the upstream input — so the merged output mirrors the
+            // shape `Engine.applyEdgeEffects` would produce at
+            // runtime.
             for (const [gk, { bk, ptSel, ptParts }] of groups) {
                 const inner = fixedByBucket.get(bk);
                 if (!inner) continue;
@@ -1343,11 +1597,13 @@
                 for (const fp of inner.values()) {
                     const fixedParts = fp.fixedParts;
                     const flen = fixedParts.length;
+                    const moved = fp.movedSet;
                     let i = 0, j = 0, m = 0;
                     const out = new Array(flen + plen);
                     while (i < flen && j < plen) {
                         const fd = fixedParts[i];
                         const pd = ptParts[j];
+                        if (moved && moved.has(pd)) { j += 2; continue; }
                         if (fd < pd) {
                             out[m++] = fd;
                             out[m++] = fixedParts[i + 1];
@@ -1369,8 +1625,11 @@
                         i += 2;
                     }
                     while (j < plen) {
-                        out[m++] = ptParts[j];
-                        out[m++] = ptParts[j + 1];
+                        const pd = ptParts[j];
+                        if (!(moved && moved.has(pd))) {
+                            out[m++] = pd;
+                            out[m++] = ptParts[j + 1];
+                        }
                         j += 2;
                     }
                     out.length = m;
@@ -1379,8 +1638,15 @@
                     if (!outSel) {
                         // Spread order matters: ptSel first, then
                         // fixedSel — explicit writes override the
-                        // pass-through value on the same dim.
+                        // pass-through value on the same dim. After
+                        // the spread, drop any moved pt dims that
+                        // weren't overwritten by fixedSel.
                         outSel = { ...ptSel, ...fp.fixedSel };
+                        if (moved) {
+                            for (const md of moved) {
+                                if (fp.fixedSel[md] === undefined) delete outSel[md];
+                            }
+                        }
                         outByKey.set(mk, outSel);
                     }
                     if (onEdge && hookInputs) {
