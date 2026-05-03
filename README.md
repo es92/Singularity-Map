@@ -39,7 +39,7 @@ explore.js                    /explore view — module/card combinatorics surfac
 precompute-explore.js         Builds the per-slot full-sel + reach binary cache (data/explore-cache/)
 precompute-reach-direct.js    Pass A of reach: per-(slot,sel) direct outcome match bits
 precompute-reach-backprop.js  Pass B of reach: back-propagate masks across slot DAG
-bundle-reach-binaries.js      Gzip per-slot .full.bin files for browser fetch (data/reach/)
+bundle-reach-binaries.js      Split slot cache into one per-outcome binary per locked entry (data/reach/)
 reach-checker.js              Composite reach lookup; shared by browser and Node tests
 explore-cache.js              Cross-platform loader for per-slot reach binaries
 timeline-animator.js          Timeline rendering and animation

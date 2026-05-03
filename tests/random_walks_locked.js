@@ -1,14 +1,19 @@
 #!/usr/bin/env node
 'use strict';
 
-// random_walks_locked.js — Reach-constrained walk verifier (v3).
+// random_walks_locked.js — Reach-constrained walk verifier (v4).
 //
 // For every outcome (and outcome variant) registered in
 // data/explore-cache/_meta.json, run N random walks that obey the
-// precomputed reachability data the same way the runtime UI does
-// when ?locked=<oid> is set: at every node, gate the enabled edges
-// through `reach-checker`'s composite cache + live in-module DFS,
-// then pick randomly among the surviving edges.
+// PER-OUTCOME reach bundle the browser fetches on lock. At every
+// node, gate the enabled edges through the per-outcome checker
+// (boolean Set lookup + live in-module DFS), then pick randomly
+// among the surviving edges.
+//
+// This is the same code path the browser runs in locked mode —
+// loading data/reach/<entryId>.bin.gz, building a Set<selKey> per
+// slot, and asking `checker.couldReach(slotKey, childSel)` per edge.
+// A failure here means a real browser regression.
 //
 // Catches:
 //   * reach-data soundness — checker says edge X reaches outcome Y,
@@ -19,14 +24,14 @@
 //     IS still reachable. The runtime would refuse to advance
 //     even though the graph permits it.
 //   * key derivation drift — Engine.applyEdgeEffects /
-//     GraphIO.findNextInternalNode / GraphIO.matchOutcomes must
-//     agree between this script and the precompute pipeline. Any
-//     drift surfaces as 100% wrong-outcome / no-reachable-edges
-//     for some entry.
-//
-// Single backend: the v3 explore-cache + reach-checker. The old
-// v1/v2 reach files (data/reach/, data/reach-v2/) and slot-level
-// walker are gone; reach-checker subsumes them.
+//     GraphIO.findNextInternalNode / Engine.templateMatches must
+//     agree between this script, the precompute pipeline, and the
+//     bundle splitter. Any drift surfaces as 100% wrong-outcome /
+//     no-reachable-edges for some entry.
+//   * per-outcome bundle integrity — paired with per_outcome_parity
+//     (which checks structural equivalence to the slot cache) this
+//     test certifies the bundle drives correct gate decisions on
+//     real walks.
 //
 // Usage:
 //   node tests/random_walks_locked.js                  default (200 walks/entry)
@@ -105,27 +110,57 @@ function mulberry32(seed) {
     };
 }
 
-// ── Build reach index + checker ──
+// ── Per-outcome checker loader ──
+//
+// Each locked entry has its own data/reach/<entryId>.bin.gz file.
+// We lazy-load the checker on first use per entry — matches what
+// the browser does on lock — and cache it for the entry's full walk
+// batch. Loading is cheap (~80 KB gzipped per outcome, ~50 ms to
+// parse + build the index).
 
-console.log('Building reach index from data/explore-cache…');
-const indexT0 = Date.now();
-const reachIndex = ReachChecker.buildIndexFromCache({ Cache, MODULES, FLOW_DAG });
-const checker = ReachChecker.createChecker(reachIndex, { GraphIO, Engine });
-const indexMs = Date.now() - indexT0;
-let totalSels = 0;
-for (const m of reachIndex.reachBySlot.values()) totalSels += m.size;
-console.log(`  ${totalSels.toLocaleString()} (slot, sel) entries across ${reachIndex.reachBySlot.size} slots, ${reachIndex.outcomeEntries.length} outcome entries, ${(indexMs / 1000).toFixed(2)}s.\n`);
+const zlib = require('zlib');
+const REACH_DIR = path.join(ROOT, 'data', 'reach');
 
-// Build entry list from the cache's _meta — same set the
-// precompute writer chose, no risk of drift with hand-rolled
+const reachMeta = (() => {
+    const p = path.join(REACH_DIR, '_meta.json');
+    if (!fs.existsSync(p)) {
+        console.error(`random_walks_locked: ${p} missing — run \`node bundle-reach-binaries.js\` after precompute.`);
+        process.exit(2);
+    }
+    return JSON.parse(fs.readFileSync(p, 'utf8'));
+})();
+
+const _checkerCache = new Map();
+function loadCheckerFor(entry) {
+    const cached = _checkerCache.get(entry.id);
+    if (cached) return cached;
+    const fp = path.join(REACH_DIR, entry.id + '.bin.gz');
+    if (!fs.existsSync(fp)) {
+        throw new Error(`random_walks_locked: per-outcome file missing: ${fp}`);
+    }
+    const view = Cache.openOutcomeFromBuffer(zlib.gunzipSync(fs.readFileSync(fp)));
+    const idx = ReachChecker.buildOutcomeIndexFromView({
+        outcomeView: view, MODULES, FLOW_DAG,
+    });
+    const checker = ReachChecker.createOutcomeChecker(idx, {
+        GraphIO, Engine,
+        template: TEMPLATE_BY_ID.get(entry.templateId),
+    });
+    _checkerCache.set(entry.id, checker);
+    return checker;
+}
+
+// Build entry list from the per-outcome bundle's _meta — same set
+// the precompute writer chose, no risk of drift with hand-rolled
 // variant enumeration.
-const entries = reachIndex.outcomeEntries.map(e => ({
+const entries = reachMeta.outcomeEntries.map(e => ({
     id: e.id,
     templateId: e.templateId,
     primaryDim: e.primaryDim,
     variantKey: e.variantKey,
     bit: e.bit | 0,
 }));
+console.log(`Loaded ${entries.length} outcome entries from data/reach/_meta.json.\n`);
 
 // ── Light-push helper (mirrors index.html `_lightPushSel`) ──
 
@@ -144,9 +179,8 @@ function lightPushSel(sel, nodeId, edgeId) {
 // reachable. If none survive → 'no-reachable-edges' (a completeness
 // failure). Picks uniformly among survivors and pushes onto the stack.
 
-function reachWalk(rand, entry) {
+function reachWalk(rand, entry, checker) {
     const template = TEMPLATE_BY_ID.get(entry.templateId);
-    const targetMask = entry.bit | 0;
     let stack = Engine.createStack();
     const trace = [];
     // DFS memo is per-slot: when we cross a slot boundary the
@@ -208,10 +242,9 @@ function reachWalk(rand, entry) {
                 // at this slot's exit boundary from the same
                 // selKey at any other slot's exit (escape × 5,
                 // brittle/sufficient pass-through, etc.).
-                const mask = checker.getReach(flow.slotKey, childSel, {
+                return checker.couldReach(flow.slotKey, childSel, {
                     dfsMemo,
                 });
-                return (mask & targetMask) !== 0;
             });
             if (reachable.length === 0) {
                 return {
@@ -283,8 +316,12 @@ for (const entry of targetEntries) {
         'unknown-flow': 0,
     };
 
+    // Load checker once per entry — every walk in this batch
+    // shares it (the per-outcome Sets are immutable post-build).
+    const checker = loadCheckerFor(entry);
+
     for (let i = 0; i < NUM_WALKS; i++) {
-        const r = reachWalk(rand, entry);
+        const r = reachWalk(rand, entry, checker);
         stats[r.kind] = (stats[r.kind] || 0) + 1;
         if (r.kind !== 'success') {
             failureSamples.push({ entryId: entry.id, kind: r.kind, sample: r });

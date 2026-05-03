@@ -1,99 +1,201 @@
 {
-  "slots": [
+  "v": 2,
+  "entries": [
     {
-      "slotKey": "alignment",
-      "raw": 4705,
-      "gz": 1223
+      "id": "the-plateau--hours",
+      "slots": 3,
+      "sels": 4,
+      "raw": 679,
+      "gz": 318
     },
     {
-      "slotKey": "auto_bd",
-      "raw": 274,
-      "gz": 203
+      "id": "the-plateau--days",
+      "slots": 3,
+      "sels": 5,
+      "raw": 691,
+      "gz": 327
     },
     {
-      "slotKey": "brittle",
-      "raw": 235361,
-      "gz": 27962
+      "id": "the-plateau--weeks",
+      "slots": 3,
+      "sels": 5,
+      "raw": 692,
+      "gz": 328
     },
     {
-      "slotKey": "control",
-      "raw": 1090,
-      "gz": 498
+      "id": "the-plateau--months",
+      "slots": 3,
+      "sels": 5,
+      "raw": 695,
+      "gz": 328
     },
     {
-      "slotKey": "decel",
-      "raw": 1911,
-      "gz": 591
+      "id": "the-automation",
+      "slots": 3,
+      "sels": 6,
+      "raw": 656,
+      "gz": 328
     },
     {
-      "slotKey": "emergence",
-      "raw": 423,
-      "gz": 289
+      "id": "the-gilded-singularity--rapid",
+      "slots": 15,
+      "sels": 32814,
+      "raw": 970188,
+      "gz": 97869
     },
     {
-      "slotKey": "escape_after_who",
-      "raw": 894166,
-      "gz": 80318
+      "id": "the-gilded-singularity--gradual",
+      "slots": 15,
+      "sels": 32814,
+      "raw": 970194,
+      "gz": 97868
     },
     {
-      "slotKey": "escape_early",
-      "raw": 33752,
-      "gz": 5115
+      "id": "the-gilded-singularity--uneven",
+      "slots": 15,
+      "sels": 32814,
+      "raw": 970192,
+      "gz": 97870
     },
     {
-      "slotKey": "escape_early_alt",
-      "raw": 84514,
-      "gz": 10616
+      "id": "the-new-hierarchy--rapid",
+      "slots": 15,
+      "sels": 26782,
+      "raw": 786825,
+      "gz": 80191
     },
     {
-      "slotKey": "escape_late",
-      "raw": 1522835,
-      "gz": 125167
+      "id": "the-new-hierarchy--gradual",
+      "slots": 15,
+      "sels": 26782,
+      "raw": 786831,
+      "gz": 80192
     },
     {
-      "slotKey": "escape_re_entry",
-      "raw": 11697933,
-      "gz": 871383
+      "id": "the-new-hierarchy--uneven",
+      "slots": 15,
+      "sels": 26782,
+      "raw": 786829,
+      "gz": 80192
     },
     {
-      "slotKey": "inert_stays",
-      "raw": 1256102,
-      "gz": 128540
+      "id": "the-flourishing--rapid",
+      "slots": 15,
+      "sels": 19146,
+      "raw": 558435,
+      "gz": 58296
     },
     {
-      "slotKey": "intent",
-      "raw": 146354,
-      "gz": 21575
+      "id": "the-flourishing--gradual",
+      "slots": 15,
+      "sels": 19146,
+      "raw": 558441,
+      "gz": 58293
     },
     {
-      "slotKey": "plateau_bd",
-      "raw": 377,
-      "gz": 261
+      "id": "the-flourishing--uneven",
+      "slots": 15,
+      "sels": 19146,
+      "raw": 558438,
+      "gz": 58294
     },
     {
-      "slotKey": "proliferation",
-      "raw": 29396,
-      "gz": 5315
+      "id": "the-capture",
+      "slots": 15,
+      "sels": 298896,
+      "raw": 9398741,
+      "gz": 797937
     },
     {
-      "slotKey": "rollout",
-      "raw": 29467380,
-      "gz": 2508980
+      "id": "the-standoff",
+      "slots": 15,
+      "sels": 82320,
+      "raw": 2583171,
+      "gz": 231494
     },
     {
-      "slotKey": "rollout_early",
-      "raw": 666,
-      "gz": 374
+      "id": "the-ruin--war",
+      "slots": 11,
+      "sels": 6071,
+      "raw": 159363,
+      "gz": 19211
     },
     {
-      "slotKey": "war",
-      "raw": 360873,
-      "gz": 37054
+      "id": "the-ruin--self_inflicted",
+      "slots": 14,
+      "sels": 88435,
+      "raw": 2697383,
+      "gz": 246781
     },
     {
-      "slotKey": "who_benefits",
-      "raw": 4456365,
-      "gz": 357138
+      "id": "the-mosaic--robust",
+      "slots": 10,
+      "sels": 2245,
+      "raw": 68769,
+      "gz": 8178
+    },
+    {
+      "id": "the-mosaic--brittle",
+      "slots": 10,
+      "sels": 532,
+      "raw": 18810,
+      "gz": 2724
+    },
+    {
+      "id": "the-mosaic--failed",
+      "slots": 15,
+      "sels": 18073,
+      "raw": 539031,
+      "gz": 53639
+    },
+    {
+      "id": "the-failure--drift",
+      "slots": 15,
+      "sels": 100242,
+      "raw": 3111985,
+      "gz": 279865
+    },
+    {
+      "id": "the-escape--benevolent",
+      "slots": 15,
+      "sels": 83836,
+      "raw": 2575250,
+      "gz": 244203
+    },
+    {
+      "id": "the-escape--paperclip",
+      "slots": 15,
+      "sels": 44472,
+      "raw": 1308349,
+      "gz": 131591
+    },
+    {
+      "id": "the-escape--power_seeking",
+      "slots": 15,
+      "sels": 44472,
+      "raw": 1308358,
+      "gz": 131583
+    },
+    {
+      "id": "the-alien-ai--alien_coexistence",
+      "slots": 15,
+      "sels": 44472,
+      "raw": 1308370,
+      "gz": 131620
+    },
+    {
+      "id": "the-alien-ai--alien_extinction",
+      "slots": 15,
+      "sels": 44472,
+      "raw": 1308368,
+      "gz": 131586
+    },
+    {
+      "id": "the-chaos",
+      "slots": 14,
+      "sels": 31357,
+      "raw": 951926,
+      "gz": 93139
     }
   ]
 }

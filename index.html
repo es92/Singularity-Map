@@ -1919,71 +1919,101 @@
 
             // ─── Precomputed reachability lookup ────────────
             //
-            // The browser fetches the per-slot reach binaries
-            // (data/reach/<slotKey>.full.bin.gz, produced by
-            // bundle-reach-binaries.js) on entering locked mode and
-            // hands them to the same composite checker the Node tests
-            // use (reach-checker.js + tests/random_walks_locked.js).
-            // No projection-key derive step → no soundness gap from
-            // bucket aggregation.
+            // The browser fetches a single per-outcome reach binary
+            // (data/reach/<entryId>.bin.gz, produced by
+            // bundle-reach-binaries.js) on lock and hands it to the
+            // same composite checker the Node tests use (reach-checker.js
+            // + tests/random_walks_locked.js + tests/per_outcome_parity.js).
             //
-            // Lifecycle: the reach index is shared across every
-            // locked outcome (each outcome is just a bit in the same
-            // mask), so once loaded we never tear it down — relocking
-            // to a different outcome just changes which bit we mask
-            // against.
-            let _reachChecker = null;
-            let _reachLoading = false;
+            // Per-outcome shape: each file contains every (slot, sel)
+            // whose precomputed forward-reach mask had this outcome's
+            // bit set, with mask + predecessors + outcome metadata
+            // stripped. Median ~80 KB gzipped (max ~780 KB for the
+            // capture); the runtime gate collapses to a Set<selKey>
+            // membership test per slot.
+            //
+            // Lifecycle: each entry's checker is built once and cached.
+            // Relocking to a different outcome lazy-loads the new
+            // entry's file (or hits cache on revisit). Unlock keeps
+            // the cache around so a re-lock doesn't re-fetch.
+            const _reachCheckerCache = new Map(); // entryId → checker
+            const _reachInflight = new Map();     // entryId → Promise<checker>
+            let _reachActiveEntryId = '';
+            let _reachActiveChecker = null;
+
+            function _lockedEntryId() {
+                if (!lockedId) return '';
+                return lockedVariantKey ? lockedId + '--' + lockedVariantKey : lockedId;
+            }
 
             function _ensureReachChecker() {
-                if (_reachChecker || _reachLoading) return;
                 if (!window.ExploreCache || !window.ReachChecker) return;
                 if (typeof DecompressionStream === 'undefined') {
                     // Older browsers degrade to "no greying"
                     // (wouldReachOutcome returns true when checker
-                    // is null), which is conservative. The full.bin
-                    // files raw are ~50 MB; we don't ship those.
+                    // is null), which is conservative.
                     return;
                 }
-                _reachLoading = true;
+                const entryId = _lockedEntryId();
+                if (!entryId) {
+                    _reachActiveEntryId = '';
+                    _reachActiveChecker = null;
+                    return;
+                }
+                if (_reachActiveEntryId === entryId && _reachActiveChecker) return;
 
-                Promise.all([
-                    fetch('data/reach/_meta.json').then(r => r.json()),
-                    fetch('data/reach/_manifest.json').then(r => r.json()),
-                ]).then(([meta, manifest]) => Promise.all(
-                    manifest.slots.map(s =>
-                        fetch('data/reach/' + encodeURIComponent(s.slotKey) + '.full.bin.gz')
-                            .then(r => {
-                                if (!r.ok) throw new Error('reach binary fetch ' + r.status);
-                                return new Response(
-                                    r.body.pipeThrough(new DecompressionStream('gzip'))
-                                ).arrayBuffer();
-                            })
-                            .then(buf => [
-                                s.slotKey,
-                                window.ExploreCache.openFullSelsFromBuffer(buf, s.slotKey),
-                            ])
-                    )
-                ).then(pairs => ({ meta, views: new Map(pairs) })))
-                    .then(({ meta, views }) => {
+                _reachActiveEntryId = entryId;
+                _reachActiveChecker = _reachCheckerCache.get(entryId) || null;
+                if (_reachActiveChecker) return;
+
+                if (_reachInflight.has(entryId)) return;
+
+                const p = fetch('data/reach/' + encodeURIComponent(entryId) + '.bin.gz')
+                    .then(r => {
+                        if (!r.ok) throw new Error('reach fetch ' + r.status + ' for ' + entryId);
+                        return new Response(
+                            r.body.pipeThrough(new DecompressionStream('gzip'))
+                        ).arrayBuffer();
+                    })
+                    .then(buf => {
+                        const view = window.ExploreCache.openOutcomeFromBuffer(buf);
                         const FLOW_DAG = window.Nodes && window.Nodes.FLOW_DAG;
-                        const index = window.ReachChecker.buildIndexFromViews({
-                            views,
-                            outcomeEntries: meta.outcomeEntries,
+                        const idx = window.ReachChecker.buildOutcomeIndexFromView({
+                            outcomeView: view,
                             MODULES: Engine.MODULES,
                             FLOW_DAG,
                         });
-                        _reachChecker = window.ReachChecker.createChecker(index, {
+                        // Look up the locked template in templatesMap
+                        // (already wired below via outcomes.json) so
+                        // the checker's mid-module direct-match check
+                        // can short-circuit on a single
+                        // Engine.templateMatches call.
+                        const template = templatesMap[view.templateId];
+                        if (!template) {
+                            throw new Error('locked template not found: ' + view.templateId);
+                        }
+                        const checker = window.ReachChecker.createOutcomeChecker(idx, {
                             GraphIO: window.GraphIO,
                             Engine,
+                            template,
                         });
-                        _reachLoading = false;
-                        update();
+                        _reachCheckerCache.set(entryId, checker);
+                        // Race: the user may have re-locked while we
+                        // were fetching. Only mount the new checker
+                        // if the lock still matches.
+                        if (_reachActiveEntryId === entryId) {
+                            _reachActiveChecker = checker;
+                        }
+                        return checker;
                     })
                     .catch(e => {
-                        console.warn('Failed to load reach data:', e);
-                        _reachLoading = false;
+                        console.warn('Failed to load reach data for', entryId, e);
+                    })
+                    .finally(() => {
+                        _reachInflight.delete(entryId);
+                        update();
                     });
+                _reachInflight.set(entryId, p);
             }
 
             function _lightPushSel(sel, nodeId, edgeId) {
@@ -1998,26 +2028,18 @@
                 return next;
             }
 
-            function _lockedEntryId() {
-                if (!lockedId) return '';
-                return lockedVariantKey ? lockedId + '--' + lockedVariantKey : lockedId;
-            }
-
             function wouldReachOutcome(slotKey, nodeId, edgeId, dfsMemo) {
                 // Returns true when the post-click sel can still reach
                 // the locked outcome at this slot's exit boundary.
                 // `slotKey` MUST be the active flowNext().slotKey — the
                 // checker indexes per-slot and the same selKey can hold
-                // different forward masks at different slots (escape × 5,
+                // different forward reach at different slots (escape × 5,
                 // brittle/sufficient pass-through, etc.).
-                if (!_reachChecker) return true;
                 if (!lockedId) return true;
-                const targetMask = _reachChecker.bitFor(_lockedEntryId()) | 0;
-                if (!targetMask) return true;
+                if (!_reachActiveChecker) return true;  // still loading
                 const sel = Engine.currentState(stack);
                 const childSel = _lightPushSel(sel, nodeId, edgeId);
-                const mask = _reachChecker.getReach(slotKey, childSel, { dfsMemo }) | 0;
-                return (mask & targetMask) !== 0;
+                return _reachActiveChecker.couldReach(slotKey, childSel, { dfsMemo });
             }
 
             function mutateStack(action, opts) {

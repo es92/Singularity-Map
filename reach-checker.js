@@ -383,8 +383,205 @@
         });
     }
 
+    // ─── Per-outcome variant ──────────────────────────────────────
+    //
+    // The browser fetches a single per-outcome file on lock — every
+    // (slot, sel) it contains has been pre-filtered to mask & bit ≠ 0,
+    // and the mask itself is dropped. The runtime gate then collapses
+    // to a boolean lookup.
+    //
+    // Equivalence with the mask-based gate (proved by tests/per_outcome_parity
+    // and tests/random_walks_locked):
+    //
+    //   * slot-exit click whose sel is in the per-outcome set
+    //                                         ⇒ couldReach=true (mask-based: mask & bit ≠ 0)
+    //   * slot-exit click whose sel is NOT in the set
+    //                                         ⇒ DFS recurses, bottoms out, returns false
+    //                                            (mask-based: mask=0 ⇒ false; same gate decision)
+    //   * mid-module click
+    //                                         ⇒ DFS walks internals exactly as before;
+    //                                            base case at the module-exit boundary uses
+    //                                            the per-outcome set instead of the mask AND
+    //                                            direct-match (siphon) reduces to a single
+    //                                            template match instead of OR-of-all-templates.
+    //
+    // Boolean result type means the in-module memo and OR-merge step
+    // both collapse — the DFS short-circuits as soon as any branch
+    // returns true.
+
+    function buildOutcomeIndexFromView(deps) {
+        if (!deps || !deps.outcomeView || !deps.MODULES || !deps.FLOW_DAG) {
+            throw new Error('buildOutcomeIndexFromView requires '
+                + '{ outcomeView, MODULES, FLOW_DAG }');
+        }
+        const { outcomeView, MODULES, FLOW_DAG } = deps;
+
+        // Per-slot Set<selKey>. Built once per locked outcome; the
+        // ExploreCache view's getSelKey() materializes the canonical
+        // string directly from the byte row (no Object/Sort/JSON
+        // detour through getSel).
+        const reachBySlot = new Map();
+        for (const slot of outcomeView.slots) {
+            const s = new Set();
+            for (let i = 0; i < slot.selCount; i++) {
+                s.add(slot.getSelKey(i));
+            }
+            reachBySlot.set(slot.key, s);
+        }
+
+        const moduleOfNode = new Map();
+        for (const m of MODULES) {
+            for (const nid of (m.nodeIds || [])) moduleOfNode.set(nid, m);
+        }
+
+        const byKey = new Map();
+        const byModule = new Map();
+        const moduleById = new Map();
+        for (const m of MODULES) moduleById.set(m.id, m);
+        for (const slot of FLOW_DAG.nodes) {
+            if (!slot || slot.kind !== 'module') continue;
+            const mod = moduleById.get(slot.id);
+            if (!mod) continue;
+            byKey.set(slot.key, mod);
+            let arr = byModule.get(mod.id);
+            if (!arr) { arr = []; byModule.set(mod.id, arr); }
+            arr.push(slot.key);
+        }
+
+        return {
+            reachBySlot,
+            moduleOfNode,
+            slotsOfModule: { byKey, byModule },
+            entryId: outcomeView.entryId,
+            templateId: outcomeView.templateId,
+            primaryDim: outcomeView.primaryDim,
+            variantKey: outcomeView.variantKey,
+        };
+    }
+
+    function createOutcomeChecker(index, deps) {
+        if (!index || !index.reachBySlot) {
+            throw new Error('reach-checker: createOutcomeChecker requires `index.reachBySlot`');
+        }
+        if (!deps || !deps.GraphIO || !deps.Engine) {
+            throw new Error('reach-checker: createOutcomeChecker requires { GraphIO, Engine } deps');
+        }
+        if (!deps.template) {
+            throw new Error('reach-checker: createOutcomeChecker requires { template } '
+                + '(the locked outcome\'s template object from outcomes.json)');
+        }
+        const { reachBySlot, moduleOfNode, slotsOfModule,
+                templateId, primaryDim, variantKey } = index;
+        const { GraphIO, Engine, template } = deps;
+
+        // Variant gate: when the locked outcome is a variant entry
+        // (e.g. the-flourishing--rapid), a direct template match is
+        // only a hit if sel[primaryDim] === variantKey. Flat outcomes
+        // skip this check.
+        const _hasVariant = primaryDim != null && variantKey != null;
+
+        function _directHit(sel) {
+            if (!Engine.templateMatches(template, sel)) return false;
+            if (_hasVariant && sel[primaryDim] !== variantKey) return false;
+            return true;
+        }
+
+        function _slotExitReach(slotKey, sk) {
+            const s = reachBySlot.get(slotKey);
+            return !!(s && s.has(sk));
+        }
+
+        function _lightPushSel(sel, node, edge) {
+            const next = Object.assign({}, sel, { [node.id]: edge.id });
+            Engine.applyEdgeEffects(next, edge, null);
+            return next;
+        }
+
+        function _dfsInModule(sel, mod, slotKey, memo) {
+            const sk = _selKey(sel);
+            const cached = memo.get(sk);
+            if (cached !== undefined) return cached;
+            // In-flight = false: short-circuits cycles to a
+            // conservative under-estimate (modules are acyclic in
+            // practice — findNextInternalNode advances a fresh
+            // dim each call — so this is belt-and-suspenders).
+            memo.set(sk, false);
+
+            // Cache hit at module exit boundary takes priority over
+            // walk: the post-edge sel landed at an exit the
+            // precompute records as reaching this outcome.
+            if (_slotExitReach(slotKey, sk)) {
+                memo.set(sk, true);
+                return true;
+            }
+
+            // Module-done with cache miss falls back to direct match
+            // only — same shape as the mask-based DFS, just bool.
+            const marker = mod.completionMarker;
+            if (marker && Engine.isModuleDone(sel, marker)) {
+                const direct = _directHit(sel);
+                memo.set(sk, direct);
+                return direct;
+            }
+
+            if (_directHit(sel)) {
+                memo.set(sk, true);
+                return true;
+            }
+
+            const node = GraphIO.findNextInternalNode(mod, sel);
+            if (!node) {
+                memo.set(sk, false);
+                return false;
+            }
+
+            for (const edge of node.edges) {
+                if (Engine.isEdgeDisabled(sel, node, edge)) continue;
+                const child = _lightPushSel(sel, node, edge);
+                if (_dfsInModule(child, mod, slotKey, memo)) {
+                    memo.set(sk, true);
+                    return true;
+                }
+            }
+            memo.set(sk, false);
+            return false;
+        }
+
+        function couldReach(slotKey, sel, opts) {
+            const sk = _selKey(sel);
+            if (_slotExitReach(slotKey, sk)) return true;
+            const mod = (slotsOfModule && slotsOfModule.byKey)
+                ? slotsOfModule.byKey.get(slotKey)
+                : null;
+            if (!mod) {
+                // Top-level node slot, sel not in the per-outcome
+                // set → cannot reach (matches the mask-based path's
+                // "return 0" precompute-gap fallback).
+                return false;
+            }
+            const dfsMemo = (opts && opts.dfsMemo) || new Map();
+            return _dfsInModule(sel, mod, slotKey, dfsMemo);
+        }
+
+        function moduleForNode(nodeId) {
+            return moduleOfNode ? moduleOfNode.get(nodeId) || null : null;
+        }
+
+        return {
+            couldReach,
+            moduleForNode,
+            entryId: index.entryId,
+            templateId, primaryDim, variantKey,
+            reachBySlot,
+        };
+    }
+
     // ─── Export surface ───────────────────────────────────────────
-    const api = { createChecker, buildIndexFromCache, buildIndexFromViews, _selKey };
+    const api = {
+        createChecker, buildIndexFromCache, buildIndexFromViews,
+        createOutcomeChecker, buildOutcomeIndexFromView,
+        _selKey,
+    };
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
     } else {

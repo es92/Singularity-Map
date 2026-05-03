@@ -415,6 +415,112 @@ function loadFullSels(slotKey) {
     };
 }
 
+// ─── Per-outcome reach binary (browser-facing) ───────────────────
+//
+// Format (v1) — produced by bundle-reach-binaries.js, consumed by
+// reach-checker's per-outcome path. Contains every full sel (across
+// every slot) whose forward reach mask had this outcome's bit set,
+// stripped of mask + predecessor data the runtime gate doesn't need.
+//
+// Layout:
+//   [u32 LE: headerLen]
+//   [headerLen bytes: JSON header, UTF-8]
+//   [body: contiguous per-slot dense sel rows]
+//
+// Header shape:
+//   {
+//     v: 1,
+//     entryId, templateId, primaryDim, variantKey, bit,
+//     values:  [string, …]                  shared dictionary; values[0] = "" (UNSET)
+//     slots:   [{ key, kind, id, dims:[…], selCount, byteOff }]
+//   }
+//
+// Body: for each slot in `slots[]` order, append `selCount × dims.length`
+// bytes of dense sel rows; each byte is the value index in `values` for
+// that dim of that row. byteOff is relative to the start of the body.
+
+function _parseOutcomeBuffer(buf) {
+    const fileBuf = _asUint8Array(buf);
+    const headerLen = _u32(fileBuf, 0);
+    const header = JSON.parse(_decodeUtf8(fileBuf, 4, headerLen));
+    if (header.v !== 1) {
+        throw new Error('explore-cache: unsupported per-outcome format version '
+            + header.v + ' (expected 1)');
+    }
+    const bodyOff = 4 + headerLen;
+    const values = header.values;
+
+    const slotViews = (header.slots || []).map(s => {
+        const dimsLen = s.dims.length;
+        const slotOff = bodyOff + s.byteOff;
+        // Sorted dim indices — selKey rebuild needs canonical
+        // (alphabetical) ordering, which we compute once per slot
+        // and reuse across every getSelKey call.
+        const sortedIdx = s.dims.map((_, i) => i)
+            .sort((a, b) => s.dims[a] < s.dims[b] ? -1 : s.dims[a] > s.dims[b] ? 1 : 0);
+
+        function getSel(i) {
+            const sel = {};
+            const base = slotOff + i * dimsLen;
+            for (let j = 0; j < dimsLen; j++) {
+                const vi = _u8(fileBuf, base + j);
+                if (vi !== 0) sel[s.dims[j]] = values[vi];
+            }
+            return sel;
+        }
+
+        function getSelKey(i) {
+            // Equivalent to GraphIO.selKey / reach-checker._selKey:
+            // canonical NUL-delimited "k0\0v0\0k1\0v1…" with keys
+            // sorted alphabetically. Built directly from the byte
+            // row to skip object allocation in the hot index-build
+            // path (every (slot, sel) entry runs through here).
+            const base = slotOff + i * dimsLen;
+            const parts = [];
+            for (const j of sortedIdx) {
+                const vi = _u8(fileBuf, base + j);
+                if (vi !== 0) {
+                    parts.push(s.dims[j]);
+                    parts.push(values[vi]);
+                }
+            }
+            return parts.join('\x00');
+        }
+
+        return {
+            key: s.key, kind: s.kind, id: s.id,
+            dims: s.dims, selCount: s.selCount,
+            getSel, getSelKey,
+        };
+    });
+
+    return {
+        v: header.v,
+        entryId: header.entryId,
+        templateId: header.templateId,
+        primaryDim: header.primaryDim || null,
+        variantKey: header.variantKey || null,
+        bit: header.bit | 0,
+        values,
+        slots: slotViews,
+    };
+}
+
+function openOutcomeFromBuffer(buf) {
+    return _parseOutcomeBuffer(buf);
+}
+
+function openOutcome(entryId) {
+    if (!_isNode) {
+        throw new Error('explore-cache.openOutcome is Node-only — '
+            + 'browsers should use openOutcomeFromBuffer(fetchedBuffer)');
+    }
+    const dataReachDir = path.join(ROOT, 'data', 'reach');
+    const p = path.join(dataReachDir, entryId + '.bin');
+    if (!fs.existsSync(p)) return null;
+    return _parseOutcomeBuffer(fs.readFileSync(p));
+}
+
 function loadMeta() {
     if (!_isNode) return null;
     const p = path.join(CACHE_DIR, '_meta.json');
@@ -427,6 +533,7 @@ function cacheDir() { return CACHE_DIR; }
 const api = {
     loadSlot, openSlot, loadAll,
     openFullSels, openFullSelsFromBuffer, loadFullSels,
+    openOutcome, openOutcomeFromBuffer,
     loadMeta,
     cacheDir,
 };
