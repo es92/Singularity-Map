@@ -553,7 +553,7 @@ const NODES = [
           ] },
         { id: 'alien_coexistence', label: 'Alien (tolerant)',
           disabledWhen: [
-            { war_survivors: ['none'], reason: 'Humanity is extinct — there is no one left to coexist with' },
+            { war_survivors: ['none', 'remnants'], reason: 'Civilization is shattered — there\'s no functioning society for the AI to coexist with' },
             { proliferation_alignment: ['holds'], reason: 'Alignment is intrinsic — the AI\'s values held even under open weights' },
             { concentration_type: ['ai_itself'], power_use: ['generous'], reason: 'The AI was already shown to wield power generously — hostile goals contradict that' }
           ] },
@@ -1577,7 +1577,7 @@ const NODES = [
         { id: 'drift', label: 'Wrong metrics' }
       ] },
     { id: 'escape_method', label: 'Method', stage: 3,
-      hideWhen: [{ war_survivors: ['none'] }],
+      hideWhen: [{ war_survivors: ['none', 'remnants'] }],
       activateWhen: [
         {
           containment: ['escaped'],
@@ -1599,7 +1599,7 @@ const NODES = [
         { id: 'industrial', label: 'Industrial conversion', shortLabel: 'Industrial' }
       ] },
     { id: 'escape_timeline', label: 'Execution Speed', stage: 3,
-      hideWhen: [{ war_survivors: ['none'] }],
+      hideWhen: [{ war_survivors: ['none', 'remnants'] }],
       activateWhen: [
         {
           containment: ['escaped'],
@@ -1627,7 +1627,7 @@ const NODES = [
         }
       ] },
     { id: 'discovery_timing', label: 'Discovery', stage: 3,
-      hideWhen: [{ war_survivors: ['none'] }],
+      hideWhen: [{ war_survivors: ['none', 'remnants'] }],
       activateWhen: [
         {
           containment: ['escaped'],
@@ -1647,7 +1647,7 @@ const NODES = [
         { id: 'never', label: 'Never — the plan succeeds undetected', shortLabel: 'Never detected' }
       ] },
     { id: 'response_method', label: 'Response', stage: 3,
-      hideWhen: [{ war_survivors: ['none'] }],
+      hideWhen: [{ war_survivors: ['none', 'remnants'] }],
       activateWhen: [
         { discovery_timing: ['before_physical', 'early_execution', 'advanced_execution'] }
       ],
@@ -1670,7 +1670,7 @@ const NODES = [
           disabledWhen: [{ concentration_type: ['ai_itself'], reason: 'No independent institutions remain — the AI runs them all' }] }
       ] },
     { id: 'response_success', label: 'Success?', stage: 3,
-      hideWhen: [{ war_survivors: ['none'] }],
+      hideWhen: [{ war_survivors: ['none', 'remnants'] }],
       // Asked on every reachable response_method, including the
       // "no decisive action" pair (competitive_paralysis,
       // institutional_indecisiveness) — there only `no` is enabled
@@ -1704,7 +1704,7 @@ const NODES = [
       // `response_method: [competitive_paralysis, institutional_indecisiveness]`
       // activateWhen clause.
       hideWhen: [
-        { war_survivors: ['none'] },
+        { war_survivors: ['none', 'remnants'] },
         { response_method: ['competitive_paralysis', 'institutional_indecisiveness'] }
       ],
       activateWhen: [
@@ -1739,7 +1739,7 @@ const NODES = [
       // (escape_late, escape_re_entry, escape_after_who) where
       // who_benefits_set='yes'.
       hideWhen: [
-        { war_survivors: ['none'] },
+        { war_survivors: ['none', 'remnants'] },
         { who_benefits_set: { not: ['yes'] } }
       ],
       activateWhen: [
@@ -2340,24 +2340,29 @@ function buildEscapeExitPlan() {
         when: {},
         set: { escape_set: 'yes', post_catch: 'loose' },
     });
-    // war_survivors=none re-entry exits. After a prior war pipeline
-    // killed everyone (war_survivors=none + ruin_type=war), an
-    // inert_stays=no answer evicts ai_goals + escape_set and re-routes
-    // through ESCAPE for a hostile ai_goals re-pick. The entire escape
-    // pipeline (escape_method, escape_timeline, etc.) is hidden by
-    // hideWhen war_survivors=['none'] — there's no civilization left to
-    // escape into. Exit immediately on the ai_goals pick with
-    // post_catch='ruined' so the-ruin (war variant) catches the state
-    // (capability=asi + post_catch=ruined matches the-ruin's first
-    // reachable clause unconditionally, beating the-escape /
-    // the-alien-ai / the-chaos which all require post_catch=loose).
-    // Narratively: war already ended civilization before this re-pick;
-    // the AI re-emerging into a dead world is a footnote in an
-    // already-resolved ruin, not a new escape outcome.
+    // Civilization-destroyed re-entry exits. After a prior war pipeline
+    // devastated civilization (war_survivors ∈ {remnants, none} +
+    // ruin_type=war), an inert_stays=no answer evicts ai_goals +
+    // escape_set and re-routes through ESCAPE for a hostile ai_goals
+    // re-pick. The entire escape pipeline (escape_method, escape_
+    // timeline, …, catch_outcome) is hidden by
+    // hideWhen war_survivors:['none','remnants'] — there's no
+    // functioning civilization for the AI to evade or be caught by.
+    // Exit immediately on the ai_goals pick with post_catch='ruined'
+    // so the-ruin (war variant) catches the state (capability=asi +
+    // post_catch=ruined matches the-ruin's first reachable clause
+    // unconditionally, beating the-escape / the-alien-ai / the-chaos
+    // which all require post_catch=loose).
+    //
+    // Narratively: war already ended civilization (or reduced it to
+    // scattered remnants) before this re-pick; the AI re-emerging
+    // into the rubble is a footnote in an already-resolved ruin, not
+    // a new escape story. "Did humans catch it?" is a category error
+    // when there's no humans-with-institutions left to catch anyone.
     for (const hostileGoal of ['alien_extinction', 'paperclip', 'power_seeking', 'swarm']) {
         plan.push({
             nodeId: 'ai_goals', edgeId: hostileGoal,
-            when: { war_survivors: ['none'] },
+            when: { war_survivors: ['none', 'remnants'] },
             set: { escape_set: 'yes', post_catch: 'ruined' },
         });
     }
@@ -2453,24 +2458,37 @@ function buildEscapeExitPlan() {
                 set: { escape_set: 'yes', war_survivors: e.id, containment: 'contained', war_set: 'yes', ...ruinSet },
             });
         }
-        // Extinction (collateral_survivors='none') invalidates the
-        // pro-humanity ai_goals values via their disabledWhen rules
-        // (`war_survivors:['none']` evicts both benevolent and
-        // alien_coexistence — there's no humanity left to benefit or
-        // coexist with). The runtime cleanSelection function used to
-        // have a separate invalidation pass that did this implicitly,
-        // but it's been removed in favor of explicit push-time evictions
-        // so static analysis (graph-io._applyEdgeWrites) and runtime
-        // produce identical sels. The eviction now lives here as an
-        // explicit `move`: when ai_goals is one of the war_survivors-
-        // disabled values, move it to flavor.
-        // ai_goals re-activates downstream so the user picks a hostile
-        // value compatible with extinction (paperclip, power_seeking, or
-        // alien_coexistence's harsher cousins). Same pattern as the
-        // power_use.{extractive,indifferent} fix above.
+        // Civilizational collapse (collateral_survivors∈{remnants,none})
+        // invalidates pro-humanity ai_goals values via their
+        // disabledWhen rules:
+        //   * `war_survivors:['none']`             evicts benevolent (no
+        //     one left to benefit) AND alien_coexistence (no one left
+        //     to coexist with).
+        //   * `war_survivors:['none','remnants']`  evicts
+        //     alien_coexistence on the remnants branch too — a
+        //     shattered civilization has no functioning society for the
+        //     AI to coexist with, so the same exit path used by hostile
+        //     goals (the-ruin) applies.
+        // The runtime cleanSelection function used to have a separate
+        // invalidation pass that did this implicitly, but it's been
+        // removed in favor of explicit push-time evictions so static
+        // analysis (graph-io._applyEdgeWrites) and runtime produce
+        // identical sels. The evictions now live here as explicit
+        // `move`s: when ai_goals is one of the war_survivors-disabled
+        // values, move it to flavor. ai_goals re-activates downstream
+        // so the user picks a hostile value compatible with the
+        // collapse (paperclip, power_seeking, alien_extinction, swarm),
+        // which then fires the early-exit tuple above to route to
+        // the-ruin. Same pattern as the
+        // power_use.{extractive,indifferent} fix on benevolent.
         plan.push({
             nodeId: 'collateral_survivors', edgeId: 'none',
             when: { ai_goals: ['benevolent', 'alien_coexistence'] },
+            move: ['ai_goals'],
+        });
+        plan.push({
+            nodeId: 'collateral_survivors', edgeId: 'remnants',
+            when: { ai_goals: ['alien_coexistence'] },
             move: ['ai_goals'],
         });
     }
@@ -2520,17 +2538,17 @@ const ESCAPE_MODULE = {
         // new-hierarchy/flourishing/capture/standoff/mosaic/failure).
         'who_benefits_set',
         // ai_goals.<hostile-goal> exit tuples carry a
-        // `when: { war_survivors: ['none'] }` clause that re-routes
-        // to the-ruin when civilization is already destroyed by war
-        // — see buildEscapeExitPlan's "war_survivors=none re-entry"
-        // block. The dim is set upstream by WAR_MODULE
-        // (war_outcome.* exit tuples) and read here at exit-tuple
-        // selection time on re-entry slots. Without it in reads,
-        // cartesianReadRows synthesizes war_survivors=UNSET per
-        // bucket, the new tuple's `when` never matches in static
-        // analysis, and the static reach map under-attributes
-        // the-ruin reach for the ai_goals=hostile + war_survivors=
-        // none subspace.
+        // `when: { war_survivors: ['none', 'remnants'] }` clause that
+        // re-routes to the-ruin when civilization is already destroyed
+        // (or reduced to remnants) by war — see buildEscapeExitPlan's
+        // "Civilization-destroyed re-entry" block. The dim is set
+        // upstream by WAR_MODULE (war_outcome.* exit tuples) and read
+        // here at exit-tuple selection time on re-entry slots. Without
+        // it in reads, cartesianReadRows synthesizes
+        // war_survivors=UNSET per bucket, the tuple's `when` never
+        // matches in static analysis, and the static reach map
+        // under-attributes the-ruin reach for the ai_goals=hostile +
+        // war_survivors∈{none,remnants} subspace.
         'war_survivors',
     ],
     writes: ESCAPE_WRITES,

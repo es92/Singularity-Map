@@ -6,16 +6,29 @@
 // on fail we replay the full captured stdout/stderr so the failure is
 // debuggable without re-running.
 //
+// Two stages:
+//
+//   1. CHEAP stage — run sequentially, ordered cheapest → heaviest so a
+//      contract failure surfaces in <1s without paying for the heavy
+//      stage.
+//   2. HEAVY stage — run in parallel. Each heavy test runs its own
+//      FlowPropagation.run() (~150s, ~1-2 GB RAM), so they're
+//      already isolated child processes; sequential execution was
+//      duplicating ~900s of identical work. Concurrency defaults to
+//      min(6, cpus-1); override with TEST_CONCURRENCY=N.
+//
 // Excluded by design:
 //   * tests/evaluate.js — LLM-based persona simulator. Requires
 //     ANTHROPIC_API_KEY and burns budget; run manually when wanted.
 //
 // Usage:
-//   node tests/run.js              # full suite (~3 min)
-//   npm run test:all               # same, via package.json
+//   node tests/run.js                    # full suite (~3 min)
+//   TEST_CONCURRENCY=2 node tests/run.js # cap parallel heavies at 2
+//   npm run test:all                     # same, via package.json
 
-const { spawnSync } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -48,71 +61,142 @@ if (!fs.existsSync(EXPLORE_META) || !fs.existsSync(REACH_META)) {
     console.log('\nprecompute complete.\n');
 }
 
-// Ordered cheapest → most expensive so failures surface fast.
-const SUITE = [
-    // ── Cheap contract tests (sub-second each) ──────────────────
-    { label: 'tests/module_primitive',         file: 'tests/module_primitive.js' },
-    { label: 'tests/decel_exit_evictions',     file: 'tests/decel_exit_evictions.js' },
-    { label: 'tests/module_reads_complete',    file: 'tests/module_reads_complete.js' },
-    { label: 'tests/post_write_dim_usage',     file: 'tests/post_write_dim_usage.js' },
-    { label: 'tests/random_walks',             file: 'tests/random_walks.js' },
-    { label: 'tests/premature_outcomes',       file: 'tests/premature_outcomes.js' },
-    { label: 'tests/unreachable_clauses',      file: 'tests/unreachable_clauses.js' },
-    { label: 'tests/runtime_cache_parity',     file: 'tests/runtime_cache_parity.js' },
-    { label: 'tests/outcome_parity',           file: 'tests/outcome_parity.js' },
-    { label: 'tests/per_outcome_parity',       file: 'tests/per_outcome_parity.js' },
-    { label: 'tests/random_walks_locked',      file: 'tests/random_walks_locked.js' },
+// Cheap stage — sub-second to ~20s each, sequential, fail-fast.
+const CHEAP = [
+    { label: 'tests/module_primitive',           file: 'tests/module_primitive.js' },
+    { label: 'tests/decel_exit_evictions',       file: 'tests/decel_exit_evictions.js' },
+    { label: 'tests/module_reads_complete',      file: 'tests/module_reads_complete.js' },
+    { label: 'tests/post_write_dim_usage',       file: 'tests/post_write_dim_usage.js' },
+    { label: 'tests/random_walks',               file: 'tests/random_walks.js' },
+    { label: 'tests/runtime_cache_parity',       file: 'tests/runtime_cache_parity.js' },
+    { label: 'tests/outcome_parity',             file: 'tests/outcome_parity.js' },
+    { label: 'tests/per_outcome_parity',         file: 'tests/per_outcome_parity.js' },
+    { label: 'tests/random_walks_locked',        file: 'tests/random_walks_locked.js' },
     { label: 'tests/module_no_repeat_questions', file: 'tests/module_no_repeat_questions.js' },
-
-    // ── Heavier static-analysis tests (~minute each) ────────────
-    { label: 'validate.js',                    file: 'validate.js' },
-    { label: 'tests/flow_next_parity',         file: 'tests/flow_next_parity.js' },
-    { label: 'tests/all_variants_reachable',   file: 'tests/all_variants_reachable.js' },
-    { label: 'tests/narrative_coverage',       file: 'tests/narrative_coverage.js' },
 ];
+
+// Heavy stage — each runs a full FlowPropagation.run() (~150s),
+// scheduled in parallel. Order doesn't matter for runtime but is
+// preserved for stable summary output on completion.
+const HEAVY = [
+    { label: 'tests/premature_outcomes',         file: 'tests/premature_outcomes.js' },
+    { label: 'tests/unreachable_clauses',        file: 'tests/unreachable_clauses.js' },
+    { label: 'validate.js',                      file: 'validate.js' },
+    { label: 'tests/flow_next_parity',           file: 'tests/flow_next_parity.js' },
+    { label: 'tests/all_variants_reachable',     file: 'tests/all_variants_reachable.js' },
+    { label: 'tests/narrative_coverage',         file: 'tests/narrative_coverage.js' },
+];
+
+const SUITE = [...CHEAP, ...HEAVY];
+const labelWidth = SUITE.reduce((m, t) => Math.max(m, t.label.length), 0);
+
+const DEFAULT_CONCURRENCY = Math.max(1, Math.min(HEAVY.length, (os.cpus().length || 4) - 1));
+const CONCURRENCY = parseInt(process.env.TEST_CONCURRENCY, 10) || DEFAULT_CONCURRENCY;
 
 function pad(s, n) { return s + ' '.repeat(Math.max(0, n - s.length)); }
 
-const labelWidth = SUITE.reduce((m, t) => Math.max(m, t.label.length), 0);
-const t0 = Date.now();
-const failures = [];
-
-console.log(`Running ${SUITE.length} tests...\n`);
-
-for (const t of SUITE) {
-    const start = Date.now();
-    const result = spawnSync(
-        'node',
-        [...NODE_FLAGS, path.join(REPO_ROOT, t.file)],
-        { stdio: ['ignore', 'pipe', 'pipe'], cwd: REPO_ROOT }
-    );
-    const dt = ((Date.now() - start) / 1000).toFixed(1);
-    const ok = result.status === 0;
-
-    if (ok) {
-        console.log(`  PASS  ${pad(t.label, labelWidth)}  (${dt}s)`);
-    } else {
-        console.log(`  FAIL  ${pad(t.label, labelWidth)}  (${dt}s)`);
-        failures.push({ ...t, dt, stdout: result.stdout, stderr: result.stderr });
-    }
+function printResult(t, dt, ok) {
+    const tag = ok ? 'PASS' : 'FAIL';
+    console.log(`  ${tag}  ${pad(t.label, labelWidth)}  (${dt.toFixed(1)}s)`);
 }
 
-const total = ((Date.now() - t0) / 1000).toFixed(1);
-const passed = SUITE.length - failures.length;
+// Run a single test in a child process. Returns { ok, dt, stdout, stderr }.
+function runTest(t) {
+    return new Promise((resolve) => {
+        const start = Date.now();
+        const child = spawn(
+            'node',
+            [...NODE_FLAGS, path.join(REPO_ROOT, t.file)],
+            { stdio: ['ignore', 'pipe', 'pipe'], cwd: REPO_ROOT }
+        );
+        const stdout = [];
+        const stderr = [];
+        child.stdout.on('data', (b) => stdout.push(b));
+        child.stderr.on('data', (b) => stderr.push(b));
+        child.on('close', (code) => {
+            const dt = (Date.now() - start) / 1000;
+            resolve({
+                ok: code === 0,
+                dt,
+                stdout: Buffer.concat(stdout),
+                stderr: Buffer.concat(stderr),
+            });
+        });
+    });
+}
 
-console.log();
-console.log('━'.repeat(60));
-if (failures.length === 0) {
-    console.log(`PASS  ${passed}/${SUITE.length} tests in ${total}s`);
-    process.exit(0);
-} else {
-    console.log(`FAIL  ${passed}/${SUITE.length} tests passed, ${failures.length} failed (${total}s)`);
+// Run the heavy stage as a worker pool: take from `queue`, max `n` in
+// flight at once. Print each result as soon as it completes (so the
+// reader sees progress on long batches). Returns array of
+// { test, result } in completion order.
+async function runPool(tests, n) {
+    const queue = tests.slice();
+    const results = [];
+    const inFlight = new Set();
+
+    function start() {
+        while (inFlight.size < n && queue.length > 0) {
+            const t = queue.shift();
+            const p = runTest(t).then((r) => {
+                inFlight.delete(p);
+                printResult(t, r.dt, r.ok);
+                results.push({ test: t, result: r });
+            });
+            inFlight.add(p);
+        }
+    }
+
+    start();
+    while (inFlight.size > 0) {
+        await Promise.race(inFlight);
+        start();
+    }
+    return results;
+}
+
+(async () => {
+    const t0 = Date.now();
+    const failures = [];
+
+    console.log(`Running ${SUITE.length} tests (cheap stage sequential, heavy stage ×${CONCURRENCY} parallel)...\n`);
+
+    // Cheap stage — sequential, fail-fast appearance.
+    for (const t of CHEAP) {
+        const r = await runTest(t);
+        printResult(t, r.dt, r.ok);
+        if (!r.ok) failures.push({ ...t, dt: r.dt.toFixed(1), stdout: r.stdout, stderr: r.stderr });
+    }
+
+    // Heavy stage — parallel pool.
+    if (HEAVY.length > 0) {
+        console.log(`\n  ── heavy stage (${HEAVY.length} tests, ~150s each, ${CONCURRENCY} in flight) ──`);
+        const heavyResults = await runPool(HEAVY, CONCURRENCY);
+        for (const { test, result } of heavyResults) {
+            if (!result.ok) failures.push({ ...test, dt: result.dt.toFixed(1), stdout: result.stdout, stderr: result.stderr });
+        }
+    }
+
+    const total = ((Date.now() - t0) / 1000).toFixed(1);
+    const passed = SUITE.length - failures.length;
+
+    console.log();
     console.log('━'.repeat(60));
-    for (const f of failures) {
-        console.log();
-        console.log(`── ${f.label} ──`);
-        if (f.stdout && f.stdout.length) process.stdout.write(f.stdout);
-        if (f.stderr && f.stderr.length) process.stderr.write(f.stderr);
+    if (failures.length === 0) {
+        console.log(`PASS  ${passed}/${SUITE.length} tests in ${total}s`);
+        process.exit(0);
+    } else {
+        console.log(`FAIL  ${passed}/${SUITE.length} tests passed, ${failures.length} failed (${total}s)`);
+        console.log('━'.repeat(60));
+        // Replay failures in suite-declared order so output is stable.
+        const orderedFailures = SUITE
+            .map((t) => failures.find((f) => f.label === t.label))
+            .filter(Boolean);
+        for (const f of orderedFailures) {
+            console.log();
+            console.log(`── ${f.label} ──`);
+            if (f.stdout && f.stdout.length) process.stdout.write(f.stdout);
+            if (f.stderr && f.stderr.length) process.stderr.write(f.stderr);
+        }
+        process.exit(1);
     }
-    process.exit(1);
-}
+})();

@@ -225,14 +225,15 @@ assert.deepStrictEqual(escape.writes.slice().sort(), [
     + ' see ESCAPE_WRITES comment in graph.js)');
 
 const escPlan = escape.exitPlan;
-// Tuple breakdown (23 total):
+// Tuple breakdown (24 total):
 //   2  ai_goals early-exit (benevolent, marginal)
-//   4  ai_goals war_survivors=none re-entry exits (alien_extinction,
-//      paperclip, power_seeking, swarm) — re-pick into a dead world
-//      after war already ruined civilization. Each gated
-//      `when: { war_survivors: ['none'] }` and sets escape_set=yes +
-//      post_catch='ruined' to route directly to the-ruin (since the
-//      escape pipeline is hidden by hideWhen war_survivors=['none']).
+//   4  ai_goals civilization-destroyed re-entry exits (alien_extinction,
+//      paperclip, power_seeking, swarm) — re-pick after war already
+//      reduced civilization to remnants or none. Each gated
+//      `when: { war_survivors: ['none', 'remnants'] }` and sets
+//      escape_set=yes + post_catch='ruined' to route directly to
+//      the-ruin (since the escape pipeline is hidden by hideWhen
+//      war_survivors=['none','remnants']).
 //   2  catch_outcome (not_permanent, holds_permanently)
 //   2  response_success.no exits — variant 1 gated on
 //      concentration_type=ai_itself; variant 2 gated on
@@ -250,34 +251,37 @@ const escPlan = escape.exitPlan;
 //   5  collateral_impact early-slot exits (2 minimal/severe on
 //      response_success=yes; 3 minimal/severe/civilizational on
 //      response_success=delayed,no)
-//   7  collateral_survivors (3 edges × 2 tuples — terminal and early-slot,
-//      both setting war_set + war_survivors — plus 1 ai_goals-eviction
-//      tuple on collateral_survivors=none)
-assert(Array.isArray(escPlan) && escPlan.length === 23,
-    `escape exitPlan should have 23 tuples; got ${escPlan.length}`);
+//   8  collateral_survivors (3 edges × 2 tuples — terminal and early-slot,
+//      both setting war_set + war_survivors — plus 2 ai_goals-eviction
+//      tuples (move-only) on cs=none and cs=remnants, mirroring the
+//      ai_goals.disabledWhen rules: cs=none evicts {benevolent,
+//      alien_coexistence}; cs=remnants evicts {alien_coexistence})
+assert(Array.isArray(escPlan) && escPlan.length === 24,
+    `escape exitPlan should have 24 tuples; got ${escPlan.length}`);
 const planByNode = {};
 for (const t of escPlan) {
-    // Most tuples set escape_set=yes; the collateral_survivors=none
-    // ai_goals-eviction tuple is purely a `move` (no `set`) — exempt it.
-    const isCsAiGoalsMove = t.nodeId === 'collateral_survivors' && t.edgeId === 'none' && !t.set;
+    // Most tuples set escape_set=yes; the cs ai_goals-eviction tuples
+    // (cs=none, cs=remnants) are purely `move`s (no `set`) — exempt.
+    const isCsAiGoalsMove = t.nodeId === 'collateral_survivors'
+        && (t.edgeId === 'none' || t.edgeId === 'remnants') && !t.set;
     if (!isCsAiGoalsMove) {
-        assert(t.set && t.set.escape_set === 'yes', 'every escape exit (except cs.none ai_goals move) sets escape_set=yes');
+        assert(t.set && t.set.escape_set === 'yes', 'every escape exit (except cs ai_goals move) sets escape_set=yes');
     }
     (planByNode[t.nodeId] = planByNode[t.nodeId] || []).push({ edgeId: t.edgeId, set: t.set, when: t.when, move: t.move });
 }
 // ai_goals exit edges: 2 unconditional early-exit (benevolent, marginal)
-// plus 4 war_survivors=none re-entry tuples (alien_extinction, paperclip,
-// power_seeking, swarm) — see breakdown above.
+// plus 4 civilization-destroyed re-entry tuples (alien_extinction,
+// paperclip, power_seeking, swarm) — see breakdown above.
 assert.deepStrictEqual(planByNode.ai_goals.map(x => x.edgeId).sort(),
     ['alien_extinction', 'benevolent', 'marginal', 'paperclip', 'power_seeking', 'swarm'],
-    'ai_goals exit edges (early-exit + war_survivors=none re-entry)');
-// The 4 war_survivors=none re-entry tuples must all carry the gating
+    'ai_goals exit edges (early-exit + civilization-destroyed re-entry)');
+// The 4 civilization-destroyed re-entry tuples must all carry the gating
 // when-clause and route to the-ruin via post_catch='ruined'.
 const aiGoalsHostile = planByNode.ai_goals.filter(t => t.edgeId !== 'benevolent' && t.edgeId !== 'marginal');
 assert.strictEqual(aiGoalsHostile.length, 4, '4 hostile ai_goals re-entry tuples');
 for (const t of aiGoalsHostile) {
-    assert.deepStrictEqual(t.when, { war_survivors: ['none'] },
-        `ai_goals.${t.edgeId} re-entry tuple gated on war_survivors=none`);
+    assert.deepStrictEqual(t.when, { war_survivors: ['none', 'remnants'] },
+        `ai_goals.${t.edgeId} re-entry tuple gated on war_survivors∈{none,remnants}`);
     assert.strictEqual(t.set.post_catch, 'ruined',
         `ai_goals.${t.edgeId} re-entry tuple → post_catch=ruined (routes to the-ruin)`);
     assert.strictEqual(t.set.escape_set, 'yes',
@@ -307,19 +311,29 @@ assert.deepStrictEqual(catchTuples.holds_permanently.when,
 // intent / who_benefits / etc. like any other caught-AI branch and
 // matches a downstream outcome rather than the-ruin.
 //
-// Plus a 7th tuple on cs.none that's purely a move:[ai_goals] to
-// mirror cleanSelection's invalidation of pro-humanity ai_goals on
-// extinction.
+// Plus 2 move-only tuples mirroring ai_goals.disabledWhen rules:
+//   * cs.none → move:[ai_goals] when ai_goals∈{benevolent,
+//     alien_coexistence} (extinction kills both pro-humanity goals)
+//   * cs.remnants → move:[ai_goals] when ai_goals=alien_coexistence
+//     (a shattered civilization has no functioning society for the
+//     AI to coexist with)
 const csTuples = planByNode.collateral_survivors;
-assert.strictEqual(csTuples.length, 7, '7 collateral_survivors tuples (3 edges × 2 + 1 ai_goals move)');
+assert.strictEqual(csTuples.length, 8, '8 collateral_survivors tuples (3 edges × 2 + 2 ai_goals moves)');
 const csSetTuples = csTuples.filter(t => t.set);
 const csMoveTuples = csTuples.filter(t => !t.set);
 assert.strictEqual(csSetTuples.length, 6, '6 set-tuples (3 edges × 2)');
-assert.strictEqual(csMoveTuples.length, 1, '1 move-only tuple (cs.none ai_goals eviction)');
-assert.deepStrictEqual(csMoveTuples[0].move, ['ai_goals'],
+assert.strictEqual(csMoveTuples.length, 2, '2 move-only tuples (cs.none + cs.remnants ai_goals evictions)');
+const csMoveByEdge = Object.fromEntries(csMoveTuples.map(t => [t.edgeId, t]));
+assert(csMoveByEdge.none, 'move-only tuple on cs.none');
+assert.deepStrictEqual(csMoveByEdge.none.move, ['ai_goals'],
     'cs.none move-tuple evicts ai_goals');
-assert.strictEqual(csMoveTuples[0].edgeId, 'none',
-    'move-only tuple is on cs.none');
+assert.deepStrictEqual(csMoveByEdge.none.when, { ai_goals: ['benevolent', 'alien_coexistence'] },
+    'cs.none move-tuple gated on ai_goals∈{benevolent,alien_coexistence}');
+assert(csMoveByEdge.remnants, 'move-only tuple on cs.remnants');
+assert.deepStrictEqual(csMoveByEdge.remnants.move, ['ai_goals'],
+    'cs.remnants move-tuple evicts ai_goals');
+assert.deepStrictEqual(csMoveByEdge.remnants.when, { ai_goals: ['alien_coexistence'] },
+    'cs.remnants move-tuple gated on ai_goals=alien_coexistence');
 for (const t of csSetTuples) {
     assert.strictEqual(t.set.war_survivors, t.edgeId,
         `collateral_survivors.${t.edgeId} writes war_survivors=${t.edgeId}`);

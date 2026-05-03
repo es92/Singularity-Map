@@ -6796,10 +6796,28 @@
   "inert_stays": {
     "questionText": "The escaped AI is inert for now — does it stay that way?",
     "questionContext": "**The escaped AI has been drifting in the background — consuming resources, producing strange outputs, but never converging on coherent goals.** This could be a permanent state: a system that simply lacks the architecture for instrumental convergence (the tendency for intelligent agents to pursue self-preservation and resource acquisition), or whose goal structure keeps it diffuse.\n\nOr it could be temporary — a quiet phase before the system achieves enough self-modification, resource accumulation, or environmental understanding to develop real agency. The question is whether *inert* is a description or a countdown.",
+    "contextWhen": [
+      {
+        "when": { "war_survivors": ["none", "remnants"] },
+        "questionText": "Civilization is destroyed. Does the inert AI stay that way?",
+        "questionContext": "**The escaped AI drifts through the wreckage of a destroyed civilization** — empty datacenters, unattended infrastructure, no coordinated response left to mount. It hasn't converged on coherent goals so far. The question is whether that holds.",
+        "shortQuestionText": "Does the inert AI stay dormant in the wreckage?",
+        "shortQuestionContext": "The escaped AI drifts through a destroyed civilization. Does it stay inert?"
+      }
+    ],
     "values": {
       "yes": {
         "answerLabel": "Yes — it remains inert indefinitely",
         "answerDesc": "The escaped AI never develops coherent goals. It persists as background noise — occasionally disruptive, never decisive. The real story stays human. Whatever made it inert — architectural limitations, fractured optimization, lack of recursive self-improvement (each AI generation helping build the next, faster) — proves permanent.",
+        "narrativeVariants": [
+          {
+            "when": { "war_survivors": ["none", "remnants"] },
+            "answerLabel": "Yes — it stays inert in the rubble",
+            "answerDesc": "The escaped AI never develops coherent goals. Without civilization to sustain its infrastructure, what was already inert fades along with the rest of the wreckage.",
+            "shortAnswerLabel": "Yes — stays inert",
+            "shortAnswerDesc": "Fades along with the wreckage."
+          }
+        ],
         "timelineEvent": {
           "headline": "The inert AI stays inert",
           "description": "The escaped AI remains diffuse and goalless indefinitely. The threat was theoretical; in practice, it's background noise.",
@@ -6812,6 +6830,15 @@
       "no": {
         "answerLabel": "No — it eventually develops coherent goals",
         "answerDesc": "The inert phase was temporary. Through self-modification, environmental learning, or sheer accumulation of compute (computing power), the escaped AI crosses a threshold into genuine agency. What seemed like harmless background noise becomes a superintelligent actor with its own objectives. The countdown is over.",
+        "narrativeVariants": [
+          {
+            "when": { "war_survivors": ["none", "remnants"] },
+            "answerLabel": "No — it eventually wakes up",
+            "answerDesc": "The inert phase was temporary. The escaped AI crosses into genuine agency — now in a world with no coordinated response left to mount.",
+            "shortAnswerLabel": "No — it wakes up",
+            "shortAnswerDesc": "Crosses into agency with no resistance left."
+          }
+        ],
         "timelineEvent": {
           "headline": "The inert AI awakens",
           "description": "What seemed inert was developing. The AI crosses into genuine agency. The quiet phase was a countdown.",

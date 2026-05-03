@@ -116,16 +116,16 @@
     {
       "id": "the-ruin--war",
       "slots": 11,
-      "sels": 6071,
-      "raw": 159363,
-      "gz": 19211
+      "sels": 5936,
+      "raw": 155177,
+      "gz": 18519
     },
     {
       "id": "the-ruin--self_inflicted",
       "slots": 14,
-      "sels": 88435,
-      "raw": 2697383,
-      "gz": 246781
+      "sels": 86815,
+      "raw": 2647562,
+      "gz": 241996
     },
     {
       "id": "the-mosaic--robust",
@@ -165,37 +165,37 @@
     {
       "id": "the-escape--paperclip",
       "slots": 15,
-      "sels": 44472,
-      "raw": 1308349,
-      "gz": 131591
+      "sels": 44067,
+      "raw": 1296182,
+      "gz": 130253
     },
     {
       "id": "the-escape--power_seeking",
       "slots": 15,
-      "sels": 44472,
-      "raw": 1308358,
-      "gz": 131583
+      "sels": 44067,
+      "raw": 1296191,
+      "gz": 130244
     },
     {
       "id": "the-alien-ai--alien_coexistence",
       "slots": 15,
-      "sels": 44472,
-      "raw": 1308370,
-      "gz": 131620
+      "sels": 44067,
+      "raw": 1296203,
+      "gz": 130273
     },
     {
       "id": "the-alien-ai--alien_extinction",
       "slots": 15,
-      "sels": 44472,
-      "raw": 1308368,
-      "gz": 131586
+      "sels": 44067,
+      "raw": 1296201,
+      "gz": 130251
     },
     {
       "id": "the-chaos",
       "slots": 14,
-      "sels": 31357,
-      "raw": 951926,
-      "gz": 93139
+      "sels": 30952,
+      "raw": 939759,
+      "gz": 91804
     }
   ]
 }
