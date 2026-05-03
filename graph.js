@@ -1325,13 +1325,31 @@ const NODES = [
         // stuck) flags this; tightening the gate here fixes it at
         // the source rather than papering over downstream.
         { id: 'extractive', label: 'A tightening grip',
-          effects: { when: { concentration_type: ['ai_itself'], ai_goals: ['benevolent'] }, move: ['ai_goals'] },
+          // Move ai_goals on concentration_type=ai_itself regardless of
+          // its prior value. The slot escape_after_who's design (per
+          // its FLOW_DAG comment) re-asks ai_goals here with benevolent
+          // + swarm + marginal disabled, forcing a paperclip /
+          // power_seeking / alien_* pick. The original guard
+          // `ai_goals: ['benevolent']` only covered the generous→
+          // extractive flip; when ai_goals had already been answered
+          // hostile in a prior escape walk (e.g. swarm in escape_early),
+          // the prior value leaked through to escape_after_who and the
+          // runtime walked straight to escape_method without re-asking
+          // — diverging from the precompute (which enumerates the
+          // post-re-ask shapes in escape_after_who.full.bin) and
+          // producing no-reachable-edges in random_walks_locked when
+          // the locked outcome required a different ai_goals. Dropping
+          // the value guard makes runtime + precompute agree.
+          effects: { when: { concentration_type: ['ai_itself'] }, move: ['ai_goals'] },
           disabledWhen: [
             { concentration_type: ['ai_itself'], proliferation_alignment: ['holds'],
               reason: 'Alignment is intrinsic — a robustly-aligned AI wouldn\'t wield power exploitatively' }
           ] },
         { id: 'indifferent', label: 'Their own project',
-          effects: { when: { concentration_type: ['ai_itself'], ai_goals: ['benevolent'] }, move: ['ai_goals'] },
+          // Same rationale as extractive — move ai_goals on
+          // concentration_type=ai_itself regardless of prior value so
+          // escape_after_who's re-ask actually fires at runtime.
+          effects: { when: { concentration_type: ['ai_itself'] }, move: ['ai_goals'] },
           disabledWhen: [
             { concentration_type: ['ai_itself'], proliferation_alignment: ['holds'],
               reason: 'Alignment is intrinsic — a robustly-aligned AI wouldn\'t treat humanity as incidental' }

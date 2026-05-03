@@ -466,7 +466,24 @@ function createStack() {
 // edge_N). No transitive re-walk, no implicit cascade.
 function push(stack, nodeId, edgeId) {
     const existingIdx = stack.findIndex(e => e.nodeId === nodeId);
-    const base = existingIdx > 0 ? stack.slice(0, existingIdx) : stack;
+    // Rewind-on-re-answer is only correct when the prior answer is
+    // still live in sel — that's the "user changes their mind"
+    // workflow the rewind was designed for. When sel[nodeId] is
+    // undefined the prior answer was moved out by an intervening
+    // edge (typically a shared-id module re-entry, e.g. proliferation
+    // → escape_early_alt re-asking ai_goals after escape_early
+    // already answered it). Treat that as a fresh push: append a
+    // new frame and keep the prior walk's frames intact, so
+    // parentSlotKeyFromStack can still find the upstream non-shared
+    // answer (proliferation_control) and disambiguate the right
+    // family member (escape_early_alt vs escape_early). Without this
+    // guard the rewind drops the proliferation_control frame, the
+    // disambiguator falls back to alignment, and flowNext deterministically
+    // routes the second walk through the wrong family member —
+    // a hard cycle, surfaced by random_walks_locked.js.
+    const currentSel = stack[stack.length - 1].state || {};
+    const shouldRewind = existingIdx > 0 && currentSel[nodeId] !== undefined;
+    const base = shouldRewind ? stack.slice(0, existingIdx) : stack;
 
     const prev = base[base.length - 1].state;
     const prevFlavor = base[base.length - 1].flavor || {};
