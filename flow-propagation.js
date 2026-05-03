@@ -97,6 +97,27 @@
 //                                              outcome's clause matches
 //                                              at a slot that wasn't
 //                                              meant to terminate at it).
+//     onEdge?             (slotKey, inputSel, outputSel) => void
+//                                              called once per
+//                                              (deduped input → output
+//                                              sel) edge produced by
+//                                              `slotKey`'s merge.
+//                                              `inputSel` is one of
+//                                              the parent-routed exits
+//                                              that landed at this
+//                                              slot; `outputSel` is
+//                                              the corresponding sel
+//                                              this slot exits with.
+//                                              Thin wrapper around
+//                                              graph-io's
+//                                              reachableFullSelsFromInputs
+//                                              onEdge hook — same
+//                                              identity semantics. Not
+//                                              fired for emergence
+//                                              (which has no parent
+//                                              inputs); use
+//                                              onSlotOutput to capture
+//                                              emergence's seed exits.
 //
 // Dependencies (read off `window` lazily so load-order is forgiving):
 //   window.GraphIO     — cartesianWriteRows, reachableFullSelsFromInputs,
@@ -213,6 +234,7 @@
         const onSlotOutput        = typeof opts.onSlotOutput        === 'function' ? opts.onSlotOutput        : null;
         const onOutcomeMatch      = typeof opts.onOutcomeMatch      === 'function' ? opts.onOutcomeMatch      : null;
         const onUnauthorizedSiphon = typeof opts.onUnauthorizedSiphon === 'function' ? opts.onUnauthorizedSiphon : null;
+        const onEdge              = typeof opts.onEdge              === 'function' ? opts.onEdge              : null;
 
         // Per-slot earlyExits as Set<oid> for O(1) membership tests.
         // Slots without earlyExits get an empty set — every match at
@@ -267,7 +289,10 @@
             } else {
                 const upstream = inputsBySlot.get(slotKey);
                 if (!upstream || !upstream.length) continue;
-                const full = GraphIO.reachableFullSelsFromInputs(slot, upstream);
+                const innerOpts = onEdge
+                    ? { onEdge: (inp, out) => onEdge(slotKey, inp, out) }
+                    : undefined;
+                const full = GraphIO.reachableFullSelsFromInputs(slot, upstream, innerOpts);
                 if (!full) continue;
                 acceptedBySlot.set(slotKey, full.acceptedInputs.length);
                 if (full.stuckInputs && full.stuckInputs.length) {

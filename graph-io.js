@@ -1116,7 +1116,17 @@
     // OBJECTS (not keys), deduped by `_selKey`. They're the canonical
     // shape to feed back into another reachability call for chained
     // propagation through the DAG.
-    function reachableFullSelsFromInputs(slot, inputSels) {
+    // opts.onEdge(inputSel, outputSel): optional hook invoked once
+    // per (deduped input sel, output sel) edge produced by the merge.
+    // Used by precompute-explore.js to capture the per-(parent, child)
+    // fan-out the reach-back-prop pass needs. The hook fires for the
+    // POST-DEDUP input set (`acceptedByKey.values()`); callers that
+    // need to map back to multiple identical-keyed parent inputs do
+    // their own fan-in bookkeeping. Wraps a Map<gk,sel[]> +
+    // Map<mergedKey,outputSel> internally; the no-hook path is
+    // unchanged.
+    function reachableFullSelsFromInputs(slot, inputSels, opts) {
+        const onEdge = (opts && typeof opts.onEdge === 'function') ? opts.onEdge : null;
         const empty = { acceptedInputs: [], outputs: [], stuckInputs: [], truncated: false };
         if (!slot || !Array.isArray(inputSels)) return empty;
         if (slot.kind === 'deadend') return empty;
@@ -1285,6 +1295,38 @@
                 }
             }
 
+            // ── Per-group input list (only built when onEdge is set) ──
+            // Each (gk) group's outputs are deterministic from
+            // (bucketKey, ptKey, projKey). Inputs in the same group
+            // produce identical outputs, so we just need to remember
+            // which inputs landed in each group so the hook can fire
+            // (input, output) edges once per pair. No-op when
+            // onEdge isn't provided.
+            const groupInputs = onEdge ? new Map() : null;
+            if (onEdge) {
+                for (const sel of acceptedByKey.values()) {
+                    const bk = _readSelKey(sel, reads);
+                    if (!byInput.has(bk)) continue;
+                    // Recompute gk to look up the group. Same
+                    // computation as above; cheaper than a parallel
+                    // Map insert during the group-build pass.
+                    const ptDims = [];
+                    for (const d of Object.keys(sel)) {
+                        if (!readSet.has(d)) ptDims.push(d);
+                    }
+                    ptDims.sort();
+                    const ptParts2 = new Array(ptDims.length * 2);
+                    for (let i = 0; i < ptDims.length; i++) {
+                        ptParts2[i * 2] = ptDims[i];
+                        ptParts2[i * 2 + 1] = sel[ptDims[i]];
+                    }
+                    const gk = bk + '\x02' + ptParts2.join('\x00');
+                    let arr = groupInputs.get(gk);
+                    if (!arr) { arr = []; groupInputs.set(gk, arr); }
+                    arr.push(sel);
+                }
+            }
+
             // Inner loop: emit merged sels. Linear merge of two
             // pre-sorted halves yields the canonical mergedKey
             // directly. Build the merged sel object only on miss.
@@ -1293,10 +1335,11 @@
             // dim — happens when a projKey writes a dim that's also
             // in the input sel and not in reads) resolve in favour
             // of fixed: explicit writes override pass-through.
-            for (const { bk, ptSel, ptParts } of groups.values()) {
+            for (const [gk, { bk, ptSel, ptParts }] of groups) {
                 const inner = fixedByBucket.get(bk);
                 if (!inner) continue;
                 const plen = ptParts.length;
+                const hookInputs = groupInputs ? groupInputs.get(gk) : null;
                 for (const fp of inner.values()) {
                     const fixedParts = fp.fixedParts;
                     const flen = fixedParts.length;
@@ -1332,11 +1375,16 @@
                     }
                     out.length = m;
                     const mk = out.join('\x00');
-                    if (!outByKey.has(mk)) {
+                    let outSel = outByKey.get(mk);
+                    if (!outSel) {
                         // Spread order matters: ptSel first, then
                         // fixedSel — explicit writes override the
                         // pass-through value on the same dim.
-                        outByKey.set(mk, { ...ptSel, ...fp.fixedSel });
+                        outSel = { ...ptSel, ...fp.fixedSel };
+                        outByKey.set(mk, outSel);
+                    }
+                    if (onEdge && hookInputs) {
+                        for (const inp of hookInputs) onEdge(inp, outSel);
                     }
                 }
             }

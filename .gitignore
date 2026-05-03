@@ -8,3 +8,4 @@ tests/audit-report.json
 .DS_Store
 .cursor
 data/reach/*.json
+data/explore-cache/
