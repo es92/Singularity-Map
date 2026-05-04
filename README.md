@@ -1,4 +1,4 @@
-# AI Singularity Map
+# AI Possibilities Map
 
 **What do you think happens with AI?** Walk through the key questions and see the future your beliefs imply.
 

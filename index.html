@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Singularity Map</title>
+    <title>AI Possibilities Map</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M4 16H18' stroke='%2300c8ff' stroke-width='2.5' stroke-linecap='round'/><path d='M18 16L28 6' stroke='%2300c8ff' stroke-width='2.5' stroke-linecap='round'/><path d='M18 16L28 16' stroke='%237c5cff' stroke-width='2.5' stroke-linecap='round'/><path d='M18 16L28 26' stroke='%2300c8ff' stroke-width='2.5' stroke-linecap='round'/><circle cx='18' cy='16' r='3' fill='%2300c8ff'/></svg>">
     <meta name="description" content="What do you think happens with AI? Reason about what the key players might do and see the future your beliefs imply. 28 possible outcomes.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://es92.github.io/Singularity-Map/">
-    <meta property="og:title" content="AI Singularity Map">
+    <meta property="og:title" content="AI Possibilities Map">
     <meta property="og:description" content="Choose your own adventure through the future of AI. ~20 questions, 28 possible outcomes.">
     <meta property="og:image" content="https://es92.github.io/Singularity-Map/og-image.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="AI Singularity Map">
+    <meta name="twitter:title" content="AI Possibilities Map">
     <meta name="twitter:description" content="Choose your own adventure through the future of AI. ~20 questions, 28 possible outcomes.">
     <meta name="twitter:image" content="https://es92.github.io/Singularity-Map/og-image.png">
     <link rel="stylesheet" href="timeline.css">
@@ -930,14 +930,37 @@
         let discovered = new Set();
         let personalData = null;
         let personalAnswers = null;
-        const PERSONAL_STORAGE_KEY = 'singularity-map-personal';
+        const PERSONAL_STORAGE_KEY = 'possibilities-map-personal';
         const { SCENARIO, NODES, NODE_MAP } = window.Graph;
+
+        // One-time migration: rename localStorage keys from the project's
+        // previous brand ("singularity-map") to the current one. Runs before
+        // any read of the new keys. Idempotent: a second pass is a no-op
+        // because old keys are deleted after copy. Safe to delete this block
+        // once the install base has rolled forward (rough rule: a few months
+        // after the rename ships).
+        (function migrateLegacyStorageKeys() {
+            const renames = [
+                ['singularity-map-discovered', SCENARIO.storageKey],
+                ['singularity-map-personal',  PERSONAL_STORAGE_KEY],
+            ];
+            for (const [oldKey, newKey] of renames) {
+                if (oldKey === newKey) continue;
+                try {
+                    if (localStorage.getItem(newKey) !== null) continue; // already migrated
+                    const oldVal = localStorage.getItem(oldKey);
+                    if (oldVal === null) continue;                       // nothing to migrate
+                    localStorage.setItem(newKey, oldVal);
+                    localStorage.removeItem(oldKey);
+                } catch (_) { /* private mode / quota / SSR — skip */ }
+            }
+        })();
 
         loadDiscovered();
         initIntroBg();
         loadData().then(() => {
             handleInitialRoute();
-            console.log('%cAI Singularity Map', 'font-weight:bold; font-size:1.1em');
+            console.log('%cAI Possibilities Map', 'font-weight:bold; font-size:1.1em');
             console.log('Type %ctoggleDebug()%c in the console to toggle debug mode.', 'font-weight:bold; color:#00c8ff', '');
         }).catch(err => {
             renderError(err);
@@ -2383,8 +2406,8 @@
                     }
                 }
                 const text = title
-                    ? 'I got ' + title + ' on AI Singularity Map. What future do your beliefs about AI lead to?'
-                    : 'What future do your beliefs about AI lead to? Try AI Singularity Map.';
+                    ? 'I got ' + title + ' on AI Possibilities Map. What future do your beliefs about AI lead to?'
+                    : 'What future do your beliefs about AI lead to? Try AI Possibilities Map.';
                 return { url, title, text };
             }
 
@@ -3098,7 +3121,7 @@
                 <div class="map-screen">
                     <div class="map-toolbar">
                         <div style="display:flex;align-items:center;gap:3rem;pointer-events:auto">
-                        <span class="map-title" data-action="home" style="cursor:pointer">AI Singularity Map</span>
+                        <span class="map-title" data-action="home" style="cursor:pointer">AI Possibilities Map</span>
                         ${lockedId ? (() => {
                             const lt = templatesMap[lockedId];
                             const lv = lockedVariantKey && lt.variants ? lt.variants[lockedVariantKey] : null;
@@ -3321,7 +3344,7 @@
             app.innerHTML = `
                 <div class="map-screen">
                     <div class="map-toolbar">
-                        <span class="map-title" style="cursor:pointer" data-action="back">AI Singularity Map</span>
+                        <span class="map-title" style="cursor:pointer" data-action="back">AI Possibilities Map</span>
                     </div>
                     <div class="about-page">
                         <h1>About</h1>
@@ -3442,7 +3465,7 @@
             app.innerHTML = `
                 <div class="error-screen">
                     <h2>Failed to Load</h2>
-                    <p>AI Singularity Map needs to be served over HTTP to load its data files. If you opened this file directly, try running a local server:</p>
+                    <p>AI Possibilities Map needs to be served over HTTP to load its data files. If you opened this file directly, try running a local server:</p>
                     <code>node serve.js</code>
                     <p style="margin-top:1rem;font-size:0.85rem;">Then visit <strong>http://localhost:3000</strong></p>
                 </div>`;

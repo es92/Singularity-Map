@@ -153,17 +153,17 @@ function sharePageHtml(card) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${esc(displayTitle)} — AI Singularity Map</title>
+    <title>${esc(displayTitle)} — AI Possibilities Map</title>
     <meta name="description" content="${esc(truncDesc)}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="${BASE_URL}share/${card.slug}.html">
-    <meta property="og:title" content="AI Singularity Map: See what your AI future could be">
+    <meta property="og:title" content="AI Possibilities Map: See what your AI future could be">
     <meta property="og:description" content="I got: ${esc(displayTitle)}">
     <meta property="og:image" content="${imgUrl}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="AI Singularity Map: See what your AI future could be">
+    <meta name="twitter:title" content="AI Possibilities Map: See what your AI future could be">
     <meta name="twitter:description" content="I got: ${esc(displayTitle)}">
     <meta name="twitter:image" content="${imgUrl}">
     <style>
@@ -342,7 +342,7 @@ function sharePageHtml(card) {
         </div>
         <div id="personalized-timeline"></div>
         <a class="cta" href="${BASE_URL}">Explore your own &rarr;</a>
-        <div class="tagline">AI Singularity Map &mdash; explore possible AI futures</div>
+        <div class="tagline">AI Possibilities Map &mdash; explore possible AI futures</div>
     </div>
     <script>
     (function() {
@@ -374,10 +374,150 @@ function sharePageHtml(card) {
 </html>`;
 }
 
+// ──────────────────────────────────────────────────────────────────────
+// Root-level og-image.png — the social card for the homepage itself.
+// Renders a branching-tree SVG (echoing the favicon / brand motif) with
+// the brand title and tagline overlaid. Deterministic: no RNG, so a
+// re-run on the same code produces a byte-stable image.
+// ──────────────────────────────────────────────────────────────────────
+function ogImageHtml({ title = 'AI Possibilities Map',
+                       subtitle = 'Choose your own adventure through the future of AI.' } = {}) {
+    const W = 1200, H = 630;
+    const origin = { x: 100, y: H / 2 };
+
+    // Recursive binary tree: each node splits into 2 children, dividing
+    // its vertical band in half. Five levels gives 32 endpoints — a
+    // density that looks busy enough to read as "many futures" without
+    // turning into noise.
+    const branches = [];   // { x1, y1, x2, y2 }
+    const endpoints = [];  // { x, y }
+    const DEPTH = 5;
+    const TOTAL_X = W - origin.x - 30;
+    // Step shrinks per level so later splits cluster toward the right
+    // edge — gives the tree a natural "spreading" silhouette.
+    const SHRINK = 0.85;
+    let stepSum = 0;
+    for (let i = 0; i < DEPTH; i++) stepSum += Math.pow(SHRINK, i);
+    const X0 = TOTAL_X / stepSum;
+
+    (function build(node, yLo, yHi, depthRem, step) {
+        if (depthRem === 0) { endpoints.push(node); return; }
+        const yMid = (yLo + yHi) / 2;
+        const upY = (yLo + yMid) / 2;
+        const dnY = (yMid + yHi) / 2;
+        const childX = node.x + step;
+        branches.push({ x1: node.x, y1: node.y, x2: childX, y2: upY });
+        branches.push({ x1: node.x, y1: node.y, x2: childX, y2: dnY });
+        build({ x: childX, y: upY }, yLo, yMid, depthRem - 1, step * SHRINK);
+        build({ x: childX, y: dnY }, yMid, yHi, depthRem - 1, step * SHRINK);
+    })(origin, 60, H - 60, DEPTH, X0);
+
+    const pathsSvg = branches.map(b => {
+        // Smooth horizontal cubic bezier — control points share the
+        // endpoint's y so the curve enters/leaves horizontally.
+        const dx = b.x2 - b.x1;
+        const cp1x = b.x1 + dx * 0.5, cp1y = b.y1;
+        const cp2x = b.x2 - dx * 0.5, cp2y = b.y2;
+        return `<path d="M${b.x1.toFixed(1)},${b.y1.toFixed(1)} C${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${b.x2.toFixed(1)},${b.y2.toFixed(1)}"/>`;
+    }).join('\n');
+
+    const dotsSvg = endpoints.map(e =>
+        `<circle cx="${e.x.toFixed(1)}" cy="${e.y.toFixed(1)}" r="4"/>`
+    ).join('\n');
+
+    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8">
+<style>
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+body {
+    width:${W}px; height:${H}px;
+    background:#08080f;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+    position:relative;
+}
+.bg {
+    position:absolute; inset:0;
+    background:radial-gradient(ellipse at 65% 50%, rgba(0,200,255,0.06) 0%, transparent 60%);
+}
+svg.tree { position:absolute; inset:0; width:100%; height:100%; }
+.branch { fill:none; stroke:url(#branch-gradient); stroke-width:1.6; stroke-linecap:round; opacity:0.85; }
+.endpoint { fill:#ff9933; }
+.title-wrap {
+    position:absolute; left:0; right:0;
+    top:50%; transform:translateY(-50%);
+    text-align:center;
+    padding:0 4rem;
+    z-index:2;
+}
+.title {
+    font-size:120px; font-weight:700;
+    letter-spacing:-0.035em; line-height:1.0;
+    color:#ffffff;
+    text-shadow:0 4px 32px rgba(8,8,15,0.85), 0 1px 8px rgba(8,8,15,0.95);
+    margin-bottom:1.2rem;
+}
+.subtitle {
+    font-size:34px; font-weight:400;
+    color:#c8c8d8;
+    text-shadow:0 2px 12px rgba(8,8,15,0.9);
+    letter-spacing:-0.005em;
+    opacity:0.92;
+}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<svg class="tree" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="branch-gradient" gradientUnits="userSpaceOnUse"
+                        x1="${origin.x}" y1="0" x2="${W - 30}" y2="0">
+            <stop offset="0%"  stop-color="#00c8ff"/>
+            <stop offset="55%" stop-color="#7fbfa0"/>
+            <stop offset="100%" stop-color="#ffaa22"/>
+        </linearGradient>
+    </defs>
+    <g class="branch">
+${pathsSvg}
+    </g>
+    <g class="endpoint">
+${dotsSvg}
+    </g>
+</svg>
+<div class="title-wrap">
+    <div class="title">${esc(title)}</div>
+    <div class="subtitle">${esc(subtitle)}</div>
+</div>
+</body>
+</html>`;
+}
+
+async function renderOgImage(browser) {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1200, height: 630, deviceScaleFactor: 1 });
+    await page.setContent(ogImageHtml(), { waitUntil: 'domcontentloaded' });
+    await page.screenshot({ path: path.join(__dirname, 'og-image.png'), type: 'png' });
+    await page.close();
+}
+
 async function main() {
     const htmlOnly = process.argv.includes('--html-only');
+    const ogOnly   = process.argv.includes('--og-only');
 
     fs.mkdirSync(IMG_DIR, { recursive: true });
+
+    if (ogOnly) {
+        console.log('Rendering og-image.png...');
+        const browser = await puppeteer.launch({ headless: 'new' });
+        await renderOgImage(browser);
+        await browser.close();
+        console.log('  ✓ og-image.png');
+        return;
+    }
 
     const cards = buildCards();
     console.log(`Generating ${cards.length} share ${htmlOnly ? 'HTML pages' : 'cards'}...`);
@@ -406,9 +546,14 @@ async function main() {
 
         console.log(`  ✓ ${card.slug}`);
     }
+    await page.close();
+
+    console.log('Rendering og-image.png...');
+    await renderOgImage(browser);
+    console.log('  ✓ og-image.png');
 
     await browser.close();
-    console.log(`\nDone! Generated ${cards.length} images + ${cards.length} HTML pages in share/`);
+    console.log(`\nDone! Generated ${cards.length} share images + HTML pages + 1 og-image.png`);
 }
 
 main().catch(err => { console.error(err); process.exit(1); });

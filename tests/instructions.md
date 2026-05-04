@@ -1,6 +1,6 @@
-# Singularity Map — Evaluation Instructions
+# Possibilities Map — Evaluation Instructions
 
-This document explains how to run persona-based evaluations of the Singularity Map simulator and generate a coherence report.
+This document explains how to run persona-based evaluations of the Possibilities Map simulator and generate a coherence report.
 
 ## Prerequisites
 
