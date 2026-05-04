@@ -916,6 +916,7 @@
     <script src="timeline-animator.js"></script>
     <script src="nodes.js"></script>
     <script src="flow-propagation.js"></script>
+    <script src="walk-step.js"></script>
     <script src="explore.js"></script>
     <script src="explore-cache.js"></script>
     <script src="reach-checker.js"></script>
@@ -2040,17 +2041,12 @@
                 _reachInflight.set(entryId, p);
             }
 
-            function _lightPushSel(sel, nodeId, edgeId) {
-                // Mirrors random_walks_locked.lightPushSel: stamp
-                // node.id=edge.id then run applyEdgeEffects on a
-                // fresh copy. Sel-only — flavor isn't observed by
-                // templateMatches and so doesn't affect reach.
-                const next = Object.assign({}, sel, { [nodeId]: edgeId });
-                const node = Engine.NODE_MAP[nodeId];
-                const edge = node && node.edges && node.edges.find(e => e.id === edgeId);
-                if (edge) Engine.applyEdgeEffects(next, edge, null);
-                return next;
-            }
+            // Sel-only edge application — single source of truth in
+            // walk-step.js (shared with reach-checker and
+            // tests/random_walks_locked). Bound locally so the per-edge
+            // hot path (`wouldReachOutcome`) stays a direct call.
+            const _lightPushSel = (sel, nodeId, edgeId) =>
+                window.WalkStep.lightPushSelById(sel, nodeId, edgeId, { Engine });
 
             function wouldReachOutcome(slotKey, nodeId, edgeId, dfsMemo, fromSel) {
                 // Returns true when the post-click sel can still reach
@@ -2089,7 +2085,6 @@
 
             function findNextQuestion() {
                 if (lockedId) _ensureReachChecker();
-                const sel = Engine.currentState(stack);
                 // Narrative-match view: sel + flavor so edge narrativeVariants
                 // can observe flavor-moved dims (e.g., stall_recovery='mild').
                 const narrSel = Engine.narrativeState(stack);
@@ -2105,15 +2100,16 @@
                 //   * 'open'     — no slot owns the sel; outcome matching
                 //                  is allowed.
                 //
-                // Derive the parent slot from stack-history so flowNext
-                // routes the same way run() does even when a slot moves
-                // its own gate dim on exit (e.g. brittle.sufficient
-                // leaves sel unchanged but flavor-moves brittle_resolution
-                // — sel-only routing would loop on brittle, but stack
-                // history shows brittle was answered so its child
-                // routing wins).
-                const parentSlotKey = window.FlowPropagation.parentSlotKeyFromStack(stack);
-                const flow = window.FlowPropagation.flowNext(sel, parentSlotKey);
+                // `flowStep` derives parentSlotKey from stack history so
+                // routing matches `run()` even when a slot moves its own
+                // gate dim on exit (e.g. brittle.sufficient leaves sel
+                // unchanged but flavor-moves brittle_resolution — sel-only
+                // routing would loop on brittle, but stack history shows
+                // brittle was answered so its child routing wins).
+                const { sel, flow } = window.WalkStep.flowStep(
+                    stack,
+                    { Engine, FlowPropagation: window.FlowPropagation },
+                );
                 if (flow.kind === 'open') {
                     // Outcome matching reads only sel — flavor is for
                     // narrative rendering, not template gating. Any dim
@@ -2255,9 +2251,10 @@
                     if (!value) continue;
                     renderedIds.add(node.id);
                     const partialStack = stack.slice(0, i);
-                    const selAtQ = Engine.currentState(partialStack);
-                    const parentSlotKeyAtQ = window.FlowPropagation.parentSlotKeyFromStack(partialStack);
-                    const flowAtQ = window.FlowPropagation.flowNext(selAtQ, parentSlotKeyAtQ);
+                    const { sel: selAtQ, flow: flowAtQ } = window.WalkStep.flowStep(
+                        partialStack,
+                        { Engine, FlowPropagation: window.FlowPropagation },
+                    );
                     // Conservative: only trust flowAtQ.slotKey if it
                     // landed on the same node we're rendering. Mismatches
                     // (e.g., engine forced a redirect, or the entry isn't

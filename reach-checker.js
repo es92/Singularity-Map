@@ -61,14 +61,18 @@
 
 (function (root) {
 
-    // Canonical sel string. Single source of truth in sel-key.js
-    // (Node `require('./sel-key')`, browser `window.SelKey`). Bound
-    // to a local so per-call lookups stay cheap on the in-module DFS
-    // path.
+    // Canonical sel string + sel-only edge application. Single source
+    // of truth in sel-key.js / walk-step.js (Node `require`, browser
+    // globals). Bound to locals so per-call lookups stay cheap on the
+    // in-module DFS path.
     const _SelKeyMod = (typeof require === 'function')
         ? require('./sel-key')
         : root.SelKey;
+    const _WalkStep = (typeof require === 'function')
+        ? require('./walk-step')
+        : root.WalkStep;
     const _selKey = _SelKeyMod.selKey;
+    const _lightPushSel = _WalkStep.lightPushSel;
 
     // ─── Composite checker ────────────────────────────────────────
 
@@ -113,16 +117,6 @@
             const m = reachBySlot.get(slotKey);
             if (!m) return undefined;
             return m.get(sk);
-        }
-
-        function _lightPushSel(sel, node, edge) {
-            // Mirrors index.html `_lightPushSel` and graph-io's
-            // `_applyEdgeWrites`. Stamps node.id=edge.id then runs
-            // applyEdgeEffects (sel-only — flavor isn't observed
-            // by templateMatches and so doesn't affect reach).
-            const next = Object.assign({}, sel, { [node.id]: edge.id });
-            Engine.applyEdgeEffects(next, edge, null);
-            return next;
         }
 
         function _dfsInModule(sel, mod, slotKey, memo) {
@@ -177,7 +171,7 @@
             let forward = 0;
             for (const edge of node.edges) {
                 if (Engine.isEdgeDisabled(sel, node, edge)) continue;
-                const child = _lightPushSel(sel, node, edge);
+                const child = _lightPushSel(sel, node, edge, { Engine });
                 forward |= _dfsInModule(child, mod, slotKey, memo);
             }
             const mask = direct | forward;
@@ -485,12 +479,6 @@
             return !!(s && s.has(sk));
         }
 
-        function _lightPushSel(sel, node, edge) {
-            const next = Object.assign({}, sel, { [node.id]: edge.id });
-            Engine.applyEdgeEffects(next, edge, null);
-            return next;
-        }
-
         function _dfsInModule(sel, mod, slotKey, memo) {
             const sk = _selKey(sel);
             const cached = memo.get(sk);
@@ -531,7 +519,7 @@
 
             for (const edge of node.edges) {
                 if (Engine.isEdgeDisabled(sel, node, edge)) continue;
-                const child = _lightPushSel(sel, node, edge);
+                const child = _lightPushSel(sel, node, edge, { Engine });
                 if (_dfsInModule(child, mod, slotKey, memo)) {
                     memo.set(sk, true);
                     return true;

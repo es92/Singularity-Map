@@ -1,48 +1,93 @@
-// walk-step.js — single-step runtime navigation primitive.
+// walk-step.js — single-step runtime navigation primitives.
 //
-// Extracts the `flowNext → locked? → enabled-edge` decision tree
-// previously open-coded in three near-identical loops:
+// Centralizes the per-edge-walk vocabulary every runtime walker uses
+// (the runtime UI in index.html, the LLM-driven evaluator in
+// tests/evaluate.js, the seeded random/reach-gated/parity walks in
+// tests/random_walks*.js + tests/runtime_cache_parity.js, and the
+// reach-checker's mid-module DFS).
 //
-//   * tests/random_walks.js          (random pick over enabled)
-//   * tests/random_walks_locked.js   (reach-gated pick + per-slot DFS memo)
-//   * tests/runtime_cache_parity.js  (slot-exit cache assertions)
+// Three layered primitives:
 //
-// `nextAction(stack, deps)` returns *what the runtime would do next*
-// without performing the push, so each driver decides:
-//   * how to handle terminal kinds ('open' / 'stuck' / 'unknown-flow')
-//   * how to pick from `enabled` (random / reach-gated / etc.)
-//   * what to track around the push (trace / slot-exit asserts / memo)
+//   flowStep(stack, deps)
+//     The irreducible 3-line "ask FlowPropagation where to go next"
+//     call every walker leads with. Returns { sel, parentSlotKey, flow }.
 //
-// Returned shapes:
-//   { kind: 'open',          sel, flow }
-//   { kind: 'stuck',         sel, flow }
-//   { kind: 'unknown-flow',  sel, flow }
-//   { kind: 'auto-locked',   sel, flow, node, edgeId }     // single edge survives
-//   { kind: 'question',      sel, flow, node, enabled }    // caller picks
+//   nextAction(stack, deps)
+//     flowStep + locked-detect + enabled-filter, returning a tagged
+//     action so the caller's outer loop can dispatch on `kind`:
+//       { kind: 'open',          sel, parentSlotKey, flow }
+//       { kind: 'stuck',         sel, parentSlotKey, flow }
+//       { kind: 'unknown-flow',  sel, parentSlotKey, flow }
+//       { kind: 'auto-locked',   sel, parentSlotKey, flow, node, edgeId }
+//       { kind: 'question',      sel, parentSlotKey, flow, node, enabled }
 //
-// `deps` carries the runtime objects so this file makes no assumptions
-// about how the test loaded them (node-runtime.js, direct require, etc.).
+//   lightPushSel(sel, node, edge, deps) / lightPushSelById(sel, nodeId, edgeId, deps)
+//     Sel-only edge application — stamps `sel[node.id]=edge.id` then
+//     runs `applyEdgeEffects` on a fresh copy. Used by the reach
+//     checker's in-module DFS and by every "would this edge keep the
+//     locked outcome reachable?" probe. Sel-only because flavor isn't
+//     observed by `templateMatches`, so it doesn't affect reach.
+//
+// `deps = { Engine, FlowPropagation }` is passed in so this module
+// makes no assumption about how the caller bootstrapped the runtime
+// (node-runtime.js for tests, plain script tags in the browser).
+//
+// Dual-mode: `require('./walk-step')` in Node, `window.WalkStep` in
+// the browser.
 
-'use strict';
+(function () {
+    'use strict';
 
-function nextAction(stack, deps) {
-    const { Engine, FlowPropagation } = deps;
-    const sel = Engine.currentState(stack);
-    const parentSlotKey = FlowPropagation.parentSlotKeyFromStack(stack);
-    const flow = FlowPropagation.flowNext(sel, parentSlotKey);
-
-    if (flow.kind === 'open')   return { kind: 'open',   sel, flow };
-    if (flow.kind === 'stuck')  return { kind: 'stuck',  sel, flow };
-    if (flow.kind !== 'question') return { kind: 'unknown-flow', sel, flow };
-
-    const node = flow.node;
-    const lockedEdgeId = Engine.isNodeLocked(sel, node);
-    if (lockedEdgeId != null) {
-        return { kind: 'auto-locked', sel, flow, node, edgeId: lockedEdgeId };
+    function flowStep(stack, deps) {
+        const sel = deps.Engine.currentState(stack);
+        const parentSlotKey = deps.FlowPropagation.parentSlotKeyFromStack(stack);
+        const flow = deps.FlowPropagation.flowNext(sel, parentSlotKey);
+        return { sel, parentSlotKey, flow };
     }
 
-    const enabled = node.edges.filter(e => !Engine.isEdgeDisabled(sel, node, e));
-    return { kind: 'question', sel, flow, node, enabled };
-}
+    function nextAction(stack, deps) {
+        const { sel, parentSlotKey, flow } = flowStep(stack, deps);
 
-module.exports = { nextAction };
+        if (flow.kind === 'open')   return { kind: 'open',   sel, parentSlotKey, flow };
+        if (flow.kind === 'stuck')  return { kind: 'stuck',  sel, parentSlotKey, flow };
+        if (flow.kind !== 'question') return { kind: 'unknown-flow', sel, parentSlotKey, flow };
+
+        const node = flow.node;
+        const lockedEdgeId = deps.Engine.isNodeLocked(sel, node);
+        if (lockedEdgeId != null) {
+            return { kind: 'auto-locked', sel, parentSlotKey, flow, node, edgeId: lockedEdgeId };
+        }
+
+        const enabled = node.edges.filter(e => !deps.Engine.isEdgeDisabled(sel, node, e));
+        return { kind: 'question', sel, parentSlotKey, flow, node, enabled };
+    }
+
+    function lightPushSel(sel, node, edge, deps) {
+        const next = Object.assign({}, sel, { [node.id]: edge.id });
+        deps.Engine.applyEdgeEffects(next, edge, null);
+        return next;
+    }
+
+    function lightPushSelById(sel, nodeId, edgeId, deps) {
+        // Defensive lookup variant — callers that hold (nodeId, edgeId)
+        // strings (URL-replay path in index.html, by-name walks) get
+        // a stable fallback when the node/edge has been renamed. Reach
+        // queries that follow will simply see the id stamped without
+        // edge effects; templateMatches is sel-only and tolerates this.
+        const Engine = deps.Engine;
+        const node = Engine.NODE_MAP && Engine.NODE_MAP[nodeId];
+        if (!node) return Object.assign({}, sel, { [nodeId]: edgeId });
+        const edge = node.edges && node.edges.find(e => e.id === edgeId);
+        const next = Object.assign({}, sel, { [nodeId]: edgeId });
+        if (edge) Engine.applyEdgeEffects(next, edge, null);
+        return next;
+    }
+
+    const api = { flowStep, nextAction, lightPushSel, lightPushSelById };
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = api;
+    }
+    if (typeof window !== 'undefined') {
+        window.WalkStep = api;
+    }
+})();

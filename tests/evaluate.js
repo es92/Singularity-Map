@@ -20,6 +20,8 @@ const { Engine, NODES, NODE_MAP, FlowPropagation } =
     require(path.join(ROOT, 'node-runtime')).loadNodeRuntime({
         richDocument: true, withOutcomes: false,
     });
+const { flowStep } = require(path.join(ROOT, 'walk-step'));
+const _walkDeps = { Engine, FlowPropagation };
 
 const outcomes = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'outcomes.json'), 'utf8'));
 const narrative = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'narrative.json'), 'utf8'));
@@ -316,17 +318,17 @@ function getNextNode(sel, stack) {
     // (unlocked) or auto-push the locked answer (mirrors the runtime's
     // one-option "Continue" button).
     //
-    // Pass parentSlotKey derived from the stack so flowNext mirrors the
-    // runtime's per-parent routing exactly. Without this, the sel-only
-    // heuristic misroutes when an upstream edge pre-sets a downstream
-    // module's completion marker — e.g. plateau_benefit_distribution's
-    // effect writes who_benefits_set='yes', which the sel-only heuristic
-    // misreads as "who_benefits exited" and skips past rollout_early into
-    // the terminal rollout slot, dead-ending the plateau path.
-    const parentSlotKey = stack
-        ? FlowPropagation.parentSlotKeyFromStack(stack)
-        : undefined;
-    const flow = FlowPropagation.flowNext(sel, parentSlotKey);
+    // `flowStep` derives parentSlotKey from stack history so the route
+    // matches the runtime's per-parent dispatch exactly. Without it,
+    // the sel-only heuristic misroutes when an upstream edge pre-sets
+    // a downstream module's completion marker — e.g.
+    // plateau_benefit_distribution's effect writes who_benefits_set,
+    // which sel-only routing misreads as "who_benefits exited" and
+    // skips past rollout_early into the terminal rollout slot,
+    // dead-ending the plateau path.
+    const { flow } = stack
+        ? flowStep(stack, _walkDeps)
+        : { flow: FlowPropagation.flowNext(sel) };
     if (flow.kind !== 'question') return null;
     const node = flow.node;
     const lockedEdgeId = Engine.isNodeLocked(sel, node);

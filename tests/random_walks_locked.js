@@ -54,7 +54,7 @@ for (const t of TEMPLATES) TEMPLATE_BY_ID.set(t.id, t);
 
 const Cache = require(path.join(ROOT, 'explore-cache'));
 const ReachChecker = require(path.join(ROOT, 'reach-checker'));
-const { nextAction } = require(path.join(ROOT, 'walk-step'));
+const { nextAction, lightPushSelById } = require(path.join(ROOT, 'walk-step'));
 const _walkDeps = { Engine, FlowPropagation };
 
 // ── CLI args ──
@@ -135,16 +135,6 @@ const entries = reachMeta.outcomeEntries.map(e => ({
 }));
 console.log(`Loaded ${entries.length} outcome entries from data/reach/_meta.json.\n`);
 
-// ── Light-push helper (mirrors index.html `_lightPushSel`) ──
-
-function lightPushSel(sel, nodeId, edgeId) {
-    const next = Object.assign({}, sel, { [nodeId]: edgeId });
-    const node = NODE_MAP[nodeId];
-    const edge = node && node.edges && node.edges.find(e => e.id === edgeId);
-    if (edge) Engine.applyEdgeEffects(next, edge, null);
-    return next;
-}
-
 // ── Single reach-constrained walk ──
 //
 // Walks the engine's findNextQuestion loop. At every askable node,
@@ -205,7 +195,7 @@ function reachWalk(rand, entry, checker) {
             locked = true;
         } else {
             const reachable = a.enabled.filter(e => {
-                const childSel = lightPushSel(a.sel, a.node.id, e.id);
+                const childSel = lightPushSelById(a.sel, a.node.id, e.id, _walkDeps);
                 // Pass the active slotKey from flowNext so the
                 // checker's per-slot lookup distinguishes reach
                 // at this slot's exit boundary from the same

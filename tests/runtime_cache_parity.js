@@ -278,9 +278,8 @@ function walk(rand, failures, debugLog) {
 
     for (let step = 0; step < STEP_CAP; step++) {
         const a = nextAction(stack, _walkDeps);
-        const parentSlotKey = FlowPropagation.parentSlotKeyFromStack(stack);
 
-        if (debugLog) debugLog.push(`step ${step}: parent=${parentSlotKey || 'null'} flowSlot=${a.flow.slotKey || a.flow.kind} sel=${JSON.stringify(a.sel)}`);
+        if (debugLog) debugLog.push(`step ${step}: parent=${a.parentSlotKey || 'null'} flowSlot=${a.flow.slotKey || a.flow.kind} sel=${JSON.stringify(a.sel)}`);
 
         if (a.kind === 'open') {
             if (currentSlotKey !== null) checkSlotExit(currentSlotKey, a.sel, failures, 'open', stack);
