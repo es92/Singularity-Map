@@ -45,29 +45,10 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-
-global.window = {
-    location: { search: '', hash: '' },
-    requestAnimationFrame: () => 0,
-    addEventListener: () => {},
-    Graph: require('../graph.js'),
-    Engine: require('../engine.js'),
-};
-global.document = {
-    addEventListener: () => {},
-    readyState: 'complete',
-    getElementById: () => null,
-    querySelector: () => null,
-};
-new Function('window', fs.readFileSync(path.join(ROOT, 'graph-io.js'), 'utf8'))(global.window);
-new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 'utf8'))(global.window, global.document);
-
-const Engine = global.window.Engine;
-const FLOW_DAG = global.window.Nodes.FLOW_DAG;
+const { Engine, FLOW_DAG, TEMPLATES } =
+    require(path.join(ROOT, 'node-runtime')).loadNodeRuntime({ flowPropagation: false });
 const NODE_MAP = Engine.NODE_MAP;
 const MODULE_MAP = Engine.MODULE_MAP;
-
-const TEMPLATES = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/outcomes.json'), 'utf8')).templates;
 
 // ── Helpers for scanning condition objects ─────────────────────────
 

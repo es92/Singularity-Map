@@ -14,24 +14,9 @@
 const fs = require('fs');
 const path = require('path');
 
-global.window = {
-    location: { search: '', hash: '' },
-    requestAnimationFrame: () => 0,
-    addEventListener: () => {},
-    Graph: require('../graph.js'),
-    Engine: require('../engine.js'),
-};
-global.document = {
-    addEventListener: () => {},
-    readyState: 'complete',
-    getElementById: () => null,
-    querySelector: () => null,
-};
 const ROOT = path.resolve(__dirname, '..');
-new Function('window', fs.readFileSync(path.join(ROOT, 'graph-io.js'), 'utf8'))(global.window);
-new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 'utf8'))(global.window, global.document);
-
-const Engine = global.window.Engine;
+const { Engine } =
+    require(path.join(ROOT, 'node-runtime')).loadNodeRuntime({ flowPropagation: false });
 const MODULE_MAP = Engine.MODULE_MAP;
 
 // ─── Test 1: every DECEL exit tuple's installed effects block

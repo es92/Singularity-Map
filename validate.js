@@ -23,45 +23,9 @@
 const fs = require('fs');
 const path = require('path');
 
-// ────────────────────────────────────────────────────────────────
-// Browser-shim setup
-// ────────────────────────────────────────────────────────────────
-// graph-io.js + nodes.js are written as IIFEs that attach to `window`.
-// engine.js + graph.js are CommonJS-friendly. To run them under Node
-// we mount a minimal window/document shim, then load the IIFEs into
-// it. This is the same pattern used by the /tmp/sm-* probe scripts.
-
-global.window = {
-    requestAnimationFrame: () => 0,
-    addEventListener: () => {},
-    location: { hash: '' },
-};
-global.document = {
-    addEventListener: () => {},
-    readyState: 'complete',
-    getElementById: () => null,
-    querySelector: () => null,
-};
-
 const ROOT = __dirname;
-const Graph = require(path.join(ROOT, 'graph.js'));
-global.window.Graph = Graph;
-const Engine = require(path.join(ROOT, 'engine.js'));
-global.window.Engine = Engine;
-new Function('window', fs.readFileSync(path.join(ROOT, 'graph-io.js'), 'utf8'))(global.window);
-new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 'utf8'))(global.window, global.document);
-new Function('window', fs.readFileSync(path.join(ROOT, 'flow-propagation.js'), 'utf8'))(global.window);
-
-const GraphIO = global.window.GraphIO;
-GraphIO.setStrictTruncation(true);
-const FlowPropagation = global.window.FlowPropagation;
-const FLOW_DAG = global.window.Nodes.FLOW_DAG;
-const NODES = Engine.NODES || Graph.NODES;
-const NODE_MAP = {};
-for (const n of NODES) NODE_MAP[n.id] = n;
-const outcomesData = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/outcomes.json'), 'utf8'));
-const TEMPLATES = outcomesData.templates;
-GraphIO.registerOutcomes(TEMPLATES);
+const { Graph, Engine, GraphIO, FlowPropagation, NODES, NODE_MAP, FLOW_DAG, TEMPLATES } =
+    require('./node-runtime').loadNodeRuntime({ strictTruncation: true });
 
 // ────────────────────────────────────────────────────────────────
 // Phase 1 — Static schema checks (no traversal)

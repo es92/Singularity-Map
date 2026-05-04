@@ -61,20 +61,14 @@
 
 (function (root) {
 
-    function _selKey(sel) {
-        // Identical to GraphIO.selKey (canonical, NUL-delimited,
-        // sorted). Re-implemented so the checker has zero optional
-        // dependencies on graph runtime — buildIndexFromCache hands
-        // us full sels straight from the binary cache, which never
-        // go through Engine.applyEdgeEffects.
-        const keys = Object.keys(sel).sort();
-        const parts = new Array(keys.length * 2);
-        for (let i = 0; i < keys.length; i++) {
-            parts[i * 2] = keys[i];
-            parts[i * 2 + 1] = sel[keys[i]];
-        }
-        return parts.join('\x00');
-    }
+    // Canonical sel string. Single source of truth in sel-key.js
+    // (Node `require('./sel-key')`, browser `window.SelKey`). Bound
+    // to a local so per-call lookups stay cheap on the in-module DFS
+    // path.
+    const _SelKeyMod = (typeof require === 'function')
+        ? require('./sel-key')
+        : root.SelKey;
+    const _selKey = _SelKeyMod.selKey;
 
     // ─── Composite checker ────────────────────────────────────────
 

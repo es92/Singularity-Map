@@ -647,26 +647,11 @@
         return sel;
     }
 
-    function _selKey(sel) {
-        // Stable canonical key for caching DFS results across input rows
-        // that project to the same starting sel (cartesianReadRows
-        // enumerates UNSET-axis rows, many of which collapse to the
-        // same non-UNSET sub-state).
-        //
-        // Hot path: O(1M) calls in reachableFullSelsFromInputs for
-        // escape_late. Pre-sized array + single join produces a flat
-        // string in one pass, which V8's Map hashes cheaply. (A naive
-        // `+=` concat builds cons strings that get re-flattened on
-        // every Map op and ends up SLOWER, despite looking simpler.)
-        const keys = Object.keys(sel).sort();
-        const parts = new Array(keys.length * 2);
-        for (let i = 0; i < keys.length; i++) {
-            const k = keys[i];
-            parts[i * 2] = k;
-            parts[i * 2 + 1] = sel[k];
-        }
-        return parts.join('\x00');
-    }
+    // Stable canonical sel string. Single source of truth lives in
+    // sel-key.js; we capture it locally so the hot path in
+    // reachableFullSelsFromInputs doesn't pay a window-property lookup
+    // per call (escape_late: ~1M calls per slot).
+    const _selKey = window.SelKey.selKey;
 
     function _projectKey(sel, dims, moveBlocks) {
         // Stable JSON-array `[writes_pairs, move_blocks]` where

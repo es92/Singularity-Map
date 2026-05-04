@@ -73,38 +73,12 @@
 const fs = require('fs');
 const path = require('path');
 
-// ─── Browser shim setup ───────────────────────────────────────────
-global.window = {
-    requestAnimationFrame: () => 0,
-    addEventListener: () => {},
-    location: { hash: '' },
-};
-global.document = {
-    addEventListener: () => {},
-    readyState: 'complete',
-    getElementById: () => null,
-    querySelector: () => null,
-};
-
 const ROOT = __dirname;
-const Graph = require(path.join(ROOT, 'graph.js'));
-global.window.Graph = Graph;
-const Engine = require(path.join(ROOT, 'engine.js'));
-global.window.Engine = Engine;
-new Function('window', fs.readFileSync(path.join(ROOT, 'graph-io.js'), 'utf8'))(global.window);
-new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 'utf8'))(global.window, global.document);
-new Function('window', fs.readFileSync(path.join(ROOT, 'flow-propagation.js'), 'utf8'))(global.window);
-
-const GraphIO = global.window.GraphIO;
-const FlowPropagation = global.window.FlowPropagation;
-const FLOW_DAG = global.window.Nodes.FLOW_DAG;
+const { Graph, GraphIO, FlowPropagation, FLOW_DAG, TEMPLATES } =
+    require('./node-runtime').loadNodeRuntime();
 const MODULE_MAP = (Graph.MODULES || []).reduce((m, mod) => { m[mod.id] = mod; return m; }, {});
 
 const UNSET = '__GIO_UNSET__';
-
-const outcomesData = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/outcomes.json'), 'utf8'));
-const TEMPLATES = outcomesData.templates;
-GraphIO.registerOutcomes(TEMPLATES);
 
 // ─── Outcome entries (variant-aware, 32-bit indexable) ────────────
 // Persisted to `_meta.json` so reach-checker.js (used by both the

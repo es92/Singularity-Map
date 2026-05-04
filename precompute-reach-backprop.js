@@ -23,18 +23,9 @@ const path = require('path');
 const ROOT = __dirname;
 const Cache = require(path.join(ROOT, 'explore-cache'));
 
-// ─── Stable canonical selKey (mirrors GraphIO.selKey) ─────────────
-// We build it ourselves so back-prop has zero dependencies on the
-// graph runtime — the cache is the only input.
-function selKey(sel) {
-    const keys = Object.keys(sel).sort();
-    const parts = new Array(keys.length * 2);
-    for (let i = 0; i < keys.length; i++) {
-        parts[i * 2] = keys[i];
-        parts[i * 2 + 1] = sel[keys[i]];
-    }
-    return parts.join('\x00');
-}
+// Canonical selKey — single source of truth in sel-key.js, shared with
+// graph-io.js, reach-checker.js, and the parity tests.
+const { selKey } = require('./sel-key');
 
 // ─── Discover slots ───────────────────────────────────────────────
 const cacheDir = Cache.cacheDir();

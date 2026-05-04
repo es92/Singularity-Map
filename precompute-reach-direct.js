@@ -22,29 +22,8 @@
 const fs = require('fs');
 const path = require('path');
 
-// ─── Browser shim setup (matches precompute-explore.js) ───────────
-global.window = {
-    requestAnimationFrame: () => 0,
-    addEventListener: () => {},
-    location: { hash: '' },
-};
-global.document = {
-    addEventListener: () => {},
-    readyState: 'complete',
-    getElementById: () => null,
-    querySelector: () => null,
-};
-
 const ROOT = __dirname;
-const Graph = require(path.join(ROOT, 'graph.js'));
-global.window.Graph = Graph;
-const Engine = require(path.join(ROOT, 'engine.js'));
-global.window.Engine = Engine;
-new Function('window', fs.readFileSync(path.join(ROOT, 'graph-io.js'), 'utf8'))(global.window);
-new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 'utf8'))(global.window, global.document);
-
-const GraphIO = global.window.GraphIO;
-GraphIO.registerOutcomes(JSON.parse(fs.readFileSync(path.join(ROOT, 'data/outcomes.json'), 'utf8')).templates);
+const { GraphIO } = require('./node-runtime').loadNodeRuntime({ flowPropagation: false });
 
 const Cache = require(path.join(ROOT, 'explore-cache'));
 

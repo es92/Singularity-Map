@@ -45,44 +45,17 @@
 const fs = require('fs');
 const path = require('path');
 
-// ── Browser-shim setup ──
-
-global.window = {
-    requestAnimationFrame: () => 0,
-    addEventListener: () => {},
-    location: { hash: '' },
-};
-global.document = {
-    addEventListener: () => {},
-    readyState: 'complete',
-    getElementById: () => null,
-    querySelector: () => null,
-};
-
 const ROOT = path.join(__dirname, '..');
-const Graph = require(path.join(ROOT, 'graph.js'));
-global.window.Graph = Graph;
-const Engine = require(path.join(ROOT, 'engine.js'));
-global.window.Engine = Engine;
-new Function('window', fs.readFileSync(path.join(ROOT, 'graph-io.js'), 'utf8'))(global.window);
-new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 'utf8'))(global.window, global.document);
-new Function('window', fs.readFileSync(path.join(ROOT, 'flow-propagation.js'), 'utf8'))(global.window);
-
-const GraphIO = global.window.GraphIO;
-const FlowPropagation = global.window.FlowPropagation;
-const FLOW_DAG = global.window.Nodes.FLOW_DAG;
-const NODES = Engine.NODES || Graph.NODES;
-const NODE_MAP = {};
-for (const n of NODES) NODE_MAP[n.id] = n;
+const { Graph, Engine, GraphIO, FlowPropagation, NODES, NODE_MAP, FLOW_DAG, TEMPLATES } =
+    require(path.join(ROOT, 'node-runtime')).loadNodeRuntime();
 const MODULES = Engine.MODULES || Graph.MODULES;
-const outcomesData = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/outcomes.json'), 'utf8'));
-const TEMPLATES = outcomesData.templates;
 const TEMPLATE_BY_ID = new Map();
 for (const t of TEMPLATES) TEMPLATE_BY_ID.set(t.id, t);
-GraphIO.registerOutcomes(TEMPLATES);
 
 const Cache = require(path.join(ROOT, 'explore-cache'));
 const ReachChecker = require(path.join(ROOT, 'reach-checker'));
+const { nextAction } = require(path.join(ROOT, 'walk-step'));
+const _walkDeps = { Engine, FlowPropagation };
 
 // ── CLI args ──
 
@@ -192,12 +165,10 @@ function reachWalk(rand, entry, checker) {
     let currentSlotKey = null;
 
     for (let step = 0; step < STEP_CAP; step++) {
-        const sel = Engine.currentState(stack);
-        const parentSlotKey = FlowPropagation.parentSlotKeyFromStack(stack);
-        const flow = FlowPropagation.flowNext(sel, parentSlotKey);
+        const a = nextAction(stack, _walkDeps);
 
-        if (flow.kind === 'open') {
-            const eff = Engine.resolvedState(sel);
+        if (a.kind === 'open') {
+            const eff = Engine.resolvedState(a.sel);
             if (Engine.templateMatches(template, eff)) {
                 if (entry.variantKey != null && eff[entry.primaryDim] !== entry.variantKey) {
                     return { kind: 'wrong-variant', actualPrimary: eff[entry.primaryDim], trace, sel: eff };
@@ -211,55 +182,54 @@ function reachWalk(rand, entry, checker) {
             }
             return { kind: 'no-outcome', trace, sel: eff };
         }
-        if (flow.kind === 'stuck') {
-            return { kind: 'stuck', slotKey: flow.slotKey, trace, sel };
+        if (a.kind === 'stuck') {
+            return { kind: 'stuck', slotKey: a.flow.slotKey, trace, sel: a.sel };
         }
-        if (flow.kind !== 'question') {
-            return { kind: 'unknown-flow', flow, trace };
+        if (a.kind === 'unknown-flow') {
+            return { kind: 'unknown-flow', flow: a.flow, trace };
         }
 
         // Slot-boundary crossing — clear the per-slot DFS memo.
-        if (flow.slotKey !== currentSlotKey) {
-            currentSlotKey = flow.slotKey;
+        if (a.flow.slotKey !== currentSlotKey) {
+            currentSlotKey = a.flow.slotKey;
             dfsMemo = new Map();
         }
 
-        const node = flow.node;
-        const lockedEdgeId = Engine.isNodeLocked(sel, node);
-        let edgeId;
-        if (lockedEdgeId != null) {
+        let edgeId, locked;
+        if (a.kind === 'auto-locked') {
             // Auto-locked: runtime auto-pushes without a gate
             // (only one edge survives anyway). If the precompute
             // missed this transition, it'll surface as a
             // wrong-outcome / wrong-variant downstream.
-            edgeId = lockedEdgeId;
+            edgeId = a.edgeId;
+            locked = true;
         } else {
-            const enabled = node.edges.filter(e => !Engine.isEdgeDisabled(sel, node, e));
-            const reachable = enabled.filter(e => {
-                const childSel = lightPushSel(sel, node.id, e.id);
+            const reachable = a.enabled.filter(e => {
+                const childSel = lightPushSel(a.sel, a.node.id, e.id);
                 // Pass the active slotKey from flowNext so the
                 // checker's per-slot lookup distinguishes reach
                 // at this slot's exit boundary from the same
                 // selKey at any other slot's exit (escape × 5,
                 // brittle/sufficient pass-through, etc.).
-                return checker.couldReach(flow.slotKey, childSel, {
+                return checker.couldReach(a.flow.slotKey, childSel, {
                     dfsMemo,
                 });
             });
             if (reachable.length === 0) {
                 return {
                     kind: 'no-reachable-edges',
-                    nodeId: node.id,
-                    enabledIds: enabled.map(e => e.id),
+                    nodeId: a.node.id,
+                    enabledIds: a.enabled.map(e => e.id),
                     trace,
-                    sel,
+                    sel: a.sel,
                 };
             }
             edgeId = reachable[Math.floor(rand() * reachable.length)].id;
+            locked = false;
         }
 
-        stack = Engine.push(stack, node.id, edgeId);
-        trace.push({ nodeId: node.id, edgeId, locked: lockedEdgeId != null });
+        stack = Engine.push(stack, a.node.id, edgeId);
+        trace.push({ nodeId: a.node.id, edgeId, locked });
     }
 
     return { kind: 'step-cap', trace };

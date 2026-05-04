@@ -32,35 +32,10 @@
 const fs = require('fs');
 const path = require('path');
 
-// ── Browser-shim setup (mirror runtime_cache_parity.js) ──
-
-global.window = {
-    requestAnimationFrame: () => 0,
-    addEventListener: () => {},
-    location: { hash: '' },
-};
-global.document = {
-    addEventListener: () => {},
-    readyState: 'complete',
-    getElementById: () => null,
-    querySelector: () => null,
-};
-
 const ROOT = path.join(__dirname, '..');
-const Graph = require(path.join(ROOT, 'graph.js'));
-global.window.Graph = Graph;
-const Engine = require(path.join(ROOT, 'engine.js'));
-global.window.Engine = Engine;
-new Function('window', fs.readFileSync(path.join(ROOT, 'graph-io.js'), 'utf8'))(global.window);
-new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 'utf8'))(global.window, global.document);
-new Function('window', fs.readFileSync(path.join(ROOT, 'flow-propagation.js'), 'utf8'))(global.window);
-
-const GraphIO = global.window.GraphIO;
-const FlowPropagation = global.window.FlowPropagation;
-const FLOW_DAG = global.window.Nodes.FLOW_DAG;
+const { Engine, GraphIO, FlowPropagation, FLOW_DAG } =
+    require(path.join(ROOT, 'node-runtime')).loadNodeRuntime();
 const MODULE_MAP = Engine.MODULE_MAP;
-const outcomesData = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/outcomes.json'), 'utf8'));
-GraphIO.registerOutcomes(outcomesData.templates);
 
 const Cache = require(path.join(ROOT, 'explore-cache'));
 

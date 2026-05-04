@@ -140,34 +140,9 @@
 const fs = require('fs');
 const path = require('path');
 
-global.window = {
-    requestAnimationFrame: () => 0,
-    addEventListener: () => {},
-    location: { hash: '' },
-};
-global.document = {
-    addEventListener: () => {},
-    readyState: 'complete',
-    getElementById: () => null,
-    querySelector: () => null,
-};
-
 const ROOT = path.resolve(__dirname, '..');
-const Graph = require(path.join(ROOT, 'graph.js'));
-global.window.Graph = Graph;
-const Engine = require(path.join(ROOT, 'engine.js'));
-global.window.Engine = Engine;
-new Function('window', fs.readFileSync(path.join(ROOT, 'graph-io.js'), 'utf8'))(global.window);
-new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 'utf8'))(global.window, global.document);
-new Function('window', fs.readFileSync(path.join(ROOT, 'flow-propagation.js'), 'utf8'))(global.window);
-
-const GraphIO = global.window.GraphIO;
-GraphIO.setStrictTruncation(true);
-GraphIO.registerOutcomes(JSON.parse(fs.readFileSync(
-    path.join(ROOT, 'data/outcomes.json'), 'utf8')).templates);
-
-const FlowPropagation = global.window.FlowPropagation;
-const FLOW_DAG = global.window.Nodes.FLOW_DAG;
+const { Graph, Engine, GraphIO, FlowPropagation, FLOW_DAG } =
+    require(path.join(ROOT, 'node-runtime')).loadNodeRuntime({ strictTruncation: true });
 const _slotByKey = new Map();
 for (const n of FLOW_DAG.nodes) if (n && n.key) _slotByKey.set(n.key, n);
 

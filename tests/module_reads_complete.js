@@ -61,26 +61,8 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-
-global.window = {
-    location: { search: '', hash: '' },
-    requestAnimationFrame: () => 0,
-    addEventListener: () => {},
-    Graph: require('../graph.js'),
-    Engine: require('../engine.js'),
-};
-global.document = {
-    addEventListener: () => {},
-    readyState: 'complete',
-    getElementById: () => null,
-    querySelector: () => null,
-};
-new Function('window', fs.readFileSync(path.join(ROOT, 'graph-io.js'), 'utf8'))(global.window);
-new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 'utf8'))(global.window, global.document);
-
-const Engine = global.window.Engine;
-const GraphIO = global.window.GraphIO;
-const FLOW_DAG = global.window.Nodes.FLOW_DAG;
+const { Engine, GraphIO, FLOW_DAG } =
+    require(path.join(ROOT, 'node-runtime')).loadNodeRuntime({ flowPropagation: false });
 
 // ── Whitelist ──────────────────────────────────────────────────────
 //

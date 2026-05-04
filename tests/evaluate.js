@@ -5,28 +5,21 @@ const path = require('path');
 
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
-const { NODES, NODE_MAP } = require('../graph.js');
-const Engine = require('../engine.js');
-
 // Shim window so the IIFE-style modules (graph-io.js, nodes.js,
 // flow-propagation.js) can attach to it. Mirrors validate.js /
 // the reach precompute so flowNext() is the same primitive used by
 // the runtime UI and the static-analysis pipeline.
+//
+// `richDocument: true` because nodes.js exercises createElement /
+// body.appendChild on a few code paths. `withOutcomes: false`
+// preserves the pre-refactor behavior where outcomes weren't
+// registered with GraphIO — evaluate.js detects outcomes itself
+// against `templatesList` rather than via `flowNext`'s open-kind.
 const ROOT = path.join(__dirname, '..');
-global.window = {
-    location: { search: '', hash: '' },
-    Graph: require('../graph.js'),
-    Engine,
-};
-global.document = {
-    createElement: () => ({ style: {}, classList: { add: () => {}, remove: () => {} }, appendChild: () => {} }),
-    body: { appendChild: () => {} },
-    addEventListener: () => {},
-};
-new Function('window', fs.readFileSync(path.join(ROOT, 'graph-io.js'), 'utf8'))(global.window);
-new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 'utf8'))(global.window, global.document);
-new Function('window', fs.readFileSync(path.join(ROOT, 'flow-propagation.js'), 'utf8'))(global.window);
-const FlowPropagation = global.window.FlowPropagation;
+const { Engine, NODES, NODE_MAP, FlowPropagation } =
+    require(path.join(ROOT, 'node-runtime')).loadNodeRuntime({
+        richDocument: true, withOutcomes: false,
+    });
 
 const outcomes = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'outcomes.json'), 'utf8'));
 const narrative = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'narrative.json'), 'utf8'));

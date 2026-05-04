@@ -31,35 +31,11 @@
 const fs = require('fs');
 const path = require('path');
 
-// ── Browser-shim setup (same pattern as validate.js) ──
-
-global.window = {
-    requestAnimationFrame: () => 0,
-    addEventListener: () => {},
-    location: { hash: '' },
-};
-global.document = {
-    addEventListener: () => {},
-    readyState: 'complete',
-    getElementById: () => null,
-    querySelector: () => null,
-};
-
 const ROOT = path.join(__dirname, '..');
-const Graph = require(path.join(ROOT, 'graph.js'));
-global.window.Graph = Graph;
-const Engine = require(path.join(ROOT, 'engine.js'));
-global.window.Engine = Engine;
-new Function('window', fs.readFileSync(path.join(ROOT, 'graph-io.js'), 'utf8'))(global.window);
-new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 'utf8'))(global.window, global.document);
-new Function('window', fs.readFileSync(path.join(ROOT, 'flow-propagation.js'), 'utf8'))(global.window);
-
-const GraphIO = global.window.GraphIO;
-const FlowPropagation = global.window.FlowPropagation;
-const NODES = Engine.NODES || Graph.NODES;
-const outcomesData = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/outcomes.json'), 'utf8'));
-const TEMPLATES = outcomesData.templates;
-GraphIO.registerOutcomes(TEMPLATES);
+const { Graph, Engine, GraphIO, FlowPropagation, NODES, TEMPLATES } =
+    require(path.join(ROOT, 'node-runtime')).loadNodeRuntime();
+const { nextAction } = require(path.join(ROOT, 'walk-step'));
+const _walkDeps = { Engine, FlowPropagation };
 
 // ── CLI args ──
 
@@ -98,12 +74,10 @@ function randomWalk(rand) {
     const trace = [];
 
     for (let step = 0; step < STEP_CAP; step++) {
-        const sel = Engine.currentState(stack);
-        const parentSlotKey = FlowPropagation.parentSlotKeyFromStack(stack);
-        const flow = FlowPropagation.flowNext(sel, parentSlotKey);
+        const a = nextAction(stack, _walkDeps);
 
-        if (flow.kind === 'open') {
-            const eff = Engine.resolvedState(sel);
+        if (a.kind === 'open') {
+            const eff = Engine.resolvedState(a.sel);
             for (const t of TEMPLATES) {
                 if (Engine.templateMatches(t, eff)) {
                     return { kind: 'success', stack, outcome: t.id, trace, sel: eff };
@@ -111,32 +85,28 @@ function randomWalk(rand) {
             }
             return { kind: 'no-outcome', stack, sel: eff, trace };
         }
-
-        if (flow.kind === 'stuck') {
-            return { kind: 'stuck', stack, sel, slotKey: flow.slotKey, trace };
+        if (a.kind === 'stuck') {
+            return { kind: 'stuck', stack, sel: a.sel, slotKey: a.flow.slotKey, trace };
+        }
+        if (a.kind === 'unknown-flow') {
+            return { kind: 'unknown-flow', stack, flow: a.flow, trace };
         }
 
-        if (flow.kind !== 'question') {
-            return { kind: 'unknown-flow', stack, flow, trace };
-        }
-
-        const node = flow.node;
-        const lockedEdgeId = Engine.isNodeLocked(sel, node);
-        let edgeId;
-        if (lockedEdgeId != null) {
-            edgeId = lockedEdgeId;
+        let edgeId, locked;
+        if (a.kind === 'auto-locked') {
+            edgeId = a.edgeId;
+            locked = true;
         } else {
-            const enabledEdges = node.edges.filter(e => !Engine.isEdgeDisabled(sel, node, e));
-            if (enabledEdges.length === 0) {
-                // flowNext said "ask this node" but no edge is enabled —
-                // would be a graph bug (Phase 5 normally catches it).
-                return { kind: 'no-edges', stack, sel, nodeId: node.id, trace };
+            // 'question' — pick uniformly. No enabled edges would be
+            // a graph bug Phase 5 normally catches; surface it here too.
+            if (a.enabled.length === 0) {
+                return { kind: 'no-edges', stack, sel: a.sel, nodeId: a.node.id, trace };
             }
-            edgeId = enabledEdges[Math.floor(rand() * enabledEdges.length)].id;
+            edgeId = a.enabled[Math.floor(rand() * a.enabled.length)].id;
+            locked = false;
         }
-
-        stack = Engine.push(stack, node.id, edgeId);
-        trace.push({ nodeId: node.id, edgeId, locked: lockedEdgeId != null });
+        stack = Engine.push(stack, a.node.id, edgeId);
+        trace.push({ nodeId: a.node.id, edgeId, locked });
     }
 
     return { kind: 'step-cap', stack, trace };

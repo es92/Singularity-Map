@@ -75,32 +75,11 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-
-global.window = {
-    location: { search: '', hash: '' },
-    requestAnimationFrame: () => 0,
-    addEventListener: () => {},
-    Graph: require(path.join(ROOT, 'graph.js')),
-    Engine: require(path.join(ROOT, 'engine.js')),
-};
-global.document = {
-    addEventListener: () => {},
-    readyState: 'complete',
-    getElementById: () => null,
-    querySelector: () => null,
-};
-new Function('window', fs.readFileSync(path.join(ROOT, 'graph-io.js'), 'utf8'))(global.window);
-new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 'utf8'))(global.window, global.document);
-new Function('window', fs.readFileSync(path.join(ROOT, 'flow-propagation.js'), 'utf8'))(global.window);
-
-const Engine = global.window.Engine;
-const GraphIO = global.window.GraphIO;
-const FlowPropagation = global.window.FlowPropagation;
+const { Engine, GraphIO, FlowPropagation, TEMPLATES } =
+    require(path.join(ROOT, 'node-runtime')).loadNodeRuntime();
 const NODE_MAP = Engine.NODE_MAP;
 
 const NARRATIVE = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/narrative.json'), 'utf8'));
-const TEMPLATES = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/outcomes.json'), 'utf8')).templates;
-GraphIO.registerOutcomes(TEMPLATES);
 
 // Mirror index.html loadData: merge narrative.json onto graph nodes.
 // This is the ONLY path that wires per-edge answerLabel / answerDesc /

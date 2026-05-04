@@ -31,30 +31,8 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-
-global.window = {
-    location: { search: '', hash: '' },
-    requestAnimationFrame: () => 0,
-    addEventListener: () => {},
-    Graph: require('../graph.js'),
-    Engine: require('../engine.js'),
-};
-global.document = {
-    addEventListener: () => {},
-    readyState: 'complete',
-    getElementById: () => null,
-    querySelector: () => null,
-};
-new Function('window', fs.readFileSync(path.join(ROOT, 'graph-io.js'), 'utf8'))(global.window);
-new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 'utf8'))(global.window, global.document);
-new Function('window', fs.readFileSync(path.join(ROOT, 'flow-propagation.js'), 'utf8'))(global.window);
-
-const Engine = global.window.Engine;
-const GraphIO = global.window.GraphIO;
-const FlowPropagation = global.window.FlowPropagation;
-
-const TEMPLATES = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/outcomes.json'), 'utf8')).templates;
-GraphIO.registerOutcomes(TEMPLATES);
+const { Engine, GraphIO, FlowPropagation, TEMPLATES } =
+    require(path.join(ROOT, 'node-runtime')).loadNodeRuntime();
 const TEMPLATES_BY_ID = new Map(TEMPLATES.map(t => [t.id, t]));
 
 // flagged: (slotKey|oid|ci) → { slotKey, oid, ci, clause, sel }

@@ -34,36 +34,11 @@
 const fs = require('fs');
 const path = require('path');
 
-// ── Browser-shim setup ──
-
-global.window = {
-    requestAnimationFrame: () => 0,
-    addEventListener: () => {},
-    location: { hash: '' },
-};
-global.document = {
-    addEventListener: () => {},
-    readyState: 'complete',
-    getElementById: () => null,
-    querySelector: () => null,
-};
-
 const ROOT = path.join(__dirname, '..');
-const Graph = require(path.join(ROOT, 'graph.js'));
-global.window.Graph = Graph;
-const Engine = require(path.join(ROOT, 'engine.js'));
-global.window.Engine = Engine;
-new Function('window', fs.readFileSync(path.join(ROOT, 'graph-io.js'), 'utf8'))(global.window);
-new Function('window', 'document', fs.readFileSync(path.join(ROOT, 'nodes.js'), 'utf8'))(global.window, global.document);
-new Function('window', fs.readFileSync(path.join(ROOT, 'flow-propagation.js'), 'utf8'))(global.window);
-
-const GraphIO = global.window.GraphIO;
-const FlowPropagation = global.window.FlowPropagation;
-const NODES = Engine.NODES || Graph.NODES;
-const NODE_MAP = {};
-for (const n of NODES) NODE_MAP[n.id] = n;
-const outcomesData = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/outcomes.json'), 'utf8'));
-GraphIO.registerOutcomes(outcomesData.templates);
+const { Graph, Engine, GraphIO, FlowPropagation, NODES, NODE_MAP } =
+    require(path.join(ROOT, 'node-runtime')).loadNodeRuntime();
+const { nextAction } = require(path.join(ROOT, 'walk-step'));
+const _walkDeps = { Engine, FlowPropagation };
 
 const Cache = require(path.join(ROOT, 'explore-cache'));
 
@@ -81,15 +56,7 @@ const STEP_CAP = parseInt(getArg('--step-cap', '500'), 10);
 
 // ── Helpers ──
 
-function selKey(sel) {
-    const keys = Object.keys(sel).sort();
-    const parts = new Array(keys.length * 2);
-    for (let i = 0; i < keys.length; i++) {
-        parts[i * 2] = keys[i];
-        parts[i * 2 + 1] = sel[keys[i]];
-    }
-    return parts.join('\x00');
-}
+const { selKey } = require('../sel-key');
 
 function mulberry32(seed) {
     let a = seed >>> 0;
@@ -310,39 +277,35 @@ function walk(rand, failures, debugLog) {
     let currentSlotKey = null;
 
     for (let step = 0; step < STEP_CAP; step++) {
-        const sel = Engine.currentState(stack);
+        const a = nextAction(stack, _walkDeps);
         const parentSlotKey = FlowPropagation.parentSlotKeyFromStack(stack);
-        const flow = FlowPropagation.flowNext(sel, parentSlotKey);
 
-        if (debugLog) debugLog.push(`step ${step}: parent=${parentSlotKey || 'null'} flowSlot=${flow.slotKey || flow.kind} sel=${JSON.stringify(sel)}`);
+        if (debugLog) debugLog.push(`step ${step}: parent=${parentSlotKey || 'null'} flowSlot=${a.flow.slotKey || a.flow.kind} sel=${JSON.stringify(a.sel)}`);
 
-        if (flow.kind === 'open') {
-            if (currentSlotKey !== null) checkSlotExit(currentSlotKey, sel, failures, 'open', stack);
+        if (a.kind === 'open') {
+            if (currentSlotKey !== null) checkSlotExit(currentSlotKey, a.sel, failures, 'open', stack);
             return 'open';
         }
-        if (flow.kind === 'stuck') {
-            if (currentSlotKey !== null) checkSlotExit(currentSlotKey, sel, failures, 'stuck', stack);
+        if (a.kind === 'stuck') {
+            if (currentSlotKey !== null) checkSlotExit(currentSlotKey, a.sel, failures, 'stuck', stack);
             return 'stuck';
         }
-        if (flow.kind !== 'question') return 'unknown';
+        if (a.kind === 'unknown-flow') return 'unknown';
 
-        if (flow.slotKey !== currentSlotKey) {
-            if (currentSlotKey !== null) checkSlotExit(currentSlotKey, sel, failures, 'transition', stack);
-            currentSlotKey = flow.slotKey;
+        if (a.flow.slotKey !== currentSlotKey) {
+            if (currentSlotKey !== null) checkSlotExit(currentSlotKey, a.sel, failures, 'transition', stack);
+            currentSlotKey = a.flow.slotKey;
         }
 
-        const node = flow.node;
-        const lockedEdgeId = Engine.isNodeLocked(sel, node);
         let edgeId;
-        if (lockedEdgeId != null) {
-            edgeId = lockedEdgeId;
+        if (a.kind === 'auto-locked') {
+            edgeId = a.edgeId;
         } else {
-            const enabled = node.edges.filter(e => !Engine.isEdgeDisabled(sel, node, e));
-            if (enabled.length === 0) return 'no-edges';
-            edgeId = enabled[Math.floor(rand() * enabled.length)].id;
+            if (a.enabled.length === 0) return 'no-edges';
+            edgeId = a.enabled[Math.floor(rand() * a.enabled.length)].id;
         }
         const stackLenBefore = stack.length;
-        stack = Engine.push(stack, node.id, edgeId);
+        stack = Engine.push(stack, a.node.id, edgeId);
         // Engine.push rolls back to before the existing answer when
         // re-answering the same node, then re-applies — random walks
         // hit this constantly. After a rollback, the previous slot
