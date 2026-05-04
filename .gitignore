@@ -4,6 +4,8 @@ tests/evaluations/
 tests/report.md
 tests/vignette-audit-report.json
 tests/audit-report.json
+tests/scrub-report.md
+tests/scrub-results.json
 .claude
 .DS_Store
 .cursor
