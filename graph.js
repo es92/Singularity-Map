@@ -1,13 +1,13 @@
-// Possibilities Map — Graph definition (structural DAG)
+// Singularity Possibilities Map — Graph definition (structural DAG)
 // Narrative content lives in data/narrative.json and is merged at runtime.
 
 (function() {
 
 const SCENARIO = {
-    id: 'possibilities-map',
-    title: 'Possibilities Map',
+    id: 'singularity-map',
+    title: 'Singularity Possibilities Map',
     description: 'Navigate the branching futures of artificial intelligence.',
-    storageKey: 'possibilities-map-discovered',
+    storageKey: 'singularity-map-discovered',
 };
 
 const DECEL_PAIRS = [

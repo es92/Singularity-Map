@@ -1,4 +1,4 @@
-// Possibilities Map — Engine
+// Singularity Possibilities Map — Engine
 // Interprets the declarative graph rules defined in graph.js: activation,
 // locking, edge-effect application, immutable answer-stack management, and
 // template matching against `sel`/`flavor`.

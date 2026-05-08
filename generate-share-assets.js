@@ -153,17 +153,17 @@ function sharePageHtml(card) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${esc(displayTitle)} — AI Possibilities Map</title>
+    <title>${esc(displayTitle)} — Singularity Possibilities Map</title>
     <meta name="description" content="${esc(truncDesc)}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="${BASE_URL}share/${card.slug}.html">
-    <meta property="og:title" content="AI Possibilities Map: See what your AI future could be">
+    <meta property="og:title" content="Singularity Possibilities Map: See what your AI future could be">
     <meta property="og:description" content="I got: ${esc(displayTitle)}">
     <meta property="og:image" content="${imgUrl}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="AI Possibilities Map: See what your AI future could be">
+    <meta name="twitter:title" content="Singularity Possibilities Map: See what your AI future could be">
     <meta name="twitter:description" content="I got: ${esc(displayTitle)}">
     <meta name="twitter:image" content="${imgUrl}">
     <style>
@@ -342,7 +342,7 @@ function sharePageHtml(card) {
         </div>
         <div id="personalized-timeline"></div>
         <a class="cta" href="${BASE_URL}">Explore your own &rarr;</a>
-        <div class="tagline">AI Possibilities Map &mdash; explore possible AI futures</div>
+        <div class="tagline">Singularity Possibilities Map &mdash; explore possible AI futures</div>
     </div>
     <script>
     (function() {
@@ -380,7 +380,7 @@ function sharePageHtml(card) {
 // the brand title and tagline overlaid. Deterministic: no RNG, so a
 // re-run on the same code produces a byte-stable image.
 // ──────────────────────────────────────────────────────────────────────
-function ogImageHtml({ title = 'AI Possibilities Map',
+function ogImageHtml({ title = 'Singularity Possibilities Map',
                        subtitle = 'Choose your own adventure through the future of AI.' } = {}) {
     const W = 1200, H = 630;
     const origin = { x: 100, y: H / 2 };

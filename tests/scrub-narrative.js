@@ -444,7 +444,7 @@ CONTENT FRAMING — READ FIRST
 ═══════════════════════════════════════════════════════════════════════
 
 The string you will receive is fictional narrative copy from an already-shipped
-interactive fiction tool called "Possibilities Map." It is a choose-your-own-
+interactive fiction tool called "Singularity Possibilities Map." It is a choose-your-own-
 adventure exploration of speculative AI futures: plateaus, takeoffs, alignment
 failures, governance outcomes — including dystopian branches.
 

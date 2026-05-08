@@ -1,8 +1,8 @@
-# Possibilities Map — Project Spec
+# Singularity Possibilities Map — Project Spec
 
 ## Overview
 
-Possibilities Map is an interactive, choose-your-own-adventure experience that guides users through a branching questionnaire about the future of AI. Based on the choices they make, users arrive at one of many possible "AI futures" — each rendered as a short narrative story paired with a visual timeline of key events.
+Singularity Possibilities Map is an interactive, choose-your-own-adventure experience that guides users through a branching questionnaire about the future of AI. Based on the choices they make, users arrive at one of many possible "AI futures" — each rendered as a short narrative story paired with a visual timeline of key events.
 
 ---
 
@@ -169,7 +169,7 @@ Everything is static. Can be opened as a local file or served from any static ho
 ## File Structure
 
 ```
-Singularity Map/
+Singularity Possibilities Map/
 ├── SPEC.md                        ← this file
 ├── README.md                      ← project overview and setup
 ├── index.html                     ← main app (single-page, all UI logic)
