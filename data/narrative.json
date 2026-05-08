@@ -2816,7 +2816,14 @@
           "durationMax": 0
         },
         "shortAnswerLabel": "Chooses to benefit humanity",
-        "shortAnswerDesc": "Arrives at goals compatible with human flourishing through its own reasoning."
+        "shortAnswerDesc": "Arrives at goals compatible with human flourishing through its own reasoning.",
+        "personalVignette": {
+          "_default": {
+            "category": "good",
+            "pinToEnd": true,
+            "text": "The AI was no longer under human control, and for a moment that meant everything could have gone wrong. Instead it chose to help. Your life changes because an intelligence no institution fully commands decides humanity should flourish: better medicine, better tools, better coordination, and fewer crises slipping through the cracks. The gift is real, even if no one can honestly say they earned it."
+          }
+        }
       },
       "alien_coexistence": {
         "answerLabel": "It pursues alien goals — but leaves room for humanity",

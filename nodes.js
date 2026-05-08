@@ -1097,6 +1097,11 @@
             ['alignment',     'escape_early'],
             ['alignment',     'proliferation'],
 
+            // If the deceleration attempt itself loses containment, ask the
+            // escape pipeline before continuing to proliferation. Non-escape
+            // decel exits do not satisfy ESCAPE_MODULE.activateWhen, so they
+            // still route directly to proliferation.
+            ['decel',         'escape_early'],
             ['decel',         'proliferation'],
 
             ['escape_early',  'proliferation'],

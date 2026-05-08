@@ -1678,6 +1678,14 @@
                 if (!value) continue;
                 const edge = node.edges && node.edges.find(e => e.id === value);
                 if (!edge) continue;
+                // A later benevolent escape supersedes the human-control
+                // economy question; keep the answer for routing/history, but
+                // don't render its now-contradictory personal impact.
+                if (
+                    node.id === 'benefit_distribution'
+                    && sel.ai_goals === 'benevolent'
+                    && sel.containment === 'escaped'
+                ) continue;
 
                 let pv = null;
                 if (edge.narrativeVariants) {
