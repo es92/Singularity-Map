@@ -443,10 +443,16 @@
         .heading-professional .timeline-year { color: var(--accent-2); }
         .heading-personal { color: var(--text); }
         .heading-personal .timeline-year { color: var(--text); }
+        .heading-good { color: var(--mood-utopian); }
+        .heading-good .timeline-year { color: var(--mood-utopian); }
+        .heading-mixed { color: var(--mood-mixed); }
+        .heading-mixed .timeline-year { color: var(--mood-mixed); }
         .heading-death { color: var(--mood-dystopian); }
         .heading-death .timeline-year { color: var(--mood-dystopian); }
         .dot-professional { background: var(--accent-2) !important; box-shadow: 0 0 8px rgba(124,92,255,0.3) !important; }
         .dot-personal { background: var(--accent) !important; box-shadow: 0 0 8px var(--accent-glow) !important; }
+        .dot-good { background: var(--mood-utopian) !important; box-shadow: 0 0 8px rgba(0,224,136,0.3) !important; }
+        .dot-mixed { background: var(--mood-mixed) !important; box-shadow: 0 0 8px rgba(255,170,34,0.3) !important; }
         .dot-death { background: var(--mood-dystopian) !important; box-shadow: 0 0 8px rgba(255,51,102,0.3) !important; }
         .dot-world { background: var(--text-secondary) !important; box-shadow: none !important; }
         .heading-world { color: var(--text-secondary); }
@@ -1334,7 +1340,13 @@
                 summary,
                 story: t.story,
                 timeline: resolveTimeline(t.timeline, state),
-                flavors: resolveFlavors(t.flavors, state, t.flavorHeadings)
+                flavors: resolveFlavors(t.flavors, state, t.flavorHeadings),
+                // Outcome-level fallback color category for personal vignettes.
+                // Edge-level (`personalVignetteCategory`) and rule-level
+                // (`category` on a `_when` entry) overrides take precedence
+                // over this. Optional — if absent, personal vignettes keep
+                // their default white styling.
+                personalCategory: t.personalCategory || null,
             };
         }
 
@@ -1435,22 +1447,32 @@
             try { localStorage.setItem(PERSONAL_STORAGE_KEY, JSON.stringify(answers)); } catch {}
         }
 
+        // Returns { text, category } when a vignette is found, or null when
+        // none matches. The optional `category` is a per-rule color override
+        // (e.g., 'good', 'mixed') sourced from the matching `_when` rule's
+        // `category` field — letting one variant of an edge's vignette read
+        // as positive/mixed while others stay neutral.
         function resolvePersonalVignetteText(spec, ctx) {
             if (!spec) return null;
-            if (typeof spec === 'string') return spec;
+            if (typeof spec === 'string') return { text: spec, category: null };
             if (spec._when && Array.isArray(spec._when)) {
                 for (const rule of spec._when) {
                     if (!rule.if) continue;
                     const match = Object.entries(rule.if).every(([k, vals]) =>
                         ctx[k] && Array.isArray(vals) && vals.includes(ctx[k])
                     );
-                    if (match) return rule.text || null;
+                    if (match) return rule.text ? { text: rule.text, category: rule.category || null } : null;
                 }
             }
-            return spec._default || null;
+            // _default may be a bare string or an object with text + category
+            // (rarely needed, but supported for symmetry with _when rules).
+            const def = spec._default;
+            if (def == null) return null;
+            if (typeof def === 'string') return { text: def, category: null };
+            return def.text ? { text: def.text, category: def.category || null } : null;
         }
 
-        function resolvePersonalVignettes(stack, answers, dateMap) {
+        function resolvePersonalVignettes(stack, answers, dateMap, outcomePersonalCategory) {
             if (!answers || !answers.profession) return [];
             const sel = Engine.currentState(stack);
             const narrSel = Engine.narrativeState(stack);
@@ -1491,16 +1513,29 @@
                 if (!pv && edge.personalVignette) pv = edge.personalVignette;
                 if (!pv) continue;
 
-                const text = resolvePersonalVignetteText(pv, ctx);
-                if (!text) continue;
+                const result = resolvePersonalVignetteText(pv, ctx);
+                if (!result) continue;
 
                 const dateInfo = dateMap && dateMap[node.id] ? dateMap[node.id] : null;
+
+                // Resolution priority for the color category:
+                //   rule.category (most specific) > edge.personalVignetteCategory >
+                //   outcome.personalCategory (broadest fallback)
+                // Death + professional headings still override this downstream
+                // in buildMergedVignettesHtml (death by node id, professional
+                // by node id), so this only colors what would otherwise be
+                // a plain "Personal Impact" item.
+                const personalCategory = result.category
+                    || edge.personalVignetteCategory
+                    || outcomePersonalCategory
+                    || null;
 
                 vignettes.push({
                     nodeId: node.id,
                     category: professionalNodes.has(node.id) ? 'Professional Impact' : 'Personal Impact',
+                    personalCategory,
                     dateInfo,
-                    text: tokenReplace(text),
+                    text: tokenReplace(result.text),
                 });
             }
 
@@ -1609,7 +1644,7 @@
 
             let personalItems = [];
             if (personalAnswers && personalAnswers.profession) {
-                personalItems = resolvePersonalVignettes(stack, personalAnswers, dateMap);
+                personalItems = resolvePersonalVignettes(stack, personalAnswers, dateMap, resolved.personalCategory);
                 const endMonths = dateMap._totalMonths || 0;
                 const endFm = formatMonths(endMonths);
                 const endDateInfo = { year: endFm.year, month: endFm.month, label: endFm.month + ' ' + endFm.year, _months: endMonths };
@@ -1649,8 +1684,23 @@
                 if (dateLabel) lastDateLabel = dateLabel;
 
                 if (item.type === 'personal') {
-                    const catClass = item.death ? 'heading-death' : (item.category === 'Professional Impact' ? 'heading-professional' : 'heading-personal');
-                    const dotClass = item.death ? 'dot-death' : (item.category === 'Professional Impact' ? 'dot-professional' : 'dot-personal');
+                    // Class precedence: death (terminal nodes / failed response)
+                    // beats professional (work-impact node allowlist), which
+                    // beats the optional valence override (personalCategory =
+                    // 'good' | 'mixed'), which finally falls through to the
+                    // default neutral 'personal' styling.
+                    let catClass, dotClass;
+                    if (item.death) {
+                        catClass = 'heading-death'; dotClass = 'dot-death';
+                    } else if (item.category === 'Professional Impact') {
+                        catClass = 'heading-professional'; dotClass = 'dot-professional';
+                    } else if (item.personalCategory === 'good') {
+                        catClass = 'heading-good'; dotClass = 'dot-good';
+                    } else if (item.personalCategory === 'mixed') {
+                        catClass = 'heading-mixed'; dotClass = 'dot-mixed';
+                    } else {
+                        catClass = 'heading-personal'; dotClass = 'dot-personal';
+                    }
                     html += `<div class="timeline-event personal-milestone scroll-reveal">
                         <div class="tl-vline-seg"></div><div class="tl-dot ${dotClass}"></div><div class="tl-hline"></div>
                         <div class="timeline-top-row ${catClass}">

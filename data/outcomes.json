@@ -2025,7 +2025,7 @@
           "extreme": "Those who held power captured nearly everything, then delegated the rest to AI that optimized for their metrics rather than humanity's wellbeing. The failure was political as much as technological."
         },
         "distribution": {
-          "open": "With AI everywhere, the failure was distributed too. No single party was to blame, because everyone had contributed a piece.",
+          "open": "With AI everywhere, the failure was distributed too. No single party to blame, but a failed outcome regardless",
           "lagging": "The lag gave some communities time to see what was happening, though not enough to change course.",
           "concentrated": "Those controlling AI saw the metrics they wanted. Everyone else saw the world they were losing.",
           "monopoly": {
@@ -2076,7 +2076,7 @@
           }
         },
         "sovereignty": {
-          "lab": "The delegation flowed through corporate platforms: the lab's apps, APIs, and optimization targets. The wrong proxies were corporate proxies — engagement, revenue, efficiency.",
+          "lab": "The delegation flowed through corporate platforms: the lab's apps, APIs, and optimization targets. The labs optimized for their own proxies for success - but these turned out to fall short of what was best for humanity.",
           "state": "The delegation flowed through government bureaucracy: automated agencies, algorithmic policy, AI-managed services. The wrong proxies were the state's — GDP, compliance, order."
         },
         "stall_recovery": {

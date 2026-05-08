@@ -221,26 +221,36 @@
             story: t.story,
             timeline: resolveTimeline(t.timeline, state),
             flavors: resolveFlavors(t.flavors, state, t.flavorHeadings),
+            // Outcome-level fallback color category for personal vignettes.
+            // Mirror of index.html resolveTemplate.
+            personalCategory: t.personalCategory || null,
         };
     }
 
     // ─── Personal vignettes (mirrors index.html) ───
+    // Returns { text, category } when a vignette is found, or null when
+    // none matches. The optional `category` is a per-rule color override
+    // (e.g., 'good', 'mixed') sourced from the matching `_when` rule's
+    // `category` field. Mirror of index.html resolvePersonalVignetteText.
     function resolvePersonalVignetteText(spec, ctx) {
         if (!spec) return null;
-        if (typeof spec === 'string') return spec;
+        if (typeof spec === 'string') return { text: spec, category: null };
         if (spec._when && Array.isArray(spec._when)) {
             for (const rule of spec._when) {
                 if (!rule.if) continue;
                 const match = Object.entries(rule.if).every(([k, vals]) =>
                     ctx[k] && Array.isArray(vals) && vals.includes(ctx[k])
                 );
-                if (match) return rule.text || null;
+                if (match) return rule.text ? { text: rule.text, category: rule.category || null } : null;
             }
         }
-        return spec._default || null;
+        const def = spec._default;
+        if (def == null) return null;
+        if (typeof def === 'string') return { text: def, category: null };
+        return def.text ? { text: def.text, category: def.category || null } : null;
     }
 
-    function resolvePersonalVignettes(stack, professionId, personalData, dateMap) {
+    function resolvePersonalVignettes(stack, professionId, personalData, dateMap, outcomePersonalCategory) {
         if (!professionId) return [];
         const Engine = window.Engine;
         const sel = Engine.currentState(stack);
@@ -283,15 +293,26 @@
             if (!pv && edge.personalVignette) pv = edge.personalVignette;
             if (!pv) continue;
 
-            const text = resolvePersonalVignetteText(pv, ctx);
-            if (!text) continue;
+            const result = resolvePersonalVignetteText(pv, ctx);
+            if (!result) continue;
 
             const dateInfo = dateMap && dateMap[node.id] ? dateMap[node.id] : null;
+
+            // Resolution priority for the color category:
+            //   rule.category > edge.personalVignetteCategory >
+            //   outcome.personalCategory. Death + professional headings
+            //   still override this in buildMergedVignettesHtml.
+            const personalCategory = result.category
+                || edge.personalVignetteCategory
+                || outcomePersonalCategory
+                || null;
+
             vignettes.push({
                 nodeId: node.id,
                 category: professionalNodes.has(node.id) ? 'Professional Impact' : 'Personal Impact',
+                personalCategory,
                 dateInfo,
-                text: tokenReplace(text),
+                text: tokenReplace(result.text),
             });
         }
 
@@ -429,7 +450,7 @@
 
         let personalItems = [];
         if (professionId) {
-            personalItems = resolvePersonalVignettes(stack, professionId, personalData, dateMap);
+            personalItems = resolvePersonalVignettes(stack, professionId, personalData, dateMap, resolved.personalCategory);
             const endMonths = dateMap._totalMonths || 0;
             const endFm = formatMonths(endMonths);
             const endDateInfo = { year: endFm.year, month: endFm.month, label: endFm.month + ' ' + endFm.year, _months: endMonths };
@@ -468,8 +489,20 @@
             if (dateLabel) lastDateLabel = dateLabel;
 
             if (item.type === 'personal') {
-                const catClass = item.death ? 'heading-death' : (item.category === 'Professional Impact' ? 'heading-professional' : 'heading-personal');
-                const dotClass = item.death ? 'dot-death' : (item.category === 'Professional Impact' ? 'dot-professional' : 'dot-personal');
+                // Mirror of index.html catClass/dotClass priority:
+                // death > professional > good/mixed valence > personal.
+                let catClass, dotClass;
+                if (item.death) {
+                    catClass = 'heading-death'; dotClass = 'dot-death';
+                } else if (item.category === 'Professional Impact') {
+                    catClass = 'heading-professional'; dotClass = 'dot-professional';
+                } else if (item.personalCategory === 'good') {
+                    catClass = 'heading-good'; dotClass = 'dot-good';
+                } else if (item.personalCategory === 'mixed') {
+                    catClass = 'heading-mixed'; dotClass = 'dot-mixed';
+                } else {
+                    catClass = 'heading-personal'; dotClass = 'dot-personal';
+                }
                 html += `<div class="timeline-event personal-milestone">
                     <div class="tl-vline-seg"></div><div class="tl-dot ${dotClass}"></div><div class="tl-hline"></div>
                     <div class="timeline-top-row ${catClass}">
