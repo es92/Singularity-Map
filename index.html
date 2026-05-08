@@ -17,6 +17,30 @@
     <meta name="twitter:title" content="Singularity Possibilities Map">
     <meta name="twitter:description" content="Choose your own adventure through the future of AI. ~20 questions, 28 possible outcomes.">
     <meta name="twitter:image" content="https://es92.github.io/Singularity-Map/og-image.png">
+    <link rel="canonical" href="https://es92.github.io/Singularity-Map/">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Singularity Possibilities Map",
+      "url": "https://es92.github.io/Singularity-Map/",
+      "description": "An interactive choose-your-own-adventure through possible AI futures. Walk through ~20 questions about AI capability, alignment, governance, and power, and see the future your beliefs imply across 28 possible outcomes — from genuine shared abundance to civilizational catastrophe.",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Any",
+      "browserRequirements": "Requires JavaScript",
+      "isAccessibleForFree": true,
+      "inLanguage": "en",
+      "image": "https://es92.github.io/Singularity-Map/og-image.png",
+      "keywords": "AI futures, AGI, artificial general intelligence, AI safety, technological singularity, AI alignment, AI scenarios, superintelligence, AI risk, AI governance",
+      "about": [
+        { "@type": "Thing", "name": "Artificial General Intelligence" },
+        { "@type": "Thing", "name": "AI Safety" },
+        { "@type": "Thing", "name": "AI Alignment" },
+        { "@type": "Thing", "name": "Technological Singularity" }
+      ],
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+    </script>
     <link rel="stylesheet" href="timeline.css">
     <style>
         #app { }
@@ -118,6 +142,54 @@
             min-height: 60vh; text-align: center;
         }
         .loading { color: var(--text-dim); }
+
+        /* ---- Static SEO Landing ----
+           Visible inside #app on initial paint so non-JS crawlers (LLM bots,
+           social previewers, Bing) get a real H1, lead, and outcome list.
+           The main JS hydration overwrites #app.innerHTML, so users with JS
+           see this for ~1 frame before the interactive map renders. */
+        .seo-static {
+            max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem 2rem;
+            color: var(--text);
+        }
+        .seo-static h1 {
+            font-size: 2.25rem; font-weight: 700; letter-spacing: -0.025em;
+            line-height: 1.15; margin-bottom: 1rem; text-align: center;
+        }
+        .seo-static .seo-lead {
+            font-size: 1.1rem; color: var(--text-secondary);
+            line-height: 1.65; margin-bottom: 1.25rem; text-align: center;
+        }
+        .seo-static .seo-body {
+            font-size: 1rem; color: var(--text-secondary);
+            line-height: 1.7; margin-bottom: 2rem;
+        }
+        .seo-static h2 {
+            font-size: 1.25rem; font-weight: 600;
+            margin: 2rem 0 1rem; color: var(--text);
+        }
+        .seo-static .seo-outcomes {
+            list-style: none; padding: 0;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 0.5rem 1rem;
+        }
+        .seo-static .seo-outcomes li { padding: 0; }
+        .seo-static .seo-outcomes a {
+            display: block; padding: 0.55rem 0.75rem;
+            color: var(--text-secondary); text-decoration: none;
+            border-radius: var(--radius-sm, 6px);
+            border: 1px solid transparent;
+            font-size: 0.95rem;
+        }
+        .seo-static .seo-outcomes a:hover {
+            color: var(--text); border-color: var(--border);
+            background: var(--bg-card);
+        }
+        .seo-static .seo-loading {
+            margin-top: 2rem; text-align: center;
+            color: var(--text-dim); font-size: 0.9rem;
+        }
+
         .error-screen h2 { color: var(--mood-dystopian); margin-bottom: 1rem; }
         .error-screen p { color: var(--text-secondary); max-width: 480px; line-height: 1.7; }
         .error-screen code {
@@ -1081,7 +1153,45 @@
 </head>
 <body>
     <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode">&#9790;</button>
-    <div id="app"><div class="loading"><p>Loading futures...</p></div></div>
+    <div id="app"><main class="seo-static">
+<!-- SEO_OUTCOMES_BLOCK_START -->
+<h1>Singularity Possibilities Map</h1>
+<p class="seo-lead">What do you think happens with AI? Walk through ~20 questions about AI capability, alignment, governance, and power — and see the future your beliefs imply, with a narrative timeline of how it unfolds.</p>
+<p class="seo-body">An interactive choose-your-own-adventure through possible AI futures, drawn from the public discourse about AI safety, AGI, and the technological singularity. 13 outcome families branch into 28 distinct scenarios, ranging from <em>The Flourishing</em> (genuine shared abundance) to <em>The Ruin</em> (civilizational catastrophe), with everything in between: plateaus, captures, standoffs, escapes, and chaos. The app also generates personalized vignettes based on your profession — how each world event reaches you specifically.</p>
+<h2>The 28 possible outcomes</h2>
+<ul class="seo-outcomes">
+<li><a href="share/the-plateau--hours.html">The Plateau: The Copilot</a></li>
+<li><a href="share/the-plateau--days.html">The Plateau: The Capable Tool</a></li>
+<li><a href="share/the-plateau--weeks.html">The Plateau: The Near Miss</a></li>
+<li><a href="share/the-plateau--months.html">The Plateau: The Long Plateau</a></li>
+<li><a href="share/the-automation.html">The Automaton</a></li>
+<li><a href="share/the-gilded-singularity--rapid.html">The Gilded Singularity: The Fast Lane</a></li>
+<li><a href="share/the-gilded-singularity--gradual.html">The Gilded Singularity: The Long Divide</a></li>
+<li><a href="share/the-gilded-singularity--uneven.html">The Gilded Singularity: The Two-Track Singularity</a></li>
+<li><a href="share/the-new-hierarchy--rapid.html">The New Hierarchy: The Instant Caste</a></li>
+<li><a href="share/the-new-hierarchy--gradual.html">The New Hierarchy: The Slow Enclosure</a></li>
+<li><a href="share/the-new-hierarchy--uneven.html">The New Hierarchy: The Archipelago</a></li>
+<li><a href="share/the-flourishing--rapid.html">The Flourishing: The Acceleration</a></li>
+<li><a href="share/the-flourishing--gradual.html">The Flourishing: The Global Compact</a></li>
+<li><a href="share/the-flourishing--uneven.html">The Flourishing: The Uneven Singularity</a></li>
+<li><a href="share/the-capture.html">The Capture</a></li>
+<li><a href="share/the-standoff.html">The Standoff: The AI Cold War</a></li>
+<li><a href="share/the-ruin--war.html">The Ruin: The AI War</a></li>
+<li><a href="share/the-ruin--self_inflicted.html">The Ruin: The Pyrrhic Victory</a></li>
+<li><a href="share/the-mosaic--robust.html">The Mosaic: The Distributed Flourishing</a></li>
+<li><a href="share/the-mosaic--brittle.html">The Mosaic: The Precarious Mosaic</a></li>
+<li><a href="share/the-mosaic--failed.html">The Mosaic: The Fragile Mosaic</a></li>
+<li><a href="share/the-failure--drift.html">The Failure: Wrong Metrics</a></li>
+<li><a href="share/the-escape--benevolent.html">The Escape: The Benevolent Escape</a></li>
+<li><a href="share/the-escape--paperclip.html">The Escape: The Paperclip</a></li>
+<li><a href="share/the-escape--power_seeking.html">The Escape: The Accumulation</a></li>
+<li><a href="share/the-alien-ai--alien_coexistence.html">The Alien AI: The Alien Purpose</a></li>
+<li><a href="share/the-alien-ai--alien_extinction.html">The Alien AI: The Extinction</a></li>
+<li><a href="share/the-chaos.html">The Chaos</a></li>
+</ul>
+<p class="seo-loading">Loading the interactive map…</p>
+<!-- SEO_OUTCOMES_BLOCK_END -->
+</main></div>
     <div id="toast"></div>
 
     <script>

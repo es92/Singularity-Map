@@ -1,0 +1,50 @@
+# Singularity Possibilities Map — robots.txt
+# Goal: maximize discoverability across web search and LLM-mediated search.
+# This is a public, non-commercial educational artifact; we *want* citation.
+
+User-agent: *
+Allow: /
+
+# Search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# LLM crawlers — explicitly allowed for training + retrieval citation.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+# Don't index development / build internals.
+Disallow: /node_modules/
+Disallow: /tests/
+Disallow: /.git/
+Disallow: /data/explore-cache/
+Disallow: /data/reach/
+
+Sitemap: https://es92.github.io/Singularity-Map/sitemap.xml

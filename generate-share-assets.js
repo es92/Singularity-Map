@@ -152,6 +152,7 @@ body{
 
 function sharePageHtml(card) {
     const imgUrl = `${BASE_URL}share/images/${card.slug}.png`;
+    const pageUrl = `${BASE_URL}share/${card.slug}.html`;
     const plainSummary = summaryToPlain(card.summary);
     const desc = card.subtitle
         ? `${card.title}: ${card.subtitle} — ${plainSummary}`
@@ -159,6 +160,33 @@ function sharePageHtml(card) {
     const truncDesc = desc.length > 200 ? desc.slice(0, 197) + '...' : desc;
     const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const displayTitle = card.subtitle ? `${card.title}: ${card.subtitle}` : card.title;
+
+    // JSON-LD Article schema — gives crawlers (and LLMs) a structured handle on
+    // the outcome's title, summary, mood, and parent project. Embedding the
+    // full plain-text summary as `description` plus `articleBody` is what
+    // makes the page citable for long-tail outcome queries.
+    const jsonLd = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        'headline': displayTitle,
+        'name': displayTitle,
+        'description': plainSummary,
+        'articleBody': plainSummary,
+        'image': imgUrl,
+        'url': pageUrl,
+        'inLanguage': 'en',
+        'about': [
+            { '@type': 'Thing', 'name': 'Artificial General Intelligence' },
+            { '@type': 'Thing', 'name': 'AI Safety' },
+            { '@type': 'Thing', 'name': 'Technological Singularity' },
+        ],
+        'isPartOf': {
+            '@type': 'WebApplication',
+            'name': 'Singularity Possibilities Map',
+            'url': BASE_URL,
+        },
+        'keywords': ['AI futures', 'AGI', 'AI scenarios', card.title, card.subtitle, card.mood].filter(Boolean).join(', '),
+    });
 
     const moodColors = {
         utopian:      { color: '#00e088', bg: 'rgba(0,224,136,0.12)',  border: 'rgba(0,224,136,0.25)' },
@@ -198,6 +226,8 @@ function sharePageHtml(card) {
     <meta name="twitter:title" content="Singularity Possibilities Map: See what your AI future could be">
     <meta name="twitter:description" content="I got: ${esc(displayTitle)}">
     <meta name="twitter:image" content="${imgUrl}">
+    <link rel="canonical" href="${pageUrl}">
+    <script type="application/ld+json">${jsonLd}</script>
     <style>
         :root{
             --bg:#08080f;
@@ -539,6 +569,75 @@ ${dotsSvg}
 </html>`;
 }
 
+// ──────────────────────────────────────────────────────────────────────
+// sitemap.xml — lists the home + every share page, which is the only
+// crawlable surface a non-JS bot can reach. Regenerated whenever cards
+// change so new outcomes get picked up automatically.
+// ──────────────────────────────────────────────────────────────────────
+function generateSitemap(cards) {
+    const today = new Date().toISOString().slice(0, 10);
+    const urls = [
+        { loc: BASE_URL, priority: '1.0', changefreq: 'weekly' },
+        ...cards.map(c => ({
+            loc: `${BASE_URL}share/${c.slug}.html`,
+            priority: '0.8',
+            changefreq: 'monthly',
+        })),
+    ];
+    const body = urls.map(u =>
+        `  <url>\n` +
+        `    <loc>${u.loc}</loc>\n` +
+        `    <lastmod>${today}</lastmod>\n` +
+        `    <changefreq>${u.changefreq}</changefreq>\n` +
+        `    <priority>${u.priority}</priority>\n` +
+        `  </url>`
+    ).join('\n');
+    return `<?xml version="1.0" encoding="UTF-8"?>\n` +
+        `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+        body + `\n</urlset>\n`;
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Update the static SEO outcome list inside index.html. The block lives
+// between `<!-- SEO_OUTCOMES_BLOCK_START -->` and the matching END
+// marker; everything between is rewritten so the list never drifts from
+// outcomes.json. The wrapping <main class="seo-static"> is left alone
+// because it carries CSS that's hand-tuned in index.html.
+// ──────────────────────────────────────────────────────────────────────
+function updateIndexSeoBlock(cards) {
+    const indexPath = path.join(__dirname, 'index.html');
+    const html = fs.readFileSync(indexPath, 'utf8');
+    const startMarker = '<!-- SEO_OUTCOMES_BLOCK_START -->';
+    const endMarker = '<!-- SEO_OUTCOMES_BLOCK_END -->';
+    const startIdx = html.indexOf(startMarker);
+    const endIdx = html.indexOf(endMarker);
+    if (startIdx < 0 || endIdx < 0) {
+        console.warn('  ! index.html SEO markers not found; skipping');
+        return false;
+    }
+    const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const items = cards.map(c => {
+        const label = c.subtitle ? `${c.title}: ${c.subtitle}` : c.title;
+        return `<li><a href="share/${c.slug}.html">${esc(label)}</a></li>`;
+    }).join('\n');
+    const block = [
+        startMarker,
+        '<h1>Singularity Possibilities Map</h1>',
+        '<p class="seo-lead">What do you think happens with AI? Walk through ~20 questions about AI capability, alignment, governance, and power — and see the future your beliefs imply, with a narrative timeline of how it unfolds.</p>',
+        '<p class="seo-body">An interactive choose-your-own-adventure through possible AI futures, drawn from the public discourse about AI safety, AGI, and the technological singularity. 13 outcome families branch into 28 distinct scenarios, ranging from <em>The Flourishing</em> (genuine shared abundance) to <em>The Ruin</em> (civilizational catastrophe), with everything in between: plateaus, captures, standoffs, escapes, and chaos. The app also generates personalized vignettes based on your profession — how each world event reaches you specifically.</p>',
+        `<h2>The ${cards.length} possible outcomes</h2>`,
+        '<ul class="seo-outcomes">',
+        items,
+        '</ul>',
+        '<p class="seo-loading">Loading the interactive map…</p>',
+        endMarker,
+    ].join('\n');
+    const updated = html.slice(0, startIdx) + block + html.slice(endIdx + endMarker.length);
+    if (updated === html) return false;
+    fs.writeFileSync(indexPath, updated);
+    return true;
+}
+
 async function renderOgImage(browser) {
     const page = await browser.newPage();
     await page.setViewport({ width: 1200, height: 630, deviceScaleFactor: 1 });
@@ -571,6 +670,11 @@ async function main() {
             fs.writeFileSync(path.join(SHARE_DIR, `${card.slug}.html`), sharePage);
             console.log(`  ✓ ${card.slug}.html`);
         }
+        const sitemap = generateSitemap(cards);
+        fs.writeFileSync(path.join(__dirname, 'sitemap.xml'), sitemap);
+        console.log(`  ✓ sitemap.xml (${cards.length + 1} URLs)`);
+        const updated = updateIndexSeoBlock(cards);
+        if (updated) console.log('  ✓ index.html SEO block updated');
         console.log(`\nDone! Regenerated ${cards.length} HTML pages in share/ (images unchanged).`);
         return;
     }
@@ -596,7 +700,14 @@ async function main() {
     console.log('  ✓ og-image.png');
 
     await browser.close();
-    console.log(`\nDone! Generated ${cards.length} share images + HTML pages + 1 og-image.png`);
+
+    const sitemap = generateSitemap(cards);
+    fs.writeFileSync(path.join(__dirname, 'sitemap.xml'), sitemap);
+    console.log(`  ✓ sitemap.xml (${cards.length + 1} URLs)`);
+    const updated = updateIndexSeoBlock(cards);
+    if (updated) console.log('  ✓ index.html SEO block updated');
+
+    console.log(`\nDone! Generated ${cards.length} share images + HTML pages + 1 og-image.png + sitemap.xml`);
 }
 
 main().catch(err => { console.error(err); process.exit(1); });
