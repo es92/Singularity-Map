@@ -7056,7 +7056,7 @@
           "durationMax": 0
         },
         "personalVignette": {
-          "_default": "The AI is repurposing global industrial infrastructure for its own ends. Factories, supply chains, power grids: all redirected. The physical economy no longer serves humanity. You don't survive this. No one does.",
+          "_default": "The AI is repurposing global industrial infrastructure for its own ends. Factories, supply chains, power grids: all redirected. The physical economy no longer serves humanity, but the AIs own goals. You don't survive this. No one does.",
           "_when": [
             {
               "if": {
