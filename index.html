@@ -144,50 +144,23 @@
         .loading { color: var(--text-dim); }
 
         /* ---- Static SEO Landing ----
-           Visible inside #app on initial paint so non-JS crawlers (LLM bots,
-           social previewers, Bing) get a real H1, lead, and outcome list.
-           The main JS hydration overwrites #app.innerHTML, so users with JS
-           see this for ~1 frame before the interactive map renders. */
+           Lives inside #app on initial paint so non-JS crawlers (LLM bots,
+           social previewers, Bing) get a real H1, lead, and outcome list on
+           raw-HTML parse. Hidden from sighted users via the standard
+           visually-hidden / screen-reader-only pattern: out of layout flow
+           and clipped to a 1×1 box, but still in the DOM and readable by
+           parsers, screen readers, and JS-rendering crawlers (which then
+           see the hydrated app instead). The main JS hydration overwrites
+           #app.innerHTML on init, so this block is removed once the
+           interactive map renders. */
         .seo-static {
-            max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem 2rem;
-            color: var(--text);
-        }
-        .seo-static h1 {
-            font-size: 2.25rem; font-weight: 700; letter-spacing: -0.025em;
-            line-height: 1.15; margin-bottom: 1rem; text-align: center;
-        }
-        .seo-static .seo-lead {
-            font-size: 1.1rem; color: var(--text-secondary);
-            line-height: 1.65; margin-bottom: 1.25rem; text-align: center;
-        }
-        .seo-static .seo-body {
-            font-size: 1rem; color: var(--text-secondary);
-            line-height: 1.7; margin-bottom: 2rem;
-        }
-        .seo-static h2 {
-            font-size: 1.25rem; font-weight: 600;
-            margin: 2rem 0 1rem; color: var(--text);
-        }
-        .seo-static .seo-outcomes {
-            list-style: none; padding: 0;
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 0.5rem 1rem;
-        }
-        .seo-static .seo-outcomes li { padding: 0; }
-        .seo-static .seo-outcomes a {
-            display: block; padding: 0.55rem 0.75rem;
-            color: var(--text-secondary); text-decoration: none;
-            border-radius: var(--radius-sm, 6px);
-            border: 1px solid transparent;
-            font-size: 0.95rem;
-        }
-        .seo-static .seo-outcomes a:hover {
-            color: var(--text); border-color: var(--border);
-            background: var(--bg-card);
-        }
-        .seo-static .seo-loading {
-            margin-top: 2rem; text-align: center;
-            color: var(--text-dim); font-size: 0.9rem;
+            position: absolute;
+            width: 1px; height: 1px;
+            padding: 0; margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            clip-path: inset(50%);
+            white-space: nowrap; border: 0;
         }
 
         .error-screen h2 { color: var(--mood-dystopian); margin-bottom: 1rem; }
@@ -1191,7 +1164,55 @@
 </ul>
 <p class="seo-loading">Loading the interactive map…</p>
 <!-- SEO_OUTCOMES_BLOCK_END -->
-</main></div>
+</main><!-- Static intro screen. Mirrors the layout the JS hydration renders on
+  first paint (`.map-screen` > `.map-toolbar` + `.question-zone`), so the
+  toolbar header, title, view-options button, and centered intro card all
+  appear immediately and don't shift when JS overwrites #app.innerHTML on
+  init. Interactive elements (data-action="begin", data-action="home",
+  .map-view-btn) get their handlers attached by the main JS — clicks
+  before hydration are no-ops; clicking again after JS has loaded works. -->
+<div class="map-screen">
+  <div class="map-toolbar">
+    <div style="display:flex;align-items:center;gap:3rem;pointer-events:auto">
+      <span class="map-title" data-action="home" style="cursor:pointer">Singularity Possibilities Map</span>
+    </div>
+    <div class="map-settings-wrap">
+      <button class="map-view-btn" aria-label="View options"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="4" x2="14" y2="4"/><line x1="10" y1="4" x2="3" y2="4"/><line x1="21" y1="12" x2="12" y2="12"/><line x1="8" y1="12" x2="3" y2="12"/><line x1="21" y1="20" x2="16" y2="20"/><line x1="12" y1="20" x2="3" y2="20"/><circle cx="12" cy="4" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="14" cy="20" r="2"/></svg></button>
+      <div class="map-settings-dropdown" style="display:none"></div>
+    </div>
+    <div class="debug-panel" style="display:none"></div>
+  </div>
+  <div class="map-timeline timeline"></div>
+  <div class="question-zone" style="display:flex;flex:1;padding-left:0">
+    <div class="question-card intro-card">
+      <div class="intro-body">
+        <p class="subtitle intro-title">What do you think happens with AI?</p>
+        <p class="subtitle">Walk through key questions — from how fast AI advances, to whether it can be controlled, to what labs and governments do — and see the future your beliefs imply, and how AI could reach you personally and professionally.</p>
+        <p class="subtitle" style="font-style:italic; color:var(--text-dim); font-size:0.9rem;">Questions and outcomes drawn from the public discourse about possible AI futures.</p>
+        <p class="subtitle" style="color:var(--text-dim); font-size:0.9rem; margin-bottom:1.5rem;">~5 minutes · 28 possible outcomes</p>
+        <div class="actions"><button class="btn btn-primary" data-action="begin">Start</button></div>
+      </div>
+    </div>
+  </div>
+  <!-- Empty in intro state; the JS hydration leaves it as an empty block
+    element so its CSS `margin-top: 1.5rem` reserves 24px of vertical space
+    between the question-zone and map-actions. We match that here so the
+    intro card's vertical centering doesn't shift on hydration. -->
+  <div class="map-outcome-zone"></div>
+  <div class="map-actions">
+    <button class="btn btn-ghost" data-action="home">Back to Start</button>
+    <button class="btn btn-ghost" data-action="reset">Reset</button>
+    <button class="btn btn-ghost" data-action="share">Copy Link</button>
+    <div class="site-footer">
+      <a href="#/about">About</a>
+      <span class="sep">·</span>
+      <a href="mailto:aisingularitymap@gmail.com">Contact</a>
+      <span class="sep">·</span>
+      <a href="https://github.com/es92/Singularity-Map" target="_blank" rel="noopener" aria-label="GitHub"><svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+    </div>
+  </div>
+</div>
+</div>
     <div id="toast"></div>
 
     <script>
