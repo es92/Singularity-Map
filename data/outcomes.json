@@ -38,7 +38,7 @@
       "flavors": {
         "stall_recovery": {
           "substantial": {
-            "_default": "The plateau held for years, perhaps decades. Whether a breakthrough would ever come was uncertain. Some researchers believed one was close; others argued the ceiling was fundamental. The world rebuilt itself around the ceiling either way. The story stopped being about the breakthrough and became about everything that happened while waiting for one.",
+            "_default": "The plateau held for years. Whether a breakthrough would ever come was uncertain. Some researchers believed one was close; others argued the ceiling was fundamental. The world rebuilt itself around the ceiling either way. The story stopped being about the breakthrough and became about everything that happened while waiting for one.",
             "_when": [
               {
                 "if": {
@@ -46,11 +46,11 @@
                     "gradual"
                   ]
                 },
-                "text": "The plateau held for years, perhaps decades. By then, the world was still adjusting to the ceiling, with adoption slow, sector by sector. Whether a breakthrough would come remained uncertain, and the world adapted regardless."
+                "text": "The plateau held for years. By then, the world was still adjusting to the ceiling, with adoption slow, sector by sector. Whether a breakthrough would come remained uncertain, and the world adapted regardless."
               }
             ]
           },
-          "never": "The ceiling was permanent. No breakthrough came. The most powerful tool humanity ever built was deployed and adapted to, but never transcended."
+          "never": "The ceiling was permanent. No breakthrough came. The most powerful tool humanity ever built was deployed and adapted to, but it never transcended."
         },
         "plateau_benefit_distribution": {
           "equal": "Productivity gains flowed broadly: lower costs, better services, and public investment in the gap between what AI could do and what it couldn't. The plateau felt like a rising floor.",
@@ -58,7 +58,7 @@
           "extreme": "The plateau's benefits flowed almost entirely to those who held power at the moment of transformation. A narrow elite shaped the plateau economy. The ceiling was the same everywhere, but who benefited was not."
         },
         "knowledge_rate": {
-          "rapid": "Within AI's capability ceiling, adoption was swift and total. Any knowledge task AI could handle was delegated within years, and once delegated, the human capacity for those tasks quietly atrophied.",
+          "rapid": "Within AI's capability ceiling, adoption was swift and total. Any knowledge task AI could handle was delegated within years.",
           "gradual": "Adoption unfolded slowly, sector by sector, firm by firm, constrained by institutional inertia and regulation. The ceiling was fixed, but reaching it took a decade.",
           "uneven": "Some industries automated overnight; others held out for years. A patchwork economy emerged: a fixed ceiling, wildly uneven adoption beneath it.",
           "limited": "AI augmented knowledge workers but rarely replaced them outright. The capability ceiling was binding: AI handled pieces of roles, not whole roles. The most powerful tool ever built, used mostly as an assistant."
