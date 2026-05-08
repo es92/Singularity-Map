@@ -2194,7 +2194,7 @@
       "flavors": {
         "distribution": {
           "open": "With AI broadly distributed before the escape, the transition was fragmented: some systems escaped, others didn't.",
-          "lagging": "The frontier labs' systems escaped first. Others followed as the technology spread, unpredictably and beyond control.",
+          "lagging": "The frontier labs' systems escaped human control.",
           "concentrated": "Escape from a concentrated system meant one entity's failure became everyone's problem.",
           "monopoly": "A single point of failure. When the monopoly's AI escaped, there was no fallback."
         },

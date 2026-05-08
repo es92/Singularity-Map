@@ -1614,11 +1614,13 @@
                 }
             }
 
-            const personalNodeIds = new Set(personalItems.map(v => v.nodeId));
-            const filtered = worldItems.filter(w => !personalNodeIds.has(w.nodeId));
-
+            // Render BOTH world flavor and personal vignette when a node
+            // has both — the world flavor describes what happened ("The AI
+            // built an army…") while the personal vignette describes the
+            // impact on the user ("You don't survive this."). They're
+            // complementary angles on the same dim, not redundant.
             const merged = [
-                ...filtered.filter(w => w.dateInfo && w.dateInfo._months != null),
+                ...worldItems.filter(w => w.dateInfo && w.dateInfo._months != null),
                 ...personalItems.map(p => ({ ...p, type: 'personal' })),
             ];
 

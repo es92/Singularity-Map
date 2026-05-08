@@ -121,7 +121,14 @@
             if (entry._when) {
                 for (const cond of entry._when) {
                     const match = Object.entries(cond.if).every(
-                        ([k, vals]) => Array.isArray(vals) && vals.includes(state[k])
+                        // Also accept the more-specific flavor detail
+                        // (e.g. `distribution_detail = 'lagging'` when sel
+                        // collapsed lagging → concentrated). Lets narrative
+                        // `_when` clauses keep referencing the pre-collapse
+                        // value directly. Mirror of the same fix in index.html.
+                        ([k, vals]) => Array.isArray(vals) && (
+                            vals.includes(state[k]) || vals.includes(state[k + '_detail'])
+                        )
                     );
                     if (match) return cond.text;
                 }
@@ -136,14 +143,27 @@
         const { NODE_MAP } = window.Graph;
         const result = [];
         for (const [nodeId, options] of Object.entries(flavors)) {
-            const val = state[nodeId];
+            // Prefer a more-specific flavor detail if the narrative declares
+            // a variant for it. This lets dims that were collapsed in sel
+            // (e.g. `distribution: lagging → concentrated` with
+            // `flavor.distribution_detail = lagging`) still surface their
+            // original narrative variant. Mirror of the same fix in index.html.
+            const detailVal = state[nodeId + '_detail'];
+            const val = (detailVal && options[detailVal]) ? detailVal : state[nodeId];
             if (!val || !options[val]) continue;
             const text = resolveConditionalText(options[val], state);
             if (!text) continue;
             let heading = null;
             if (flavorHeadings && flavorHeadings[nodeId]) {
                 const h = flavorHeadings[nodeId];
-                heading = typeof h === 'string' ? h : (h[val] || null);
+                if (typeof h === 'string') {
+                    heading = h;
+                } else {
+                    // Per-value headings may themselves be `_when`/`_default`
+                    // blocks — let resolveConditionalText handle both forms.
+                    const hv = h[val];
+                    heading = (typeof hv === 'string') ? hv : resolveConditionalText(hv, state);
+                }
             }
             if (!heading) {
                 const node = NODE_MAP[nodeId];
@@ -240,21 +260,31 @@
         ]);
 
         const vignettes = [];
-        const seen = new Set();
-        const collectVignette = (node) => {
-            const value = sel[node.id];
-            if (!value) return;
+        // Iterate the stack directly (raw user picks via entry.edgeId), not
+        // sel — because effects may move dims out of sel (e.g., agi_threshold
+        // is moved to flavor by asi_threshold's edges) or rewrite them
+        // (e.g., capability='stalls' → 'singularity'). We still want to
+        // render the vignette for the user's ORIGINAL pick. Mirror of the
+        // same fix in index.html resolvePersonalVignettes.
+        for (const entry of stack) {
+            if (!entry.nodeId) continue;
+            const node = Engine.NODE_MAP[entry.nodeId];
+            if (!node || node.derived) continue;
+            const value = entry.edgeId;
+            if (!value) continue;
             const edge = node.edges && node.edges.find(e => e.id === value);
-            if (!edge) return;
+            if (!edge) continue;
+
             let pv = null;
-            if (edge.narrativeVariants && sel) {
-                const variant = resolveNarrativeVariant(edge.narrativeVariants, sel);
+            if (edge.narrativeVariants) {
+                const variant = resolveNarrativeVariant(edge.narrativeVariants, narrSel);
                 if (variant && variant.personalVignette) pv = variant.personalVignette;
             }
             if (!pv && edge.personalVignette) pv = edge.personalVignette;
-            if (!pv) return;
+            if (!pv) continue;
+
             const text = resolvePersonalVignetteText(pv, ctx);
-            if (!text) return;
+            if (!text) continue;
 
             const dateInfo = dateMap && dateMap[node.id] ? dateMap[node.id] : null;
             vignettes.push({
@@ -263,24 +293,11 @@
                 dateInfo,
                 text: tokenReplace(text),
             });
-        };
-        // Stack-order only (chronological) — matches index.html. Iterating
-        // NODES on top would double-render canonical dims that effects
-        // wrote (e.g., early_knowledge_rate=gradual writes
-        // knowledge_rate=gradual, and both nodes have personalVignettes
-        // in narrative.json). Stack-only renders the user's actual pick.
-        for (const entry of stack) {
-            if (!entry.nodeId) continue;
-            const node = Engine.NODE_MAP[entry.nodeId];
-            if (!node || node.derived) continue;
-            if (seen.has(node.id)) continue;
-            seen.add(node.id);
-            collectVignette(node);
         }
 
         const latePersonalNodes = new Set(['power_use']);
         const benefitNodes = new Set(['plateau_benefit_distribution', 'auto_benefit_distribution', 'benefit_distribution']);
-        const deathNodes = new Set(['war_survivors']);
+        const deathNodes = new Set(['war_survivors', 'collateral_survivors']);
         if (narrSel.response_success !== 'yes') deathNodes.add('escape_method');
         // Pre-merge this was `catch_outcome === 'holds_temporarily'` — the
         // AI was stopped but the threat returns. Post-merge, that case is
@@ -424,10 +441,13 @@
             }
         }
 
-        const personalNodeIds = new Set(personalItems.map(v => v.nodeId));
-        const filtered = worldItems.filter(w => !personalNodeIds.has(w.nodeId));
+        // Render BOTH world flavor and personal vignette when a node has
+        // both — the world flavor describes what happened ("The AI built
+        // an army…") while the personal vignette describes the impact on
+        // the user ("You don't survive this."). They're complementary
+        // angles on the same dim, not redundant.
         const merged = [
-            ...filtered.filter(w => w.dateInfo && w.dateInfo._months != null),
+            ...worldItems.filter(w => w.dateInfo && w.dateInfo._months != null),
             ...personalItems.map(p => ({ ...p, type: 'personal' })),
         ];
         merged.sort((a, b) => {
