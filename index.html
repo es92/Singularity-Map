@@ -3437,7 +3437,11 @@
         // --- Render: About ---
         function renderAbout(showOutcomes) {
             updateIntroBg(false);
-            window.scrollTo({ top: 0, behavior: 'instant' });
+            // Default: top of the page. If we arrived via "Browse all
+            // outcomes" (?outcomes=1), the post-render handler below jumps
+            // to the outcomes section instead — so the user lands where
+            // they asked to go, not at the page header.
+            if (!showOutcomes) window.scrollTo({ top: 0, behavior: 'instant' });
             app.innerHTML = `
                 <div class="map-screen">
                     <div class="map-toolbar">
@@ -3494,6 +3498,18 @@
                     </div>
                 </div>`;
             app.querySelectorAll('[data-action="back"]').forEach(el => el.addEventListener('click', () => history.back()));
+
+            // When the user arrived via "Browse all outcomes" we jump
+            // straight to the Preview Outcomes section so they don't have
+            // to scroll past the about copy. rAF ensures layout has settled
+            // (the outcomes grid is large) before we measure the target.
+            if (showOutcomes) {
+                requestAnimationFrame(() => {
+                    const target = app.querySelector('.about-outcomes-wrap');
+                    const section = target ? target.closest('section') : null;
+                    if (section) section.scrollIntoView({ block: 'start' });
+                });
+            }
 
             const outcomesWrap = app.querySelector('.about-outcomes-wrap');
             const outcomesBtn = app.querySelector('.about-outcomes-btn');
