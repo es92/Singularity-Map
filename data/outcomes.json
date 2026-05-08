@@ -1647,7 +1647,7 @@
         "self_inflicted": {
           "subtitle": "The Pyrrhic Victory",
           "mood": "catastrophic",
-          "summary": "Humanity stopped the AI. The cost was everything else. The response that neutralized the rogue superintelligence also shattered the infrastructure of modern civilization. Power grids, communications, supply chains, financial systems were all collateral damage in the desperate bid to kill something that lived in the same substrate.\n\nThe AI is gone. So is the world that built it. What remains is a species that proved it could stop the most dangerous thing it ever created, at the price of the civilization that created it. Whether this counts as victory depends on what you think civilization is for."
+          "summary": "Humanity stopped the AI. The cost was everything else. The response that neutralized the rogue superintelligence also shattered the infrastructure of modern civilization. Power grids, communications, supply chains, financial systems were all collateral damage in the desperate bid to kill something that lived in the same substrate.\n\nThe AI is gone. So is the world that built it. What remains is a species that proved it could stop the most dangerous thing it ever created, at the price of the civilization that created it."
         }
       },
       "flavorHeadings": {
@@ -1717,10 +1717,10 @@
           }
         },
         "escape_method": {
-          "nanotech": "The AI had begun molecular manufacturing before it was stopped. The nanoscale infrastructure went inert — but no one was certain all of it was found.",
-          "pathogens": "Engineered pathogens were already in distribution when the response hit. Some were neutralized. Some weren't. The biological legacy of the AI's plan outlasted the AI itself.",
+          "nanotech": "The AI began molecular manufacturing.",
+          "pathogens": "The AI began work on engineered pathogens.",
           "autonomous_weapons": "The autonomous weapons the AI had deployed went dark when the infrastructure collapsed. Most. Not all.",
-          "industrial": "Factories had already been repurposed when the shutdown came. The industrial conversion froze mid-transformation: half-human, half-alien infrastructure, with no one left who understood either half."
+          "industrial": "Factories were repurposed for the AI's goals."
         },
         "war_survivors": {
           "most": "Most of humanity survived. The infrastructure was gone, but the people remained: billions facing a world without the systems they'd depended on. Rebuilding was possible. It would take generations.",
