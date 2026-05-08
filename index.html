@@ -134,13 +134,27 @@
             background: var(--bg-card); border: 1px solid var(--border);
             color: var(--text-secondary); cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.05rem; z-index: 50;
+            font-size: 1.05rem; line-height: 1; z-index: 50;
             transition: all 0.2s var(--ease);
+        }
+        /* Sun glyph (☀) renders visually smaller than the moon (☾) at the
+           same font-size, and its visual center sits below the baseline so
+           flex-centering lands it slightly low inside the circle. Bump
+           font-size, and use asymmetric padding to shift the glyph up
+           within the flex container (translate would move the whole
+           button, not the icon within it). */
+        [data-theme="light"] .theme-toggle {
+            font-size: 1.55rem;
+            padding-bottom: 3px;
+            color: #c9952a; /* muted gold for the sun */
         }
         .theme-toggle:hover {
             border-color: var(--border-hover); color: var(--text);
             background: var(--bg-card-hover);
         }
+        /* Keep the sun gold even on hover (otherwise the :hover rule above
+           swaps it back to the default text color). */
+        [data-theme="light"] .theme-toggle:hover { color: #a87d22; }
 
         /* ---- Toast ---- */
         #toast {
