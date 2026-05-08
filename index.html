@@ -562,6 +562,10 @@
         .rating-prompt {
             font-size: 0.95rem; font-weight: 500; color: var(--text-secondary);
         }
+        .rating-hint {
+            font-size: 0.8rem; color: var(--text-dim);
+            margin-top: -0.15rem;
+        }
         .rating-slider-wrap {
             display: flex; align-items: center; gap: 0.75rem;
             width: 100%; max-width: 360px;
@@ -2586,6 +2590,7 @@
                 if (!inner) return;
                 inner.innerHTML =
                     '<div class="rating-prompt">How likely is this future?</div>' +
+                    '<div class="rating-hint">Submit to see how likely others rated this future.</div>' +
                     '<div class="rating-slider-wrap">' +
                         '<input type="range" min="0" max="100" value="' + initialValue + '" class="rating-slider" aria-label="Probability this scenario happens" />' +
                         '<div class="rating-value"><span class="rating-value-num">' + initialValue + '</span>%</div>' +
@@ -2650,6 +2655,7 @@
                     return `<div class="rating-section scroll-reveal" data-outcome-id="${esc(outcomeId)}" data-variant-key="${variantAttr}">
                         <div class="rating-inner">
                             <div class="rating-prompt">How likely is this future?</div>
+                            <div class="rating-hint">Submit to see how likely others rated this future.</div>
                             <div class="rating-slider-wrap">
                                 <input type="range" min="0" max="100" value="50" class="rating-slider" aria-label="Probability this scenario happens" />
                                 <div class="rating-value"><span class="rating-value-num">50</span>%</div>
