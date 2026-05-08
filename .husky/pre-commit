@@ -19,3 +19,27 @@ fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
 console.log('Bumped version to ' + pkg.version);
 "
 git add package.json
+
+# Also stamp today's date into the 'Last updated …' line in the About
+# section of index.html, so the visible footer date tracks each commit.
+# en-US locale is used explicitly to keep the format ('April 20, 2026')
+# stable regardless of the committer's system locale. Fails the commit
+# if the marker can't be found, so a future refactor of the About section
+# doesn't silently disable this.
+node -e "
+const fs = require('fs');
+const path = 'index.html';
+const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+const re = /Last updated [A-Z][a-z]+ \d{1,2}, \d{4}/;
+let html = fs.readFileSync(path, 'utf8');
+if (!re.test(html)) {
+    console.error('pre-commit: could not find \"Last updated …\" marker in ' + path);
+    process.exit(1);
+}
+const next = html.replace(re, 'Last updated ' + date);
+if (next !== html) {
+    fs.writeFileSync(path, next);
+    console.log('Updated last-updated date to ' + date);
+}
+"
+git add index.html
