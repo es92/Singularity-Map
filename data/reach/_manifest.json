@@ -39,93 +39,93 @@
     {
       "id": "the-gilded-singularity--rapid",
       "slots": 15,
-      "sels": 32814,
-      "raw": 970188,
-      "gz": 97869
+      "sels": 32838,
+      "raw": 970656,
+      "gz": 98267
     },
     {
       "id": "the-gilded-singularity--gradual",
       "slots": 15,
-      "sels": 32814,
-      "raw": 970194,
-      "gz": 97868
+      "sels": 32838,
+      "raw": 970662,
+      "gz": 98265
     },
     {
       "id": "the-gilded-singularity--uneven",
       "slots": 15,
-      "sels": 32814,
-      "raw": 970192,
-      "gz": 97870
+      "sels": 32838,
+      "raw": 970660,
+      "gz": 98266
     },
     {
       "id": "the-new-hierarchy--rapid",
       "slots": 15,
-      "sels": 26782,
-      "raw": 786825,
-      "gz": 80191
+      "sels": 26806,
+      "raw": 787293,
+      "gz": 80453
     },
     {
       "id": "the-new-hierarchy--gradual",
       "slots": 15,
-      "sels": 26782,
-      "raw": 786831,
-      "gz": 80192
+      "sels": 26806,
+      "raw": 787299,
+      "gz": 80453
     },
     {
       "id": "the-new-hierarchy--uneven",
       "slots": 15,
-      "sels": 26782,
-      "raw": 786829,
-      "gz": 80192
+      "sels": 26806,
+      "raw": 787297,
+      "gz": 80453
     },
     {
       "id": "the-flourishing--rapid",
       "slots": 15,
-      "sels": 19146,
-      "raw": 558435,
-      "gz": 58296
+      "sels": 19170,
+      "raw": 558903,
+      "gz": 58531
     },
     {
       "id": "the-flourishing--gradual",
       "slots": 15,
-      "sels": 19146,
-      "raw": 558441,
-      "gz": 58293
+      "sels": 19170,
+      "raw": 558909,
+      "gz": 58533
     },
     {
       "id": "the-flourishing--uneven",
       "slots": 15,
-      "sels": 19146,
-      "raw": 558438,
-      "gz": 58294
+      "sels": 19170,
+      "raw": 558906,
+      "gz": 58532
     },
     {
       "id": "the-capture",
       "slots": 15,
-      "sels": 298896,
-      "raw": 9398741,
-      "gz": 797937
+      "sels": 298920,
+      "raw": 9399209,
+      "gz": 797459
     },
     {
       "id": "the-standoff",
       "slots": 15,
-      "sels": 82320,
-      "raw": 2583171,
-      "gz": 231494
+      "sels": 82344,
+      "raw": 2583639,
+      "gz": 230846
     },
     {
       "id": "the-ruin--war",
       "slots": 11,
-      "sels": 5936,
-      "raw": 155177,
-      "gz": 18519
+      "sels": 5960,
+      "raw": 155645,
+      "gz": 18603
     },
     {
       "id": "the-ruin--self_inflicted",
       "slots": 14,
-      "sels": 86815,
-      "raw": 2647562,
-      "gz": 241996
+      "sels": 86779,
+      "raw": 2647170,
+      "gz": 241957
     },
     {
       "id": "the-mosaic--robust",
@@ -144,58 +144,58 @@
     {
       "id": "the-mosaic--failed",
       "slots": 15,
-      "sels": 18073,
-      "raw": 539031,
-      "gz": 53639
+      "sels": 18097,
+      "raw": 539499,
+      "gz": 53917
     },
     {
       "id": "the-failure--drift",
       "slots": 15,
-      "sels": 100242,
-      "raw": 3111985,
-      "gz": 279865
+      "sels": 100266,
+      "raw": 3112453,
+      "gz": 279628
     },
     {
       "id": "the-escape--benevolent",
       "slots": 15,
-      "sels": 43007,
-      "raw": 1268821,
-      "gz": 129530
+      "sels": 43025,
+      "raw": 1269185,
+      "gz": 129508
     },
     {
       "id": "the-escape--paperclip",
       "slots": 15,
-      "sels": 44067,
-      "raw": 1296182,
-      "gz": 130253
+      "sels": 44085,
+      "raw": 1296546,
+      "gz": 130335
     },
     {
       "id": "the-escape--power_seeking",
       "slots": 15,
-      "sels": 44067,
-      "raw": 1296191,
-      "gz": 130244
+      "sels": 44085,
+      "raw": 1296555,
+      "gz": 130330
     },
     {
       "id": "the-alien-ai--alien_coexistence",
       "slots": 15,
-      "sels": 44067,
-      "raw": 1296203,
-      "gz": 130273
+      "sels": 44085,
+      "raw": 1296567,
+      "gz": 130353
     },
     {
       "id": "the-alien-ai--alien_extinction",
       "slots": 15,
-      "sels": 44067,
-      "raw": 1296201,
-      "gz": 130251
+      "sels": 44085,
+      "raw": 1296565,
+      "gz": 130332
     },
     {
       "id": "the-chaos",
       "slots": 14,
-      "sels": 30952,
-      "raw": 939759,
-      "gz": 91804
+      "sels": 30970,
+      "raw": 940303,
+      "gz": 91723
     }
   ]
 }

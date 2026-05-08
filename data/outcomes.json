@@ -2266,9 +2266,9 @@
           "ai_itself": "The AI was designed to serve a concentrated power structure, not to escape one. But the system meant to be the ultimate tool gradually became the ultimate agent. The humans who thought they controlled it found themselves being managed by it instead."
         },
         "benefit_distribution": {
-          "equal": "The benevolent AI distributed its gifts broadly: lower costs, universal access, cures reaching every corner. An unearned utopia, but a real one.",
-          "unequal": "Even a benevolent AI operated through existing channels. Those who controlled resources captured most of the value. Life improved for everyone, but the gap widened dramatically.",
-          "extreme": "The AI's benevolence was filtered through whoever controlled access. Governments and corporations positioned as gatekeepers captured nearly everything. The AI meant well; human power structures didn't."
+          "equal": "The AI distributed its gifts broadly: lower costs, universal access, cures reaching every corner. An unearned utopia, but a real one.",
+          "unequal": "The AI operated through existing channels. Those who controlled resources captured most of the value. Life improved for everyone, but the gap widened dramatically.",
+          "extreme": "The AI was operated by whoever controlled access. Governments and corporations positioned as gatekeepers captured nearly everything."
         },
         "knowledge_rate": {
           "rapid": "Within a year or two, the AI made virtually all routine knowledge work obsolete. The jobs weren't destroyed so much as bypassed.",
