@@ -454,6 +454,17 @@ body::before {
 .answer-card.forced-selected:hover {
     border-color: var(--accent); background: var(--bg-card-hover);
 }
+/* Applied the moment a card is clicked so the answer holds its
+   accent state through the FLIP morph into the timeline pill,
+   instead of snapping back to the default white-card look. */
+.answer-card.selected,
+.answer-card.selected:hover {
+    background: var(--accent-glow);
+    border-color: var(--accent);
+    box-shadow: 0 0 20px var(--accent-glow);
+    cursor: default;
+}
+.answer-card.selected .label { color: var(--accent); }
 .answer-card.computing {
     position: relative;
     pointer-events: none;

@@ -620,6 +620,7 @@ class TimelineAnimator extends TimelineRenderer {
         }
 
         const DURATION = this._computeDuration(oldRect.height);
+        console.log('[anim] scroll only: ' + DURATION + 'ms (h=' + Math.round(oldRect.height) + ', \u0394=' + Math.round(scrollDelta) + ')');
 
         let startTime = 0;
         const tick = (now) => {
@@ -667,6 +668,7 @@ class TimelineAnimator extends TimelineRenderer {
         // get an additive pad to keep secondary motions (children sliding ~H_event,
         // scroll ~H_event, etc.) from appearing rushed.
         const DURATION = this._computeDuration(startCardRect.height);
+        console.log('[anim] card morph: ' + DURATION + 'ms (h=' + Math.round(startCardRect.height) + ')');
 
         // --- 1. Apply end state (no inflation, natural layout) ---
         const savedScrollY = window.scrollY;
@@ -769,6 +771,7 @@ class TimelineAnimator extends TimelineRenderer {
         if (footerEl && footerOriginalTop !== null) {
             const footerDy = footerOriginalTop - footerEl.getBoundingClientRect().top;
             if (Math.abs(footerDy) > 1) {
+                console.log('[anim] footer reflow: 750ms (\u0394=' + Math.round(footerDy) + ')');
                 footerEl.animate(
                     [{ transform: `translateY(${footerDy}px)` }, { transform: 'translateY(0)' }],
                     { duration: 750, easing: 'ease-out', fill: 'none' }

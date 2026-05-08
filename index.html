@@ -2995,6 +2995,10 @@
                                     const idx = parseInt(cardEl.dataset.aidx, 10);
                                     const answer = qResult.answerCards[idx];
                                     if (!answer || answer.disabled) return;
+                                    // Mark the chosen card so it holds the accent
+                                    // styling through the FLIP into the timeline
+                                    // pill, instead of flashing back to white.
+                                    cardEl.classList.add('selected');
                                     mutateStack(s => Engine.push(s, answer.nodeId, answer.value));
                                 });
                             });
