@@ -8,6 +8,34 @@ const IMG_DIR = path.join(SHARE_DIR, 'images');
 
 const outcomes = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'outcomes.json'), 'utf8'));
 
+// Tiny markdown renderer for outcome summaries. Summaries in outcomes.json
+// only use **bold** and \n\n paragraph breaks (no links, lists, code, etc.),
+// so we hand-roll instead of pulling in marked. Order: HTML-escape first,
+// then apply markdown — keeps user content safe and avoids `<` in the source
+// breaking later regexes.
+function summaryToHtml(s) {
+    if (!s) return '';
+    const escaped = String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const bolded = escaped.replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>');
+    return bolded
+        .split(/\n{2,}/)
+        .map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>')
+        .join('');
+}
+
+// Plain-text version for <meta description> and <og:description> — strips
+// markdown markers and collapses newlines so the snippet reads cleanly in
+// search/social previews.
+function summaryToPlain(s) {
+    return String(s || '')
+        .replace(/\*\*/g, '')
+        .replace(/\s*\n+\s*/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
 function buildCards() {
     const cards = [];
     for (const t of outcomes.templates) {
@@ -108,22 +136,26 @@ body{
     font-size:1.3rem;line-height:1.65;
     color:#9898b0;
 }
+.summary p{margin:0 0 0.6em 0}
+.summary p:last-child{margin-bottom:0}
+.summary strong{font-weight:600;color:#e4e4f0}
 </style></head>
 <body>
 <div class="card"><div class="inner">
     <h1 class="title">${esc(card.title)}</h1>
     ${card.subtitle ? `<div class="subtitle">${esc(card.subtitle)}</div>` : ''}
     <span class="mood-badge">${esc(card.mood)}</span>
-    <div class="summary">${esc(card.summary)}</div>
+    <div class="summary">${summaryToHtml(card.summary)}</div>
 </div></div>
 </body></html>`;
 }
 
 function sharePageHtml(card) {
     const imgUrl = `${BASE_URL}share/images/${card.slug}.png`;
+    const plainSummary = summaryToPlain(card.summary);
     const desc = card.subtitle
-        ? `${card.title}: ${card.subtitle} — ${card.summary}`
-        : `${card.title} — ${card.summary}`;
+        ? `${card.title}: ${card.subtitle} — ${plainSummary}`
+        : `${card.title} — ${plainSummary}`;
     const truncDesc = desc.length > 200 ? desc.slice(0, 197) + '...' : desc;
     const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const displayTitle = card.subtitle ? `${card.title}: ${card.subtitle}` : card.title;
@@ -254,6 +286,9 @@ function sharePageHtml(card) {
             font-size:1.05rem;line-height:1.65;
             color:var(--text-secondary);
         }
+        .summary p{margin:0 0 0.7em 0}
+        .summary p:last-child{margin-bottom:0}
+        .summary strong{font-weight:600;color:var(--text)}
         .cta{
             display:inline-block;
             padding:0.9rem 1.75rem;
@@ -338,7 +373,7 @@ function sharePageHtml(card) {
             <h1 class="title">${esc(card.title)}</h1>
             ${card.subtitle ? `<div class="subtitle">${esc(card.subtitle)}</div>` : ''}
             <span class="mood-badge">${esc(card.mood)}</span>
-            <div class="summary">${esc(card.summary)}</div>
+            <div class="summary">${summaryToHtml(card.summary)}</div>
         </div>
         <div id="personalized-timeline"></div>
         <a class="cta" href="${BASE_URL}">Explore your own &rarr;</a>
