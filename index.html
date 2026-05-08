@@ -1776,6 +1776,7 @@
             if (hash.startsWith('/map')) {
                 const pairs = [];
                 let lockedOutcomeId = '';
+                let startedFlag = false;
                 const flags = { fullQuestions: true, expandTimeline: true };
                 const qIdx = hash.indexOf('?');
                 if (qIdx >= 0) {
@@ -1785,6 +1786,7 @@
                         const dk = decodeURIComponent(k);
                         const dv = decodeURIComponent(v);
                         if (dk === 'locked') { lockedOutcomeId = dv; }
+                        else if (dk === 's') { startedFlag = dv === '1'; }
                         else if (dk === 'fq') { flags.fullQuestions = dv !== '0'; }
                         else if (dk === 'et') { flags.expandTimeline = dv !== '0'; }
                         else if (dk === 'sq') { flags.shortQuestions = dv === '1'; }
@@ -1799,8 +1801,11 @@
                 }
                 // A /map URL with only flags (no answered pairs, no locked
                 // outcome) lands on the intro screen with those flags applied,
-                // mirroring share links produced from the start screen.
-                const isStarted = pairs.length > 0 || !!lockedOutcomeId;
+                // mirroring share links produced from the start screen. Once
+                // the user clicks Start without yet answering anything we have
+                // no pairs/locked to infer "started" from, so the serializer
+                // emits an explicit `s=1` marker that we honor here.
+                const isStarted = pairs.length > 0 || !!lockedOutcomeId || startedFlag;
                 return { screen: 'map', started: isStarted, pairs, lockedOutcomeId, flags };
             }
             if (hash.startsWith('/about')) {
@@ -2641,6 +2646,7 @@
                 _pushNextSync = false;
                 let hash = '/map';
                 const entries = [];
+                const pairs = stack.filter(e => e.nodeId).map(e => ({ nodeId: e.nodeId, edgeId: e.edgeId }));
                 for (const entry of stack) {
                     if (!entry.nodeId) continue;
                     // Retracted entries are gone from both state and flavor.
@@ -2650,17 +2656,30 @@
                     }
                 }
                 if (lockedId) entries.push('locked=' + encodeURIComponent(lockedId + (lockedVariantKey ? '--' + lockedVariantKey : '')));
+                // Explicit "started" marker for the case where the user has
+                // clicked Start but hasn't answered anything yet — without it,
+                // a refresh would parse pairs.length === 0 && !lockedId and
+                // bounce them back to the intro screen. Pairs/locked already
+                // imply started, so we omit `s` when either is present.
+                if (started && pairs.length === 0 && !lockedId) entries.push('s=1');
                 if (!fullQuestions) entries.push('fq=0');
-                if (shortQuestions) entries.push('sq=1');
+                // shortQuestions defaults to true, so we only need to encode
+                // the non-default state (false = "Detailed questions" toggled
+                // ON in the UI). Older share links with `sq=1` still parse
+                // as true via the default fallback, so we don't break them.
+                if (!shortQuestions) entries.push('sq=0');
                 if (!expandTimeline) entries.push('et=0');
                 if (customDurations) entries.push('cd=1');
                 if (debugMode) entries.push('db=1');
-                if (personalAnswers) {
-                    if (personalAnswers.profession) entries.push('pp=' + encodeURIComponent(personalAnswers.profession));
+                // Profession is loaded from localStorage on every visit, so
+                // emitting it on the intro screen would pollute the bare URL
+                // and leak personal info into intro share links. Only attach
+                // once the journey is underway.
+                if (started && personalAnswers && personalAnswers.profession) {
+                    entries.push('pp=' + encodeURIComponent(personalAnswers.profession));
                 }
                 if (entries.length > 0) hash += '?' + entries.join('&');
                 const stateFlags = { fullQuestions, shortQuestions, expandTimeline, customDurations, debugMode };
-                const pairs = stack.filter(e => e.nodeId).map(e => ({ nodeId: e.nodeId, edgeId: e.edgeId }));
                 const state = { screen: 'map', pairs, lockedOutcomeId: lockedId + (lockedVariantKey ? '--' + lockedVariantKey : ''), flags: stateFlags, started };
                 // On the intro screen with no flags toggled, keep the URL clean
                 // (just the pathname) rather than changing it to `#/map`.
