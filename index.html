@@ -3262,8 +3262,24 @@
                 const nextQ = findNextQuestion();
                 if (!nextQ) return 'No question available';
                 if (nextQ.isForced) {
-                    mutateStack(s => Engine.push(s, nextQ.node.id, nextQ.forcedValue));
+                    // Forced cards already wear `.forced-selected` styling,
+                    // so they don't suffer the white-card flash. Click the
+                    // rendered card so the same advance handler runs.
+                    const forcedCard = document.querySelector('.question-zone .answer-card.forced-selected');
+                    if (forcedCard) forcedCard.click();
+                    else mutateStack(s => Engine.push(s, nextQ.node.id, nextQ.forcedValue));
                     return nextQ.node.id + ' = ' + nextQ.forcedValue + ' (forced)';
+                }
+                // Pick a random enabled rendered card and click it directly,
+                // so spacebar inherits the styled-click path (`.selected`
+                // class) instead of bypassing it via mutateStack. Falls back
+                // to the old direct-mutate path if no cards are rendered.
+                const cards = Array.from(document.querySelectorAll('.question-zone .answer-card'))
+                    .filter(c => !c.classList.contains('disabled') && !c.classList.contains('forced-selected'));
+                if (cards.length > 0) {
+                    const card = cards[Math.floor(Math.random() * cards.length)];
+                    card.click();
+                    return nextQ.node.id + ' (random card)';
                 }
                 const enabled = nextQ.options.filter(o => !o.disabled);
                 if (enabled.length === 0) return 'No enabled options';
