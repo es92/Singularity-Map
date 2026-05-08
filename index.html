@@ -1859,20 +1859,19 @@
                 const am = a.dateInfo && a.dateInfo._months != null ? a.dateInfo._months : Infinity;
                 const bm = b.dateInfo && b.dateInfo._months != null ? b.dateInfo._months : Infinity;
                 if (am !== bm) return am - bm;
-                const ai = a.stackIndex != null ? a.stackIndex : (stackOrder.has(a.nodeId) ? stackOrder.get(a.nodeId) : Infinity);
-                const bi = b.stackIndex != null ? b.stackIndex : (stackOrder.has(b.nodeId) ? stackOrder.get(b.nodeId) : Infinity);
-                if (ai !== bi) return ai - bi;
-                // Tiebreaker: at the same date, death-marked vignettes sink
-                // to the bottom of the group so the last thing the reader
-                // sees in that beat is the heaviest one. World items and
-                // non-death personals stay in their stack order first,
-                // then their original spread order.
+                // At the same date, pinned personal vignettes should read
+                // after the ordinary world/personal beats. Death still comes
+                // last so terminal outcomes remain the final note.
                 const ad = a.death ? 1 : 0;
                 const bd = b.death ? 1 : 0;
                 if (ad !== bd) return ad - bd;
                 const ae = a.pinToEnd ? 1 : 0;
                 const be = b.pinToEnd ? 1 : 0;
-                return ae - be;
+                if (ae !== be) return ae - be;
+                const ai = a.stackIndex != null ? a.stackIndex : (stackOrder.has(a.nodeId) ? stackOrder.get(a.nodeId) : Infinity);
+                const bi = b.stackIndex != null ? b.stackIndex : (stackOrder.has(b.nodeId) ? stackOrder.get(b.nodeId) : Infinity);
+                if (ai !== bi) return ai - bi;
+                return 0;
             });
 
             if (merged.length === 0) return '';
