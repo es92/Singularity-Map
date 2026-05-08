@@ -2388,7 +2388,7 @@
           "containment": [
             "escaped"
           ],
-          "rollout_set": [
+          "escape_set": [
             "yes"
           ],
           "_not": [

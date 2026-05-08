@@ -228,26 +228,34 @@
     }
 
     // ─── Personal vignettes (mirrors index.html) ───
-    // Returns { text, category } when a vignette is found, or null when
-    // none matches. The optional `category` is a per-rule color override
-    // (e.g., 'good', 'mixed') sourced from the matching `_when` rule's
-    // `category` field. Mirror of index.html resolvePersonalVignetteText.
+    // Returns { text, category, pinToEnd } when a vignette is found, or
+    // null when none matches. `pinToEnd` forces this personal vignette to
+    // use the final timeline date and sort at the end of that date group.
+    // Mirror of index.html resolvePersonalVignetteText.
     function resolvePersonalVignetteText(spec, ctx) {
         if (!spec) return null;
-        if (typeof spec === 'string') return { text: spec, category: null };
+        if (typeof spec === 'string') return { text: spec, category: null, pinToEnd: false };
         if (spec._when && Array.isArray(spec._when)) {
             for (const rule of spec._when) {
                 if (!rule.if) continue;
                 const match = Object.entries(rule.if).every(([k, vals]) =>
                     ctx[k] && Array.isArray(vals) && vals.includes(ctx[k])
                 );
-                if (match) return rule.text ? { text: rule.text, category: rule.category || null } : null;
+                if (match) return rule.text ? {
+                    text: rule.text,
+                    category: rule.category || null,
+                    pinToEnd: rule.pinToEnd === true,
+                } : null;
             }
         }
         const def = spec._default;
         if (def == null) return null;
-        if (typeof def === 'string') return { text: def, category: null };
-        return def.text ? { text: def.text, category: def.category || null } : null;
+        if (typeof def === 'string') return { text: def, category: null, pinToEnd: false };
+        return def.text ? {
+            text: def.text,
+            category: def.category || null,
+            pinToEnd: def.pinToEnd === true,
+        } : null;
     }
 
     function resolvePersonalVignettes(stack, professionId, personalData, dateMap, outcomePersonalCategory) {
@@ -311,6 +319,7 @@
                 nodeId: node.id,
                 category: professionalNodes.has(node.id) ? 'Professional Impact' : 'Personal Impact',
                 personalCategory,
+                pinToEnd: result.pinToEnd === true || edge.personalVignettePinToEnd === true,
                 dateInfo,
                 text: tokenReplace(result.text),
             });
@@ -456,7 +465,7 @@
             const endDateInfo = { year: endFm.year, month: endFm.month, label: endFm.month + ' ' + endFm.year, _months: endMonths };
             const terminalNodes = new Set(['escape_method', 'war_survivors']);
             for (const v of personalItems) {
-                if (!v.dateInfo || v.dateInfo._months == null || terminalNodes.has(v.nodeId)) {
+                if (!v.dateInfo || v.dateInfo._months == null || terminalNodes.has(v.nodeId) || v.pinToEnd) {
                     v.dateInfo = endDateInfo;
                 }
             }
@@ -479,7 +488,10 @@
             // the bottom of the group. Mirror of index.html.
             const ad = a.death ? 1 : 0;
             const bd = b.death ? 1 : 0;
-            return ad - bd;
+            if (ad !== bd) return ad - bd;
+            const ae = a.pinToEnd ? 1 : 0;
+            const be = b.pinToEnd ? 1 : 0;
+            return ae - be;
         });
 
         if (merged.length === 0) return '';

@@ -4291,7 +4291,11 @@
               "text": "The economic gains reached everyone. Healthcare, education, housing: all dramatically cheaper or free. By every material measure, life is better than you could have imagined. Because of how the gains were distributed, the displaced didn't fall through. But something is missing. The abundance is real, but the sense of purpose hasn't followed."
             }
           ],
-          "_default": "The economic gains reached everyone. Healthcare, education, housing: all dramatically cheaper or free. Your material quality of life is unrecognizable compared to a decade ago. Scarcity, as a defining feature of daily life, is over. Because of how the gains were distributed, the displaced didn't fall through."
+          "_default": {
+            "category": "good",
+            "pinToEnd": true,
+            "text": "The economic gains reached everyone. Healthcare, education, housing: all dramatically cheaper or free. Your material quality of life is unrecognizable compared to a decade ago. Scarcity, as a defining feature of daily life, is over. Because of how the gains were distributed, the displaced didn't fall through."
+          }
         }
       },
       "unequal": {
