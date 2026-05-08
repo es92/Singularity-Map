@@ -1559,38 +1559,20 @@ const NODES = [
       ] },
     { id: 'failure_mode', label: 'Delivery', stage: 3, priority: 2, forwardKey: true,
       hideWhen: [
-        // Benevolent escape already means the AI escaped human control and
-        // independently chose to help. Asking whether the human "delivery"
-        // succeeded is incoherent here, and `failure_mode=drift` would not
-        // change the outcome variant (the-escape is keyed on ai_goals), so
-        // it creates a false "wrong metrics but good escape" result.
-        { containment: ['escaped'], ai_goals: ['benevolent'] },
+        // Benevolent AI means the agent independently wants to help humanity.
+        // A human-rollout "Delivery / Wrong metrics" question is incoherent
+        // on that branch and would not change the outcome variant anyway.
+        { ai_goals: ['benevolent'] },
         { ai_goals: { not: ['marginal', 'benevolent'], required: true }, containment: { not: ['contained'] } },
         { rollout_set: ['yes'] }
       ],
       // After Who Benefits completes, delivery is eligible unless the world
       // already ended in a capture-like shape (benefit_distribution=extreme,
       // or self-interest + unequal — see benefit_distribution edges, which
-      // set `delivery_ask_eligible: 'no'` on those paths). The benevolent
-      // bypass keeps the delivery question askable on the soft-takeover
-      // benevolent-AI path (concentration_type=ai_itself + power_use=
-      // generous → ai_goals=benevolent), which sidesteps who_benefits.
-      // Restrict the benevolent bypass to the soft-takeover path itself.
-      // Checking only containment!=escaped is not enough: share/map URLs
-      // serialize raw user picks, not effect-written state, so an escaped
-      // path can replay without a literal containment=escaped query param
-      // even though the graph state reconstructs it internally. The actual
-      // coherent bypass is concentration_type=ai_itself + generous power_use
-      // (which writes ai_goals=benevolent and skips who_benefits). A plain
-      // benevolent escape should skip Delivery entirely: the AI escaped human
-      // control, so a human-rollout "delivery" question is incoherent — and
-      // letting the user pick failure_mode=drift produced a contradiction
-      // where the-escape--benevolent (utopian) rendered despite the user
-      // having signaled "wrong metrics" (which doesn't change the variant
-      // since the-escape is keyed on ai_goals only).
+      // set `delivery_ask_eligible: 'no'` on those paths). Benevolent-AI
+      // paths are hidden above and close rollout at physical_rate instead.
       activateWhen: [
-        { capability: ['asi'], who_benefits_set: ['yes'], delivery_ask_eligible: { not: ['no'] } },
-        { capability: ['asi'], ai_goals: ['benevolent'], concentration_type: ['ai_itself'] }
+        { capability: ['asi'], who_benefits_set: ['yes'], delivery_ask_eligible: { not: ['no'] } }
       ],
       edges: [
         { id: 'none', label: 'Succeeds' },
@@ -3118,12 +3100,12 @@ function buildRolloutExitPlan() {
             plan.push({
                 nodeId: 'physical_rate',
                 edgeId: e.id,
-                // Benevolent escape skips Delivery, but knowledge/physical
+                // Benevolent AI skips Delivery, but knowledge/physical
                 // rollout questions are still coherent as "how broadly and
                 // quickly do the AI's benefits reach society?" Physical rate
                 // is the terminal rollout question, so close the module here
                 // without inventing a failure_mode.
-                when: { capability: ['asi'], containment: ['escaped'], ai_goals: ['benevolent'] },
+                when: { capability: ['asi'], ai_goals: ['benevolent'] },
                 set: { rollout_set: 'yes' },
             });
         }

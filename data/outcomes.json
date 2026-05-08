@@ -873,8 +873,8 @@
               }
             ]
           },
-          "keeping_safe": "The promise was safety, and in this branch it did not become a permanent excuse for control. The institutions built to manage risk also created accountability: guardrails, oversight, and a public expectation that protection meant protecting everyone.",
-          "best_will_rise": "The promise was opportunity: give people access, let talent find its level, and let the best ideas rise. In the flourishing path, that story became less hollow than it could have been. Access widened enough that abundance did not remain trapped inside the old hierarchy."
+          "keeping_safe": "The promise was safety: control was necessary to prevent catastrophe.",
+          "best_will_rise": "The promise was opportunity: give people access, let talent find its level, and let the best ideas rise."
         },
         "catch_outcome": {
           "holds_permanently": "This almost didn't happen. Humanity nearly lost everything to an escaped superintelligence. The AI was caught, the threat neutralized, and the world chose to rebuild with what it had learned about how close the call had been."
@@ -2333,6 +2333,9 @@
             "escaped"
           ],
           "escape_set": [
+            "yes"
+          ],
+          "rollout_set": [
             "yes"
           ],
           "_not": [
