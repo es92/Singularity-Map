@@ -1,6 +1,6 @@
 # Singularity Possibilities Map
 
-**What do you think happens with AI?** Walk through the key questions and see the future your beliefs imply.
+**What do you think happens with AI?** Walk through the key questions and see the future your beliefs imply, and how AI could reach you personally and professionally.
 
 [**Try it →**](https://es92.github.io/Singularity-Map/)
 
