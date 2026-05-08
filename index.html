@@ -3053,9 +3053,14 @@
                                 if (action === 'native') {
                                     navigator.share({ title: info.title, text: info.text, url: info.url }).catch(() => {});
                                 } else if (action === 'x') {
-                                    window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(info.text) + '&url=' + encodeURIComponent(info.url), '_blank');
+                                    // X/Twitter joins the `text` and `url` params with a
+                                    // single space, so to put the URL on its own line we
+                                    // embed it inside `text` with \n\n and omit the
+                                    // separate `url` param. X still auto-detects and
+                                    // shortens the URL inline.
+                                    window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(info.text + '\n\n' + info.url), '_blank');
                                 } else if (action === 'whatsapp') {
-                                    window.open('https://wa.me/?text=' + encodeURIComponent(info.text + ' ' + info.url), '_blank');
+                                    window.open('https://wa.me/?text=' + encodeURIComponent(info.text + '\n\n' + info.url), '_blank');
                                 } else if (action === 'linkedin') {
                                     window.open('https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(info.url), '_blank');
                                 } else if (action === 'copy') {
