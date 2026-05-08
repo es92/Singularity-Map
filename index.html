@@ -924,6 +924,16 @@
     (function () {
         'use strict';
 
+        // Dev-only flag. True when served from a typical local dev host;
+        // false on the deployed (es92.github.io) site. Used to gate noisy
+        // affordances like the spacebar quick-pick shortcut and the
+        // animation-timing console.logs in timeline-animator.js. Exposed
+        // on window so non-module scripts (timeline-animator.js) can read it.
+        const IS_DEV = location.hostname === 'localhost'
+            || location.hostname === '127.0.0.1'
+            || location.hostname === '0.0.0.0';
+        window.IS_DEV = IS_DEV;
+
         const app = document.getElementById('app');
         const toastEl = document.getElementById('toast');
 
@@ -3287,16 +3297,22 @@
                 mutateStack(s => Engine.push(s, pick.nodeId, pick.value));
                 return nextQ.node.id + ' = ' + pick.value;
             };
-            // TEMP: Space key triggers DebugSelectRandom for quick clickthroughs,
-            // or clicks Start when the intro is still showing.
+            // Spacebar shortcut: clicks the Start button when the intro is
+            // showing (always available — useful keyboard affordance), and
+            // additionally triggers DebugSelectRandom() for quick walkthroughs
+            // when running locally. The random-pick path is dev-only so it
+            // doesn't accidentally answer questions for real users who hit
+            // space while reading.
             window.addEventListener('keydown', e => {
                 if (e.code !== 'Space' && e.key !== ' ') return;
                 const t = e.target;
                 if (t && (t.matches?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]'))) return;
-                e.preventDefault();
                 const startBtn = document.querySelector('[data-action="begin"]');
-                if (startBtn) { startBtn.click(); return; }
-                window.DebugSelectRandom();
+                if (startBtn) { e.preventDefault(); startBtn.click(); return; }
+                if (IS_DEV) {
+                    e.preventDefault();
+                    window.DebugSelectRandom();
+                }
             });
             listen('[data-action="share"]', 'click', () => {
                 const url = location.origin + location.pathname + location.hash;
