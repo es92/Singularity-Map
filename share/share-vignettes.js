@@ -474,7 +474,12 @@
         merged.sort((a, b) => {
             const am = a.dateInfo && a.dateInfo._months != null ? a.dateInfo._months : Infinity;
             const bm = b.dateInfo && b.dateInfo._months != null ? b.dateInfo._months : Infinity;
-            return am - bm;
+            if (am !== bm) return am - bm;
+            // Tiebreaker: at the same date, death-marked vignettes sink to
+            // the bottom of the group. Mirror of index.html.
+            const ad = a.death ? 1 : 0;
+            const bd = b.death ? 1 : 0;
+            return ad - bd;
         });
 
         if (merged.length === 0) return '';
