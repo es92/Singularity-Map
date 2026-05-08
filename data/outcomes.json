@@ -654,42 +654,15 @@
         },
         "pushback_outcome": "The Pushback",
         "sincerity_test": "The Promise",
-        "power_promise": "The Compact",
+        "power_promise": {
+          "for_everyone": "The Compact",
+          "keeping_safe": "The Safety Narrative",
+          "best_will_rise": "The Opportunity Promise"
+        },
         "catch_outcome": "The Near Miss",
         "collateral_impact": "The Aftermath"
       },
       "flavors": {
-        "distribution": {
-          "open": "AI capability was widely distributed, with the transformation driven by many actors rather than a single hand.",
-          "lagging": "Frontier labs led the transformation, but competing visions among multiple actors ensured no single approach dominated completely.",
-          "concentrated": {
-            "_default": "A handful of organizations drove the transformation. Their choices shaped the pace and direction for everyone.",
-            "_when": [
-              {
-                "if": {
-                  "proliferation_outcome": [
-                    "leaks_public"
-                  ]
-                },
-                "text": "AI capability was broadly available — the technology leaked publicly. But the organizations that built it first retained structural advantages: network effects, compute infrastructure, and institutional knowledge that open access alone couldn't erase."
-              },
-              {
-                "if": {
-                  "open_source": [
-                    "near_parity"
-                  ]
-                },
-                "text": "Open-source AI kept pace with the frontier, ensuring broad access. But a few organizations still sat at the center — their head start in compute, data, and talent translated into lasting influence even as the technology itself became available to everyone."
-              }
-            ]
-          },
-          "monopoly": "The transformation flowed from a single source. Every advance, every application, filtered through one set of priorities."
-        },
-        "takeoff": {
-          "fast": "The feedback loop ran fast: a year of progress every month. Superintelligence arrived before most people understood what had changed.",
-          "slow": "The long timeline was a gift. Institutions adapted and workers retrained while governance frameworks caught up. Humanity was ready.",
-          "moderate": "The transition was fast enough to feel urgent but slow enough to manage. A few years of intense disruption, then a new equilibrium."
-        },
         "governance": {
           "governed": {
             "_default": "International governance worked. Not perfectly: it was slow, contentious, full of compromise. But the frameworks held, and coordination kept the most dangerous dynamics in check.",
@@ -741,22 +714,6 @@
             ]
           }
         },
-        "sovereignty": {
-          "lab": {
-            "_default": "The labs that built superintelligence also shaped its deployment. Corporate priorities influenced the trajectory even as the outcome was positive: fast and innovative, but always pulled between public benefit and shareholder value.",
-            "_when": [
-              {
-                "if": {
-                  "distribution": [
-                    "monopoly"
-                  ]
-                },
-                "text": "The lab that built superintelligence also shaped its deployment. Corporate priorities influenced the trajectory even as the outcome was positive: fast and innovative, but always caught between public benefit and shareholder value."
-              }
-            ]
-          },
-          "state": "Governments took the reins early. The transition was slower, shaped by political processes rather than market dynamics. Messier and full of trade-offs, but with broader democratic legitimacy."
-        },
         "stall_recovery": {
           "mild": "The exponential trend didn't hold at first. AI hit a ceiling that looked permanent. But a breakthrough came within a few years. The ceiling held for a while, then broke. What mattered was everything that happened in between."
         },
@@ -794,21 +751,6 @@
           }
         },
         "alignment": {
-          "robust": {
-            "_default": "Alignment was comprehensive and durable. The AI systems reliably pursued human values. Humans handed off execution but kept meaningful oversight over goals. Safety was verified, not hoped for.",
-            "_when": [
-              {
-                "if": {
-                  "takeoff": [
-                    "fast",
-                    "explosive",
-                    "moderate"
-                  ]
-                },
-                "text": "Alignment was comprehensive and durable. The AI systems reliably pursued human values even under recursive self-improvement (each AI generation helping build the next, faster). Humans handed off execution but kept meaningful oversight over goals, with safety verified rather than assumed."
-              }
-            ]
-          },
           "brittle": {
             "_default": "Alignment held, but everyone knew it might not have. The techniques passed every test, yet the theoretical fragility haunted every policy discussion. Flourishing happened in the shadow of a risk that never materialized.",
             "_when": [
@@ -930,7 +872,9 @@
                 "text": "The promise was inclusion, and it wasn't kept in any structural sense. Talk of shared prosperity continued long after the reality diverged from it. Some crumbs reached everyone, but the feast belonged to a few."
               }
             ]
-          }
+          },
+          "keeping_safe": "The promise was safety, and in this branch it did not become a permanent excuse for control. The institutions built to manage risk also created accountability: guardrails, oversight, and a public expectation that protection meant protecting everyone.",
+          "best_will_rise": "The promise was opportunity: give people access, let talent find its level, and let the best ideas rise. In the flourishing path, that story became less hollow than it could have been. Access widened enough that abundance did not remain trapped inside the old hierarchy."
         },
         "catch_outcome": {
           "holds_permanently": "This almost didn't happen. Humanity nearly lost everything to an escaped superintelligence. The AI was caught, the threat neutralized, and the world chose to rebuild with what it had learned about how close the call had been."

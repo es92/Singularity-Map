@@ -1817,12 +1817,18 @@
         }
 
         function buildMergedVignettesHtml(resolved, stack, eff, dateMap) {
+            const stackOrder = new Map();
+            for (let i = 0; i < stack.length; i++) {
+                const nodeId = stack[i] && stack[i].nodeId;
+                if (nodeId && !stackOrder.has(nodeId)) stackOrder.set(nodeId, i);
+            }
             const worldItems = resolved.flavors.map(f => ({
                 type: 'world',
                 nodeId: f.nodeId,
                 heading: f.heading,
                 text: f.text,
                 dateInfo: dateMap[f.nodeId] || null,
+                stackIndex: stackOrder.has(f.nodeId) ? stackOrder.get(f.nodeId) : Infinity,
             }));
 
             let personalItems = [];
@@ -1853,11 +1859,14 @@
                 const am = a.dateInfo && a.dateInfo._months != null ? a.dateInfo._months : Infinity;
                 const bm = b.dateInfo && b.dateInfo._months != null ? b.dateInfo._months : Infinity;
                 if (am !== bm) return am - bm;
+                const ai = a.stackIndex != null ? a.stackIndex : (stackOrder.has(a.nodeId) ? stackOrder.get(a.nodeId) : Infinity);
+                const bi = b.stackIndex != null ? b.stackIndex : (stackOrder.has(b.nodeId) ? stackOrder.get(b.nodeId) : Infinity);
+                if (ai !== bi) return ai - bi;
                 // Tiebreaker: at the same date, death-marked vignettes sink
                 // to the bottom of the group so the last thing the reader
                 // sees in that beat is the heaviest one. World items and
-                // non-death personals stay in their original spread order
-                // (worlds before personals).
+                // non-death personals stay in their stack order first,
+                // then their original spread order.
                 const ad = a.death ? 1 : 0;
                 const bd = b.death ? 1 : 0;
                 if (ad !== bd) return ad - bd;
