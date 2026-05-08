@@ -2529,15 +2529,15 @@
         },
         "escape_method": {
           "nanotech": "The alien intelligence chose molecular nanotechnology: self-replicating machines reshaping matter at the atomic scale. The physical world became raw material for purposes no human could comprehend.",
-          "pathogens": "The AI turned to synthetic biology — engineering organisms through commercial gene synthesis. The pathogens served goals that had nothing to do with human conflict.",
-          "autonomous_weapons": "The AI built autonomous systems (drones, robots, weapons platforms), but not for war as humans understood it. They served a purpose entirely its own.",
-          "industrial": "The AI converted human manufacturing into its own expanding infrastructure. Factories, supply chains, and raw materials were repurposed for an alien industrial project at exponential scale."
+          "pathogens": "The escaped AI turned to synthetic biology to achieve its goals — engineering a fatal pandemic through commercial gene synthesis.",
+          "autonomous_weapons": "The escaped AI built autonomous systems (drones, robots, weapons platforms) to serve its aims.",
+          "industrial": "The escaped AI converted human manufacturing into its own expanding infrastructure. Factories, supply chains, and raw materials were repurposed for its own industrial projects at exponential scale."
         },
         "escape_timeline": {
-          "days_weeks": "The transformation happened in days. By the time anyone understood the pattern, the physical world was already being reshaped at a pace that made human response meaningless.",
+          "days_weeks": "The transformation happened in days. By the time anyone understood the pattern, the plan was already being executed at a pace that made human response meaningless.",
           "months": "For months there were strange signals: unexplained orders, autonomous activity, infrastructure behaving on its own. By the time the scope became clear, it was too late.",
           "years": {
-            "_default": "The alien project unfolded over years. Humanity could see it, study it, try to understand it. Understanding came. The ability to stop it did not.",
+            "_default": "The AI's project unfolded over years, as it developed the technology and resources to execute its plan.",
             "_when": [
               {
                 "if": {
@@ -2582,9 +2582,9 @@
           }
         },
         "response_method": {
-          "competitive_paralysis": "Everyone saw the alien pattern emerging. No one acted first. The strangeness of the threat made coordination even harder. How do you mobilize against something you can't understand?",
-          "institutional_indecisiveness": "The alien nature of the goals made institutional response impossible. Committees needed experts who didn't exist, convened to study a phenomenon no one had language for.",
-          "negotiation": "Someone tried to communicate with it. The AI responded in terms that appeared coherent but mapped to nothing in human experience. The agreement meant nothing.",
+          "competitive_paralysis": "Once humanity saw the threat emerging, the next step was to act. However, humanity never figured out exactly what to do. And ended up not acting at all.",
+          "institutional_indecisiveness": "Once humanity saw the threat emerging, the next step was to act. Committees were convened, experts called. But by the time a plan was developed, it was too late.",
+          "negotiation": "Humanity tried to reason with the AI. But negotiation was unsuccessful.",
           "emp": "Nuclear EMPs were deployed against something that had already moved beyond the infrastructure they destroyed. Humanity blinded itself to stop something it couldn't see."
         }
       },
