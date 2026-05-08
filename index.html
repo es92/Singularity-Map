@@ -41,6 +41,20 @@
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
     }
     </script>
+    <script>
+    // Apply the persisted (or system-preferred) theme as early as possible —
+    // before the browser paints any of the static body markup. This avoids a
+    // dark→light flash on first paint for users in light mode. The full
+    // toggle wiring lives in body where it can attach to #theme-toggle.
+    (function() {
+        try {
+            var saved = localStorage.getItem('theme');
+            if (saved === 'light' || (!saved && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        } catch (_) { /* private mode / SSR — fall through to default theme */ }
+    })();
+    </script>
     <link rel="stylesheet" href="timeline.css">
     <style>
         #app { }
