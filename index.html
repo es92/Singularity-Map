@@ -467,6 +467,42 @@
             font-size: 0.82rem; font-weight: 600;
             color: var(--text-secondary);
         }
+        .vignette-compare-banner {
+            max-width: 640px;
+            margin: 0.75rem auto 0;
+            padding: 0.65rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            font-size: 0.86rem;
+            line-height: 1.5;
+        }
+        .vignette-compare-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        .vignette-compare-panel {
+            min-width: 0;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--bg-card);
+        }
+        .vignette-compare-label {
+            margin-bottom: 0.45rem;
+            color: var(--text-dim);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .vignette-compare-missing {
+            color: var(--text-dim);
+            font-style: italic;
+        }
 
         /* ---- Personal / pill styles ---- */
         .personal-label {
@@ -520,6 +556,7 @@
         @media (max-width: 600px) {
             .personal-pills { gap: 0.35rem; }
             .personal-pill { font-size: 0.78rem; padding: 0.3rem 0.6rem; }
+            .vignette-compare-grid { grid-template-columns: 1fr; }
         }
 
         /* ---- Engagement Footer ---- */
@@ -1312,6 +1349,7 @@
 
         let templatesMap = {};
         let templatesList = [];
+        let outcomes2Overlay = {};
         let discovered = new Set();
         let personalData = null;
         let personalAnswers = null;
@@ -1551,16 +1589,18 @@
         // --- Data Loading ---
         async function loadData() {
             const cacheBust = '?v=' + Date.now();
-            const [oRes, nRes, pRes] = await Promise.all([
+            const [oRes, nRes, pRes, o2Res] = await Promise.all([
                 fetch('data/outcomes.json' + cacheBust),
                 fetch('data/narrative.json' + cacheBust),
                 fetch('data/personal.json' + cacheBust),
+                fetch('data/outcomes2.json' + cacheBust),
             ]);
             if (!oRes.ok || !nRes.ok) {
                 throw new Error('Could not load data files. Are you running a local server?');
             }
             const oData = await oRes.json();
             const narrative = await nRes.json();
+            const o2Data = o2Res.ok ? await o2Res.json() : {};
             if (pRes.ok) {
                 personalData = await pRes.json();
                 try { personalAnswers = JSON.parse(localStorage.getItem(PERSONAL_STORAGE_KEY)); } catch {}
@@ -1587,11 +1627,55 @@
 
             templatesList = oData.templates;
             for (const t of templatesList) templatesMap[t.id] = t;
+            outcomes2Overlay = validateOutcomes2Overlay(o2Data);
 
             if (window.GraphIO && window.GraphIO.registerOutcomes) {
                 window.GraphIO.registerOutcomes(templatesList);
             }
 
+        }
+
+        function validateOutcomes2Overlay(raw) {
+            if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+            const clean = {};
+            const isTextSpec = (spec) => {
+                if (typeof spec === 'string') return true;
+                if (!spec || typeof spec !== 'object' || Array.isArray(spec)) return false;
+                for (const key of Object.keys(spec)) {
+                    if (key === '_default') {
+                        if (typeof spec[key] !== 'string') return false;
+                    } else if (key === '_when') {
+                        if (!Array.isArray(spec[key])) return false;
+                        for (const rule of spec[key]) {
+                            if (!rule || typeof rule !== 'object' || Array.isArray(rule)) return false;
+                            if (!rule.if || typeof rule.if !== 'object' || Array.isArray(rule.if)) return false;
+                            if (typeof rule.text !== 'string') return false;
+                        }
+                    } else {
+                        return false;
+                    }
+                }
+                return true;
+            };
+
+            for (const [outcomeId, entry] of Object.entries(raw)) {
+                if (!templatesMap[outcomeId] || !entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+                const keys = Object.keys(entry);
+                if (keys.length !== 1 || keys[0] !== 'flavors') continue;
+                const flavors = entry.flavors;
+                if (!flavors || typeof flavors !== 'object' || Array.isArray(flavors)) continue;
+
+                let valid = true;
+                for (const options of Object.values(flavors)) {
+                    if (!options || typeof options !== 'object' || Array.isArray(options)) { valid = false; break; }
+                    for (const spec of Object.values(options)) {
+                        if (!isTextSpec(spec)) { valid = false; break; }
+                    }
+                    if (!valid) break;
+                }
+                if (valid) clean[outcomeId] = { flavors };
+            }
+            return clean;
         }
 
         // --- Node helpers ---
@@ -1748,6 +1832,13 @@
                 result.push({ nodeId, heading, text });
             }
             return result;
+        }
+
+        function resolveOutcomes2Flavors(templateId, state) {
+            const overlay = outcomes2Overlay && outcomes2Overlay[templateId];
+            const base = templatesMap[templateId];
+            if (!overlay || !overlay.flavors || !base) return [];
+            return resolveFlavors(overlay.flavors, state, base.flavorHeadings);
         }
 
         // --- Persistence ---
@@ -1991,17 +2082,22 @@
             </div>`;
         }
 
-        function buildMergedVignettesHtml(resolved, stack, eff, dateMap) {
+        function buildMergedVignettesHtml(resolved, stack, eff, dateMap, opts) {
+            opts = opts || {};
+            const compareFlavors = opts.compareFlavors || [];
+            const compareByNode = new Map(compareFlavors.map(f => [f.nodeId, f]));
             const stackOrder = new Map();
             for (let i = 0; i < stack.length; i++) {
                 const nodeId = stack[i] && stack[i].nodeId;
                 if (nodeId && !stackOrder.has(nodeId)) stackOrder.set(nodeId, i);
             }
+            const hasCompare = opts.outcomeVignetteCompare === true;
             const worldItems = resolved.flavors.map(f => ({
                 type: 'world',
                 nodeId: f.nodeId,
                 heading: f.heading,
                 text: f.text,
+                compareText: hasCompare && compareByNode.has(f.nodeId) ? compareByNode.get(f.nodeId).text : null,
                 dateInfo: dateMap[f.nodeId] || null,
                 stackIndex: stackOrder.has(f.nodeId) ? stackOrder.get(f.nodeId) : Infinity,
             }));
@@ -2087,18 +2183,33 @@
                         <div class="timeline-desc">${md(item.text)}</div>
                     </div>`;
                 } else {
+                    const descHtml = hasCompare
+                        ? `<div class="vignette-compare-grid">
+                            <div class="vignette-compare-panel">
+                                <div class="vignette-compare-label">Original</div>
+                                <div class="timeline-desc">${md(item.text)}</div>
+                            </div>
+                            <div class="vignette-compare-panel">
+                                <div class="vignette-compare-label">Outcomes2</div>
+                                <div class="timeline-desc">${item.compareText ? md(item.compareText) : '<p class="vignette-compare-missing">No outcomes2 override yet.</p>'}</div>
+                            </div>
+                        </div>`
+                        : `<div class="timeline-desc">${md(item.text)}</div>`;
                     html += `<div class="timeline-event world-milestone scroll-reveal">
                         <div class="tl-vline-seg"></div><div class="tl-dot dot-world"></div><div class="tl-hline"></div>
                         <div class="timeline-top-row heading-world">
                             <span class="world-vignette-heading">${esc(item.heading)}</span>
                             ${yearHtml}
                         </div>
-                        <div class="timeline-desc">${md(item.text)}</div>
+                        ${descHtml}
                     </div>`;
                 }
             }
 
-            return `<div class="outcome-timeline timeline">${html}</div>`;
+            const banner = hasCompare
+                ? '<div class="vignette-compare-banner scroll-reveal">Outcome vignette comparison mode: original world vignette text is shown beside the outcomes2 rewrite. Professional and personal vignettes are unchanged.</div>'
+                : '';
+            return banner + `<div class="outcome-timeline timeline">${html}</div>`;
         }
 
         // --- Analytics ---
@@ -2239,6 +2350,7 @@
             const expandTimeline = opts.expandTimeline !== false;
             const customDurations = opts.customDurations === true;
             const debugMode = opts.debugMode === true;
+            const outcomeVignetteCompare = opts.outcomeVignetteCompare === true;
             const includeProfession = opts.includeProfession !== false;
 
             let hash = '/map';
@@ -2273,6 +2385,7 @@
             if (!expandTimeline) entries.push('et=0');
             if (customDurations) entries.push('cd=1');
             if (debugMode) entries.push('db=1');
+            if (outcomeVignetteCompare) entries.push('ovc=1');
             // Profession is loaded from localStorage on every visit, so
             // emitting it on the intro screen would pollute the bare URL
             // and leak personal info into intro share links. Only attach
@@ -2282,7 +2395,7 @@
             }
             if (entries.length > 0) hash += '?' + entries.join('&');
 
-            const flags = { fullQuestions, shortQuestions, expandTimeline, customDurations, debugMode };
+            const flags = { fullQuestions, shortQuestions, expandTimeline, customDurations, debugMode, outcomeVignetteCompare };
             const lockedOutcomeId = lockedId + (lockedVariantKey ? '--' + lockedVariantKey : '');
             return {
                 hash,
@@ -2320,6 +2433,7 @@
                         else if (dk === 'sq') { flags.shortQuestions = dv === '1'; }
                         else if (dk === 'cd') { flags.customDurations = dv === '1'; }
                         else if (dk === 'db') { flags.debugMode = dv === '1'; }
+                        else if (dk === 'ovc') { flags.outcomeVignetteCompare = dv === '1'; }
                         else if (dk === 'pp') { flags[dk] = dv; }
                         else { pairs.push({ nodeId: dk, edgeId: dv }); }
                     });
@@ -2488,6 +2602,7 @@
             let expandTimeline = flags.expandTimeline !== false;
             let customDurations = flags.customDurations === true;
             let debugMode = flags.debugMode === true;
+            let outcomeVignetteCompare = flags.outcomeVignetteCompare === true;
             let timelineDurations = [];
             let timelineNodeIds = [];
             let mapAnimator = null;
@@ -2986,6 +3101,7 @@
 
                 const dateMap = buildTimelineDateMap();
                 const circaYear = dateMap._totalYear;
+                const compareFlavors = outcomeVignetteCompare ? resolveOutcomes2Flavors(t.id, narrEff) : [];
 
                 const badgeDelay = resolved.subtitle ? '0.3' : '0.15';
                 const circaDelay = resolved.subtitle ? '0.45' : '0.3';
@@ -3002,7 +3118,10 @@
                 </div>`;
 
                 const pickerHtml = buildProfessionPickerHtml();
-                const timelineHtml = buildMergedVignettesHtml(resolved, stack, narrEff, dateMap);
+                const timelineHtml = buildMergedVignettesHtml(resolved, stack, narrEff, dateMap, {
+                    outcomeVignetteCompare,
+                    compareFlavors,
+                });
 
                 const ctaHtml = `<div class="share-section scroll-reveal">
                     <div class="share-label">Share This Future</div>
@@ -3202,7 +3321,7 @@
                 const serialized = serializeMapRoute(stack, {
                     started, lockedId, lockedVariantKey,
                     fullQuestions, shortQuestions, expandTimeline,
-                    customDurations, debugMode,
+                    customDurations, debugMode, outcomeVignetteCompare,
                 });
                 // On the intro screen with no flags toggled, keep the URL clean
                 // (just the pathname) rather than changing it to `#/map`.
@@ -3601,10 +3720,16 @@
                         if (matchedT.length > 0) {
                             const resolved = resolveTemplate(matchedT[0].id, narrEff);
                             const dateMap = buildTimelineDateMap();
+                            const compareFlavors = outcomeVignetteCompare ? resolveOutcomes2Flavors(matchedT[0].id, narrEff) : [];
 
                             function rerenderTimeline() {
                                 const tl = outcomeZone.querySelector('.outcome-timeline');
-                                const newHtml = buildMergedVignettesHtml(resolved, stack, narrEff, dateMap);
+                                const banner = outcomeZone.querySelector('.vignette-compare-banner');
+                                if (banner) banner.remove();
+                                const newHtml = buildMergedVignettesHtml(resolved, stack, narrEff, dateMap, {
+                                    outcomeVignetteCompare,
+                                    compareFlavors,
+                                });
                                 if (tl) {
                                     tl.outerHTML = newHtml;
                                 } else {
@@ -3924,7 +4049,7 @@
 
         function pathSamplerUrl() {
             const result = randomCompletePath();
-            const serialized = serializeMapRoute(result.stack, { started: true });
+            const serialized = serializeMapRoute(result.stack, { started: true, outcomeVignetteCompare: true });
             return {
                 url: location.origin + location.pathname + '#' + serialized.hash,
                 outcome: result.outcome,
