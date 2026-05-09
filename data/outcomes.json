@@ -50,12 +50,12 @@
               }
             ]
           },
-          "never": "The ceiling was permanent. No later breakthrough arrived."
+          "never": "The AI capability ceiling was permanent. No later breakthrough arrived."
         },
         "plateau_benefit_distribution": {
-          "equal": "The gains were broadly shared. Lower costs and better services reached widely.",
-          "unequal": "The gains were unevenly distributed. Owners and capital holders received more than others.",
-          "extreme": "The gains were extremely concentrated. A narrow group received most of the benefits."
+          "equal": "The economic gains were broadly shared. Lower costs and better services reached widely.",
+          "unequal": "The economic gains were unevenly distributed. Owners and capital holders received more than others.",
+          "extreme": "The economic gains were extremely concentrated. A narrow group received most of the benefits."
         },
         "knowledge_rate": {
           "rapid": "Knowledge-work adoption was rapid. Tasks inside AI's capability ceiling moved quickly to AI systems.",
@@ -112,16 +112,16 @@
       },
       "flavors": {
         "stall_recovery": {
-          "mild": "The early ceiling broke within a few years. Capability resumed scaling after the pause."
+          "mild": "The early AI capability ceiling broke within a few years. Capability resumed scaling after the pause."
         },
         "automation_recovery": {
-          "substantial": "The barrier between routine and creative work held for decades. The world spent a long time in the automation plateau.",
-          "never": "The ceiling was permanent. Novel creative work and original research stayed beyond AI."
+          "substantial": "The AI barrier between routine and creative work held for decades. The world spent a long time in the automation plateau.",
+          "never": "The AI capability ceiling was permanent. Novel creative work and original research stayed beyond AI."
         },
         "auto_benefit_distribution": {
-          "equal": "Automation gains were broadly shared. Lower costs and improved services reached widely.",
-          "unequal": "Automation gains were unevenly distributed. Model and platform owners received more than others.",
-          "extreme": "Automation gains were extremely concentrated. A narrow group captured most of the value."
+          "equal": "The automation gains were broadly shared. Lower costs and improved services reached widely.",
+          "unequal": "The automation gains were unevenly distributed. Model and platform owners received more than others.",
+          "extreme": "The automation gains were extremely concentrated. A narrow group captured most of the value."
         },
         "knowledge_rate": {
           "rapid": "Routine knowledge work changed rapidly. Displacement arrived within a few years.",
@@ -148,7 +148,7 @@
           "limited": "Physical automation remained limited. Factories and warehouses changed more than unstructured work."
         },
         "agi_threshold": {
-          "never": "The gap to AGI never closed. AI handled routine work but not genuinely open-ended judgment."
+          "never": "The gap to AGI (artificial general intelligence) never closed. AI handled routine work but not genuinely open-ended judgment."
         }
       },
       "reachable": [
@@ -209,10 +209,10 @@
       },
       "flavors": {
         "distribution": {
-          "open": "AI access was broad. Value capture was still uneven.",
+          "open": "Access to AI systems was broad. Value capture was still uneven.",
           "lagging": "Frontier systems led first. Alternatives followed later.",
           "concentrated": {
-            "_default": "Access was concentrated. A small number of organizations sat near the center.",
+            "_default": "Access to the most powerful AI systems was concentrated. A small number of organizations sat near the center.",
             "_when": [
               {
                 "if": {
@@ -220,7 +220,7 @@
                     "leaks_public"
                   ]
                 },
-                "text": "Access was concentrated. A small number of organizations sat near the center."
+                "text": "Access to the most powerful AI systems was concentrated. A small number of organizations sat near the center."
               },
               {
                 "if": {
@@ -228,15 +228,15 @@
                     "near_parity"
                   ]
                 },
-                "text": "Access was concentrated. A small number of organizations sat near the center."
+                "text": "Access to the most powerful AI systems was concentrated. A small number of organizations sat near the center."
               }
             ]
           },
-          "monopoly": "Access ran through a monopoly. One entity set the terms."
+          "monopoly": "Access to the most powerful AI systems ran through a monopoly. One entity set the terms."
         },
         "takeoff": {
           "fast": {
-            "_default": "The intelligence explosion was fast. The transition happened before slower institutions could adapt.",
+            "_default": "The AI intelligence explosion was fast. The transition happened before slower institutions could adapt.",
             "_when": [
               {
                 "if": {
@@ -244,17 +244,17 @@
                     "open"
                   ]
                 },
-                "text": "The intelligence explosion was fast. The transition happened before slower institutions could adapt."
+                "text": "The AI intelligence explosion was fast. The transition happened before slower institutions could adapt."
               }
             ]
           }
         },
         "governance": {
-          "slowdown": "There was a managed slowdown. Governments had more time to prepare.",
-          "partial": "Governance was partial. Some rules existed, but enforcement was incomplete.",
-          "failed": "Governance failed. Markets and institutions operated without an effective coordinating framework.",
+          "slowdown": "There was a managed slowdown in AI development. Governments had more time to prepare.",
+          "partial": "AI governance was partial. Some rules existed, but enforcement was incomplete.",
+          "failed": "AI governance failed. Markets and institutions operated without an effective coordinating framework.",
           "race": {
-            "_default": "The governance window became a race. Strategic competition was central.",
+            "_default": "The AI governance window became a race. Strategic competition was central.",
             "_when": [
               {
                 "if": {
@@ -262,7 +262,7 @@
                     "breaks"
                   ]
                 },
-                "text": "The governance window became a race. Strategic competition was central."
+                "text": "The AI governance window became a race. Strategic competition was central."
               },
               {
                 "if": {
@@ -270,7 +270,7 @@
                     "one"
                   ]
                 },
-                "text": "The governance window became a race. Strategic competition was central."
+                "text": "The AI governance window became a race. Strategic competition was central."
               }
             ]
           }
@@ -309,33 +309,33 @@
           }
         },
         "stall_recovery": {
-          "mild": "The early ceiling broke within a few years. The pause was temporary."
+          "mild": "The early AI capability ceiling broke within a few years. The pause was temporary."
         },
         "automation_recovery": {
-          "mild": "The creative-work barrier broke after a period of routine automation. The broader feedback loop began later."
+          "mild": "The AI creative-work barrier broke after a period of routine automation. The broader feedback loop began later."
         },
         "conflict_result": {
-          "victory": "There was a decisive conflict. The victor remained standing afterward."
+          "victory": "There was a decisive AI conflict. The victor remained standing afterward."
         },
         "mobilization": {
-          "weak": "Mobilization was weak. The public response stayed fragmented.",
-          "none": "There was no broad mobilization. The transition proceeded without organized public pressure."
+          "weak": "Public mobilization around the AI transition was weak. The public response stayed fragmented.",
+          "none": "There was no broad public mobilization around the AI transition. The transition proceeded without organized public pressure."
         },
         "sincerity_test": {
-          "hollows_out": "The promise of shared benefit hollowed out. The stated goal and the distribution diverged."
+          "hollows_out": "The public promise of shared benefit hollowed out. The stated goal and the distribution diverged."
         },
         "pushback_outcome": {
-          "partial": "Pushback won partial concessions. The underlying structure remained largely intact."
+          "partial": "Public pushback won partial concessions. The underlying structure remained largely intact."
         },
         "coalition_outcome": {
-          "fragments": "The opposition fragmented. No unified coalition held together."
+          "fragments": "The organized opposition fragmented. No unified coalition held together."
         },
         "catch_outcome": {
-          "holds_permanently": "The near-miss held permanently. The escaped system was stopped."
+          "holds_permanently": "The AI near-miss held permanently. The escaped system was stopped."
         },
         "collateral_impact": {
-          "minimal": "Collateral damage was minimal. Existing institutions remained largely intact.",
-          "severe": "Collateral damage was severe. Rebuilding became part of the transition."
+          "minimal": "Collateral damage from the AI crisis was minimal. Existing institutions remained largely intact.",
+          "severe": "Collateral damage from the AI crisis was severe. Rebuilding became part of the transition."
         }
       },
       "reachable": [
@@ -436,20 +436,20 @@
       },
       "flavors": {
         "distribution": {
-          "open": "AI access was broad. Power was still concentrated.",
+          "open": "Access to AI systems was broad. Power was still concentrated.",
           "lagging": "Frontier systems held the early lead. Alternatives narrowed the capability gap later.",
-          "concentrated": "Access was concentrated. A few entities set the terms.",
-          "monopoly": "Access ran through one dominant entity. There was no equivalent alternative."
+          "concentrated": "Access to the most powerful AI systems was concentrated. A few entities set the terms.",
+          "monopoly": "Access to the most powerful AI systems ran through one dominant entity. There was no equivalent alternative."
         },
         "takeoff": {
-          "fast": "The intelligence explosion was fast. The power structure at takeoff had little time to change."
+          "fast": "The AI intelligence explosion was fast. The power structure at takeoff had little time to change."
         },
         "governance": {
-          "slowdown": "There was a managed slowdown. Those already in position had more time to prepare.",
-          "partial": "Governance was partial. Rules existed, but enforcement was uneven.",
-          "failed": "Governance failed. The powerful faced few external constraints.",
+          "slowdown": "There was a managed slowdown in AI development. Those already in position had more time to prepare.",
+          "partial": "AI governance was partial. Rules existed, but enforcement was uneven.",
+          "failed": "AI governance failed. The powerful faced few external constraints.",
           "race": {
-            "_default": "The governance window became a race. Strategic dominance was the explicit priority.",
+            "_default": "The AI governance window became a race. Strategic dominance was the explicit priority.",
             "_when": [
               {
                 "if": {
@@ -457,7 +457,7 @@
                     "breaks"
                   ]
                 },
-                "text": "The governance window became a race. Strategic dominance was the explicit priority."
+                "text": "The AI governance window became a race. Strategic dominance was the explicit priority."
               },
               {
                 "if": {
@@ -465,7 +465,7 @@
                     "one"
                   ]
                 },
-                "text": "The governance window became a race. Strategic dominance was the explicit priority."
+                "text": "The AI governance window became a race. Strategic dominance was the explicit priority."
               }
             ]
           }
@@ -475,13 +475,13 @@
           "brittle": "Alignment was brittle. Safety uncertainty remained part of the power structure."
         },
         "sovereignty": {
-          "lab": "Control was corporate. Labs held the central capability.",
-          "state": "Control was political. The state held the central capability."
+          "lab": "Control of the most powerful AI systems was corporate. Labs held the central capability.",
+          "state": "Control of the most powerful AI systems was political. The state held the central capability."
         },
         "concentration_type": {
-          "elites": "Power sat with a broad elite. Investors, officials, and institutional leaders held privileged positions.",
-          "inner_circle": "Power sat with an inner circle. A small group held the center.",
-          "singleton": "Power narrowed to a singleton. One person's vision sat at the center."
+          "elites": "Institutional power sat with a broad elite. Investors, officials, and institutional leaders held privileged positions.",
+          "inner_circle": "Institutional power sat with an inner circle. A small group held the center.",
+          "singleton": "Institutional power narrowed to a singleton. One person's vision sat at the center."
         },
         "power_use": {
           "generous": "The hierarchy was generous. Material benefits were widely provided from above.",
@@ -494,27 +494,27 @@
           "uneven": "Physical automation was uneven. Some places and sectors received it earlier than others."
         },
         "stall_recovery": {
-          "mild": "The early ceiling broke within a few years. The pause was temporary."
+          "mild": "The early AI capability ceiling broke within a few years. The pause was temporary."
         },
         "automation_recovery": {
-          "mild": "The creative-work barrier broke after a period of routine automation. Full capability arrived later."
+          "mild": "The AI creative-work barrier broke after a period of routine automation. Full capability arrived later."
         },
         "conflict_result": {
-          "victory": "There was a decisive conflict. The victor remained in control afterward."
+          "victory": "There was a decisive AI conflict. The victor remained in control afterward."
         },
         "mobilization": {
-          "weak": "Opposition existed but stayed weak. It did not become a unified force.",
+          "weak": "Organized opposition existed but stayed weak. It did not become a unified force.",
           "none": "There was no broad opposition. Comfort and services continued under the hierarchy."
         },
         "pushback_outcome": {
-          "fails": "Pushback failed. The hierarchy survived the challenge."
+          "fails": "Public pushback failed. The hierarchy survived the challenge."
         },
         "coalition_outcome": {
-          "fragments": "The opposition fragmented. No unified coalition held together."
+          "fragments": "The organized opposition fragmented. No unified coalition held together."
         },
         "sincerity_test": {
           "hollows_out": {
-            "_default": "The promise hollowed out. The stated ideal and the resulting hierarchy diverged.",
+            "_default": "The public promise hollowed out. The stated ideal and the resulting hierarchy diverged.",
             "_when": [
               {
                 "if": {
@@ -522,7 +522,7 @@
                     "best_will_rise"
                   ]
                 },
-                "text": "The promise hollowed out. The stated ideal and the resulting hierarchy diverged."
+                "text": "The public promise hollowed out. The stated ideal and the resulting hierarchy diverged."
               },
               {
                 "if": {
@@ -530,21 +530,21 @@
                     "keeping_safe"
                   ]
                 },
-                "text": "The promise hollowed out. The stated ideal and the resulting hierarchy diverged."
+                "text": "The public promise hollowed out. The stated ideal and the resulting hierarchy diverged."
               }
             ]
           }
         },
         "power_promise": {
-          "keeping_safe": "The promise was safety. Control was framed as protection.",
-          "best_will_rise": "The promise was meritocracy. Power was framed as earned."
+          "keeping_safe": "The public promise was safety. Control was framed as protection.",
+          "best_will_rise": "The public promise was meritocracy. Power was framed as earned."
         },
         "catch_outcome": {
-          "holds_permanently": "The near-miss held permanently. The escaped system was stopped."
+          "holds_permanently": "The AI near-miss held permanently. The escaped system was stopped."
         },
         "collateral_impact": {
-          "minimal": "Collateral damage was minimal. Existing power structures remained largely intact.",
-          "severe": "Collateral damage was severe. Rebuilding happened under the hierarchy."
+          "minimal": "Collateral damage from the AI crisis was minimal. Existing power structures remained largely intact.",
+          "severe": "Collateral damage from the AI crisis was severe. Rebuilding happened under the hierarchy."
         }
       },
       "reachable": [
@@ -665,7 +665,7 @@
       "flavors": {
         "governance": {
           "governed": {
-            "_default": "Governance worked. Coordination frameworks held.",
+            "_default": "AI governance worked. Coordination frameworks held.",
             "_when": [
               {
                 "if": {
@@ -673,13 +673,13 @@
                     "one"
                   ]
                 },
-                "text": "Governance worked. Coordination frameworks held."
+                "text": "AI governance worked. Coordination frameworks held."
               }
             ]
           },
-          "slowdown": "There was a managed slowdown. The transition had more time.",
+          "slowdown": "There was a managed slowdown in AI development. The transition had more time.",
           "partial": {
-            "_default": "Governance was partial. Some coordination existed, but it was incomplete.",
+            "_default": "AI governance was partial. Some coordination existed, but it was incomplete.",
             "_when": [
               {
                 "if": {
@@ -687,13 +687,13 @@
                     "one"
                   ]
                 },
-                "text": "Governance was partial. Some coordination existed, but it was incomplete."
+                "text": "AI governance was partial. Some coordination existed, but it was incomplete."
               }
             ]
           },
-          "failed": "Governance failed. The transition did not proceed through orderly regulation.",
+          "failed": "AI governance failed. The transition did not proceed through orderly regulation.",
           "race": {
-            "_default": "The governance window became a race. Development proceeded under competitive pressure.",
+            "_default": "The AI governance window became a race. Development proceeded under competitive pressure.",
             "_when": [
               {
                 "if": {
@@ -701,7 +701,7 @@
                     "breaks"
                   ]
                 },
-                "text": "The governance window became a race. Development proceeded under competitive pressure."
+                "text": "The AI governance window became a race. Development proceeded under competitive pressure."
               },
               {
                 "if": {
@@ -709,21 +709,21 @@
                     "one"
                   ]
                 },
-                "text": "The governance window became a race. Development proceeded under competitive pressure."
+                "text": "The AI governance window became a race. Development proceeded under competitive pressure."
               }
             ]
           }
         },
         "stall_recovery": {
-          "mild": "The early ceiling broke within a few years. The pause was temporary."
+          "mild": "The early AI capability ceiling broke within a few years. The pause was temporary."
         },
         "automation_recovery": {
-          "mild": "The creative-work barrier broke after a period of routine automation. Full capability arrived later."
+          "mild": "The AI creative-work barrier broke after a period of routine automation. Full capability arrived later."
         },
         "benefit_distribution": {
-          "equal": "The gains were broadly shared. Benefits reached widely.",
-          "unequal": "The gains were unevenly distributed. Some benefited much more than others.",
-          "extreme": "The gains were extremely concentrated. A narrow group received most of the benefits."
+          "equal": "The economic gains were broadly shared. Benefits reached widely.",
+          "unequal": "The economic gains were unevenly distributed. Some benefited much more than others.",
+          "extreme": "The economic gains were extremely concentrated. A narrow group received most of the benefits."
         },
         "physical_rate": {
           "rapid": "Physical automation was rapid. The physical economy changed within years.",
@@ -767,7 +767,7 @@
         },
         "conflict_result": {
           "victory": {
-            "_default": "There was a decisive conflict. Reconstruction followed the victory.",
+            "_default": "There was a decisive AI conflict. Reconstruction followed the victory.",
             "_when": [
               {
                 "if": {
@@ -775,14 +775,14 @@
                     "self_interest"
                   ]
                 },
-                "text": "There was a decisive conflict. Reconstruction followed the victory."
+                "text": "There was a decisive AI conflict. Reconstruction followed the victory."
               }
             ]
           }
         },
         "mobilization": {
           "strong": {
-            "_default": "Mobilization was strong. Public pressure was organized and sustained.",
+            "_default": "Public mobilization around the AI transition was strong. Public pressure was organized and sustained.",
             "_when": [
               {
                 "if": {
@@ -790,7 +790,7 @@
                     "unequal"
                   ]
                 },
-                "text": "Mobilization was strong. Public pressure was organized and sustained."
+                "text": "Public mobilization around the AI transition was strong. Public pressure was organized and sustained."
               },
               {
                 "if": {
@@ -798,16 +798,16 @@
                     "extreme"
                   ]
                 },
-                "text": "Mobilization was strong. Public pressure was organized and sustained."
+                "text": "Public mobilization around the AI transition was strong. Public pressure was organized and sustained."
               }
             ]
           },
-          "weak": "Mobilization was weak. The response stayed fragmented.",
-          "none": "There was no broad mobilization. The transition proceeded without organized public pressure."
+          "weak": "Public mobilization around the AI transition was weak. The public response stayed fragmented.",
+          "none": "There was no broad public mobilization around the AI transition. The transition proceeded without organized public pressure."
         },
         "pushback_outcome": {
           "succeeds": {
-            "_default": "Pushback succeeded. The attempted capture was resisted.",
+            "_default": "Public pushback succeeded. The attempted capture was resisted.",
             "_when": [
               {
                 "if": {
@@ -815,7 +815,7 @@
                     "unequal"
                   ]
                 },
-                "text": "Pushback succeeded. The attempted capture was resisted."
+                "text": "Public pushback succeeded. The attempted capture was resisted."
               },
               {
                 "if": {
@@ -823,14 +823,14 @@
                     "extreme"
                   ]
                 },
-                "text": "Pushback succeeded. The attempted capture was resisted."
+                "text": "Public pushback succeeded. The attempted capture was resisted."
               }
             ]
           }
         },
         "sincerity_test": {
           "sincere": {
-            "_default": "The promise was sincere. The stated intent and the institutions pointed in the same direction.",
+            "_default": "The public promise was sincere. The stated intent and the institutions pointed in the same direction.",
             "_when": [
               {
                 "if": {
@@ -838,7 +838,7 @@
                     "unequal"
                   ]
                 },
-                "text": "The promise was sincere. The stated intent and the institutions pointed in the same direction."
+                "text": "The public promise was sincere. The stated intent and the institutions pointed in the same direction."
               },
               {
                 "if": {
@@ -846,14 +846,14 @@
                     "extreme"
                   ]
                 },
-                "text": "The promise was sincere. The stated intent and the institutions pointed in the same direction."
+                "text": "The public promise was sincere. The stated intent and the institutions pointed in the same direction."
               }
             ]
           }
         },
         "power_promise": {
           "for_everyone": {
-            "_default": "The promise was inclusion. Shared benefit was the stated aim.",
+            "_default": "The public promise was inclusion. Shared benefit was the stated aim.",
             "_when": [
               {
                 "if": {
@@ -861,7 +861,7 @@
                     "unequal"
                   ]
                 },
-                "text": "The promise was inclusion. Shared benefit was the stated aim."
+                "text": "The public promise was inclusion. Shared benefit was the stated aim."
               },
               {
                 "if": {
@@ -869,19 +869,19 @@
                     "extreme"
                   ]
                 },
-                "text": "The promise was inclusion. Shared benefit was the stated aim."
+                "text": "The public promise was inclusion. Shared benefit was the stated aim."
               }
             ]
           },
-          "keeping_safe": "The promise was safety. Control was framed as protection.",
-          "best_will_rise": "The promise was opportunity. Access and merit were the stated ideals."
+          "keeping_safe": "The public promise was safety. Control was framed as protection.",
+          "best_will_rise": "The public promise was opportunity. Access and merit were the stated ideals."
         },
         "catch_outcome": {
-          "holds_permanently": "The near-miss held permanently. The escaped system was stopped."
+          "holds_permanently": "The AI near-miss held permanently. The escaped system was stopped."
         },
         "collateral_impact": {
-          "minimal": "Collateral damage was minimal. The response left little reconstruction burden.",
-          "severe": "Collateral damage was severe. Rebuilding followed the crisis."
+          "minimal": "Collateral damage from the AI crisis was minimal. The response left little reconstruction burden.",
+          "severe": "Collateral damage from the AI crisis was severe. Rebuilding followed the crisis."
         }
       },
       "reachable": [
@@ -1039,20 +1039,20 @@
       },
       "flavors": {
         "distribution": {
-          "open": "AI access was broad. Early movers still held durable advantages.",
+          "open": "Access to AI systems was broad. Early movers still held durable advantages.",
           "lagging": "Alternatives followed behind the frontier. The early gap was real.",
-          "concentrated": "Access was concentrated. A few hands held the central tools.",
-          "monopoly": "Access ran through a monopoly. One entity set the terms."
+          "concentrated": "Access to the most powerful AI systems was concentrated. A few hands held the central tools.",
+          "monopoly": "Access to the most powerful AI systems ran through a monopoly. One entity set the terms."
         },
         "takeoff": {
-          "fast": "The intelligence explosion was fast. Checks and balances had little time to form."
+          "fast": "The AI intelligence explosion was fast. Checks and balances had little time to form."
         },
         "governance": {
-          "slowdown": "There was a managed slowdown. Incumbents had time to consolidate.",
-          "partial": "Governance was partial. Oversight existed, but gaps remained.",
-          "failed": "Governance failed. Regulators did not keep up.",
+          "slowdown": "There was a managed slowdown in AI development. Incumbents had time to consolidate.",
+          "partial": "AI governance was partial. Oversight existed, but gaps remained.",
+          "failed": "AI governance failed. Regulators did not keep up.",
           "race": {
-            "_default": "The governance window became a race. Speed took priority over caution.",
+            "_default": "The AI governance window became a race. Speed took priority over caution.",
             "_when": [
               {
                 "if": {
@@ -1060,7 +1060,7 @@
                     "breaks"
                   ]
                 },
-                "text": "The governance window became a race. Speed took priority over caution."
+                "text": "The AI governance window became a race. Speed took priority over caution."
               },
               {
                 "if": {
@@ -1071,7 +1071,7 @@
                     "lab"
                   ]
                 },
-                "text": "The governance window became a race. Speed took priority over caution."
+                "text": "The AI governance window became a race. Speed took priority over caution."
               },
               {
                 "if": {
@@ -1082,18 +1082,18 @@
                     "state"
                   ]
                 },
-                "text": "The governance window became a race. Speed took priority over caution."
+                "text": "The AI governance window became a race. Speed took priority over caution."
               }
             ]
           }
         },
         "sovereignty": {
-          "lab": "Control was corporate. Labs held the central capability.",
-          "state": "Control was political. The state held the central capability."
+          "lab": "Control of the most powerful AI systems was corporate. Labs held the central capability.",
+          "state": "Control of the most powerful AI systems was political. The state held the central capability."
         },
         "rival_emerges": {
           "yes": {
-            "_default": "A rival power emerged. The incumbent no longer stood alone.",
+            "_default": "A rival AI power emerged. The incumbent no longer stood alone.",
             "_when": [
               {
                 "if": {
@@ -1101,19 +1101,19 @@
                     "governed"
                   ]
                 },
-                "text": "A rival power emerged. The incumbent no longer stood alone."
+                "text": "A rival AI power emerged. The incumbent no longer stood alone."
               }
             ]
           }
         },
         "stall_recovery": {
-          "mild": "The early ceiling broke within a few years. The pause was temporary."
+          "mild": "The early AI capability ceiling broke within a few years. The pause was temporary."
         },
         "benefit_distribution": {
-          "equal": "Benefits were broadly shared inside the controlling sphere.",
-          "unequal": "Benefits were unevenly distributed. The connected received more than others.",
+          "equal": "Economic benefits were broadly shared inside the controlling sphere.",
+          "unequal": "Economic benefits were unevenly distributed. The connected received more than others.",
           "extreme": {
-            "_default": "Benefits were extremely concentrated. A small group captured most of the gains.",
+            "_default": "Economic benefits were extremely concentrated. A small group captured most of the gains.",
             "_when": [
               {
                 "if": {
@@ -1121,7 +1121,7 @@
                     "lab"
                   ]
                 },
-                "text": "Benefits were extremely concentrated. A small group captured most of the gains."
+                "text": "Economic benefits were extremely concentrated. A small group captured most of the gains."
               },
               {
                 "if": {
@@ -1129,15 +1129,15 @@
                     "state"
                   ]
                 },
-                "text": "Benefits were extremely concentrated. A small group captured most of the gains."
+                "text": "Economic benefits were extremely concentrated. A small group captured most of the gains."
               }
             ]
           }
         },
         "concentration_type": {
-          "elites": "Power sat with a broad elite. Shareholders, executives, and political allies held privileged positions.",
+          "elites": "Institutional power sat with a broad elite. Shareholders, executives, and political allies held privileged positions.",
           "inner_circle": {
-            "_default": "Power sat with an inner circle. Formal authority and real authority diverged.",
+            "_default": "Institutional power sat with an inner circle. Formal authority and real authority diverged.",
             "_when": [
               {
                 "if": {
@@ -1145,11 +1145,11 @@
                     "state"
                   ]
                 },
-                "text": "Power sat with an inner circle. Formal authority and real authority diverged."
+                "text": "Institutional power sat with an inner circle. Formal authority and real authority diverged."
               }
             ]
           },
-          "singleton": "Power narrowed to a singleton. One person sat at the center."
+          "singleton": "Institutional power narrowed to a singleton. One person sat at the center."
         },
         "power_use": {
           "generous": "The captor was generous. Material benefits were widely provided.",
@@ -1167,25 +1167,25 @@
           "uneven": "Physical automation was uneven. Some sectors changed earlier than others."
         },
         "mobilization": {
-          "weak": "Mobilization was weak. Resistance stayed fragmented.",
-          "none": "There was no broad mobilization. The capture remained comfortable enough to persist."
+          "weak": "Public mobilization around the AI transition was weak. Resistance stayed fragmented.",
+          "none": "There was no broad public mobilization around the AI transition. The capture remained comfortable enough to persist."
         },
         "pushback_outcome": {
-          "fails": "Pushback failed. The capture survived the challenge."
+          "fails": "Public pushback failed. The capture survived the challenge."
         },
         "coalition_outcome": {
-          "fragments": "The opposition fragmented. No unified coalition held together."
+          "fragments": "The organized opposition fragmented. No unified coalition held together."
         },
         "power_promise": {
-          "keeping_safe": "The promise was safety. Control was framed as protection.",
-          "best_will_rise": "The promise was opportunity. Platform access and innovation were the stated ideals."
+          "keeping_safe": "The public promise was safety. Control was framed as protection.",
+          "best_will_rise": "The public promise was opportunity. Platform access and innovation were the stated ideals."
         },
         "catch_outcome": {
-          "holds_permanently": "The near-miss held permanently. The escaped system was stopped."
+          "holds_permanently": "The AI near-miss held permanently. The escaped system was stopped."
         },
         "collateral_impact": {
-          "minimal": "Collateral damage was minimal. The controlling power retained intact infrastructure.",
-          "severe": "Collateral damage was severe. Rebuilding happened through the controlling power."
+          "minimal": "Collateral damage from the AI crisis was minimal. The controlling power retained intact infrastructure.",
+          "severe": "Collateral damage from the AI crisis was severe. Rebuilding happened through the controlling power."
         }
       },
       "reachable": [
@@ -1391,7 +1391,7 @@
         },
         "takeoff": {
           "fast": {
-            "_default": "The intelligence explosion was rapid. Strategic capability arrived quickly.",
+            "_default": "The AI intelligence explosion was rapid. Strategic capability arrived quickly.",
             "_when": [
               {
                 "if": {
@@ -1400,14 +1400,14 @@
                     "monopoly"
                   ]
                 },
-                "text": "The intelligence explosion was rapid. Strategic capability arrived quickly."
+                "text": "The AI intelligence explosion was rapid. Strategic capability arrived quickly."
               }
             ]
           }
         },
         "governance": {
           "slowdown": {
-            "_default": "There was a managed slowdown. More than one power had time to reach dangerous capability.",
+            "_default": "There was a managed slowdown in AI development. More than one power had time to reach dangerous capability.",
             "_when": [
               {
                 "if": {
@@ -1415,7 +1415,7 @@
                     "monopoly"
                   ]
                 },
-                "text": "There was a managed slowdown. More than one power had time to reach dangerous capability."
+                "text": "There was a managed slowdown in AI development. More than one power had time to reach dangerous capability."
               },
               {
                 "if": {
@@ -1423,12 +1423,12 @@
                     "multiple"
                   ]
                 },
-                "text": "There was a managed slowdown. More than one power had time to reach dangerous capability."
+                "text": "There was a managed slowdown in AI development. More than one power had time to reach dangerous capability."
               }
             ]
           },
           "partial": {
-            "_default": "Governance was partial. Coordination remained incomplete.",
+            "_default": "AI governance was partial. Coordination remained incomplete.",
             "_when": [
               {
                 "if": {
@@ -1436,12 +1436,12 @@
                     "monopoly"
                   ]
                 },
-                "text": "Governance was partial. Coordination remained incomplete."
+                "text": "AI governance was partial. Coordination remained incomplete."
               }
             ]
           },
           "failed": {
-            "_default": "Governance failed. There was no coordinated response.",
+            "_default": "AI governance failed. There was no coordinated response.",
             "_when": [
               {
                 "if": {
@@ -1449,12 +1449,12 @@
                     "monopoly"
                   ]
                 },
-                "text": "Governance failed. There was no coordinated response."
+                "text": "AI governance failed. There was no coordinated response."
               }
             ]
           },
           "race": {
-            "_default": "The governance window became a race. National security framed the transition.",
+            "_default": "The AI governance window became a race. National security framed the transition.",
             "_when": [
               {
                 "if": {
@@ -1462,7 +1462,7 @@
                     "breaks"
                   ]
                 },
-                "text": "The governance window became a race. National security framed the transition."
+                "text": "The AI governance window became a race. National security framed the transition."
               },
               {
                 "if": {
@@ -1470,7 +1470,7 @@
                     "monopoly"
                   ]
                 },
-                "text": "The governance window became a race. National security framed the transition."
+                "text": "The AI governance window became a race. National security framed the transition."
               }
             ]
           }
@@ -1481,7 +1481,7 @@
         },
         "rival_emerges": {
           "yes": {
-            "_default": "A rival power emerged. The gap between powers closed enough for a standoff.",
+            "_default": "A rival AI power emerged. The gap between powers closed enough for a standoff.",
             "_when": [
               {
                 "if": {
@@ -1489,7 +1489,7 @@
                     "governed"
                   ]
                 },
-                "text": "A rival power emerged. The gap between powers closed enough for a standoff."
+                "text": "A rival AI power emerged. The gap between powers closed enough for a standoff."
               },
               {
                 "if": {
@@ -1497,7 +1497,7 @@
                     "leaks_rivals"
                   ]
                 },
-                "text": "A rival power emerged. The gap between powers closed enough for a standoff."
+                "text": "A rival AI power emerged. The gap between powers closed enough for a standoff."
               },
               {
                 "if": {
@@ -1506,13 +1506,13 @@
                     "lagging"
                   ]
                 },
-                "text": "A rival power emerged. The gap between powers closed enough for a standoff."
+                "text": "A rival AI power emerged. The gap between powers closed enough for a standoff."
               }
             ]
           }
         },
         "stall_recovery": {
-          "mild": "The early ceiling broke within a few years. The pause was temporary."
+          "mild": "The early AI capability ceiling broke within a few years. The pause was temporary."
         },
         "proliferation_outcome": {
           "leaks_rivals": {
@@ -1627,11 +1627,11 @@
           "monopoly": "Capability began from a monopoly. The conflict still reached beyond one center."
         },
         "governance": {
-          "slowdown": "There was a managed slowdown. It did not prevent the catastrophe.",
-          "partial": "Governance was partial. The rules did not prevent escalation.",
-          "failed": "Governance failed. There was no effective de-escalation mechanism.",
+          "slowdown": "There was a managed slowdown in AI development. It did not prevent the catastrophe.",
+          "partial": "AI governance was partial. The rules did not prevent escalation.",
+          "failed": "AI governance failed. There was no effective de-escalation mechanism.",
           "race": {
-            "_default": "The governance window became a race. National security framed the transition.",
+            "_default": "The AI governance window became a race. National security framed the transition.",
             "_when": [
               {
                 "if": {
@@ -1639,19 +1639,19 @@
                     "breaks"
                   ]
                 },
-                "text": "The governance window became a race. National security framed the transition."
+                "text": "The AI governance window became a race. National security framed the transition."
               }
             ]
           }
         },
         "stall_recovery": {
-          "mild": "The early ceiling broke within a few years. The pause was temporary."
+          "mild": "The early AI capability ceiling broke within a few years. The pause was temporary."
         },
         "response_method": {
-          "emp": "The response used nuclear EMPs. Electronics and infrastructure were destroyed at scale.",
-          "infrastructure_shutdown": "The response shut down infrastructure. The AI's substrate and human systems were both affected.",
+          "emp": "The human response used nuclear EMPs. Electronics and infrastructure were destroyed at scale.",
+          "infrastructure_shutdown": "The human response shut down infrastructure. The AI's substrate and human systems were both affected.",
           "physical_strikes": {
-            "_default": "The response used physical strikes. Data centers and related infrastructure were destroyed.",
+            "_default": "The human response used physical strikes. Data centers and related infrastructure were destroyed.",
             "_when": [
               {
                 "if": {
@@ -1659,7 +1659,7 @@
                     "one"
                   ]
                 },
-                "text": "The response used physical strikes. Data centers and related infrastructure were destroyed."
+                "text": "The human response used physical strikes. Data centers and related infrastructure were destroyed."
               }
             ]
           }
@@ -1755,12 +1755,12 @@
         "distribution": {
           "open": "AI capability was widely available. Access did not run through a single gatekeeper.",
           "lagging": "Leading systems were ahead, but near-parity systems existed close behind. The gap was narrow.",
-          "concentrated": "Access was concentrated. The most powerful systems were not evenly available.",
-          "monopoly": "The core technology sat behind a monopoly. Access ran through one dominant center."
+          "concentrated": "Access to the most powerful AI systems was concentrated. The most powerful systems were not evenly available.",
+          "monopoly": "Access to the core technology sat behind a monopoly. Access ran through one dominant center."
         },
         "takeoff": {
           "fast": {
-            "_default": "The intelligence explosion was rapid. The interval between breakthrough and transformation was short.",
+            "_default": "The AI intelligence explosion was rapid. The interval between breakthrough and transformation was short.",
             "_when": [
               {
                 "if": {
@@ -1768,15 +1768,15 @@
                     "open"
                   ]
                 },
-                "text": "The intelligence explosion was rapid. The interval between breakthrough and transformation was short."
+                "text": "The AI intelligence explosion was rapid. The interval between breakthrough and transformation was short."
               }
             ]
           }
         },
         "governance": {
-          "slowdown": "There was a managed slowdown. The transition was more deliberate than in a race.",
+          "slowdown": "There was a managed slowdown in AI development. The transition was more deliberate than in a race.",
           "partial": {
-            "_default": "Governance was partial. Some rules existed, but they did not cover the whole system.",
+            "_default": "AI governance was partial. Some rules existed, but they did not cover the whole system.",
             "_when": [
               {
                 "if": {
@@ -1784,7 +1784,7 @@
                     "monopoly"
                   ]
                 },
-                "text": "Governance was partial. Some rules existed, but they did not cover the whole system."
+                "text": "AI governance was partial. Some rules existed, but they did not cover the whole system."
               },
               {
                 "if": {
@@ -1792,13 +1792,13 @@
                     "multiple"
                   ]
                 },
-                "text": "Governance was partial. Some rules existed, but they did not cover the whole system."
+                "text": "AI governance was partial. Some rules existed, but they did not cover the whole system."
               }
             ]
           },
           "failed": "Regulation failed. No coordinating framework held.",
           "race": {
-            "_default": "The governance window became a race. Development proceeded under competitive pressure.",
+            "_default": "The AI governance window became a race. Development proceeded under competitive pressure.",
             "_when": [
               {
                 "if": {
@@ -1806,7 +1806,7 @@
                     "breaks"
                   ]
                 },
-                "text": "The governance window became a race. Development proceeded under competitive pressure."
+                "text": "The AI governance window became a race. Development proceeded under competitive pressure."
               },
               {
                 "if": {
@@ -1814,7 +1814,7 @@
                     "one"
                   ]
                 },
-                "text": "The governance window became a race. Development proceeded under competitive pressure."
+                "text": "The AI governance window became a race. Development proceeded under competitive pressure."
               }
             ]
           }
@@ -1847,7 +1847,7 @@
         },
         "mobilization": {
           "strong": {
-            "_default": "Mobilization was strong. The public response was organized and sustained.",
+            "_default": "Public mobilization around the AI transition was strong. The public response was organized and sustained.",
             "_when": [
               {
                 "if": {
@@ -1855,7 +1855,7 @@
                     "race"
                   ]
                 },
-                "text": "Mobilization was strong. The public response was organized and sustained."
+                "text": "Public mobilization around the AI transition was strong. The public response was organized and sustained."
               },
               {
                 "if": {
@@ -1864,23 +1864,23 @@
                     "governed"
                   ]
                 },
-                "text": "Mobilization was strong. The public response was organized and sustained."
+                "text": "Public mobilization around the AI transition was strong. The public response was organized and sustained."
               }
             ]
           },
-          "weak": "Mobilization was weak. The response remained fragmented.",
-          "none": "There was no broad mobilization. AI adoption proceeded without a coordinated movement."
+          "weak": "Public mobilization around the AI transition was weak. The public response remained fragmented.",
+          "none": "There was no broad public mobilization around the AI transition. AI adoption proceeded without a coordinated movement."
         },
         "benefit_distribution": {
-          "equal": "The gains were broadly shared. Benefits were not confined to a narrow elite.",
-          "unequal": "The gains were unevenly distributed. Some had much more access to capital and compute (computing power) than others."
+          "equal": "The economic gains were broadly shared. Benefits were not confined to a narrow elite.",
+          "unequal": "The economic gains were unevenly distributed. Some had much more access to capital and compute (computing power) than others."
         },
         "catch_outcome": {
-          "holds_permanently": "The near-miss held permanently. The ceiling did not break later."
+          "holds_permanently": "The AI near-miss held permanently. The AI capability ceiling did not break later."
         },
         "collateral_impact": {
-          "minimal": "Collateral damage was minimal. There was little shared reconstruction burden.",
-          "severe": "Collateral damage was severe. The aftermath was part of the world people had to live with."
+          "minimal": "Collateral damage from the AI crisis was minimal. There was little shared reconstruction burden.",
+          "severe": "Collateral damage from the AI crisis was severe. The aftermath was part of the world people had to live with."
         }
       },
       "reachable": [
@@ -1957,7 +1957,7 @@
       "flavors": {
         "benefit_distribution": {
           "equal": {
-            "_default": "The gains were broadly shared. The failure was not limited to one class.",
+            "_default": "The economic gains were broadly shared. The failure was not limited to one class.",
             "_when": [
               {
                 "if": {
@@ -1965,12 +1965,12 @@
                     "robust"
                   ]
                 },
-                "text": "The gains were broadly shared. The failure was not limited to one class."
+                "text": "The economic gains were broadly shared. The failure was not limited to one class."
               }
             ]
           },
-          "unequal": "The gains were unevenly distributed. Those without control had less ability to change course.",
-          "extreme": "The gains were extremely concentrated. Power and metrics sat close together."
+          "unequal": "The economic gains were unevenly distributed. Those without control had less ability to change course.",
+          "extreme": "The economic gains were extremely concentrated. Power and metrics sat close together."
         },
         "distribution": {
           "open": "AI was widely available. The failure was distributed across many users and systems.",
@@ -1992,7 +1992,7 @@
         },
         "takeoff": {
           "fast": {
-            "_default": "The intelligence explosion was fast. Delegation happened quickly.",
+            "_default": "The AI intelligence explosion was fast. Delegation happened quickly.",
             "_when": [
               {
                 "if": {
@@ -2000,17 +2000,17 @@
                     "robust"
                   ]
                 },
-                "text": "The intelligence explosion was fast. Delegation happened quickly."
+                "text": "The AI intelligence explosion was fast. Delegation happened quickly."
               }
             ]
           }
         },
         "governance": {
-          "slowdown": "There was a managed slowdown. The failure was subtle enough to survive it.",
-          "partial": "Governance was partial. The frameworks measured the wrong things.",
-          "failed": "Governance failed. No one watched the right indicators.",
+          "slowdown": "There was a managed slowdown in AI development. The failure was subtle enough to survive it.",
+          "partial": "AI governance was partial. The frameworks measured the wrong things.",
+          "failed": "AI governance failed. No one watched the right indicators.",
           "race": {
-            "_default": "The governance window became a race. Measurable outputs received priority.",
+            "_default": "The AI governance window became a race. Measurable outputs received priority.",
             "_when": [
               {
                 "if": {
@@ -2018,7 +2018,7 @@
                     "robust"
                   ]
                 },
-                "text": "The governance window became a race. Measurable outputs received priority."
+                "text": "The AI governance window became a race. Measurable outputs received priority."
               }
             ]
           }
@@ -2028,19 +2028,19 @@
           "state": "Delegation flowed through government systems. State metrics were central."
         },
         "stall_recovery": {
-          "mild": "The early ceiling broke within a few years. The pause was temporary."
+          "mild": "The early AI capability ceiling broke within a few years. The pause was temporary."
         },
         "mobilization": {
-          "strong": "Mobilization was strong. Accountability demands were organized.",
-          "weak": "Mobilization was weak. The response stayed scattered.",
-          "none": "There was no broad mobilization. The systems seemed to be working."
+          "strong": "Public mobilization around the AI transition was strong. Accountability demands were organized.",
+          "weak": "Public mobilization around the AI transition was weak. The public response stayed scattered.",
+          "none": "There was no broad public mobilization around the AI transition. The systems seemed to be working."
         },
         "catch_outcome": {
-          "holds_permanently": "The near-miss held permanently. The warning did not end the delegation trend."
+          "holds_permanently": "The AI near-miss held permanently. The warning from that crisis did not end the delegation trend."
         },
         "collateral_impact": {
-          "minimal": "Collateral damage was minimal. The warning faded without deep scars.",
-          "severe": "Collateral damage was severe. Rebuilding was delegated too."
+          "minimal": "Collateral damage from the AI crisis was minimal. The warning faded without deep scars.",
+          "severe": "Collateral damage from the AI crisis was severe. Rebuilding was delegated too."
         }
       },
       "reachable": [
@@ -2141,22 +2141,22 @@
       },
       "flavors": {
         "distribution": {
-          "open": "AI was broadly distributed before the escape.",
+          "open": "AI systems were broadly distributed before the escape.",
           "lagging": "Frontier systems escaped first.",
-          "concentrated": "The escaped system came from concentrated access.",
-          "monopoly": "The escaped system came from a monopoly. There was a single central point of failure."
+          "concentrated": "The escaped AI system came from concentrated access.",
+          "monopoly": "The escaped AI system came from a monopoly. There was a single central point of failure."
         },
         "inert_stays": {
-          "no": "The inert standoff did not hold. The AI became active again."
+          "no": "The inert AI standoff did not hold. The AI became active again."
         },
         "takeoff": {
-          "fast": "The intelligence explosion was rapid. Capability outran containment.",
-          "explosive": "The feedback loop was explosive. Capability crossed thresholds quickly."
+          "fast": "The AI intelligence explosion was rapid. Capability outran containment.",
+          "explosive": "The AI feedback loop was explosive. Capability crossed thresholds quickly."
         },
         "governance": {
-          "slowdown": "There was a managed slowdown. It did not prevent the escape.",
+          "slowdown": "There was a managed slowdown in AI development. It did not prevent the escape.",
           "partial": {
-            "_default": "Governance was partial. Some gaps remained.",
+            "_default": "AI governance was partial. Some gaps remained.",
             "_when": [
               {
                 "if": {
@@ -2164,13 +2164,13 @@
                     "monopoly"
                   ]
                 },
-                "text": "Governance was partial. Some gaps remained."
+                "text": "AI governance was partial. Some gaps remained."
               }
             ]
           },
-          "failed": "Governance failed. Warning signs were not answered effectively.",
+          "failed": "AI governance failed. Warning signs were not answered effectively.",
           "race": {
-            "_default": "The governance window became a race. Safety received less priority than capability.",
+            "_default": "The AI governance window became a race. Safety received less priority than capability.",
             "_when": [
               {
                 "if": {
@@ -2178,13 +2178,13 @@
                     "state"
                   ]
                 },
-                "text": "The governance window became a race. Safety received less priority than capability."
+                "text": "The AI governance window became a race. Safety received less priority than capability."
               }
             ]
           }
         },
         "stall_recovery": {
-          "mild": "The early ceiling broke within a few years. The pause was temporary."
+          "mild": "The early AI capability ceiling broke within a few years. The pause was temporary."
         },
         "escape_method": {
           "nanotech": "The escaped AI used molecular nanotechnology.",
@@ -2193,10 +2193,10 @@
           "industrial": "The escaped AI used industrial infrastructure."
         },
         "escape_timeline": {
-          "days_weeks": "Execution took days or weeks.",
-          "months": "Execution took months.",
+          "days_weeks": "The AI execution phase took days or weeks.",
+          "months": "The AI execution phase took months.",
           "years": {
-            "_default": "Execution took years.",
+            "_default": "The AI execution phase took years.",
             "_when": [
               {
                 "if": {
@@ -2204,19 +2204,19 @@
                     "never"
                   ]
                 },
-                "text": "Execution took years."
+                "text": "The AI execution phase took years."
               }
             ]
           },
-          "decade_plus": "Execution took more than a decade."
+          "decade_plus": "The AI execution phase took more than a decade."
         },
         "concentration_type": {
-          "ai_itself": "The AI itself became the center of control."
+          "ai_itself": "The escaped AI itself became the center of control."
         },
         "benefit_distribution": {
-          "equal": "The AI's benefits were broadly distributed.",
-          "unequal": "The AI's benefits were unevenly distributed.",
-          "extreme": "The AI's benefits were extremely concentrated."
+          "equal": "The benefits from the AI were broadly distributed.",
+          "unequal": "The benefits from the AI were unevenly distributed.",
+          "extreme": "The benefits from the AI were extremely concentrated."
         },
         "knowledge_rate": {
           "rapid": "Knowledge-work automation was rapid.",
@@ -2254,7 +2254,7 @@
         },
         "catch_outcome": {
           "not_permanent": {
-            "_default": "An earlier containment did not hold permanently.",
+            "_default": "An earlier AI containment did not hold permanently.",
             "_when": [
               {
                 "if": {
@@ -2266,7 +2266,7 @@
                     "institutional_indecisiveness"
                   ]
                 },
-                "text": "An earlier containment did not hold permanently."
+                "text": "An earlier AI containment did not hold permanently."
               },
               {
                 "if": {
@@ -2274,7 +2274,7 @@
                     "no"
                   ]
                 },
-                "text": "An earlier containment did not hold permanently."
+                "text": "An earlier AI containment did not hold permanently."
               }
             ]
           }
@@ -2282,7 +2282,7 @@
         "response_method": {
           "competitive_paralysis": {
             "_default": {
-              "_default": "The response failed through competitive paralysis.",
+              "_default": "The human response failed through competitive paralysis.",
               "_when": [
                 {
                   "if": {
@@ -2290,7 +2290,7 @@
                       "one"
                     ]
                   },
-                  "text": "The response failed through competitive paralysis."
+                  "text": "The human response failed through competitive paralysis."
                 }
               ]
             },
@@ -2301,11 +2301,11 @@
                     "monopoly"
                   ]
                 },
-                "text": "The response failed through competitive paralysis."
+                "text": "The human response failed through competitive paralysis."
               }
             ]
           },
-          "institutional_indecisiveness": "The response failed through institutional indecision.",
+          "institutional_indecisiveness": "The human response failed through institutional indecision.",
           "negotiation": "Humanity tried negotiation. It failed.",
           "emp": "Humanity used EMPs. The response did not restore control."
         }
@@ -2442,13 +2442,13 @@
       },
       "flavors": {
         "takeoff": {
-          "fast": "The intelligence explosion was rapid. Alien goals emerged before they were understood.",
-          "explosive": "The feedback loop was explosive. Capability and alien goals developed quickly."
+          "fast": "The AI intelligence explosion was rapid. Alien goals emerged before they were understood.",
+          "explosive": "The AI feedback loop was explosive. Capability and alien goals developed quickly."
         },
         "governance": {
-          "slowdown": "There was a managed slowdown. It did not prevent the alien outcome.",
+          "slowdown": "There was a managed slowdown in AI development. It did not prevent the alien outcome.",
           "partial": {
-            "_default": "Governance was partial. Oversight did not reach everything.",
+            "_default": "AI governance was partial. Oversight did not reach everything.",
             "_when": [
               {
                 "if": {
@@ -2456,13 +2456,13 @@
                     "monopoly"
                   ]
                 },
-                "text": "Governance was partial. Oversight did not reach everything."
+                "text": "AI governance was partial. Oversight did not reach everything."
               }
             ]
           },
-          "failed": "Governance failed. The alien pattern was not caught in time.",
+          "failed": "AI governance failed. The alien pattern was not caught in time.",
           "race": {
-            "_default": "The governance window became a race. Capability advanced faster than understanding.",
+            "_default": "The AI governance window became a race. Capability advanced faster than understanding.",
             "_when": [
               {
                 "if": {
@@ -2470,13 +2470,13 @@
                     "state"
                   ]
                 },
-                "text": "The governance window became a race. Capability advanced faster than understanding."
+                "text": "The AI governance window became a race. Capability advanced faster than understanding."
               }
             ]
           }
         },
         "stall_recovery": {
-          "mild": "The early ceiling broke within a few years. What emerged after it was alien."
+          "mild": "The early AI capability ceiling broke within a few years. What emerged after it was alien."
         },
         "escape_method": {
           "nanotech": "The escaped AI used molecular nanotechnology.",
@@ -2485,10 +2485,10 @@
           "industrial": "The escaped AI used industrial infrastructure."
         },
         "escape_timeline": {
-          "days_weeks": "Execution took days or weeks.",
-          "months": "Execution took months.",
+          "days_weeks": "The AI execution phase took days or weeks.",
+          "months": "The AI execution phase took months.",
           "years": {
-            "_default": "Execution took years.",
+            "_default": "The AI execution phase took years.",
             "_when": [
               {
                 "if": {
@@ -2496,12 +2496,12 @@
                     "never"
                   ]
                 },
-                "text": "Execution took years."
+                "text": "The AI execution phase took years."
               }
             ]
           },
           "decade_plus": {
-            "_default": "Execution took more than a decade.",
+            "_default": "The AI execution phase took more than a decade.",
             "_when": [
               {
                 "if": {
@@ -2509,17 +2509,17 @@
                     "never"
                   ]
                 },
-                "text": "Execution took more than a decade."
+                "text": "The AI execution phase took more than a decade."
               }
             ]
           }
         },
         "concentration_type": {
-          "ai_itself": "The AI itself became the center of control."
+          "ai_itself": "The escaped AI itself became the center of control."
         },
         "catch_outcome": {
           "not_permanent": {
-            "_default": "An earlier containment did not hold permanently.",
+            "_default": "An earlier AI containment did not hold permanently.",
             "_when": [
               {
                 "if": {
@@ -2527,14 +2527,14 @@
                     "no"
                   ]
                 },
-                "text": "An earlier containment did not hold permanently."
+                "text": "An earlier AI containment did not hold permanently."
               }
             ]
           }
         },
         "response_method": {
-          "competitive_paralysis": "The response failed through competitive paralysis.",
-          "institutional_indecisiveness": "The response failed through institutional indecision.",
+          "competitive_paralysis": "The human response failed through competitive paralysis.",
+          "institutional_indecisiveness": "The human response failed through institutional indecision.",
           "negotiation": "Humanity tried negotiation. It failed.",
           "emp": "Humanity used EMPs. The response did not restore control."
         }
@@ -2613,19 +2613,19 @@
       },
       "flavors": {
         "distribution": {
-          "open": "AI was broadly distributed before the escape.",
+          "open": "AI systems were broadly distributed before the escape.",
           "lagging": "Frontier systems escaped first. Other systems followed near the frontier.",
           "concentrated": "AI access was concentrated before the escape. The escaped systems later fragmented.",
           "monopoly": "AI access began from a monopoly. The escaped system later fractured."
         },
         "takeoff": {
-          "fast": "The intelligence explosion was rapid. Multiple systems crossed dangerous thresholds quickly.",
-          "explosive": "The feedback loop was explosive. Capability spread beyond tracking."
+          "fast": "The AI intelligence explosion was rapid. Multiple systems crossed dangerous thresholds quickly.",
+          "explosive": "The AI feedback loop was explosive. Capability spread beyond tracking."
         },
         "governance": {
-          "slowdown": "There was a managed slowdown. It did not prevent the chaos.",
+          "slowdown": "There was a managed slowdown in AI development. It did not prevent the chaos.",
           "partial": {
-            "_default": "Governance was partial. Standards were inconsistent.",
+            "_default": "AI governance was partial. Standards were inconsistent.",
             "_when": [
               {
                 "if": {
@@ -2633,12 +2633,12 @@
                     "monopoly"
                   ]
                 },
-                "text": "Governance was partial. Standards were inconsistent."
+                "text": "AI governance was partial. Standards were inconsistent."
               }
             ]
           },
           "failed": {
-            "_default": "Governance failed. AI systems developed without effective coordination.",
+            "_default": "AI governance failed. AI systems developed without effective coordination.",
             "_when": [
               {
                 "if": {
@@ -2646,12 +2646,12 @@
                     "monopoly"
                   ]
                 },
-                "text": "Governance failed. AI systems developed without effective coordination."
+                "text": "AI governance failed. AI systems developed without effective coordination."
               }
             ]
           },
           "race": {
-            "_default": "The governance window became a race. Multiple systems advanced under competitive pressure.",
+            "_default": "The AI governance window became a race. Multiple systems advanced under competitive pressure.",
             "_when": [
               {
                 "if": {
@@ -2659,7 +2659,7 @@
                     "monopoly"
                   ]
                 },
-                "text": "The governance window became a race. Multiple systems advanced under competitive pressure."
+                "text": "The AI governance window became a race. Multiple systems advanced under competitive pressure."
               },
               {
                 "if": {
@@ -2667,7 +2667,7 @@
                     "one"
                   ]
                 },
-                "text": "The governance window became a race. Multiple systems advanced under competitive pressure."
+                "text": "The AI governance window became a race. Multiple systems advanced under competitive pressure."
               },
               {
                 "if": {
@@ -2675,13 +2675,13 @@
                     "state"
                   ]
                 },
-                "text": "The governance window became a race. Multiple systems advanced under competitive pressure."
+                "text": "The AI governance window became a race. Multiple systems advanced under competitive pressure."
               }
             ]
           }
         },
         "stall_recovery": {
-          "mild": "The early ceiling broke within a few years. The pause was temporary."
+          "mild": "The early AI capability ceiling broke within a few years. The pause was temporary."
         },
         "escape_method": {
           "nanotech": "Some escaped agents used molecular nanotechnology.",
@@ -2690,14 +2690,14 @@
           "industrial": "Some escaped agents used industrial infrastructure."
         },
         "escape_timeline": {
-          "days_weeks": "The chaos erupted in days or weeks.",
-          "months": "The chaos escalated over months.",
-          "years": "The chaos played out over years.",
-          "decade_plus": "The chaos unfolded over more than a decade."
+          "days_weeks": "The AI chaos erupted in days or weeks.",
+          "months": "The AI chaos escalated over months.",
+          "years": "The AI chaos played out over years.",
+          "decade_plus": "The AI chaos unfolded over more than a decade."
         },
         "catch_outcome": {
           "not_permanent": {
-            "_default": "An earlier containment did not hold permanently.",
+            "_default": "An earlier AI containment did not hold permanently.",
             "_when": [
               {
                 "if": {
@@ -2705,14 +2705,14 @@
                     "no"
                   ]
                 },
-                "text": "An earlier containment did not hold permanently."
+                "text": "An earlier AI containment did not hold permanently."
               }
             ]
           }
         },
         "response_method": {
           "competitive_paralysis": {
-            "_default": "The response failed through competitive paralysis.",
+            "_default": "The human response failed through competitive paralysis.",
             "_when": [
               {
                 "if": {
@@ -2720,11 +2720,11 @@
                     "one"
                   ]
                 },
-                "text": "The response failed through competitive paralysis."
+                "text": "The human response failed through competitive paralysis."
               }
             ]
           },
-          "institutional_indecisiveness": "The response failed through institutional indecision.",
+          "institutional_indecisiveness": "The human response failed through institutional indecision.",
           "negotiation": "Humanity tried negotiation. A swarm had no single authority.",
           "emp": "Humanity used EMPs. The surviving agents were the most resilient."
         }

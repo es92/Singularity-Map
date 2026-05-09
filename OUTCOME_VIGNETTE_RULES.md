@@ -16,12 +16,14 @@ Working notes for rewriting `data/outcomes2.json` outcome/world vignettes.
 - Do not infer causal weight, even softly, unless the selected answer explicitly implies it.
 - Do not use one vignette to re-explain or re-derive the whole outcome family. Let the outcome summary carry the big-picture world.
 - Keep the vignette compatible with many possible paths that share the same selected value.
+- Keep each vignette readable without the original question text. Do not rely on internal variable labels as the only context.
+- Name the plain-English subject of the selected dimension: "public mobilization around the AI transition," "access to the most powerful AI systems," "the economic gains," etc.
 
 ## Safer Phrasing
 
-- Prefer: "Access was concentrated. The most powerful systems were not evenly available." over "Access mattered, but it did not settle everything."
-- Prefer: "The response was fragmented." over "The fragmented response produced the mosaic."
-- Prefer: "The gains were broadly shared." over "Each fragment found its own version of fairness."
+- Prefer: "Access to the most powerful AI systems was concentrated." over "Access mattered, but it did not settle everything."
+- Prefer: "Public mobilization around the AI transition was weak. The response remained fragmented." over "The fragmented response produced the mosaic."
+- Prefer: "The economic gains were broadly shared." over "Each fragment found its own version of fairness."
 - Prefer: "There was more than one center of AI power." over "No one could impose a single vision."
 
 ## Things To Avoid
@@ -31,6 +33,8 @@ Working notes for rewriting `data/outcomes2.json` outcome/world vignettes.
 - Overconfident causation: "X produced Y," "Y guaranteed Z," "Z was inevitable."
 - Soft causal analysis: "X mattered," "X shaped Y," "X left room for Y," "X did not settle Y," unless directly selected.
 - Abstract model language: "viable paths," "the shape of the future," "conditions for divergence," unless the original answer uses that register.
+- Contextless variable-label prose: "Mobilization was weak," "The response was fragmented," "The gains were shared," unless the human-readable subject is already named.
+- Unexplained definite nouns: "the response," "the movement," "the gains," "the ceiling," unless the same vignette has already identified what they refer to.
 - Outcome-specific overfitting that contradicts other valid paths reaching the same outcome.
 
 ## Review Heuristic
@@ -42,3 +46,4 @@ For each vignette, ask:
 3. Is it describing the state of the world rather than inventing an event sequence?
 4. Does it avoid making the selected value do more explanatory work than it can support?
 5. Could the sentence be shortened to a direct retrospective statement of the selected condition?
+6. Would it make sense on a share page to someone who never saw the original question?
