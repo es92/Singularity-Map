@@ -873,6 +873,36 @@
             border-color: var(--accent);
             box-shadow: 0 0 12px var(--accent-glow);
         }
+        .path-sampler-page {
+            max-width: 760px;
+            width: 100%;
+            padding: 2rem 0 3rem;
+            text-align: center;
+        }
+        .path-sampler-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-card);
+        }
+        .path-sampler-page h1 {
+            font-size: 2rem;
+            line-height: 1.2;
+            margin-bottom: 0.75rem;
+        }
+        .path-sampler-page p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin: 0 auto 1.25rem;
+            max-width: 560px;
+        }
+        .path-sampler-status {
+            min-height: 1.4rem;
+            margin-top: 1rem;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
 
         /* ---- Vignettes catalog (hidden authoring page) ---- */
         .vignettes-page {
@@ -2199,6 +2229,69 @@
             </div>`;
         }
 
+        function serializeMapRoute(stack, opts) {
+            opts = opts || {};
+            const started = opts.started === true;
+            const lockedId = opts.lockedId || '';
+            const lockedVariantKey = opts.lockedVariantKey || '';
+            const fullQuestions = opts.fullQuestions !== false;
+            const shortQuestions = opts.shortQuestions !== undefined ? opts.shortQuestions : true;
+            const expandTimeline = opts.expandTimeline !== false;
+            const customDurations = opts.customDurations === true;
+            const debugMode = opts.debugMode === true;
+            const includeProfession = opts.includeProfession !== false;
+
+            let hash = '/map';
+            const entries = [];
+            const pairs = (stack || [])
+                .filter(e => e.nodeId)
+                .map(e => ({ nodeId: e.nodeId, edgeId: e.edgeId }));
+
+            for (const entry of stack || []) {
+                if (!entry.nodeId) continue;
+                // Retracted entries are gone from both state and flavor.
+                // Collapsed entries live in flavor. Keep either.
+                if (entry.state[entry.nodeId] || (entry.flavor && entry.flavor[entry.nodeId])) {
+                    entries.push(encodeURIComponent(entry.nodeId) + '=' + encodeURIComponent(entry.edgeId));
+                }
+            }
+            if (lockedId) {
+                entries.push('locked=' + encodeURIComponent(lockedId + (lockedVariantKey ? '--' + lockedVariantKey : '')));
+            }
+            // Explicit "started" marker for the case where the user has
+            // clicked Start but hasn't answered anything yet — without it,
+            // a refresh would parse pairs.length === 0 && !lockedId and
+            // bounce them back to the intro screen. Pairs/locked already
+            // imply started, so we omit `s` when either is present.
+            if (started && pairs.length === 0 && !lockedId) entries.push('s=1');
+            if (!fullQuestions) entries.push('fq=0');
+            // shortQuestions defaults to true, so we only need to encode
+            // the non-default state (false = "Detailed questions" toggled
+            // ON in the UI). Older share links with `sq=1` still parse
+            // as true via the default fallback, so we don't break them.
+            if (!shortQuestions) entries.push('sq=0');
+            if (!expandTimeline) entries.push('et=0');
+            if (customDurations) entries.push('cd=1');
+            if (debugMode) entries.push('db=1');
+            // Profession is loaded from localStorage on every visit, so
+            // emitting it on the intro screen would pollute the bare URL
+            // and leak personal info into intro share links. Only attach
+            // once the journey is underway.
+            if (includeProfession && started && personalAnswers && personalAnswers.profession) {
+                entries.push('pp=' + encodeURIComponent(personalAnswers.profession));
+            }
+            if (entries.length > 0) hash += '?' + entries.join('&');
+
+            const flags = { fullQuestions, shortQuestions, expandTimeline, customDurations, debugMode };
+            const lockedOutcomeId = lockedId + (lockedVariantKey ? '--' + lockedVariantKey : '');
+            return {
+                hash,
+                pairs,
+                state: { screen: 'map', pairs, lockedOutcomeId, flags, started },
+                entries,
+            };
+        }
+
         // --- Routing ---
         function handleInitialRoute() {
             const state = routeFromHash();
@@ -2247,6 +2340,9 @@
                 const showOutcomes = hash.includes('outcomes=1');
                 return { screen: 'about', showOutcomes };
             }
+            if (hash.startsWith('/path-sampler')) {
+                return { screen: 'path-sampler' };
+            }
             if (hash.startsWith('/vignettes')) {
                 let selected = '';
                 let tab = 'world';
@@ -2283,6 +2379,10 @@
         function renderState(state, animated) {
             if (state.screen === 'about') {
                 renderAbout(state.showOutcomes);
+                return;
+            }
+            if (state.screen === 'path-sampler') {
+                renderPathSampler();
                 return;
             }
             if (state.screen === 'vignettes') {
@@ -3099,50 +3199,20 @@
             function syncHash() {
                 const shouldPush = _pushNextSync;
                 _pushNextSync = false;
-                let hash = '/map';
-                const entries = [];
-                const pairs = stack.filter(e => e.nodeId).map(e => ({ nodeId: e.nodeId, edgeId: e.edgeId }));
-                for (const entry of stack) {
-                    if (!entry.nodeId) continue;
-                    // Retracted entries are gone from both state and flavor.
-                    // Collapsed entries live in flavor. Keep either.
-                    if (entry.state[entry.nodeId] || (entry.flavor && entry.flavor[entry.nodeId])) {
-                        entries.push(encodeURIComponent(entry.nodeId) + '=' + encodeURIComponent(entry.edgeId));
-                    }
-                }
-                if (lockedId) entries.push('locked=' + encodeURIComponent(lockedId + (lockedVariantKey ? '--' + lockedVariantKey : '')));
-                // Explicit "started" marker for the case where the user has
-                // clicked Start but hasn't answered anything yet — without it,
-                // a refresh would parse pairs.length === 0 && !lockedId and
-                // bounce them back to the intro screen. Pairs/locked already
-                // imply started, so we omit `s` when either is present.
-                if (started && pairs.length === 0 && !lockedId) entries.push('s=1');
-                if (!fullQuestions) entries.push('fq=0');
-                // shortQuestions defaults to true, so we only need to encode
-                // the non-default state (false = "Detailed questions" toggled
-                // ON in the UI). Older share links with `sq=1` still parse
-                // as true via the default fallback, so we don't break them.
-                if (!shortQuestions) entries.push('sq=0');
-                if (!expandTimeline) entries.push('et=0');
-                if (customDurations) entries.push('cd=1');
-                if (debugMode) entries.push('db=1');
-                // Profession is loaded from localStorage on every visit, so
-                // emitting it on the intro screen would pollute the bare URL
-                // and leak personal info into intro share links. Only attach
-                // once the journey is underway.
-                if (started && personalAnswers && personalAnswers.profession) {
-                    entries.push('pp=' + encodeURIComponent(personalAnswers.profession));
-                }
-                if (entries.length > 0) hash += '?' + entries.join('&');
-                const stateFlags = { fullQuestions, shortQuestions, expandTimeline, customDurations, debugMode };
-                const state = { screen: 'map', pairs, lockedOutcomeId: lockedId + (lockedVariantKey ? '--' + lockedVariantKey : ''), flags: stateFlags, started };
+                const serialized = serializeMapRoute(stack, {
+                    started, lockedId, lockedVariantKey,
+                    fullQuestions, shortQuestions, expandTimeline,
+                    customDurations, debugMode,
+                });
                 // On the intro screen with no flags toggled, keep the URL clean
                 // (just the pathname) rather than changing it to `#/map`.
-                const target = !started && entries.length === 0 ? location.pathname : '#' + hash;
+                const target = !started && serialized.entries.length === 0
+                    ? location.pathname
+                    : '#' + serialized.hash;
                 if (shouldPush) {
-                    history.pushState(state, '', target);
+                    history.pushState(serialized.state, '', target);
                 } else {
-                    history.replaceState(state, '', target);
+                    history.replaceState(serialized.state, '', target);
                 }
             }
 
@@ -3808,6 +3878,103 @@
             });
         }
 
+        function randomCompletePath(rand, stepCap) {
+            const random = rand || Math.random;
+            const cap = stepCap || 500;
+            let stack = Engine.createStack();
+            const deps = { Engine, FlowPropagation: window.FlowPropagation };
+
+            for (let step = 0; step < cap; step++) {
+                const action = window.WalkStep.nextAction(stack, deps);
+
+                if (action.kind === 'open') {
+                    const sel = action.sel;
+                    for (const t of templatesList) {
+                        if (Engine.templateMatches(t, sel)) {
+                            return { stack, outcome: t, sel };
+                        }
+                    }
+                    throw new Error('Random path reached open state with no matching outcome.');
+                }
+                if (action.kind === 'stuck') {
+                    throw new Error('Random path got stuck before reaching an outcome.');
+                }
+                if (action.kind === 'unknown-flow') {
+                    throw new Error('Random path hit an unknown flow state.');
+                }
+
+                let nodeId, edgeId;
+                if (action.kind === 'auto-locked') {
+                    nodeId = action.node.id;
+                    edgeId = action.edgeId;
+                } else {
+                    const enabled = action.enabled || [];
+                    if (enabled.length === 0) {
+                        throw new Error('Random path found a question with no enabled answers.');
+                    }
+                    const pick = enabled[Math.floor(random() * enabled.length)];
+                    nodeId = action.node.id;
+                    edgeId = pick.id;
+                }
+                stack = Engine.push(stack, nodeId, edgeId);
+            }
+
+            throw new Error('Random path exceeded the step cap before reaching an outcome.');
+        }
+
+        function pathSamplerUrl() {
+            const result = randomCompletePath();
+            const serialized = serializeMapRoute(result.stack, { started: true });
+            return {
+                url: location.origin + location.pathname + '#' + serialized.hash,
+                outcome: result.outcome,
+                steps: serialized.pairs.length,
+            };
+        }
+
+        function renderPathSampler() {
+            app.innerHTML = `
+                <div class="path-sampler-page">
+                    <div class="path-sampler-card">
+                        <h1>Path Sampler</h1>
+                        <p>Generate a random complete journey through the same question graph used by the main map. Each click opens a full, shareable map URL in a new tab.</p>
+                        <button class="btn btn-primary" data-action="randomize-path">Randomize</button>
+                        <div class="path-sampler-status" aria-live="polite"></div>
+                    </div>
+                    <div class="map-actions">
+                        <button class="btn btn-ghost" data-action="home">Back to Start</button>
+                        ${siteFooterHtml()}
+                    </div>
+                </div>`;
+
+            const status = app.querySelector('.path-sampler-status');
+            const btn = app.querySelector('[data-action="randomize-path"]');
+            btn.addEventListener('click', () => {
+                try {
+                    const sample = pathSamplerUrl();
+                    const opened = window.open(sample.url, '_blank');
+                    if (opened) opened.opener = null;
+                    const outcomeLabel = sample.outcome
+                        ? sample.outcome.title + (sample.outcome.subtitle ? ': ' + sample.outcome.subtitle : '')
+                        : 'random outcome';
+                    if (opened) {
+                        status.textContent = 'Opened ' + outcomeLabel + ' after ' + sample.steps + ' choices.';
+                    } else {
+                        status.innerHTML = 'Popup blocked. <a href="' + esc(sample.url) + '" target="_blank" rel="noopener">Open the sampled path</a>.';
+                    }
+                } catch (err) {
+                    console.error(err);
+                    status.textContent = err && err.message ? err.message : 'Could not generate a random path.';
+                }
+            });
+
+            const home = app.querySelector('[data-action="home"]');
+            home.addEventListener('click', () => {
+                history.pushState({ screen: 'map' }, '', location.pathname);
+                renderState({ screen: 'map' }, false);
+            });
+        }
+
         function buildOutcomeCards() {
             const groupOrder = [
                 'the-plateau', 'the-automation',
@@ -4234,7 +4401,7 @@
 
                         <div class="about-cta">
                             <p class="about-updated">
-                                <span>Last updated May 9, 2026</span>
+                                <span>Last updated May 10, 2026</span>
                                 <a href="https://github.com/es92/Singularity-Map" target="_blank" rel="noopener" aria-label="GitHub">
                                     <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
                                 </a>
