@@ -108,35 +108,35 @@ body{
     width:1200px;height:630px;
     display:flex;align-items:center;justify-content:center;
     text-align:center;
-    padding:1.5rem 2.5rem;
+    padding:1.5rem 2rem;
     background:${heroGradient};
     border:1px solid ${m.border};
     border-radius:12px;
     position:relative;
 }
-.inner{max-width:1000px;margin:0 auto}
+.inner{max-width:1120px;margin:0 auto}
 .title{
-    font-size:3.5rem;font-weight:700;
+    font-size:5rem;font-weight:700;
     letter-spacing:-0.03em;line-height:1.1;
     margin-bottom:0.5rem;color:#e4e4f0;
 }
 .subtitle{
-    font-size:1.5rem;font-weight:400;
-    font-style:italic;margin-bottom:0.85rem;opacity:0.8;color:#e4e4f0;
+    font-size:2rem;font-weight:400;
+    font-style:italic;margin-bottom:0.75rem;opacity:0.8;color:#e4e4f0;
 }
 .mood-badge{
     display:inline-block;
-    padding:0.22rem 0.7rem;border-radius:20px;
-    font-size:0.75rem;font-weight:600;
+    padding:0.25rem 0.8rem;border-radius:20px;
+    font-size:1rem;font-weight:600;
     text-transform:uppercase;letter-spacing:0.06em;
     background:${m.bg};color:${m.color};border:1px solid ${m.border};
-    margin-bottom:1.25rem;
+    margin-bottom:1rem;
 }
 .summary{
-    font-size:1.3rem;line-height:1.65;
+    font-size:1.7rem;line-height:1.5;
     color:#9898b0;
 }
-.summary p{margin:0 0 0.6em 0}
+.summary p{margin:0 0 0.5em 0}
 .summary p:last-child{margin-bottom:0}
 .summary strong{font-weight:600;color:#e4e4f0}
 </style></head>
