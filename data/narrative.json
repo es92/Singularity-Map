@@ -169,7 +169,7 @@
         },
         "shortAnswerLabel": "Wealth holders benefit most",
         "shortAnswerDesc": "Capital owners capture most value. Labor's share of income falls.",
-        "personalVignette": "Your material life is meaningfully better — services got cheaper, your purchasing power crept up. But those who held resources during the transformation captured gains that dwarf yours. You're better off than your parents could have imagined. You're nowhere near the top."
+        "personalVignette": "Your material life is meaningfully better — AI-driven services got dramatically cheaper, and even a sliver of that abundance reached you. The career you'd built was automated, but enough of the trickle was real to leave you ahead of where you started. Those who held resources during the transformation captured gains that dwarf yours. You're better off than your parents could have imagined. You're nowhere near the top."
       },
       "extreme": {
         "answerLabel": "Extremely unequally — those holding power capture nearly everything",
@@ -182,7 +182,7 @@
         },
         "shortAnswerLabel": "Power holders capture nearly everything",
         "shortAnswerDesc": "A tiny elite controls the AI economy. Everyone else is a dependent.",
-        "personalVignette": "Your life is somewhat better — cheaper goods, better basic services. But the transformation's real gains went to those who held power when it happened. Your improvement is modest; theirs is civilizational. The gap isn't just wealth — it's access, influence, and the ability to shape what comes next."
+        "personalVignette": "Cheap AI services keep daily life functional. But the work you'd built a career on was automated, and what's left for you exists at the discretion of whoever holds AI infrastructure and policy. You're a dependent in their economy. The transformation's real gains went to those who held power when it happened. The gap isn't just wealth — it's access, influence, and the ability to shape what comes next."
       }
     },
     "shortQuestionContext": "AI hit its ceiling, but it's still the most powerful tool ever built. Who captures the value?"
@@ -829,7 +829,7 @@
         },
         "shortAnswerLabel": "Wealth holders benefit most",
         "shortAnswerDesc": "Those who own AI systems capture the productivity gains.",
-        "personalVignette": "Your material life is dramatically better. By any historical standard, you're wealthy. But those who held resources during the transformation captured gains that dwarf yours. You're better off than your parents could have imagined, and nowhere near the top."
+        "personalVignette": "Your material life is dramatically better — AI-driven goods and services are nearly free, and even a sliver of the abundance is enough to put you ahead by any historical standard. The career you'd built was automated, but the trickle was real. Those who held resources during the transformation captured gains that dwarf yours. You're better off than your parents could have imagined, and nowhere near the top."
       },
       "extreme": {
         "answerLabel": "Extremely unequally — those holding power capture nearly everything",
@@ -842,7 +842,7 @@
         },
         "shortAnswerLabel": "Power holders capture nearly everything",
         "shortAnswerDesc": "AI becomes a tool of entrenchment for those already in power.",
-        "personalVignette": "Your life is somewhat better — cheaper goods, better basic services. But the transformation's real gains went to those who held power when it happened. Your improvement is modest; theirs is civilizational. The gap isn't just wealth — it's access, influence, and the ability to shape what comes next."
+        "personalVignette": "Cheap AI services keep daily life functional. But the work you'd built a career on was automated, and what's left for you exists at the discretion of whoever holds AI infrastructure and policy. You're a dependent in their economy. The transformation's real gains went to those who held power when it happened. The gap isn't just wealth — it's access, influence, and the ability to shape what comes next."
       }
     },
     "shortQuestionContext": "Productivity soars from AI automation. But who captures the gains — broadly, or concentrated?"
@@ -4374,10 +4374,10 @@
                   "drift"
                 ]
               },
-              "text": "Your material life is dramatically better. By any historical standard, you're wealthy. But those who held resources during the transformation captured gains that dwarf yours. And even what you have feels hollow. The material improvement is real; something else isn't."
+              "text": "Your material life is dramatically better — AI-driven goods and services are nearly free, and even a sliver of the abundance is enough to put you ahead by any historical standard. The career you'd built was automated; the trickle was real. But those who held resources during the transformation captured gains that dwarf yours. And even what you have feels hollow. The material improvement is real; something else isn't."
             }
           ],
-          "_default": "Your material life is dramatically better. By any historical standard, you're wealthy. But those who held resources during the transformation captured gains that dwarf yours. You're better off than your parents could have imagined, and nowhere near the top."
+          "_default": "Your material life is dramatically better — AI-driven goods and services are nearly free, and even a sliver of the abundance is enough to put you ahead by any historical standard. The career you'd built was automated, but the trickle was real. Those who held resources during the transformation captured gains that dwarf yours. You're better off than your parents could have imagined, and nowhere near the top."
         }
       },
       "extreme": {
@@ -4453,7 +4453,7 @@
                   "drift"
                 ]
               },
-              "text": "Your life is a little better. Goods are cheaper, basic services improved. But the real gains went to those who already held power. And even your modest improvement feels empty. The gap is about meaning as much as wealth."
+              "text": "Cheap AI services keep daily life functional. The work you did is gone, and what's left for you exists at the discretion of whoever held power when it happened. You're a dependent in their economy. And even what you have feels empty. The gap is about meaning as much as wealth."
             },
             {
               "if": {
@@ -4472,7 +4472,7 @@
               "text": null
             }
           ],
-          "_default": "Your life is somewhat better — cheaper goods, better basic services. But the transformation's real gains went to those who held power when it happened. Your improvement is modest; theirs is civilizational. The gap isn't just wealth — it's access, influence, and the ability to shape what comes next."
+          "_default": "Cheap AI services keep daily life functional. But the work you'd built a career on was automated, and what's left for you exists at the discretion of whoever holds AI infrastructure and policy. You're a dependent in their economy. The transformation's real gains went to those who held power when it happened. The gap isn't just wealth — it's access, influence, and the ability to shape what comes next."
         }
       }
     },
