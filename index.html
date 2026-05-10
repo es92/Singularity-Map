@@ -768,7 +768,9 @@
 
         /* ---- About page ---- */
         .about-page {
+            width: 100%;
             max-width: 640px;
+            margin: 0 auto;
             padding: 1rem 0 3rem;
         }
         .about-page h1 {
@@ -805,6 +807,199 @@
             font-size: 0.95rem;
             line-height: 1.75;
             margin-bottom: 0.75rem;
+        }
+        .methodology-flow-embed {
+            width: 100%;
+            margin: 1.25rem 0 1.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--bg-card);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        }
+        .methodology-flow-canvas {
+            position: relative;
+            height: min(520px, 68vh);
+            overflow: hidden;
+            cursor: grab;
+            user-select: none;
+            touch-action: pan-y;
+            background:
+                radial-gradient(circle at 1px 1px, rgba(128,128,160,0.16) 1px, transparent 0) 0 0 / 24px 24px,
+                var(--bg);
+        }
+        .methodology-flow-canvas.dragging { cursor: grabbing; }
+        .methodology-flow-scrollbar {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.55rem;
+            bottom: 0.75rem;
+            width: 10px;
+            z-index: 6;
+            border-radius: 999px;
+            background: rgba(128,128,160,0.12);
+            cursor: pointer;
+        }
+        .methodology-flow-scrollbar[hidden] {
+            display: none;
+        }
+        .methodology-flow-scroll-thumb {
+            position: absolute;
+            top: 0;
+            left: 1px;
+            right: 1px;
+            min-height: 28px;
+            border-radius: 999px;
+            background: var(--text-dim);
+            opacity: 0.72;
+            transition: opacity 0.16s var(--ease), background 0.16s var(--ease);
+        }
+        .methodology-flow-scrollbar:hover .methodology-flow-scroll-thumb,
+        .methodology-flow-scrollbar.dragging .methodology-flow-scroll-thumb {
+            background: var(--accent);
+            opacity: 0.9;
+        }
+        .methodology-flow-viewport {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: 0 0;
+            will-change: transform;
+            padding: 22px;
+        }
+        .methodology-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        .methodology-body th,
+        .methodology-body td {
+            border: 1px solid var(--border);
+            padding: 0.5rem 0.7rem;
+            text-align: left;
+            vertical-align: top;
+        }
+        .methodology-body th[align="center"],
+        .methodology-body td[align="center"] {
+            text-align: center;
+        }
+        .methodology-body th[align="right"],
+        .methodology-body td[align="right"] {
+            text-align: right;
+        }
+        .methodology-body th {
+            background: var(--bg-card);
+            font-weight: 600;
+        }
+        .methodology-body tr:nth-child(even) td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .methodology-flow {
+            display: grid;
+            grid-template-columns: repeat(3, 190px);
+            gap: 46px 16px;
+            align-items: start;
+            justify-content: start;
+            position: relative;
+        }
+        .methodology-flow-edges {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            overflow: visible;
+            color: var(--text-dim);
+            z-index: 0;
+        }
+        .methodology-flow-edges path {
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.4;
+            opacity: 0.72;
+        }
+        .methodology-flow-edges marker path {
+            fill: currentColor;
+            stroke: none;
+            opacity: 1;
+        }
+        .methodology-flow-card {
+            position: relative;
+            z-index: 1;
+            display: block;
+            width: 220px;
+            padding: 0.55rem 0.65rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-card);
+            color: var(--text);
+            text-decoration: none;
+            transition: border-color 0.16s var(--ease), background 0.16s var(--ease);
+        }
+        .methodology-flow-card:hover {
+            border-color: var(--accent);
+            background: var(--bg-card-hover);
+        }
+        .methodology-flow-card.is-opt {
+            border-style: dashed;
+        }
+        .methodology-flow-row {
+            display: flex;
+            align-items: baseline;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+        .methodology-flow-id {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-weight: 700;
+            font-size: 0.72rem;
+            color: var(--text);
+        }
+        .methodology-flow-kind,
+        .methodology-flow-opt {
+            font-size: 0.55rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+        .methodology-flow-opt {
+            color: var(--accent-2);
+        }
+        .methodology-flow-label,
+        .methodology-flow-note {
+            margin-top: 0.25rem;
+            color: var(--text-secondary);
+            font-size: 0.68rem;
+            line-height: 1.35;
+        }
+        .methodology-flow-note {
+            color: var(--text-dim);
+            font-style: italic;
+        }
+        .methodology-flow-outcomes {
+            margin: 0.55rem -0.65rem -0.55rem;
+            padding: 0.45rem 0.65rem 0.35rem;
+            border-top: 1px dashed var(--border);
+            background: rgba(255,170,34,0.08);
+        }
+        .methodology-flow-outcomes-head {
+            margin-bottom: 0.25rem;
+            color: var(--text-dim);
+            font-size: 0.52rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .methodology-flow-outcome {
+            display: block;
+            color: var(--text-secondary);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.62rem;
+            line-height: 1.45;
+        }
+        @media (max-width: 580px) {
+            .methodology-flow-canvas {
+                height: 420px;
+            }
         }
         .about-cta {
             text-align: center;
@@ -1286,8 +1481,6 @@
     <button class="btn btn-ghost" data-action="share">Copy Link</button>
     <div class="site-footer">
       <a href="#/about">About</a>
-      <span class="sep">·</span>
-      <a href="#/methodology-and-notes">Methodology &amp; Notes</a>
       <span class="sep">·</span>
       <a href="mailto:aisingularitymap@gmail.com">Contact</a>
       <span class="sep">·</span>
@@ -2333,8 +2526,6 @@
         function siteFooterHtml() {
             return `<div class="site-footer">
                 <a href="#/about">About</a>
-                <span class="sep">·</span>
-                <a href="#/methodology-and-notes">Methodology &amp; Notes</a>
                 <span class="sep">·</span>
                 <a href="mailto:aisingularitymap@gmail.com">Contact</a>
                 <span class="sep">·</span>
@@ -4670,12 +4861,428 @@
                 if (!res.ok) throw new Error('methodology markdown fetch ' + res.status);
                 const markdown = await res.text();
                 const body = app.querySelector('.methodology-body');
-                if (body) body.innerHTML = md(markdown);
+                if (body) {
+                    body.innerHTML = md(markdown);
+                    hydrateMethodologyModules(body);
+                }
             } catch (err) {
                 const body = app.querySelector('.methodology-body');
                 if (body) body.innerHTML = '<p>Methodology notes are not available right now.</p>';
                 console.error(err);
             }
+        }
+
+        function hydrateMethodologyModules(root) {
+            root.querySelectorAll('[data-methodology-module]').forEach(el => {
+                const type = el.dataset.methodologyModule;
+                if (type === 'flow-dag') renderMethodologyFlowDag(el);
+            });
+        }
+
+        function renderMethodologyFlowDag(mount) {
+            const sourceDag = window.Nodes && window.Nodes.FLOW_DAG;
+            if (!sourceDag || !sourceDag.nodes || !sourceDag.edges) {
+                mount.innerHTML = '<p>Flow graph is not available right now.</p>';
+                return;
+            }
+            const dag = methodologyDisplayDag(sourceDag);
+
+            const layout = methodologyFlowLayout(dag);
+            const laneMin = 0;
+            const laneToColumn = lane => lane - laneMin + 1;
+
+            let flowHtml = `<svg class="methodology-flow-edges" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <marker id="methodology-flow-arrow" viewBox="0 0 10 10" refX="0" refY="5" markerWidth="5" markerHeight="7" orient="auto-start-reverse" preserveAspectRatio="none">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+                    </marker>
+                </defs>
+            </svg>`;
+            flowHtml += '<div class="methodology-flow">';
+            for (const slot of dag.nodes) {
+                const pos = layout.get(slot.key) || { row: 0, lane: 0 };
+                flowHtml += methodologyFlowCardHtml(slot, pos, laneToColumn(pos.lane));
+            }
+            flowHtml += '</div>';
+
+            mount.innerHTML = `
+                <div class="methodology-flow-embed">
+                    <div class="methodology-flow-canvas">
+                        <div class="methodology-flow-scrollbar" role="scrollbar" aria-label="Scroll module flow" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                            <div class="methodology-flow-scroll-thumb"></div>
+                        </div>
+                        <div class="methodology-flow-viewport">${flowHtml}</div>
+                    </div>
+                </div>`;
+
+            wireMethodologyFlowCanvas(mount, dag);
+        }
+
+        function methodologyDisplayDag(sourceDag) {
+            // Display-only simplification for the public notes page:
+            // collapse the rare "AI itself takes over" escape slot into the
+            // late escape card so the overview stays legible. The canonical
+            // FLOW_DAG remains unchanged for validation, /nodes, and runtime.
+            const hidden = new Set(['escape_after_who']);
+            const redirect = new Map([['escape_after_who', 'escape_late']]);
+            const nodes = sourceDag.nodes.filter(node => !hidden.has(node.key));
+            const seenEdges = new Set();
+            const edges = [];
+            for (const [rawFrom, rawTo, kind] of sourceDag.edges) {
+                const from = redirect.get(rawFrom) || rawFrom;
+                const to = redirect.get(rawTo) || rawTo;
+                if (hidden.has(from) || hidden.has(to) || from === to) continue;
+                const key = `${from}\u0000${to}\u0000${kind || ''}`;
+                if (seenEdges.has(key)) continue;
+                seenEdges.add(key);
+                edges.push(kind ? [from, to, kind] : [from, to]);
+            }
+            return { nodes, edges };
+        }
+
+        function methodologyFlowLayout(dag) {
+            const authored = new Map(Object.entries({
+                emergence: { row: 0, lane: 0, offsetX: 26 },
+
+                plateau_bd: { row: 1, lane: 0, offsetX: 77 },
+                auto_bd: { row: 1, lane: 1, offsetX: 128 },
+                control: { row: 3, lane: 0, offsetX: 26 },
+
+                rollout_early: { row: 2, lane: 1, offsetX: -26 },
+                alignment: { row: 4, lane: 0, offsetX: 26 },
+
+                decel: { row: 5, lane: 0, offsetX: 77 },
+                escape_early: { row: 6, lane: 1, offsetX: -26 },
+                proliferation: { row: 7, lane: 0, offsetX: 26 },
+                escape_early_alt: { row: 8, lane: 1, offsetX: -26 },
+                intent: { row: 9, lane: 0, offsetX: 26 },
+                war: { row: 10, lane: 1, offsetX: -26 },
+                who_benefits: { row: 11, lane: 0, offsetX: 26 },
+
+                brittle: { row: 12, lane: 0, offsetX: 77 },
+                escape_late: { row: 13, lane: 1, offsetX: 77 },
+                inert_stays: { row: 14, lane: 0, offsetX: 77 },
+                escape_re_entry: { row: 15, lane: 1, offsetX: -26 },
+                rollout: { row: 16, lane: 0, offsetX: 26 },
+            }));
+            const layout = new Map();
+            for (const node of dag.nodes) {
+                if (authored.has(node.key)) {
+                    layout.set(node.key, authored.get(node.key));
+                }
+            }
+            if (layout.size === dag.nodes.length) return layout;
+
+            // Fallback for future FLOW_DAG additions: place unknown slots by
+            // longest-path depth on the center lane so the embed still renders.
+            const parents = new Map();
+            for (const node of dag.nodes) parents.set(node.key, []);
+            for (const [from, to] of dag.edges) {
+                if (!parents.has(to)) parents.set(to, []);
+                parents.get(to).push(from);
+            }
+            const memo = new Map();
+            const visiting = new Set();
+            const visit = (key) => {
+                if (memo.has(key)) return memo.get(key);
+                if (visiting.has(key)) return 0;
+                visiting.add(key);
+                const ps = parents.get(key) || [];
+                const col = ps.length ? Math.max(...ps.map(p => visit(p) + 1)) : 0;
+                visiting.delete(key);
+                memo.set(key, col);
+                return col;
+            };
+            for (const node of dag.nodes) {
+                if (!layout.has(node.key)) layout.set(node.key, { row: visit(node.key), lane: 0 });
+            }
+            return layout;
+        }
+
+        function methodologyFlowCardHtml(slot, pos, gridColumn) {
+            const isModule = slot.kind === 'module';
+            const nodeMap = window.Engine && window.Engine.NODE_MAP;
+            const moduleMap = (window.Graph && window.Graph.MODULE_MAP) || {};
+            const mod = isModule ? moduleMap[slot.id] : null;
+            const node = !isModule && nodeMap ? nodeMap[slot.id] : null;
+            const label = isModule ? ((mod && mod.label) || '') : ((node && node.label) || '');
+            const href = isModule
+                ? `#/nodes?m=${encodeURIComponent(slot.id)}&view=flow`
+                : `#/nodes?n=${encodeURIComponent(slot.id)}&view=flow`;
+            const offset = pos.offsetX ? `margin-left:${pos.offsetX}px;` : '';
+            const style = `grid-row:${pos.row + 1};grid-column:${gridColumn};${offset}`;
+            let html = `<a class="methodology-flow-card${slot.opt ? ' is-opt' : ''}" href="${href}" data-flow-key="${esc(slot.key)}" style="${style}">`;
+            html += `<div class="methodology-flow-row">`;
+            html += `<span class="methodology-flow-id">${esc(slot.id)}</span>`;
+            html += `<span class="methodology-flow-kind">${esc(slot.kind)}</span>`;
+            if (slot.opt) html += `<span class="methodology-flow-opt">opt</span>`;
+            html += `</div>`;
+            if (label) html += `<div class="methodology-flow-label">${esc(label)}</div>`;
+            if (slot.note) html += `<div class="methodology-flow-note">${esc(slot.note)}</div>`;
+            if (slot.earlyExits && slot.earlyExits.length) {
+                html += `<div class="methodology-flow-outcomes">`;
+                html += `<div class="methodology-flow-outcomes-head">outcomes</div>`;
+                for (const oid of slot.earlyExits) {
+                    const t = templatesMap[oid];
+                    html += `<span class="methodology-flow-outcome" title="${esc((t && t.title) || oid)}">${esc(oid)}</span>`;
+                }
+                html += `</div>`;
+            }
+            html += `</a>`;
+            return html;
+        }
+
+        function drawMethodologyFlowEdges(root, dag) {
+            const viewport = root.querySelector('.methodology-flow-viewport');
+            const svg = root.querySelector('.methodology-flow-edges');
+            if (!viewport || !svg) return;
+
+            svg.setAttribute('width', 0);
+            svg.setAttribute('height', 0);
+            const vRect = viewport.getBoundingClientRect();
+            const rects = new Map();
+            let maxRight = 0;
+            let maxBottom = 0;
+            viewport.querySelectorAll('[data-flow-key]').forEach(el => {
+                const r = el.getBoundingClientRect();
+                const x = r.left - vRect.left;
+                const y = r.top - vRect.top;
+                rects.set(el.dataset.flowKey, { x, y, w: r.width, h: r.height });
+                maxRight = Math.max(maxRight, x + r.width);
+                maxBottom = Math.max(maxBottom, y + r.height);
+            });
+
+            const width = maxRight + 24;
+            const height = maxBottom + 24;
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+            const paths = [];
+            for (const [from, to] of dag.edges) {
+                const a = rects.get(from);
+                const b = rects.get(to);
+                if (!a || !b) continue;
+                const x1 = a.x + a.w / 2;
+                const y1 = a.y + a.h;
+                const x2 = b.x + b.w / 2;
+                const y2 = b.y - 7;
+                const dy = Math.max(34, (y2 - y1) / 2);
+                paths.push(`<path d="M ${x1} ${y1} C ${x1} ${y1 + dy}, ${x2} ${y2 - dy}, ${x2} ${y2}" marker-end="url(#methodology-flow-arrow)"></path>`);
+            }
+
+            const defs = svg.querySelector('defs');
+            svg.innerHTML = '';
+            if (defs) svg.appendChild(defs);
+            svg.insertAdjacentHTML('beforeend', paths.join(''));
+        }
+
+        function wireMethodologyFlowCanvas(root, dag) {
+            const canvas = root.querySelector('.methodology-flow-canvas');
+            const viewport = root.querySelector('.methodology-flow-viewport');
+            const scrollbar = root.querySelector('.methodology-flow-scrollbar');
+            const thumb = root.querySelector('.methodology-flow-scroll-thumb');
+            if (!canvas || !viewport) return;
+
+            const view = { x: 20, y: 20, s: 1 };
+            const apply = () => {
+                viewport.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.s})`;
+            };
+            const centerX = () => {
+                const cw = canvas.clientWidth;
+                const vw = viewport.scrollWidth;
+                if (!cw || !vw) return view.x;
+                return Math.round((cw - vw * view.s) / 2);
+            };
+            const widthFitScale = () => {
+                const cw = canvas.clientWidth;
+                const vw = viewport.scrollWidth;
+                if (!cw || !vw) return view.s;
+                const sidePad = 0;
+                const usableWidth = Math.max(120, cw - sidePad * 2);
+                return Math.min(1.35, usableWidth / vw);
+            };
+            const yBounds = () => {
+                const ch = canvas.clientHeight;
+                const vh = viewport.scrollHeight * view.s;
+                const pad = 24;
+                if (!ch || !vh || vh <= ch - pad * 2) return { min: pad, max: pad };
+                return { min: ch - vh - pad, max: pad };
+            };
+            const clampY = (y) => {
+                const bounds = yBounds();
+                return Math.max(bounds.min, Math.min(bounds.max, y));
+            };
+            const canMoveY = (deltaY) => {
+                const bounds = yBounds();
+                if (bounds.max <= bounds.min) return false;
+                if (deltaY < 0) return view.y > bounds.min;
+                if (deltaY > 0) return view.y < bounds.max;
+                return false;
+            };
+            const updateScrollThumb = () => {
+                if (!scrollbar || !thumb) return;
+                const bounds = yBounds();
+                const range = bounds.max - bounds.min;
+                if (range <= 0) {
+                    scrollbar.hidden = true;
+                    return;
+                }
+                scrollbar.hidden = false;
+                const trackH = scrollbar.clientHeight;
+                const ch = canvas.clientHeight;
+                const vh = viewport.scrollHeight * view.s;
+                const thumbH = Math.max(28, Math.min(trackH, trackH * (ch / vh)));
+                const progress = (bounds.max - view.y) / range;
+                const thumbY = progress * Math.max(0, trackH - thumbH);
+                thumb.style.height = `${thumbH}px`;
+                thumb.style.transform = `translateY(${thumbY}px)`;
+                scrollbar.setAttribute('aria-valuenow', String(Math.round(progress * 100)));
+            };
+            const setY = (nextY) => {
+                view.x = centerX();
+                view.y = clampY(nextY);
+                apply();
+                updateScrollThumb();
+            };
+            const fit = () => {
+                viewport.style.transform = 'translate(0,0) scale(1)';
+                drawMethodologyFlowEdges(root, dag);
+                const cw = canvas.clientWidth;
+                const vw = viewport.scrollWidth;
+                if (!cw || !vw) { apply(); return; }
+
+                // Start focused on the top of the DAG, not zoomed out to
+                // show the whole graph. Width-fit keeps the x-axis centered.
+                view.s = widthFitScale();
+                view.x = centerX();
+                view.y = clampY(24);
+                apply();
+                updateScrollThumb();
+            };
+
+            requestAnimationFrame(fit);
+
+            let dragging = false;
+            let moved = false;
+            let sx = 0, sy = 0, y0 = 0;
+            canvas.addEventListener('mousedown', e => {
+                if (e.target.closest && e.target.closest('a, button, .methodology-flow-scrollbar')) return;
+                if (e.button !== 0) return;
+                dragging = true;
+                moved = false;
+                sx = e.clientX;
+                sy = e.clientY;
+                y0 = view.y;
+                canvas.classList.add('dragging');
+                e.preventDefault();
+            });
+            window.addEventListener('mousemove', e => {
+                if (!dragging) return;
+                const dx = e.clientX - sx;
+                const dy = e.clientY - sy;
+                if (!moved && Math.hypot(dx, dy) > 3) moved = true;
+                if (!canMoveY(dy)) {
+                    dragging = false;
+                    canvas.classList.remove('dragging');
+                    return;
+                }
+                setY(y0 + dy);
+            });
+            window.addEventListener('mouseup', () => {
+                if (!dragging) return;
+                dragging = false;
+                canvas.classList.remove('dragging');
+            });
+            canvas.addEventListener('click', e => {
+                if (moved) {
+                    e.preventDefault();
+                    moved = false;
+                }
+            }, true);
+            canvas.addEventListener('touchstart', e => {
+                if (e.target.closest && e.target.closest('a, button, .methodology-flow-scrollbar')) return;
+                if (e.touches.length !== 1) return;
+                dragging = true;
+                moved = false;
+                sx = e.touches[0].clientX;
+                sy = e.touches[0].clientY;
+                y0 = view.y;
+                canvas.classList.add('dragging');
+            }, { passive: false });
+            canvas.addEventListener('touchmove', e => {
+                if (!dragging || e.touches.length !== 1) return;
+                const dx = e.touches[0].clientX - sx;
+                const dy = e.touches[0].clientY - sy;
+                if (!moved && Math.hypot(dx, dy) > 3) moved = true;
+                if (!canMoveY(dy)) {
+                    dragging = false;
+                    canvas.classList.remove('dragging');
+                    return;
+                }
+                setY(y0 + dy);
+                e.preventDefault();
+            }, { passive: false });
+            canvas.addEventListener('touchend', () => {
+                if (!dragging) return;
+                dragging = false;
+                canvas.classList.remove('dragging');
+            });
+            canvas.addEventListener('wheel', e => {
+                const deltaY = -e.deltaY;
+                if (!canMoveY(deltaY)) return;
+                e.preventDefault();
+                setY(view.y + deltaY);
+            }, { passive: false });
+            if (scrollbar && thumb) {
+                let scrolling = false;
+                let scrollStartY = 0;
+                let viewStartY = 0;
+                const yFromTrackClientY = (clientY) => {
+                    const bounds = yBounds();
+                    const range = bounds.max - bounds.min;
+                    const track = scrollbar.getBoundingClientRect();
+                    const thumbH = thumb.getBoundingClientRect().height;
+                    const travel = Math.max(1, track.height - thumbH);
+                    const progress = Math.max(0, Math.min(1, (clientY - track.top - thumbH / 2) / travel));
+                    return bounds.max - progress * range;
+                };
+                scrollbar.addEventListener('mousedown', e => {
+                    if (e.button !== 0) return;
+                    scrolling = true;
+                    scrollStartY = e.clientY;
+                    viewStartY = view.y;
+                    scrollbar.classList.add('dragging');
+                    if (e.target === scrollbar) {
+                        setY(yFromTrackClientY(e.clientY));
+                        viewStartY = view.y;
+                        scrollStartY = e.clientY;
+                    }
+                    e.preventDefault();
+                });
+                window.addEventListener('mousemove', e => {
+                    if (!scrolling) return;
+                    const bounds = yBounds();
+                    const range = bounds.max - bounds.min;
+                    const trackH = scrollbar.clientHeight;
+                    const thumbH = thumb.getBoundingClientRect().height;
+                    const travel = Math.max(1, trackH - thumbH);
+                    setY(viewStartY - (e.clientY - scrollStartY) * (range / travel));
+                    e.preventDefault();
+                });
+                window.addEventListener('mouseup', () => {
+                    if (!scrolling) return;
+                    scrolling = false;
+                    scrollbar.classList.remove('dragging');
+                });
+            }
+            window.addEventListener('resize', () => {
+                view.s = widthFitScale();
+                view.x = centerX();
+                view.y = clampY(view.y);
+                apply();
+                updateScrollThumb();
+            });
         }
 
         // --- Render: Error ---
