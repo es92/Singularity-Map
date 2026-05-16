@@ -11,13 +11,13 @@ Questions are structured under the hood as a series of modules:
 
 The question tree is defined as a dynamically-unfolding DAG over state, both within and outside of modules. As you answer questions, you are modifying a state vector. What questions can appear and in what order is a function of that state vector. In this way the DAG is constructed "backwards" by evaluating question eligibility at each state, instead of forwards (enumerating the forward possibilities from each state seemed harder to get narratively correct). Once in a module, that module is completed before matching outcomes or next potential modules.
 
-Graph validity is checked with a verifier that ensures that all paths lead to a valid outcome, and do not dead-end (a risk with the "backwards" question & module eligibility approach). This is made tractable by constructing tables within modules, and de-duplicating state between modules. I'm hopeful this has been sufficient in eliminating dead-ends.
+Graph validity is checked with a verifier that ensures that all paths lead to a valid outcome, and do not dead-end (a risk with the "backwards" question & module eligibility approach). This is made tractable by constructing tables within modules, and de-duplicating state between modules. This has hopefully eliminated all dead-ends in the graph.
 
 ## Emergence Module
 
 If I took more time for this project, it would have been great to spend more time on the emergence / capabilities section. Ultimately for this project, I wanted the user to get a place where they output one of { powerful tool, agi, asi }, but I suspect in reality the path to asi could be slightly messier, and it is interesting to ask, will current tools recursively self improve to remove hurdles, or are genuine breakthroughs needed? As if genuine breakthroughs are needed, we still may see a plateau period before further acceleration.
 
-I suspect with all of the capital being poured into the AI space this would be a short plateau if any, but it still would give more time for work on alignment and social readiness, which would be helpful. Again, I'm not expecting it, but would be nice to know if it was the case.
+I suspect with all of the capital being poured into the AI space this would be a short plateau if any, but if there is a plateau, it would be in itself very interesting to think about, and would give more time for work on alignment and social readiness, which would be helpful. 
 
 Some capabilities that could be interesting to explore are:
 
@@ -34,19 +34,21 @@ Some capabilities that could be interesting to explore are:
 | Calibrated uncertainty | 🔬 early research |
 | Continuous learning | 🔬 early research |
 
-I suspect that not all of these are needed to unlock the recursive improvements such that we reach an AI that can solve all of them with low effort, but could be interesting to understand how different people understand that (I personally would have thought until recently that fast RL would be needed to approach stronger intelligence, but no longer think that after seeing how models have recently progressed, for example).
+The case for plateau that seems most likely to me, is that we are in a place where we have systems that can learn to do anything, but need to be taught through slow RL and harnesses for quite a while. In this world, I imagine we would continue to have "spikey" AGI, that effectively automates some domains, without getting to recursive self-improvement.
+
+That said, it does seem like, at least in programming, math, and research, the current systems have been getting progressively better, and are bordering AGI / ASI, so it seems to me this would have to stop / slow down to avoid recursive self-improvement.
 
 ## Geopolitical complexities
 
-How the world exactly reacts to ASI is not something I claim this game precisely does (nor do I think any simple model like this can do), though I do think it can help expose some of the key levers for it.
+How the world exactly reacts to ASI is not something I think this game can precisely do (nor do I think any simple model like this can do), though I do think it can help expose some of the key levers for it.
 
-Outside of the contents presented here, there are many other factors which I suspect will be influential. Particularly, regional politics and conflicts, related to on-the-ground realities of markets, politics, and environmental factors. This is how I suspect the geopolitical reality of ASI will unfold (assuming it is kept aligned and contained), and is something we can each have an impact on.
+Particularly, outside of the simplified geopolitical questions presented here, there are many other factors which I suspect will be influential. Particularly, regional politics and conflicts, related to on-the-ground realities of markets, politics, and environmental factors. These other factors are how I suspect the geopolitical reality of ASI will unfold (assuming it is kept aligned and contained).
 
-By default, I suspect decision making to lean on our historical set of political and economic narratives. These are already, at least in my opinion, becoming outdated as the world changes. These should be avoided, as they will increasingly not reflect the reality we will find ourselves in; in the same way a medieval lord might have tried to reason about industrialization. Sticking to our values while leaning on the vastly more powerful intelligences we will have available seems a more reliable approach in this new world.
+## Some reflections after making this model
 
-## How ASI unfolds
+The above geopolitical factors seem like a main thing we ca each have an impact on. By default, I would suspect decision making to lean on our historical set of political and economic narratives. These are already, at least in my opinion, becoming outdated as the world changes. Given that, I think they should be considered carefully, as they will increasingly not reflect the reality we will find ourselves in; in the same way a medieval lord might have tried to reason about industrialization. Sticking to our values while thoughtfully considering the world we find ourselves in (while perhaps leveraging the powerful intelligence we will have available) seems like should be considered in the approach.
 
-If we make it through the rollout of ASI, I think we will see a great transformation of humanity, beyond just material or intellectual change. The closest I can envision to it is the world set out in the Culture novels; though I could imagine us wanting to preserve more collective agency depending on how much ASI is able to deduce about our reality and what kinds of lives we want to live.
+If we make it through the rollout of ASI, I suspect, as I think do many others,  we will see a substantial transformation of humanity, beyond just material or intellectual change. The closest I can envision to it is the world set out in the Culture novels; though I could imagine us wanting to preserve more collective agency depending on how much ASI is able to deduce about our reality and what kinds of lives we want to live.
 
 The key thing I think today is whether we can make it through this period of potentially great change, and whether we can do so in a way that leads to a world we want to live in. I'm hopeful about this, but we certainly have a big challenge ahead of us, to avoid all of the potential pitfalls of realizing superintelligence.
 
