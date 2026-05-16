@@ -8,7 +8,7 @@
     },
     "values": {
       "singularity": {
-        "answerLabel": "Yes — it keeps doubling roughly every 7 months",
+        "answerLabel": "Yes — capability keeps doubling roughly every 7 months",
         "answerDesc": "Scaling laws (the pattern that AI keeps improving with more data and computing power) hold, compute (computing power) keeps growing, and AI capability maintains its exponential trajectory.",
         "timelineEvent": {
           "headline": "AI scaling trend holds",
@@ -19,7 +19,7 @@
         "shortAnswerDesc": "Scaling laws hold, compute keeps growing, exponential trajectory continues."
       },
       "stalls": {
-        "answerLabel": "No — it slows down or hits a wall",
+        "answerLabel": "No — capability slows down or hits a wall",
         "answerDesc": "Something breaks the trend (diminishing returns on scaling, data limits, architectural ceilings, or something unexpected) and AI capability plateaus before reaching superhuman levels.",
         "timelineEvent": {
           "headline": "AI scaling hits a wall",
@@ -96,7 +96,7 @@
           "durationMin": 3,
           "durationMax": 24
         },
-        "shortAnswerDesc": "A new technique restarts the exponential trend quickly."
+        "shortAnswerDesc": "With all of the new labs and capital working towards superintelligence, a new approach restarts progress quickly."
       },
       "substantial": {
         "answerLabel": "A substantial breakthrough — years to decades",
@@ -107,7 +107,7 @@
           "durationMin": 36,
           "durationMax": 120
         },
-        "shortAnswerDesc": "Requires a genuine paradigm shift. Could take a decade or more."
+        "shortAnswerDesc": "Substantial new research is required, and doesn't come through quickly even with all of the labs and capital working towards superintelligence. The world adapts to pre-ASI capabilities first."
       },
       "never": {
         "answerLabel": "It's never going to happen",
@@ -215,7 +215,7 @@
           "durationMin": 40,
           "durationMax": 40
         },
-        "shortAnswerDesc": "Doubling shrinks from 7 to 3 months. 3–4 years total."
+        "shortAnswerDesc": "Doubling times shrink as each generation improves the next. 3–4 years total."
       },
       "moderate": {
         "answerLabel": "20% — Meaningful acceleration",
@@ -226,7 +226,7 @@
           "durationMin": 25,
           "durationMax": 25
         },
-        "shortAnswerDesc": "Doubling compresses to under 2 months. ~2 years total."
+        "shortAnswerDesc": "Doubling times shrink quickly. ~2 years total."
       },
       "fast": {
         "answerLabel": "35% — Dramatic acceleration",
@@ -237,7 +237,7 @@
           "durationMin": 13,
           "durationMax": 13
         },
-        "shortAnswerDesc": "Superintelligence in roughly a year. Most institutions can't keep up."
+        "shortAnswerDesc": "Rapid recursive self-improvement. Superintelligence arrives in roughly a year."
       },
       "explosive": {
         "answerLabel": "50% — Runaway acceleration",
@@ -755,11 +755,11 @@
           "durationMin": 0,
           "durationMax": 0
         },
-        "shortAnswerDesc": "AI never surpasses humans at what matters most."
+        "shortAnswerDesc": "Superintelligence isn't about task length, and either isn't possible or requires some other breakthrough."
       }
     },
     "shortQuestionText": "How capable must AI get to surpass the best humans?",
-    "shortQuestionContext": "Matching humans is one threshold. Surpassing them reshapes everything. How far beyond matching does AI need to go?"
+    "shortQuestionContext": "Matching humans is one threshold. How far beyond matching does AI need to go to reach superintelligence, where it can recursively self-improve, and realize the capability for any knowledge task?"
   },
   "automation_recovery": {
     "questionText": "Could a different breakthrough crack the barrier?",
@@ -774,7 +774,7 @@
           "durationMin": 3,
           "durationMax": 24
         },
-        "shortAnswerDesc": "The barrier is thin. A new approach restarts progress quickly."
+        "shortAnswerDesc": "With all of the new labs and capital working towards superintelligence, a new approach restarts progress quickly."
       },
       "substantial": {
         "answerLabel": "Eventually — but it takes years to decades",
@@ -785,7 +785,7 @@
           "durationMin": 36,
           "durationMax": 120
         },
-        "shortAnswerDesc": "Requires a real paradigm shift. The world adapts to the ceiling first."
+        "shortAnswerDesc": "Substantial new research is required, and doesn't come through quickly even with all of the labs and capital working towards superintelligence. The world adapts to pre-ASI capabilities first."
       },
       "never": {
         "answerLabel": "No — the ceiling is permanent",
