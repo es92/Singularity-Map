@@ -34,7 +34,7 @@ Some capabilities that could be interesting to explore are:
 | Calibrated uncertainty | 🔬 early research |
 | Continuous learning | 🔬 early research |
 
-The case for plateau that seems most likely to me, is that we are in a place where we have systems that can learn to do anything, but need to be taught through slow RL and harnesses for quite a while. In this world, I imagine we would continue to have "spikey" AGI, that effectively automates some domains, without getting to recursive self-improvement.
+The case for plateau that seems most likely to me, is that we end up in a place where we have systems that can learn to do anything, but need to be taught through slow RL and human-crafted harnesses for quite a while. In this world, I imagine we would continue to have "spikey" AGI, that effectively automates some domains, without getting to recursive self-improvement.
 
 That said, it does seem like, at least in programming, math, and research, the current systems have been getting progressively better, and are bordering AGI / ASI, so it seems to me this would have to stop / slow down to avoid recursive self-improvement.
 
