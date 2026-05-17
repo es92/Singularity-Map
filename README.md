@@ -82,4 +82,4 @@ Journey paths and outcomes are logged to a Cloudflare D1 database via a Worker e
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
